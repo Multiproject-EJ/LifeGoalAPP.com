@@ -48,9 +48,17 @@ requireText(model, "'living-horizon-relief': livingHorizon.root", 'The Living Ho
 requireText(model, "root.userData.compassPageId = 'living_horizon'", 'Chapter III must own a page-addressable Living Horizon relief.');
 requireText(model, "selectedPageId === 'living_horizon'", 'Chapter III relief visibility must follow the canonical active page.');
 requireText(model, "selectedPageId === 'inner_compass'", 'The Inner Compass must be visibility-gated by canonical active page.');
+requireText(model, 'createQuestForgeRelief(', 'Chapter V must retain its production Quest Forge relief.');
+requireText(model, "root.userData.compassPageId = 'quest_forge'", 'Chapter V must own a page-addressable Quest Forge relief.');
+requireText(model, "'quest-forge-relief': questForge.root", 'The Quest Forge must remain a named runtime part.');
+requireText(model, "selectedPageId === 'quest_forge'", 'The Quest Forge must be visibility-gated by canonical active page.');
+requireText(model, 'questChapterCelebration', 'Chapter V must retain its bounded chapter-completion ceremony.');
+requireText(model, 'questFragmentCelebration', 'Chapter V must retain its single-fragment completion ceremony.');
+requireText(model, 'presentationOnly: true', 'Compass Book relief runtimes must remain presentation-only.');
 requireText(model, 'tabs.visible = eased < 0.72', 'Open spreads must hand tab navigation from the physical rail to the accessible DOM rail.');
 requireText(styles, ":not([data-page-id='living_wheel'])", 'Chapter I must retain the approved wide hybrid spread.');
 requireText(styles, ":not([data-page-id='inner_compass'])", 'Chapter II must retain the approved wide hybrid spread.');
+requireText(styles, ":not([data-page-id='quest_forge'])", 'Chapter V must retain the approved wide hybrid spread.');
 requireText(preview, "window.location.protocol !== 'file:'", 'The preview must distinguish direct file launches from Vite-served launches.');
 requireText(preview, 'http://127.0.0.1:5174/compass-preview.html', 'The direct-file launcher must route to the local preview server.');
 requireText(preview, "entry.src = '/src/scripts/compassPreviewHarness.tsx'", 'The Vite-served preview must retain its React entry module.');

@@ -1,0 +1,52 @@
+{
+  "result": "pass",
+  "presentationOnly": true,
+  "runtimeRoot": "COMPASS_BOOK_QUEST_FORGE_RELIEF",
+  "runtimeContract": "root.userData.sculptRuntime",
+  "parts": {
+    "runtimeEntries": 21,
+    "specifiedComponents": 20,
+    "unnamedMeshes": 0,
+    "coverageErrors": 0,
+    "coverageWarnings": 0
+  },
+  "sockets": [
+    "primary",
+    "supporting",
+    "released",
+    "review",
+    "flame",
+    "vault"
+  ],
+  "colliders": [
+    "relief"
+  ],
+  "destructionGroups": [
+    "forge",
+    "maintenance",
+    "release"
+  ],
+  "attachmentContracts": [
+    "primary-token",
+    "supporting-token",
+    "review-socket",
+    "milestone-anvil",
+    "protected-flame",
+    "not-now-vault",
+    "released-fragment",
+    "release-path"
+  ],
+  "interactionChecks": {
+    "chapterCompletion": "pass",
+    "fragmentCompletion": "pass",
+    "reducedMotion": "pass",
+    "exactlyThreeCandidateStates": "pass"
+  },
+  "evidence": [
+    ".img2threejs/compass-book-quest-forge/parts.json",
+    ".img2threejs/compass-book-quest-forge/part-coverage.json",
+    "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-v-interaction/chapter-completion-relief.png",
+    "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-v-interaction/fragment-completion-relief.png",
+    "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-v-interaction/chapter-completion-reduced-motion.png"
+  ]
+}

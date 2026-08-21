@@ -1,0 +1,556 @@
+{
+  "targetName": "Compass Book Quest Forge Relief",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "page-bound symbolic forge relief",
+      "primaryDomain": "object",
+      "formLanguage": ["hard-surface", "mechanical", "sculptural", "surface-relief"],
+      "structureKind": ["compound object", "layered assembly", "repeated modules"],
+      "motionPotential": ["static prop", "whole-object transform", "effect-emitter", "detachable semantic modules"],
+      "materialFamilies": ["aged metal", "enamel", "faceted crystal", "leather-like field", "emissive solid"],
+      "notes": "Presentation-only Chapter V instrument. Personal text and goal creation remain outside the 3D layer."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 2,
+        "materialLayerCount": 3,
+        "localDetailDensity": 2,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 2
+      },
+      "estimatedCounts": {
+        "macroComponents": 4,
+        "mesoComponents": 10,
+        "microFeatureGroups": 12,
+        "materialLayers": 6,
+        "repetitionSystems": 3
+      },
+      "reasoning": [
+        "The accepted goal contains four connected macro assemblies, at least ten countable meso parts, three repeated hardware/engraving systems, six visually distinct material responses, and a shallow but non-trivial action-ready hierarchy.",
+        "The silhouette is readable, but identity depends on exact candidate count, crest notch, ring sockets, forge spine, and closed-vault relationship rather than outline alone."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Reverse faces and underside contacts are hidden; infer closed shallow solids with 0.02-0.05 world-unit overlap.",
+      "The closed vault interior is intentionally undetermined and must not be invented.",
+      "Flame volume is stylized emissive geometry; smoke, particles, and fluid simulation are outside the reconstruction target.",
+      "Tiny engraving glyphs may be simplified, but their radial distribution and relief response must survive."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 12,
+      "note": "Component-zone inventory is authored separately and must be copied into the final spec with every entry mapped to implemented component or material fields.",
+      "details": [
+              {
+                "id": "frame-double-bevel",
+                "kind": "bevel",
+                "description": "Continuous outer and inner gilt frame rails use real raised chamfers that catch grazing light and hold the dark field flush to the page.",
+                "region": {
+                  "x": 0.1,
+                  "y": 0.07,
+                  "width": 0.45,
+                  "height": 0.82,
+                  "units": "normalized"
+                },
+                "scale": "macro border; bevel radius about 0.012 of plate width",
+                "affects": "silhouette, page contact and gilt edge response",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "contact-frame.double-bevel"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/contact-frame.png",
+                "confidence": 0.99
+              },
+              {
+                "id": "frame-corner-fasteners",
+                "kind": "fastener",
+                "description": "Four violet cabochon corner studs and smaller brass frame screws form a disciplined repeated attachment system.",
+                "region": {
+                  "x": 0.1,
+                  "y": 0.07,
+                  "width": 0.45,
+                  "height": 0.82,
+                  "units": "normalized"
+                },
+                "scale": "4 primary studs plus small secondary screws",
+                "affects": "instanced geometry and polished highlight response",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "contact-frame.corner-fasteners"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/contact-frame.png",
+                "confidence": 0.97
+              },
+              {
+                "id": "ring-engraved-marks",
+                "kind": "linework",
+                "description": "The outer maintenance ring carries shallow repeated rectangular/rune engravings that remain subordinate to the crest.",
+                "region": {
+                  "x": 0.18,
+                  "y": 0.08,
+                  "width": 0.36,
+                  "height": 0.53,
+                  "units": "normalized"
+                },
+                "scale": "micro radial marks, 28-36 instances",
+                "affects": "recessed geometry, cavity AO and radial repetition",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "maintenance-ring.radial-engravings"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/maintenance-ring.png",
+                "confidence": 0.96
+              },
+              {
+                "id": "ring-socket-rivets",
+                "kind": "fastener",
+                "description": "Small brass studs repeat around the inner rail and terminate attachment brackets without floating gaps.",
+                "region": {
+                  "x": 0.18,
+                  "y": 0.08,
+                  "width": 0.36,
+                  "height": 0.53,
+                  "units": "normalized"
+                },
+                "scale": "micro hemispheres, 8-12 instances",
+                "affects": "instanced geometry, seam overlap and specular points",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "maintenance-ring.socket-rivets"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/maintenance-ring.png",
+                "confidence": 0.95
+              },
+              {
+                "id": "crest-faceted-topology",
+                "kind": "ridge",
+                "description": "The violet Quest Crest is a thick irregular polygon with countable planar facets, raised facet seams and a pointed lower tip over the anvil glow.",
+                "region": {
+                  "x": 0.25,
+                  "y": 0.14,
+                  "width": 0.22,
+                  "height": 0.29,
+                  "units": "normalized"
+                },
+                "scale": "dominant meso solid, about 0.20 of full image width",
+                "affects": "primary silhouette, true cross-section and crystal material response",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "quest-crest.facet-ridges"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/quest-crest.png",
+                "confidence": 0.99
+              },
+              {
+                "id": "crest-accepted-cost-notch",
+                "kind": "chip",
+                "description": "One large deliberate missing facet interrupts the crest's right perimeter and must change silhouette rather than appear as painted damage.",
+                "region": {
+                  "x": 0.25,
+                  "y": 0.14,
+                  "width": 0.22,
+                  "height": 0.29,
+                  "units": "normalized"
+                },
+                "scale": "meso notch, about 0.22 of crest width",
+                "affects": "identity silhouette and exposed dark fracture face",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "quest-crest.accepted-cost-notch"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/quest-crest.png",
+                "confidence": 0.99
+              },
+              {
+                "id": "primary-token-pronged-bezel",
+                "kind": "bevel",
+                "description": "A gold diamond primary token is embedded in a concentric violet-and-gilt socket with four cardinal retaining prongs.",
+                "region": {
+                  "x": 0.25,
+                  "y": 0.14,
+                  "width": 0.22,
+                  "height": 0.29,
+                  "units": "normalized"
+                },
+                "scale": "meso token socket, about 0.36 of crest width",
+                "affects": "candidate count, socket depth and polished gold hierarchy",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "primary-token.pronged-bezel"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/quest-crest.png",
+                "confidence": 0.99
+              },
+              {
+                "id": "milestone-anvil-stepped-bevels",
+                "kind": "bevel",
+                "description": "The First Milestone is a compact dark anvil with a broad top, narrower waist, stepped gold lower collar and readable real edge chamfers.",
+                "region": {
+                  "x": 0.25,
+                  "y": 0.38,
+                  "width": 0.18,
+                  "height": 0.39,
+                  "units": "normalized"
+                },
+                "scale": "meso forge plate, about 0.13 of full image width",
+                "affects": "forge path silhouette, metal contact and stepped hierarchy",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "milestone-anvil.stepped-bevels"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/forge-spine.png",
+                "confidence": 0.98
+              },
+              {
+                "id": "protected-flame-cage",
+                "kind": "emissive",
+                "description": "A compact amber flame solid sits inside repeated curved brass cage ribs, with nearby warm spill but no smoke or fluid volume.",
+                "region": {
+                  "x": 0.25,
+                  "y": 0.38,
+                  "width": 0.18,
+                  "height": 0.39,
+                  "units": "normalized"
+                },
+                "scale": "meso flame plus 6-8 repeated cage ribs",
+                "affects": "emissive material, instanced/tube geometry and protected-flame identity",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "protected-flame.cage-ribs"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/forge-spine.png",
+                "confidence": 0.98
+              },
+              {
+                "id": "support-token-gloss-bezel",
+                "kind": "gloss",
+                "description": "The one supporting token is a teal enamel disc in a double gilt socket, with a single raised diamond inset and controlled clearcoat highlight.",
+                "region": {
+                  "x": 0.39,
+                  "y": 0.08,
+                  "width": 0.16,
+                  "height": 0.34,
+                  "units": "normalized"
+                },
+                "scale": "meso token, about 0.10 of full image width",
+                "affects": "candidate count, low-roughness enamel and layered bezel geometry",
+                "mapsTo": {
+                  "type": "material.localOverrides",
+                  "ref": "teal-enamel.support-token-clearcoat"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/support-review.png",
+                "confidence": 0.99
+              },
+              {
+                "id": "review-clock-markers",
+                "kind": "linework",
+                "description": "A small clock/rune socket at the ring's upper tangent uses twelve radial marks and two raised hands inside a gilt bezel.",
+                "region": {
+                  "x": 0.3,
+                  "y": 0.04,
+                  "width": 0.13,
+                  "height": 0.16,
+                  "units": "normalized"
+                },
+                "scale": "micro review socket, about 0.08 of image width",
+                "affects": "review-point identity, radial repetition and shallow relief",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "review-socket.clock-markers"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/quest-forge-admission-reference-white.png",
+                "confidence": 0.96
+              },
+              {
+                "id": "vault-hinges-latch-seams",
+                "kind": "seam",
+                "description": "The closed charcoal vault door has vertical panel seams, two right-side hinge straps, a centre latch emblem and an annular bolted bezel.",
+                "region": {
+                  "x": 0.36,
+                  "y": 0.51,
+                  "width": 0.2,
+                  "height": 0.28,
+                  "units": "normalized"
+                },
+                "scale": "meso door with micro hardware",
+                "affects": "closed-vault readability, attachment geometry and cavity AO",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "not-now-vault.hinges-latch-seams"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/not-now-vault.png",
+                "confidence": 0.98
+              },
+              {
+                "id": "released-fragment-cooling-facets",
+                "kind": "ridge",
+                "description": "One small violet released fragment has its own closed faceted solid and lower emission while contacting a short path into the vault.",
+                "region": {
+                  "x": 0.36,
+                  "y": 0.51,
+                  "width": 0.2,
+                  "height": 0.28,
+                  "units": "normalized"
+                },
+                "scale": "micro/meso fragment, about 0.045 of full image width",
+                "affects": "third candidate state, true thickness and transfer-path contact",
+                "mapsTo": {
+                  "type": "component.localFeatures",
+                  "ref": "released-fragment.cooling-facets"
+                },
+                "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/not-now-vault.png",
+                "confidence": 0.99
+              }
+            ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "At the production book camera, the relief reads immediately as one Quest Forge: faceted crest first, protected flame and milestone anvil second, maintenance ring and exactly three candidate states third, closed Not-Now vault fourth.",
+      "The primary, supporting, and released states are countable and unambiguous; no fourth candidate token or player text is present.",
+      "Two orbit views and a map-stripped capture prove real thickness, closed solids, page contact, socket overlap, and separable named parts rather than a painted projection.",
+      "Neutral, grazing, and reference-matched evidence prove independent aged-brass, violet-crystal, teal-enamel, charcoal-vault, leather-field, and emissive-flame responses on high tier, with a simplified but semantically complete low tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 4,
+      "mesoComponents": 10,
+      "microFeatureGroups": 12,
+      "materialLayers": 6,
+      "repetitionSystems": 3,
+      "reviewViewpoints": 5
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Compass Book Quest Forge Relief hard surface bas relief layered page instrument aged brass violet enamel PBR cavity patina faceted crest ring brazier vault hinges rivets emissive flame",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-normal-map",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[2]",
+        "score": 5.701886373511,
+        "snippets": [
+          "Tangent-space RGB texture that perturbs surface normals to simulate fine geometric detail (engravings, scratches, weave) without added polycount. Kết cấu RGB không gian tiếp tuyến làm lệch pháp tuyến bề mặt để mô phỏng chi tiết hình học nhỏ ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[2]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-customshadermaterial-csm-weathering-hooks",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[1]",
+        "score": 5.60513619157,
+        "snippets": [
+          "... output variables to inject procedural noise/masks into an otherwise-standard lit material, used for dynamic tarnish/patina effects. Thư viện mở rộng cung cấp các biến đầu ra csm_* để chèn nhiễu/mặt nạ thủ tục vào vật liệu chiếu sáng ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-hand-painted-vs-pbr-texture",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[12]",
+        "score": 4.661903223664,
+        "snippets": [
+          "... baked directly into color (static, stylized) from textures that respond dynamically to scene lighting via separate PBR channels. Phân biệt kết cấu có ánh sáng được nướng trực tiếp vào màu (tĩnh, cách điệu) với kết cấu phản hồi động ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[12]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}

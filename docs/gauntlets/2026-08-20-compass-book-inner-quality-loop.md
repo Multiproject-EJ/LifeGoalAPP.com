@@ -261,3 +261,47 @@ Optimization-pass is accepted with **0.99 pre/post visual parity**. The accepted
 Compass Book assertions, strict sculpt validation, TypeScript, and diff hygiene pass. The img2threejs state is now **complete**: blockout, structural, form, material, surface, lighting, interaction, optimization, part coverage, and action readiness all pass. This completes the Chapter IV production-sculpt programme, not the whole launch programme. Because production 3D is a launch requirement, **supported-iPhone hardware profiling remains an explicit blocking launch gate**; desktop FPS evidence and browser device emulation must not be substituted for that measurement.
 
 The gate now has a repeatable execution path: the real production shell can run a foreground-only 30-second High/Low trace in either the LAN preview or an explicitly flagged internal Capacitor profiler build. The procedure is `COMPASS_BOOK_SUPPORTED_IPHONE_PROFILING.md`. No device result has been inferred from this tooling; the blocking gate remains open until both required physical-iPhone reports pass and are retained.
+
+## Loop 8 — Chapter V: Quest Forge
+
+Status: COMPLETE for the production sculpt programme; supported-iPhone hardware profiling remains a separate blocking launch gate.
+
+### Accepted direction
+
+Chapter V now uses the dual-presentation contract. In the Island Run experience, the 3D Quest Forge is the ceremonial artifact and completion-animation surface; the adjacent canonical DOM page remains the readable, state-owning book. Explicit 2D mode and the PWA/book outside Island Run retain the complete centered reading surface. The 3D model is presentation-only and adds no gameplay write path or runtime-state mirror.
+
+The accepted ImageGen goal is `evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png`. The first generated attempt is retained as rejected evidence at `77-wide-chapter-5-goal-v1.png`. The correction removed invented candidate tokens and fixed the non-negotiable semantic count:
+
+- exactly one primary gold state seated in the violet Quest Crest;
+- exactly one teal supporting state held at the maintenance/review socket;
+- exactly one released violet fragment traveling toward a closed, respectful Not-Now vault;
+- one protected flame, milestone anvil, review clock, accepted-cost fracture and contacting release path.
+
+No generated text or invented user answer entered product data.
+
+### img2threejs result
+
+The complete sculpt package lives at `.img2threejs/compass-book-quest-forge/`. Strict-quality validation passes with **20 specified components**, **21 named runtime parts**, **four repetition systems**, **13 mapped intake details**, and seven source-derived PBR material regions whose extraction confidence ranges from **0.794 to 0.860** against a 0.70 target.
+
+All eight production passes are accepted:
+
+- blockout **0.72** — exact-three candidate contract **0.98**, forge hierarchy **0.90**;
+- structural **0.76** — forge hierarchy **0.92**, maintenance/read **0.88**, closed vault **0.91**;
+- form **0.78** — accepted-cost topology **0.91**, maintenance/read **0.88**;
+- material **0.80** — closed vault **0.92**, page-contact materials **0.82**;
+- surface **0.82** — accepted-cost topology **0.93**, page-contact materials **0.85**;
+- lighting **0.83** — forge hierarchy **0.92**, page-contact materials **0.86**;
+- interaction **0.84** — exact-three candidate contract **0.98**;
+- optimization **0.86** — complete semantic parity across High and Low.
+
+The deterministic palette gate passes at maximum **ΔE 18.32** against the fixed threshold of 20. The diagnostic proof is `evidence/2026-08-21-compass-book-chapter-v-material/color-swatch-proof-7.png`; beauty, neutral and axial-orbit captures separately prove the live PBR materials and real relief depth. Both High and Low orbit checks are non-degenerate.
+
+Chapter completion pulses the crest, primary and supporting hierarchy and warms the protected flame/path. Fragment completion advances only the single released fragment. Reduced motion keeps authored transforms fixed and retains a restrained light cue. Evidence lives under `evidence/2026-08-21-compass-book-chapter-v-interaction/`.
+
+High tier uses independent roughness, normal and ambient-occlusion maps for charcoal field, aged brass, violet crystal, gold, teal enamel, vault and flame. Low tier does not request those 21 maps. In the focused desktop lab, Low reduces **143 to 87 render calls** (−39.2%), **41.4k to 8.6k rendered triangles** (−79.3%), and **670 to 584 meshes** (−12.8%) while keeping all three candidate states and the complete forge/vault read. The sampled browser frame rate changed from 37 to 47 FPS; this is scheduling-sensitive desktop evidence, not physical-device certification. The machine-readable comparison is `evidence/2026-08-21-compass-book-chapter-v-optimization/tier-comparison.json`.
+
+The final runtime manifest reports **zero unnamed meshes**, six interaction sockets, one relief collider, three destruction groups and eight explicit attachment contracts. Part coverage passes with **zero errors and zero warnings**. The final local pipeline state is `complete`, including action readiness.
+
+### Launch boundary
+
+Chapter V is approved for the wide hybrid spread and is now protected by the Compass Book launch-contract assertions. Production 3D remains a launch requirement. The existing supported-iPhone High ≥50 FPS and Low ≥55 FPS traces must still be recorded on physical hardware; neither these desktop results nor browser emulation close that gate.

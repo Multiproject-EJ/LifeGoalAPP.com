@@ -2651,6 +2651,1026 @@ function createIkigaiMapRelief(
   };
 }
 
+function createQuestForgeRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'COMPASS_BOOK_QUEST_FORGE_RELIEF';
+  root.userData.compassPageId = 'quest_forge';
+  const high = quality === 'high';
+  const radialSegments = high ? 28 : 14;
+  const questTextureLoader = new THREE.TextureLoader();
+  const loadQuestPbrMap = (
+    directory: string,
+    fileName: string,
+    channel: 'albedo' | 'roughness' | 'normal' | 'ao',
+    repeat = 3,
+  ) => {
+    if (!high) return null;
+    const texture = questTextureLoader.load(
+      `/assets/compass-book/quest-forge/materials/${directory}/${fileName}`,
+    );
+    texture.name = `COMPASS_BOOK_QUEST_FORGE_${directory}_${channel}`.toUpperCase();
+    texture.colorSpace = channel === 'albedo' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(repeat, repeat);
+    texture.anisotropy = 8;
+    if (channel === 'ao') texture.channel = 0;
+    return texture;
+  };
+  const questPbr = high ? {
+    field: {
+      roughness: loadQuestPbrMap('pbr-00-indigo-field-grain', 'indigo-field_roughness.png', 'roughness', 4),
+      normal: loadQuestPbrMap('pbr-00-indigo-field-grain', 'indigo-field_normal.png', 'normal', 5),
+      ao: loadQuestPbrMap('pbr-00-indigo-field-grain', 'indigo-field_ao.png', 'ao', 4),
+    },
+    brass: {
+      roughness: loadQuestPbrMap('pbr-01-aged-brass-ring', 'aged-brass_roughness.png', 'roughness', 3),
+      normal: loadQuestPbrMap('pbr-01-aged-brass-ring', 'aged-brass_normal.png', 'normal', 4),
+      ao: loadQuestPbrMap('pbr-01-aged-brass-ring', 'aged-brass_ao.png', 'ao', 3),
+    },
+    crystal: {
+      roughness: loadQuestPbrMap('pbr-02-violet-crystal-facet', 'violet-crystal_roughness.png', 'roughness', 2),
+      normal: loadQuestPbrMap('pbr-02-violet-crystal-facet', 'violet-crystal_normal.png', 'normal', 2),
+      ao: loadQuestPbrMap('pbr-02-violet-crystal-facet', 'violet-crystal_ao.png', 'ao', 2),
+    },
+    gold: {
+      roughness: loadQuestPbrMap('pbr-03-polished-gold-primary', 'gold-primary_roughness.png', 'roughness', 2),
+      normal: loadQuestPbrMap('pbr-03-polished-gold-primary', 'gold-primary_normal.png', 'normal', 2),
+      ao: loadQuestPbrMap('pbr-03-polished-gold-primary', 'gold-primary_ao.png', 'ao', 2),
+    },
+    teal: {
+      roughness: loadQuestPbrMap('pbr-04-teal-support-enamel', 'teal-enamel_roughness.png', 'roughness', 2),
+      normal: loadQuestPbrMap('pbr-04-teal-support-enamel', 'teal-enamel_normal.png', 'normal', 2),
+      ao: loadQuestPbrMap('pbr-04-teal-support-enamel', 'teal-enamel_ao.png', 'ao', 2),
+    },
+    vault: {
+      roughness: loadQuestPbrMap('pbr-05-charcoal-vault-panel', 'vault-charcoal_roughness.png', 'roughness', 3),
+      normal: loadQuestPbrMap('pbr-05-charcoal-vault-panel', 'vault-charcoal_normal.png', 'normal', 3),
+      ao: loadQuestPbrMap('pbr-05-charcoal-vault-panel', 'vault-charcoal_ao.png', 'ao', 3),
+    },
+    flame: {
+      roughness: loadQuestPbrMap('pbr-06-amber-emissive-solid', 'flame-amber_roughness.png', 'roughness', 2),
+      normal: loadQuestPbrMap('pbr-06-amber-emissive-solid', 'flame-amber_normal.png', 'normal', 2),
+      ao: loadQuestPbrMap('pbr-06-amber-emissive-solid', 'flame-amber_ao.png', 'ao', 2),
+    },
+  } : null;
+
+  const forgeBrassMaterial = materials.gilt.clone();
+  forgeBrassMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_AGED_BRASS_MATERIAL';
+  forgeBrassMaterial.color.setHex(0xbc8135);
+  forgeBrassMaterial.map = null;
+  forgeBrassMaterial.roughness = 0.34;
+  forgeBrassMaterial.metalness = 0.9;
+  if (questPbr) {
+    forgeBrassMaterial.roughnessMap = questPbr.brass.roughness;
+    forgeBrassMaterial.normalMap = questPbr.brass.normal;
+    forgeBrassMaterial.normalScale.setScalar(0.18);
+    forgeBrassMaterial.aoMap = questPbr.brass.ao;
+    forgeBrassMaterial.aoMapIntensity = 0.42;
+  }
+  const forgeBrassDarkMaterial = materials.giltDark.clone();
+  forgeBrassDarkMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_AGED_BRASS_DARK_MATERIAL';
+  forgeBrassDarkMaterial.color.setHex(0x6e451e);
+  forgeBrassDarkMaterial.map = null;
+  forgeBrassDarkMaterial.roughness = 0.5;
+  forgeBrassDarkMaterial.metalness = 0.78;
+  if (questPbr) {
+    forgeBrassDarkMaterial.roughnessMap = questPbr.brass.roughness;
+    forgeBrassDarkMaterial.normalMap = questPbr.brass.normal;
+    forgeBrassDarkMaterial.normalScale.setScalar(0.13);
+    forgeBrassDarkMaterial.aoMap = questPbr.brass.ao;
+    forgeBrassDarkMaterial.aoMapIntensity = 0.5;
+  }
+  const primaryGoldMaterial = materials.gilt.clone();
+  primaryGoldMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_PRIMARY_GOLD_MATERIAL';
+  primaryGoldMaterial.color.setHex(0xe3b65f);
+  primaryGoldMaterial.map = null;
+  primaryGoldMaterial.roughness = 0.22;
+  primaryGoldMaterial.metalness = 0.94;
+  if (questPbr) {
+    primaryGoldMaterial.roughnessMap = questPbr.gold.roughness;
+    primaryGoldMaterial.normalMap = questPbr.gold.normal;
+    primaryGoldMaterial.normalScale.setScalar(0.11);
+    primaryGoldMaterial.aoMap = questPbr.gold.ao;
+    primaryGoldMaterial.aoMapIntensity = 0.32;
+  }
+
+  const fieldMaterial = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_FIELD_MATERIAL',
+    color: 0x141426,
+    map: materials.leatherInset.map,
+    aoMap: materials.leatherInset.aoMap,
+    aoMapIntensity: 0.42,
+    roughness: 0.76,
+    roughnessMap: materials.leatherInset.roughnessMap,
+    bumpMap: materials.leatherInset.bumpMap,
+    bumpScale: high ? 0.025 : 0.01,
+    metalness: 0.04,
+  });
+  if (questPbr) {
+    fieldMaterial.roughnessMap = questPbr.field.roughness;
+    fieldMaterial.normalMap = questPbr.field.normal;
+    fieldMaterial.normalScale.setScalar(0.16);
+    fieldMaterial.aoMap = questPbr.field.ao;
+    fieldMaterial.aoMapIntensity = 0.42;
+  }
+  const crestMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_CREST_MATERIAL',
+    color: 0x5d2b91,
+    emissive: 0x2d0d56,
+    emissiveIntensity: 0.14,
+    roughness: 0.2,
+    metalness: 0.05,
+    clearcoat: high ? 0.82 : 0.48,
+    clearcoatRoughness: 0.12,
+    envMapIntensity: 1.05,
+  });
+  if (questPbr) {
+    crestMaterial.roughnessMap = questPbr.crystal.roughness;
+    crestMaterial.normalMap = questPbr.crystal.normal;
+    crestMaterial.normalScale.setScalar(0.2);
+    crestMaterial.aoMap = questPbr.crystal.ao;
+    crestMaterial.aoMapIntensity = 0.28;
+  }
+  const crestDarkMaterial = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_FRACTURE_MATERIAL',
+    color: 0x241831,
+    roughness: 0.68,
+    metalness: 0.08,
+  });
+  const tealMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_SUPPORT_MATERIAL',
+    color: 0x127d82,
+    emissive: 0x052b2f,
+    emissiveIntensity: 0.2,
+    roughness: 0.18,
+    metalness: 0.05,
+    clearcoat: high ? 0.78 : 0.42,
+    clearcoatRoughness: 0.13,
+    envMapIntensity: 0.92,
+  });
+  if (questPbr) {
+    tealMaterial.roughnessMap = questPbr.teal.roughness;
+    tealMaterial.normalMap = questPbr.teal.normal;
+    tealMaterial.normalScale.setScalar(0.13);
+    tealMaterial.aoMap = questPbr.teal.ao;
+    tealMaterial.aoMapIntensity = 0.25;
+  }
+  const vaultMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_VAULT_MATERIAL',
+    color: 0x29263b,
+    emissive: 0x080711,
+    emissiveIntensity: 0.06,
+    roughness: 0.56,
+    metalness: 0.46,
+    clearcoat: high ? 0.18 : 0.08,
+    clearcoatRoughness: 0.44,
+  });
+  if (questPbr) {
+    vaultMaterial.roughnessMap = questPbr.vault.roughness;
+    vaultMaterial.normalMap = questPbr.vault.normal;
+    vaultMaterial.normalScale.setScalar(0.19);
+    vaultMaterial.aoMap = questPbr.vault.ao;
+    vaultMaterial.aoMapIntensity = 0.48;
+  }
+  const flameMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_FLAME_MATERIAL',
+    color: 0xff5a00,
+    emissive: 0xe12600,
+    emissiveIntensity: 0.46,
+    roughness: 0.28,
+    metalness: 0.01,
+    clearcoat: high ? 0.62 : 0.36,
+    clearcoatRoughness: 0.14,
+  });
+  if (questPbr) {
+    flameMaterial.roughnessMap = questPbr.flame.roughness;
+    flameMaterial.normalMap = questPbr.flame.normal;
+    flameMaterial.normalScale.setScalar(0.12);
+    flameMaterial.aoMap = questPbr.flame.ao;
+    flameMaterial.aoMapIntensity = 0.18;
+  }
+  const releasedMaterial = crestMaterial.clone();
+  releasedMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_RELEASED_MATERIAL';
+  releasedMaterial.color.setHex(0x674388);
+  releasedMaterial.emissive.setHex(0x160b25);
+  releasedMaterial.emissiveIntensity = 0.08;
+  releasedMaterial.roughness = 0.38;
+
+  const makePlate = (
+    name: string,
+    points: Array<[number, number]>,
+    depth: number,
+    material: THREE.Material,
+    bevel = 0.03,
+  ) => {
+    const shape = new THREE.Shape();
+    points.forEach(([x, z], index) => {
+      if (index === 0) shape.moveTo(x, -z);
+      else shape.lineTo(x, -z);
+    });
+    shape.closePath();
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: true,
+      bevelSegments: high ? 2 : 1,
+      bevelSize: bevel,
+      bevelThickness: Math.min(depth * 0.35, bevel),
+      curveSegments: high ? 10 : 5,
+      steps: 1,
+    });
+    geometry.rotateX(-Math.PI / 2);
+    geometry.translate(0, depth * 0.45, 0);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  };
+
+  const contactPlate = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_CONTACT_PLATE',
+    3.82,
+    0.055,
+    5.66,
+    0.16,
+    high ? 4 : 2,
+    materials.leatherEdge,
+  );
+  contactPlate.position.y = 0.025;
+  root.add(contactPlate);
+  const contactField = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_CONTACT_FIELD',
+    3.48,
+    0.075,
+    5.26,
+    0.2,
+    high ? 4 : 2,
+    fieldMaterial,
+  );
+  contactField.position.y = 0.075;
+  root.add(contactField);
+  const contactFrame = new THREE.Group();
+  contactFrame.name = 'COMPASS_BOOK_QUEST_FORGE_CONTACT_FRAME';
+  const outerFrame = createFrame(
+    'COMPASS_BOOK_QUEST_FORGE_OUTER_FRAME',
+    3.72,
+    5.54,
+    0.115,
+    forgeBrassMaterial,
+    quality,
+  );
+  const innerFrame = createFrame(
+    'COMPASS_BOOK_QUEST_FORGE_INNER_FRAME',
+    3.48,
+    5.3,
+    0.126,
+    forgeBrassDarkMaterial,
+    quality,
+  );
+  contactFrame.add(outerFrame, innerFrame);
+  root.add(contactFrame);
+
+  const frameFasteners = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.055, high ? 10 : 6, high ? 7 : 4),
+    forgeBrassMaterial,
+    8,
+  );
+  frameFasteners.name = 'COMPASS_BOOK_QUEST_FORGE_FRAME_FASTENERS';
+  const instanceMatrix = new THREE.Matrix4();
+  const instanceScale = new THREE.Vector3(1, 0.6, 1);
+  const framePoints: Array<[number, number]> = [
+    [-1.68, -2.54], [1.68, -2.54], [-1.68, 2.54], [1.68, 2.54],
+    [0, -2.58], [0, 2.58], [-1.73, 0], [1.73, 0],
+  ];
+  framePoints.forEach(([x, z], index) => {
+    instanceMatrix.compose(new THREE.Vector3(x, 0.2, z), new THREE.Quaternion(), instanceScale);
+    frameFasteners.setMatrixAt(index, instanceMatrix);
+  });
+  frameFasteners.instanceMatrix.needsUpdate = true;
+  contactFrame.add(frameFasteners);
+
+  const maintenanceSystem = new THREE.Group();
+  maintenanceSystem.name = 'COMPASS_BOOK_QUEST_FORGE_MAINTENANCE_SYSTEM';
+  maintenanceSystem.position.z = -0.62;
+  const maintenanceRing = new THREE.Group();
+  maintenanceRing.name = 'COMPASS_BOOK_QUEST_FORGE_MAINTENANCE_RING';
+  [1.36, 1.03].forEach((radius, index) => {
+    const rail = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, index === 0 ? 0.085 : 0.04, high ? 9 : 5, high ? 72 : 32),
+      index === 0 ? forgeBrassMaterial : forgeBrassDarkMaterial,
+    );
+    rail.name = `COMPASS_BOOK_QUEST_FORGE_RING_RAIL_${index + 1}`;
+    rail.rotation.x = Math.PI / 2;
+    rail.position.y = 0.23 + index * 0.012;
+    rail.castShadow = true;
+    maintenanceRing.add(rail);
+  });
+  const ringMarks = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.025, 0.025, 0.09),
+    forgeBrassDarkMaterial,
+    high ? 32 : 16,
+  );
+  ringMarks.name = 'COMPASS_BOOK_QUEST_FORGE_RING_MARK_ARRAY';
+  const markCount = high ? 32 : 16;
+  for (let index = 0; index < markCount; index += 1) {
+    const angle = index / markCount * Math.PI * 2;
+    const quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -angle, 0));
+    instanceMatrix.compose(
+      new THREE.Vector3(Math.cos(angle) * 1.36, 0.325, Math.sin(angle) * 1.36),
+      quaternion,
+      new THREE.Vector3(1, 1, 1),
+    );
+    ringMarks.setMatrixAt(index, instanceMatrix);
+  }
+  ringMarks.instanceMatrix.needsUpdate = true;
+  maintenanceRing.add(ringMarks);
+  const ringRivets = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.045, high ? 9 : 6, high ? 6 : 4),
+    forgeBrassMaterial,
+    8,
+  );
+  ringRivets.name = 'COMPASS_BOOK_QUEST_FORGE_RING_RIVET_ARRAY';
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index / 8 * Math.PI * 2 + Math.PI / 8;
+    instanceMatrix.compose(
+      new THREE.Vector3(Math.cos(angle) * 1.02, 0.31, Math.sin(angle) * 1.02),
+      new THREE.Quaternion(),
+      new THREE.Vector3(1, 0.65, 1),
+    );
+    ringRivets.setMatrixAt(index, instanceMatrix);
+  }
+  ringRivets.instanceMatrix.needsUpdate = true;
+  maintenanceRing.add(ringRivets);
+  maintenanceSystem.add(maintenanceRing);
+  root.add(maintenanceSystem);
+
+  const reviewSocket = new THREE.Group();
+  reviewSocket.name = 'COMPASS_BOOK_QUEST_FORGE_REVIEW_SOCKET';
+  reviewSocket.position.set(0, 0, -1.98);
+  reviewSocket.scale.setScalar(1.08);
+  const reviewBezel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.32, 0.055, high ? 9 : 5, radialSegments),
+    forgeBrassMaterial,
+  );
+  reviewBezel.name = 'COMPASS_BOOK_QUEST_FORGE_REVIEW_BEZEL';
+  reviewBezel.rotation.x = Math.PI / 2;
+  reviewBezel.position.y = 0.29;
+  const reviewFace = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.255, 0.27, 0.085, radialSegments),
+    vaultMaterial,
+  );
+  reviewFace.name = 'COMPASS_BOOK_QUEST_FORGE_REVIEW_FACE';
+  reviewFace.position.y = 0.245;
+  const reviewHands = new THREE.Group();
+  reviewHands.name = 'COMPASS_BOOK_QUEST_FORGE_REVIEW_HANDS';
+  const hourHand = box('COMPASS_BOOK_QUEST_FORGE_REVIEW_HOUR', 0.045, 0.035, 0.16, primaryGoldMaterial);
+  hourHand.position.set(0.035, 0.345, -0.035);
+  hourHand.rotation.y = -0.55;
+  const minuteHand = box('COMPASS_BOOK_QUEST_FORGE_REVIEW_MINUTE', 0.038, 0.035, 0.22, primaryGoldMaterial);
+  minuteHand.position.set(0, 0.348, -0.07);
+  reviewHands.add(hourHand, minuteHand);
+  const reviewMarkers = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.026, 0.025, 0.09),
+    primaryGoldMaterial,
+    12,
+  );
+  reviewMarkers.name = 'COMPASS_BOOK_QUEST_FORGE_REVIEW_MARKERS';
+  for (let index = 0; index < 12; index += 1) {
+    const angle = index / 12 * Math.PI * 2;
+    const quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -angle, 0));
+    instanceMatrix.compose(
+      new THREE.Vector3(Math.cos(angle) * 0.205, 0.34, Math.sin(angle) * 0.205),
+      quaternion,
+      new THREE.Vector3(1, 1, index % 3 === 0 ? 1.28 : 0.82),
+    );
+    reviewMarkers.setMatrixAt(index, instanceMatrix);
+  }
+  reviewMarkers.instanceMatrix.needsUpdate = true;
+  reviewSocket.add(reviewBezel, reviewFace, reviewMarkers, reviewHands);
+  const reviewBridge = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_REVIEW_BRIDGE',
+    0.22,
+    0.09,
+    0.34,
+    0.035,
+    high ? 2 : 1,
+    forgeBrassDarkMaterial,
+  );
+  reviewBridge.position.set(0, 0.245, 0.29);
+  const reviewBridgePin = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.07, 0.07, 0.1, high ? 12 : 7),
+    forgeBrassMaterial,
+  );
+  reviewBridgePin.name = 'COMPASS_BOOK_QUEST_FORGE_REVIEW_BRIDGE_PIN';
+  reviewBridgePin.position.set(0, 0.31, 0.21);
+  reviewSocket.add(reviewBridge, reviewBridgePin);
+  maintenanceSystem.add(reviewSocket);
+
+  const supportingToken = new THREE.Group();
+  supportingToken.name = 'COMPASS_BOOK_QUEST_FORGE_SUPPORTING_TOKEN';
+  supportingToken.position.set(1.22, 0, -0.72);
+  const supportBezel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.35, 0.065, high ? 9 : 5, radialSegments),
+    forgeBrassMaterial,
+  );
+  supportBezel.name = 'COMPASS_BOOK_QUEST_FORGE_SUPPORT_BEZEL';
+  supportBezel.rotation.x = Math.PI / 2;
+  supportBezel.position.y = 0.3;
+  const supportDisc = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.285, 0.3, 0.11, radialSegments),
+    tealMaterial,
+  );
+  supportDisc.name = 'COMPASS_BOOK_QUEST_FORGE_SUPPORT_DISC';
+  supportDisc.position.y = 0.25;
+  const supportDiamond = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), primaryGoldMaterial);
+  supportDiamond.name = 'COMPASS_BOOK_QUEST_FORGE_SUPPORT_DIAMOND';
+  supportDiamond.position.y = 0.37;
+  supportDiamond.scale.set(0.85, 0.38, 0.85);
+  const supportClamp = new THREE.Group();
+  supportClamp.name = 'COMPASS_BOOK_QUEST_FORGE_SUPPORT_CLAMP';
+  [-1, 1].forEach((side, index) => {
+    const clasp = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_SUPPORT_CLASP_${index + 1}`,
+      0.13,
+      0.1,
+      0.2,
+      0.035,
+      high ? 2 : 1,
+      forgeBrassDarkMaterial,
+    );
+    clasp.position.set(side * 0.33, 0.31, 0);
+    supportClamp.add(clasp);
+  });
+  supportingToken.add(supportBezel, supportDisc, supportDiamond, supportClamp);
+  maintenanceSystem.add(supportingToken);
+
+  const forgeSpine = new THREE.Group();
+  forgeSpine.name = 'COMPASS_BOOK_QUEST_FORGE_SPINE';
+  const crestPoints: Array<[number, number]> = [
+    [-0.72, -0.45], [-0.3, -0.76], [0.24, -0.7], [0.66, -0.42],
+    [0.72, -0.08], [0.28, -0.01], [0.59, 0.29], [0.36, 0.58],
+    [0, 0.77], [-0.46, 0.58], [-0.72, 0.12],
+  ];
+  const crestSocket = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_CREST_SOCKET',
+    crestPoints.map(([x, z]) => [x * 1.06, z * 1.05] as [number, number]),
+    high ? 0.1 : 0.075,
+    forgeBrassDarkMaterial,
+    high ? 0.035 : 0.022,
+  );
+  crestSocket.position.set(-0.12, 0.18, -0.68);
+  crestSocket.scale.set(0.98, 1, 1.38);
+  forgeSpine.add(crestSocket);
+  const crest = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_CREST',
+    crestPoints,
+    high ? 0.22 : 0.16,
+    crestMaterial,
+    high ? 0.045 : 0.028,
+  );
+  crest.position.set(-0.12, 0.24, -0.68);
+  crest.scale.set(0.98, 1, 1.38);
+  forgeSpine.add(crest);
+  const crestBrightFacetMaterial = crestMaterial.clone();
+  crestBrightFacetMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_CREST_BRIGHT_FACET_MATERIAL';
+  crestBrightFacetMaterial.color.setHex(0xa15ae0);
+  const crestShadeFacetMaterial = crestMaterial.clone();
+  crestShadeFacetMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_CREST_SHADE_FACET_MATERIAL';
+  crestShadeFacetMaterial.color.setHex(0x3e1d5e);
+  crestShadeFacetMaterial.roughness = 0.31;
+  const crestFacetGroup = new THREE.Group();
+  crestFacetGroup.name = 'COMPASS_BOOK_QUEST_FORGE_CREST_FACETS';
+  const crestLeftFacet = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_CREST_LEFT_FACET',
+    [[-0.63, -0.4], [-0.14, -0.7], [-0.14, 0.66], [-0.48, 0.52], [-0.66, 0.12]],
+    high ? 0.055 : 0.038,
+    crestBrightFacetMaterial,
+    high ? 0.018 : 0.01,
+  );
+  const crestUpperFacet = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_CREST_UPPER_FACET',
+    [[-0.14, -0.7], [0.24, -0.64], [0.58, -0.4], [0.48, -0.08], [-0.14, 0.06]],
+    high ? 0.06 : 0.04,
+    crestMaterial,
+    high ? 0.018 : 0.01,
+  );
+  const crestLowerFacet = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_CREST_LOWER_FACET',
+    [[-0.14, 0.06], [0.34, 0.54], [0, 0.72], [-0.44, 0.54], [-0.14, 0.66]],
+    high ? 0.065 : 0.042,
+    crestShadeFacetMaterial,
+    high ? 0.018 : 0.01,
+  );
+  [crestLeftFacet, crestUpperFacet, crestLowerFacet].forEach((facet, index) => {
+    facet.position.set(-0.12, 0.47 + index * 0.01, -0.68);
+    facet.scale.set(0.98, 1, 1.38);
+    crestFacetGroup.add(facet);
+  });
+  forgeSpine.add(crestFacetGroup);
+  const fractureFace = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_ACCEPTED_COST_FRACTURE',
+    0.18,
+    0.11,
+    0.32,
+    0.025,
+    high ? 2 : 1,
+    crestDarkMaterial,
+  );
+  fractureFace.position.set(0.48, 0.42, -0.69);
+  fractureFace.rotation.z = -0.16;
+  forgeSpine.add(fractureFace);
+  const fractureGrooves = new THREE.Group();
+  fractureGrooves.name = 'COMPASS_BOOK_QUEST_FORGE_ACCEPTED_COST_GROOVES';
+  [
+    { x: 0.33, z: -0.38, length: 0.38, angle: -0.52 },
+    { x: 0.27, z: -0.18, length: 0.32, angle: 0.44 },
+    { x: 0.18, z: 0.03, length: 0.28, angle: -0.38 },
+    { x: -0.28, z: -0.31, length: 0.34, angle: 0.32 },
+    { x: -0.4, z: 0.06, length: 0.29, angle: -0.46 },
+    { x: 0.02, z: 0.31, length: 0.3, angle: 0.28 },
+  ].forEach((grooveData, index) => {
+    const groove = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_FRACTURE_GROOVE_${index + 1}`,
+      index < 3 ? 0.045 : 0.018,
+      index < 3 ? 0.035 : 0.022,
+      grooveData.length,
+      0.012,
+      1,
+      crestDarkMaterial,
+    );
+    groove.position.set(-0.12 + grooveData.x, 0.56 + index * 0.008, -0.68 + grooveData.z);
+    groove.rotation.y = grooveData.angle;
+    fractureGrooves.add(groove);
+  });
+  forgeSpine.add(fractureGrooves);
+  const primaryToken = new THREE.Group();
+  primaryToken.name = 'COMPASS_BOOK_QUEST_FORGE_PRIMARY_TOKEN';
+  primaryToken.position.set(-0.12, 0, -0.74);
+  const primaryBezel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.4, 0.065, high ? 9 : 5, radialSegments),
+    primaryGoldMaterial,
+  );
+  primaryBezel.name = 'COMPASS_BOOK_QUEST_FORGE_PRIMARY_BEZEL';
+  primaryBezel.rotation.x = Math.PI / 2;
+  primaryBezel.position.y = 0.57;
+  const primaryDisc = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.33, 0.35, 0.09, radialSegments),
+    materials.violetDark,
+  );
+  primaryDisc.name = 'COMPASS_BOOK_QUEST_FORGE_PRIMARY_SOCKET_DISC';
+  primaryDisc.position.y = 0.515;
+  const primaryDiamond = new THREE.Mesh(new THREE.OctahedronGeometry(0.29, 0), primaryGoldMaterial);
+  primaryDiamond.name = 'COMPASS_BOOK_QUEST_FORGE_PRIMARY_DIAMOND';
+  primaryDiamond.position.y = 0.66;
+  primaryDiamond.scale.set(0.78, 0.6, 0.78);
+  primaryToken.add(primaryBezel, primaryDisc, primaryDiamond);
+  forgeSpine.add(primaryToken);
+
+  const anvilPoints: Array<[number, number]> = [
+    [-0.52, -0.22], [0.54, -0.22], [0.42, -0.04], [0.24, 0.02],
+    [0.22, 0.5], [0.42, 0.62], [0.34, 0.78], [-0.34, 0.78],
+    [-0.42, 0.62], [-0.22, 0.5], [-0.24, 0.02], [-0.42, -0.04],
+  ];
+  const milestoneAnvil = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_MILESTONE_ANVIL',
+    anvilPoints,
+    high ? 0.16 : 0.12,
+    forgeBrassDarkMaterial,
+    high ? 0.035 : 0.022,
+  );
+  milestoneAnvil.position.set(-0.12, 0.2, 0.56);
+  milestoneAnvil.scale.x = 0.82;
+  forgeSpine.add(milestoneAnvil);
+  const anvilTop = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_ANVIL_GOLD_TOP',
+    1.05,
+    0.13,
+    0.24,
+    0.055,
+    high ? 3 : 1,
+    primaryGoldMaterial,
+  );
+  anvilTop.position.set(-0.12, 0.43, 0.4);
+  const anvilInset = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_ANVIL_VIOLET_INSET',
+    0.16,
+    0.1,
+    0.48,
+    0.03,
+    high ? 2 : 1,
+    materials.violetDark,
+  );
+  anvilInset.position.set(-0.12, 0.42, 0.68);
+  forgeSpine.add(anvilTop, anvilInset);
+  const anvilHornGroup = new THREE.Group();
+  anvilHornGroup.name = 'COMPASS_BOOK_QUEST_FORGE_ANVIL_HORNS';
+  [-1, 1].forEach((side, index) => {
+    const horn = makePlate(
+      `COMPASS_BOOK_QUEST_FORGE_ANVIL_HORN_${index + 1}`,
+      side < 0
+        ? [[-0.58, -0.14], [-0.16, -0.18], [-0.12, 0.12], [-0.38, 0.08]]
+        : [[0.16, -0.18], [0.62, -0.08], [0.4, 0.09], [0.12, 0.12]],
+      high ? 0.11 : 0.08,
+      forgeBrassMaterial,
+      high ? 0.025 : 0.016,
+    );
+    horn.position.set(-0.12, 0.43, 0.47);
+    anvilHornGroup.add(horn);
+  });
+  forgeSpine.add(anvilHornGroup);
+  const anvilCollar = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_ANVIL_COLLAR',
+    0.7,
+    0.12,
+    0.22,
+    0.04,
+    high ? 3 : 1,
+    forgeBrassMaterial,
+  );
+  anvilCollar.position.set(-0.12, 0.4, 1.12);
+  const anvilFoot = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_ANVIL_FOOT',
+    0.76,
+    0.13,
+    0.26,
+    0.045,
+    high ? 3 : 1,
+    forgeBrassDarkMaterial,
+  );
+  anvilFoot.position.set(-0.12, 0.34, 1.27);
+  const anvilBrace = new THREE.Group();
+  anvilBrace.name = 'COMPASS_BOOK_QUEST_FORGE_ANVIL_BRACE';
+  [-1, 1].forEach((side, index) => {
+    const brace = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_ANVIL_BRACE_${index + 1}`,
+      0.12,
+      0.12,
+      0.48,
+      0.035,
+      high ? 2 : 1,
+      forgeBrassDarkMaterial,
+    );
+    brace.position.set(-0.12 + side * 0.3, 0.34, 0.91);
+    brace.rotation.y = side * 0.22;
+    anvilBrace.add(brace);
+  });
+  forgeSpine.add(anvilCollar, anvilFoot, anvilBrace);
+
+  const protectedFlame = new THREE.Group();
+  protectedFlame.name = 'COMPASS_BOOK_QUEST_FORGE_PROTECTED_FLAME';
+  protectedFlame.position.set(-0.12, 0, 2.02);
+  const brazierBase = new THREE.Mesh(
+    new THREE.TorusGeometry(0.38, 0.055, high ? 9 : 5, radialSegments),
+    forgeBrassMaterial,
+  );
+  brazierBase.name = 'COMPASS_BOOK_QUEST_FORGE_BRAZIER_BASE';
+  brazierBase.rotation.x = Math.PI / 2;
+  brazierBase.position.y = 0.25;
+  const brazierStem = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_BRAZIER_STEM',
+    0.18,
+    0.1,
+    0.42,
+    0.04,
+    high ? 2 : 1,
+    forgeBrassDarkMaterial,
+  );
+  brazierStem.position.set(0, 0.22, -0.34);
+  const brazierCoupler = roundedBox(
+    'COMPASS_BOOK_QUEST_FORGE_BRAZIER_COUPLER',
+    0.42,
+    0.12,
+    0.18,
+    0.045,
+    high ? 2 : 1,
+    forgeBrassMaterial,
+  );
+  brazierCoupler.position.set(0, 0.27, -0.53);
+  const flame = makePlate(
+    'COMPASS_BOOK_QUEST_FORGE_FLAME_CORE',
+    [[0, -0.42], [0.2, -0.15], [0.1, 0.02], [0.24, 0.2], [0.03, 0.43], [-0.06, 0.22], [-0.2, 0.34], [-0.24, 0.05], [-0.14, -0.18]],
+    high ? 0.12 : 0.085,
+    flameMaterial,
+    high ? 0.025 : 0.016,
+  );
+  flame.position.y = 0.28;
+  flame.scale.setScalar(0.62);
+  protectedFlame.add(brazierBase, brazierStem, brazierCoupler, flame);
+  const flameCage = new THREE.Group();
+  flameCage.name = 'COMPASS_BOOK_QUEST_FORGE_FLAME_CAGE';
+  const cageBarGeometry = new THREE.CylinderGeometry(0.018, 0.024, 0.5, high ? 7 : 5);
+  for (let index = 0; index < 6; index += 1) {
+    const angle = index / 6 * Math.PI * 2;
+    const bar = new THREE.Mesh(cageBarGeometry, forgeBrassDarkMaterial);
+    bar.name = `COMPASS_BOOK_QUEST_FORGE_CAGE_BAR_${index + 1}`;
+    bar.position.set(Math.cos(angle) * 0.28, 0.38, Math.sin(angle) * 0.28);
+    bar.rotation.z = Math.cos(angle) * 0.12;
+    bar.rotation.x = Math.sin(angle) * 0.12;
+    flameCage.add(bar);
+  }
+  const cageCrown = new THREE.Mesh(
+    new THREE.TorusGeometry(0.27, 0.022, high ? 7 : 4, radialSegments),
+    forgeBrassMaterial,
+  );
+  cageCrown.name = 'COMPASS_BOOK_QUEST_FORGE_CAGE_CROWN';
+  cageCrown.rotation.x = Math.PI / 2;
+  cageCrown.position.y = 0.6;
+  flameCage.add(cageCrown);
+  protectedFlame.add(flameCage);
+  forgeSpine.add(protectedFlame);
+  root.add(forgeSpine);
+
+  const vaultSystem = new THREE.Group();
+  vaultSystem.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_SYSTEM';
+  const notNowVault = new THREE.Group();
+  notNowVault.name = 'COMPASS_BOOK_QUEST_FORGE_NOT_NOW_VAULT';
+  notNowVault.position.set(1.16, 0, 1.5);
+  notNowVault.scale.z = 1.12;
+  const vaultBezel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.6, 0.07, high ? 9 : 5, radialSegments),
+    forgeBrassDarkMaterial,
+  );
+  vaultBezel.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_BEZEL';
+  vaultBezel.rotation.x = Math.PI / 2;
+  vaultBezel.position.y = 0.25;
+  const vaultDoor = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.52, 0.12, radialSegments),
+    vaultMaterial,
+  );
+  vaultDoor.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_DOOR';
+  vaultDoor.position.y = 0.2;
+  const vaultInnerRim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.43, 0.035, high ? 8 : 5, radialSegments),
+    forgeBrassDarkMaterial,
+  );
+  vaultInnerRim.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_INNER_RIM';
+  vaultInnerRim.rotation.x = Math.PI / 2;
+  vaultInnerRim.position.y = 0.305;
+  notNowVault.add(vaultBezel, vaultDoor, vaultInnerRim);
+  const vaultHardware = new THREE.Group();
+  vaultHardware.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_HARDWARE';
+  const vaultGrainMaterial = vaultMaterial.clone();
+  vaultGrainMaterial.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_GRAIN_MATERIAL';
+  vaultGrainMaterial.color.setHex(0x171522);
+  vaultGrainMaterial.roughness = 0.78;
+  const vaultGrain = new THREE.Group();
+  vaultGrain.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_GRAIN';
+  [-0.3, -0.15, 0, 0.15, 0.3].forEach((x, index) => {
+    const groove = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_VAULT_GRAIN_${index + 1}`,
+      0.014,
+      0.018,
+      index % 2 === 0 ? 0.68 : 0.58,
+      0.005,
+      1,
+      vaultGrainMaterial,
+    );
+    groove.position.set(x, 0.325, (index % 2 === 0 ? -1 : 1) * 0.025);
+    vaultGrain.add(groove);
+  });
+  vaultHardware.add(vaultGrain);
+  [-0.18, 0, 0.18].forEach((x, index) => {
+    const seam = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_VAULT_SEAM_${index + 1}`,
+      0.022,
+      0.035,
+      index === 1 ? 0.74 : 0.68,
+      0.008,
+      1,
+      forgeBrassDarkMaterial,
+    );
+    seam.position.set(x, 0.31, 0);
+    vaultHardware.add(seam);
+  });
+  [-0.24, 0.24].forEach((z, index) => {
+    const hinge = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_VAULT_HINGE_${index + 1}`,
+      0.14,
+      0.09,
+      0.22,
+      0.025,
+      high ? 2 : 1,
+      forgeBrassMaterial,
+    );
+    hinge.position.set(0.46, 0.34, z);
+    vaultHardware.add(hinge);
+    const hingePin = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.035, 0.24, high ? 10 : 6),
+      forgeBrassDarkMaterial,
+    );
+    hingePin.name = `COMPASS_BOOK_QUEST_FORGE_VAULT_HINGE_PIN_${index + 1}`;
+    hingePin.rotation.x = Math.PI / 2;
+    hingePin.position.set(0.49, 0.39, z);
+    vaultHardware.add(hingePin);
+  });
+  const vaultLatch = new THREE.Mesh(new THREE.OctahedronGeometry(0.17, 0), primaryGoldMaterial);
+  vaultLatch.name = 'COMPASS_BOOK_QUEST_FORGE_VAULT_LATCH';
+  vaultLatch.position.y = 0.35;
+  vaultLatch.scale.set(0.78, 0.34, 0.78);
+  vaultHardware.add(vaultLatch);
+  for (let index = 0; index < 4; index += 1) {
+    const spoke = roundedBox(
+      `COMPASS_BOOK_QUEST_FORGE_VAULT_LOCK_SPOKE_${index + 1}`,
+      0.035,
+      0.035,
+      0.32,
+      0.01,
+      1,
+      forgeBrassDarkMaterial,
+    );
+    spoke.position.y = 0.34;
+    spoke.rotation.y = index * (Math.PI / 2);
+    vaultHardware.add(spoke);
+  }
+  notNowVault.add(vaultHardware);
+  vaultSystem.add(notNowVault);
+
+  const releasedFragment = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), releasedMaterial);
+  releasedFragment.name = 'COMPASS_BOOK_QUEST_FORGE_RELEASED_FRAGMENT';
+  releasedFragment.position.set(0.45, 0.35, 1.5);
+  releasedFragment.scale.set(0.82, 0.62, 1);
+  vaultSystem.add(releasedFragment);
+  const releasePathMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_QUEST_FORGE_RELEASE_PATH_MATERIAL',
+    color: 0xc58b32,
+    emissive: 0x5d2808,
+    emissiveIntensity: 0.24,
+    roughness: 0.44,
+    metalness: 0.72,
+    clearcoat: high ? 0.28 : 0.14,
+    clearcoatRoughness: 0.3,
+  });
+  const releasePath = createOrnamentalStroke(
+    'COMPASS_BOOK_QUEST_FORGE_RELEASE_PATH',
+    [[0.35, 1.5], [0.65, 1.5], [0.86, 1.5]],
+    0.24,
+    high ? 0.045 : 0.032,
+    releasePathMaterial,
+    quality,
+  );
+  const releaseTerminal = new THREE.Mesh(
+    new THREE.TorusGeometry(0.13, 0.025, high ? 7 : 4, high ? 20 : 10),
+    forgeBrassMaterial,
+  );
+  releaseTerminal.name = 'COMPASS_BOOK_QUEST_FORGE_RELEASE_TERMINAL';
+  releaseTerminal.rotation.x = Math.PI / 2;
+  releaseTerminal.position.set(0.88, 0.26, 1.5);
+  vaultSystem.add(releasePath, releaseTerminal);
+  root.add(vaultSystem);
+
+  const flameBounceLight = new THREE.PointLight(
+    0xff6a18,
+    high ? 0.72 : 0.34,
+    high ? 2.7 : 2.1,
+    2,
+  );
+  flameBounceLight.name = 'COMPASS_BOOK_QUEST_FORGE_FLAME_BOUNCE_LIGHT';
+  flameBounceLight.position.set(-0.12, 0.78, 1.82);
+  const crystalRimLight = new THREE.PointLight(
+    0x9b6cff,
+    high ? 0.34 : 0.16,
+    high ? 2.5 : 1.9,
+    2,
+  );
+  crystalRimLight.name = 'COMPASS_BOOK_QUEST_FORGE_CRYSTAL_RIM_LIGHT';
+  crystalRimLight.position.set(-0.52, 0.72, -0.72);
+  root.add(flameBounceLight, crystalRimLight);
+
+  const reliefParts: Record<string, THREE.Object3D> = {
+    root,
+    'contact-frame': contactFrame,
+    'contact-field': contactField,
+    'maintenance-system': maintenanceSystem,
+    'maintenance-ring': maintenanceRing,
+    'review-socket': reviewSocket,
+    'supporting-token': supportingToken,
+    'forge-spine': forgeSpine,
+    'quest-crest': crest,
+    'primary-token': primaryToken,
+    'milestone-anvil': milestoneAnvil,
+    'protected-flame': protectedFlame,
+    'not-now-vault-system': vaultSystem,
+    'not-now-vault': notNowVault,
+    'released-fragment': releasedFragment,
+    'release-path': releasePath,
+    'frame-fasteners': frameFasteners,
+    'ring-mark-array': ringMarks,
+    'ring-rivet-array': ringRivets,
+    'flame-cage': flameCage,
+    'vault-hardware': vaultHardware,
+  };
+  Object.entries(reliefParts).forEach(([partId, part]) => {
+    part.userData.sculptPartId = partId;
+  });
+  const attachmentContracts = {
+    'primary-token': {
+      parentSocket: 'quest-crest.primary-seat',
+      localStart: [-0.12, 0.515, -0.74],
+      localEnd: [-0.12, 0.66, -0.74],
+      contactType: 'embedded-bezel',
+      overlap: 0.06,
+      gapTolerance: 0.012,
+    },
+    'supporting-token': {
+      parentSocket: 'maintenance-ring.support-clamp',
+      localStart: [1.22, 0.25, -0.72],
+      localEnd: [1.22, 0.37, -0.72],
+      contactType: 'clamped-socket',
+      overlap: 0.05,
+      gapTolerance: 0.012,
+    },
+    'review-socket': {
+      parentSocket: 'maintenance-ring.review-bridge',
+      localStart: [0, 0.245, -1.69],
+      localEnd: [0, 0.31, -1.98],
+      contactType: 'pinned-bridge',
+      overlap: 0.045,
+      gapTolerance: 0.01,
+    },
+    'milestone-anvil': {
+      parentSocket: 'quest-crest.forge-throat',
+      localStart: [-0.12, 0.2, 0.34],
+      localEnd: [-0.12, 0.4, 1.27],
+      contactType: 'braced-mortise',
+      overlap: 0.055,
+      gapTolerance: 0.012,
+    },
+    'protected-flame': {
+      parentSocket: 'milestone-anvil.brazier-coupler',
+      localStart: [-0.12, 0.27, 1.49],
+      localEnd: [-0.12, 0.6, 2.02],
+      contactType: 'coupled-brazier',
+      overlap: 0.05,
+      gapTolerance: 0.012,
+    },
+    'not-now-vault': {
+      parentSocket: 'contact-field.vault-recess',
+      localStart: [1.16, 0.2, 1.5],
+      localEnd: [1.16, 0.39, 1.5],
+      contactType: 'recessed-hinged-door',
+      overlap: 0.04,
+      gapTolerance: 0.012,
+    },
+    'released-fragment': {
+      parentSocket: 'release-path.fragment-seat',
+      localStart: [0.45, 0.24, 1.5],
+      localEnd: [0.45, 0.35, 1.5],
+      contactType: 'resting-token',
+      overlap: 0.03,
+      gapTolerance: 0.015,
+    },
+    'release-path': {
+      parentSocket: 'not-now-vault.release-terminal',
+      localStart: [0.35, 0.24, 1.5],
+      localEnd: [0.88, 0.26, 1.5],
+      contactType: 'overlapping-rail',
+      overlap: 0.04,
+      gapTolerance: 0.01,
+    },
+  } as const;
+  Object.entries(attachmentContracts).forEach(([partId, attachment]) => {
+    reliefParts[partId].userData.attachment = attachment;
+  });
+  root.userData.sculptRuntime = {
+    parts: reliefParts,
+    attachmentContracts,
+    sockets: {
+      primary: primaryToken,
+      supporting: supportingToken,
+      released: releasedFragment,
+      review: reviewSocket,
+      flame: protectedFlame,
+      vault: notNowVault,
+    },
+    colliders: {
+      relief: { type: 'box', center: [0, 0.25, 0], size: [3.82, 0.75, 5.66] },
+    },
+    destructionGroups: {
+      forge: [forgeSpine, crest, milestoneAnvil, protectedFlame],
+      maintenance: [maintenanceSystem, supportingToken, reviewSocket],
+      release: [vaultSystem, releasedFragment, notNowVault],
+    },
+    presentationOnly: true,
+  };
+
+  return {
+    root,
+    crest,
+    primaryToken,
+    supportingToken,
+    releasedFragment,
+    maintenanceRing,
+    reviewHands,
+    flame,
+    flameMaterial,
+    releasePathMaterial,
+  };
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -3146,6 +4166,11 @@ export function createCompassBookThreeModel(
   ikigaiMap.root.rotation.z = Math.PI;
   ikigaiMap.root.visible = false;
   frontPivot.add(ikigaiMap.root);
+  const questForge = createQuestForgeRelief(materials, quality);
+  questForge.root.position.set(COVER_CENTER_X, -0.48, -0.22);
+  questForge.root.rotation.z = Math.PI;
+  questForge.root.visible = false;
+  frontPivot.add(questForge.root);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 3.2 : 2.1, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -3217,6 +4242,7 @@ export function createCompassBookThreeModel(
     'inner-compass-relief': innerCompass.root,
     'living-horizon-relief': livingHorizon.root,
     'ikigai-map-relief': ikigaiMap.root,
+    'quest-forge-relief': questForge.root,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -3266,12 +4292,14 @@ export function createCompassBookThreeModel(
     const innerCompassVisible = eased > 0.43 && selectedPageId === 'inner_compass';
     const livingHorizonVisible = eased > 0.43 && selectedPageId === 'living_horizon';
     const ikigaiMapVisible = eased > 0.43 && selectedPageId === 'ikigai_map';
+    const questForgeVisible = eased > 0.43 && selectedPageId === 'quest_forge';
     readingCompass.root.visible = readingPageVisible;
     readingSignalMarkers.visible = readingPageVisible;
     livingWheel.root.visible = livingWheelVisible;
     innerCompass.root.visible = innerCompassVisible;
     livingHorizon.root.visible = livingHorizonVisible;
     ikigaiMap.root.visible = ikigaiMapVisible;
+    questForge.root.visible = questForgeVisible;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 3.2 : 2.1, eased);
   }
 
@@ -3295,6 +4323,7 @@ export function createCompassBookThreeModel(
     innerCompass.root.visible = openProgress > 0.43 && pageId === 'inner_compass';
     livingHorizon.root.visible = openProgress > 0.43 && pageId === 'living_horizon';
     ikigaiMap.root.visible = openProgress > 0.43 && pageId === 'ikigai_map';
+    questForge.root.visible = openProgress > 0.43 && pageId === 'quest_forge';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }
@@ -3309,6 +4338,8 @@ export function createCompassBookThreeModel(
     const clampedStrength = THREE.MathUtils.clamp(strength, 0, 1);
     const chapterCelebration = kind === 'chapter' && selectedPageId === 'ikigai_map';
     const fragmentCelebration = kind === 'fragment' && selectedPageId === 'ikigai_map';
+    const questChapterCelebration = kind === 'chapter' && selectedPageId === 'quest_forge';
+    const questFragmentCelebration = kind === 'fragment' && selectedPageId === 'quest_forge';
 
     ikigaiMap.forceNodes.forEach((node, index) => {
       const staggeredProgress = THREE.MathUtils.clamp(clampedProgress * 1.8 - index * 0.14, 0, 1);
@@ -3339,6 +4370,26 @@ export function createCompassBookThreeModel(
     const mirageRecession = chapterCelebration ? clampedStrength * 0.06 : 0;
     ikigaiMap.mirage.scale.setScalar(reducedMotion ? 1 : 1 - mirageRecession);
     ikigaiMap.mirage.position.y = reducedMotion ? 0 : -mirageRecession * 0.45;
+
+    const questPulse = questChapterCelebration || questFragmentCelebration
+      ? Math.sin(clampedProgress * Math.PI) * clampedStrength
+      : 0;
+    questForge.crest.scale.setScalar(reducedMotion ? 1 : 1 + questPulse * 0.08);
+    questForge.primaryToken.scale.setScalar(reducedMotion ? 1 : 1 + questPulse * 0.12);
+    questForge.supportingToken.scale.setScalar(
+      reducedMotion ? 1 : 1 + (questChapterCelebration ? questPulse * 0.06 : 0),
+    );
+    questForge.releasedFragment.position.x = 0.45 + (
+      reducedMotion
+        ? 0
+        : questFragmentCelebration
+          ? questPulse * 0.18
+          : questChapterCelebration
+            ? questPulse * 0.07
+            : 0
+    );
+    questForge.flameMaterial.emissiveIntensity = 0.46 + questPulse * 0.5;
+    questForge.releasePathMaterial.emissiveIntensity = 0.18 + questPulse * 0.48;
   }
 
   function setPageTurnProgress(progress: number, direction: -1 | 1) {
@@ -3400,6 +4451,25 @@ export function createCompassBookThreeModel(
     ikigaiMap.willingness.emissiveIntensity = reducedMotion
       ? 0.5
       : 0.42 + (Math.sin(elapsedSeconds * 0.82 + 1.2) + 1) * 0.08;
+    questForge.crest.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.22) * 0.022;
+    questForge.primaryToken.rotation.y = reducedMotion ? 0 : elapsedSeconds * 0.08;
+    questForge.maintenanceRing.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.12) * 0.008;
+    questForge.reviewHands.rotation.y = reducedMotion ? 0 : elapsedSeconds * 0.06;
+    questForge.flame.scale.setScalar(
+      reducedMotion ? 0.62 : 0.62 + (Math.sin(elapsedSeconds * 1.15) + 1) * 0.015,
+    );
+    questForge.flameMaterial.emissiveIntensity = reducedMotion
+      ? 0.46
+      : 0.4 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.1;
+    questForge.releasedFragment.rotation.y = reducedMotion
+      ? Math.PI / 7
+      : elapsedSeconds * 0.18;
+    questForge.releasedFragment.position.y = reducedMotion
+      ? 0.35
+      : 0.35 + Math.sin(elapsedSeconds * 0.5) * 0.012;
+    questForge.releasePathMaterial.emissiveIntensity = reducedMotion
+      ? 0.18
+      : 0.14 + (Math.sin(elapsedSeconds * 0.7 - 0.4) + 1) * 0.08;
     spineMedallion.needleRoot.rotation.y = coverNeedleAngle * 0.5;
     bookmark.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.42) * 0.025;
     const pulse = reducedMotion ? 0.14 : 0.12 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.04;

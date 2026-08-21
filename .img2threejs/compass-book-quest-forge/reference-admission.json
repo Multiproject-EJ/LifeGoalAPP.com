@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "three-quarter-top",
+    "sourcePath": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/quest-forge-admission-reference-white.png",
+    "width": 1900,
+    "height": 1200,
+    "foregroundCoverage": 0.6908,
+    "largestComponentFraction": 1.0,
+    "pHash": 18064740983933823488,
+    "duplicateOfHash": null
+  },
+  "note": "Admission-only white padding resolves full-frame background segmentation; the canonical art reference remains the untouched accepted Chapter V goal image."
+}

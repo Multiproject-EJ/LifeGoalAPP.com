@@ -1,0 +1,62 @@
+{
+  "referenceId": "compass-book-chapter-v-quest-forge-goal",
+  "targetThreshold": 0.7,
+  "regions": [
+    {
+      "componentId": "contact-field",
+      "regionId": "indigo-field-grain",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 205, "y": 560, "width": 150, "height": 125 },
+      "materialId": "leather.matte",
+      "materialSpecId": "indigo-field"
+    },
+    {
+      "componentId": "maintenance-ring",
+      "regionId": "aged-brass-ring",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 294, "y": 104, "width": 250, "height": 52 },
+      "materialId": "metal.brass",
+      "materialSpecId": "aged-brass"
+    },
+    {
+      "componentId": "quest-crest",
+      "regionId": "violet-crystal-facet",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 447, "y": 175, "width": 126, "height": 94 },
+      "materialId": "gemstone.quartz",
+      "materialSpecId": "violet-crystal"
+    },
+    {
+      "componentId": "primary-token",
+      "regionId": "polished-gold-primary",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 530, "y": 233, "width": 75, "height": 92 },
+      "materialId": "metal.gold",
+      "materialSpecId": "gold-primary"
+    },
+    {
+      "componentId": "supporting-token",
+      "regionId": "teal-support-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 746, "y": 250, "width": 98, "height": 98 },
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "teal-enamel"
+    },
+    {
+      "componentId": "not-now-vault",
+      "regionId": "charcoal-vault-panel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 650, "y": 555, "width": 112, "height": 112 },
+      "materialId": "coating.painted-metal",
+      "materialSpecId": "vault-charcoal"
+    },
+    {
+      "componentId": "protected-flame",
+      "regionId": "amber-emissive-solid",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+      "bbox": { "x": 472, "y": 630, "width": 116, "height": 114 },
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "flame-amber"
+    }
+  ]
+}

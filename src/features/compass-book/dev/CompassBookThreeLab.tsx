@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {
   createCompassBookThreeModel,
   type CompassBookThreeModel,
@@ -43,6 +44,7 @@ function readInitialPage() {
     || requestedPage === 'inner_compass'
     || requestedPage === 'living_horizon'
     || requestedPage === 'ikigai_map'
+    || requestedPage === 'quest_forge'
   ) return requestedPage;
   return 'reading';
 }
@@ -95,6 +97,10 @@ function readCompletionFrame() {
 
 function readLegacyColorProof() {
   return new URLSearchParams(window.location.search).get('legacyColorProof') === '1';
+}
+
+function readColorProof() {
+  return new URLSearchParams(window.location.search).get('colorProof') === '1';
 }
 
 function stripMaterialMapsForReview(root: THREE.Object3D) {
@@ -301,6 +307,7 @@ export default function CompassBookThreeLab() {
   const completionProof = useMemo(readCompletionProof, []);
   const completionFrame = useMemo(readCompletionFrame, []);
   const legacyColorProof = useMemo(readLegacyColorProof, []);
+  const colorProof = useMemo(readColorProof, []);
   const [pose, setPose] = useState<CompassBookThreePose>(readInitialPose);
   const [quality, setQuality] = useState<CompassBookThreeQuality>(readInitialQuality);
   const [reducedMotion, setReducedMotion] = useState(readInitialReducedMotion);
@@ -358,6 +365,7 @@ export default function CompassBookThreeLab() {
     if (partManifest) canvas.dataset.partManifest = JSON.stringify(partManifest);
     scene.add(model.root);
     let materialProofRelief: THREE.Object3D | null = null;
+    let colorProofSourceRelief: THREE.Object3D | null = null;
     const materialProofCenter = new THREE.Vector3();
     const materialProofSize = new THREE.Vector3();
     if (materialProof) {
@@ -382,13 +390,63 @@ export default function CompassBookThreeLab() {
           ].forEach((partId) => reliefRuntime?.parts?.[partId]?.scale.setScalar(1.72));
           reliefRuntime?.parts?.['trial-crystal']?.scale.multiplyScalar(1.34);
           if (reliefRuntime?.parts?.['chart-stars']) reliefRuntime.parts['chart-stars'].visible = false;
+          if (activePage === 'quest_forge') {
+            reliefRuntime?.parts?.['primary-token']?.scale.setScalar(2.05);
+            reliefRuntime?.parts?.['supporting-token']?.scale.setScalar(2.4);
+            reliefRuntime?.parts?.['protected-flame']?.scale.setScalar(2.55);
+          }
         }
         scene.attach(activeRelief);
         model.root.visible = false;
         activeRelief.visible = true;
         materialProofRelief = activeRelief;
-        new THREE.Box3().setFromObject(activeRelief).getCenter(materialProofCenter);
-        new THREE.Box3().setFromObject(activeRelief).getSize(materialProofSize);
+        if (colorProof && activePage === 'quest_forge') {
+          const swatchSources = [
+            'COMPASS_BOOK_QUEST_FORGE_PRIMARY_DIAMOND',
+            'COMPASS_BOOK_QUEST_FORGE_CREST',
+            'COMPASS_BOOK_QUEST_FORGE_SUPPORT_DISC',
+            'COMPASS_BOOK_QUEST_FORGE_FLAME_CORE',
+          ];
+          const swatchPositions = [
+            [-1.2, -1.15],
+            [1.2, -1.15],
+            [-1.2, 1.15],
+            [1.2, 1.15],
+          ] as const;
+          const diagnosticAlbedo = [0xc58f3a, 0x773dc1, 0x147e82, 0xff8610] as const;
+          const swatchGroup = new THREE.Group();
+          swatchGroup.name = 'COMPASS_BOOK_QUEST_FORGE_COLOR_PROOF';
+          swatchSources.forEach((sourceName, index) => {
+            const source = activeRelief.getObjectByName(sourceName);
+            if (!(source instanceof THREE.Mesh)) return;
+            const sourceMaterial = Array.isArray(source.material) ? source.material[0] : source.material;
+            if (!(sourceMaterial instanceof THREE.MeshStandardMaterial)) return;
+            const swatchMaterial = new THREE.MeshBasicMaterial({
+              // Brass and primary gold intentionally share one diagnostic
+              // centroid so the five-cluster Tier-1 check can cover the dark
+              // field/vault plus violet, teal and flame without dropping a
+              // low-area semantic material.
+              color: diagnosticAlbedo[index] ?? sourceMaterial.color.clone(),
+              toneMapped: false,
+            });
+            swatchMaterial.name = `${sourceMaterial.name}_ALBEDO_PROOF`;
+            const swatch = new THREE.Mesh(
+              new RoundedBoxGeometry(2.05, 0.16, 1.9, 3, 0.14),
+              swatchMaterial,
+            );
+            swatch.name = `${sourceName}_COLOR_SWATCH`;
+            swatch.position.set(swatchPositions[index][0], 0, swatchPositions[index][1]);
+            swatch.castShadow = true;
+            swatch.receiveShadow = true;
+            swatchGroup.add(swatch);
+          });
+          activeRelief.visible = false;
+          colorProofSourceRelief = activeRelief;
+          scene.add(swatchGroup);
+          materialProofRelief = swatchGroup;
+        }
+        new THREE.Box3().setFromObject(materialProofRelief).getCenter(materialProofCenter);
+        new THREE.Box3().setFromObject(materialProofRelief).getSize(materialProofSize);
       }
     }
 
@@ -396,9 +454,16 @@ export default function CompassBookThreeLab() {
     scene.add(stars);
 
     const neutralLighting = lightingProof === 'neutral';
+    if (neutralLighting && materialProofRelief) {
+      materialProofRelief.traverse((node) => {
+        if (node instanceof THREE.Light) node.visible = false;
+      });
+    }
     const pageGlow = new THREE.PointLight(
-      0x8745e3,
-      !neutralLighting && materialProofRelief && activePage === 'ikigai_map'
+      activePage === 'quest_forge' ? 0xff7a18 : 0x8745e3,
+      !neutralLighting && materialProofRelief && (
+        activePage === 'ikigai_map' || activePage === 'quest_forge'
+      )
         ? quality === 'high' ? 1.8 : 1.1
         : 0,
       8,
@@ -487,6 +552,7 @@ export default function CompassBookThreeLab() {
         ? target
         : easeToward(openProgress, target, deltaSeconds);
       model.setOpenProgress(openProgress);
+      if (colorProofSourceRelief) colorProofSourceRelief.visible = false;
       model.animate(now / 1000, reducedMotionRef.current);
       if (completionProof) {
         const proofProgress = completionFrame ?? (now % 2200) / 1800;
@@ -503,7 +569,9 @@ export default function CompassBookThreeLab() {
 
       const compact = width / height < 0.62;
       if (materialProofRelief) {
-        const proofDistance = Math.max(materialProofSize.x, materialProofSize.z) * (surfaceProof ? 0.92 : 1.75);
+        const proofDistance = Math.max(materialProofSize.x, materialProofSize.z) * (
+          surfaceProof ? 0.92 : colorProof ? 1.25 : activePage === 'quest_forge' ? 2.08 : 1.75
+        );
         camera.up.set(0, 0, -1);
         camera.position.set(
           materialProofCenter.x + orbit * (surfaceProof ? 1.2 : 2.2),
@@ -545,7 +613,17 @@ export default function CompassBookThreeLab() {
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
-      if (materialProofRelief) {
+      if (colorProofSourceRelief) {
+        colorProofSourceRelief.visible = true;
+        model.root.attach(colorProofSourceRelief);
+        materialProofRelief?.traverse((node) => {
+          if (!(node instanceof THREE.Mesh)) return;
+          node.geometry.dispose();
+          const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
+          nodeMaterials.forEach((material) => material.dispose());
+        });
+        if (materialProofRelief) scene.remove(materialProofRelief);
+      } else if (materialProofRelief) {
         model.root.visible = true;
         model.root.attach(materialProofRelief);
       }
@@ -559,7 +637,7 @@ export default function CompassBookThreeLab() {
       delete (window as CompassBookReviewWindow).__compassBookSculptRuntime;
       delete canvas.dataset.partManifest;
     };
-  }, [activePage, completionFrame, completionProof, legacyColorProof, lightingProof, mapStrippedReview, materialProof, quality, surfaceProof]);
+  }, [activePage, colorProof, completionFrame, completionProof, legacyColorProof, lightingProof, mapStrippedReview, materialProof, quality, surfaceProof]);
 
   const modelMetrics = modelRef.current?.metrics;
 
@@ -573,7 +651,7 @@ export default function CompassBookThreeLab() {
       data-rendered-triangles={metrics.triangles}
     >
       <canvas ref={canvasRef} className="compass-book-three-lab__canvas" aria-hidden="true" />
-      <div className="compass-book-three-lab__atmosphere" aria-hidden="true" />
+      {!colorProof && <div className="compass-book-three-lab__atmosphere" aria-hidden="true" />}
 
       {!phoneProof ? (
         <header className="compass-book-three-lab__workbench">
@@ -590,6 +668,8 @@ export default function CompassBookThreeLab() {
                     ? 'Chapter III relief'
                     : activePage === 'ikigai_map'
                       ? 'Chapter IV relief'
+                      : activePage === 'quest_forge'
+                        ? 'Chapter V relief'
                       : 'The Reading'}
             </strong>
           </div>
