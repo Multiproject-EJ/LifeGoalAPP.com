@@ -462,6 +462,7 @@ import {
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
+  claimSunkenSandsFirstTreasure,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   spinFrostwellDrillWheel,
@@ -471,12 +472,16 @@ import {
   FROSTWELL_SPIN_METERS,
   ROOTHEART_POWER_COMPONENTS,
   ROOTHEART_POWERWORKS_MAX_STAGE,
+  SUNKEN_SANDS_FIRST_TREASURE_NAME,
+  SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
+  getSunkenSandsTreasureRevealProgress,
   isRootheartPowerworksCollectionComplete,
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
+  resolveSunkenSandsTreasureProgress,
 } from '../services/islandRunSignatureMissions';
 import {
   getIslandMissionBriefingPresentation,
@@ -3034,6 +3039,45 @@ export function IslandRunBoardPrototype({
     runtimeState.cycleIndex,
     Math.min(ROOTHEART_POWERWORKS_MAX_STAGE, rootheartPowerworksProgress.buildStage + 1),
   );
+  const sunkenSandsTreasureProgress = useMemo(() => resolveSunkenSandsTreasureProgress({
+    ledger: __storeState.signatureMissionProgressByIsland,
+    cycleIndex: __storeState.cycleIndex,
+    islandNumber: 12,
+  }), [__storeState.cycleIndex, __storeState.signatureMissionProgressByIsland]);
+  const sunkenSandsTreasureReady = sunkenSandsTreasureProgress.rollsCompleted >= SUNKEN_SANDS_TREASURE_ROLL_TARGET
+    && sunkenSandsTreasureProgress.claimedAtMs === null;
+  const sunkenSandsTreasureClaimed = sunkenSandsTreasureProgress.claimedAtMs !== null;
+  const [isSunkenSandsTreasureClaimPending, setIsSunkenSandsTreasureClaimPending] = useState(false);
+  const handleSunkenSandsTreasureClick = useCallback(async () => {
+    if (isSunkenSandsTreasureClaimPending) return;
+    if (sunkenSandsTreasureClaimed) {
+      setLandingText('The Sunscarab Token is already safe in your treasure collection.');
+      return;
+    }
+    if (!sunkenSandsTreasureReady) {
+      const remaining = SUNKEN_SANDS_TREASURE_ROLL_TARGET - sunkenSandsTreasureProgress.rollsCompleted;
+      setLandingText(`${remaining} roll${remaining === 1 ? '' : 's'} until the Citadel chamber is fully open.`);
+      return;
+    }
+    setIsSunkenSandsTreasureClaimPending(true);
+    try {
+      const result = await claimSunkenSandsFirstTreasure({ session, client });
+      if (result.status === 'ok') {
+        playIslandRunSound('reward_bar_claim_burst');
+        triggerIslandRunHaptic('reward_claim');
+        setLandingText(`Sunscarab Token collected! +${result.diceAwarded} 🎲 · +${result.essenceAwarded} Essence`);
+        return;
+      }
+      if (result.status === 'not_ready') {
+        const remaining = SUNKEN_SANDS_TREASURE_ROLL_TARGET - result.rollsCompleted;
+        setLandingText(`${remaining} roll${remaining === 1 ? '' : 's'} until the chamber is fully open.`);
+      } else if (result.status === 'already_claimed') {
+        setLandingText('The Sunscarab Token is already in your treasure collection.');
+      }
+    } finally {
+      setIsSunkenSandsTreasureClaimPending(false);
+    }
+  }, [client, isSunkenSandsTreasureClaimPending, session, sunkenSandsTreasureClaimed, sunkenSandsTreasureProgress.rollsCompleted, sunkenSandsTreasureReady]);
   const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
     ? 'Continue Treasure Path'
     : 'Collect Treasure';
@@ -14186,9 +14230,22 @@ export function IslandRunBoardPrototype({
                     : rootheartPowerworksProgress.buildStage,
                   constructionSequence: rootheartConstructionSequence,
                 }}
-                onSignatureMissionClick={isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10
-                  ? undefined
-                  : islandArtPreviewNumber === 10
+                sunkenSandsTreasurePresentation={{
+                  revealProgress: isIslandVisualPreview && islandArtPreviewNumber === 12
+                    ? 1
+                    : getSunkenSandsTreasureRevealProgress(sunkenSandsTreasureProgress),
+                  ready: isIslandVisualPreview && islandArtPreviewNumber === 12
+                    ? true
+                    : sunkenSandsTreasureReady,
+                  claimed: isIslandVisualPreview && islandArtPreviewNumber === 12
+                    ? false
+                    : sunkenSandsTreasureClaimed,
+                }}
+                onSignatureMissionClick={islandArtPreviewNumber === 12
+                  ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
+                  : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10
+                    ? undefined
+                    : islandArtPreviewNumber === 10
                     ? openRootheartPowerworks
                     : islandArtPreviewNumber === 3
                       ? openFrostwellMission
@@ -14239,6 +14296,25 @@ export function IslandRunBoardPrototype({
                     : rootheartPowerworksCollectionComplete
                       ? `Stage ${rootheartPowerworksProgress.buildStage + 1} ready · ${rootheartPowerworksNextCost.toLocaleString()}`
                       : `${rootheartPowerworksProgress.collectedComponentIds.length}/${ROOTHEART_POWER_COMPONENTS.length} parts found`}
+                </span>
+              </button>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 12 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--sunken-treasure"
+                onClick={handleSunkenSandsTreasureClick}
+                disabled={isSunkenSandsTreasureClaimPending}
+                aria-label={sunkenSandsTreasureReady ? 'Collect the Sunscarab Token' : 'View Sunken Sands treasure progress'}
+              >
+                <span aria-hidden="true">{sunkenSandsTreasureClaimed ? '✓' : sunkenSandsTreasureReady ? '✨' : '🔆'}</span>
+                <span>
+                  <strong>First Treasure</strong>
+                  {sunkenSandsTreasureClaimed
+                    ? `${SUNKEN_SANDS_FIRST_TREASURE_NAME} collected`
+                    : sunkenSandsTreasureReady
+                      ? 'Chamber open · Collect'
+                      : `${sunkenSandsTreasureProgress.rollsCompleted}/${SUNKEN_SANDS_TREASURE_ROLL_TARGET} rolls · Glass rising`}
                 </span>
               </button>
             ) : null}

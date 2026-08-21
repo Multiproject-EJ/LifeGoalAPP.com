@@ -522,6 +522,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island12SunkenSandsThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const templateKitSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx', 'utf8');
       assert(worldSource.includes('const highFrondCounts = [12, 3, 5, 3] as const;'), 'lush, wind-thinned, sun-yellowed and young palms need distinct crown densities');
       assert(worldSource.includes("frondInstances.name = 'ISLAND_12_MIXED_DENSITY_PALM_FROND_ARRAY'"), 'mixed crowns must remain one batched palm-frond family');
       assert(worldSource.includes("civicCobbles.name = 'ISLAND_12_CIVIC_COBBLE_POCKET_ARRAY'"), 'outer civic districts need named cobblestone ground pockets');
@@ -542,7 +545,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(worldSource.includes('Math.cos(angle) * domeRadius'), 'each chamber hinge must sit on the lower dome rim rather than at the shell centre');
       assert(worldSource.includes('panel.position.x = -domeRadius;'), 'each glass panel must be offset back from its rim-mounted pivot');
       assert(worldSource.includes("hingeAxle.name = `ISLAND_12_CITADEL_REWARD_GLASS_HINGE_AXLE_${index + 1}`"), 'the glass opening needs visible mechanical hinge hardware');
-      assert(worldSource.includes('const staggeredReveal = THREE.MathUtils.smoothstep('), 'the hinged panels should peel back with a restrained sequential reveal');
+      assert(worldSource.includes('const panelReveal = THREE.MathUtils.smoothstep('), 'the hinged panels should peel back progressively across the canonical reveal');
+      assert(worldSource.includes('updateTreasureProgress'), 'the 3D chamber must consume presentation progress without owning gameplay state');
+      assert(pilotSource.includes("scene.getObjectByName('ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN')"), 'only the revealed treasure token should intercept the special collectible click');
+      assert(boardSource.includes('sunkenSandsTreasurePresentation={{'), 'the live board must project canonical chamber progress into Three.js');
+      assert(templateKitSource.includes("params.get('treasureRolls')"), 'the dev kit must expose deterministic chamber-turn evidence states');
+      assert(boardSource.includes('claimSunkenSandsFirstTreasure({ session, client })'), 'treasure collection must route through the mutex-protected action service');
       assert(worldSource.includes("forecourtLife.name = 'ISLAND_12_CITADEL_CIVIC_FORECOURT_LIFE'"), 'the Citadel needs a readable civic terrace outside its portal axis');
       assert(worldSource.includes("petitionTablets.name = 'ISLAND_12_CITADEL_FORECOURT_PETITION_TABLET_ARRAY'"), 'restored Citadel seating needs small signs of civic use');
       assert(worldSource.includes("registerIsland12RuntimePart('citadel-forecourt-life'"), 'Citadel forecourt life must remain an addressable presentation-only family');

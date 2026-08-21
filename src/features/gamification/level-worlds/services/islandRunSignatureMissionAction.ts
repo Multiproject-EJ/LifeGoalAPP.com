@@ -2,18 +2,28 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import {
+  ISLAND_RUN_ECONOMY_SOURCES,
+  recordIslandRunDiceInflow,
+} from './islandRunEconomyTelemetry';
+import {
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
   ROOTHEART_POWERWORKS_MAX_STAGE,
+  SUNKEN_SANDS_FIRST_TREASURE_DICE,
+  SUNKEN_SANDS_FIRST_TREASURE_ID,
+  SUNKEN_SANDS_ISLAND_NUMBER,
+  SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   getRootheartPowerworksStageCost,
+  getSunkenSandsTreasureEssenceReward,
   isRootheartPowerworksCollectionComplete,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
+  resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
 
 export type SpinFrostwellDrillWheelResult =
@@ -180,5 +190,86 @@ export function fundRootheartPowerworksStage(options: {
       triggerSource: 'fund_rootheart_powerworks_stage',
     });
     return { status: 'ok', cost, buildStage, activatedAtMs };
+  });
+}
+
+export type ClaimSunkenSandsFirstTreasureResult =
+  | {
+      status: 'ok';
+      treasureId: typeof SUNKEN_SANDS_FIRST_TREASURE_ID;
+      diceAwarded: number;
+      essenceAwarded: number;
+      claimedAtMs: number;
+    }
+  | {
+      status: 'wrong_island' | 'not_ready' | 'already_claimed';
+      rollsCompleted: number;
+    };
+
+export function claimSunkenSandsFirstTreasure(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ClaimSunkenSandsFirstTreasureResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    const progress = resolveSunkenSandsTreasureProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (state.currentIslandNumber !== SUNKEN_SANDS_ISLAND_NUMBER) {
+      return { status: 'wrong_island', rollsCompleted: progress.rollsCompleted };
+    }
+    if (progress.claimedAtMs !== null) {
+      return { status: 'already_claimed', rollsCompleted: progress.rollsCompleted };
+    }
+    if (progress.rollsCompleted < SUNKEN_SANDS_TREASURE_ROLL_TARGET) {
+      return { status: 'not_ready', rollsCompleted: progress.rollsCompleted };
+    }
+
+    const claimedAtMs = Date.now();
+    const diceAwarded = SUNKEN_SANDS_FIRST_TREASURE_DICE;
+    const essenceAwarded = getSunkenSandsTreasureEssenceReward(state.cycleIndex);
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        dicePool: state.dicePool + diceAwarded,
+        essence: state.essence + essenceAwarded,
+        essenceLifetimeEarned: state.essenceLifetimeEarned + essenceAwarded,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: {
+            ...progress,
+            treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+            rollsCompleted: SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+            revealedAtMs: progress.revealedAtMs ?? claimedAtMs,
+            claimedAtMs,
+            updatedAtMs: claimedAtMs,
+          },
+        },
+      },
+      triggerSource: 'claim_sunken_sands_first_treasure',
+    });
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.signatureTreasureDice,
+      amount: diceAwarded,
+      sessionId: options.session.user.id,
+      atMs: claimedAtMs,
+      metadata: {
+        islandNumber: SUNKEN_SANDS_ISLAND_NUMBER,
+        treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+      },
+    });
+    return {
+      status: 'ok',
+      treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+      diceAwarded,
+      essenceAwarded,
+      claimedAtMs,
+    };
   });
 }

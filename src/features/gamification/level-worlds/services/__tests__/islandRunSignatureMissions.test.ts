@@ -2,6 +2,10 @@ import {
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_DRILL_TILE_INDICES,
   ROOTHEART_POWER_COMPONENTS,
+  SUNKEN_SANDS_FIRST_TREASURE_DICE,
+  SUNKEN_SANDS_FIRST_TREASURE_ID,
+  SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  advanceSunkenSandsTreasureForRoll,
   collectRootheartPowerComponentForLanding,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
@@ -11,9 +15,11 @@ import {
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
+  resolveSunkenSandsTreasureProgress,
   sanitizeIslandRunSignatureMissionProgress,
 } from '../islandRunSignatureMissions';
 import {
+  claimSunkenSandsFirstTreasure,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   spinFrostwellDrillWheel,
@@ -104,7 +110,115 @@ async function seedRootheart(options: {
   refreshIslandRunStateFromLocal(session);
 }
 
+async function seedSunkenSandsTreasure(rollsCompleted: number): Promise<void> {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+  const session = makeSession();
+  const base = readIslandRunGameStateRecord(session);
+  const key = getIslandRunSignatureMissionKey(0, 12);
+  await writeIslandRunGameStateRecord({
+    session,
+    client: null,
+    record: {
+      ...base,
+      currentIslandNumber: 12,
+      cycleIndex: 0,
+      dicePool: 10,
+      essence: 50,
+      essenceLifetimeEarned: 70,
+      signatureMissionProgressByIsland: {
+        [key]: {
+          missionId: 'sunken-sands-first-treasure',
+          version: 1,
+          treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+          rollsCompleted,
+          revealedAtMs: rollsCompleted >= SUNKEN_SANDS_TREASURE_ROLL_TARGET ? 100 : null,
+          claimedAtMs: null,
+          updatedAtMs: 100,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(session);
+}
+
 export const islandRunSignatureMissionTests: TestCase[] = [
+  {
+    name: 'Sunken Sands advances one chamber turn per canonical roll and caps at twenty',
+    run: () => {
+      const first = advanceSunkenSandsTreasureForRoll({
+        ledger: {}, islandNumber: 12, cycleIndex: 0, nowMs: 10,
+      });
+      assertEqual(first.rollsCompleted, 1, 'first successful Island 012 roll opens one turn');
+      assertEqual(first.becameReady, false, 'first turn is not claimable');
+      const key = getIslandRunSignatureMissionKey(0, 12);
+      const almostReady = {
+        [key]: {
+          ...resolveSunkenSandsTreasureProgress({ ledger: first.ledger, cycleIndex: 0, islandNumber: 12 }),
+          rollsCompleted: 19,
+        },
+      };
+      const ready = advanceSunkenSandsTreasureForRoll({
+        ledger: almostReady, islandNumber: 12, cycleIndex: 0, nowMs: 20,
+      });
+      assertEqual(ready.rollsCompleted, 20, 'twentieth turn opens the chamber fully');
+      assertEqual(ready.becameReady, true, 'twentieth turn exposes one ready edge');
+      const capped = advanceSunkenSandsTreasureForRoll({
+        ledger: ready.ledger, islandNumber: 12, cycleIndex: 0, nowMs: 30,
+      });
+      assertEqual(capped.rollsCompleted, 20, 'later rolls cannot overfill the chamber');
+      assertEqual(capped.becameReady, false, 'ready edge cannot repeat');
+      assertEqual(
+        advanceSunkenSandsTreasureForRoll({ ledger: {}, islandNumber: 11, cycleIndex: 0, nowMs: 40 }).rollsCompleted,
+        0,
+        'other islands never advance this treasure',
+      );
+    },
+  },
+  {
+    name: 'Sunken Sands first treasure claim is gated, rewarding, persisted, and idempotent',
+    run: async () => {
+      await seedSunkenSandsTreasure(19);
+      const blocked = await claimSunkenSandsFirstTreasure({ session: makeSession(), client: null });
+      assertEqual(blocked.status, 'not_ready', 'nineteen rolls cannot claim');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).dicePool, 10, 'blocked claim leaves dice untouched');
+
+      await seedSunkenSandsTreasure(20);
+      const first = await claimSunkenSandsFirstTreasure({ session: makeSession(), client: null });
+      const afterFirst = readIslandRunGameStateRecord(makeSession());
+      const repeated = await claimSunkenSandsFirstTreasure({ session: makeSession(), client: null });
+      assertEqual(first.status, 'ok', 'ready chamber claims');
+      if (first.status !== 'ok') return;
+      assertEqual(first.treasureId, SUNKEN_SANDS_FIRST_TREASURE_ID, 'the first treasure keeps a durable identity');
+      assertEqual(afterFirst.dicePool, 10 + SUNKEN_SANDS_FIRST_TREASURE_DICE, 'claim pays the configured dice once');
+      assert(afterFirst.essence > 50, 'claim pays scaled Essence');
+      assert(
+        resolveSunkenSandsTreasureProgress({ ledger: afterFirst.signatureMissionProgressByIsland, cycleIndex: 0, islandNumber: 12 }).claimedAtMs !== null,
+        'claim timestamp persists in the cycle-scoped ledger',
+      );
+      assertEqual(repeated.status, 'already_claimed', 'repeat claim is rejected');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).dicePool, afterFirst.dicePool, 'repeat claim cannot double-pay');
+    },
+  },
+  {
+    name: 'Sunken Sands sanitizer and conflict merge preserve furthest reveal and first claim',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 12);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'sunken-sands-first-treasure', rolls_completed: 12, updated_at_ms: 12 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'sunken-sands-first-treasure', rolls_completed: 20, revealed_at_ms: 20, claimed_at_ms: 30, updated_at_ms: 30 },
+      });
+      const merged = mergeIslandRunSignatureMissionProgress(remote, local);
+      const progress = resolveSunkenSandsTreasureProgress({ ledger: merged, cycleIndex: 0, islandNumber: 12 });
+      assertEqual(progress.rollsCompleted, 20, 'furthest chamber turn wins');
+      assertEqual(progress.revealedAtMs, 20, 'reveal timestamp survives');
+      assertEqual(progress.claimedAtMs, 30, 'claim survives cross-device merge');
+    },
+  },
   {
     name: 'Rootheart exposes eight stable Powerworks caches clear of doors and special economy stations',
     run: () => {

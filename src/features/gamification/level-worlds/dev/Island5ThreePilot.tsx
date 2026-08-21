@@ -148,6 +148,7 @@ import {
   registerIsland12RuntimePart,
   ISLAND_12_SUNKEN_SANDS_LANDMARK_LABELS,
   ISLAND_12_SUNKEN_SANDS_WORLD_NAME,
+  type Island12SunkenSandsTreasurePresentation,
 } from './Island12SunkenSandsThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 
@@ -199,6 +200,7 @@ interface Island5ThreePilotProps {
   journeyDiscArenaCenterActive?: boolean;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
+  sunkenSandsTreasurePresentation?: Island12SunkenSandsTreasurePresentation;
   onSignatureMissionClick?: () => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
@@ -2187,6 +2189,10 @@ interface Island5AmbienceRuntime {
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
   updatePowerworksStage?: (presentation: Island10RootheartPowerworksPresentation) => void;
+  updateTreasureProgress?: (
+    presentation: Island12SunkenSandsTreasurePresentation,
+    instant?: boolean,
+  ) => void;
 }
 
 function createInstancedScenery(
@@ -3227,6 +3233,7 @@ export default function Island5ThreePilot({
   journeyDiscArenaCenterActive = false,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
+  sunkenSandsTreasurePresentation = { revealProgress: 1, ready: true, claimed: false },
   onSignatureMissionClick,
   caretakerEncounterOpen = false,
   onCaretakerClick,
@@ -3324,6 +3331,8 @@ export default function Island5ThreePilot({
   signatureMissionPresentationRef.current = signatureMissionPresentation;
   const rootheartPowerworksPresentationRef = useRef(rootheartPowerworksPresentation);
   rootheartPowerworksPresentationRef.current = rootheartPowerworksPresentation;
+  const sunkenSandsTreasurePresentationRef = useRef(sunkenSandsTreasurePresentation);
+  sunkenSandsTreasurePresentationRef.current = sunkenSandsTreasurePresentation;
   const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
   const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
   const onCaretakerClickRef = useRef(onCaretakerClick);
@@ -4049,6 +4058,9 @@ export default function Island5ThreePilot({
     if (isRootheartCanopyCity) {
       livingAmbience.updatePowerworksStage?.(rootheartPowerworksPresentationRef.current);
     }
+    if (isSunkenSands) {
+      livingAmbience.updateTreasureProgress?.(sunkenSandsTreasurePresentationRef.current, true);
+    }
     const clickableSignatureMissions = isFrostmoonHaven
       ? [livingAmbience.root.getObjectByName('ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT')].filter(
           (candidate): candidate is THREE.Object3D => Boolean(candidate),
@@ -4057,6 +4069,10 @@ export default function Island5ThreePilot({
         ? [livingAmbience.root.getObjectByName('ISLAND_10_ROOTHEART_POWERWORKS')].filter(
             (candidate): candidate is THREE.Object3D => Boolean(candidate),
           )
+        : isSunkenSands
+          ? [scene.getObjectByName('ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN')].filter(
+              (candidate): candidate is THREE.Object3D => Boolean(candidate),
+            )
         : [];
 
     const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
@@ -5122,6 +5138,7 @@ export default function Island5ThreePilot({
         idleOverviewAt = null;
         if (isFrostmoonHaven) applyPreset('frostwell', 0.9);
         if (isRootheartCanopyCity) applyPreset('powerworks', 0.9);
+        if (isSunkenSands) applyPreset('boss', 0.9);
         onSignatureMissionClickRef.current?.();
         return;
       }
@@ -5149,6 +5166,12 @@ export default function Island5ThreePilot({
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
       livingAmbience.updateView?.(camera.position, controls.target);
+      if (isSunkenSands) {
+        livingAmbience.updateTreasureProgress?.(
+          sunkenSandsTreasurePresentationRef.current,
+          isReducedMotion,
+        );
+      }
       if (isRootheartCanopyCity) {
         const powerworksPresentation = rootheartPowerworksPresentationRef.current;
         const requestedSequence = Math.max(0, Math.floor(powerworksPresentation.constructionSequence ?? 0));

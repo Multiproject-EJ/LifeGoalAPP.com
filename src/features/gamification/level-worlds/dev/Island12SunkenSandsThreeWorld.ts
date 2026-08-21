@@ -60,6 +60,16 @@ export interface Island12SunkenSandsAmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
+  updateTreasureProgress?: (
+    presentation: Island12SunkenSandsTreasurePresentation,
+    instant?: boolean,
+  ) => void;
+}
+
+export interface Island12SunkenSandsTreasurePresentation {
+  revealProgress: number;
+  ready: boolean;
+  claimed: boolean;
 }
 
 export const ISLAND_12_RUNTIME_PART_IDS = [
@@ -3354,6 +3364,7 @@ function createOasisCrownCitadel(level: 1 | 2 | 3, quality: Island3DQuality, mat
     token.name = 'ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN';
     token.position.y = 0.62;
     token.userData.presentationOnly = true;
+    token.userData.collectibleReady = false;
     const tokenCore = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.075, 14), materials.gold);
     tokenCore.name = 'ISLAND_12_CITADEL_PLACEHOLDER_TOKEN_CORE';
     tokenCore.rotation.x = Math.PI / 2;
@@ -7116,6 +7127,12 @@ export function createIsland12SunkenSandsLivingAmbience(
   let rewardDomeRibs: THREE.InstancedMesh | null = null;
   const rewardOpenQuaternion = new THREE.Quaternion();
   const rewardHingeAxis = new THREE.Vector3(0, 0, 1);
+  let rewardTargetReveal = 1;
+  let rewardDisplayReveal = 1;
+  let rewardReady = true;
+  let rewardClaimed = false;
+  let rewardPresentationResolved = false;
+  let previousRewardElapsed = 0;
   const resolveRewardRevealNodes = () => {
     if (rewardRevealResolved) return;
     rewardGlassHinges = Array.from({ length: 6 }, (_, index) => (
@@ -7126,6 +7143,20 @@ export function createIsland12SunkenSandsLivingAmbience(
     rewardSparkles = scene.getObjectByName('ISLAND_12_CITADEL_REWARD_SPARKLE_ARRAY') as THREE.InstancedMesh | null;
     rewardDomeRibs = scene.getObjectByName('ISLAND_12_CITADEL_DOME_RIB_ARRAY') as THREE.InstancedMesh | null;
     rewardRevealResolved = rewardGlassHinges.length === 6 && Boolean(rewardToken && rewardHalo && rewardSparkles);
+  };
+
+  const updateTreasureProgress = (
+    presentation: Island12SunkenSandsTreasurePresentation,
+    instant = false,
+  ) => {
+    const nextReveal = THREE.MathUtils.clamp(presentation.revealProgress, 0, 1);
+    rewardTargetReveal = nextReveal;
+    rewardReady = presentation.ready;
+    rewardClaimed = presentation.claimed;
+    if (!rewardPresentationResolved || instant) rewardDisplayReveal = nextReveal;
+    rewardPresentationResolved = true;
+    resolveRewardRevealNodes();
+    if (rewardToken) rewardToken.userData.collectibleReady = rewardReady && !rewardClaimed;
   };
 
   const animate = (elapsed: number) => {
@@ -7153,34 +7184,52 @@ export function createIsland12SunkenSandsLivingAmbience(
     waterDetails.reeds.rotation.z = Math.sin(elapsed * 0.34) * 0.018;
     resolveRewardRevealNodes();
     if (rewardRevealResolved && rewardToken && rewardHalo && rewardSparkles) {
-      const rawReveal = THREE.MathUtils.clamp((elapsed - 1.1) / 2.6, 0, 1);
-      const reveal = rawReveal * rawReveal * (3 - 2 * rawReveal);
+      const rewardDelta = previousRewardElapsed > 0
+        ? THREE.MathUtils.clamp(elapsed - previousRewardElapsed, 0, 0.1)
+        : 0;
+      previousRewardElapsed = elapsed;
+      rewardDisplayReveal = THREE.MathUtils.lerp(
+        rewardDisplayReveal,
+        rewardTargetReveal,
+        1 - Math.exp(-rewardDelta * 1.45),
+      );
+      if (Math.abs(rewardDisplayReveal - rewardTargetReveal) < 0.0005) {
+        rewardDisplayReveal = rewardTargetReveal;
+      }
+      const reveal = THREE.MathUtils.clamp(rewardDisplayReveal, 0, 1);
       rewardGlassHinges.forEach((hinge, index) => {
         const closedQuaternion = hinge.userData.closedQuaternion as THREE.Quaternion;
         const openAngle = hinge.userData.openAngle as number;
-        const staggeredReveal = THREE.MathUtils.smoothstep(
-          rawReveal,
-          index * 0.035,
-          0.72 + index * 0.035,
+        const panelStart = index / rewardGlassHinges.length * 0.72;
+        const panelReveal = THREE.MathUtils.smoothstep(
+          reveal,
+          panelStart,
+          panelStart + 0.36,
         );
-        rewardOpenQuaternion.setFromAxisAngle(rewardHingeAxis, staggeredReveal * openAngle);
+        rewardOpenQuaternion.setFromAxisAngle(rewardHingeAxis, panelReveal * openAngle);
         hinge.quaternion.copy(closedQuaternion).multiply(rewardOpenQuaternion);
       });
-      if (rewardDomeRibs) rewardDomeRibs.visible = reveal < 0.72;
-      rewardToken.visible = reveal > 0.08;
+      if (rewardDomeRibs) rewardDomeRibs.visible = reveal < 0.94;
+      const treasureCollectible = rewardReady && reveal >= 0.995 && !rewardClaimed;
+      rewardToken.userData.collectibleReady = treasureCollectible;
+      rewardToken.visible = !rewardClaimed && reveal > 0.72;
       rewardToken.rotation.y = elapsed * (0.72 + reveal * 0.42);
       rewardToken.position.y = 0.68 + reveal * 0.18 + Math.sin(elapsed * 1.4) * 0.035 * reveal;
-      const tokenScale = 0.48 + reveal * 0.77;
+      const tokenScale = 0.32 + reveal * 0.93;
       rewardToken.scale.setScalar(tokenScale);
       rewardHalo.rotation.y = elapsed * 0.38;
       rewardHalo.scale.setScalar(0.72 + reveal * 0.28 + Math.sin(elapsed * 1.8) * 0.04 * reveal);
+      rewardHalo.visible = treasureCollectible;
       if (!Array.isArray(rewardHalo.material) && rewardHalo.material instanceof THREE.MeshBasicMaterial) {
-        rewardHalo.material.opacity = 0.12 + reveal * (0.28 + Math.sin(elapsed * 1.65) * 0.08);
+        rewardHalo.material.opacity = treasureCollectible
+          ? 0.4 + Math.sin(elapsed * 1.65) * 0.08
+          : 0;
       }
+      rewardSparkles.visible = treasureCollectible;
       rewardSparkles.rotation.y = -elapsed * 0.31;
       rewardSparkles.position.y = Math.sin(elapsed * 0.9) * 0.035 * reveal;
       rewardSparkles.scale.setScalar(0.45 + reveal * 0.55);
     }
   };
-  return { root, animate };
+  return { root, animate, updateTreasureProgress };
 }

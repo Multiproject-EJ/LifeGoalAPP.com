@@ -22958,6 +22958,16 @@
   box-shadow: 0 8px 24px rgba(22, 14, 8, .35), inset 0 0 18px rgba(255, 187, 65, .08);
 }
 
+.island-run-board__signature-mission-pill--sunken-treasure {
+  border-color: rgba(120, 237, 220, .82);
+  background: linear-gradient(145deg, rgba(20, 74, 79, .95), rgba(70, 48, 24, .96));
+  box-shadow: 0 8px 24px rgba(22, 14, 8, .34), inset 0 0 20px rgba(107, 255, 225, .13);
+}
+.island-run-board__signature-mission-pill--sunken-treasure:not(:disabled):hover {
+  border-color: rgba(255, 224, 133, .95);
+  box-shadow: 0 8px 26px rgba(22, 14, 8, .38), 0 0 18px rgba(107, 255, 225, .2);
+}
+
 .island-run-board__rootheart-completion {
   position: absolute;
   left: 50%;

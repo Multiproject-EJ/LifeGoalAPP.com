@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
+import { SUNKEN_SANDS_TREASURE_ROLL_TARGET } from '../services/islandRunSignatureMissions';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
 import './IslandTemplateKitPage.css';
@@ -18,6 +19,10 @@ function readInitialPreviewState() {
   const islandParam = Number(params.get('island'));
   const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
+  const treasureRollsParam = Number(params.get('treasureRolls'));
+  const treasureRolls = Number.isFinite(treasureRollsParam)
+    ? Math.max(0, Math.min(SUNKEN_SANDS_TREASURE_ROLL_TARGET, Math.floor(treasureRollsParam)))
+    : SUNKEN_SANDS_TREASURE_ROLL_TARGET;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
       ? requestedMode
@@ -25,6 +30,7 @@ function readInitialPreviewState() {
     buildLevel: ([0, 1, 2, 3].includes(requestedLevel) ? requestedLevel : 3) as BuildLevel,
     islandNumber,
     worldSourceNumber,
+    treasureRolls,
     overlays: params.get('guides') !== '0',
   };
 }
@@ -197,6 +203,11 @@ export default function IslandTemplateKitPage() {
               islandNumber={initialState.islandNumber}
               worldSourceNumber={initialState.worldSourceNumber}
               buildLevel={buildLevel}
+              sunkenSandsTreasurePresentation={{
+                revealProgress: initialState.treasureRolls / SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+                ready: initialState.treasureRolls >= SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+                claimed: false,
+              }}
             />
           ) : (
             <>

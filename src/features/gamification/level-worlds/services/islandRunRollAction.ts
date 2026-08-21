@@ -88,6 +88,7 @@ import {
 } from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 import {
+  advanceSunkenSandsTreasureForRoll,
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
@@ -249,6 +250,10 @@ export interface IslandRunRollActionResult {
    * persisted mission state remains the authority.
    */
   rootheartPowerworksUnlocked?: boolean;
+  /** Canonical Island 012 chamber turn after this successful roll. */
+  sunkenSandsTreasureRollsCompleted?: number;
+  /** True only for the twentieth roll that makes the first treasure claimable. */
+  sunkenSandsTreasureBecameReady?: boolean;
   /**
    * Cycle-scoped first-lap briefing beat crossed by this roll. Presentation
    * opens only after the authoritative hop animation and any higher-priority
@@ -446,6 +451,12 @@ async function performRollAction(options: {
       cycleIndex: state.cycleIndex,
       islandNumber: state.currentIslandNumber,
     }));
+  const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
+    ledger: rootheartLanding.ledger,
+    islandNumber: state.currentIslandNumber,
+    cycleIndex: state.cycleIndex,
+    nowMs,
+  });
   const missionBriefingTrigger = ordinaryTileGameplayActive
     ? resolveIslandMissionBriefingTrigger({
         islandNumber: state.currentIslandNumber,
@@ -491,7 +502,7 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
-    signatureMissionProgressByIsland: rootheartLanding.ledger,
+    signatureMissionProgressByIsland: sunkenSandsTreasureRoll.ledger,
     narrativeSeenState: livingTicketLanding.narrativeSeenState,
     minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };
@@ -531,6 +542,8 @@ async function performRollAction(options: {
     frostwellSpinGranted: frostwellLanding.granted,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
+    sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,
+    sunkenSandsTreasureBecameReady: sunkenSandsTreasureRoll.becameReady,
     missionBriefingTrigger,
     livingTicketPickup: livingTicketLanding.pickup,
   };

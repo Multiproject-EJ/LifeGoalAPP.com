@@ -17,9 +17,11 @@ import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTra
 import {
   FROSTWELL_DRILL_TILE_INDICES,
   ROOTHEART_POWER_COMPONENTS,
+  SUNKEN_SANDS_FIRST_TREASURE_ID,
   getIslandRunSignatureMissionKey,
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
+  resolveSunkenSandsTreasureProgress,
 } from '../islandRunSignatureMissions';
 import { getIslandRunLivingTicketBeatId, ISLAND_RUN_LIVING_TICKET_REGROW_MS } from '../islandRunLivingTicket';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
@@ -75,6 +77,50 @@ async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Pro
 }
 
 export const islandRunRollActionTests: TestCase[] = [
+  {
+    name: 'Island 012 successful rolls advance the hinged treasure chamber exactly once',
+    run: async () => {
+      resetEnvironment();
+      const key = getIslandRunSignatureMissionKey(0, 12);
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 0,
+        currentIslandNumber: 12,
+        cycleIndex: 0,
+        signatureMissionProgressByIsland: {
+          [key]: {
+            missionId: 'sunken-sands-first-treasure',
+            version: 1,
+            treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+            rollsCompleted: 19,
+            revealedAtMs: null,
+            claimedAtMs: null,
+            updatedAtMs: 1,
+          },
+        },
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.status, 'ok', 'roll succeeds');
+      assertEqual(result.sunkenSandsTreasureRollsCompleted, 20, 'one roll advances one final chamber turn');
+      assertEqual(result.sunkenSandsTreasureBecameReady, true, 'twentieth roll emits the ready edge');
+      const progress = resolveSunkenSandsTreasureProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 12,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.rollsCompleted, 20, 'twentieth turn persists atomically with movement');
+
+      seedState({ tokenIndex: 2, dicePool: 30 });
+      const repeat = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(repeat.sunkenSandsTreasureRollsCompleted, 20, 'later rolls stay capped');
+      assertEqual(repeat.sunkenSandsTreasureBecameReady, false, 'ready edge does not repeat');
+    },
+  },
   {
     name: 'single ×1 roll: deducts 1 die, bumps runtimeVersion, returns newDicePool / hopSequence',
     run: async () => {
