@@ -1,0 +1,2911 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped",
+  "profile": "generic",
+  "currentStep": "stopped",
+  "currentPass": "blockout",
+  "checklist": [
+    {
+      "id": "image-analysis",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/image-analysis.md"
+      ],
+      "reason": "",
+      "command": "Read grimoire/intake/image_analysis.md and analyze {reference}"
+    },
+    {
+      "id": "reference-suitability",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/reference-suitability.md"
+      ],
+      "reason": "",
+      "command": "Read grimoire/intake/validation_rubric.md and record a pass, conditional, or reject verdict for {reference}"
+    },
+    {
+      "id": "reference-admission",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [
+        ".img2threejs/expedition-ship/reference-admission.json"
+      ],
+      "reason": "Cinematic multi-pose and exterior references exceed the automatic silhouette-isolation coverage threshold; proceed only under the recorded conditional multi-view/manual restrictions.",
+      "command": "python3 forge/stage1_intake/check_reference_admission.py {reference}"
+    },
+    {
+      "id": "local-spec-search",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/local-spec-search.json"
+      ],
+      "reason": "",
+      "command": "Run the local evidence search before authoring the assessment"
+    },
+    {
+      "id": "pre-spec-assessment",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/pre-spec-assessment.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/new_pre_spec_assessment.py \"<name>\" --image {reference} --out assessment.json"
+    },
+    {
+      "id": "detail-inventory",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/detail-inventory.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage1_intake/build_detail_inventory.py {reference} --mode grid-3x3 --out-dir detail-inventory --out di.json"
+    },
+    {
+      "id": "projection-route",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [
+        ".img2threejs/expedition-ship/reference-suitability.md"
+      ],
+      "reason": "Projection is unsafe for this articulated multi-pose subject: cinematic lighting is baked into the references, major surfaces rotate and telescope independently, and hidden rear/top/belly views are inferred. Use procedural PBR geometry and materials with fixed-camera comparison instead.",
+      "command": "Record whether projection is required; if required run solve_camera_pose.py, delight_albedo.py, and bake_projected_texture.py, otherwise skip with a reason"
+    },
+    {
+      "id": "spec-authoring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
+    },
+    {
+      "id": "material-evidence",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [
+        ".img2threejs/expedition-ship/reference-suitability.md"
+      ],
+      "reason": "The available references are cinematic composites with baked warm/cool lighting and no verified de-lit material crops. The macro transform pass uses conservative observed PBR families and independent procedural channels; material extraction is deferred until controlled crops exist.",
+      "command": "python3 forge/stage1_intake/material_region_analysis.py --manifest material-regions.json --out-dir material-evidence --out material-analysis.json (single-crop route: analyze_texture.py + extract_pbr_evidence.py per verified crop; otherwise skip with a reason)"
+    },
+    {
+      "id": "material-spec-wiring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/apply_material_analysis.py {spec} material-analysis.json --in-place"
+    },
+    {
+      "id": "strict-validation",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
+    },
+    {
+      "id": "build-current-pass",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+    },
+    {
+      "id": "render-capture",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+    },
+    {
+      "id": "review-contract-read",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+    },
+    {
+      "id": "tier1-diagnostics",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+    },
+    {
+      "id": "multi-angle-review",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+    },
+    {
+      "id": "pass-gate-check",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+    },
+    {
+      "id": "ai-review-recorded",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+    },
+    {
+      "id": "pipeline-sync",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/evidence/checkpoint-22-command-interior-finish"
+      ],
+      "reason": "Final correction completed and reviewed: tests and budgets pass; multi-angle volume passes; Tier-1 likeness remains explicitly failed; review action is stop at the bounded ceiling.",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+    },
+    {
+      "id": "part-coverage",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
+    },
+    {
+      "id": "action-ready",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
+    }
+  ],
+  "loops": {
+    "perPass": {
+      "blockout": 34,
+      "checkpoint-13-compact-interior-controller-shell-v1": 1,
+      "checkpoint-14-inhabited-program-haven-walker-v1": 1
+    },
+    "total": 36,
+    "maxPerPass": 36,
+    "maxTotal": 36
+  },
+  "artifacts": {
+    "reference": "docs/design/expedition-ship/expedition-ship-150m-walker-living-mode-candidate-v1.png",
+    "spec": ".img2threejs/expedition-ship/object-sculpt-spec.json"
+  },
+  "passHistory": [
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx"
+          ],
+          "reason": "Loop 1 review routed to refine-code: preserve the 150m rig while rebuilding architectural density, leg silhouettes, shell integration, shield shutters, and batching.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/walker-living-left24-v4.png",
+            ".img2threejs/expedition-ship/evidence/blockout/hypersonic-left24-v1.png"
+          ],
+          "reason": "Loop 0 evidence is retained; recapture after the required refine-code pass.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Read both mandatory review contracts completely before continuing the blockout review.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx"
+          ],
+          "reason": "Loop 1 review routed to refine-code: preserve the 150m rig while rebuilding architectural density, leg silhouettes, shell integration, shield shutters, and batching.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/walker-refine1-left30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/gait-left55-front-foot-unload-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/hypersonic-left24-v3.png"
+          ],
+          "reason": "Captured the first refine-code living walker, deterministic gait pose, and sealed hypersonic pose from the same model.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Read both mandatory review contracts completely before continuing the blockout review.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Implemented controller bridge, grip nacelles, protected sanctuary, tri-drive, locomotion hierarchy, armor leaves, and conformal shield systems.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild2-haven-left30-v2.png"
+          ],
+          "reason": "Captured Haven front and orbit views plus Fast Space closure from the same live model.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Read the mandatory gates and self-correction contracts before review.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier 1 passed but warned that the render background was not isolated; used only as a weak deterministic signal.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild2-haven-right30-v2.png"
+          ],
+          "reason": "Three real orbit views were nondegenerate; background-heavy masks limit the area metric.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remained the unlocked pass.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild2-v2.png"
+          ],
+          "reason": "AI vision review recorded refine-code at estimated fidelity 0.55.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Sculpt pipeline synchronized after the refine-code review.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild5-walker-right30-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild6-walker-front-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild6-walker-left30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild6-walker-right30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/interior-slice-front-v2.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild7-walker-front-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild7-walker-left30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild7-walker-right30-v3.png",
+            ".img2threejs/expedition-ship/evidence/blockout/interior-slice-front-v4.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 7 rebuilt the pressure habitat frame and curved glass, swept the shoulder crowns into the outer shells, deepened the powered legs, and repaired left-side face winding.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild8-walker-front-v5.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild8-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild8-walker-right30-v4.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild8-interior-front-v1.png"
+          ],
+          "reason": "Fixed front, plus/minus 30 degree exterior, and interior evidence captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both required visual review contracts were reread completely before judging correction 7.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 diagnostics recorded in-place; latest silhouette IoU is 0.7876 and remains below 0.85.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild8-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild8-walker-right30-v4.png"
+          ],
+          "reason": "Both orbit views passed the non-degenerate-volume check.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "The ordered blockout pass is unlocked; visual acceptance still depends on the failed Tier-1 likeness threshold.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild8-v1.png"
+          ],
+          "reason": "Correction 7 appended exactly one refine-code action at estimated fidelity 0.52.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Sculpt pipeline synchronized after the correction-7 refine-code review.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 8 rotated the powered leg root by side times 0.34 and counter-rotated the knee by side times -0.08, producing a wider load-bearing stance.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild9-walker-front-v2.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild9-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild9-walker-right30-v1.png"
+          ],
+          "reason": "Current front and both orbit stance renders captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread completely before correction-8 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU measured 0.7726 and remains below threshold.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild9-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild9-walker-right30-v1.png"
+          ],
+          "reason": "Both orbit silhouettes remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains the current unlocked pass.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild9-v1.png"
+          ],
+          "reason": "Correction 8 appended exactly one refine-code review at fidelity 0.52.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 8.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 9 moved atrium slabs to x plus/minus 1.48, narrowed them to 0.84, moved window columns and structural piers outward, and opened the protected sanctuary sightline.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild10-walker-front-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild10-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild10-walker-right30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild10-interior-front-v1.png"
+          ],
+          "reason": "Final exterior and interior evidence captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread completely before final review.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; final silhouette IoU is 0.7718 below 0.85.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild10-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild10-walker-right30-v1.png"
+          ],
+          "reason": "Both final orbit silhouettes remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout is unlocked but still below its visual acceptance thresholds.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild10-v1.png"
+          ],
+          "reason": "Correction 9 appended exactly one refine-code review at estimated fidelity 0.56.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 9.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 10 replaced solid upper fairings with open tapered armor frames, exposed the existing chassis, moved shin rails and panels forward, and moved powered leg roots from local x plus/minus 0.34 to plus/minus 0.55.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild11-walker-front-v3.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild11-walker-left30-v3.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild11-walker-right30-v3.png"
+          ],
+          "reason": "Current powered-leg front and orbit evidence captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread before correction-10 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU is 0.7687 below threshold.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild11-walker-left30-v3.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild11-walker-right30-v3.png"
+          ],
+          "reason": "Both correction-10 orbit views remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains the current unlocked pass, with the visual gate still failing.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild11-v1.png"
+          ],
+          "reason": "Correction 10 appended exactly one refine-code review at estimated fidelity 0.57.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 10.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 11 increased the roof observatory from 3.62 by 0.34 to 3.82 by 0.58, widened the top arch, and rebuilt both power towers as taller tapered dark structures with full-height warm observation glazing.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild12-walker-front-v3.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild12-walker-left30-v3.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild12-walker-right30-v3.png"
+          ],
+          "reason": "Current roof/tower front and orbit evidence captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread before correction-11 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU remains 0.7687 below threshold.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild12-walker-left30-v3.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild12-walker-right30-v3.png"
+          ],
+          "reason": "Both correction-11 orbit views remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains unlocked; visual acceptance still fails.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild12-v1.png"
+          ],
+          "reason": "Correction 11 appended exactly one refine-code review at estimated fidelity 0.58.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 11.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 12 moved the existing occupied wing window bands outward beneath the white shoulder arches and reshaped the inset shoulder panel into a tall vertical connective element without closing the sanctuary.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild13-walker-front-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild13-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild13-walker-right30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild13-interior-front-v1.png"
+          ],
+          "reason": "Final correction-12 exterior and interior evidence captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread completely before correction-12 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU is 0.7718 below the 0.85 threshold and the conditionally admitted cinematic reference lacks a map-stripped pair.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild13-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild13-walker-right30-v1.png"
+          ],
+          "reason": "Both correction-12 orbit silhouettes remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains the current unlocked pass; the visual acceptance gate correctly remains unmet.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild13-v1.png"
+          ],
+          "reason": "Correction 12 appended exactly one refine-code review at estimated fidelity 0.60.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 12; blockout remains intentionally incomplete.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 13 enlarged powered and rear leg hips upper members knees shins armor and feet, and moved the rear roots outward to plus or minus 2.02 for a broader load-bearing stance.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild14-walker-front-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild14-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild14-walker-right30-v1.png"
+          ],
+          "reason": "Correction-13 front and both orbit views captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts read completely before correction-13 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU is 0.771 below 0.85 and the conditional cinematic reference lacks a map-stripped pair.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild14-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild14-walker-right30-v1.png"
+          ],
+          "reason": "Both correction-13 orbit silhouettes remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains unlocked and its visual acceptance gate remains unmet.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild14-v1.png"
+          ],
+          "reason": "Correction 13 appended exactly one refine-code review at estimated fidelity 0.61.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 13.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 14 replaced four identical occupied side-deck rows with three differently offset canted and scaled deck volumes, larger varied windows and a deeper pressure facade.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild15-walker-front-v2.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild15-walker-left30-v2.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild15-walker-right30-v2.png"
+          ],
+          "reason": "Correction-14 final front and both orbit views captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread completely before correction-14 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU is 0.7704 below threshold.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild15-walker-left30-v2.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild15-walker-right30-v2.png"
+          ],
+          "reason": "Both correction-14 orbit silhouettes remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains unlocked and below visual acceptance.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild15-v1.png"
+          ],
+          "reason": "Correction 14 appended exactly one refine-code review at estimated fidelity 0.62.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 14.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 15 converted the translucent roof slab to a deeper armored service spine, enlarged the top arch and visor overlap, strengthened shoulder seams and yokes, and changed the towers to larger glass lantern cores with brighter observation volumes.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild16-walker-front-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild16-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild16-walker-right30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild16-interior-front-v1.png"
+          ],
+          "reason": "Final correction-15 exterior and interior evidence captured.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md;/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "Both review contracts reread completely before correction-15 judgment.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place; silhouette IoU is 0.7664 below threshold and remains only an advisory cue for this cinematic reconstruction.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild16-walker-left30-v1.png;.img2threejs/expedition-ship/evidence/blockout/controller-rebuild16-walker-right30-v1.png"
+          ],
+          "reason": "Both final orbit silhouettes remain non-degenerate.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains unlocked but below the 10/10 visual goal and formal visual acceptance.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild16-v1.png"
+          ],
+          "reason": "Correction 15 appended exactly one refine-code review at estimated fidelity 0.63.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Pipeline synchronized after correction 15.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild17-walker-front-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild17-walker-right30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild17-walker-left30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild17-v1.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild18-walker-front-v2.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild18-walker-right30-v2.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild18-walker-left30-v2.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild18-v2.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild19-walker-front-v2.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild19-walker-right30-v2.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild19-walker-left30-v2.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild19-v2.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild20-walker-front-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild20-walker-right30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild20-walker-left30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild20-v1.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild21-walker-front-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild21-walker-left30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild21-v1.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild22-walker-front-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild22-walker-right30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild22-v1.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild23-walker-front-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild23-walker-right30-v1.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild23-v1.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild24-walker-front-v2.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild24-walker-right30-v2.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild24-v2.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild25-walker-front-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild25-walker-left30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild25-walker-right30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild25-interior-front-v1.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier 1 measured IoU 0.7346 and correctly rejected cinematic reference fidelity below 0.85; map-stripped evidence is absent, so the result is diagnostic rather than acceptance.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild25-walker-left30-v1.png",
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild25-walker-right30-v1.png"
+          ],
+          "reason": "Left and right orbit area ratios 1.0104 and 1.0365; no degenerate-view collapse.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains the current unlocked pass.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild25-v1.png"
+          ],
+          "reason": "AI vision recorded one refine-code action at estimated fidelity 0.705.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild26-walker-front-v3.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "IoU improved to 0.7371; cinematic-reference pixel gate remains diagnostic and map-stripped evidence is absent.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild26-walker-left30-v3.png"
+          ],
+          "reason": "Left and right three-quarter views retain coherent volumetric shoulder and leg silhouettes; no visual collapse.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout is the current unlocked pass.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild26-v3.png"
+          ],
+          "reason": "AI vision recorded exactly one refine-code action at estimated fidelity 0.715.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild27-walker-front-v2.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier 1 measured IoU 0.7383; the cinematic-reference pixel gate remains diagnostic and map-stripped evidence is absent.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild27-walker-left30-v2.png"
+          ],
+          "reason": "Both three-quarter views visibly preserve the new curved gallery depth and complete walker volume without collapse.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains the current unlocked pass.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild27-v2.png"
+          ],
+          "reason": "AI vision recorded exactly one refine-code action at estimated fidelity 0.723.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild28-walker-front-v2.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier 1 measured IoU 0.7378; cinematic-reference pixel alignment remains diagnostic and map-stripped evidence is absent.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/controller-rebuild28-walker-left30-v2.png"
+          ],
+          "reason": "Left and right three-quarter evidence retains the curved gallery, shoulder, and articulated walker volumes without silhouette collapse.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Blockout remains the current unlocked pass.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/blockout/comparison-controller-rebuild28-v2.png"
+          ],
+          "reason": "AI vision recorded exactly one refine-code action at estimated fidelity 0.731.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/2026-08-20-expedition-ship-controller-rebuild.md"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-20-shoulder-suites"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "grimoire/review/gates_reference.md",
+            "grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Tier-1 recorded in-place with explicit map-free evidence; Walker silhouette IoU 0.8111 remains below 0.85, so this is diagnostic evidence and the pass cannot continue.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-20-shoulder-suites"
+          ],
+          "reason": "The plus/minus 30-degree Walker captures do not collapse, although the full lab chrome makes the area ratio coarse.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-20-shoulder-suites/steering-goal-vs-before.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-21-command-suites"
+          ],
+          "reason": "Distinct steering and administration furniture, practical lighting, efficient armor scales, transparent glazing; typecheck and 1815-test suite pass within 71694 high triangles and 159 meshes",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-21-command-suites"
+          ],
+          "reason": "Captured fixed Haven -30 exterior plus true steering and administration POVs; review gates and self-correction contract were read before this correction",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-21-command-suites"
+          ],
+          "reason": "Captured fixed Haven -30 exterior plus true steering and administration POVs; review gates and self-correction contract were read before this correction",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-21-command-suites"
+          ],
+          "reason": "Mode-matched Walker diagnostic recorded IoU 0.699 below 0.85, so no likeness claim; aspect and scale deltas 0.0. Multi-angle area ratios 1.025 and 1.060 confirm real non-degenerate 3D volume.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-21-command-suites"
+          ],
+          "reason": "Mode-matched Walker diagnostic recorded IoU 0.699 below 0.85, so no likeness claim; aspect and scale deltas 0.0. Multi-angle area ratios 1.025 and 1.060 confirm real non-degenerate 3D volume.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "orchestrate_passes.py check reports PASS; blockout remains current unlocked pass",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/evidence/checkpoint-21-command-suites/steering-goal-vs-checkpoint-21.png"
+          ],
+          "reason": "AI visual review recorded at 0.30 with exactly one next action: refine-code",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec.json"
+          ],
+          "reason": "Review action synchronized to pass pipeline",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    }
+  ],
+  "reviewCursor": 38,
+  "iterationAction": "refine-code",
+  "stopReason": "max-total-correction-loops-reached:36/36"
+}

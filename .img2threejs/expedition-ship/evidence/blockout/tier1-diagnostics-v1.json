@@ -1,0 +1,20 @@
+{
+  "passed": false,
+  "passId": "blockout",
+  "renderHash": "6353e462ff8133f3",
+  "checks": {
+    "silhouetteIoU": 0.8062,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.014,
+    "maxColorDeltaE": 88.52
+  },
+  "failures": [
+    "silhouette IoU 0.806 is below threshold 0.85",
+    "blockout render is procedural and map-free, but the first diagnostic invocation did not receive explicit map-stripped-render evidence"
+  ],
+  "maskWarnings": [
+    "The cinematic photo and dark WebGL preview are not cleanly isolated; reconstruction-mode pixel scores remain advisory."
+  ],
+  "reviewDecision": "refine-code"
+}

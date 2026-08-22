@@ -1,0 +1,27 @@
+[
+  {
+    "id": "multispecies-sanctuary-zoning",
+    "score": 0.69,
+    "note": "The creature floor now reserves bathing, burrow, thermal-stone, perch, quiet-nest and open-foraging zones, but these still read as simplified real-time silhouettes rather than a dense living ecology."
+  },
+  {
+    "id": "mixed-scale-creature-residences",
+    "score": 0.66,
+    "note": "Small nests, medium coves and larger family dens are visibly varied and intentionally unoccupied, though upholstery and privacy structures remain materially coarse."
+  },
+  {
+    "id": "vehicle-scale-garage-program",
+    "score": 0.62,
+    "note": "The workshop now exposes an empty rover bay, rotary lift, service trenches, magnetic clamps and an overhead handling carriage, but the machinery is still primitive beside the billionaire engineering reference."
+  },
+  {
+    "id": "contained-readable-lower-deck-povs",
+    "score": 0.88,
+    "note": "Both cameras now stand deeper inside extended pressure floors; the garage has its own ceiling cassette and the creature deck no longer appears as workshop overhead clutter."
+  },
+  {
+    "id": "premium-material-and-lighting-finish",
+    "score": 0.36,
+    "note": "Dark structure, green nests and warm guidance are separated, but large black ceilings, broad highlights and flat surfaces remain far below the layered bronze, glass, water and practical-light finish of the goal images."
+  }
+]

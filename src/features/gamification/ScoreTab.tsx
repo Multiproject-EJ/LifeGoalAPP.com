@@ -10,7 +10,7 @@
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useEffect, useMemo, useRef, useState, useCallback, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, useCallback, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import type {
@@ -79,6 +79,10 @@ import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
 import scoreZenGarden from '../../assets/Score_zengarden.webp';
+
+const ExpeditionShipGarageShowcase = lazy(
+  () => import('./level-worlds/components/ExpeditionShipGarageShowcase'),
+);
 
 const scoreLeaderboard = '/icons/Score_tab_leaderboard.webp';
 const SCORE_ENTRANCE_ARTWORK = [
@@ -216,6 +220,7 @@ export function ScoreTab({
   const [leagueMutationPending, setLeagueMutationPending] = useState(false);
   const [leagueCelebration, setLeagueCelebration] = useState<'seeking' | 'found' | null>(null);
   const shouldCelebrateLeagueJoinRef = useRef(false);
+  const [garageExperience, setGarageExperience] = useState<'hangar' | 'legacy'>('hangar');
   const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
   const [collectionsView, setCollectionsView] = useState<'hub' | 'creatureSanctuary'>('hub');
   const [perfectCompanionOps, setPerfectCompanionOps] = useState<PerfectCompanionRuntimeConfig>(() =>
@@ -338,6 +343,9 @@ export function ScoreTab({
 
   const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections') => {
     setActiveTab(tab);
+    if (tab === 'garage') {
+      setGarageExperience('hangar');
+    }
     if (tab !== 'collections') {
       setCollectionsView('hub');
     }
@@ -1369,60 +1377,90 @@ export function ScoreTab({
       {!loading && enabled && activeTab === 'garage' && (
         <div className="score-tab__content">
           <div className="score-tab__bank-intro">
-            <h2 className="score-tab__headline">Ship Systems</h2>
+            <h2 className="score-tab__headline">
+              {garageExperience === 'hangar' ? 'Spaceship Garage' : 'Old Ship Systems'}
+            </h2>
             <p className="score-tab__subtitle">
-              Unified ship shell: companions, upgrades, and cosmetics.
+              {garageExperience === 'hangar'
+                ? 'Explore your expedition ship, its travel forms, rooms, upgrades, and customisation.'
+                : 'Legacy companions, upgrades, cosmetics, and operations controls.'}
             </p>
+            {isAdminOrCreator === true ? (
+              <button
+                type="button"
+                className="score-tab__link"
+                onClick={() => setGarageExperience((current) => current === 'hangar' ? 'legacy' : 'hangar')}
+              >
+                {garageExperience === 'hangar' ? 'Old garage tab' : 'Back to new garage'}
+              </button>
+            ) : null}
           </div>
-          <div className="score-tab__leaderboard-filters" role="tablist" aria-label="Ship sections">
-            <button
-              type="button"
-              className={`score-tab__leaderboard-filter${garageShipTab === 'companions' ? ' score-tab__leaderboard-filter--active' : ''}`}
-              onClick={() => {
-                setGarageShipTab('companions');
-                if (!session?.user?.id) return;
-                void recordTelemetryEvent({
-                  userId: session.user.id,
-                  eventType: 'island_run_ui_interaction',
-                  metadata: { stage: 'ship_shell_tab_opened', tab: 'companions' },
-                });
-              }}
-            >
-              Companions
-            </button>
-            <button
-              type="button"
-              className={`score-tab__leaderboard-filter${garageShipTab === 'upgrades' ? ' score-tab__leaderboard-filter--active' : ''}`}
-              onClick={() => {
-                setGarageShipTab('upgrades');
-                if (!session?.user?.id) return;
-                void recordTelemetryEvent({
-                  userId: session.user.id,
-                  eventType: 'island_run_ui_interaction',
-                  metadata: { stage: 'ship_shell_tab_opened', tab: 'upgrades' },
-                });
-              }}
-            >
-              Upgrades
-            </button>
-            <button
-              type="button"
-              className={`score-tab__leaderboard-filter${garageShipTab === 'cosmetics' ? ' score-tab__leaderboard-filter--active' : ''}`}
-              onClick={() => {
-                setGarageShipTab('cosmetics');
-                if (!session?.user?.id) return;
-                void recordTelemetryEvent({
-                  userId: session.user.id,
-                  eventType: 'island_run_ui_interaction',
-                  metadata: { stage: 'ship_shell_tab_opened', tab: 'cosmetics' },
-                });
-              }}
-            >
-              Cosmetics
-            </button>
-          </div>
+          {garageExperience === 'legacy' ? (
+            <div className="score-tab__leaderboard-filters" role="tablist" aria-label="Old ship sections">
+              <button
+                type="button"
+                className={`score-tab__leaderboard-filter${garageShipTab === 'companions' ? ' score-tab__leaderboard-filter--active' : ''}`}
+                onClick={() => {
+                  setGarageShipTab('companions');
+                  if (!session?.user?.id) return;
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'island_run_ui_interaction',
+                    metadata: { stage: 'ship_shell_tab_opened', tab: 'companions' },
+                  });
+                }}
+              >
+                Companions
+              </button>
+              <button
+                type="button"
+                className={`score-tab__leaderboard-filter${garageShipTab === 'upgrades' ? ' score-tab__leaderboard-filter--active' : ''}`}
+                onClick={() => {
+                  setGarageShipTab('upgrades');
+                  if (!session?.user?.id) return;
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'island_run_ui_interaction',
+                    metadata: { stage: 'ship_shell_tab_opened', tab: 'upgrades' },
+                  });
+                }}
+              >
+                Upgrades
+              </button>
+              <button
+                type="button"
+                className={`score-tab__leaderboard-filter${garageShipTab === 'cosmetics' ? ' score-tab__leaderboard-filter--active' : ''}`}
+                onClick={() => {
+                  setGarageShipTab('cosmetics');
+                  if (!session?.user?.id) return;
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'island_run_ui_interaction',
+                    metadata: { stage: 'ship_shell_tab_opened', tab: 'cosmetics' },
+                  });
+                }}
+              >
+                Cosmetics
+              </button>
+            </div>
+          ) : null}
 
-          {garageShipTab === 'companions' ? (
+          {garageExperience === 'hangar' ? (
+            <Suspense fallback={<div className="score-tab__status">Preparing the expedition ship hangar…</div>}>
+              <ExpeditionShipGarageShowcase
+                onOpenUpgrades={() => {
+                  setGarageShipTab('upgrades');
+                  setGarageExperience('legacy');
+                }}
+                onOpenCosmetics={() => {
+                  setGarageShipTab('cosmetics');
+                  setGarageExperience('legacy');
+                }}
+              />
+            </Suspense>
+          ) : null}
+
+          {garageExperience === 'legacy' && garageShipTab === 'companions' ? (
             <section className="score-tab__card">
               <h3 className="score-tab__card-title">Companion Sanctuary</h3>
               <p className="score-tab__meta">
@@ -1446,7 +1484,7 @@ export function ScoreTab({
             </section>
           ) : null}
 
-          {garageShipTab === 'upgrades' ? (
+          {garageExperience === 'legacy' && garageShipTab === 'upgrades' ? (
             session ? (
               <PowerUpsStore session={session} />
             ) : (
@@ -1454,7 +1492,7 @@ export function ScoreTab({
             )
           ) : null}
 
-          {garageShipTab === 'cosmetics' ? (
+          {garageExperience === 'legacy' && garageShipTab === 'cosmetics' ? (
             <section className="score-tab__card">
               <h3 className="score-tab__card-title">Ship Cosmetics</h3>
               <p className="score-tab__meta">
@@ -1463,7 +1501,7 @@ export function ScoreTab({
             </section>
           ) : null}
 
-          {session ? (
+          {garageExperience === 'legacy' && session && isAdminOrCreator === true ? (
             <section className="score-tab__card">
               <h3 className="score-tab__card-title">Perfect Companion tuning (ops)</h3>
               <p className="score-tab__meta">

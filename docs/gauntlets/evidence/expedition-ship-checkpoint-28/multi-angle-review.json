@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9974717881944445,
+  "angles": [
+    {
+      "path": "docs/gauntlets/evidence/expedition-ship-checkpoint-28/haven-minus30.png",
+      "areaFraction": 0.9978645833333334,
+      "ratio": 1.0003937907252494,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/evidence/expedition-ship-checkpoint-28/haven-plus30.png",
+      "areaFraction": 0.99765625,
+      "ratio": 1.0001849293461116,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "scopeNote": "Whole framed lab masks make these useful as non-degeneracy regression evidence, not precise ship-only silhouette measurements."
+}

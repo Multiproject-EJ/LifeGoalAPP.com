@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 0.9941,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0041
+  },
+  "failures": [],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "23a2b39af938ba97",
+  "passId": null,
+  "scopeNote": "Unstripped whole-lab regression comparison only. The blockout record still lacks the required map-stripped render and this result is not a reference-fidelity acceptance signal."
+}

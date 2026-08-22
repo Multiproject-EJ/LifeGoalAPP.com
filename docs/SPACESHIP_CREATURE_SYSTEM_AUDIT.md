@@ -1,5 +1,12 @@
 # Spaceship + Creature Habitat Audit (Current Repo State)
 
+> **2026-08-22 implementation update:** The Score Garage now starts with a
+> lazy-loaded `Hangar` section that renders the shared Expedition Ship 3D
+> canvas. It supports Haven, Walker and Fast Space configurations plus
+> exterior, fabrication-workshop and forward-glass inspection. The existing
+> Companions, Upgrades and Cosmetics sections remain separate and unchanged;
+> the Island Run sanctuary still owns creature gameplay state.
+
 ## Executive summary
 As of the current codebase, there are **two different "spaceship/garage" concepts**:
 

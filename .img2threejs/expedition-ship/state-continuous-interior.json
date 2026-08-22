@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped",
+  "profile": "generic",
+  "currentStep": "stopped",
+  "currentPass": "blockout",
+  "checklist": [
+    {
+      "id": "image-analysis",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "Fresh phase carries forward the admitted mixed reference, layered analysis, conditional suitability, local evidence search, ultra-complex assessment and mapped 16-item detail inventory; only construction strategy, phase identity and review history are reset.",
+      "command": "Read grimoire/intake/image_analysis.md and analyze {reference}"
+    },
+    {
+      "id": "reference-suitability",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "Fresh phase carries forward the admitted mixed reference, layered analysis, conditional suitability, local evidence search, ultra-complex assessment and mapped 16-item detail inventory; only construction strategy, phase identity and review history are reset.",
+      "command": "Read grimoire/intake/validation_rubric.md and record a pass, conditional, or reject verdict for {reference}"
+    },
+    {
+      "id": "reference-admission",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "Fresh phase carries forward the admitted mixed reference, layered analysis, conditional suitability, local evidence search, ultra-complex assessment and mapped 16-item detail inventory; only construction strategy, phase identity and review history are reset.",
+      "command": "python3 forge/stage1_intake/check_reference_admission.py {reference}"
+    },
+    {
+      "id": "local-spec-search",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "Fresh phase carries forward the admitted mixed reference, layered analysis, conditional suitability, local evidence search, ultra-complex assessment and mapped 16-item detail inventory; only construction strategy, phase identity and review history are reset.",
+      "command": "Run the local evidence search before authoring the assessment"
+    },
+    {
+      "id": "pre-spec-assessment",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "Fresh phase carries forward the admitted mixed reference, layered analysis, conditional suitability, local evidence search, ultra-complex assessment and mapped 16-item detail inventory; only construction strategy, phase identity and review history are reset.",
+      "command": "python3 forge/stage2_spec/new_pre_spec_assessment.py \"<name>\" --image {reference} --out assessment.json"
+    },
+    {
+      "id": "detail-inventory",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "Fresh phase carries forward the admitted mixed reference, layered analysis, conditional suitability, local evidence search, ultra-complex assessment and mapped 16-item detail inventory; only construction strategy, phase identity and review history are reset.",
+      "command": "python3 forge/stage1_intake/build_detail_inventory.py {reference} --mode grid-3x3 --out-dir detail-inventory --out di.json"
+    },
+    {
+      "id": "projection-route",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "This phase rebuilds navigable multi-angle room envelopes and instanced machinery; single-view projection would fail free-look consistency, so existing independent PBR evidence remains the correct route.",
+      "command": "Record whether projection is required; if required run solve_camera_pose.py, delight_albedo.py, and bake_projected_texture.py, otherwise skip with a reason"
+    },
+    {
+      "id": "spec-authoring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "The fresh spec preserves the verified 21-component hierarchy and independent workshop-metal, sanctuary-hardscape and sanctuary-textile PBR mappings, adds continuous-envelope and near-camera LOD strategy, resets review records, and passes strict-quality validation.",
+      "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
+    },
+    {
+      "id": "material-evidence",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "The fresh spec preserves the verified 21-component hierarchy and independent workshop-metal, sanctuary-hardscape and sanctuary-textile PBR mappings, adds continuous-envelope and near-camera LOD strategy, resets review records, and passes strict-quality validation.",
+      "command": "python3 forge/stage1_intake/material_region_analysis.py --manifest material-regions.json --out-dir material-evidence --out material-analysis.json (single-crop route: analyze_texture.py + extract_pbr_evidence.py per verified crop; otherwise skip with a reason)"
+    },
+    {
+      "id": "material-spec-wiring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "The fresh spec preserves the verified 21-component hierarchy and independent workshop-metal, sanctuary-hardscape and sanctuary-textile PBR mappings, adds continuous-envelope and near-camera LOD strategy, resets review records, and passes strict-quality validation.",
+      "command": "python3 forge/stage2_spec/apply_material_analysis.py {spec} material-analysis.json --in-place"
+    },
+    {
+      "id": "strict-validation",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+      ],
+      "reason": "The fresh spec preserves the verified 21-component hierarchy and independent workshop-metal, sanctuary-hardscape and sanctuary-textile PBR mappings, adds continuous-envelope and near-camera LOD strategy, resets review records, and passes strict-quality validation.",
+      "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
+    },
+    {
+      "id": "build-current-pass",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+    },
+    {
+      "id": "render-capture",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+    },
+    {
+      "id": "review-contract-read",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+    },
+    {
+      "id": "tier1-diagnostics",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+    },
+    {
+      "id": "multi-angle-review",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+    },
+    {
+      "id": "pass-gate-check",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+    },
+    {
+      "id": "ai-review-recorded",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+    },
+    {
+      "id": "pipeline-sync",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+    },
+    {
+      "id": "part-coverage",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
+    },
+    {
+      "id": "action-ready",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
+    }
+  ],
+  "loops": {
+    "perPass": {
+      "blockout": 3
+    },
+    "total": 3,
+    "maxPerPass": 3,
+    "maxTotal": 6
+  },
+  "artifacts": {
+    "reference": "docs/design/expedition-ship/references/14-workshop-and-creature-exploration-mixed-v1.png",
+    "spec": ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+  },
+  "passHistory": [
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-35/reference-vs-workshop.png"
+          ],
+          "reason": "Checkpoint 35 starts the user-authorized continuous-interior phase, replaces flat workshop slabs with a bowed canopy and curved pressure cheeks, wraps reusable kits around the perimeter, captures primary/yaw/Haven/Fast-Space evidence, records Tier-1 failure, passes the non-degenerate yaw check, records exactly one refine-code review and synchronizes the locked pipeline.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-36",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts",
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeLab.tsx",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-37",
+            ".img2threejs/expedition-ship/object-sculpt-spec-continuous-interior.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    }
+  ],
+  "reviewCursor": 3,
+  "iterationAction": "refine-spec",
+  "stopReason": "max-correction-loops-reached:blockout:3/3"
+}

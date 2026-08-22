@@ -173,6 +173,7 @@ import { island10RootheartThreeWorldContractTests } from './island10RootheartThr
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
 import { eggHatchThreePresentationTests } from './eggHatchThreePresentation.test';
 import { eggHatchThreeContractTests } from './eggHatchThreeContract.test';
+import { expeditionShipThreeContractTests } from './expeditionShipThreeContract.test';
 import { islandRunArenaCreatureRosterTests } from './islandRunArenaCreatureRoster.test';
 import { islandRunCreatureArenaBattleTests } from './islandRunCreatureArenaBattle.test';
 import { journeyDiscArenaGameTests } from './journeyDiscArenaGame.test';
@@ -199,6 +200,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
   { label: 'eggHatchThreePresentation', tests: eggHatchThreePresentationTests },
   { label: 'eggHatchThreeContract', tests: eggHatchThreeContractTests },
+  { label: 'expeditionShipThreeContract', tests: expeditionShipThreeContractTests },
   { label: 'islandRunArenaCreatureRoster', tests: islandRunArenaCreatureRosterTests },
   { label: 'islandRunCreatureArenaBattle', tests: islandRunCreatureArenaBattleTests },
   { label: 'journeyDiscArenaGame', tests: journeyDiscArenaGameTests },
