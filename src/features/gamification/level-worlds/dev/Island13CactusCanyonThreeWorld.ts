@@ -43,6 +43,13 @@ interface Island13RailSample {
   tangent: THREE.Vector3;
 }
 
+export type Island13TrainRideView = 'driver' | 'rear' | 'side';
+
+export interface Island13TrainRidePose {
+  position: THREE.Vector3;
+  target: THREE.Vector3;
+}
+
 const island13SpiralElevation = (progress: number) => THREE.MathUtils.lerp(
   ISLAND_13_SPIRAL_BOTTOM_Y,
   ISLAND_13_SPIRAL_TOP_Y,
@@ -168,6 +175,7 @@ export interface Island13CactusCanyonAmbienceRuntime {
   animate: (elapsed: number) => void;
   updateSpiralRail?: (presentation: Island13CactusCanyonSpiralPresentation) => void;
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
+  getTrainRidePose?: (view: Island13TrainRideView) => Island13TrainRidePose | null;
 }
 
 export interface Island13CactusCanyonSpiralPresentation {
@@ -256,6 +264,42 @@ export function isIsland13RouteCorridorClear(x: number, z: number, footprintRadi
   const footprint = Math.max(0, footprintRadius);
   return distance + footprint <= ISLAND_13_ROUTE_CLEARANCE_INNER_RADIUS
     || distance - footprint >= ISLAND_13_ROUTE_CLEARANCE_OUTER_RADIUS;
+}
+
+const ISLAND_13_SUMMIT_RAIL_SCENERY_MARGIN = 0.08;
+
+export function isIsland13SummitRailCorridorClear(x: number, z: number, footprintRadius = 0): boolean {
+  const distance = Math.hypot(x, z);
+  const footprint = Math.max(0, footprintRadius);
+  const innerRadius = ISLAND_13_SUMMIT_RAIL_RADIUS
+    - ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH
+    - ISLAND_13_SUMMIT_RAIL_SCENERY_MARGIN;
+  const outerRadius = ISLAND_13_SUMMIT_RAIL_RADIUS
+    + ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH
+    + ISLAND_13_SUMMIT_RAIL_SCENERY_MARGIN;
+  return distance + footprint <= innerRadius || distance - footprint >= outerRadius;
+}
+
+function resolveIsland13SummitRailSafePosition(
+  x: number,
+  z: number,
+  footprintRadius: number,
+): readonly [number, number] {
+  if (isIsland13SummitRailCorridorClear(x, z, footprintRadius)) return [x, z];
+  const distance = Math.max(0.001, Math.hypot(x, z));
+  const innerSafeRadius = ISLAND_13_SUMMIT_RAIL_RADIUS
+    - ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH
+    - ISLAND_13_SUMMIT_RAIL_SCENERY_MARGIN
+    - footprintRadius
+    - 0.02;
+  const outerSafeRadius = ISLAND_13_SUMMIT_RAIL_RADIUS
+    + ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH
+    + ISLAND_13_SUMMIT_RAIL_SCENERY_MARGIN
+    + footprintRadius
+    + 0.02;
+  const safeRadius = distance < ISLAND_13_SUMMIT_RAIL_RADIUS ? innerSafeRadius : outerSafeRadius;
+  const scale = safeRadius / distance;
+  return [x * scale, z * scale];
 }
 
 function box(width: number, height: number, depth: number, material: THREE.Material) {
@@ -909,7 +953,9 @@ function addIsland13LandmarkRailPassage(
   [-1, 1].forEach((side, sideIndex) => {
     const platform = box(2.48, 0.1, 0.2, sideIndex ? materials.sandstoneLight : materials.timberWorn);
     platform.name = `${prefix}_PLATFORM_${sideIndex + 1}`;
-    platform.position.set(0, 0.31, side * (platformHalfGap + 0.1));
+    // Keep the platform coping below the locomotive underframe after the
+    // satellite landmark's authored 1.22x vertical scale is applied.
+    platform.position.set(0, 0.27, side * (platformHalfGap + 0.1));
     passage.add(platform);
   });
 
@@ -925,22 +971,22 @@ function addIsland13LandmarkRailPassage(
     });
     const lintel = box(0.12, 0.16, 1.16, materials.brass);
     lintel.name = `${prefix}_PORTAL_${portalIndex + 1}_LINTEL`;
-    lintel.position.y = 1.62;
+    lintel.position.y = 1.94;
     portal.add(lintel);
     passage.add(portal);
   });
 
   [-1, 1].forEach((side, canopyIndex) => {
-    const canopy = box(2.36, 0.09, 0.3, materials.roof);
+    const canopy = box(2.36, 0.09, 0.24, materials.roof);
     canopy.name = `${prefix}_PLATFORM_CANOPY_${canopyIndex + 1}`;
-    canopy.position.set(0, 1.72, side * 0.48);
+    canopy.position.set(0, 1.96, side * 0.65);
     canopy.rotation.x = side * 0.08;
     passage.add(canopy);
   });
   [-0.72, 0.72].forEach((x, lampIndex) => {
     const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.085, 8, 6), materials.window);
     lamp.name = `${prefix}_LAMP_${lampIndex + 1}`;
-    lamp.position.set(x, 1.5, -0.48);
+    lamp.position.set(x, 1.58, -0.68);
     passage.add(lamp);
   });
 
@@ -1163,6 +1209,14 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
       root.add(sidePlatform, sideCanopy);
     });
     const roofApexY = towerRoofBaseY + 0.68;
+    // A substantial saddle transfers the cupola into the tower roof instead
+    // of leaving the turret balanced on the single apex point.
+    const cupolaSaddle = box(0.76, 0.5, 0.76, materials.timberWorn);
+    cupolaSaddle.name = 'ISLAND_13_UNION_STATION_CUPOLA_ROOF_SADDLE';
+    cupolaSaddle.position.y = roofApexY - 0.06;
+    const cupolaSaddleTrim = box(0.88, 0.11, 0.88, materials.brass);
+    cupolaSaddleTrim.name = 'ISLAND_13_UNION_STATION_CUPOLA_ROOF_SADDLE_TRIM';
+    cupolaSaddleTrim.position.y = roofApexY - 0.25;
     const cupola = cylinder(0.33, 0.39, 0.5, materials.timberWorn, 8);
     cupola.name = 'ISLAND_13_UNION_STATION_CUPOLA';
     cupola.position.y = roofApexY + 0.2;
@@ -1187,7 +1241,31 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
     // Mount the railway flag off-centre on the roof shoulder. A centred pole
     // reinforced the church-steeple silhouette and disappeared beneath the
     // phone safe-area notch in the canonical camera.
-    flagPole.position.set(-0.58, roofApexY + 0.66, 0);
+    // The longer pole reaches through the sloping roof. A socket, collar and
+    // paired stays expose the actual load path from cloth to station frame.
+    flagPole.scale.y = 1.9;
+    flagPole.position.set(-0.58, roofApexY + 0.32, 0);
+    const flagPoleFoot = cylinder(0.075, 0.095, 0.12, materials.iron, 8);
+    flagPoleFoot.name = 'ISLAND_13_UNION_STATION_FLAG_POLE_ROOF_SOCKET';
+    flagPoleFoot.position.set(-0.58, roofApexY - 0.39, 0);
+    const flagPoleCollar = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.018, 5, 10), materials.brass);
+    flagPoleCollar.name = 'ISLAND_13_UNION_STATION_FLAG_POLE_MOUNTING_COLLAR';
+    flagPoleCollar.rotation.x = Math.PI / 2;
+    flagPoleCollar.position.set(-0.58, roofApexY - 0.32, 0);
+    const flagBraceFront = timberBeamBetween(
+      new THREE.Vector3(-0.84, roofApexY - 0.43, 0.18),
+      new THREE.Vector3(-0.58, roofApexY - 0.08, 0),
+      0.035,
+      materials.brass,
+      'ISLAND_13_UNION_STATION_FLAG_POLE_BRACE_FRONT',
+    );
+    const flagBraceRear = timberBeamBetween(
+      new THREE.Vector3(-0.84, roofApexY - 0.43, -0.18),
+      new THREE.Vector3(-0.58, roofApexY - 0.08, 0),
+      0.035,
+      materials.brass,
+      'ISLAND_13_UNION_STATION_FLAG_POLE_BRACE_REAR',
+    );
     const railwayFlag = createWesternRailwayFlag(materials.bluePaint);
     railwayFlag.position.set(-0.58, roofApexY + 0.82, 0);
     railwayFlag.rotation.y = Math.PI;
@@ -1226,7 +1304,23 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
     const rearChimney = box(0.16, 0.6, 0.16, materials.iron);
     rearChimney.name = 'ISLAND_13_UNION_REAR_CHIMNEY';
     rearChimney.position.set(-0.54, 1.93, -0.42);
-    root.add(cupola, crown, bell, flagPole, railwayFlag, clockFace, rearClockFace, stationSign, rearChimney);
+    root.add(
+      cupolaSaddle,
+      cupolaSaddleTrim,
+      cupola,
+      crown,
+      bell,
+      flagPole,
+      flagPoleFoot,
+      flagPoleCollar,
+      flagBraceFront,
+      flagBraceRear,
+      railwayFlag,
+      clockFace,
+      rearClockFace,
+      stationSign,
+      rearChimney,
+    );
   } else {
     addWesternSaloonEntry(root, 'ISLAND_13_UNION_FRONT_SALOON', 0.885, materials);
   }
@@ -1851,7 +1945,10 @@ export function collectIsland13LandmarkTrainClearanceViolations(landmark: THREE.
   const instanceMatrix = new THREE.Matrix4();
   const instanceWorldMatrix = new THREE.Matrix4();
 
-  architecture.traverse((object) => {
+  // Include the portal, canopy and platform dressing in the same swept-volume
+  // audit. A clear set-back building is insufficient if later station pieces
+  // hang into the locomotive or independently articulated carriages.
+  landmark.traverse((object) => {
     if (!(object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh)) return;
     const positions = object.geometry.getAttribute('position');
     if (!positions) return;
@@ -2068,6 +2165,17 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
   const orbit = new THREE.Group();
   orbit.name = 'ISLAND_13_LOCOMOTIVE_ORBIT';
   const units: Island13TrainUnit[] = [];
+  const royalBlack = materials.bluePaint.clone();
+  royalBlack.name = 'ISLAND_13_ROYAL_TRAIN_BLACK_LACQUER';
+  royalBlack.color.setHex(0x070a0f);
+  royalBlack.roughness = 0.2;
+  royalBlack.metalness = 0.72;
+  royalBlack.emissive.setHex(0x05080c);
+  royalBlack.emissiveIntensity = 0.2;
+  const velvet = materials.roof.clone();
+  velvet.name = 'ISLAND_13_ROYAL_CARRIAGE_VELVET';
+  velvet.color.setHex(0x651824);
+  velvet.roughness = 0.54;
   const createWheelPair = (owner: THREE.Group, wheelPivots: THREE.Group[], x: number, wheelRadius = 0.16) => {
     [-1, 1].forEach((side) => {
       const pivot = new THREE.Group();
@@ -2090,11 +2198,35 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
   const train = new THREE.Group();
   train.name = 'ISLAND_13_CANYON_LOOP_LOCOMOTIVE';
   const engineWheels: THREE.Group[] = [];
-  const boiler = cylinder(0.28, 0.28, 0.82, materials.bluePaint, segments(quality));
+  const boiler = cylinder(0.28, 0.28, 0.82, royalBlack, segments(quality));
+  boiler.name = 'ISLAND_13_LOCOMOTIVE_BLACK_LACQUER_BOILER';
   boiler.rotation.z = Math.PI / 2;
   boiler.position.set(0.08, 0.46, 0);
-  const cab = box(0.54, 0.7, 0.58, materials.bluePaint);
-  cab.position.set(-0.5, 0.48, 0);
+  const cab = new THREE.Group();
+  cab.name = 'ISLAND_13_LOCOMOTIVE_BLACK_LACQUER_CAB';
+  const cabFloor = box(0.58, 0.14, 0.62, royalBlack);
+  cabFloor.name = 'ISLAND_13_LOCOMOTIVE_CAB_FLOOR';
+  cabFloor.position.set(-0.5, 0.22, 0);
+  const cabRoof = box(0.64, 0.1, 0.68, royalBlack);
+  cabRoof.name = 'ISLAND_13_LOCOMOTIVE_CAB_ROOF';
+  cabRoof.position.set(-0.5, 0.89, 0);
+  const cabRearWall = box(0.08, 0.58, 0.58, royalBlack);
+  cabRearWall.name = 'ISLAND_13_LOCOMOTIVE_CAB_REAR_WALL';
+  cabRearWall.position.set(-0.75, 0.57, 0);
+  cab.add(cabFloor, cabRoof, cabRearWall);
+  [-0.72, -0.28].forEach((x, xIndex) => [-1, 1].forEach((side) => {
+    const cabPost = box(0.065, 0.58, 0.065, royalBlack);
+    cabPost.name = `ISLAND_13_LOCOMOTIVE_CAB_${xIndex === 0 ? 'REAR' : 'FRONT'}_${side < 0 ? 'PORT' : 'STARBOARD'}_POST`;
+    cabPost.position.set(x, 0.58, side * 0.265);
+    cab.add(cabPost);
+  }));
+  const cabSeat = box(0.24, 0.18, 0.34, velvet);
+  cabSeat.name = 'ISLAND_13_LOCOMOTIVE_ENGINEER_VELVET_SEAT';
+  cabSeat.position.set(-0.63, 0.36, 0);
+  const cabRoofTrim = box(0.68, 0.045, 0.72, materials.brass);
+  cabRoofTrim.name = 'ISLAND_13_LOCOMOTIVE_CAB_BRASS_ROOF_TRIM';
+  cabRoofTrim.position.set(-0.5, 0.835, 0);
+  cab.add(cabSeat, cabRoofTrim);
   const chimney = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.42, 10), materials.iron);
   chimney.position.set(0.31, 0.94, 0);
   const cowcatcher = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.62, 4, 1, true), materials.brass);
@@ -2102,8 +2234,18 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
   cowcatcher.rotation.y = Math.PI / 4;
   cowcatcher.position.set(0.78, 0.22, 0);
   const headlamp = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), materials.window);
+  headlamp.name = 'ISLAND_13_LOCOMOTIVE_ROYAL_HEADLAMP';
   headlamp.position.set(0.5, 0.68, 0);
-  train.add(boiler, cab, chimney, cowcatcher, headlamp);
+  const steamDome = cylinder(0.13, 0.16, 0.22, materials.brass, 10);
+  steamDome.name = 'ISLAND_13_LOCOMOTIVE_BRASS_STEAM_DOME';
+  steamDome.position.set(-0.04, 0.81, 0);
+  const boilerRailPort = box(0.68, 0.035, 0.035, materials.brass);
+  boilerRailPort.name = 'ISLAND_13_LOCOMOTIVE_PORT_HANDRAIL';
+  boilerRailPort.position.set(0.1, 0.57, -0.315);
+  const boilerRailStarboard = boilerRailPort.clone();
+  boilerRailStarboard.name = 'ISLAND_13_LOCOMOTIVE_STARBOARD_HANDRAIL';
+  boilerRailStarboard.position.z = 0.315;
+  train.add(boiler, cab, chimney, cowcatcher, headlamp, steamDome, boilerRailPort, boilerRailStarboard);
   [-1, 1].forEach((side) => {
     const cabWindow = box(0.24, 0.28, 0.055, materials.window);
     cabWindow.name = `ISLAND_13_LOCOMOTIVE_CAB_${side < 0 ? 'PORT' : 'STARBOARD'}_WINDOW`;
@@ -2126,12 +2268,23 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
   }
   train.userData.steamPuffs = steamPuffs;
   train.userData.consistRole = 'engine';
+  const driverCamera = new THREE.Object3D();
+  driverCamera.name = 'ISLAND_13_TRAIN_RIDE_DRIVER_CAMERA';
+  // Put the eye line just ahead of the cab header, as if the engineer leans
+  // into the open forward window. This preserves the black boiler in the
+  // lower frame without letting the cab roof occlude the canyon horizon.
+  driverCamera.position.set(0, 0.9, 0.33);
+  const driverTarget = new THREE.Object3D();
+  driverTarget.name = 'ISLAND_13_TRAIN_RIDE_DRIVER_TARGET';
+  driverTarget.position.set(2.4, 0.78, 0.92);
+  train.add(driverCamera, driverTarget);
   units.push({ node: train, offset: 0, wheelPivots: engineWheels });
 
   const tender = new THREE.Group();
   tender.name = 'ISLAND_13_TRAIN_TENDER';
   const tenderWheels: THREE.Group[] = [];
-  const tenderBody = box(0.72, 0.5, 0.58, materials.bluePaint);
+  const tenderBody = box(0.72, 0.5, 0.58, royalBlack);
+  tenderBody.name = 'ISLAND_13_TRAIN_TENDER_BLACK_LACQUER_BODY';
   tenderBody.position.y = 0.42;
   const coal = box(0.54, 0.12, 0.46, materials.iron);
   coal.position.y = 0.73;
@@ -2148,22 +2301,65 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
     const coach = new THREE.Group();
     coach.name = `ISLAND_13_TRAIN_PASSENGER_CARRIAGE_${coachIndex}`;
     const coachWheels: THREE.Group[] = [];
-    const body = box(0.92, 0.62, 0.64, coachIndex === 1 ? materials.timber : materials.bluePaint);
-    body.position.y = 0.49;
+    const exterior = coachIndex === 1 ? materials.timber : royalBlack;
+    const floor = box(0.94, 0.12, 0.66, materials.timberWorn);
+    floor.name = `ISLAND_13_COACH_${coachIndex}_FLOOR_FRAME`;
+    floor.position.y = 0.25;
+    const lowerBody = box(0.92, 0.24, 0.64, exterior);
+    lowerBody.name = `ISLAND_13_COACH_${coachIndex}_LOWER_BODY`;
+    lowerBody.position.y = 0.39;
     const roof = createGableRoof(1.04, 0.25, 0.74, materials.roof);
+    roof.name = `ISLAND_13_COACH_${coachIndex}_ROOF`;
     roof.position.y = 0.83;
-    coach.add(body, roof);
+    const frontWall = box(0.08, 0.54, 0.62, exterior);
+    frontWall.name = `ISLAND_13_COACH_${coachIndex}_FRONT_WALL`;
+    frontWall.position.set(0.45, 0.61, 0);
+    const rearWall = frontWall.clone();
+    rearWall.name = `ISLAND_13_COACH_${coachIndex}_REAR_WALL`;
+    rearWall.position.x = -0.45;
+    coach.add(floor, lowerBody, roof, frontWall, rearWall);
     [-1, 1].forEach((side) => {
-      [-0.26, 0, 0.26].forEach((windowOffset, windowIndex) => {
-        const window = box(0.18, 0.24, 0.05, materials.window);
-        window.name = coachIndex === 1
-          ? `ISLAND_13_COACH_${side < 0 ? 'PORT' : 'STARBOARD'}_WINDOW_${windowIndex + 1}`
-          : `ISLAND_13_COACH_${coachIndex}_${side < 0 ? 'PORT' : 'STARBOARD'}_WINDOW_${windowIndex + 1}`;
-        window.position.set(windowOffset, 0.56, side * 0.345);
-        coach.add(window);
+      [-0.45, -0.15, 0.15, 0.45].forEach((x, postIndex) => {
+        const post = box(0.055, 0.42, 0.065, coachIndex === 2 && postIndex % 2 ? materials.brass : exterior);
+        post.name = `ISLAND_13_COACH_${coachIndex}_${side < 0 ? 'PORT' : 'STARBOARD'}_WINDOW_POST_${postIndex + 1}`;
+        post.position.set(x, 0.69, side * 0.31);
+        coach.add(post);
+      });
+      const upperRail = box(0.94, 0.055, 0.07, coachIndex === 2 ? materials.brass : exterior);
+      upperRail.name = `ISLAND_13_COACH_${coachIndex}_${side < 0 ? 'PORT' : 'STARBOARD'}_UPPER_RAIL`;
+      upperRail.position.set(0, 0.88, side * 0.31);
+      coach.add(upperRail);
+      [-0.3, 0, 0.3].forEach((windowOffset, windowIndex) => {
+        const isRoyalOpenWindow = coachIndex === 2 && side > 0 && windowIndex === 1;
+        if (!isRoyalOpenWindow) {
+          const window = box(0.225, 0.27, 0.025, materials.window);
+          window.name = coachIndex === 1
+            ? `ISLAND_13_COACH_${side < 0 ? 'PORT' : 'STARBOARD'}_WINDOW_${windowIndex + 1}`
+            : `ISLAND_13_COACH_${coachIndex}_${side < 0 ? 'PORT' : 'STARBOARD'}_WINDOW_${windowIndex + 1}`;
+          window.position.set(windowOffset, 0.69, side * 0.326);
+          coach.add(window);
+        } else {
+          const openWindow = new THREE.Object3D();
+          openWindow.name = 'ISLAND_13_ROYAL_CARRIAGE_OPEN_SIDE_WINDOW';
+          openWindow.position.set(windowOffset, 0.69, side * 0.326);
+          coach.add(openWindow);
+          const raisedSash = box(0.225, 0.055, 0.035, materials.brass);
+          raisedSash.name = 'ISLAND_13_ROYAL_CARRIAGE_RAISED_WINDOW_SASH';
+          raisedSash.position.set(windowOffset, 0.84, side * 0.34);
+          const openWindowSill = box(0.26, 0.035, 0.045, materials.brass);
+          openWindowSill.name = 'ISLAND_13_ROYAL_CARRIAGE_OPEN_WINDOW_SILL';
+          openWindowSill.position.set(windowOffset, 0.545, side * 0.345);
+          const openWindowJambPort = box(0.035, 0.31, 0.045, materials.brass);
+          openWindowJambPort.name = 'ISLAND_13_ROYAL_CARRIAGE_OPEN_WINDOW_JAMB_A';
+          openWindowJambPort.position.set(windowOffset - 0.13, 0.69, side * 0.345);
+          const openWindowJambStarboard = openWindowJambPort.clone();
+          openWindowJambStarboard.name = 'ISLAND_13_ROYAL_CARRIAGE_OPEN_WINDOW_JAMB_B';
+          openWindowJambStarboard.position.x = windowOffset + 0.13;
+          coach.add(raisedSash, openWindowSill, openWindowJambPort, openWindowJambStarboard);
+        }
       });
     });
-    const rearDoor = box(0.055, 0.44, 0.26, materials.bluePaint);
+    const rearDoor = box(0.055, 0.44, 0.26, coachIndex === 2 ? royalBlack : materials.bluePaint);
     rearDoor.name = coachIndex === 1 ? 'ISLAND_13_COACH_REAR_DOOR' : `ISLAND_13_COACH_${coachIndex}_REAR_DOOR`;
     rearDoor.position.set(-0.49, 0.45, 0);
     const frontCoupler = box(0.2, 0.07, 0.09, materials.iron);
@@ -2171,6 +2367,79 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
     const rearCoupler = frontCoupler.clone();
     rearCoupler.position.x = -0.56;
     coach.add(rearDoor, frontCoupler, rearCoupler);
+    if (coachIndex === 2) {
+      const observationDeck = box(0.4, 0.065, 0.62, materials.timberWorn);
+      observationDeck.name = 'ISLAND_13_ROYAL_CARRIAGE_REAR_OBSERVATION_DECK';
+      observationDeck.position.set(-0.65, 0.3, 0);
+      const observationRail = new THREE.Group();
+      observationRail.name = 'ISLAND_13_ROYAL_CARRIAGE_REAR_OBSERVATION_RAIL';
+      [-1, 1].forEach((side, railIndex) => {
+        const sideRail = box(0.38, 0.045, 0.045, materials.brass);
+        sideRail.name = `ISLAND_13_ROYAL_CARRIAGE_REAR_SIDE_RAIL_${railIndex + 1}`;
+        sideRail.position.set(-0.66, 0.52, side * 0.28);
+        observationRail.add(sideRail);
+      });
+      coach.add(observationDeck, observationRail);
+      [-1, 1].forEach((side, postIndex) => {
+        const observationPost = box(0.045, 0.3, 0.045, materials.brass);
+        observationPost.name = `ISLAND_13_ROYAL_CARRIAGE_REAR_OBSERVATION_POST_${postIndex + 1}`;
+        observationPost.position.set(-0.84, 0.42, side * 0.27);
+        coach.add(observationPost);
+      });
+      const royalInterior = new THREE.Group();
+      royalInterior.name = 'ISLAND_13_ROYAL_CARRIAGE_INTERIOR';
+      const parquet = box(0.78, 0.035, 0.5, materials.timber);
+      parquet.name = 'ISLAND_13_ROYAL_CARRIAGE_PARQUET_FLOOR';
+      parquet.position.y = 0.325;
+      royalInterior.add(parquet);
+      [-1, 1].forEach((side) => {
+        const seatBase = box(0.68, 0.16, 0.16, velvet);
+        seatBase.name = `ISLAND_13_ROYAL_CARRIAGE_${side < 0 ? 'PORT' : 'STARBOARD'}_VELVET_SEAT`;
+        seatBase.position.set(-0.02, 0.44, side * 0.2);
+        royalInterior.add(seatBase);
+        if (side < 0) {
+          const seatBack = box(0.68, 0.27, 0.09, velvet);
+          seatBack.name = 'ISLAND_13_ROYAL_CARRIAGE_PORT_VELVET_BACKREST';
+          seatBack.position.set(-0.02, 0.61, side * 0.26);
+          royalInterior.add(seatBack);
+        } else {
+          // Split the window-side backrest around the passenger camera. This
+          // leaves a real line of sight through the raised sash instead of
+          // hiding the canyon behind upholstery placed in the camera ray.
+          [-0.28, 0.28].forEach((x, backIndex) => {
+            const seatBack = box(0.2, 0.27, 0.09, velvet);
+            seatBack.name = `ISLAND_13_ROYAL_CARRIAGE_STARBOARD_VELVET_BACKREST_${backIndex + 1}`;
+            seatBack.position.set(x, 0.61, side * 0.26);
+            royalInterior.add(seatBack);
+          });
+        }
+      });
+      const luggageRack = box(0.7, 0.035, 0.08, materials.brass);
+      luggageRack.name = 'ISLAND_13_ROYAL_CARRIAGE_BRASS_LUGGAGE_RACK';
+      luggageRack.position.set(0, 0.82, -0.24);
+      const ceilingLamp = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), materials.window);
+      ceilingLamp.name = 'ISLAND_13_ROYAL_CARRIAGE_CEILING_LAMP';
+      ceilingLamp.position.set(0, 0.88, 0);
+      royalInterior.add(luggageRack, ceilingLamp);
+      coach.add(royalInterior);
+
+      const rearCamera = new THREE.Object3D();
+      rearCamera.name = 'ISLAND_13_TRAIN_RIDE_REAR_CAMERA';
+      rearCamera.position.set(-0.56, 0.82, 0.48);
+      const rearTarget = new THREE.Object3D();
+      rearTarget.name = 'ISLAND_13_TRAIN_RIDE_REAR_TARGET';
+      rearTarget.position.set(-2.4, 0.76, 2.0);
+      const sideCamera = new THREE.Object3D();
+      sideCamera.name = 'ISLAND_13_TRAIN_RIDE_SIDE_CAMERA';
+      // The passenger leans just beyond the raised sash. Keeping the lens
+      // outside the roof overhang prevents the coach eave from swallowing
+      // half the view while the brass window frame remains directly behind.
+      sideCamera.position.set(0, 0.66, 0.42);
+      const sideTarget = new THREE.Object3D();
+      sideTarget.name = 'ISLAND_13_TRAIN_RIDE_SIDE_TARGET';
+      sideTarget.position.set(1.25, 0.58, 2.1);
+      coach.add(rearCamera, rearTarget, sideCamera, sideTarget);
+    }
     [-0.3, 0.3].forEach((x) => createWheelPair(coach, coachWheels, x));
     coach.userData.consistRole = 'passenger-carriage';
     units.push({ node: coach, offset, wheelPivots: coachWheels });
@@ -2179,7 +2448,17 @@ function createLocomotive(materials: Island13CactusCanyonMaterials, quality: Isl
   const firstCoach = createCoach(1, 2.08);
   const secondCoach = createCoach(2, 3.2);
 
+  const rideHitTarget = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 1.35, 1.0),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+  );
+  rideHitTarget.name = 'ISLAND_13_TRAIN_RIDE_HIT_TARGET';
+  rideHitTarget.position.set(-0.2, 0.62, 0);
+  rideHitTarget.userData.trainRideTarget = true;
+  train.add(rideHitTarget);
+
   orbit.add(train, tender, firstCoach, secondCoach);
+  orbit.traverse((object) => { object.userData.trainRideTarget = true; });
   orbit.userData.trainUnits = units;
   orbit.userData.consistLength = 3.2;
   const summitAngle = ISLAND_13_SPIRAL_START_ANGLE + ISLAND_13_SPIRAL_TURNS * Math.PI * 2;
@@ -3127,7 +3406,10 @@ function createCactusField(materials: Island13CactusCanyonMaterials, quality: Is
     [-5.8, 0.4], [5.75, -0.6], [-1.1, 5.3], [1.35, -5.4], [-3.8, 4.2], [3.9, -4.0],
     [-1.6, 1.85], [1.55, 1.95], [-1.4, -2.0], [1.35, -1.9], [-5.2, 2.8], [5.1, -2.9],
   ] as const;
-  const admitted = placements.filter(([x, z]) => isIsland13RouteCorridorClear(x, z, 0.18));
+  const railSafePlacements = placements.map(([x, z]) => (
+    resolveIsland13SummitRailSafePosition(x, z, 0.18)
+  ));
+  const admitted = railSafePlacements.filter(([x, z]) => isIsland13RouteCorridorClear(x, z, 0.18));
   const count = Math.max(7, Math.round(admitted.length * detailScale(quality)));
   const armCount = Array.from({ length: count }, (_, index) => index % 3 === 1 ? 1 : 2)
     .reduce((sum, value) => sum + value, 0);
@@ -3289,7 +3571,10 @@ function createFrontierGroundDetails(materials: Island13CactusCanyonMaterials, q
   for (let index = 0; index < fenceCount; index += 1) {
     const angle = index / fenceCount * Math.PI * 2 + 0.13;
     const fence = new THREE.Group();
-    fence.position.set(Math.cos(angle) * 4.55, 0.5, Math.sin(angle) * 4.55);
+    fence.name = `ISLAND_13_SUMMIT_RAIL_CLEAR_FENCE_${index + 1}`;
+    // Keep the complete fence line inside the inner edge of the passenger
+    // railway; the former 4.55 radius put rails and posts in the consist.
+    fence.position.set(Math.cos(angle) * 4.32, 0.5, Math.sin(angle) * 4.32);
     fence.rotation.y = -angle;
     [-0.28, 0.28].forEach((x) => {
       const post = box(0.06, 0.48, 0.06, materials.timberWorn);
@@ -3306,8 +3591,10 @@ function createFrontierGroundDetails(materials: Island13CactusCanyonMaterials, q
   const propPlacements = [
     [-2.35, -0.8], [2.25, -0.75], [-2.25, 0.95], [2.35, 0.9], [-4.55, -2.2], [4.45, 2.15], [-4.4, 2.25], [4.5, -2.2],
   ] as const;
-  propPlacements.slice(0, quality === 'low' ? 5 : propPlacements.length).forEach(([x, z], index) => {
+  propPlacements.slice(0, quality === 'low' ? 5 : propPlacements.length).forEach(([unsafeX, unsafeZ], index) => {
+    const [x, z] = resolveIsland13SummitRailSafePosition(unsafeX, unsafeZ, 0.32);
     const cluster = new THREE.Group();
+    cluster.name = `ISLAND_13_SUMMIT_RAIL_CLEAR_PROP_CLUSTER_${index + 1}`;
     cluster.position.set(x, 0.5, z);
     cluster.rotation.y = index * 0.67;
     const crate = box(0.22 + (index % 2) * 0.08, 0.2, 0.22, materials.timberWorn);
@@ -3323,7 +3610,7 @@ function createFrontierGroundDetails(materials: Island13CactusCanyonMaterials, q
   const scrub = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.12, 0), materials.cactusLight, scrubCount);
   for (let index = 0; index < scrubCount; index += 1) {
     const angle = index * 2.399963;
-    const radius = index % 2 === 0 ? 2.28 : 4.58;
+    const radius = index % 2 === 0 ? 2.28 : 4.42;
     const size = 0.62 + (index % 4) * 0.13;
     matrix.compose(
       position.set(Math.cos(angle) * radius, 0.5, Math.sin(angle) * radius),
@@ -3349,9 +3636,12 @@ function createFrontierGroundDetails(materials: Island13CactusCanyonMaterials, q
   let grassCount = 0;
   for (let index = 0; index < grassTargetCount * 2 && grassCount < grassTargetCount; index += 1) {
     const angle = index * 2.399963 + 0.21;
-    const radius = index % 3 === 0 ? 3.05 : 4.82 + (index % 4) * 0.12;
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
+    const unsafeRadius = index % 3 === 0 ? 3.05 : 4.82 + (index % 4) * 0.12;
+    const [x, z] = resolveIsland13SummitRailSafePosition(
+      Math.cos(angle) * unsafeRadius,
+      Math.sin(angle) * unsafeRadius,
+      0.08,
+    );
     if (!isIsland13RouteCorridorClear(x, z, 0.08)) continue;
     const bladeHeight = 0.7 + (index % 5) * 0.11;
     matrix.compose(
@@ -4245,8 +4535,34 @@ export function createIsland13CactusCanyonLivingAmbience(
   const serviceTimeOverride = Number.isFinite(requestedServiceTime)
     ? THREE.MathUtils.clamp(requestedServiceTime, 0, 89.999)
     : null;
+  const trainRideSockets: Record<Island13TrainRideView, {
+    camera: THREE.Object3D | undefined;
+    target: THREE.Object3D | undefined;
+  }> = {
+    driver: {
+      camera: root.getObjectByName('ISLAND_13_TRAIN_RIDE_DRIVER_CAMERA'),
+      target: root.getObjectByName('ISLAND_13_TRAIN_RIDE_DRIVER_TARGET'),
+    },
+    rear: {
+      camera: root.getObjectByName('ISLAND_13_TRAIN_RIDE_REAR_CAMERA'),
+      target: root.getObjectByName('ISLAND_13_TRAIN_RIDE_REAR_TARGET'),
+    },
+    side: {
+      camera: root.getObjectByName('ISLAND_13_TRAIN_RIDE_SIDE_CAMERA'),
+      target: root.getObjectByName('ISLAND_13_TRAIN_RIDE_SIDE_TARGET'),
+    },
+  };
   return {
     root,
+    getTrainRidePose: (view) => {
+      const sockets = trainRideSockets[view];
+      if (!sockets.camera || !sockets.target) return null;
+      root.updateWorldMatrix(true, true);
+      return {
+        position: sockets.camera.getWorldPosition(new THREE.Vector3()),
+        target: sockets.target.getWorldPosition(new THREE.Vector3()),
+      };
+    },
     updateSpiralRail: (presentation) => {
       spiralPresentation = {
         ...presentation,

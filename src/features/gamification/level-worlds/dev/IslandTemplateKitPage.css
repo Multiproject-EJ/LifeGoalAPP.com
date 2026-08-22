@@ -156,6 +156,63 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
 
 .island-5-three-pilot__canvas:active { cursor: grabbing; }
 
+.island-5-three-pilot__train-ride-prompt {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: max(calc(env(safe-area-inset-bottom) + 154px), 168px);
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 218, 127, .6);
+  border-radius: 999px;
+  color: #fff5cf;
+  background: rgba(28, 15, 9, .72);
+  box-shadow: 0 8px 28px rgba(25, 8, 2, .28);
+  font: 800 10px/1.2 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .025em;
+  transform: translateX(-50%);
+  backdrop-filter: blur(9px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.island-5-three-pilot__train-ride-hud {
+  position: absolute;
+  z-index: 12;
+  top: max(calc(env(safe-area-inset-top) + 76px), 86px);
+  left: 50%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  width: min(88%, 430px);
+  padding: 10px 11px 10px 14px;
+  border: 1px solid rgba(232, 184, 86, .76);
+  border-radius: 15px;
+  color: #fff2cf;
+  background: linear-gradient(135deg, rgba(20, 13, 10, .92), rgba(49, 26, 16, .84));
+  box-shadow: 0 10px 32px rgba(19, 7, 2, .38), inset 0 1px rgba(255, 241, 203, .1);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.island-5-three-pilot__train-ride-hud span,
+.island-5-three-pilot__train-ride-hud strong,
+.island-5-three-pilot__train-ride-hud small { display: block; }
+.island-5-three-pilot__train-ride-hud span { color: #e3b65e; font-size: 7px; font-weight: 900; letter-spacing: .14em; }
+.island-5-three-pilot__train-ride-hud strong { margin-top: 2px; font: 800 12px/1.16 Georgia, serif; }
+.island-5-three-pilot__train-ride-hud small { margin-top: 3px; color: rgba(255, 239, 205, .7); font-size: 7px; }
+.island-5-three-pilot__train-ride-actions { display: grid; gap: 5px; align-content: center; }
+.island-5-three-pilot__train-ride-actions button {
+  min-width: 68px;
+  min-height: 27px;
+  border: 1px solid rgba(246, 207, 124, .48);
+  border-radius: 8px;
+  color: #fff3ce;
+  background: rgba(95, 49, 24, .78);
+  font-size: 7px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .island-5-three-pilot--evidence .island-5-three-pilot__topline,
 .island-5-three-pilot--evidence .island-5-three-pilot__metrics,
 .island-5-three-pilot--evidence .island-5-three-pilot__profiler,
