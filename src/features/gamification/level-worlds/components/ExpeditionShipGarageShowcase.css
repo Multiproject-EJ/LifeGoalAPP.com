@@ -136,7 +136,7 @@
 
 .expedition-ship-garage__controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   padding: 0.85rem 1rem 1rem;
 }
@@ -255,6 +255,16 @@
   .expedition-ship-garage__controls,
   .expedition-ship-garage__systems {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 980px) {
+  .expedition-ship-garage__controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .expedition-ship-garage__controls .expedition-ship-quality {
+    grid-column: 1 / -1;
   }
 }
 

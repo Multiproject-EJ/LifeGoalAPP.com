@@ -1,9 +1,16 @@
 import {useMemo, useState} from 'react';
-import type {ExpeditionShipPose, ExpeditionShipQuality} from '../dev/ExpeditionShipThreeModel';
+import type {ExpeditionShipPose} from '../dev/ExpeditionShipThreeModel';
 import {
   ExpeditionShipCanvas,
   type ExpeditionShipPov,
 } from '../dev/ExpeditionShipThreeLab';
+import {ExpeditionShipGarageQualitySelector} from './ExpeditionShipGarageQualitySelector';
+import {
+  readExpeditionShipGarageQualityPreference,
+  resolveExpeditionShipGarageQuality,
+  writeExpeditionShipGarageQualityPreference,
+  type ExpeditionShipGarageQualityPreference,
+} from './expeditionShipGarageQuality';
 import './ExpeditionShipGarageShowcase.css';
 
 const POSE_LABELS: Record<ExpeditionShipPose, string> = {
@@ -21,21 +28,26 @@ const VIEW_OPTIONS: Array<{id: ExpeditionShipPov; label: string}> = [
 interface ExpeditionShipGarageShowcaseProps {
   onOpenUpgrades: () => void;
   onOpenCosmetics: () => void;
+  qualityPreference?: ExpeditionShipGarageQualityPreference;
+  onQualityPreferenceChange?: (preference: ExpeditionShipGarageQualityPreference) => void;
 }
 
 export default function ExpeditionShipGarageShowcase({
   onOpenUpgrades,
   onOpenCosmetics,
+  qualityPreference: controlledQualityPreference,
+  onQualityPreferenceChange,
 }: ExpeditionShipGarageShowcaseProps) {
   const [pose, setPose] = useState<ExpeditionShipPose>('docked');
   const [pov, setPov] = useState<ExpeditionShipPov>('orbit');
   const [orbit, setOrbit] = useState(28);
-  const quality = useMemo<ExpeditionShipQuality>(() => {
-    if (typeof window === 'undefined') return 'low';
-    return window.matchMedia('(max-width: 820px), (prefers-reduced-motion: reduce)').matches
-      ? 'low'
-      : 'high';
-  }, []);
+  const [internalQualityPreference, setInternalQualityPreference] =
+    useState<ExpeditionShipGarageQualityPreference>(readExpeditionShipGarageQualityPreference);
+  const qualityPreference = controlledQualityPreference ?? internalQualityPreference;
+  const quality = useMemo(
+    () => resolveExpeditionShipGarageQuality(qualityPreference),
+    [qualityPreference],
+  );
   const motion = useMemo(() => {
     if (pose === 'flight') return {thrust: 0.62, boost: 0.22, hover: 0.32, walk: 0, stabilize: 0.82};
     if (pose === 'expedition') return {thrust: 0.08, boost: 0, hover: 0.38, walk: 0.28, stabilize: 0.74};
@@ -58,6 +70,15 @@ export default function ExpeditionShipGarageShowcase({
       const next = current + delta;
       return next > 180 ? next - 360 : next < -180 ? next + 360 : next;
     });
+  };
+
+  const chooseQuality = (preference: ExpeditionShipGarageQualityPreference) => {
+    writeExpeditionShipGarageQualityPreference(preference);
+    if (onQualityPreferenceChange) {
+      onQualityPreferenceChange(preference);
+      return;
+    }
+    setInternalQualityPreference(preference);
   };
 
   return (
@@ -133,6 +154,10 @@ export default function ExpeditionShipGarageShowcase({
               ))}
             </div>
           </div>
+          <ExpeditionShipGarageQualitySelector
+            value={qualityPreference}
+            onChange={chooseQuality}
+          />
         </div>
       </div>
 

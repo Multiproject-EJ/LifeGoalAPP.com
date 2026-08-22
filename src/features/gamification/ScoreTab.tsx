@@ -69,6 +69,11 @@ import { applyCreatureArtFallback } from './level-worlds/components/creatureArtF
 import { CreatureCard } from './level-worlds/components/CreatureCard';
 import { getCreatureCardMetadata } from './level-worlds/services/creatureCardCatalog';
 import {
+  readExpeditionShipGarageQualityPreference,
+  writeExpeditionShipGarageQualityPreference,
+  type ExpeditionShipGarageQualityPreference,
+} from './level-worlds/components/expeditionShipGarageQuality';
+import {
   DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   readPerfectCompanionRuntimeConfig,
   resetPerfectCompanionRuntimeConfig,
@@ -82,6 +87,10 @@ import scoreZenGarden from '../../assets/Score_zengarden.webp';
 
 const ExpeditionShipGarageShowcase = lazy(
   () => import('./level-worlds/components/ExpeditionShipGarageShowcase'),
+);
+
+const ExpeditionShipGarageEntrance = lazy(
+  () => import('./level-worlds/components/ExpeditionShipGarageEntrance'),
 );
 
 const scoreLeaderboard = '/icons/Score_tab_leaderboard.webp';
@@ -222,6 +231,12 @@ export function ScoreTab({
   const shouldCelebrateLeagueJoinRef = useRef(false);
   const [garageExperience, setGarageExperience] = useState<'hangar' | 'legacy'>('hangar');
   const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
+  const [garageDoorOpen, setGarageDoorOpen] = useState(false);
+  const [garageEntering, setGarageEntering] = useState(false);
+  const [garageModalOpen, setGarageModalOpen] = useState(false);
+  const [garageQualityPreference, setGarageQualityPreference] =
+    useState<ExpeditionShipGarageQualityPreference>(readExpeditionShipGarageQualityPreference);
+  const garageEntryTimerRef = useRef<number | null>(null);
   const [collectionsView, setCollectionsView] = useState<'hub' | 'creatureSanctuary'>('hub');
   const [perfectCompanionOps, setPerfectCompanionOps] = useState<PerfectCompanionRuntimeConfig>(() =>
     DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
@@ -311,6 +326,25 @@ export function ScoreTab({
     }
   }, [initialActiveTab]);
 
+  useEffect(() => () => {
+    if (garageEntryTimerRef.current !== null) {
+      window.clearTimeout(garageEntryTimerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!garageModalOpen) return undefined;
+    const unlockScroll = lockPageScroll();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setGarageModalOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      unlockScroll();
+    };
+  }, [garageModalOpen]);
+
   useEffect(() => {
     if (!session?.user?.id) {
       setIsAdminOrCreator(false);
@@ -345,12 +379,43 @@ export function ScoreTab({
     setActiveTab(tab);
     if (tab === 'garage') {
       setGarageExperience('hangar');
+    } else {
+      setGarageModalOpen(false);
     }
     if (tab !== 'collections') {
       setCollectionsView('hub');
     }
     onActiveTabChange?.(tab);
   };
+
+  const handleGarageQualityPreferenceChange = useCallback((preference: ExpeditionShipGarageQualityPreference) => {
+    setGarageQualityPreference(preference);
+    writeExpeditionShipGarageQualityPreference(preference);
+  }, []);
+
+  const enterGarage = useCallback(() => {
+    if (garageEntryTimerRef.current !== null) {
+      window.clearTimeout(garageEntryTimerRef.current);
+    }
+    setGarageDoorOpen(true);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion || garageDoorOpen) {
+      setGarageEntering(false);
+      setGarageModalOpen(true);
+      return;
+    }
+    setGarageEntering(true);
+    garageEntryTimerRef.current = window.setTimeout(() => {
+      setGarageEntering(false);
+      setGarageModalOpen(true);
+      garageEntryTimerRef.current = null;
+    }, 940);
+  }, [garageDoorOpen]);
+
+  const leaveGarage = useCallback(() => {
+    setGarageModalOpen(false);
+    setGarageEntering(false);
+  }, []);
 
   const leaderboardArchetypes = useMemo(() => {
     const archetypes = new Set<string>();
@@ -1447,18 +1512,60 @@ export function ScoreTab({
 
           {garageExperience === 'hangar' ? (
             <Suspense fallback={<div className="score-tab__status">Preparing the expedition ship hangar…</div>}>
-              <ExpeditionShipGarageShowcase
-                onOpenUpgrades={() => {
-                  setGarageShipTab('upgrades');
-                  setGarageExperience('legacy');
-                }}
-                onOpenCosmetics={() => {
-                  setGarageShipTab('cosmetics');
-                  setGarageExperience('legacy');
-                }}
+              <ExpeditionShipGarageEntrance
+                doorOpen={garageDoorOpen}
+                entering={garageEntering}
+                qualityPreference={garageQualityPreference}
+                onQualityPreferenceChange={handleGarageQualityPreferenceChange}
+                onEnter={enterGarage}
               />
             </Suspense>
           ) : null}
+
+          {garageExperience === 'hangar' && garageModalOpen && typeof document !== 'undefined' ? createPortal((
+            <div
+              className="score-tab__garage-fullscreen"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="score-tab-garage-modal-title"
+            >
+              <div className="score-tab__garage-fullscreen-shell">
+                <header className="score-tab__garage-fullscreen-header">
+                  <button
+                    type="button"
+                    className="score-tab__garage-back"
+                    onClick={leaveGarage}
+                    autoFocus
+                  >
+                    <span aria-hidden="true">←</span> Back to Score
+                  </button>
+                  <div>
+                    <p>Hangar 01 · Live ship systems</p>
+                    <h2 id="score-tab-garage-modal-title">Expedition Ship Garage</h2>
+                  </div>
+                  <span className="score-tab__garage-fullscreen-status"><i /> Connected</span>
+                </header>
+                <main className="score-tab__garage-fullscreen-content">
+                  <Suspense fallback={<div className="score-tab__status">Opening the full 3D garage…</div>}>
+                    <ExpeditionShipGarageShowcase
+                      qualityPreference={garageQualityPreference}
+                      onQualityPreferenceChange={handleGarageQualityPreferenceChange}
+                      onOpenUpgrades={() => {
+                        leaveGarage();
+                        setGarageShipTab('upgrades');
+                        setGarageExperience('legacy');
+                      }}
+                      onOpenCosmetics={() => {
+                        leaveGarage();
+                        setGarageShipTab('cosmetics');
+                        setGarageExperience('legacy');
+                      }}
+                    />
+                  </Suspense>
+                </main>
+              </div>
+            </div>
+          ), document.body) : null}
 
           {garageExperience === 'legacy' && garageShipTab === 'companions' ? (
             <section className="score-tab__card">
