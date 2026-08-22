@@ -2,7 +2,24 @@
 
 Status: **150 m living/walker macro direction approved for procedural blockout; hidden surfaces remain provisional**
 Working asset ID: `VEH-SHIP-PRIMARY-CANDIDATE-01`
-Updated: 2026-08-16
+Updated: 2026-08-23
+
+## Resume this work
+
+Do not reconstruct the ship direction from chat history. Start with:
+
+1. `references/README.md` — canonical goal-image root, authority labels and
+   accepted garage concepts;
+2. `../../gauntlets/2026-08-23-expedition-ship-and-garage-visual-production.md`
+   — active cross-session execution contract and customisation backlog;
+3. `EXPEDITION_SHIP_MODE_ARCHITECTURE_V1.md` — engineering and mode invariants;
+4. `.img2threejs/expedition-ship/state.json` from the repository root — current
+   reconstruction state, prior evidence and unresolved gates;
+5. the latest `origin/main` plus relevant ship branches/worktrees — never assume
+   the current checkout contains all agent work.
+
+The goal-image folder belongs to this project. EJ-Jarvis holds only a pointer to
+this route so a fresh task can find the current truth without duplicating it.
 
 ## Product decision captured
 
