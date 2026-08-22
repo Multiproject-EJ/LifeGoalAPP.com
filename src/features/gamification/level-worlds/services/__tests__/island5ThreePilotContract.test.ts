@@ -130,6 +130,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(Boolean(runtime.root.getObjectByName('ISLAND_13_FRACTURED_MESA_CLIFF')), 'Island 013 needs the floating red-rock mesa silhouette from its source');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_PILLAR_UPPER')), 'Island 013 needs a tall mountain pillar supporting the playable mesa');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_PILLAR_LOWER')), 'the canyon pillar must continue well below the playable mesa');
+      const pillarCore = runtime.root.getObjectByName('ISLAND_13_CANYON_PILLAR_CONTINUOUS_CORE') as THREE.Mesh<THREE.BufferGeometry> | undefined;
+      assert(Boolean(pillarCore), 'the mountain needs a continuous solid sandstone core behind the excavated rail shelf');
+      assert((pillarCore?.geometry.index?.count ?? 0) > 14 * 8 * 6, 'the continuous pillar core needs closed top and bottom caps rather than an open shell');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_FRACTURED_BLOCK_SKIN')), 'the pillar needs deep columnar sandstone blocks rather than a smooth cylinder');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_FRACTURED_BLOCK_SUNLIT_SKIN')), 'the columnar cliff needs a restrained sunlit rock family for meso-scale separation');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_13_FRONTIER_MAIN_FLAGSTONES')), 'the summit town floor needs route-clear irregular frontier paving');
@@ -257,6 +260,18 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_CUPOLA_REAR_WINDOW')), 'the station cupola needs lit civic detail around all four sides');
       assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_MAIN_REAR_GABLE_RAFTER_1')), 'the station gable construction must continue around the rear elevation');
       assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_ENTRY_PAVILION')), 'the station needs the source-specific projecting civic entrance volume');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_SALOON_WEST_SWING_HINGE')), 'the station front entrance needs a genuinely hinged western saloon door leaf');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_SALOON_EAST_SWING_HINGE')), 'the station front entrance needs a paired saloon door rather than one flat door panel');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_SALOON_WEST_DOOR_PLANK_1')), 'the saloon doors need visible timber construction at phone scale');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_WEST_WING_FALSE_FRONT')), 'the lower west roofline needs a frontier false-front storefront silhouette');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_EAST_WING_FALSE_FRONT')), 'the lower east roofline needs a matching but independently dressed western storefront');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_WEST_WING_CROSSED_RAIL_ART')), 'the west storefront sign needs rail-town artwork instead of an unbroken blank roof');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_EAST_WING_HORSESHOE_ART')), 'the east storefront sign needs western identity artwork');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_WESTERN_ENTRY_SIGN')), 'the central saloon entrance needs a readable painted signboard');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_WESTERN_STAR_BADGE')), 'the central entrance sign needs unmistakable western artwork rather than a generic plaque');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_FLAG_POLE')), 'the station silhouette needs a civic railway flag pole rather than reading as a church steeple');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG')), 'the western station needs a cloth flag that can respond to the canyon wind');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG_STAR')), 'the station flag needs rail-town artwork that matches the western frontage');
       assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_MAIN_FOUR_SIDE_SIDING_COURSES')), 'station material detail must wrap around all four elevations');
       assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_WEST_ROOF_DORMER')), 'the station roof needs authored stepped forms on the rear elevation');
       assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_TOWER_LEG_EAST_REAR')), 'the windmill tower must be four-legged rather than a front-only prop');

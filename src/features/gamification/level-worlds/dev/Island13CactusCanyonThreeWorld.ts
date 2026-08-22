@@ -363,8 +363,20 @@ function createFracturedPillarGeometry(
       const b = a + 1;
       const c = a + rowStride;
       const d = c + 1;
-      indices.push(a, c, b, b, c, d);
+      // Rows are authored from top to bottom. This winding faces outward;
+      // the former inverse winding exposed the inside/back faces and made the
+      // supposedly solid mountain read as a hollow shell from the game camera.
+      indices.push(a, b, c, b, d, c);
     }
+  }
+  const topCenter = positions.length / 3;
+  positions.push(0, height * 0.5, 0);
+  const bottomCenter = positions.length / 3;
+  positions.push(0, -height * 0.5, 0);
+  const bottomRowStart = verticalSegments * rowStride;
+  for (let segment = 0; segment < radialSegments; segment += 1) {
+    indices.push(topCenter, segment + 1, segment);
+    indices.push(bottomCenter, bottomRowStart + segment, bottomRowStart + segment + 1);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -714,6 +726,135 @@ function addTimberFrame(root: THREE.Group, width: number, height: number, depth:
   root.add(beam);
 }
 
+function addWesternSaloonEntry(
+  root: THREE.Group,
+  prefix: string,
+  frontZ: number,
+  materials: Island13CactusCanyonMaterials,
+) {
+  const portal = box(0.64, 0.74, 0.07, materials.iron);
+  portal.name = `${prefix}_RECESSED_PORTAL`;
+  portal.position.set(0, 0.76, frontZ);
+  root.add(portal);
+
+  [-1, 1].forEach((side) => {
+    const framePost = box(0.075, 0.78, 0.075, materials.timberWorn);
+    framePost.name = `${prefix}_${side < 0 ? 'WEST' : 'EAST'}_JAMB`;
+    framePost.position.set(side * 0.36, 0.77, frontZ + 0.055);
+    root.add(framePost);
+
+    const hinge = new THREE.Group();
+    hinge.name = `${prefix}_${side < 0 ? 'WEST' : 'EAST'}_SWING_HINGE`;
+    hinge.position.set(side * 0.29, 0.72, frontZ + 0.095);
+    // Each leaf is genuinely hinged at its outer jamb and held slightly open,
+    // so the entrance reads as a saloon door rather than a painted rectangle.
+    hinge.rotation.y = side * 0.3;
+    const leafDirection = -side;
+    [0.075, 0.215].forEach((offset, plankIndex) => {
+      const plank = box(0.125, 0.38 - plankIndex * 0.025, 0.055, materials.timberWorn);
+      plank.name = `${prefix}_${side < 0 ? 'WEST' : 'EAST'}_DOOR_PLANK_${plankIndex + 1}`;
+      plank.position.set(leafDirection * offset, plankIndex * -0.012, 0);
+      hinge.add(plank);
+    });
+    [-0.135, 0.13].forEach((y, railIndex) => {
+      const rail = box(0.28, 0.055, 0.07, railIndex ? materials.brass : materials.timber);
+      rail.name = `${prefix}_${side < 0 ? 'WEST' : 'EAST'}_DOOR_RAIL_${railIndex + 1}`;
+      rail.position.set(leafDirection * 0.145, y, 0.006);
+      hinge.add(rail);
+    });
+    const hingePin = cylinder(0.026, 0.026, 0.42, materials.brass, 8);
+    hingePin.name = `${prefix}_${side < 0 ? 'WEST' : 'EAST'}_HINGE_PIN`;
+    hinge.add(hingePin);
+    root.add(hinge);
+  });
+
+  const lintel = box(0.82, 0.09, 0.09, materials.timberWorn);
+  lintel.name = `${prefix}_CARVED_LINTEL`;
+  lintel.position.set(0, 1.18, frontZ + 0.055);
+  root.add(lintel);
+}
+
+function addWesternFalseFront(
+  root: THREE.Group,
+  prefix: string,
+  centerX: number,
+  frontZ: number,
+  artwork: 'rail' | 'horseshoe',
+  materials: Island13CactusCanyonMaterials,
+) {
+  const facade = box(1.16, 0.48, 0.105, materials.timberWorn);
+  facade.name = `${prefix}_FALSE_FRONT`;
+  facade.position.set(centerX, 1.46, frontZ);
+  const steppedCrown = box(0.72, 0.16, 0.12, materials.timber);
+  steppedCrown.name = `${prefix}_STEPPED_CROWN`;
+  steppedCrown.position.set(centerX, 1.75, frontZ);
+  const topCornice = box(1.28, 0.075, 0.145, materials.brass);
+  topCornice.name = `${prefix}_TOP_CORNICE`;
+  topCornice.position.set(centerX, 1.73, frontZ + 0.015);
+  const lowerCornice = box(1.22, 0.055, 0.14, materials.timber);
+  lowerCornice.name = `${prefix}_LOWER_CORNICE`;
+  lowerCornice.position.set(centerX, 1.22, frontZ + 0.015);
+  const sign = box(0.82, 0.2, 0.065, materials.bluePaint);
+  sign.name = `${prefix}_PAINTED_SIGNBOARD`;
+  sign.position.set(centerX, 1.48, frontZ + 0.085);
+  root.add(facade, steppedCrown, topCornice, lowerCornice, sign);
+
+  const art = new THREE.Group();
+  art.name = `${prefix}_${artwork === 'rail' ? 'CROSSED_RAIL_ART' : 'HORSESHOE_ART'}`;
+  art.position.set(centerX, 1.48, frontZ + 0.125);
+  if (artwork === 'horseshoe') {
+    const horseshoe = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.02, 6, 14, Math.PI * 1.55), materials.brass);
+    horseshoe.name = `${prefix}_HORSESHOE_BADGE`;
+    horseshoe.rotation.z = Math.PI * 0.72;
+    art.add(horseshoe);
+  } else {
+    [-1, 1].forEach((side, index) => {
+      const railSpike = box(0.035, 0.19, 0.025, materials.brass);
+      railSpike.name = `${prefix}_CROSSED_RAIL_${index + 1}`;
+      railSpike.rotation.z = side * 0.62;
+      art.add(railSpike);
+    });
+    const railHub = cylinder(0.034, 0.034, 0.03, materials.brass, 8);
+    railHub.name = `${prefix}_CROSSED_RAIL_HUB`;
+    railHub.rotation.x = Math.PI / 2;
+    art.add(railHub);
+  }
+  root.add(art);
+}
+
+function createWesternStarBadge(material: THREE.Material) {
+  const shape = new THREE.Shape();
+  for (let point = 0; point < 10; point += 1) {
+    const radius = point % 2 === 0 ? 0.115 : 0.048;
+    const angle = -Math.PI / 2 + point * Math.PI / 5;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    if (point === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  const badge = new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
+  badge.castShadow = true;
+  return badge;
+}
+
+function createWesternRailwayFlag(material: THREE.MeshStandardMaterial) {
+  const geometry = new THREE.PlaneGeometry(0.72, 0.34, 6, 2);
+  // Anchor the cloth's left edge to the pole while the free edge ripples.
+  geometry.translate(0.36, 0, 0);
+  const clothMaterial = material.clone();
+  clothMaterial.side = THREE.DoubleSide;
+  clothMaterial.roughness = Math.max(0.62, clothMaterial.roughness);
+  clothMaterial.color.setHex(0x247994);
+  clothMaterial.emissive.setHex(0x123b4a);
+  clothMaterial.emissiveIntensity = 0.62;
+  const flag = new THREE.Mesh(geometry, clothMaterial);
+  flag.name = 'ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG';
+  flag.castShadow = true;
+  flag.userData.basePositions = Float32Array.from(geometry.attributes.position.array as ArrayLike<number>);
+  return flag;
+}
+
 function addPlinth(root: THREE.Group, radius: number, materials: Island13CactusCanyonMaterials, quality: Island3DQuality) {
   const lower = cylinder(radius * 1.08, radius * 1.16, 0.24, materials.sandstoneShadow, segments(quality));
   lower.name = 'ISLAND_13_LANDMARK_PLOT_PLINTH_LOWER';
@@ -860,9 +1001,6 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
   addFourSideSidingCourses(root, 'ISLAND_13_UNION_MAIN', 1.025, 0.83, 0.54, 0.78, 5, materials.timberWorn);
   addWindow(root, -0.52, 1.08, 0.85, 0.28, 0.44, materials);
   addWindow(root, 0.52, 1.08, 0.85, 0.28, 0.44, materials);
-  const doorway = box(0.34, 0.68, 0.1, materials.iron);
-  doorway.position.set(0, 0.7, 0.88);
-  root.add(doorway);
   const porch = box(2.2, 0.12, 0.72, materials.timberWorn);
   porch.position.set(0, 0.42, 1.08);
   const awning = box(2.14, 0.09, 0.68, materials.roof);
@@ -967,6 +1105,8 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
       addWraparoundTimberBand(root, `ISLAND_13_UNION_${side < 0 ? 'WEST' : 'EAST'}_WING`, 0.51, 0.61, 1.12, materials.timberWorn, side * 1.46, -0.03);
       addFourSideSidingCourses(root, `ISLAND_13_UNION_${side < 0 ? 'WEST' : 'EAST'}_WING`, 0.51, 0.61, 0.48, 0.54, 3, materials.timberWorn, side * 1.46, -0.03);
     });
+    addWesternFalseFront(root, 'ISLAND_13_UNION_WEST_WING', -1.46, 0.69, 'rail', materials);
+    addWesternFalseFront(root, 'ISLAND_13_UNION_EAST_WING', 1.46, 0.69, 'horseshoe', materials);
   }
   if (level >= 3) {
     const entryPavilion = box(0.78, 0.92, 0.64, materials.timber);
@@ -975,13 +1115,18 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
     const entryRoof = createGableRoof(0.98, 0.46, 0.82, materials.roof);
     entryRoof.name = 'ISLAND_13_UNION_FRONT_ENTRY_PAVILION_ROOF';
     entryRoof.position.set(0, 1.36, 1.08);
-    const entryDoor = box(0.34, 0.66, 0.07, materials.bluePaint);
-    entryDoor.name = 'ISLAND_13_UNION_FRONT_ENTRY_DOOR';
-    entryDoor.position.set(0, 0.73, 1.42);
     const entryDeck = box(1.22, 0.1, 0.52, materials.timberWorn);
     entryDeck.name = 'ISLAND_13_UNION_FRONT_ENTRY_DECK';
     entryDeck.position.set(0, 0.42, 1.58);
-    root.add(entryPavilion, entryRoof, entryDoor, entryDeck);
+    root.add(entryPavilion, entryRoof, entryDeck);
+    addWesternSaloonEntry(root, 'ISLAND_13_UNION_FRONT_SALOON', 1.425, materials);
+    const entrySign = box(0.72, 0.2, 0.07, materials.bluePaint);
+    entrySign.name = 'ISLAND_13_UNION_FRONT_WESTERN_ENTRY_SIGN';
+    entrySign.position.set(0, 1.45, 1.44);
+    const entryStar = createWesternStarBadge(materials.brass);
+    entryStar.name = 'ISLAND_13_UNION_FRONT_WESTERN_STAR_BADGE';
+    entryStar.position.set(0, 1.45, 1.485);
+    root.add(entrySign, entryStar);
     [-1, 1].forEach((side) => {
       const entryPost = box(0.07, 0.82, 0.07, materials.timberWorn);
       entryPost.name = `ISLAND_13_UNION_FRONT_ENTRY_POST_${side < 0 ? 'WEST' : 'EAST'}`;
@@ -1038,7 +1183,21 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
     bell.rotation.x = Math.PI / 2;
     bell.position.set(0, roofApexY + 0.2, 0.31);
     const flagPole = cylinder(0.025, 0.025, 0.8, materials.brass, 8);
-    flagPole.position.y = roofApexY + 1.34;
+    flagPole.name = 'ISLAND_13_UNION_STATION_FLAG_POLE';
+    // Mount the railway flag off-centre on the roof shoulder. A centred pole
+    // reinforced the church-steeple silhouette and disappeared beneath the
+    // phone safe-area notch in the canonical camera.
+    flagPole.position.set(-0.58, roofApexY + 0.66, 0);
+    const railwayFlag = createWesternRailwayFlag(materials.bluePaint);
+    railwayFlag.position.set(-0.58, roofApexY + 0.82, 0);
+    railwayFlag.rotation.y = Math.PI;
+    const flagStarMaterial = materials.brass.clone();
+    flagStarMaterial.side = THREE.DoubleSide;
+    const flagStar = createWesternStarBadge(flagStarMaterial);
+    flagStar.name = 'ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG_STAR';
+    flagStar.scale.setScalar(0.7);
+    flagStar.position.set(0.22, 0, -0.012);
+    railwayFlag.add(flagStar);
     const clockFace = cylinder(0.22, 0.22, 0.045, materials.sandstoneLight, 16);
     clockFace.name = 'ISLAND_13_UNION_FRONT_CLOCK';
     clockFace.rotation.x = Math.PI / 2;
@@ -1067,7 +1226,9 @@ function createUnionStation(level: 1 | 2 | 3, quality: Island3DQuality, material
     const rearChimney = box(0.16, 0.6, 0.16, materials.iron);
     rearChimney.name = 'ISLAND_13_UNION_REAR_CHIMNEY';
     rearChimney.position.set(-0.54, 1.93, -0.42);
-    root.add(cupola, crown, bell, flagPole, clockFace, rearClockFace, stationSign, rearChimney);
+    root.add(cupola, crown, bell, flagPole, railwayFlag, clockFace, rearClockFace, stationSign, rearChimney);
+  } else {
+    addWesternSaloonEntry(root, 'ISLAND_13_UNION_FRONT_SALOON', 0.885, materials);
   }
   root.userData.sculptRuntime = { parts: [registerIsland13RuntimePart('union-station', root, 'landmark')] };
   return root;
@@ -3386,7 +3547,10 @@ export function createIsland13CactusCanyonLivingAmbience(
   canyonSystem.name = 'ISLAND_13_360_CANYON_SYSTEM';
   const canyonVoidMaterial = materials.sandstoneShadow.clone();
   canyonVoidMaterial.name = 'ISLAND_13_CANYON_VOID_MATERIAL';
-  canyonVoidMaterial.color.setHex(0x54251a);
+  // These are recessed rock faces, not holes through the mountain. Keep them
+  // darker than the sunlit skin but clearly sandstone-solid; the completed
+  // spiral excavation is the only truly hollow-looking channel.
+  canyonVoidMaterial.color.setHex(0x91442f);
   canyonVoidMaterial.roughness = 1;
   canyonVoidMaterial.metalness = 0;
   canyonVoidMaterial.side = THREE.DoubleSide;
@@ -3395,7 +3559,7 @@ export function createIsland13CactusCanyonLivingAmbience(
   canyonVoidMaterial.polygonOffsetUnits = -2;
   const minorCanyonMaterial = canyonVoidMaterial.clone();
   minorCanyonMaterial.name = 'ISLAND_13_MINOR_CANYON_MATERIAL';
-  minorCanyonMaterial.color.setHex(0x87402b);
+  minorCanyonMaterial.color.setHex(0xa65537);
   const canyonRimGeometry = new THREE.DodecahedronGeometry(0.42, 0);
   const canyonInnerLedgeGeometry = new THREE.DodecahedronGeometry(0.5, 0);
   const pillarRadiusAtY = (y: number) => {
@@ -4051,6 +4215,8 @@ export function createIsland13CactusCanyonLivingAmbience(
   scene.add(root);
 
   const steamPuffs = (locomotive.getObjectByName('ISLAND_13_CANYON_LOOP_LOCOMOTIVE')?.userData.steamPuffs ?? []) as THREE.Mesh[];
+  const stationFlag = root.getObjectByName('ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG') as THREE.Mesh<THREE.PlaneGeometry> | undefined;
+  const stationFlagBasePositions = stationFlag?.userData.basePositions as Float32Array | undefined;
   const locomotiveTrain = locomotive.getObjectByName('ISLAND_13_CANYON_LOOP_LOCOMOTIVE');
   const trainUnits = (locomotive.userData.trainUnits ?? []) as Island13TrainUnit[];
   const summitSwitchAngle = ISLAND_13_SPIRAL_START_ANGLE + ISLAND_13_SPIRAL_TURNS * Math.PI * 2;
@@ -4090,6 +4256,24 @@ export function createIsland13CactusCanyonLivingAmbience(
     },
     animate: (elapsed) => {
       sunCorona.scale.setScalar(1 + Math.sin(elapsed * 0.32) * 0.025);
+      if (stationFlag && stationFlagBasePositions) {
+        const positions = stationFlag.geometry.attributes.position as THREE.BufferAttribute;
+        for (let vertex = 0; vertex < positions.count; vertex += 1) {
+          const index = vertex * 3;
+          const x = stationFlagBasePositions[index];
+          const freeEdge = THREE.MathUtils.clamp(x / 0.72, 0, 1);
+          const gust = Math.sin(elapsed * 2.25 + freeEdge * Math.PI * 2.15)
+            + Math.sin(elapsed * 0.73 + freeEdge * Math.PI * 4.1) * 0.32;
+          positions.setZ(vertex, gust * 0.055 * freeEdge);
+          positions.setY(
+            vertex,
+            stationFlagBasePositions[index + 1]
+              + Math.sin(elapsed * 1.35 + freeEdge * Math.PI) * 0.018 * freeEdge,
+          );
+        }
+        positions.needsUpdate = true;
+        stationFlag.geometry.computeVertexNormals();
+      }
       heatSheets.forEach((veil, index) => {
         const phase = elapsed * (0.19 + (index % 3) * 0.025) + Number(veil.userData.phase ?? 0);
         veil.position.y = Number(veil.userData.baseY ?? -12) + Math.sin(phase) * 0.32;

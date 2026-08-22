@@ -540,6 +540,34 @@ separate approval.
   environmental anchors in world space across 360 views. These requirements are
   now recorded in `ISLAND_ACTUAL_3D_PRODUCTION_PLAYBOOK.md` for the next island.
 
+### 2026-08-22 checkpoint — western station frontage and solid pillar correction
+
+- The Union Station's lower front row now reads as an authored western street:
+  both wings have stepped timber false fronts, cornices, independent painted
+  signboards and distinct crossed-rail/horseshoe artwork. The central entrance
+  has a recessed portal and paired timber saloon leaves built on separate,
+  slightly open hinge groups rather than a flat door decal.
+- A blue-and-brass railway flag now sits asymmetrically on the tower roof,
+  breaking the former church-like centred silhouette and staying clear of the
+  canonical phone notch. Its subdivided cloth mesh remains fixed at the pole
+  edge while two bounded waves produce a subtle changing canyon-wind ripple.
+- Visual review exposed a more fundamental pillar defect: the procedural core's
+  triangle winding faced inward and the cylinder ends were uncapped. The core
+  now faces outward and is closed at both ends, so the mountain reads as one
+  solid sandstone mass. Canyon scars use recessed rock colours rather than void
+  black; only the completed blasted spiral shelf retains a hollow channel read.
+- Saved evidence includes the close frontage in
+  `renders/013-pass111-western-station-flag-viewport.png`, the settled overview
+  in `renders/013-pass114-western-flag-wave-b-overview.png`, and the 360 checks
+  `renders/013-pass115-western-solid-360-right.png` and
+  `renders/013-pass116-western-solid-360-left.png`.
+- All 1,827 Island Run tests, architecture guards (0 violations, 3 allowlisted
+  warnings) and `git diff --check` pass. Regression checks now lock the hinged
+  doors, western storefront identities, railway flag hierarchy and closed
+  continuous pillar core. This remains a bounded `refine-code` correction; the
+  formal img2threejs state stays parked at its previously recorded Tier-1 colour
+  diagnostic rather than claiming an unsupported pipeline completion.
+
 Resume from `.img2threejs/island-013-cactus-canyon/state.json`, run
 `forge/next.py --state ...`, inspect the latest source/current evidence and fix
 the largest recorded mismatch only. Never reconstruct progress from chat.
