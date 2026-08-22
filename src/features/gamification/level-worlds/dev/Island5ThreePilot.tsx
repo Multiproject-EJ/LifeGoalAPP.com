@@ -161,6 +161,7 @@ import {
   ISLAND_13_CACTUS_CANYON_LANDMARK_LABELS,
   ISLAND_13_CACTUS_CANYON_WORLD_NAME,
   type Island13CactusCanyonSpiralPresentation,
+  type Island13TrainRideView,
 } from './Island13CactusCanyonThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 
@@ -387,6 +388,10 @@ interface PilotMetrics {
 
 type ProfilerStatus = 'idle' | 'running' | 'complete' | 'cancelled';
 type CameraTourStatus = 'idle' | 'running';
+type Island13TrainRidePhase = 'idle' | Island13TrainRideView;
+
+const ISLAND_13_TRAIN_RIDE_VIEWS: readonly Island13TrainRideView[] = ['driver', 'rear', 'side'];
+const ISLAND_13_TRAIN_RIDE_PHASE_MS = 15_000;
 
 interface PilotProfileReport extends Island3DPerformanceSummary {
   profileSchema: 'island-3d-m7-v1';
@@ -2207,6 +2212,9 @@ interface Island5AmbienceRuntime {
     instant?: boolean,
   ) => void;
   updateSpiralRail?: (presentation: Island13CactusCanyonSpiralPresentation) => void;
+  getTrainRidePose?: (
+    view: Island13TrainRideView,
+  ) => { position: THREE.Vector3; target: THREE.Vector3 } | null;
 }
 
 function createInstancedScenery(
@@ -3317,6 +3325,8 @@ export default function Island5ThreePilot({
   const [profilerNotice, setProfilerNotice] = useState('Keep this tab visible during the run.');
   const [deviceLabel, setDeviceLabel] = useState('');
   const [reportShareNotice, setReportShareNotice] = useState('');
+  const [trainRidePhase, setTrainRidePhase] = useState<Island13TrainRidePhase>('idle');
+  const [trainRideSecondsRemaining, setTrainRideSecondsRemaining] = useState(15);
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
@@ -3335,6 +3345,8 @@ export default function Island5ThreePilot({
   const startTourRef = useRef<() => void>(() => undefined);
   const stopTourRef = useRef<() => void>(() => undefined);
   const startProfilerRef = useRef<() => void>(() => undefined);
+  const exitTrainRideRef = useRef<() => void>(() => undefined);
+  const advanceTrainRideRef = useRef<() => void>(() => undefined);
   const deviceLabelRef = useRef('');
   const tokenIndexRef = useRef(tokenIndex);
   const tokenSnapRequestRef = useRef(tokenIndex);
@@ -4152,6 +4164,11 @@ export default function Island5ThreePilot({
               (candidate): candidate is THREE.Object3D => Boolean(candidate),
             )
         : [];
+    const clickableCactusCanyonTrain = isCactusCanyon
+      ? [livingAmbience.root.getObjectByName('ISLAND_13_LOCOMOTIVE_ORBIT')].filter(
+          (candidate): candidate is THREE.Object3D => Boolean(candidate),
+        )
+      : [];
 
     const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileGeometry = createRadialTileGeometry(tileTransforms.length);
@@ -4829,6 +4846,19 @@ export default function Island5ThreePilot({
       stepIndex: number;
       nextStepAt: number;
     } | null = null;
+    let activeTrainRide: {
+      startedAt: number;
+      phaseIndex: number;
+      phaseDurationMs: number;
+      holdRequestedView: boolean;
+      returnPosition: THREE.Vector3;
+      returnTarget: THREE.Vector3;
+      returnFov: number;
+      returnPreset: Island5CameraPresetId | 'manual';
+    } | null = null;
+    let trainRidePublishedSeconds = -1;
+    let lastTrainTapAt = Number.NEGATIVE_INFINITY;
+    const lastTrainTapPosition = new THREE.Vector2();
     let consumedTokenMotionRequestId = 0;
     let appliedTokenSnapIndex = tokenIndexRef.current;
     let lastAnimationFrameAt = performance.now();
@@ -5187,6 +5217,95 @@ export default function Island5ThreePilot({
       };
     };
     applyPresetRef.current = applyPreset;
+    const trainRideParams = new URLSearchParams(window.location.search);
+    const requestedTrainRideView = trainRideParams.get('island13TrainRideView');
+    const holdRequestedTrainRideView = import.meta.env.DEV
+      && trainRideParams.get('island13TrainRideHold') === '1';
+    const requestedTrainRidePhaseMsRaw = trainRideParams.get('island13TrainRidePhaseMs');
+    const requestedTrainRidePhaseMs = requestedTrainRidePhaseMsRaw === null
+      ? Number.NaN
+      : Number(requestedTrainRidePhaseMsRaw);
+    const trainRidePhaseDurationMs = import.meta.env.DEV && Number.isFinite(requestedTrainRidePhaseMs)
+      ? THREE.MathUtils.clamp(requestedTrainRidePhaseMs, 800, ISLAND_13_TRAIN_RIDE_PHASE_MS)
+      : ISLAND_13_TRAIN_RIDE_PHASE_MS;
+    const finishTrainRide = (restoreCamera = true) => {
+      if (!activeTrainRide) return;
+      const finishedRide = activeTrainRide;
+      activeTrainRide = null;
+      trainRidePublishedSeconds = -1;
+      canvas.dataset.trainRidePhase = 'idle';
+      setTrainRidePhase('idle');
+      setTrainRideSecondsRemaining(15);
+      camera.fov = finishedRide.returnFov;
+      camera.updateProjectionMatrix();
+      controls.enabled = !interactionPausedRef.current && !caretakerEncounterOpenRef.current;
+      if (!restoreCamera) return;
+      setBoardActorsVisibleForPreset(finishedRide.returnPreset);
+      setActivePreset(finishedRide.returnPreset);
+      if (isReducedMotion) {
+        camera.position.copy(finishedRide.returnPosition);
+        controls.target.copy(finishedRide.returnTarget);
+        camera.lookAt(controls.target);
+        controls.update();
+        transition = null;
+        return;
+      }
+      const fromPosition = camera.position.clone();
+      const controlPosition = fromPosition.clone().lerp(finishedRide.returnPosition, 0.5);
+      controlPosition.y += 1.4;
+      transition = {
+        startedAt: performance.now(),
+        durationMs: 720,
+        fromPosition,
+        fromTarget: controls.target.clone(),
+        controlPosition,
+        toPosition: finishedRide.returnPosition,
+        toTarget: finishedRide.returnTarget,
+      };
+    };
+    const publishTrainRidePhase = (phaseIndex: number) => {
+      if (!activeTrainRide) return;
+      const view = ISLAND_13_TRAIN_RIDE_VIEWS[phaseIndex];
+      if (!view) return;
+      activeTrainRide.phaseIndex = phaseIndex;
+      trainRidePublishedSeconds = -1;
+      canvas.dataset.trainRidePhase = view;
+      setTrainRidePhase(view);
+      camera.fov = view === 'side' ? 56 : view === 'rear' ? 62 : 60;
+      camera.updateProjectionMatrix();
+    };
+    const startTrainRide = (startedAt: number, initialView: Island13TrainRideView = 'driver') => {
+      if (!isCactusCanyon || !livingAmbience.getTrainRidePose) return;
+      const initialPhaseIndex = Math.max(0, ISLAND_13_TRAIN_RIDE_VIEWS.indexOf(initialView));
+      activeTrainRide = {
+        startedAt: startedAt - initialPhaseIndex * trainRidePhaseDurationMs,
+        phaseIndex: initialPhaseIndex,
+        phaseDurationMs: trainRidePhaseDurationMs,
+        holdRequestedView: holdRequestedTrainRideView,
+        returnPosition: camera.position.clone(),
+        returnTarget: controls.target.clone(),
+        returnFov: camera.fov,
+        returnPreset: activeInspectionPreset,
+      };
+      transition = null;
+      idleOverviewAt = null;
+      controls.enabled = false;
+      setBoardActorsVisibleForPreset('manual');
+      setActivePreset('manual');
+      publishTrainRidePhase(initialPhaseIndex);
+    };
+    const advanceTrainRide = () => {
+      if (!activeTrainRide) return;
+      const nextPhaseIndex = activeTrainRide.phaseIndex + 1;
+      if (nextPhaseIndex >= ISLAND_13_TRAIN_RIDE_VIEWS.length) {
+        finishTrainRide();
+        return;
+      }
+      activeTrainRide.startedAt = performance.now() - nextPhaseIndex * activeTrainRide.phaseDurationMs;
+      publishTrainRidePhase(nextPhaseIndex);
+    };
+    exitTrainRideRef.current = () => finishTrainRide();
+    advanceTrainRideRef.current = advanceTrainRide;
     const applyControlledCameraFocus = (request: ControlledCameraFocusRequest) => {
       if (request.version <= appliedControlledCameraFocusVersionRef.current) return;
       appliedControlledCameraFocusVersionRef.current = request.version;
@@ -5202,6 +5321,12 @@ export default function Island5ThreePilot({
       if (evidencePreset && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === evidencePreset)) {
         applyPreset(evidencePreset as Island5CameraPresetId, 0.2);
       }
+    }
+    if (
+      isCactusCanyon
+      && ISLAND_13_TRAIN_RIDE_VIEWS.includes(requestedTrainRideView as Island13TrainRideView)
+    ) {
+      startTrainRide(performance.now(), requestedTrainRideView as Island13TrainRideView);
     }
 
     const stopTour = (returnToOverview = true) => {
@@ -5301,7 +5426,7 @@ export default function Island5ThreePilot({
       pointerDown.set(event.clientX, event.clientY);
     };
     const handlePointerUp = (event: PointerEvent) => {
-      if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion) return;
+      if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion || activeTrainRide) return;
       if (pointerDown.distanceTo(new THREE.Vector2(event.clientX, event.clientY)) > 7) return;
       const rect = canvas.getBoundingClientRect();
       pointer.set(
@@ -5309,6 +5434,22 @@ export default function Island5ThreePilot({
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
+      const trainIntersection = raycaster.intersectObjects(clickableCactusCanyonTrain, true)[0];
+      if (trainIntersection) {
+        const tappedAt = performance.now();
+        const tapPosition = new THREE.Vector2(event.clientX, event.clientY);
+        const isDoubleTap = tappedAt - lastTrainTapAt <= 430
+          && lastTrainTapPosition.distanceTo(tapPosition) <= 28;
+        lastTrainTapAt = tappedAt;
+        lastTrainTapPosition.copy(tapPosition);
+        if (isDoubleTap) {
+          lastTrainTapAt = Number.NEGATIVE_INFINITY;
+          startTrainRide(tappedAt);
+        }
+        // A single tap reserves the moving consist for its documented
+        // double-tap interaction instead of focusing a landmark behind it.
+        return;
+      }
       const caretakerIntersection = raycaster.intersectObjects(clickableCaretaker, true)[0];
       if (caretakerIntersection) {
         idleOverviewAt = null;
@@ -5371,6 +5512,7 @@ export default function Island5ThreePilot({
         tileRewardObjects.setCactusCanyonMissionStarted(spiralPresentation.started !== false);
         const requestedSequence = Math.max(0, Math.floor(spiralPresentation.constructionSequence ?? 0));
         if (requestedSequence > cactusCanyonLastConstructionSequence) {
+          if (activeTrainRide) finishTrainRide(false);
           cactusCanyonLastConstructionSequence = requestedSequence;
           cactusCanyonBlastStartedAtMs = now;
           cactusCanyonBlastCameraWasActive = true;
@@ -5870,12 +6012,48 @@ export default function Island5ThreePilot({
         controls.target.copy(cactusCanyonBlastCameraPose.target);
         camera.lookAt(controls.target);
       }
+      if (activeTrainRide && activeTokenMotion) finishTrainRide(false);
+      if (activeTrainRide && interactionPausedRef.current) finishTrainRide();
+      if (activeTrainRide) {
+        const totalRideElapsedMs = Math.max(0, now - activeTrainRide.startedAt);
+        const phaseIndex = activeTrainRide.holdRequestedView
+          ? activeTrainRide.phaseIndex
+          : Math.floor(totalRideElapsedMs / activeTrainRide.phaseDurationMs);
+        if (phaseIndex >= ISLAND_13_TRAIN_RIDE_VIEWS.length) {
+          finishTrainRide();
+        } else {
+          if (phaseIndex !== activeTrainRide.phaseIndex) publishTrainRidePhase(phaseIndex);
+          const view = ISLAND_13_TRAIN_RIDE_VIEWS[phaseIndex];
+          const pose = livingAmbience.getTrainRidePose?.(view);
+          if (!pose) {
+            finishTrainRide();
+          } else {
+            transition = null;
+            controls.enabled = false;
+            const phaseElapsedMs = activeTrainRide.holdRequestedView
+              ? 0
+              : totalRideElapsedMs - phaseIndex * activeTrainRide.phaseDurationMs;
+            const secondsRemaining = Math.max(1, Math.ceil(
+              (activeTrainRide.phaseDurationMs - phaseElapsedMs) / 1000,
+            ));
+            if (secondsRemaining !== trainRidePublishedSeconds) {
+              trainRidePublishedSeconds = secondsRemaining;
+              setTrainRideSecondsRemaining(secondsRemaining);
+            }
+            camera.position.copy(pose.position);
+            if (!isReducedMotion) camera.position.y += Math.sin(elapsed * 5.2) * 0.012;
+            controls.target.copy(pose.target);
+            camera.lookAt(controls.target);
+          }
+        }
+      }
       if (
         idleOverviewAt !== null
         && now >= idleOverviewAt
         && !activeTokenMotion
         && !activeTour
         && !activeProfiler
+        && !activeTrainRide
         && !caretakerEncounterOpenRef.current
       ) {
         idleOverviewAt = null;
@@ -6091,24 +6269,59 @@ export default function Island5ThreePilot({
       startTourRef.current = () => undefined;
       stopTourRef.current = () => undefined;
       startProfilerRef.current = () => undefined;
+      exitTrainRideRef.current = () => undefined;
+      advanceTrainRideRef.current = () => undefined;
+      if (activeTrainRide) setTrainRidePhase('idle');
       setCameraAuthoringModeRef.current = () => undefined;
     };
   }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+
+  const trainRideViewCopy = trainRidePhase === 'driver'
+    ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }
+    : trainRidePhase === 'rear'
+      ? { eyebrow: 'ROYAL OBSERVATION', title: 'Watching the rails fall away', next: 'Open-window carriage' }
+      : trainRidePhase === 'side'
+        ? { eyebrow: 'LUXURY CARRIAGE', title: 'Canyon air through the open sash', next: 'Return to the island' }
+        : null;
 
   return (
     <section
       className={`island-5-three-pilot${isEmbedded ? ' island-5-three-pilot--embedded' : ''}${isEvidenceCapture ? ' island-5-three-pilot--evidence' : ''}`}
       data-quality={qualityProfile.id}
       data-camera-preset={activePreset}
+      data-train-ride-phase={trainRidePhase}
       aria-label={isEmbedded ? `Interactive 3D Island ${islandNumber}` : `Actual 3D Island ${islandNumber} pilot`}
     >
-      <canvas key={`${islandNumber}-${resolvedWorldSourceNumber}-${qualityProfile.id}`} ref={canvasRef} className="island-5-three-pilot__canvas" aria-label={`Interactive 3D ${worldName} island`} />
+      <canvas
+        key={`${islandNumber}-${resolvedWorldSourceNumber}-${qualityProfile.id}`}
+        ref={canvasRef}
+        className="island-5-three-pilot__canvas"
+        aria-label={`Interactive 3D ${worldName} island${isCactusCanyon ? '; double-tap the train to ride' : ''}`}
+      />
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
           <span aria-hidden="true" />
           <strong>Entering {worldName}</strong>
           <small>Awakening the living world…</small>
         </div>
+      ) : null}
+      {isCactusCanyon && hasRenderedFrame && trainRidePhase === 'idle' && !isEvidenceCapture ? (
+        <div className="island-5-three-pilot__train-ride-prompt" aria-hidden="true">
+          <span>🚂</span> Double-tap the train to ride
+        </div>
+      ) : null}
+      {trainRideViewCopy ? (
+        <section className="island-5-three-pilot__train-ride-hud" role="status" aria-live="polite">
+          <div>
+            <span>{trainRideViewCopy.eyebrow}</span>
+            <strong>{trainRideViewCopy.title}</strong>
+            <small>{trainRideSecondsRemaining}s · next: {trainRideViewCopy.next}</small>
+          </div>
+          <div className="island-5-three-pilot__train-ride-actions">
+            <button type="button" onClick={() => advanceTrainRideRef.current()}>Next view</button>
+            <button type="button" onClick={() => exitTrainRideRef.current()}>Exit ride</button>
+          </div>
+        </section>
       ) : null}
       {!isEmbedded ? (
         <>
