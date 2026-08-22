@@ -183,7 +183,43 @@ from text embedded in the concept, and never overwrite a source or accepted
 - Reuse the shared caretaker LOD; apply the island outfit/material module.
 - Add/update structural and routing tests. No component-level gameplay writes.
 
-### 7. Gauntlet evidence loop
+### 7. Signature missions and moving infrastructure
+
+When an island contains a buildable railway, bridge, lift, excavation or other
+moving system, define its complete player loop before adding final scenery:
+
+- mission briefing and unlock condition;
+- route-relative pickup positions and authored pickup quantities;
+- canonical inventory, spend action and monotonic completion state;
+- one deterministic visible construction result per spend;
+- presentation-only cinematic, focus camera, reduced-motion path and replayable
+  developer preview;
+- completion beat and safe compatibility for saves created before the mission.
+
+Commit gameplay through the canonical action service before starting the
+cinematic. The cinematic may read the committed before/after state, but must not
+own or duplicate inventory, reward or completion authority. It must also be
+interrupt-safe: closing a modal, changing focus or using reduced motion cannot
+lose or repeat the gameplay result.
+
+Audit two clearances separately and early:
+
+- the protected 36-tile board corridor against every landscape/landmark object;
+- the complete swept envelope of each moving vehicle—including carriages—against
+  every L3 landmark mesh, instance, tunnel, switch and camera focus volume.
+
+Run the vehicle-clearance audit again whenever a landmark grows, a track moves
+or a review camera changes. A decorative doorway or facade painted over a track
+is not a tunnel; show a physically open throughpass with enough width, height
+and turning clearance on both elevations. Keep shared transport construction
+language consistent without making the five landmarks repeat silhouettes.
+
+Environmental anchors that establish direction—especially a sun, moon or
+distant landmark—must live in world space. Verify them from overview, left,
+right and rear orbits so they do not follow the camera. Review background depth,
+360 construction and moving-system clearance at blockout, before micro-detail.
+
+### 8. Gauntlet evidence loop
 
 After each meaningful pass capture:
 
@@ -206,7 +242,13 @@ Critique the largest observed mismatch first. Change one bounded problem group,
 recapture and log the delta. Do not claim 10/10 from code inspection or a
 single flattering camera.
 
-### 8. Mobile optimization and release
+For animated construction, also preserve a deterministic query/toggle that can
+replay each segment and capture before, ignition, impact and completed frames.
+The safest review camera usually uses a bounded exterior arc that keeps the work
+face visible; a literal full spin is wrong when the terrain itself occludes the
+action.
+
+### 9. Mobile optimization and release
 
 - Quality tiers must change real cost, not only labels.
 - Profile the representative High scene on the physical target phone.
@@ -230,6 +272,8 @@ An island is complete only when:
 - it has a unique authored 3D world and stable routing identity;
 - all five L1–L3 landmarks are coherent and readable at phone scale;
 - the real board, token, rewards, clicks, Build flow and caretaker still work;
+- any signature mission has canonical, save-compatible progression and its
+  moving geometry passes swept-envelope clearance from all relevant views;
 - ambience is alive but quality-scalable and reduced-motion safe;
 - overview/orbits/focus/level/motion evidence matches current code;
 - physical-device and static budgets pass, or any review/waiver is explicit;
@@ -256,4 +300,6 @@ Use this prompt, replacing `NNN` and the slug:
 > one landmark at a time. Return to the immutable NNN-source image at every
 > major pass, record the five source-fidelity scores and block unresolved
 > identity drift. Capture phone/360 evidence, enforce High mobile
-> budgets, and never leave a profiler build installed in place of HabitGame.
+> budgets, define signature-mission gameplay before its final infrastructure,
+> audit moving-vehicle swept clearance separately from board clearance, and
+> never leave a profiler build installed in place of HabitGame.

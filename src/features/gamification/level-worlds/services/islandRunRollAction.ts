@@ -89,13 +89,16 @@ import {
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 import {
   advanceSunkenSandsTreasureForRoll,
+  collectCactusCanyonDynamiteForLanding,
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
   resolveRootheartPowerworksProgress,
+  startCactusCanyonSpiralMission,
   type RootheartPowerComponentId,
 } from './islandRunSignatureMissions';
 import {
+  getIslandMissionBriefingBeatId,
   markIslandMissionBriefingSeen,
   resolveIslandMissionBriefingTrigger,
   type IslandMissionBriefingTrigger,
@@ -242,6 +245,8 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
+  /** Canonical number of dynamite sticks collected on this Island 013 landing. */
+  cactusCanyonDynamiteCollected?: number;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
   rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
   /**
@@ -451,12 +456,6 @@ async function performRollAction(options: {
       cycleIndex: state.cycleIndex,
       islandNumber: state.currentIslandNumber,
     }));
-  const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
-    ledger: rootheartLanding.ledger,
-    islandNumber: state.currentIslandNumber,
-    cycleIndex: state.cycleIndex,
-    nowMs,
-  });
   const missionBriefingTrigger = ordinaryTileGameplayActive
     ? resolveIslandMissionBriefingTrigger({
         islandNumber: state.currentIslandNumber,
@@ -466,6 +465,34 @@ async function performRollAction(options: {
         narrativeSeenState: state.narrativeSeenState,
       })
     : null;
+  const cactusCanyonBriefingWasAlreadySeen = state.currentIslandNumber === 13
+    && typeof state.narrativeSeenState?.beats?.[
+      getIslandMissionBriefingBeatId(state.cycleIndex, state.currentIslandNumber)
+    ] === 'number';
+  const missionStartedLedger = missionBriefingTrigger?.islandNumber === 13 || cactusCanyonBriefingWasAlreadySeen
+    ? startCactusCanyonSpiralMission({
+        ledger: rootheartLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        nowMs,
+      })
+    : rootheartLanding.ledger;
+  const cactusCanyonLanding = ordinaryTileGameplayActive
+    ? collectCactusCanyonDynamiteForLanding({
+        ledger: missionStartedLedger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        tileCount: boardProfile.tileCount,
+        nowMs,
+      })
+    : { ledger: missionStartedLedger, dynamiteCollected: 0 };
+  const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
+    ledger: cactusCanyonLanding.ledger,
+    islandNumber: state.currentIslandNumber,
+    cycleIndex: state.cycleIndex,
+    nowMs,
+  });
   const missionNarrativeSeenState = markIslandMissionBriefingSeen(
     state.narrativeSeenState,
     missionBriefingTrigger,
@@ -540,6 +567,7 @@ async function performRollAction(options: {
     ordinaryTileGameplayActive,
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
+    cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
     sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,

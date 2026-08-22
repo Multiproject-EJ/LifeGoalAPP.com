@@ -1,0 +1,26 @@
+[
+  {
+    "id": "blockout-pillar-railway-silhouette",
+    "score": 0.79,
+    "threshold": 0.72,
+    "notes": "The approved tall, broad pillar and inhabited summit now read as one monumental macro structure. The railway forms a continuous excavated shelf around it, while later passes still need denser rock-cut tunnel engineering."
+  },
+  {
+    "id": "blockout-frontier-landmark-masses",
+    "score": 0.66,
+    "threshold": 0.64,
+    "notes": "Union Station, the water tower, windmill and satellite buildings retain distinct silhouettes from all four elevations. Their structural masses pass blockout, but roof breaks, porches, timber framing and rear elevations need major structural refinement."
+  },
+  {
+    "id": "blockout-360-canyon-volume",
+    "score": 0.68,
+    "threshold": 0.64,
+    "notes": "Front, long-axis, thickness-axis and rear views prove a non-degenerate full pillar with one monumental ravine and secondary cuts distributed around the circumference. Several secondary cuts still read as surface overlays and must become richer recessed geology later."
+  },
+  {
+    "id": "blockout-summit-board-integration",
+    "score": 0.66,
+    "threshold": 0.64,
+    "notes": "The inhabited summit and landmark foundations remain inside their protected scenery footprints while the canonical route stays readable. Prop density and landmark frontage require refinement without entering the route corridor."
+  }
+]

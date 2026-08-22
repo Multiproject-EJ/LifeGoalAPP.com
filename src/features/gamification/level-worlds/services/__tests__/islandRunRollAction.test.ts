@@ -20,6 +20,7 @@ import {
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   getIslandRunSignatureMissionKey,
   resolveFrostwellIceworksProgress,
+  resolveCactusCanyonSpiralProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from '../islandRunSignatureMissions';
@@ -315,6 +316,56 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(result.frostwellSpinGranted, false, 'ordinary landing grants nothing');
       const state = readIslandRunGameStateRecord(makeSession());
       assertEqual(resolveFrostwellIceworksProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 3, cycleIndex: 0 }).spinsEarned, 0, 'mission remains unchanged');
+    },
+  },
+  {
+    name: 'Island 013 mission briefing unlocks and collects canonical Canyon Spiral dynamite',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 17,
+        currentIslandNumber: 13,
+        cycleIndex: 0,
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.newTokenIndex, 19, 'roll crosses the briefing trigger and lands on a dynamite cache');
+      assertEqual(result.cactusCanyonDynamiteCollected, 1, 'landing emits the exact dynamite pickup quantity');
+      const progress = resolveCactusCanyonSpiralProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 13,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.startedAtMs !== null, true, 'briefing starts the mission in the same canonical roll');
+      assertEqual(progress.dynamiteEarned, 1, 'dynamite persists atomically with movement');
+    },
+  },
+  {
+    name: 'Island 013 existing briefing saves unlock dynamite after the v2 mission migration',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 17,
+        currentIslandNumber: 13,
+        cycleIndex: 0,
+        narrativeSeenState: { episodes: {}, beats: { 'MISSION-BRIEFING-C0-I013': 1 } },
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.missionBriefingTrigger, null, 'the existing briefing does not repeat');
+      assertEqual(result.cactusCanyonDynamiteCollected, 1, 'the migrated save can immediately collect its route cache');
+      const progress = resolveCactusCanyonSpiralProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 13,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.startedAtMs !== null, true, 'the mission start timestamp is repaired canonically');
     },
   },
   {

@@ -135,6 +135,14 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'Keep the Arena clear. Every gear, cable and lantern must tell one physical story.',
     caretakerSignal: 'We remember the sound of every workshop lighting up together.',
   },
+  13: {
+    headline: 'Carve the Canyon Spiral',
+    missionStatement: 'Cactus Canyon stands on a monumental stone pillar, but its summit railway has no safe route to the settlements below. Collect frontier dynamite and cut a passenger gallery downward through the mountain itself.',
+    primaryObjective: 'Collect dynamite caches placed around the summit route.',
+    supportingObjective: 'Blast all sixteen rock-cut sections and connect Union Station to the canyon-floor stop.',
+    fieldProtocol: 'One controlled blast opens one section. Keep civilians and the summit train clear until every charge is accounted for.',
+    caretakerSignal: 'The mountain can carry us—if every cut follows the stone instead of fighting it.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({

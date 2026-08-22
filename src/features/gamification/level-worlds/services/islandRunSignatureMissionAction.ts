@@ -6,6 +6,8 @@ import {
   recordIslandRunDiceInflow,
 } from './islandRunEconomyTelemetry';
 import {
+  CACTUS_CANYON_ISLAND_NUMBER,
+  CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
@@ -14,17 +16,91 @@ import {
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   SUNKEN_SANDS_ISLAND_NUMBER,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  getCactusCanyonAvailableDynamite,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   getRootheartPowerworksStageCost,
   getSunkenSandsTreasureEssenceReward,
   isRootheartPowerworksCollectionComplete,
+  resolveCactusCanyonSpiralProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
+
+export type BlastCactusCanyonSpiralSectionResult =
+  | {
+      status: 'ok';
+      segments: number;
+      segmentsBefore: number;
+      segmentsAfter: number;
+      dynamiteRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_dynamite' | 'mission_locked' | 'already_complete' };
+
+export function blastCactusCanyonSpiralSection(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<BlastCactusCanyonSpiralSectionResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== CACTUS_CANYON_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveCactusCanyonSpiralProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (progress.completedAtMs !== null || progress.segmentsExcavated >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS) {
+      return { status: 'already_complete' };
+    }
+    if (progress.startedAtMs === null) return { status: 'mission_locked' };
+    if (getCactusCanyonAvailableDynamite(progress) <= 0) return { status: 'no_dynamite' };
+
+    const segmentsBefore = progress.segmentsExcavated;
+    // One player-earned stick clears one authored gallery section. Keeping the
+    // exchange deterministic makes the 3D blast and the persisted rail reveal
+    // describe exactly the same event.
+    const segmentsAfter = Math.min(CACTUS_CANYON_SPIRAL_MAX_SEGMENTS, segmentsBefore + 1);
+    const segments = segmentsAfter - segmentsBefore;
+    const nowMs = Date.now();
+    const completedAtMs = segmentsAfter >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    const nextProgress = {
+      ...progress,
+      segmentsExcavated: segmentsAfter,
+      dynamiteSpent: progress.dynamiteSpent + 1,
+      lastBlastSegments: segments,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: 'blast_cactus_canyon_spiral_section',
+    });
+    return {
+      status: 'ok',
+      segments,
+      segmentsBefore,
+      segmentsAfter,
+      dynamiteRemaining: getCactusCanyonAvailableDynamite(nextProgress),
+      completedAtMs,
+    };
+  });
+}
 
 export type SpinFrostwellDrillWheelResult =
   | { status: 'ok'; meters: number; wheelMeters: number; metersBefore: number; metersAfter: number; spinsRemaining: number }

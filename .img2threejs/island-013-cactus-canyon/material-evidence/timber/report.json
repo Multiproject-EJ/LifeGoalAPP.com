@@ -1,0 +1,87 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.829,
+  "estimatedFidelity": 0.829,
+  "targetThreshold": 0.7,
+  "materialId": "timber-material",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/source-crops/timber-facade.png",
+  "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/timber",
+  "palette": [
+    "#542F14",
+    "#B86920",
+    "#341B0B",
+    "#82491A",
+    "#E6A659"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/timber/timber-material_albedo.png",
+      "url": "timber-material_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/timber/timber-material_roughness.png",
+      "url": "timber-material_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/timber/timber-material_height.png",
+      "url": "timber-material_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/timber/timber-material_normal.png",
+      "url": "timber-material_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-013-cactus-canyon/.img2threejs/island-013-cactus-canyon/material-evidence/timber/timber-material_ao.png",
+      "url": "timber-material_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 105,
+    "sourceHeight": 150,
+    "mapSize": 1024,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 105,
+      "height": 150
+    },
+    "mask": {
+      "backgroundColor": "#593008",
+      "backgroundNoise": 62.04,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.9993
+    },
+    "mapStats": {
+      "valueRange": 0.5163,
+      "heightP90Gradient": 0.08464,
+      "roughnessBase": 0.748,
+      "roughnessVariation": 0.153,
+      "normalStrength": 0.255,
+      "blurRadius": 21
+    },
+    "palette": [
+      "#542F14",
+      "#B86920",
+      "#341B0B",
+      "#82491A",
+      "#E6A659"
+    ]
+  },
+  "warnings": [
+    "image is not clearly isolated from background; using most pixels as material evidence",
+    "object/background separation is weak",
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

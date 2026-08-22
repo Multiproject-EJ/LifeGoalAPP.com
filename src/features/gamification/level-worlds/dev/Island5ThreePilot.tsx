@@ -150,6 +150,18 @@ import {
   ISLAND_12_SUNKEN_SANDS_WORLD_NAME,
   type Island12SunkenSandsTreasurePresentation,
 } from './Island12SunkenSandsThreeWorld';
+import {
+  buildIsland13CactusCanyonLandmark,
+  collectIsland13RuntimePartManifest,
+  createIsland13CactusCanyonBackdrop,
+  createIsland13CactusCanyonLivingAmbience,
+  createIsland13CactusCanyonMaterials,
+  getIsland13SpiralBlastFocus,
+  registerIsland13RuntimePart,
+  ISLAND_13_CACTUS_CANYON_LANDMARK_LABELS,
+  ISLAND_13_CACTUS_CANYON_WORLD_NAME,
+  type Island13CactusCanyonSpiralPresentation,
+} from './Island13CactusCanyonThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 
 export type BuildLevel = 0 | 1 | 2 | 3;
@@ -201,6 +213,7 @@ interface Island5ThreePilotProps {
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
   sunkenSandsTreasurePresentation?: Island12SunkenSandsTreasurePresentation;
+  cactusCanyonSpiralPresentation?: Island13CactusCanyonSpiralPresentation;
   onSignatureMissionClick?: () => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
@@ -2193,6 +2206,7 @@ interface Island5AmbienceRuntime {
     presentation: Island12SunkenSandsTreasurePresentation,
     instant?: boolean,
   ) => void;
+  updateSpiralRail?: (presentation: Island13CactusCanyonSpiralPresentation) => void;
 }
 
 function createInstancedScenery(
@@ -3234,6 +3248,7 @@ export default function Island5ThreePilot({
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
   sunkenSandsTreasurePresentation = { revealProgress: 1, ready: true, claimed: false },
+  cactusCanyonSpiralPresentation = { segmentsExcavated: 16, maxSegments: 16, completed: true },
   onSignatureMissionClick,
   caretakerEncounterOpen = false,
   onCaretakerClick,
@@ -3254,6 +3269,7 @@ export default function Island5ThreePilot({
   const isHeartshaftCrucible = resolvedWorldSourceNumber === 9;
   const isRootheartCanopyCity = resolvedWorldSourceNumber === 10;
   const isSunkenSands = resolvedWorldSourceNumber === 12;
+  const isCactusCanyon = resolvedWorldSourceNumber === 13;
   const worldName = isFirstLightKingdom
     ? ISLAND_1_WORLD_NAME
     : isCelestialSkyKingdom
@@ -3274,6 +3290,8 @@ export default function Island5ThreePilot({
                     ? ISLAND_10_ROOTHEART_WORLD_NAME
                     : isSunkenSands
                       ? ISLAND_12_SUNKEN_SANDS_WORLD_NAME
+                      : isCactusCanyon
+                        ? ISLAND_13_CACTUS_CANYON_WORLD_NAME
               : 'Crown of Tides';
   const isEmbedded = presentation === 'embedded';
   const [isEvidenceCapture, setIsEvidenceCapture] = useState(() => (
@@ -3333,6 +3351,8 @@ export default function Island5ThreePilot({
   rootheartPowerworksPresentationRef.current = rootheartPowerworksPresentation;
   const sunkenSandsTreasurePresentationRef = useRef(sunkenSandsTreasurePresentation);
   sunkenSandsTreasurePresentationRef.current = sunkenSandsTreasurePresentation;
+  const cactusCanyonSpiralPresentationRef = useRef(cactusCanyonSpiralPresentation);
+  cactusCanyonSpiralPresentationRef.current = cactusCanyonSpiralPresentation;
   const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
   const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
   const onCaretakerClickRef = useRef(onCaretakerClick);
@@ -3568,6 +3588,8 @@ export default function Island5ThreePilot({
                     ? 0x2b3d2a
                     : isSunkenSands
                       ? 0xdfbd7d
+                      : isCactusCanyon
+                        ? 0xd98a58
               : 0x91d7e8;
     const fogColor = isFirstLightKingdom
       ? 0xbdebf5
@@ -3589,6 +3611,8 @@ export default function Island5ThreePilot({
                     ? 0x665f3d
                     : isSunkenSands
                       ? 0xdccba6
+                      : isCactusCanyon
+                        ? 0xc98258
               : 0x8ecdda;
     const fogDensity = isFirstLightKingdom
       ? 0.0038
@@ -3610,6 +3634,8 @@ export default function Island5ThreePilot({
                     ? 0.0036
                     : isSunkenSands
                       ? 0.0105
+                      : isCactusCanyon
+                        ? 0.0065
               : 0.0048;
     let rootheartDayBackdrop: THREE.Texture | null = null;
     let rootheartNightBackdrop: THREE.Texture | null = null;
@@ -3618,6 +3644,8 @@ export default function Island5ThreePilot({
       scene.background = createFirstLightSunriseBackdrop() ?? scene.background;
     } else if (isSunkenSands) {
       scene.background = createSunkenSandsDesertBackdrop() ?? scene.background;
+    } else if (isCactusCanyon) {
+      scene.background = createIsland13CactusCanyonBackdrop();
     } else if (isMoonveilNexus) {
       const moonveilSky = new THREE.TextureLoader().load('/assets/islands/island-006/background/moonveil-nebula-sky-portrait-v2.webp');
       moonveilSky.colorSpace = THREE.SRGBColorSpace;
@@ -3646,7 +3674,7 @@ export default function Island5ThreePilot({
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
-    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isFirstLightKingdom ? 1.03 : 1;
+    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isCactusCanyon ? 1.06 : isFirstLightKingdom ? 1.03 : 1;
     camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
     const firstLightInitialOverview = {
@@ -3664,16 +3692,27 @@ export default function Island5ThreePilot({
       position: [0, 16.5, 27] as const,
       target: [0, 0.72, -0.35] as const,
     };
+    const cactusCanyonInitialOverview = {
+      // Cactus Canyon is a compact floating mesa with tall central railway
+      // architecture and a deep butte horizon. This pitch keeps the rail loop,
+      // cliff underside and skyline readable together on portrait screens.
+      position: [0, 14.8, 24] as const,
+      target: [0, 0.78, -0.35] as const,
+    };
     const restoredCameraPose = cameraPoseSnapshotRef.current;
     const initialOverviewPosition = isFirstLightKingdom
       ? firstLightInitialOverview.position
       : isSunkenSands
         ? sunkenSandsInitialOverview.position
+        : isCactusCanyon
+          ? cactusCanyonInitialOverview.position
         : overview.position;
     const initialOverviewTarget = isFirstLightKingdom
       ? firstLightInitialOverview.target
       : isSunkenSands
         ? sunkenSandsInitialOverview.target
+        : isCactusCanyon
+          ? cactusCanyonInitialOverview.target
         : overview.target;
     camera.position.set(...(restoredCameraPose?.position ?? initialOverviewPosition));
     camera.lookAt(...(restoredCameraPose?.target ?? initialOverviewTarget));
@@ -3701,6 +3740,8 @@ export default function Island5ThreePilot({
                       ? 1.1
                       : isSunkenSands
                         ? 1.02
+                        : isCactusCanyon
+                          ? 1.08
               : 1.06;
     // The underwater scene carries multiple full-screen transparent water and
     // light layers. A 1.4 DPR ceiling remains crisp at the phone viewport while
@@ -3787,6 +3828,8 @@ export default function Island5ThreePilot({
                       ? 0x24351f
                       : isSunkenSands
                         ? 0x6e4b2f
+                        : isCactusCanyon
+                          ? 0x4b241b
               : 0x28566a;
     const hemisphereIntensity = isArchiveNeutralLookdev
       ? 1.18
@@ -3816,6 +3859,8 @@ export default function Island5ThreePilot({
                       ? 1.78
                       : isSunkenSands
                         ? 1.52
+                        : isCactusCanyon
+                          ? 1.78
               : 2.25;
     const hemisphere = new THREE.HemisphereLight(
       isArchiveNeutralLookdev
@@ -3826,7 +3871,7 @@ export default function Island5ThreePilot({
             ? 0xd9eaff
             : isArchiveBacklightLookdev
               ? 0x7d9bc2
-          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : 0xeefcff,
+          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : 0xeefcff,
       hemisphereGroundColor,
       hemisphereIntensity,
     );
@@ -3859,6 +3904,8 @@ export default function Island5ThreePilot({
                       ? 3.8
                       : isSunkenSands
                         ? 3.9
+                        : isCactusCanyon
+                          ? 4.15
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
       isArchiveNeutralLookdev
@@ -3869,13 +3916,13 @@ export default function Island5ThreePilot({
             ? 0xe8f2ff
             : isArchiveBacklightLookdev
               ? 0x83c7ff
-          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
+          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     sunlight.position.set(
-      isArchiveGrazingLookdev ? -14 : isArchiveEnvironmentLookdev ? -6 : isArchiveBacklightLookdev ? 5 : isSunkenSands ? 6 : -9,
-      isArchiveGrazingLookdev ? 3.4 : isArchiveEnvironmentLookdev ? 10 : isArchiveBacklightLookdev ? 6 : isSunkenSands ? 16 : 15,
-      isArchiveGrazingLookdev ? 8 : isArchiveEnvironmentLookdev ? 7 : isArchiveBacklightLookdev ? -14 : isSunkenSands ? -12 : 10,
+      isArchiveGrazingLookdev ? -14 : isArchiveEnvironmentLookdev ? -6 : isArchiveBacklightLookdev ? 5 : isSunkenSands ? 6 : isCactusCanyon ? 8 : -9,
+      isArchiveGrazingLookdev ? 3.4 : isArchiveEnvironmentLookdev ? 10 : isArchiveBacklightLookdev ? 6 : isSunkenSands ? 16 : isCactusCanyon ? 18 : 15,
+      isArchiveGrazingLookdev ? 8 : isArchiveEnvironmentLookdev ? 7 : isArchiveBacklightLookdev ? -14 : isSunkenSands ? -12 : isCactusCanyon ? -14 : 10,
     );
     sunlight.castShadow = sceneUsesRealtimeShadows;
     sunlight.shadow.mapSize.set(qualityProfile.shadowMapSize, qualityProfile.shadowMapSize);
@@ -3916,6 +3963,12 @@ export default function Island5ThreePilot({
       oasisBounce.position.set(8, 4, 13);
       scene.add(oasisBounce);
     }
+    if (isCactusCanyon) {
+      const canyonBounce = new THREE.DirectionalLight(0x8fb9d0, 0.48);
+      canyonBounce.name = 'ISLAND_13_CANYON_SKY_BOUNCE_LIGHT';
+      canyonBounce.position.set(10, 7, 12);
+      scene.add(canyonBounce);
+    }
     const rootheartDaySky = new THREE.Color(0xffedc2);
     const rootheartEveningSky = new THREE.Color(0x52647a);
     const rootheartDayGround = new THREE.Color(0x24351f);
@@ -3930,6 +3983,21 @@ export default function Island5ThreePilot({
       Math.floor(rootheartPowerworksPresentationRef.current.constructionSequence ?? 0),
     );
     let rootheartConstructionStartedAtMs = Number.NEGATIVE_INFINITY;
+    let cactusCanyonLastConstructionSequence = Math.max(
+      0,
+      Math.floor(cactusCanyonSpiralPresentationRef.current.constructionSequence ?? 0),
+    );
+    let cactusCanyonBlastStartedAtMs = Number.NEGATIVE_INFINITY;
+    let cactusCanyonBlastCameraWasActive = false;
+    const cactusCanyonBlastPreviewEnabled = typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('island13BlastPreview') === '1';
+    const cactusCanyonBlastPreviewSegment = typeof window !== 'undefined'
+      ? THREE.MathUtils.clamp(
+          Number(new URLSearchParams(window.location.search).get('island13BlastSegment') ?? 8),
+          1,
+          16,
+        )
+      : 8;
 
     const materials = createPilotMaterials(qualityProfile.id, resolvedWorldSourceNumber);
     const island1Materials = isFirstLightKingdom ? createIsland1WorldMaterials() : null;
@@ -3942,6 +4010,7 @@ export default function Island5ThreePilot({
     const island9HeartshaftMaterials = isHeartshaftCrucible ? createIsland9HeartshaftMaterials() : null;
     const island10RootheartMaterials = isRootheartCanopyCity ? createIsland10RootheartMaterials() : null;
     const island12SunkenSandsMaterials = isSunkenSands ? createIsland12SunkenSandsMaterials() : null;
+    const island13CactusCanyonMaterials = isCactusCanyon ? createIsland13CactusCanyonMaterials() : null;
     const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom || isEverblossomKingdom || isSunkenSands;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
@@ -3980,11 +4049,11 @@ export default function Island5ThreePilot({
     water.rotation.x = -Math.PI / 2;
     water.position.y = isFirstLightKingdom ? ISLAND_1_OCEAN_SURFACE_Y : -0.62;
     water.receiveShadow = true;
-    if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity) scene.add(water);
+    if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isCactusCanyon) scene.add(water);
 
     // Island 007 owns a dedicated seabed/root system. Do not construct and then
     // hide the generic coastal plates, bridges and lagoon underneath it.
-    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands) {
+    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon) {
       const firstLightMainDepth = 3.4;
       const island = createTerrainPlate({
         radius: 6.25,
@@ -4051,6 +4120,8 @@ export default function Island5ThreePilot({
               ? createIsland10RootheartLivingAmbience(scene, qualityProfile, island10RootheartMaterials, water)
             : isSunkenSands && island12SunkenSandsMaterials
               ? createIsland12SunkenSandsLivingAmbience(scene, qualityProfile, island12SunkenSandsMaterials, water, buildLevel)
+            : isCactusCanyon && island13CactusCanyonMaterials
+              ? createIsland13CactusCanyonLivingAmbience(scene, qualityProfile, island13CactusCanyonMaterials)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
     if (isFrostmoonHaven) {
       livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
@@ -4060,6 +4131,9 @@ export default function Island5ThreePilot({
     }
     if (isSunkenSands) {
       livingAmbience.updateTreasureProgress?.(sunkenSandsTreasurePresentationRef.current, true);
+    }
+    if (isCactusCanyon) {
+      livingAmbience.updateSpiralRail?.(cactusCanyonSpiralPresentationRef.current);
     }
     const clickableSignatureMissions = isFrostmoonHaven
       ? [livingAmbience.root.getObjectByName('ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT')].filter(
@@ -4071,6 +4145,10 @@ export default function Island5ThreePilot({
           )
         : isSunkenSands
           ? [scene.getObjectByName('ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN')].filter(
+              (candidate): candidate is THREE.Object3D => Boolean(candidate),
+            )
+        : isCactusCanyon
+          ? [scene.getObjectByName('ISLAND_13_SPIRAL_RAIL_MISSION_HIT_TARGET')].filter(
               (candidate): candidate is THREE.Object3D => Boolean(candidate),
             )
         : [];
@@ -4137,11 +4215,29 @@ export default function Island5ThreePilot({
             new THREE.MeshPhysicalMaterial({ color: 0xb77745, roughness: 0.72, metalness: 0.01, clearcoat: 0.08 }),
             new THREE.MeshPhysicalMaterial({ color: 0xc99635, roughness: 0.31, metalness: 0.68, clearcoat: 0.42, emissive: 0x4b2a08, emissiveIntensity: 0.14 }),
           ]
+      : isCactusCanyon
+        ? [
+            new THREE.MeshStandardMaterial({ color: 0xd89a5b, roughness: 0.84, metalness: 0.01 }),
+            new THREE.MeshStandardMaterial({ color: 0x7d3b27, roughness: 0.76, metalness: 0.03 }),
+            new THREE.MeshStandardMaterial({ color: 0xc28235, roughness: 0.34, metalness: 0.68, emissive: 0x3b1604, emissiveIntensity: 0.15 }),
+          ]
       : [
           new THREE.MeshStandardMaterial({ color: 0xf3e4bd, roughness: 0.7 }),
           new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
           new THREE.MeshStandardMaterial({ color: 0xf2c861, roughness: 0.42, metalness: 0.18 }),
         ];
+    if (isCactusCanyon) {
+      // The canyon tiles sit very close to the sandy mesa cap. A stable depth
+      // bias prevents their coplanar fragments from alternating while the
+      // camera or tile-impact animation moves, without changing board logic.
+      tileMaterials.forEach((material) => {
+        material.polygonOffset = true;
+        material.polygonOffsetFactor = -2;
+        material.polygonOffsetUnits = -4;
+        material.depthTest = true;
+        material.depthWrite = true;
+      });
+    }
     const moonveilTileEdgeGeometry = isMoonveilNexus ? new THREE.EdgesGeometry(tileGeometry, 24) : null;
     const moonveilTileEdgeMaterials = isMoonveilNexus
       ? [
@@ -4165,7 +4261,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands;
+    const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon;
     const instancedTileCounts = [0, 0, 0];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -4177,7 +4273,9 @@ export default function Island5ThreePilot({
           const mesh = new THREE.InstancedMesh(tileGeometry, tileMaterials[materialIndex], count);
           mesh.name = isSunkenSands
             ? `ISLAND_12_TILE_SURFACE_BATCH_${materialIndex + 1}`
-            : `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
+            : isCactusCanyon
+              ? `ISLAND_13_TILE_SURFACE_BATCH_${materialIndex + 1}`
+              : `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
           if (isAbyssalPearlKingdom && materialIndex === 0) {
             mesh.userData.sculptRuntime = {
               parts: [registerIsland7RuntimePart('route-integration', mesh, 'canonical-board-route')],
@@ -4185,6 +4283,7 @@ export default function Island5ThreePilot({
             };
           }
           mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          if (isCactusCanyon) mesh.renderOrder = 2;
           mesh.castShadow = sceneUsesRealtimeShadows;
           mesh.receiveShadow = true;
           scene.add(mesh);
@@ -4365,6 +4464,8 @@ export default function Island5ThreePilot({
                 ? buildIsland10RootheartLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island10RootheartMaterials)
               : isSunkenSands && island12SunkenSandsMaterials
                 ? buildIsland12SunkenSandsLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island12SunkenSandsMaterials)
+              : isCactusCanyon && island13CactusCanyonMaterials
+                ? buildIsland13CactusCanyonLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island13CactusCanyonMaterials)
               : buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
       if (landmark.id === 'boss') makeLandmarkMaterialsIndependent(landmarkRoot);
       scene.add(landmarkRoot);
@@ -4545,6 +4646,35 @@ export default function Island5ThreePilot({
       canvas.dataset.island12RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
       canvas.dataset.island12PerformanceInventory = JSON.stringify(performanceInventory);
     }
+    if (isCactusCanyon) {
+      const landmarkNetwork = new THREE.Object3D();
+      landmarkNetwork.name = 'ISLAND_13_LANDMARK_NETWORK_RUNTIME_PROXY';
+      landmarkNetwork.visible = false;
+      const routeIntegration = new THREE.Object3D();
+      routeIntegration.name = 'ISLAND_13_ROUTE_INTEGRATION_RUNTIME_PROXY';
+      routeIntegration.visible = false;
+      landmarkNetwork.userData.sculptRuntime = {
+        parts: [registerIsland13RuntimePart('landmark-network', landmarkNetwork, 'landmark-network')],
+        sockets: Object.fromEntries(ISLAND_5_LANDMARKS.map((landmark) => [landmark.id, `ISLAND_13_${landmark.id.toUpperCase()}_FOCUS_SOCKET`])),
+        colliders: [{ id: 'island-013-landmark-network', type: 'compound', isTrigger: true }],
+        destructionGroups: [{ id: 'landmark-network', breakable: false, partIds: ISLAND_5_LANDMARKS.map((landmark) => landmark.id) }],
+      };
+      routeIntegration.userData.sculptRuntime = {
+        parts: [registerIsland13RuntimePart('route-integration', routeIntegration, 'canonical-board-route')],
+        colliders: [{ id: 'island-013-board-route', type: 'compound-ring', isTrigger: true }],
+      };
+      scene.add(landmarkNetwork, routeIntegration);
+      const partManifest = collectIsland13RuntimePartManifest([
+        livingAmbience.root,
+        landmarkNetwork,
+        routeIntegration,
+        ...landmarkRootsById.values(),
+        ...instancedTileMeshes,
+      ]);
+      canvas.dataset.island13RuntimePartManifest = JSON.stringify(partManifest);
+      canvas.dataset.island13RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
+      canvas.dataset.island13ScenePerformanceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
+    }
     const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevel;
     const crownDrifter = !isRootheartCanopyCity && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
       ? createCrownDrifterModel({ lod: 'board', quality: qualityProfile.id })
@@ -4559,7 +4689,7 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
@@ -4582,6 +4712,8 @@ export default function Island5ThreePilot({
                 ? 0xe5bd67
               : isSunkenSands
                 ? 0xe9bf62
+              : isCactusCanyon
+                ? 0xd6a257
               : 0xffdb8c;
     const routeGlowEmissive = isFirstLightKingdom
       ? 0x247bb2
@@ -4603,6 +4735,8 @@ export default function Island5ThreePilot({
                 ? 0x744311
               : isSunkenSands
                 ? 0x76500f
+              : isCactusCanyon
+                ? 0x6f3713
               : 0xa96f18;
     const routeGlow = new THREE.Mesh(
       new THREE.TorusGeometry(3.4, 0.055, 8, 96),
@@ -4615,7 +4749,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands)
+    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon)
       && new URLSearchParams(window.location.search).get('island3dMapStripped') === '1';
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -4721,7 +4855,8 @@ export default function Island5ThreePilot({
         || preset === 'wisdom'
         || preset === 'event'
         || preset === 'frostwell'
-        || preset === 'powerworks';
+        || preset === 'powerworks'
+        || preset === 'canyon-spiral';
       const visible = !isLandmarkInspection;
       playerPiece.root.visible = visible;
       playerPiece.shadow.visible = visible;
@@ -4931,6 +5066,53 @@ export default function Island5ThreePilot({
           ? { position: [0, 8.6, 14.5], target: [0, 0.5, -9.4] }
           : { position: [0, 5.4, 2.8], target: [0, 0.82, -9.4] },
       };
+      const cactusCanyonSpiralView = new URLSearchParams(window.location.search).get('island13SpiralView');
+      const cactusCanyonLandmarkView = new URLSearchParams(window.location.search).get('island13LandmarkView');
+      const cactusCanyonWorldView = new URLSearchParams(window.location.search).get('island13WorldView');
+      const cactusCanyonFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number];
+        target: readonly [number, number, number];
+      }>> = {
+        overview: cactusCanyonWorldView === 'rear'
+          ? { position: [0, 20, -31], target: [0, -2.2, 0] }
+          : { position: [0, 20, 31], target: [0, -2.2, 0] },
+        survey: { position: [0, 28, 39], target: [0, -2.4, 0] },
+        'orbit-left': { position: [-25, 14, 27], target: [0, -2.8, 0] },
+        'orbit-right': { position: [25, 14, 27], target: [0, -2.8, 0] },
+        hatchery: cactusCanyonLandmarkView === 'rail'
+          ? { position: [-8, 5.2, 1], target: [-3.94, 1.05, -3.52] }
+          : cactusCanyonLandmarkView === 'rear'
+          ? { position: [-10.8, 7.4, 2.8], target: [-4.36, 1.34, -3.9] }
+          : { position: [-10.8, 7.4, -10.6], target: [-4.36, 1.34, -3.9] },
+        habit: cactusCanyonLandmarkView === 'rail'
+          ? { position: [8, 5.2, 1], target: [3.94, 1.05, -3.52] }
+          : cactusCanyonLandmarkView === 'rear'
+          ? { position: [-2, 6.6, -10.7], target: [4.36, 1.8, -3.9] }
+          : { position: [10.7, 6.6, 2.9], target: [4.36, 1.8, -3.9] },
+        wisdom: cactusCanyonLandmarkView === 'rail'
+          ? { position: [-8, 5.2, -1], target: [-3.94, 1.05, 3.52] }
+          : cactusCanyonLandmarkView === 'rear'
+          ? { position: [-10.8, 7.2, -2.8], target: [-4.36, 1.42, 3.9] }
+          : cactusCanyonLandmarkView === 'side'
+            ? { position: [-10.8, 6.5, 3.9], target: [-4.36, 1.42, 3.9] }
+            : { position: [-9.8, 6.2, 9.5], target: [-4.36, 1.42, 3.9] },
+        event: cactusCanyonLandmarkView === 'rail'
+          ? { position: [-0.2, 5.5, 9.5], target: [3.94, 1.05, 3.52] }
+          : cactusCanyonLandmarkView === 'rear'
+          ? { position: [10.8, 7.2, -2.8], target: [4.36, 1.38, 3.9] }
+          : cactusCanyonLandmarkView === 'side'
+            ? { position: [9.3, 5.8, 8.9], target: [4.36, 1.38, 3.9] }
+            : { position: [10.8, 6.5, 3.9], target: [4.36, 1.38, 3.9] },
+        'canyon-spiral': cactusCanyonSpiralView === 'rear'
+          ? { position: [-24, 9.5, -34], target: [0, -7.2, 0] }
+          : cactusCanyonSpiralView === 'summit'
+            ? { position: [12.5, 8.2, 17.5], target: [0, 0.75, 0] }
+          : cactusCanyonSpiralView === 'left'
+            ? { position: [-37, 9.5, 0], target: [0, -7.2, 0] }
+            : cactusCanyonSpiralView === 'right'
+              ? { position: [37, 9.5, 0], target: [0, -7.2, 0] }
+              : { position: [24, 9.5, 34], target: [0, -7.2, 0] },
+      };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
       const underwaterOverride = isAbyssalPearlKingdom ? underwaterFocusOverrides[id] : undefined;
@@ -4939,7 +5121,8 @@ export default function Island5ThreePilot({
       const rootheartOverride = isRootheartCanopyCity ? rootheartFocusOverrides[id] : undefined;
       const sunkenSandsOverride = isSunkenSands ? sunkenSandsFocusOverrides[id] : undefined;
       const frostmoonOverride = isFrostmoonHaven ? frostmoonFocusOverrides[id] : undefined;
-      const authoredFocusOverride = frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
+      const cactusCanyonOverride = isCactusCanyon ? cactusCanyonFocusOverrides[id] : undefined;
+      const authoredFocusOverride = cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
       const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       setBoardActorsVisibleForPreset(id);
       setActivePreset(id);
@@ -5163,6 +5346,7 @@ export default function Island5ThreePilot({
       const elapsed = timer.getElapsed();
       const frameDeltaSeconds = Math.min(0.05, Math.max(0, (now - lastAnimationFrameAt) / 1000));
       lastAnimationFrameAt = now;
+      let cactusCanyonBlastCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
       livingAmbience.updateView?.(camera.position, controls.target);
@@ -5171,6 +5355,61 @@ export default function Island5ThreePilot({
           sunkenSandsTreasurePresentationRef.current,
           isReducedMotion,
         );
+      }
+      if (isCactusCanyon) {
+        let spiralPresentation = cactusCanyonSpiralPresentationRef.current;
+        if (cactusCanyonBlastPreviewEnabled) {
+          const previewCycle = Math.floor(elapsed / 3.1);
+          spiralPresentation = {
+            started: true,
+            segmentsExcavated: Math.floor(cactusCanyonBlastPreviewSegment),
+            maxSegments: 16,
+            completed: false,
+            constructionSequence: 10_000 + previewCycle,
+          };
+        }
+        tileRewardObjects.setCactusCanyonMissionStarted(spiralPresentation.started !== false);
+        const requestedSequence = Math.max(0, Math.floor(spiralPresentation.constructionSequence ?? 0));
+        if (requestedSequence > cactusCanyonLastConstructionSequence) {
+          cactusCanyonLastConstructionSequence = requestedSequence;
+          cactusCanyonBlastStartedAtMs = now;
+          cactusCanyonBlastCameraWasActive = true;
+          transition = null;
+          idleOverviewAt = null;
+          controls.enabled = false;
+          setActivePreset('manual');
+        }
+        const blastDurationMs = isReducedMotion ? 650 : 2_350;
+        const blastProgress = Number.isFinite(cactusCanyonBlastStartedAtMs)
+          ? THREE.MathUtils.clamp((now - cactusCanyonBlastStartedAtMs) / blastDurationMs, 0, 1)
+          : 1;
+        livingAmbience.updateSpiralRail?.({ ...spiralPresentation, blastProgress });
+        if (blastProgress < 1) {
+          const target = getIsland13SpiralBlastFocus(spiralPresentation.segmentsExcavated);
+          const baseAngle = Math.atan2(target.z, target.x);
+          const orbitProgress = THREE.MathUtils.smoothstep(blastProgress, 0, 1);
+          // Orbit across the outward face of the active gallery. A full spin
+          // would place the mountain between camera and charge for half the
+          // sequence; this broad 86° sweep preserves the spinning sensation
+          // while keeping the blast and new rail readable throughout.
+          const orbitAngle = baseAngle - 0.35 + orbitProgress * 0.7;
+          const shakeWindow = blastProgress >= 0.34 && blastProgress <= 0.56
+            ? Math.sin((blastProgress - 0.34) / 0.22 * Math.PI)
+            : 0;
+          const shake = isReducedMotion ? 0 : shakeWindow * 0.16;
+          cactusCanyonBlastCameraPose = {
+            target,
+            position: new THREE.Vector3(
+              Math.cos(orbitAngle) * 24.5 + Math.sin(now * 0.11) * shake,
+              target.y + 7.6 + Math.sin(now * 0.17) * shake * 0.45,
+              Math.sin(orbitAngle) * 24.5 + Math.cos(now * 0.13) * shake,
+            ),
+          };
+        } else if (cactusCanyonBlastCameraWasActive) {
+          cactusCanyonBlastCameraWasActive = false;
+          controls.enabled = true;
+          applyPreset('canyon-spiral', 0.72);
+        }
       }
       if (isRootheartCanopyCity) {
         const powerworksPresentation = rootheartPowerworksPresentationRef.current;
@@ -5625,6 +5864,12 @@ export default function Island5ThreePilot({
         camera.lookAt(controls.target);
         if (rawProgress >= 1) transition = null;
       }
+      if (cactusCanyonBlastCameraPose) {
+        transition = null;
+        camera.position.copy(cactusCanyonBlastCameraPose.position);
+        controls.target.copy(cactusCanyonBlastCameraPose.target);
+        camera.lookAt(controls.target);
+      }
       if (
         idleOverviewAt !== null
         && now >= idleOverviewAt
@@ -5848,7 +6093,7 @@ export default function Island5ThreePilot({
       startProfilerRef.current = () => undefined;
       setCameraAuthoringModeRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   return (
     <section
@@ -5951,7 +6196,7 @@ export default function Island5ThreePilot({
         <select
           aria-label="Focus a landmark"
           disabled={profilerStatus === 'running' || tourStatus === 'running'}
-          value={['boss', 'hatchery', 'habit', 'wisdom', 'event'].includes(activePreset) ? activePreset : ''}
+          value={['boss', 'hatchery', 'habit', 'wisdom', 'event', 'canyon-spiral'].includes(activePreset) ? activePreset : ''}
           onChange={(event) => event.target.value && applyPresetRef.current(event.target.value as Island5CameraPresetId)}
         >
           <option value="">Focus landmark…</option>
@@ -5959,6 +6204,7 @@ export default function Island5ThreePilot({
             .filter((preset) => (
               (preset.id !== 'frostwell' || isFrostmoonHaven)
               && (preset.id !== 'powerworks' || isRootheartCanopyCity)
+              && (preset.id !== 'canyon-spiral' || isCactusCanyon)
             ))
             .map((preset) => (
             <option key={preset.id} value={preset.id}>
@@ -5982,6 +6228,8 @@ export default function Island5ThreePilot({
                               ? ISLAND_10_ROOTHEART_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_10_ROOTHEART_LANDMARK_LABELS]
                             : isSunkenSands
                               ? ISLAND_12_SUNKEN_SANDS_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_12_SUNKEN_SANDS_LANDMARK_LABELS]
+                            : isCactusCanyon
+                              ? ISLAND_13_CACTUS_CANYON_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_13_CACTUS_CANYON_LANDMARK_LABELS]
                           : preset.label}
             </option>
           ))}

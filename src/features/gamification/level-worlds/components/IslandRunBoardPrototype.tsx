@@ -463,22 +463,26 @@ import {
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   claimSunkenSandsFirstTreasure,
+  blastCactusCanyonSpiralSection,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   spinFrostwellDrillWheel,
 } from '../services/islandRunSignatureMissionAction';
 import {
+  CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_SPIN_METERS,
   ROOTHEART_POWER_COMPONENTS,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_FIRST_TREASURE_NAME,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  getCactusCanyonAvailableDynamite,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
   getSunkenSandsTreasureRevealProgress,
   isRootheartPowerworksCollectionComplete,
+  resolveCactusCanyonSpiralProgress,
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
@@ -1911,6 +1915,11 @@ export function IslandRunBoardPrototype({
   const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
   const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
   const [frostwellConstructionSequence, setFrostwellConstructionSequence] = useState(0);
+  const [showCactusCanyonSpiral, setShowCactusCanyonSpiral] = useState(false);
+  const [isBlastingCactusCanyonSpiral, setIsBlastingCactusCanyonSpiral] = useState(false);
+  const [cactusCanyonLastBlastSegments, setCactusCanyonLastBlastSegments] = useState<number | null>(null);
+  const [cactusCanyonConstructionSequence, setCactusCanyonConstructionSequence] = useState(0);
+  const [cactusCanyonPendingBlast, setCactusCanyonPendingBlast] = useState<{ before: number; after: number } | null>(null);
   const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
   const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
@@ -2614,6 +2623,13 @@ export function IslandRunBoardPrototype({
     // unobstructed 3D look at the rig. The board magnifier remains the explicit
     // route back to overview.
   }, []);
+  const openCactusCanyonSpiral = useCallback(() => {
+    setBuildCameraFocusRequest({ preset: 'canyon-spiral', transition: 'quick' });
+    setShowCactusCanyonSpiral(true);
+  }, []);
+  const closeCactusCanyonSpiral = useCallback(() => {
+    setShowCactusCanyonSpiral(false);
+  }, []);
   const openRootheartPowerworks = useCallback(() => {
     setBuildCameraFocusRequest({ preset: 'powerworks', transition: 'quick' });
     setShowRootheartPowerworks(true);
@@ -2942,6 +2958,7 @@ export function IslandRunBoardPrototype({
     showBoardSymbolLegend ||
     Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
+    showCactusCanyonSpiral ||
     showRootheartPowerworks ||
     Boolean(dormantDoorMiniGame) ||
     Boolean(trafficLightCoinFlip) ||
@@ -3029,6 +3046,13 @@ export function IslandRunBoardPrototype({
   const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
     ? 1
     : getFrostwellAvailableSpins(frostwellProgress);
+  const cactusCanyonSpiralProgress = useMemo(() => resolveCactusCanyonSpiralProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 13,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const cactusCanyonAvailableDynamite = getCactusCanyonAvailableDynamite(cactusCanyonSpiralProgress);
+  const cactusCanyonSpiralCompleted = cactusCanyonSpiralProgress.completedAtMs !== null;
   const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -7678,6 +7702,12 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
+        } else if ((rollResult.cactusCanyonDynamiteCollected ?? 0) > 0) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          const collected = rollResult.cactusCanyonDynamiteCollected ?? 0;
+          setLandingText(`🧨 Dynamite cache collected! +${collected} stick${collected === 1 ? '' : 's'} for the Canyon Spiral.`);
+          openCactusCanyonSpiral();
         } else if (rollResult.frostwellSpinGranted) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -12486,6 +12516,7 @@ export function IslandRunBoardPrototype({
       showBoardSymbolLegend ||
       Boolean(activeMissionBriefing) ||
       showFrostwellMission ||
+      showCactusCanyonSpiral ||
       showRootheartPowerworks ||
       showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
@@ -12513,6 +12544,10 @@ export function IslandRunBoardPrototype({
     if (!showFrostwellMission || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showFrostwellMission]);
+  useEffect(() => {
+    if (!showCactusCanyonSpiral || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showCactusCanyonSpiral]);
   useEffect(() => {
     if (!showRootheartPowerworks || typeof document === 'undefined') return undefined;
     return lockPageScroll();
@@ -12548,6 +12583,39 @@ export function IslandRunBoardPrototype({
       setIsSpinningFrostwell(false);
     }
   }, [client, isSpinningFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+
+  const handleBlastCactusCanyonSpiral = useCallback(async () => {
+    if (isBlastingCactusCanyonSpiral) return;
+    setIsBlastingCactusCanyonSpiral(true);
+    setCactusCanyonLastBlastSegments(null);
+    try {
+      const result = await blastCactusCanyonSpiralSection({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_dynamite') setLandingText('Collect a dynamite cache on the Canyon route before setting the next charge.');
+        if (result.status === 'mission_locked') setLandingText('Receive the Island 013 mission briefing before handling dynamite.');
+        return;
+      }
+      // The gameplay action has already committed one deterministic section.
+      // This delay belongs only to the fuse/orbit/debris presentation.
+      setShowCactusCanyonSpiral(false);
+      setCactusCanyonPendingBlast({ before: result.segmentsBefore, after: result.segmentsAfter });
+      setCactusCanyonConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'canyon-spiral', transition: 'quick' });
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 2_450));
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('blast_cactus_canyon_spiral_section', fresh);
+      setCactusCanyonLastBlastSegments(result.segments);
+      setCactusCanyonPendingBlast(null);
+      const completed = result.segmentsAfter >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS;
+      setLandingText(`🧨 Controlled blast complete — rail section ${result.segmentsAfter}/${CACTUS_CANYON_SPIRAL_MAX_SEGMENTS} is open${completed ? ', and the Canyon Spiral is online!' : '.'}`);
+      playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
+    } finally {
+      setIsBlastingCactusCanyonSpiral(false);
+    }
+  }, [client, isBlastingCactusCanyonSpiral, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
 
   const handleFundFrostwell = useCallback(async () => {
     if (isFundingFrostwell) return;
@@ -14241,10 +14309,25 @@ export function IslandRunBoardPrototype({
                     ? false
                     : sunkenSandsTreasureClaimed,
                 }}
+                cactusCanyonSpiralPresentation={{
+                  started: isIslandVisualPreview && islandArtPreviewNumber === 13
+                    ? true
+                    : cactusCanyonSpiralProgress.startedAtMs !== null,
+                  segmentsExcavated: isIslandVisualPreview && islandArtPreviewNumber === 13
+                    ? CACTUS_CANYON_SPIRAL_MAX_SEGMENTS
+                    : cactusCanyonPendingBlast?.after ?? cactusCanyonSpiralProgress.segmentsExcavated,
+                  maxSegments: CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
+                  completed: isIslandVisualPreview && islandArtPreviewNumber === 13
+                    ? true
+                    : cactusCanyonSpiralCompleted,
+                  constructionSequence: cactusCanyonConstructionSequence,
+                }}
                 onSignatureMissionClick={islandArtPreviewNumber === 12
                   ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
-                  : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10
+                  : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10 && islandArtPreviewNumber !== 13
                     ? undefined
+                    : islandArtPreviewNumber === 13
+                      ? isIslandVisualPreview ? undefined : openCactusCanyonSpiral
                     : islandArtPreviewNumber === 10
                     ? openRootheartPowerworks
                     : islandArtPreviewNumber === 3
@@ -14296,6 +14379,22 @@ export function IslandRunBoardPrototype({
                     : rootheartPowerworksCollectionComplete
                       ? `Stage ${rootheartPowerworksProgress.buildStage + 1} ready · ${rootheartPowerworksNextCost.toLocaleString()}`
                       : `${rootheartPowerworksProgress.collectedComponentIds.length}/${ROOTHEART_POWER_COMPONENTS.length} parts found`}
+                </span>
+              </button>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 13 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--canyon-spiral"
+                onClick={openCactusCanyonSpiral}
+                aria-label="Open Canyon Spiral Railway mission"
+              >
+                <span aria-hidden="true">{cactusCanyonSpiralCompleted ? '🚂' : '🧨'}</span>
+                <span>
+                  <strong>Canyon Spiral</strong>
+                  {cactusCanyonSpiralCompleted
+                    ? 'Mountain railway online'
+                    : `${cactusCanyonSpiralProgress.segmentsExcavated}/${CACTUS_CANYON_SPIRAL_MAX_SEGMENTS} sections · 🧨 ${cactusCanyonAvailableDynamite}`}
                 </span>
               </button>
             ) : null}
@@ -18538,6 +18637,99 @@ export function IslandRunBoardPrototype({
                       : `Build for ${frostwellTechCost.toLocaleString()} Essence`}
                 </button>
               ) : null}
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
+
+      {showCactusCanyonSpiral && typeof document !== 'undefined' ? createPortal((
+        <div
+          className="frostwell-mission-modal__backdrop cactus-canyon-spiral-modal__backdrop"
+          role="presentation"
+          onClick={closeCactusCanyonSpiral}
+        >
+          <section
+            className="frostwell-mission-modal cactus-canyon-spiral-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cactus-canyon-spiral-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="frostwell-mission-modal__close"
+              onClick={closeCactusCanyonSpiral}
+              aria-label="Close Canyon Spiral Railway mission"
+            >
+              ×
+            </button>
+            <header className="frostwell-mission-modal__header">
+              <p className="frostwell-mission-modal__eyebrow">Island 013 signature mission</p>
+              <h2 id="cactus-canyon-spiral-title">🧨 Build the Canyon Spiral</h2>
+              <p className="frostwell-mission-modal__lede">
+                Collect red dynamite caches around the summit. Each controlled blast opens one rock-cut gallery and lays the next rail section down toward the canyon floor.
+              </p>
+            </header>
+            <div className="frostwell-mission-modal__machine">
+              <div
+                className={`cactus-canyon-spiral-modal__mountain${isBlastingCactusCanyonSpiral ? ' cactus-canyon-spiral-modal__mountain--building' : ''}`}
+                aria-label={`${cactusCanyonSpiralProgress.segmentsExcavated} of ${CACTUS_CANYON_SPIRAL_MAX_SEGMENTS} spiral railway sections excavated`}
+              >
+                <span className="cactus-canyon-spiral-modal__mesa">UNION STATION</span>
+                <span className="cactus-canyon-spiral-modal__column" />
+                <span className="cactus-canyon-spiral-modal__train" aria-hidden="true">🚂</span>
+                <div className="cactus-canyon-spiral-modal__rails" aria-hidden="true">
+                  {Array.from({ length: CACTUS_CANYON_SPIRAL_MAX_SEGMENTS }, (_, index) => (
+                    <i
+                      key={index}
+                      className={index < cactusCanyonSpiralProgress.segmentsExcavated ? 'is-built' : ''}
+                      style={{
+                        '--spiral-top': `${index * 6}%`,
+                        '--spiral-inset': `${12 + index * 1.2}%`,
+                        '--spiral-rotation': `${index * 15}deg`,
+                      } as CSSProperties}
+                    />
+                  ))}
+                </div>
+                <span className="cactus-canyon-spiral-modal__readout">
+                  <strong>{cactusCanyonSpiralProgress.segmentsExcavated}/{CACTUS_CANYON_SPIRAL_MAX_SEGMENTS}</strong>
+                  <small>rail sections</small>
+                </span>
+              </div>
+              <div className="cactus-canyon-spiral-modal__blast-panel">
+                <div className={`cactus-canyon-spiral-modal__charge${isBlastingCactusCanyonSpiral ? ' is-burning' : ''}`} aria-hidden="true">
+                  <i /><i /><i />
+                  <span className="cactus-canyon-spiral-modal__fuse" />
+                  <b>🧨 {cactusCanyonAvailableDynamite}</b>
+                </div>
+                <button
+                  type="button"
+                  className="cactus-canyon-spiral-modal__blast-button"
+                  disabled={isBlastingCactusCanyonSpiral || cactusCanyonAvailableDynamite < 1 || cactusCanyonSpiralCompleted || cactusCanyonSpiralProgress.startedAtMs === null}
+                  onClick={() => void handleBlastCactusCanyonSpiral()}
+                  aria-label={cactusCanyonAvailableDynamite > 0 ? 'Set one controlled charge for the Canyon Spiral' : 'No Canyon Spiral dynamite ready'}
+                >
+                  {isBlastingCactusCanyonSpiral ? 'FUSE BURNING…' : cactusCanyonAvailableDynamite > 0 ? 'BLAST NEXT SECTION' : 'COLLECT DYNAMITE'}
+                  <small>{cactusCanyonAvailableDynamite} stick{cactusCanyonAvailableDynamite === 1 ? '' : 's'} ready</small>
+                </button>
+                {cactusCanyonLastBlastSegments !== null ? <em>Section {cactusCanyonSpiralProgress.segmentsExcavated} secured!</em> : null}
+              </div>
+            </div>
+            <div className="frostwell-mission-modal__depth-track">
+              <span style={{ width: `${Math.min(100, cactusCanyonSpiralProgress.segmentsExcavated / CACTUS_CANYON_SPIRAL_MAX_SEGMENTS * 100)}%` }} />
+            </div>
+            <div className={`frostwell-mission-modal__status${cactusCanyonSpiralCompleted ? ' frostwell-mission-modal__status--online' : ''}`}>
+              <strong>{cactusCanyonSpiralCompleted ? '🚂 Mountain railway online' : 'Excavation in progress'}</strong>
+              <span>
+                {cactusCanyonSpiralCompleted
+                  ? 'The public train runs three summit circuits, pauses at Union Station, descends to the canyon-floor stop, waits, climbs back up and repeats.'
+                  : 'Each stick triggers a cinematic controlled blast: the camera orbits the work face, stone clears outward, and the next sleepers and rails appear. Construction advances downward from the summit in 3D.'}
+              </span>
+            </div>
+            <div className="frostwell-mission-modal__actions">
+              <button type="button" className="island-stop-modal__btn" onClick={closeCactusCanyonSpiral}>
+                {cactusCanyonSpiralCompleted ? 'Watch the railway' : 'Keep exploring'}
+              </button>
             </div>
           </section>
         </div>

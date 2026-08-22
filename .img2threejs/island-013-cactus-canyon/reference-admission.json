@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "phone-front-three-quarter",
+    "sourcePath": "docs/visual-references/island-013-cactus-canyon/013-source.png",
+    "width": 1023,
+    "height": 1537,
+    "foregroundCoverage": 0.967,
+    "largestComponentFraction": 1.0,
+    "pHash": 17197596217638030060,
+    "duplicateOfHash": null
+  },
+  "scopeNote": "The admitted reference is the immutable full-scene source. Baked UI and approximate route geometry are excluded; hidden rear and underside construction remain documented approximations."
+}

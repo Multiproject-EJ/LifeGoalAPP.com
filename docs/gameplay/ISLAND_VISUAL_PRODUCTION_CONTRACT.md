@@ -257,6 +257,23 @@ An asset moves from draft → selected → approved only after all applicable ga
    bytes and any approved exception are recorded; no avoidable duplicate binary
    is introduced.
 
+### 360-degree authored-geometry gate
+
+Every real-3D island must remain intentional when the player orbits around it.
+A polished hero façade with blank side or rear elevations does not pass visual
+approval. Buildings, vehicles, monuments, terrain edges, foliage clusters and
+other directionally readable assets need coherent front, rear, left and right
+construction: entrances or service access where appropriate, windows and trim,
+roof and support logic, material continuation, silhouette breakup and lived-in
+ground dressing. Symmetry may be used deliberately, but not as a substitute for
+credible construction.
+
+Each meaningful visual milestone must save at least four evidence views: the
+canonical gameplay POV plus left, right and rear surveys. Review the least
+flattering survey first. An island may only be marked done when no survey reveals
+an empty façade, paper-thin prop, missing terrain continuation or one-sided
+vehicle detail.
+
 ## Pilot roles for Islands 1–5
 
 The five pilots intentionally exercise different production problems:

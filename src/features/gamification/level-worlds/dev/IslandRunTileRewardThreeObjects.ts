@@ -7,6 +7,7 @@ import { compactStaticGeometry } from './CrownCitadelThreeModel';
 export interface IslandRunTileRewardThreeRuntime {
   root: THREE.Group;
   animate: (elapsed: number, tokenIndex: number) => void;
+  setCactusCanyonMissionStarted: (started: boolean) => void;
 }
 
 function compactRewardToVertexColorMesh(root: THREE.Group, material: THREE.MeshStandardMaterial, name: string) {
@@ -60,6 +61,7 @@ export type IslandRunTileRewardObjectKind =
   | 'traffic_beacon'
   | 'frostwell_drill'
   | 'rootheart_power_component'
+  | 'cactus_canyon_dynamite'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
@@ -67,6 +69,7 @@ export function resolveIslandRunTileRewardObjectKind(
 ): IslandRunTileRewardObjectKind | null {
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.signatureMissionKind === 'rootheart_power_component') return 'rootheart_power_component';
+  if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -88,6 +91,7 @@ type RewardVisualEntry = {
   phase: number;
   baseScale: number;
   spinRate: number;
+  signatureMissionKind?: IslandTileMapEntry['signatureMissionKind'];
 };
 
 interface RewardMaterials {
@@ -389,10 +393,57 @@ function createRootheartPowerComponent(materials: RewardMaterials, quality: Isla
   return root;
 }
 
+function createCactusCanyonDynamiteCache(
+  materials: RewardMaterials,
+  quality: Island3DQuality,
+  amount: number,
+) {
+  const root = new THREE.Group();
+  root.name = `ISLAND_RUN_TILE_OBJECT_CACTUS_CANYON_DYNAMITE_X${amount >= 3 ? 3 : 1}`;
+  const stickCount = amount >= 3 ? 3 : 1;
+  const radiusSegments = qualitySegments(quality);
+  for (let index = 0; index < stickCount; index += 1) {
+    const stick = new THREE.Group();
+    stick.position.set((index - (stickCount - 1) / 2) * 0.13, (index % 2) * 0.025, 0);
+    stick.rotation.z = (index - 1) * 0.08;
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.055, 0.055, 0.42, radiusSegments),
+      materials.hazard,
+    );
+    body.rotation.z = Math.PI / 2;
+    const capA = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.025, radiusSegments), materials.gold);
+    capA.rotation.z = Math.PI / 2;
+    capA.position.x = -0.21;
+    const capB = capA.clone();
+    capB.position.x = 0.21;
+    const fuse = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 5, radiusSegments, Math.PI * 0.72), materials.midnight);
+    fuse.position.set(0.245, 0.055, 0);
+    fuse.rotation.z = -0.3;
+    stick.add(body, capA, capB, fuse);
+    root.add(stick);
+  }
+  if (stickCount === 3) {
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.34, 0.19), materials.gold);
+    strap.rotation.z = Math.PI / 2;
+    root.add(strap);
+  }
+  const warningHalo = new THREE.Mesh(
+    new THREE.RingGeometry(stickCount === 3 ? 0.29 : 0.22, stickCount === 3 ? 0.36 : 0.29, radiusSegments * 2),
+    materials.goldGlow,
+  );
+  warningHalo.rotation.x = -Math.PI / 2;
+  warningHalo.position.y = -0.13;
+  root.add(warningHalo);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
   if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
   if (kind === 'rootheart_power_component') return createRootheartPowerComponent(materials, quality);
+  if (kind === 'cactus_canyon_dynamite') {
+    return createCactusCanyonDynamiteCache(materials, quality, entry.signatureMissionAmount ?? 1);
+  }
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -438,7 +489,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
     if (!transform) return;
     // Low mode keeps the important economy/special objects but omits common
     // reward-progress tokens so the visual tier is materially cheaper.
-    if (options.quality === 'low' && tileEntry.tileType === 'micro') return;
+    if (options.quality === 'low' && tileEntry.tileType === 'micro' && !tileEntry.signatureMissionKind) return;
     const visual = createVisualForTile(tileEntry, materials, options.quality);
     if (!visual) return;
     // Each collectible still owns its transform for bob, spin and occupancy
@@ -454,6 +505,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
       ? 1.08
       : tileEntry.signatureMissionKind === 'rootheart_power_component'
         ? 1.04
+      : tileEntry.signatureMissionKind === 'cactus_canyon_dynamite'
+        ? 1.08
       : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'
@@ -480,6 +533,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
       phase: tileEntry.index * 0.71,
       baseScale,
       spinRate: tileEntry.tileType === 'free_ticket' ? 0.52 : tileEntry.tileType === 'currency' ? 0.68 : 0.34,
+      signatureMissionKind: tileEntry.signatureMissionKind,
     });
   });
 
@@ -493,8 +547,13 @@ export function createIslandRunTileRewardThreeObjects(options: {
     child.receiveShadow = false;
   });
 
+  let cactusCanyonMissionStarted = true;
   const update = (elapsed: number, tokenIndex: number) => {
     entries.forEach((entry) => {
+      if (entry.signatureMissionKind === 'cactus_canyon_dynamite') {
+        entry.root.visible = cactusCanyonMissionStarted;
+        if (!cactusCanyonMissionStarted) return;
+      }
       const occupied = entry.tileIndex === tokenIndex;
       const collectScale = occupied ? 0.08 : 1;
       const bob = entry.tileType === 'hazard' ? 0.025 : 0.055;
@@ -506,5 +565,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
   };
   update(0, -1);
 
-  return { root, animate: update };
+  return {
+    root,
+    animate: update,
+    setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
+  };
 }

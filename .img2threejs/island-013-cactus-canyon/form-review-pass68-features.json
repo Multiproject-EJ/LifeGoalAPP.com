@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mesa-railway-identity:form-refinement",
+    "score": 0.86,
+    "threshold": 0.84,
+    "notes": "The thick tall pillar, circular summit service, excavated spiral and articulated consist preserve one coherent railway-mesa identity across all four views."
+  },
+  {
+    "id": "five-frontier-landmarks:form-refinement",
+    "score": 0.84,
+    "threshold": 0.84,
+    "notes": "Union Station now has a broad stepped tower, projecting entry pavilion, four roof dormers, side platforms and rear service annex. The four satellite families retain distinct silhouettes, with four-sided trestles plus attached pump-shed and ranch-stable volumes. Remaining richness is predominantly trim, material and surface work."
+  },
+  {
+    "id": "locomotive-mechanical-life:form-refinement",
+    "score": 0.83,
+    "threshold": 0.82,
+    "notes": "Engine, tender and both coaches remain independently sampled on the rail centreline with natural spacing, curve tangents and wheel motion."
+  },
+  {
+    "id": "canyon-depth-stack:form-refinement",
+    "score": 0.84,
+    "threshold": 0.82,
+    "notes": "Broad layered mesa crowns and attached spires now rise from a horizon-anchored inland rim, while side and rear cameras preserve the full pillar volume without background ceilings."
+  },
+  {
+    "id": "canonical-route-clarity:form-refinement",
+    "score": 0.96,
+    "threshold": 0.96,
+    "notes": "The form additions stay inside landmark footprints and preserve the canonical 36-tile route, token clearance, train centreline and mission semantics."
+  }
+]
