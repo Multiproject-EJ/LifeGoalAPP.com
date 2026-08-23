@@ -35871,6 +35871,36 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
   #root {
     display: none;
   }
+
+  /* Internal deterministic 3D evidence capture renders inside its own
+     390x844 phone frame, even when the browser workbench is landscape. */
+  body:has(.island-5-three-pilot--evidence)::before {
+    display: none;
+    content: none;
+  }
+
+  body.island-3d-evidence-capture::before {
+    display: none;
+    content: none;
+  }
+
+  body:has(.island-5-three-pilot--evidence) #root {
+    display: block;
+  }
+
+  body.island-3d-evidence-capture #root {
+    display: block;
+  }
+
+  html:has(.island-5-three-pilot--evidence),
+  body:has(.island-5-three-pilot--evidence) {
+    overflow: auto;
+  }
+
+  html:has(body.island-3d-evidence-capture),
+  body.island-3d-evidence-capture {
+    overflow: auto;
+  }
 }
 
 .habit-analysis-modal-backdrop {

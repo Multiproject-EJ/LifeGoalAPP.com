@@ -24,6 +24,25 @@ export const ROOTHEART_POWER_COMPONENTS = Object.freeze([
 export type RootheartPowerComponentId = typeof ROOTHEART_POWER_COMPONENTS[number]['id'];
 export type RootheartPowerworksBuildStage = 0 | 1 | 2 | 3;
 
+export const SUNKEN_SANDS_ISLAND_NUMBER = 12;
+export const SUNKEN_SANDS_TREASURE_ROLL_TARGET = 20;
+export const SUNKEN_SANDS_FIRST_TREASURE_ID = 'sunscarab-token';
+export const SUNKEN_SANDS_FIRST_TREASURE_NAME = 'Sunscarab Token';
+export const SUNKEN_SANDS_FIRST_TREASURE_DICE = 25;
+export const SUNKEN_SANDS_FIRST_TREASURE_BASE_ESSENCE = 120;
+
+export const CACTUS_CANYON_ISLAND_NUMBER = 13;
+export const CACTUS_CANYON_SPIRAL_MAX_SEGMENTS = 16;
+/**
+ * Route-relative dynamite caches. The 36-tile production profile resolves to
+ * 1, 8, 10, 17, 19, 26, 28 and 35: all clear of the four landmark-door
+ * clusters. Most caches hold one stick; two rarer crates hold three.
+ */
+export const CACTUS_CANYON_DYNAMITE_CACHE_FRACTIONS = Object.freeze([
+  1 / 36, 8 / 36, 10 / 36, 17 / 36, 19 / 36, 26 / 36, 28 / 36, 35 / 36,
+] as const);
+export const CACTUS_CANYON_DYNAMITE_CACHE_AMOUNTS = Object.freeze([1, 1, 3, 1, 1, 3, 1, 1] as const);
+
 export interface FrostwellIceworksProgress {
   missionId: 'frostwell-iceworks';
   version: 2;
@@ -45,7 +64,33 @@ export interface RootheartPowerworksProgress {
   updatedAtMs: number;
 }
 
-export type IslandRunSignatureMissionProgress = FrostwellIceworksProgress | RootheartPowerworksProgress;
+export interface SunkenSandsTreasureProgress {
+  missionId: 'sunken-sands-first-treasure';
+  version: 1;
+  treasureId: typeof SUNKEN_SANDS_FIRST_TREASURE_ID;
+  rollsCompleted: number;
+  revealedAtMs: number | null;
+  claimedAtMs: number | null;
+  updatedAtMs: number;
+}
+
+export interface CactusCanyonSpiralProgress {
+  missionId: 'cactus-canyon-spiral-rail';
+  version: 2;
+  segmentsExcavated: number;
+  dynamiteEarned: number;
+  dynamiteSpent: number;
+  lastBlastSegments: number | null;
+  startedAtMs: number | null;
+  completedAtMs: number | null;
+  updatedAtMs: number;
+}
+
+export type IslandRunSignatureMissionProgress =
+  | FrostwellIceworksProgress
+  | RootheartPowerworksProgress
+  | SunkenSandsTreasureProgress
+  | CactusCanyonSpiralProgress;
 export type IslandRunSignatureMissionProgressByIsland = Record<string, IslandRunSignatureMissionProgress>;
 
 export function getIslandRunSignatureMissionKey(cycleIndex: number, islandNumber: number): string {
@@ -79,6 +124,68 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'cactus-canyon-spiral-rail' || record.mission_id === 'cactus-canyon-spiral-rail') {
+      const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
+      const startedAtRaw = record.startedAtMs ?? record.started_at_ms;
+      const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
+      const lastBlastRaw = record.lastBlastSegments ?? record.last_blast_segments
+        ?? record.lastSpinSegments ?? record.last_spin_segments;
+      const segmentsExcavated = Math.max(0, Math.min(
+        CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
+        finiteInteger(record.segmentsExcavated ?? record.segments_excavated),
+      ));
+      result[key] = {
+        missionId: 'cactus-canyon-spiral-rail',
+        version: 2,
+        segmentsExcavated,
+        // Version 1 awarded wheel spins. Treat every remaining legacy spin as
+        // one stick so an in-progress save can continue without losing value.
+        dynamiteEarned: Math.max(0, finiteInteger(
+          record.dynamiteEarned ?? record.dynamite_earned ?? record.spinsEarned ?? record.spins_earned,
+        )),
+        dynamiteSpent: Math.max(0, finiteInteger(
+          record.dynamiteSpent ?? record.dynamite_spent ?? record.spinsUsed ?? record.spins_used,
+        )),
+        lastBlastSegments: typeof lastBlastRaw === 'number' && Number.isFinite(lastBlastRaw)
+          ? Math.max(0, Math.floor(lastBlastRaw))
+          : null,
+        startedAtMs: typeof startedAtRaw === 'number' && Number.isFinite(startedAtRaw)
+          ? Math.max(0, startedAtRaw)
+          : segmentsExcavated > 0 ? 0 : null,
+        completedAtMs: typeof completedAtRaw === 'number' && Number.isFinite(completedAtRaw)
+          ? Math.max(0, completedAtRaw)
+          : segmentsExcavated >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS ? 0 : null,
+        updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+          ? Math.max(0, updatedAtRaw)
+          : 0,
+      };
+      return;
+    }
+    if (record.missionId === 'sunken-sands-first-treasure' || record.mission_id === 'sunken-sands-first-treasure') {
+      const revealedAtRaw = record.revealedAtMs ?? record.revealed_at_ms;
+      const claimedAtRaw = record.claimedAtMs ?? record.claimed_at_ms;
+      const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
+      const rollsCompleted = Math.max(0, Math.min(
+        SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+        finiteInteger(record.rollsCompleted ?? record.rolls_completed),
+      ));
+      result[key] = {
+        missionId: 'sunken-sands-first-treasure',
+        version: 1,
+        treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+        rollsCompleted,
+        revealedAtMs: typeof revealedAtRaw === 'number' && Number.isFinite(revealedAtRaw)
+          ? Math.max(0, revealedAtRaw)
+          : rollsCompleted >= SUNKEN_SANDS_TREASURE_ROLL_TARGET ? 0 : null,
+        claimedAtMs: typeof claimedAtRaw === 'number' && Number.isFinite(claimedAtRaw)
+          ? Math.max(0, claimedAtRaw)
+          : null,
+        updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+          ? Math.max(0, updatedAtRaw)
+          : 0,
+      };
+      return;
+    }
     if (record.missionId === 'rootheart-powerworks' || record.mission_id === 'rootheart-powerworks') {
       const activatedAtRaw = record.activatedAtMs ?? record.activated_at_ms;
       const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
@@ -164,6 +271,169 @@ export function resolveRootheartPowerworksProgress(options: {
     essenceSpent: 0,
     activatedAtMs: null,
     updatedAtMs: 0,
+  };
+}
+
+export function resolveSunkenSandsTreasureProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): SunkenSandsTreasureProgress {
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber ?? SUNKEN_SANDS_ISLAND_NUMBER);
+  const current = options.ledger[key];
+  return current?.missionId === 'sunken-sands-first-treasure' ? current : {
+    missionId: 'sunken-sands-first-treasure',
+    version: 1,
+    treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+    rollsCompleted: 0,
+    revealedAtMs: null,
+    claimedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
+export function resolveCactusCanyonSpiralProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): CactusCanyonSpiralProgress {
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber ?? CACTUS_CANYON_ISLAND_NUMBER);
+  const current = options.ledger[key];
+  return current?.missionId === 'cactus-canyon-spiral-rail' ? current : {
+    missionId: 'cactus-canyon-spiral-rail',
+    version: 2,
+    segmentsExcavated: 0,
+    dynamiteEarned: 0,
+    dynamiteSpent: 0,
+    lastBlastSegments: null,
+    startedAtMs: null,
+    completedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
+export function getCactusCanyonDynamiteQuantityForTile(
+  islandNumber: number,
+  tileIndex: number,
+  tileCount: number,
+): number {
+  if (islandNumber !== CACTUS_CANYON_ISLAND_NUMBER) return 0;
+  const safeTileCount = Math.max(1, Math.floor(tileCount));
+  const cacheIndex = CACTUS_CANYON_DYNAMITE_CACHE_FRACTIONS.findIndex((fraction) => (
+    Math.min(safeTileCount - 1, Math.max(0, Math.floor(fraction * safeTileCount))) === tileIndex
+  ));
+  return cacheIndex < 0 ? 0 : CACTUS_CANYON_DYNAMITE_CACHE_AMOUNTS[cacheIndex];
+}
+
+export function isCactusCanyonDynamiteTile(
+  islandNumber: number,
+  tileIndex: number,
+  tileCount: number,
+): boolean {
+  return getCactusCanyonDynamiteQuantityForTile(islandNumber, tileIndex, tileCount) > 0;
+}
+
+export function getCactusCanyonAvailableDynamite(progress: CactusCanyonSpiralProgress): number {
+  return Math.max(0, progress.dynamiteEarned - progress.dynamiteSpent);
+}
+
+export function getCactusCanyonSpiralBuildProgress(progress: CactusCanyonSpiralProgress): number {
+  return Math.max(0, Math.min(1, progress.segmentsExcavated / CACTUS_CANYON_SPIRAL_MAX_SEGMENTS));
+}
+
+export function startCactusCanyonSpiralMission(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  nowMs: number;
+}): IslandRunSignatureMissionProgressByIsland {
+  if (options.islandNumber !== CACTUS_CANYON_ISLAND_NUMBER) return options.ledger;
+  const current = resolveCactusCanyonSpiralProgress(options);
+  if (current.startedAtMs !== null) return options.ledger;
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  return {
+    ...options.ledger,
+    [key]: { ...current, startedAtMs: options.nowMs, updatedAtMs: options.nowMs },
+  };
+}
+
+export function collectCactusCanyonDynamiteForLanding(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  tileIndex: number;
+  tileCount: number;
+  nowMs: number;
+}): { ledger: IslandRunSignatureMissionProgressByIsland; dynamiteCollected: number } {
+  const amount = getCactusCanyonDynamiteQuantityForTile(
+    options.islandNumber,
+    options.tileIndex,
+    options.tileCount,
+  );
+  if (amount <= 0) return { ledger: options.ledger, dynamiteCollected: 0 };
+  const current = resolveCactusCanyonSpiralProgress(options);
+  if (
+    current.startedAtMs === null
+    || current.completedAtMs !== null
+    || current.segmentsExcavated >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS
+  ) {
+    return { ledger: options.ledger, dynamiteCollected: 0 };
+  }
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  return {
+    dynamiteCollected: amount,
+    ledger: {
+      ...options.ledger,
+      [key]: {
+        ...current,
+        dynamiteEarned: current.dynamiteEarned + amount,
+        updatedAtMs: options.nowMs,
+      },
+    },
+  };
+}
+
+export function getSunkenSandsTreasureRevealProgress(progress: SunkenSandsTreasureProgress): number {
+  return Math.max(0, Math.min(1, progress.rollsCompleted / SUNKEN_SANDS_TREASURE_ROLL_TARGET));
+}
+
+export function getSunkenSandsTreasureEssenceReward(cycleIndex: number): number {
+  const effectiveIsland = getEffectiveIslandNumber(SUNKEN_SANDS_ISLAND_NUMBER, cycleIndex);
+  return Math.round(SUNKEN_SANDS_FIRST_TREASURE_BASE_ESSENCE * getIslandEssenceMultiplier(effectiveIsland));
+}
+
+export function advanceSunkenSandsTreasureForRoll(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  nowMs: number;
+}): {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  rollsCompleted: number;
+  becameReady: boolean;
+} {
+  if (options.islandNumber !== SUNKEN_SANDS_ISLAND_NUMBER) {
+    return { ledger: options.ledger, rollsCompleted: 0, becameReady: false };
+  }
+  const current = resolveSunkenSandsTreasureProgress(options);
+  if (current.claimedAtMs !== null || current.rollsCompleted >= SUNKEN_SANDS_TREASURE_ROLL_TARGET) {
+    return { ledger: options.ledger, rollsCompleted: current.rollsCompleted, becameReady: false };
+  }
+  const rollsCompleted = Math.min(SUNKEN_SANDS_TREASURE_ROLL_TARGET, current.rollsCompleted + 1);
+  const becameReady = rollsCompleted >= SUNKEN_SANDS_TREASURE_ROLL_TARGET;
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  return {
+    rollsCompleted,
+    becameReady,
+    ledger: {
+      ...options.ledger,
+      [key]: {
+        ...current,
+        rollsCompleted,
+        revealedAtMs: becameReady ? options.nowMs : current.revealedAtMs,
+        updatedAtMs: options.nowMs,
+      },
+    },
   };
 }
 
@@ -277,6 +547,47 @@ export function mergeIslandRunSignatureMissionProgress(
     const b = local[key];
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'sunken-sands-first-treasure' || b.missionId === 'sunken-sands-first-treasure') {
+      if (a.missionId !== 'sunken-sands-first-treasure') { merged[key] = b; return; }
+      if (b.missionId !== 'sunken-sands-first-treasure') { merged[key] = a; return; }
+      const earliestTimestamp = (left: number | null, right: number | null): number | null => (
+        left === null ? right : right === null ? left : Math.min(left, right)
+      );
+      merged[key] = {
+        missionId: 'sunken-sands-first-treasure',
+        version: 1,
+        treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+        rollsCompleted: Math.max(a.rollsCompleted, b.rollsCompleted),
+        revealedAtMs: earliestTimestamp(a.revealedAtMs, b.revealedAtMs),
+        claimedAtMs: earliestTimestamp(a.claimedAtMs, b.claimedAtMs),
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
+    if (a.missionId === 'cactus-canyon-spiral-rail' || b.missionId === 'cactus-canyon-spiral-rail') {
+      if (a.missionId !== 'cactus-canyon-spiral-rail') { merged[key] = b; return; }
+      if (b.missionId !== 'cactus-canyon-spiral-rail') { merged[key] = a; return; }
+      const completedAtMs = a.completedAtMs === null
+        ? b.completedAtMs
+        : b.completedAtMs === null
+          ? a.completedAtMs
+          : Math.min(a.completedAtMs, b.completedAtMs);
+      const latest = a.updatedAtMs >= b.updatedAtMs ? a : b;
+      merged[key] = {
+        missionId: 'cactus-canyon-spiral-rail',
+        version: 2,
+        segmentsExcavated: Math.max(a.segmentsExcavated, b.segmentsExcavated),
+        dynamiteEarned: Math.max(a.dynamiteEarned, b.dynamiteEarned),
+        dynamiteSpent: Math.max(a.dynamiteSpent, b.dynamiteSpent),
+        lastBlastSegments: latest.lastBlastSegments,
+        startedAtMs: a.startedAtMs === null
+          ? b.startedAtMs
+          : b.startedAtMs === null ? a.startedAtMs : Math.min(a.startedAtMs, b.startedAtMs),
+        completedAtMs,
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
     if (a.missionId === 'rootheart-powerworks' || b.missionId === 'rootheart-powerworks') {
       if (a.missionId !== 'rootheart-powerworks') { merged[key] = b; return; }
       if (b.missionId !== 'rootheart-powerworks') { merged[key] = a; return; }

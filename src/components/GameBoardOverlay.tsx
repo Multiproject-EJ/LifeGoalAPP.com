@@ -525,7 +525,7 @@ export function GameBoardOverlay({
               onClick={onGarageClick}
               disabled={!onGarageClick}
             >
-              ⚡️ Actions
+              🚀 Garage
             </button>
             <div
               className="game-board-overlay__controller-badge game-board-overlay__controller-badge--slot"

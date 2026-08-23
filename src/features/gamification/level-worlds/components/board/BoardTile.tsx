@@ -169,6 +169,7 @@ export interface BoardTileProps {
   doorStopId?: IslandTileMapEntry['doorStopId'];
   isActiveDoorCluster?: boolean;
   signatureMissionKind?: IslandTileMapEntry['signatureMissionKind'];
+  signatureMissionAmount?: number;
   isEncounter: boolean;
   isEncounterCompleted: boolean;
   isTokenCurrent: boolean;
@@ -203,6 +204,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     doorStopId,
     isActiveDoorCluster = false,
     signatureMissionKind,
+    signatureMissionAmount = 1,
     isEncounter,
     isEncounterCompleted,
     isTokenCurrent,
@@ -232,6 +234,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '⛏';
   } else if (signatureMissionKind === 'rootheart_power_component') {
     iconContent = '⚙';
+  } else if (signatureMissionKind === 'cactus_canyon_dynamite') {
+    iconContent = signatureMissionAmount >= 3 ? '🧨³' : '🧨';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
@@ -272,6 +276,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         signatureMissionKind === 'frostwell_drill' ? 'island-tile--frostwell-drill' : '',
         signatureMissionKind === 'rootheart_power_component' ? 'island-tile--rootheart-power-component' : '',
+        signatureMissionKind === 'cactus_canyon_dynamite' ? 'island-tile--cactus-canyon-dynamite' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -285,6 +290,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
           ? `Tile ${index + 1}. Frostwell drill spin`
           : signatureMissionKind === 'rootheart_power_component'
             ? `Tile ${index + 1}. Rootheart Powerworks component`
+            : signatureMissionKind === 'cactus_canyon_dynamite'
+              ? `Tile ${index + 1}. Cactus Canyon dynamite cache, ${signatureMissionAmount} stick${signatureMissionAmount === 1 ? '' : 's'}`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing

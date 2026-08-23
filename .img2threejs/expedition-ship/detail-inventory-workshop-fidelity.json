@@ -1,0 +1,251 @@
+{
+  "sourceImage": "docs/design/expedition-ship/references/fabrication-deck-panoramic-master-v1.png",
+  "zonesDir": ".img2threejs/expedition-ship/detail-workshop-fidelity",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 16,
+    "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+    "details": [
+      {
+        "id": "overhead-maintenance-rings",
+        "kind": "ridge",
+        "description": "Concentric suspended maintenance rings with radial braces over the garage lift.",
+        "region": "workshop-upper",
+        "scale": "meso",
+        "affects": "silhouette and vertical machinery density",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-gantry-system"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r0c0.png",
+        "confidence": 0.93,
+        "realization": "unreported"
+      },
+      {
+        "id": "continuous-tool-wall",
+        "kind": "groove",
+        "description": "Continuous perimeter cabinets, shelves, tool bays and warm task-light reveals.",
+        "region": "workshop-perimeter",
+        "scale": "meso",
+        "affects": "room density and enclosure",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-perimeter-system"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r0c1.png",
+        "confidence": 0.95,
+        "realization": "unreported"
+      },
+      {
+        "id": "diagnostic-hologram-bay",
+        "kind": "emissive",
+        "description": "Transparent cyan engine diagnostic volume above a curved technical desk.",
+        "region": "workshop-bench",
+        "scale": "meso",
+        "affects": "semantic engineering read",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "diagnostic-bench-system"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r0c2.png",
+        "confidence": 0.9,
+        "realization": "unreported"
+      },
+      {
+        "id": "articulated-manipulator-joints",
+        "kind": "contour",
+        "description": "Socketed multi-link robotic arms with visible rotary joints and tool heads.",
+        "region": "workshop-bench",
+        "scale": "meso",
+        "affects": "action readiness",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-manipulators"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r0c3.png",
+        "confidence": 0.92,
+        "realization": "unreported"
+      },
+      {
+        "id": "rotary-service-lift",
+        "kind": "contour",
+        "description": "Layered circular service platform with recessed radial channels and warm rim light.",
+        "region": "workshop-floor",
+        "scale": "macro",
+        "affects": "floor hierarchy",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "rotary-service-lift"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r1c0.png",
+        "confidence": 0.96,
+        "realization": "unreported"
+      },
+      {
+        "id": "vehicle-service-channels",
+        "kind": "groove",
+        "description": "Parallel service trenches, clamp pads and luminous guide strips around vehicle bays.",
+        "region": "workshop-floor",
+        "scale": "meso",
+        "affects": "garage scale",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "vehicle-service-bays"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r1c1.png",
+        "confidence": 0.9,
+        "realization": "unreported"
+      },
+      {
+        "id": "bronze-worktop-edge",
+        "kind": "linework",
+        "description": "Warm bronze/wood-toned curved worktop edge against dark metal cabinetry.",
+        "region": "workshop-bench",
+        "scale": "micro",
+        "affects": "material separation",
+        "mapsTo": {
+          "type": "material.localOverrides",
+          "ref": "workshop-bronze-trim"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r1c2.png",
+        "confidence": 0.88,
+        "realization": "unreported"
+      },
+      {
+        "id": "cabinet-task-lights",
+        "kind": "emissive",
+        "description": "Narrow warm light strips inset beneath shelves and inside tool bays.",
+        "region": "workshop-perimeter",
+        "scale": "micro",
+        "affects": "lighting hierarchy",
+        "mapsTo": {
+          "type": "material.localOverrides",
+          "ref": "warm-practical-light"
+        },
+        "evidenceRef": "detail-interior-systems/zone-r1c3.png",
+        "confidence": 0.91,
+        "realization": "unreported"
+      },
+      {
+        "id": "panoramic-glass-bow",
+        "kind": "gloss",
+        "description": "One full-width slightly bowed forward pressure-glass surface with low tint and restrained reflection.",
+        "region": "workshop-forward",
+        "scale": "macro",
+        "affects": "sealed room boundary and exterior sightline",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-panoramic-pressure-glass"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.97,
+        "realization": "required"
+      },
+      {
+        "id": "glass-structural-sill",
+        "kind": "bevel",
+        "description": "Thick rounded lower sill sockets the glass into the retractable pressure deck.",
+        "region": "workshop-forward-lower",
+        "scale": "meso",
+        "affects": "glass attachment and scale",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-panoramic-pressure-glass"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.94,
+        "realization": "required"
+      },
+      {
+        "id": "glass-head-frame",
+        "kind": "ridge",
+        "description": "Continuous curved upper header joins the forward glazing to the bowed canopy.",
+        "region": "workshop-forward-upper",
+        "scale": "meso",
+        "affects": "pressure-shell continuity",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-panoramic-pressure-glass"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.93,
+        "realization": "required"
+      },
+      {
+        "id": "slim-glass-mullions",
+        "kind": "seam",
+        "description": "Sparse slim vertical structural mullions subdivide the glass without creating a visual grid.",
+        "region": "workshop-forward",
+        "scale": "meso",
+        "affects": "engineering plausibility and openness",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-panoramic-pressure-glass"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.95,
+        "realization": "required"
+      },
+      {
+        "id": "glass-edge-reflection",
+        "kind": "gloss",
+        "description": "Low-roughness edge response reveals transparent glass from interior angles without becoming opaque.",
+        "region": "workshop-forward",
+        "scale": "micro",
+        "affects": "glass legibility",
+        "mapsTo": {
+          "type": "material.localOverrides",
+          "ref": "pressure-glass"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.91,
+        "realization": "required"
+      },
+      {
+        "id": "panoramic-exterior-sightline",
+        "kind": "contour",
+        "description": "The internal forward POV keeps a broad unobstructed sightline through the glass to the live exterior environment.",
+        "region": "workshop-forward-center",
+        "scale": "macro",
+        "affects": "interior POV identity",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "workshop-room"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.96,
+        "realization": "required"
+      },
+      {
+        "id": "radial-lift-floor-grooves",
+        "kind": "groove",
+        "description": "Concentric and radial recessed guidance lines keep the service lift as the room focal point.",
+        "region": "workshop-floor-center",
+        "scale": "meso",
+        "affects": "garage identity and depth",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "rotary-service-lift"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.94,
+        "realization": "required"
+      },
+      {
+        "id": "perimeter-warm-reveals",
+        "kind": "emissive",
+        "description": "Warm restrained reveal lights trace ceiling and cabinetry edges without overpowering the exterior daylight.",
+        "region": "workshop-perimeter",
+        "scale": "micro",
+        "affects": "material separation and room depth",
+        "mapsTo": {
+          "type": "material.localOverrides",
+          "ref": "warm-practical-light"
+        },
+        "evidenceRef": "full-object",
+        "confidence": 0.92,
+        "realization": "required"
+      }
+    ]
+  }
+}

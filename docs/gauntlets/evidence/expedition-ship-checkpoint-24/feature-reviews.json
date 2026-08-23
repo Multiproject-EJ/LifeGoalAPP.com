@@ -1,0 +1,27 @@
+[
+  {
+    "id": "six-storey-density",
+    "score": 0.82,
+    "note": "Six compact inhabited bands are visible without enlarging the outer controller hull."
+  },
+  {
+    "id": "dedicated-lower-decks",
+    "score": 0.78,
+    "note": "Workshop and creature habitat now read as separate usable levels beneath the Zen commons."
+  },
+  {
+    "id": "fabrication-lift-workbenches",
+    "score": 0.48,
+    "note": "Lift, rails and repeated diagnostic workstations exist, but the robotic tool-wall and gantry density is missing."
+  },
+  {
+    "id": "creature-nests-plants-water",
+    "score": 0.52,
+    "note": "Soft nests, backrests, bowls and plants are present, but the premium curved habitat and bathing stream are still absent."
+  },
+  {
+    "id": "mega-yacht-finish",
+    "score": 0.25,
+    "note": "Lighting, materials, cabinetry and curved ceiling architecture remain blockout quality."
+  }
+]

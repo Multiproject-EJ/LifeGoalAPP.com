@@ -1,0 +1,209 @@
+{
+  "sourceImage": "docs/design/expedition-ship/expedition-ship-three-stage-transformation-candidate-v1.png",
+  "zonesDir": ".img2threejs/expedition-ship/detail-inventory",
+  "authoringInstruction": "Every observed detail is linked to a planned component.localFeatures or material.localOverrides entry. Hidden rear, upper, and belly surfaces remain inferred and may not override visible evidence.",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 16,
+    "details": [
+      {
+        "id": "shell-crown-bevel",
+        "kind": "bevel",
+        "description": "Broad real chamfer around the white controller-shell crown that carries a continuous grazing highlight.",
+        "region": {"x": 0.02, "y": 0.02, "width": 0.30, "height": 0.35, "units": "normalized"},
+        "scale": "macro edge, bevelRadius 0.035 of shell thickness, 3 segments",
+        "affects": "white shell silhouette and perceived manufactured scale",
+        "mapsTo": {"type": "component.localFeatures", "ref": "left-outer-shell.crown-bevel"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c0.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "shell-split-seam",
+        "kind": "seam",
+        "description": "Recessed charcoal split line separating each white outer shell from its darker structural underframe.",
+        "region": {"x": 0.04, "y": 0.16, "width": 0.30, "height": 0.38, "units": "normalized"},
+        "scale": "meso groove, width 0.012 of ship width, depth 0.004",
+        "affects": "readability of transformable shell layers",
+        "mapsTo": {"type": "component.localFeatures", "ref": "left-outer-shell.split-seam"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c0.png",
+        "confidence": 0.91
+      },
+      {
+        "id": "atrium-aperture-rim",
+        "kind": "ridge",
+        "description": "Continuous dark structural rim around the protected garden opening, with a restrained blue energy accent.",
+        "region": {"x": 0.31, "y": 0.07, "width": 0.38, "height": 0.36, "units": "normalized"},
+        "scale": "macro raised frame, 0.045 ship-height thick",
+        "affects": "garden protection and controller bridge identity",
+        "mapsTo": {"type": "component.localFeatures", "ref": "garden-shield-frame.aperture-rim"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c1.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "garden-shield-seam",
+        "kind": "seam",
+        "description": "Segmented transparent shield shutters meet along the garden crown and retract into the atrium frame in flight pose.",
+        "region": {"x": 0.36, "y": 0.05, "width": 0.28, "height": 0.30, "units": "normalized"},
+        "scale": "four shutter panels with 0.006 clearance gaps",
+        "affects": "occupied garden volume and transformation credibility",
+        "mapsTo": {"type": "component.localFeatures", "ref": "garden-shield-frame.shutter-seams"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c1.png",
+        "confidence": 0.72
+      },
+      {
+        "id": "warm-deck-window-bands",
+        "kind": "emissive",
+        "description": "Warm inhabited deck windows remain legible inside both wings and around the atrium in every pose.",
+        "region": {"x": 0.14, "y": 0.24, "width": 0.72, "height": 0.36, "units": "normalized"},
+        "scale": "three deck bands per side, emissiveIntensity 1.2 normal / 1.8 night",
+        "affects": "office-building scale, warmth, and habitation",
+        "mapsTo": {"type": "material.localOverrides", "ref": "warm-window-glass.deck-window-bands"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r1c1.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "shoulder-hinge-collars",
+        "kind": "fastener",
+        "description": "Large concentric hinge collars at both controller shoulders carry the primary wing rotation.",
+        "region": {"x": 0.16, "y": 0.18, "width": 0.68, "height": 0.34, "units": "normalized"},
+        "scale": "two radial collar systems, 12 instanced locking heads each",
+        "affects": "primary transform pivot authority",
+        "mapsTo": {"type": "component.localFeatures", "ref": "wing-hinge-system.radial-locks"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c1.png",
+        "confidence": 0.82
+      },
+      {
+        "id": "power-tower-rings",
+        "kind": "ridge",
+        "description": "Telescoping blue power towers use repeated dark collar rings that visibly compress into the shoulders for flight.",
+        "region": {"x": 0.15, "y": 0.02, "width": 0.70, "height": 0.32, "units": "normalized"},
+        "scale": "4 collar rings per tower, instanced and nested",
+        "affects": "docked height and telescoping motion readability",
+        "mapsTo": {"type": "component.localFeatures", "ref": "power-towers.telescoping-collars"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c1.png",
+        "confidence": 0.88
+      },
+      {
+        "id": "blue-power-nodes",
+        "kind": "emissive",
+        "description": "Cyan-blue nodes at tower caps, shoulder hinges, keel, and engine sockets form one coherent power language.",
+        "region": {"x": 0.10, "y": 0.03, "width": 0.80, "height": 0.74, "units": "normalized"},
+        "scale": "repeated emissive nodes, intensity linked to thrust and transform phase",
+        "affects": "energy state communication",
+        "mapsTo": {"type": "material.localOverrides", "ref": "blue-power-glass.power-node-family"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r1c1.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "service-rail-lines",
+        "kind": "linework",
+        "description": "Thin dark service-panel rails follow the white shell curvature without becoming noisy at phone scale.",
+        "region": {"x": 0.04, "y": 0.10, "width": 0.92, "height": 0.48, "units": "normalized"},
+        "scale": "sparse panel-line decal/AO seams, 0.002 ship-width",
+        "affects": "large manufactured scale while preserving broad clean surfaces",
+        "mapsTo": {"type": "material.localOverrides", "ref": "white-ceramic-shell.service-panel-lines"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c2.png",
+        "confidence": 0.80
+      },
+      {
+        "id": "bridge-visor",
+        "kind": "gloss",
+        "description": "Dark panoramic visor at the forward crown reads as the command bridge, not a decorative black stripe.",
+        "region": {"x": 0.38, "y": 0.19, "width": 0.24, "height": 0.16, "units": "normalized"},
+        "scale": "low roughness 0.08, clearcoat 1, subtle warm interior behind glass",
+        "affects": "forward orientation and travel POV continuity",
+        "mapsTo": {"type": "material.localOverrides", "ref": "smoked-bridge-glass.forward-visor"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c1.png",
+        "confidence": 0.86
+      },
+      {
+        "id": "landing-keel-lock",
+        "kind": "groove",
+        "description": "Central landing/service keel telescopes through a nested mechanical lock rather than floating below the body.",
+        "region": {"x": 0.42, "y": 0.55, "width": 0.16, "height": 0.40, "units": "normalized"},
+        "scale": "three nested rails and one annular lock groove",
+        "affects": "docked support and flight retraction credibility",
+        "mapsTo": {"type": "component.localFeatures", "ref": "landing-keel.telescoping-lock"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r2c1.png",
+        "confidence": 0.83
+      },
+      {
+        "id": "garage-belly-door",
+        "kind": "seam",
+        "description": "Large fabrication/garage door is integrated in the belly with a split clamshell seam and clear occupied clearance volume.",
+        "region": {"x": 0.27, "y": 0.54, "width": 0.46, "height": 0.28, "units": "normalized"},
+        "scale": "macro clamshell seam, 0.01 gap, internal dark cavity",
+        "affects": "room entry and fabrication-deck narrative",
+        "mapsTo": {"type": "component.localFeatures", "ref": "garage-belly.garage-door-seam"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r2c1.png",
+        "confidence": 0.70
+      },
+      {
+        "id": "engine-vent-stacks",
+        "kind": "hole",
+        "description": "Real recessed engine vents sit along the aft and inner handle housings; they are not painted dark rectangles.",
+        "region": {"x": 0.05, "y": 0.43, "width": 0.90, "height": 0.34, "units": "normalized"},
+        "scale": "three vent banks per wing, cavity depth 0.025 ship-width",
+        "affects": "propulsion mass and aft orientation",
+        "mapsTo": {"type": "component.localFeatures", "ref": "engine-housings.recessed-vent-banks"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r1c2.png",
+        "confidence": 0.77
+      },
+      {
+        "id": "main-thruster-socket",
+        "kind": "hole",
+        "description": "One monumental vectored main-engine socket sits at the aft end of each controller wing and rotates with that wing.",
+        "region": {"x": 0.00, "y": 0.50, "width": 1.00, "height": 0.34, "units": "normalized"},
+        "scale": "two deep annular sockets, one per wing",
+        "affects": "travel thrust animation and directional silhouette",
+        "mapsTo": {"type": "component.localFeatures", "ref": "main-thruster-socket"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r2c0.png",
+        "confidence": 0.68
+      },
+      {
+        "id": "hover-downwash-array",
+        "kind": "hole",
+        "description": "A distributed belly lift array drives hover downwash without pointing travel engines vertically through occupied decks.",
+        "region": {"x": 0.24, "y": 0.66, "width": 0.52, "height": 0.30, "units": "normalized"},
+        "scale": "8 recessed lift emitters around the center spine",
+        "affects": "water ripple, dust, snow, leaf, and heat-distortion environment signals",
+        "mapsTo": {"type": "component.localFeatures", "ref": "hover-lift-array.downwash-emitters"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r2c1.png",
+        "confidence": 0.58
+      },
+      {
+        "id": "landing-guide-lights",
+        "kind": "emissive",
+        "description": "Warm-white guide lights outline the keel, garage, and lower shell during approach and landing.",
+        "region": {"x": 0.20, "y": 0.57, "width": 0.60, "height": 0.38, "units": "normalized"},
+        "scale": "16 instanced guide lights, intensity driven by landing phase",
+        "affects": "approach readability and scale",
+        "mapsTo": {"type": "material.localOverrides", "ref": "landing-light-glass.guide-light-family"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r2c1.png",
+        "confidence": 0.64
+      },
+      {
+        "id": "room-entry-portals",
+        "kind": "hole",
+        "description": "Garden, garage, creature habitat, command bridge, and sky-terrace portals are reserved as actual scene-graph sockets and camera entries.",
+        "region": {"x": 0.20, "y": 0.24, "width": 0.60, "height": 0.46, "units": "normalized"},
+        "scale": "five named portals with occupied-volume clearance proxies",
+        "affects": "future room traversal and Micromachines-style camera transitions",
+        "mapsTo": {"type": "component.localFeatures", "ref": "interior-volume-reservations.room-entry-sockets"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r1c1.png",
+        "confidence": 0.74
+      },
+      {
+        "id": "shell-ceramic-gloss",
+        "kind": "gloss",
+        "description": "White shell uses restrained ceramic clearcoat with broad highlights; it must not read as plastic toy material.",
+        "region": {"x": 0.02, "y": 0.03, "width": 0.96, "height": 0.54, "units": "normalized"},
+        "scale": "roughness 0.32, clearcoat 0.55, clearcoatRoughness 0.18",
+        "affects": "premium inhabited spacecraft finish",
+        "mapsTo": {"type": "material.localOverrides", "ref": "white-ceramic-shell.clearcoat-response"},
+        "evidenceRef": ".img2threejs/expedition-ship/detail-inventory/zone-r0c1.png",
+        "confidence": 0.90
+      }
+    ]
+  }
+}

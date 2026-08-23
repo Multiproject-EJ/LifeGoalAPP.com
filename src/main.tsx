@@ -50,6 +50,8 @@ const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const CARETAKER_CHARACTER_LAB_PATH = '/dev/caretaker-character-lab';
 const EGG_HATCH_THREE_LAB_PATH = '/dev/egg-hatch-3d';
+const EXPEDITION_SHIP_THREE_LAB_PATH = '/dev/expedition-ship-3d';
+const EXPEDITION_SHIP_GARAGE_PREVIEW_PATH = '/dev/expedition-ship-garage';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const COMPASS_BOOK_PROFILER_BUILD_ENABLED = import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true';
 const COMPASS_BOOK_PROFILER_PATH = '/dev/compass-book-profiler';
@@ -300,6 +302,43 @@ function EggHatchThreeLabRoute() {
   return EggHatchLab ? <EggHatchLab /> : null;
 }
 
+function ExpeditionShipThreeLabRoute() {
+  const [ExpeditionShipLab, setExpeditionShipLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/dev/ExpeditionShipThreeLab').then((module) => {
+      if (isMounted) setExpeditionShipLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return ExpeditionShipLab ? <ExpeditionShipLab /> : null;
+}
+
+function ExpeditionShipGaragePreviewRoute() {
+  const [GaragePreview, setGaragePreview] = useState<ComponentType<{
+    onOpenUpgrades: () => void;
+    onOpenCosmetics: () => void;
+  }> | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/components/ExpeditionShipGarageShowcase').then((module) => {
+      if (isMounted) setGaragePreview(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return GaragePreview ? (
+    <main style={{minHeight: '100vh', padding: 'clamp(12px, 3vw, 36px)', background: '#050b10'}}>
+      <div style={{width: 'min(1120px, 100%)', margin: '0 auto'}}>
+        <GaragePreview onOpenUpgrades={() => undefined} onOpenCosmetics={() => undefined} />
+      </div>
+    </main>
+  ) : null;
+}
+
 function Island001StoryPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
 
@@ -403,6 +442,14 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === EGG_HATCH_THREE_LAB_PATH;
+  const isExpeditionShipThreeLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === EXPEDITION_SHIP_THREE_LAB_PATH;
+  const isExpeditionShipGaragePreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === EXPEDITION_SHIP_GARAGE_PREVIEW_PATH;
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -566,6 +613,14 @@ function Root() {
 
   if (isEggHatchThreeLabRoute) {
     return <EggHatchThreeLabRoute />;
+  }
+
+  if (isExpeditionShipThreeLabRoute) {
+    return <ExpeditionShipThreeLabRoute />;
+  }
+
+  if (isExpeditionShipGaragePreviewRoute) {
+    return <ExpeditionShipGaragePreviewRoute />;
   }
 
   if (

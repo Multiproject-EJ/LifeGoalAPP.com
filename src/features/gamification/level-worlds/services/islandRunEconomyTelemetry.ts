@@ -18,6 +18,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   tokenHopDice: 'token_hop_dice',
   eggRewardDice: 'egg_reward_dice',
   creatureFormUpgradeDice: 'creature_form_upgrade_dice',
+  signatureTreasureDice: 'signature_treasure_dice',
   unknownDiceDelta: 'unknown_dice_delta',
 } as const;
 

@@ -1,0 +1,31 @@
+{
+  "admitted": false,
+  "disposition": "conditional-multi-view-manual-admission",
+  "reasons": [
+    "The three-pose cinematic sheet reports foreground coverage 0.9768, above the 0.97 isolation threshold.",
+    "The primary exterior cutaway reports foreground coverage 0.997 for the same hangar-background reason.",
+    "Neither image provides a clean alpha or neutral-background silhouette for deterministic reference segmentation."
+  ],
+  "manualBasis": [
+    "Five user-selected references establish scale, deck adjacency, garden identity and service configuration.",
+    "The approved three-pose sheet establishes the intended macro motion order.",
+    "The user explicitly approved beginning an approximate macro transform blockout from largest shapes first."
+  ],
+  "restrictions": [
+    "Do not claim exact silhouette fidelity from the cinematic references.",
+    "Generate isolated procedural alpha captures for front, side, rear and top review.",
+    "Treat hidden rear, top and belly geometry as inferred until matching authority is supplied."
+  ],
+  "provenance": {
+    "primaryReference": "docs/design/expedition-ship/expedition-ship-three-stage-transformation-candidate-v1.png",
+    "primaryWidth": 1774,
+    "primaryHeight": 887,
+    "primaryForegroundCoverage": 0.9768,
+    "primaryPHash": "15548332925541541954",
+    "exteriorReference": "docs/design/expedition-ship/references/03-primary-exterior-cutaway.jpg",
+    "exteriorWidth": 1086,
+    "exteriorHeight": 724,
+    "exteriorForegroundCoverage": 0.997,
+    "exteriorPHash": "16904484033611360856"
+  }
+}

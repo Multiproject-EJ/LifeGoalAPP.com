@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "reference",
+    "sourcePath": "docs/design/expedition-ship/references/fabrication-deck-panoramic-master-v1.png",
+    "width": 1672,
+    "height": 941,
+    "foregroundCoverage": 0.8467,
+    "largestComponentFraction": 1.0,
+    "pHash": 17496751633917341936,
+    "duplicateOfHash": null
+  }
+}

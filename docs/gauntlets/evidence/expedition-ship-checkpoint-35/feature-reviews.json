@@ -1,0 +1,37 @@
+[
+  {
+    "id": "contained-room-scale-and-envelope",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.7,
+    "notes": "The flat ceiling slab is replaced by one bowed surface and the yaw view holds a curved pressure cheek without collapsing. The canopy still has abrupt front cut edges and weak thickness cues."
+  },
+  {
+    "id": "continuous-workshop-perimeter",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.6,
+    "notes": "Rear modules now fan around the wall curve and the side kits rotate inward, producing a real perimeter system. Cabinet fronts remain sparse and rectilinear beside the reference's dense continuous tool wall."
+  },
+  {
+    "id": "workshop-vertical-machinery-density",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.62,
+    "notes": "The tri-drive service subject and paired manipulators remain legible, while the maintenance ring is raised into the canopy for a clearer sightline. Joint housings and tool anatomy still read as low-poly."
+  },
+  {
+    "id": "curved-pressure-architecture",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.58,
+    "notes": "Bronze arches now connect the bowed canopy to continuous glass side surfaces, establishing the intended yacht-like primitive family. The surfaces need thickness, bevel hierarchy and panel seams before they feel engineered."
+  },
+  {
+    "id": "reference-material-lighting",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.42,
+    "notes": "Bronze, dark metal and cyan zones remain coherent, but the floor foreground falls nearly black, the canopy lacks contact shadow, and there is still no visible macro/meso/micro PBR breakup."
+  }
+]

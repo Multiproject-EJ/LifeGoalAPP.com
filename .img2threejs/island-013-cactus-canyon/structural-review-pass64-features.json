@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mesa-railway-identity:structural-pass",
+    "score": 0.79,
+    "threshold": 0.78,
+    "notes": "The full-width pillar, one monumental ravine and the three-turn public railway now read as one structure. Four-part gallery shells add recessed back walls, under-shelf rock and flanking buttresses, so the route is visibly excavated rather than suspended. Rock cadence is still more regular than the approved goal and belongs in form refinement."
+  },
+  {
+    "id": "five-frontier-landmarks:structural-pass",
+    "score": 0.8,
+    "threshold": 0.8,
+    "notes": "Union Station remains dominant while the windmill, water tower, signal yard and sheriff archive keep distinct structural silhouettes in the overview and four surveys. Their timber trim, rear service detail and lived-in ground dressing remain below final quality."
+  },
+  {
+    "id": "locomotive-mechanical-life:structural-pass",
+    "score": 0.81,
+    "threshold": 0.8,
+    "notes": "The engine, tender and two coaches are independently posed on the rail centreline and remain legible in the rear descent survey. The train is correctly small at full-column scale; close-up wheel, rod and steam richness is deferred."
+  },
+  {
+    "id": "canyon-depth-stack:structural-pass",
+    "score": 0.78,
+    "threshold": 0.78,
+    "notes": "Near and far butte bands remain fixed in world space and recede through the warm background. Their silhouettes are structurally layered but visibly simple, so form refinement must replace the repeated chimney cadence with broader Monument Valley groups."
+  },
+  {
+    "id": "canonical-route-clarity:structural-pass",
+    "score": 0.96,
+    "threshold": 0.96,
+    "notes": "The terrain edits are presentation-only and retain the unchanged canonical 36-tile transforms, reward objects and token clearance. Full-column inspection intentionally hides board actors, while the gameplay overview preserves them."
+  }
+]

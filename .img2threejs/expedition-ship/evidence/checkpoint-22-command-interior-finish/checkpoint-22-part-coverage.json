@@ -1,0 +1,406 @@
+{
+  "model": "habitgame-expedition-ship",
+  "specifiedComponents": 39,
+  "builtParts": 40,
+  "errors": 24,
+  "warnings": 17,
+  "result": "fail",
+  "findings": [
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "garden-shield-frame",
+      "detail": "specified component 'garden-shield-frame' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "hover-lift-array",
+      "detail": "specified component 'hover-lift-array' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "walker-leg-front-left",
+      "detail": "specified component 'walker-leg-front-left' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "walker-leg-front-right",
+      "detail": "specified component 'walker-leg-front-right' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "walker-leg-rear-left",
+      "detail": "specified component 'walker-leg-rear-left' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "walker-leg-rear-right",
+      "detail": "specified component 'walker-leg-rear-right' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "interior-volume-reservations",
+      "detail": "specified component 'interior-volume-reservations' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "bridge-crown",
+      "detail": "specified component 'bridge-crown' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "central-deck-stack",
+      "detail": "specified component 'central-deck-stack' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "left-occupied-decks",
+      "detail": "specified component 'left-occupied-decks' has no matching part in the built model, and its parent 'left-wing-pivot' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "right-occupied-decks",
+      "detail": "specified component 'right-occupied-decks' has no matching part in the built model, and its parent 'right-wing-pivot' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "sky-terrace",
+      "detail": "specified component 'sky-terrace' has no matching part in the built model, and its parent 'garden-atrium' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "atrium-water",
+      "detail": "specified component 'atrium-water' has no matching part in the built model, and its parent 'garden-atrium' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "fabrication-deck",
+      "detail": "specified component 'fabrication-deck' has no matching part in the built model, and its parent 'garage-belly' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "creature-deck",
+      "detail": "specified component 'creature-deck' has no matching part in the built model, and its parent 'right-occupied-decks' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "window-band-system",
+      "detail": "specified component 'window-band-system' has no matching part in the built model, and its parent 'central-deck-stack' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "service-seam-system",
+      "detail": "specified component 'service-seam-system' has no matching part in the built model, and its parent 'root' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "hinge-lock-system",
+      "detail": "specified component 'hinge-lock-system' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "tower-collar-system",
+      "detail": "specified component 'tower-collar-system' has no matching part in the built model, and its parent 'power-towers' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "vent-bank-system",
+      "detail": "specified component 'vent-bank-system' has no matching part in the built model, and its parent 'root' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "thruster-socket-system",
+      "detail": "specified component 'thruster-socket-system' has no matching part in the built model, and its parent 'root' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "landing-guide-lights",
+      "detail": "specified component 'landing-guide-lights' has no matching part in the built model, and its parent 'center-spine' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "room-portal-system",
+      "detail": "specified component 'room-portal-system' has no matching part in the built model, and its parent 'interior-volume-reservations' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "panel-fastener-system",
+      "detail": "specified component 'panel-fastener-system' has no matching part in the built model, and its parent 'root' is missing too"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "shell-crown-bevel",
+      "detail": "mapsTo 'left-outer-shell.crown-bevel' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "shell-split-seam",
+      "detail": "mapsTo 'left-outer-shell.split-seam' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "atrium-aperture-rim",
+      "detail": "mapsTo 'garden-shield-frame.aperture-rim' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "garden-shield-seam",
+      "detail": "mapsTo 'garden-shield-frame.shutter-seams' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "warm-deck-window-bands",
+      "detail": "mapsTo 'warm-window-glass.deck-window-bands' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "shoulder-hinge-collars",
+      "detail": "mapsTo 'wing-hinge-system.radial-locks' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "power-tower-rings",
+      "detail": "mapsTo 'power-towers.telescoping-collars' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "blue-power-nodes",
+      "detail": "mapsTo 'blue-power-glass.power-node-family' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "service-rail-lines",
+      "detail": "mapsTo 'white-ceramic-shell.service-panel-lines' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "bridge-visor",
+      "detail": "mapsTo 'smoked-bridge-glass.forward-visor' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "landing-keel-lock",
+      "detail": "mapsTo 'landing-keel.telescoping-lock' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "garage-belly-door",
+      "detail": "mapsTo 'garage-belly.garage-door-seam' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "engine-vent-stacks",
+      "detail": "mapsTo 'engine-housings.recessed-vent-banks' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "hover-downwash-array",
+      "detail": "mapsTo 'hover-lift-array.downwash-emitters' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "landing-guide-lights",
+      "detail": "mapsTo 'landing-light-glass.guide-light-family' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "room-entry-portals",
+      "detail": "mapsTo 'interior-volume-reservations.room-entry-sockets' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "shell-ceramic-gloss",
+      "detail": "mapsTo 'white-ceramic-shell.clearcoat-response' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "ATRIUM_OCCUPIED_DECKS",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "CENTRAL_KEEL_DRIVE",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "CENTRAL_KEEL_DRIVE_SOCKET",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "CENTRE_ROOF_OBSERVATORY",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "deck-window-instances",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "garage-guide-light-instances",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "GARDEN_APERTURE_FRAME",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "GARDEN_POOL",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "inhabited-deck-facade",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "interior-room-picture-window-instances",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "LEFT_HINGE_COLLAR",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "LEFT_MAIN_ENGINE_SOCKET",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "LEFT_OCCUPIED_DECK_WINDOWS",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "LIVING_MODE_SIDE_TERRACES",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "POWERED_GRIP_FRONT_LEG_LEFT",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "POWERED_GRIP_FRONT_LEG_RIGHT",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "REAR_STABILIZER_LEG_LEFT",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "REAR_STABILIZER_LEG_RIGHT",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "RIGHT_HINGE_COLLAR",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "RIGHT_MAIN_ENGINE_SOCKET",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "RIGHT_OCCUPIED_DECK_WINDOWS",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "SANCTUARY_CLEARANCE_VOLUME",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "tower-collar-instances",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "walker-shin-service-panel-instances",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "WINDOW_ARMOR_SEAM_BACKSTOP",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    }
+  ]
+}

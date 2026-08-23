@@ -4149,20 +4149,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
   }, [activeSession, logIslandRunEntryDebug, showLevelWorldsFromEntry]);
 
+  const openScoreGarage = useCallback(() => {
+    setShowGameBoardOverlay(false);
+    setShowLevelWorldsFromEntry(false);
+    setLevelWorldsEntryPanel('default');
+    setScoreTabActiveTab('garage');
+    setShowMobileHome(false);
+    setActiveWorkspaceNav('score');
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
-    const handleOpenScoreGarage = () => {
-      setShowLevelWorldsFromEntry(false);
-      setLevelWorldsEntryPanel('default');
-      setScoreTabActiveTab('garage');
-      setShowMobileHome(false);
-      setActiveWorkspaceNav('score');
-    };
-    window.addEventListener('openScoreGarageFromSanctuary', handleOpenScoreGarage as EventListener);
+    window.addEventListener('openScoreGarageFromSanctuary', openScoreGarage as EventListener);
     return () => {
-      window.removeEventListener('openScoreGarageFromSanctuary', handleOpenScoreGarage as EventListener);
+      window.removeEventListener('openScoreGarageFromSanctuary', openScoreGarage as EventListener);
     };
-  }, []);
+  }, [openScoreGarage]);
 
   const shouldLockAppScroll = isMobileMenuOpen || showGameBoardOverlay || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
   const isStandalonePwa = useMemo(
@@ -4619,9 +4621,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onNavigateToZenGarden={() => {
                 setShowZenGardenFullScreen(true);
               }}
-              onNavigateToGarage={() => {
-                setScoreTabActiveTab('garage');
-              }}
+              onNavigateToGarage={openScoreGarage}
               onNavigateToShipCompanions={() => {
                 setLevelWorldsEntryPanel('sanctuary');
                 setShowLevelWorldsFromEntry(true);
@@ -6112,7 +6112,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           }}
           onSpinWinClick={() => handleMobileNavSelect('score')}
           onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
-          onGarageClick={() => handleMobileNavSelect('actions')}
+          onGarageClick={openScoreGarage}
           onCompassClick={openFullMobileMenuFromGameOverlay}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profileAvatarUrl={profileAvatarUrl}
@@ -6458,7 +6458,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         }}
         onSpinWinClick={() => handleMobileNavSelect('score')}
         onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
-        onGarageClick={() => handleMobileNavSelect('actions')}
+        onGarageClick={openScoreGarage}
         onCompassClick={openFullMobileMenuFromGameOverlay}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profileAvatarUrl={profileAvatarUrl}

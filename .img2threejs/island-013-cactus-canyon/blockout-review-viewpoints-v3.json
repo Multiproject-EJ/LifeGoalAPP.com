@@ -1,0 +1,31 @@
+{
+  "passId": "blockout",
+  "capture": "013-pass26-fractured-pillar",
+  "views": {
+    "front": "work/island-visual-library/island-013-cactus-canyon/renders/013-pass26-fractured-pillar-front-crop.png",
+    "left": "work/island-visual-library/island-013-cactus-canyon/renders/013-pass26-fractured-pillar-left-crop.png",
+    "right": "work/island-visual-library/island-013-cactus-canyon/renders/013-pass26-fractured-pillar-right-crop.png",
+    "rear": "work/island-visual-library/island-013-cactus-canyon/renders/013-pass26-fractured-pillar-rear-crop.png"
+  },
+  "tier1": {
+    "passed": true,
+    "silhouetteIoU": 0.9352,
+    "aspectRatioDelta": 0,
+    "scaleDelta": 0,
+    "bilateralSymmetryError": 0.0147,
+    "renderHash": "a3ebc3b0124c6149",
+    "limitations": [
+      "Reference and render are not isolated from their backgrounds.",
+      "The diagnostic proves framing and gross structure only; it does not prove source fidelity or 3D geological realism."
+    ]
+  },
+  "multiAngle": {
+    "passed": true,
+    "degenerate": false,
+    "areaRatios": {
+      "left": 1.0094974515887818,
+      "right": 1.0108554582412954,
+      "rear": 0.9977910904449621
+    }
+  }
+}

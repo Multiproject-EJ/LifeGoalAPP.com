@@ -1,0 +1,27 @@
+[
+  {
+    "id": "true-inside-pressure-floor-povs",
+    "score": 0.84,
+    "note": "Both lower-deck cameras now stand inside the actual pressure-floor footprint, retain drag-look, and no longer expose the workshop beneath the creature room."
+  },
+  {
+    "id": "curved-fabrication-stations",
+    "score": 0.56,
+    "note": "Rounded machine plinths and work surfaces replace repeated office desks, but the workshop still lacks dense wall tools, vehicle-scale machinery and convincing articulated complexity."
+  },
+  {
+    "id": "articulated-service-cradles",
+    "score": 0.54,
+    "note": "Each workshop station now exposes a two-link powered service arm, though its primitive geometry remains visually coarse."
+  },
+  {
+    "id": "curved-creature-coves-and-soft-nests",
+    "score": 0.64,
+    "note": "Softened nest cushions and half-ring privacy coves create a recognizable creature-residence language and sit on a dedicated dark pressure floor."
+  },
+  {
+    "id": "premium-material-and-lighting-finish",
+    "score": 0.36,
+    "note": "Dark structural planes and warm/cyan practicals improve hierarchy, but surfaces remain flat, highlights are over-concentrated and the rooms lack cinematic layered light and material detail."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mesa-railway-identity:form-refinement",
+    "score": 0.85,
+    "threshold": 0.84,
+    "notes": "The tall full-width pillar, circular summit railway, excavated spiral gallery and four-unit train remain one coherent Cactus Canyon structure. The gallery does not collapse from the side or rear and no roller-coaster support language has returned."
+  },
+  {
+    "id": "five-frontier-landmarks:form-refinement",
+    "score": 0.81,
+    "threshold": 0.84,
+    "notes": "Union Station now has a broader bell-tower mass and rear construction, while the windmill and waterworks are four-sided timber structures. Against the source and saved form goal, the station still lacks enough stepped lower bays, dormers and porch volumes, and the secondary landmarks remain too sparse to clear the form gate."
+  },
+  {
+    "id": "locomotive-mechanical-life:form-refinement",
+    "score": 0.83,
+    "threshold": 0.82,
+    "notes": "Engine, tender and two coaches remain independently sampled on the route with natural spacing and tangent changes. The train reads correctly in overview and orbit views; close material and steam refinement remains later work."
+  },
+  {
+    "id": "canyon-depth-stack:form-refinement",
+    "score": 0.83,
+    "threshold": 0.82,
+    "notes": "Far scenery now uses broad tiered mesa bases, crowns, attached spires and overlapping continental shelves positioned on the descending camera horizon. It no longer reads as a row of detached floating chimneys, though the silhouettes remain simpler than the source."
+  },
+  {
+    "id": "canonical-route-clarity:form-refinement",
+    "score": 0.96,
+    "threshold": 0.96,
+    "notes": "All form changes remain presentation-only around the unchanged canonical route. Board tiles, token clearance, rail centreline and landmark placements remain intact."
+  }
+]

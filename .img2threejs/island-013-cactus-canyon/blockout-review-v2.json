@@ -1,0 +1,38 @@
+[
+  {
+    "id": "pillar-mesa-and-canyon-silhouette",
+    "score": 0.65,
+    "threshold": 0.8,
+    "notes": "The user-directed tall canyon pillar now gives the island a continuous support silhouette and rock ribs break up its surface. The distant mesa stems remain repetitive and too prominent, so atmospheric depth is not yet convincing."
+  },
+  {
+    "id": "union-station-hero-hierarchy",
+    "score": 0.52,
+    "threshold": 0.82,
+    "notes": "The L3 station has substantially deeper body, tower and wings and reads as volume from both side surveys. Its rear service elevation is still dominated by broad dark planes, and the source has much richer porches, roof breaks, timber lattice, windows and civic ornament."
+  },
+  {
+    "id": "double-railway-train-and-tunnel",
+    "score": 0.58,
+    "threshold": 0.8,
+    "notes": "The double rails, sleepers, two-sided moving train and tangent-aligned open tunnel are real geometry. The train remains visually small and simple against the source, and tunnel portal readability needs a dedicated survey."
+  },
+  {
+    "id": "five-frontier-landmark-identities",
+    "score": 0.53,
+    "threshold": 0.78,
+    "notes": "All five families remain distinct from four angles, with water tower and windmill strongest. Sheriff, signal yard and smaller depot structures still need richer roof, signage, porch and ground-story articulation."
+  },
+  {
+    "id": "ground-life-materials-and-depth",
+    "score": 0.4,
+    "threshold": 0.78,
+    "notes": "Cacti, fences, pebbles, crates, fractured edges and warm sky are present, but the scene is still broad low-detail procedural colour compared with the source's dense rock, timber, rail ballast, vegetation and atmospheric layering."
+  },
+  {
+    "id": "four-elevation-authored-quality",
+    "score": 0.62,
+    "threshold": 0.8,
+    "notes": "Left and right surveys prove real depth, side windows and two-sided train construction. The rear survey exposes an under-authored Union Station service wall, so the new 360-degree gate is not yet passed."
+  }
+]

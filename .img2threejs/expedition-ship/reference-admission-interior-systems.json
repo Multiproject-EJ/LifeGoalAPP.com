@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "lower-deck-interior-authority",
+    "sourcePath": "docs/design/expedition-ship/references/14-workshop-and-creature-exploration-mixed-v1.png",
+    "width": 1254,
+    "height": 1254,
+    "foregroundCoverage": 0.8899,
+    "largestComponentFraction": 1.0,
+    "pHash": 18012350131647188352,
+    "duplicateOfHash": null
+  }
+}

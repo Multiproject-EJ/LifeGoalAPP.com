@@ -1,0 +1,82 @@
+.expedition-ship-quality {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.expedition-ship-quality legend {
+  margin-bottom: 0.38rem;
+  color: rgba(186, 220, 231, 0.68);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.expedition-ship-quality > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.38rem;
+}
+
+.expedition-ship-quality button {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+  border: 1px solid rgba(145, 203, 223, 0.2);
+  border-radius: 12px;
+  padding: 0.48rem 0.58rem;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(225, 242, 247, 0.76);
+  text-align: left;
+}
+
+.expedition-ship-quality button strong {
+  font-size: 0.7rem;
+}
+
+.expedition-ship-quality button span {
+  overflow: hidden;
+  color: rgba(196, 219, 228, 0.54);
+  font-size: 0.58rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.expedition-ship-quality button.is-active {
+  border-color: rgba(89, 216, 255, 0.64);
+  background: linear-gradient(135deg, rgba(31, 143, 183, 0.55), rgba(24, 88, 122, 0.42));
+  color: #fff;
+  box-shadow: inset 0 0 18px rgba(71, 201, 239, 0.14), 0 0 18px rgba(62, 191, 229, 0.08);
+}
+
+.expedition-ship-quality--compact {
+  padding: 0.52rem;
+  border: 1px solid rgba(113, 201, 230, 0.18);
+  border-radius: 14px;
+  background: rgba(3, 12, 17, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.expedition-ship-quality--compact legend {
+  padding-inline: 0.18rem;
+  color: rgba(197, 227, 236, 0.64);
+}
+
+.expedition-ship-quality--compact button {
+  display: block;
+  border-radius: 999px;
+  padding: 0.38rem 0.54rem;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .expedition-ship-quality button span {
+    display: none;
+  }
+
+  .expedition-ship-quality button {
+    text-align: center;
+  }
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "floating-mesa-and-canyon-silhouette",
+    "score": 0.6,
+    "threshold": 0.8,
+    "notes": "The island is recognizably a floating red-rock mesa, but its cliff underside remains a regular cylinder and the far buttes are still simplified terraces rather than fractured canyon formations."
+  },
+  {
+    "id": "union-station-hero-hierarchy",
+    "score": 0.47,
+    "threshold": 0.82,
+    "notes": "The central tower now leads the composition, but reads as one dark block with a thin spire instead of the source's layered station wings, porches, windows, trim, flag, and warm timber articulation."
+  },
+  {
+    "id": "double-railway-and-locomotive",
+    "score": 0.49,
+    "threshold": 0.8,
+    "notes": "Both railway rails and sleepers are real geometry and the train animates, but the locomotive is too small and the railway lacks ballast, tunnel framing, switchwork and foreground prominence."
+  },
+  {
+    "id": "five-frontier-landmark-identities",
+    "score": 0.5,
+    "threshold": 0.78,
+    "notes": "Water tower and windmill silhouettes are visible and the five landmark families exist, but sheriff, signal yard and Rail Nest architecture need much more meso detail and stronger framing."
+  },
+  {
+    "id": "ground-life-materials-and-depth",
+    "score": 0.32,
+    "threshold": 0.78,
+    "notes": "Fences, pebbles and cactus variation were added, yet most surfaces remain broad flat colour fields; missing fractured edge rocks, scrub clumps, crates, signs, timber trim, rail ballast and atmospheric distance layers dominate the mismatch."
+  }
+]

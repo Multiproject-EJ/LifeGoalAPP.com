@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9989652882758041,
+  "angles": [
+    {
+      "path": "docs/gauntlets/evidence/expedition-ship-checkpoint-38/fabrication-room-to-window.png",
+      "areaFraction": 0.951589663643235,
+      "ratio": 0.9525753044789589,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/evidence/expedition-ship-checkpoint-38/fabrication-overview.png",
+      "areaFraction": 0.9008172713529856,
+      "ratio": 0.9017503229844751,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "The window and room remain volumetric across the named outward, rear-to-front, and fabrication overview cameras."
+}
