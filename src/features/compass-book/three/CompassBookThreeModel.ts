@@ -3671,6 +3671,851 @@ function createQuestForgeRelief(
   };
 }
 
+function createPersonalPlaybookRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_RELIEF';
+  root.userData.compassPageId = 'personal_playbook';
+  const high = quality === 'high';
+  const radialSegments = high ? 28 : 14;
+  const textureLoader = new THREE.TextureLoader();
+  const loadPbrMap = (
+    directory: string,
+    fileName: string,
+    channel: 'roughness' | 'normal' | 'ao',
+    repeat = 3,
+  ) => {
+    if (!high) return null;
+    const texture = textureLoader.load(
+      `/assets/compass-book/personal-playbook/materials/${directory}/${fileName}`,
+    );
+    texture.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_${directory}_${channel}`.toUpperCase();
+    texture.colorSpace = THREE.NoColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(repeat, repeat);
+    texture.anisotropy = 8;
+    if (channel === 'ao') texture.channel = 0;
+    return texture;
+  };
+  const pbr = high ? {
+    field: {
+      roughness: loadPbrMap('pbr-00-indigo-field-grain', 'indigo-field_roughness.png', 'roughness', 4),
+      normal: loadPbrMap('pbr-00-indigo-field-grain', 'indigo-field_normal.png', 'normal', 5),
+      ao: loadPbrMap('pbr-00-indigo-field-grain', 'indigo-field_ao.png', 'ao', 4),
+    },
+    brass: {
+      roughness: loadPbrMap('pbr-01-aged-brass-frame', 'aged-brass_roughness.png', 'roughness', 3),
+      normal: loadPbrMap('pbr-01-aged-brass-frame', 'aged-brass_normal.png', 'normal', 4),
+      ao: loadPbrMap('pbr-01-aged-brass-frame', 'aged-brass_ao.png', 'ao', 3),
+    },
+    gold: {
+      roughness: loadPbrMap('pbr-02-warm-gold-rocket', 'warm-gold_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-02-warm-gold-rocket', 'warm-gold_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-02-warm-gold-rocket', 'warm-gold_ao.png', 'ao', 2),
+    },
+    violet: {
+      roughness: loadPbrMap('pbr-03-violet-core-crystal', 'violet-crystal_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-03-violet-core-crystal', 'violet-crystal_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-03-violet-core-crystal', 'violet-crystal_ao.png', 'ao', 2),
+    },
+    teal: {
+      roughness: loadPbrMap('pbr-04-teal-crescent-enamel', 'teal-enamel_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-04-teal-crescent-enamel', 'teal-enamel_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-04-teal-crescent-enamel', 'teal-enamel_ao.png', 'ao', 2),
+    },
+    alloy: {
+      roughness: loadPbrMap('pbr-05-obsidian-engine-alloy', 'obsidian-alloy_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-05-obsidian-engine-alloy', 'obsidian-alloy_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-05-obsidian-engine-alloy', 'obsidian-alloy_ao.png', 'ao', 2),
+    },
+    earth: {
+      roughness: loadPbrMap('pbr-06-earth-ocean-enamel', 'earth-enamel_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-06-earth-ocean-enamel', 'earth-enamel_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-06-earth-ocean-enamel', 'earth-enamel_ao.png', 'ao', 2),
+    },
+    cyan: {
+      roughness: loadPbrMap('pbr-07-cyan-orbit-emission', 'cyan-emissive_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-07-cyan-orbit-emission', 'cyan-emissive_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-07-cyan-orbit-emission', 'cyan-emissive_ao.png', 'ao', 2),
+    },
+    amber: {
+      roughness: loadPbrMap('pbr-08-amber-launch-emission', 'amber-emissive_roughness.png', 'roughness', 2),
+      normal: loadPbrMap('pbr-08-amber-launch-emission', 'amber-emissive_normal.png', 'normal', 2),
+      ao: loadPbrMap('pbr-08-amber-launch-emission', 'amber-emissive_ao.png', 'ao', 2),
+    },
+  } : null;
+
+  const fieldMaterial = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_INDIGO_FIELD_MATERIAL',
+    color: 0x11172b,
+    map: materials.leatherInset.map,
+    roughness: 0.78,
+    roughnessMap: pbr?.field.roughness ?? materials.leatherInset.roughnessMap,
+    normalMap: pbr?.field.normal ?? null,
+    aoMap: pbr?.field.ao ?? materials.leatherInset.aoMap,
+    aoMapIntensity: 0.48,
+    metalness: 0.03,
+  });
+  fieldMaterial.normalScale.setScalar(high ? 0.18 : 0);
+  const brassMaterial = materials.gilt.clone();
+  brassMaterial.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_AGED_BRASS_MATERIAL';
+  brassMaterial.color.setHex(0xa86f2c);
+  brassMaterial.map = null;
+  brassMaterial.roughness = 0.38;
+  brassMaterial.metalness = 0.88;
+  brassMaterial.roughnessMap = pbr?.brass.roughness ?? null;
+  brassMaterial.normalMap = pbr?.brass.normal ?? null;
+  brassMaterial.normalScale.setScalar(high ? 0.15 : 0);
+  brassMaterial.aoMap = pbr?.brass.ao ?? null;
+  brassMaterial.aoMapIntensity = 0.42;
+  const brassDarkMaterial = materials.giltDark.clone();
+  brassDarkMaterial.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_DARK_BRASS_MATERIAL';
+  brassDarkMaterial.color.setHex(0x59371d);
+  brassDarkMaterial.map = null;
+  brassDarkMaterial.roughness = 0.54;
+  brassDarkMaterial.metalness = 0.74;
+  const goldMaterial = materials.gilt.clone();
+  goldMaterial.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_WARM_GOLD_MATERIAL';
+  goldMaterial.color.setHex(0xd6a03e);
+  goldMaterial.map = null;
+  goldMaterial.roughness = 0.25;
+  goldMaterial.metalness = 0.92;
+  goldMaterial.roughnessMap = pbr?.gold.roughness ?? null;
+  goldMaterial.normalMap = pbr?.gold.normal ?? null;
+  goldMaterial.normalScale.setScalar(high ? 0.12 : 0);
+  goldMaterial.aoMap = pbr?.gold.ao ?? null;
+  goldMaterial.aoMapIntensity = 0.3;
+  const violetMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_VIOLET_CRYSTAL_MATERIAL',
+    color: 0x6d35c7,
+    emissive: 0x2e106f,
+    emissiveIntensity: 0.52,
+    roughness: 0.17,
+    roughnessMap: pbr?.violet.roughness ?? null,
+    normalMap: pbr?.violet.normal ?? null,
+    aoMap: pbr?.violet.ao ?? null,
+    aoMapIntensity: 0.24,
+    metalness: 0.03,
+    clearcoat: high ? 0.86 : 0.5,
+    clearcoatRoughness: 0.11,
+    envMapIntensity: 1.0,
+  });
+  violetMaterial.normalScale.setScalar(high ? 0.17 : 0);
+  const tealMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_TEAL_ENAMEL_MATERIAL',
+    color: 0x0e8390,
+    emissive: 0x063a48,
+    emissiveIntensity: 0.2,
+    roughness: 0.2,
+    roughnessMap: pbr?.teal.roughness ?? null,
+    normalMap: pbr?.teal.normal ?? null,
+    aoMap: pbr?.teal.ao ?? null,
+    aoMapIntensity: 0.3,
+    metalness: 0.04,
+    clearcoat: high ? 0.76 : 0.4,
+    clearcoatRoughness: 0.13,
+  });
+  tealMaterial.normalScale.setScalar(high ? 0.13 : 0);
+  const alloyMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_OBSIDIAN_ALLOY_MATERIAL',
+    color: 0x161826,
+    roughness: 0.48,
+    roughnessMap: pbr?.alloy.roughness ?? null,
+    normalMap: pbr?.alloy.normal ?? null,
+    aoMap: pbr?.alloy.ao ?? null,
+    aoMapIntensity: 0.46,
+    metalness: 0.62,
+    clearcoat: high ? 0.22 : 0.1,
+    clearcoatRoughness: 0.38,
+  });
+  alloyMaterial.normalScale.setScalar(high ? 0.16 : 0);
+  const earthMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_EARTH_ENAMEL_MATERIAL',
+    color: 0x0c304d,
+    emissive: 0x06233b,
+    emissiveIntensity: 0.16,
+    roughness: 0.32,
+    roughnessMap: pbr?.earth.roughness ?? null,
+    normalMap: pbr?.earth.normal ?? null,
+    aoMap: pbr?.earth.ao ?? null,
+    aoMapIntensity: 0.38,
+    metalness: 0.04,
+    clearcoat: high ? 0.58 : 0.3,
+    clearcoatRoughness: 0.18,
+  });
+  earthMaterial.normalScale.setScalar(high ? 0.15 : 0);
+  const earthLandMaterial = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_EARTH_LAND_MATERIAL',
+    color: 0x4f716d,
+    roughness: 0.68,
+    metalness: 0.12,
+  });
+  const cyanMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_CYAN_ORBIT_MATERIAL',
+    color: 0x18bcef,
+    emissive: 0x0b8dd0,
+    emissiveIntensity: 0.82,
+    roughness: 0.2,
+    roughnessMap: pbr?.cyan.roughness ?? null,
+    normalMap: pbr?.cyan.normal ?? null,
+    aoMap: pbr?.cyan.ao ?? null,
+    metalness: 0.02,
+    clearcoat: 0.62,
+    clearcoatRoughness: 0.12,
+  });
+  cyanMaterial.normalScale.setScalar(high ? 0.1 : 0);
+  const amberMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_PERSONAL_PLAYBOOK_AMBER_LAUNCH_MATERIAL',
+    color: 0xffaa20,
+    emissive: 0xff6a08,
+    emissiveIntensity: 0.74,
+    roughness: 0.22,
+    roughnessMap: pbr?.amber.roughness ?? null,
+    normalMap: pbr?.amber.normal ?? null,
+    aoMap: pbr?.amber.ao ?? null,
+    metalness: 0.01,
+    clearcoat: 0.58,
+    clearcoatRoughness: 0.12,
+  });
+  amberMaterial.normalScale.setScalar(high ? 0.1 : 0);
+
+  const makePlate = (
+    name: string,
+    points: Array<[number, number]>,
+    depth: number,
+    material: THREE.Material,
+    bevel = 0.025,
+  ) => {
+    const shape = new THREE.Shape();
+    points.forEach(([x, z], index) => {
+      if (index === 0) shape.moveTo(x, -z);
+      else shape.lineTo(x, -z);
+    });
+    shape.closePath();
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: true,
+      bevelSegments: high ? 2 : 1,
+      bevelSize: bevel,
+      bevelThickness: Math.min(depth * 0.35, bevel),
+      curveSegments: high ? 10 : 5,
+      steps: 1,
+    });
+    geometry.rotateX(-Math.PI / 2);
+    geometry.translate(0, depth * 0.45, 0);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  };
+  const makeTube = (
+    name: string,
+    points: THREE.Vector3[],
+    radius: number,
+    material: THREE.Material,
+  ) => {
+    const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal');
+    const tube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, high ? 24 : 10, radius, high ? 8 : 5, false),
+      material,
+    );
+    tube.name = name;
+    tube.castShadow = true;
+    return tube;
+  };
+  const makeStar = (name: string, outer: number, inner: number, depth: number) => {
+    const points: Array<[number, number]> = [];
+    for (let index = 0; index < 16; index += 1) {
+      const angle = -Math.PI / 2 + index * (Math.PI / 8);
+      const radius = index % 2 === 0 ? outer : inner;
+      points.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
+    }
+    return makePlate(name, points, depth, goldMaterial, 0.018);
+  };
+
+  const contactPlate = roundedBox(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_CONTACT_PLATE',
+    3.82,
+    0.055,
+    5.66,
+    0.16,
+    high ? 4 : 2,
+    materials.leatherEdge,
+  );
+  contactPlate.position.y = 0.025;
+  const contactField = roundedBox(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_CONTACT_FIELD',
+    3.48,
+    0.075,
+    5.28,
+    0.18,
+    high ? 4 : 2,
+    fieldMaterial,
+  );
+  contactField.position.y = 0.075;
+  root.add(contactPlate, contactField);
+
+  const contactFrame = new THREE.Group();
+  contactFrame.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_RELIEF_FRAME';
+  const frameOuter = createFrame(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_FRAME_OUTER',
+    3.63,
+    5.48,
+    0.14,
+    brassMaterial,
+    quality,
+  );
+  const frameInner = createFrame(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_FRAME_INNER',
+    3.4,
+    5.22,
+    0.155,
+    brassDarkMaterial,
+    quality,
+  );
+  contactFrame.add(frameOuter, frameInner);
+  root.add(contactFrame);
+
+  const frameFasteners = new THREE.Group();
+  frameFasteners.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_FRAME_FASTENERS';
+  const fastenerPositions: Array<[number, number]> = [
+    [-1.66, -2.48], [1.66, -2.48], [-1.66, 2.48], [1.66, 2.48],
+    [0, -2.52], [0, 2.52], [-1.7, 0], [1.7, 0],
+  ];
+  fastenerPositions.slice(0, high ? 8 : 4).forEach(([x, z], index) => {
+    const fastener = new THREE.Mesh(new THREE.SphereGeometry(0.045, high ? 10 : 6, high ? 6 : 4), goldMaterial);
+    fastener.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_FRAME_FASTENER_${index + 1}`;
+    fastener.scale.y = 0.48;
+    fastener.position.set(x, 0.2, z);
+    frameFasteners.add(fastener);
+  });
+  root.add(frameFasteners);
+
+  const earthHorizon = new THREE.Group();
+  earthHorizon.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_EARTH_HORIZON';
+  const earthPoints: Array<[number, number]> = [];
+  for (let index = 0; index <= 24; index += 1) {
+    const x = -1.68 + index * (3.36 / 24);
+    const z = 2.02 - (1 - Math.pow(x / 1.78, 2)) * 0.42;
+    earthPoints.push([x, z]);
+  }
+  earthPoints.push([1.68, 2.62], [-1.68, 2.62]);
+  const earth = makePlate('COMPASS_BOOK_PERSONAL_PLAYBOOK_EARTH_SHELL', earthPoints, 0.09, earthMaterial, 0.018);
+  earth.position.y = 0.13;
+  const orbitPoints: THREE.Vector3[] = [];
+  for (let index = 0; index <= 24; index += 1) {
+    const x = -1.7 + index * (3.4 / 24);
+    const z = 1.98 - (1 - Math.pow(x / 1.8, 2)) * 0.44;
+    orbitPoints.push(new THREE.Vector3(x, 0.31, z));
+  }
+  const orbitRail = makeTube('COMPASS_BOOK_PERSONAL_PLAYBOOK_ORBIT_RAIL', orbitPoints, high ? 0.035 : 0.028, cyanMaterial);
+  const earthContinents = new THREE.Group();
+  earthContinents.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_EARTH_CONTINENTS';
+  const continentShapes: Array<Array<[number, number]>> = [
+    [[-1.34, 2.3], [-1.19, 2.14], [-1.02, 2.17], [-0.91, 2.3], [-1.04, 2.39], [-1.25, 2.4]],
+    [[-0.87, 2.14], [-0.71, 2.03], [-0.56, 2.09], [-0.6, 2.23], [-0.77, 2.27]],
+    [[-0.24, 2.14], [-0.05, 1.99], [0.14, 2.04], [0.22, 2.18], [0.05, 2.3], [-0.17, 2.27]],
+    [[0.5, 2.13], [0.68, 2.04], [0.86, 2.13], [0.79, 2.27], [0.58, 2.29]],
+    [[1.0, 2.25], [1.18, 2.14], [1.37, 2.28], [1.23, 2.4], [1.07, 2.37]],
+  ];
+  continentShapes.slice(0, high ? 5 : 3).forEach((points, index) => {
+    const continent = makePlate(
+      `COMPASS_BOOK_PERSONAL_PLAYBOOK_EARTH_CONTINENT_${index + 1}`,
+      points,
+      0.025,
+      earthLandMaterial,
+      0.008,
+    );
+    continent.position.y = 0.245;
+    earthContinents.add(continent);
+  });
+  earthHorizon.add(earth, earthContinents, orbitRail);
+  root.add(earthHorizon);
+
+  const rocket = new THREE.Group();
+  rocket.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_ASSEMBLY';
+  const rocketHull = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.29, 0.34, 1.68, radialSegments, 2),
+    goldMaterial,
+  );
+  rocketHull.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_HULL';
+  rocketHull.rotation.x = Math.PI / 2;
+  rocketHull.position.set(0.1, 0.44, -0.25);
+  rocketHull.castShadow = true;
+  const rocketNose = new THREE.Mesh(
+    new THREE.ConeGeometry(0.3, 0.74, radialSegments, 2),
+    goldMaterial,
+  );
+  rocketNose.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_NOSE';
+  rocketNose.rotation.x = -Math.PI / 2;
+  rocketNose.position.set(0.1, 0.44, -1.45);
+  rocketNose.castShadow = true;
+  const rocketCoreFrame = makePlate(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_CORE_FRAME',
+    [[-0.17, -0.5], [0, -0.59], [0.17, -0.5], [0.18, 0.34], [0, 0.5], [-0.18, 0.34]],
+    0.095,
+    brassDarkMaterial,
+    0.035,
+  );
+  rocketCoreFrame.position.set(0.1, 0.68, -0.28);
+  const rocketCore = makePlate(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_CORE',
+    [[-0.115, -0.43], [0, -0.51], [0.115, -0.43], [0.125, 0.29], [0, 0.42], [-0.125, 0.29]],
+    0.15,
+    violetMaterial,
+    0.04,
+  );
+  rocketCore.position.set(0.1, 0.77, -0.28);
+  const leftFin = makePlate(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_FIN_LEFT',
+    [[-0.28, 0.3], [-0.85, 0.93], [-0.63, 1.28], [-0.19, 0.7]],
+    0.12,
+    goldMaterial,
+  );
+  leftFin.position.set(0.1, 0.31, 0);
+  const rightFin = makePlate(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_FIN_RIGHT',
+    [[0.28, 0.3], [0.85, 0.93], [0.63, 1.28], [0.19, 0.7]],
+    0.12,
+    goldMaterial,
+  );
+  rightFin.position.set(0.1, 0.31, 0);
+  const engineCollar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.36, 0.34, 0.38, radialSegments, 1),
+    alloyMaterial,
+  );
+  engineCollar.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_ENGINE_COLLAR';
+  engineCollar.rotation.x = Math.PI / 2;
+  engineCollar.position.set(0.1, 0.48, 0.85);
+  const exhaustCrystal = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.25, high ? 1 : 0),
+    violetMaterial,
+  );
+  exhaustCrystal.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_EXHAUST_CRYSTAL';
+  exhaustCrystal.scale.set(0.78, 0.6, 1.2);
+  exhaustCrystal.position.set(0.1, 0.62, 1.14);
+  const rocketSegmentation = new THREE.Group();
+  rocketSegmentation.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_SEGMENTATION';
+  [-0.94, 0.35].forEach((z, index) => {
+    const seam = new THREE.Mesh(
+      new THREE.TorusGeometry(index === 0 ? 0.3 : 0.34, 0.035, high ? 8 : 5, radialSegments),
+      brassDarkMaterial,
+    );
+    seam.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_HULL_SEAM_${index + 1}`;
+    seam.position.set(0.1, 0.44, z);
+    seam.castShadow = true;
+    rocketSegmentation.add(seam);
+  });
+  const noseCollar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.315, 0.315, 0.12, radialSegments, 1),
+    brassDarkMaterial,
+  );
+  noseCollar.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_ROCKET_NOSE_COLLAR';
+  noseCollar.rotation.x = Math.PI / 2;
+  noseCollar.position.set(0.1, 0.44, -1.08);
+  noseCollar.castShadow = true;
+  rocketSegmentation.add(noseCollar);
+  rocket.add(rocketHull, rocketNose, rocketCoreFrame, rocketCore, leftFin, rightFin, engineCollar, exhaustCrystal, rocketSegmentation);
+  root.add(rocket);
+
+  const systemCluster = new THREE.Group();
+  systemCluster.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_FLIGHT_SYSTEMS';
+  const moduleRoots: THREE.Group[] = [];
+  const modulePositions: Array<[string, number, number]> = [
+    ['IGNITION', -1.03, -1.72],
+    ['MOMENTUM', 1.17, -1.72],
+    ['MINIMUM_POWER', 1.48, -0.42],
+    ['WARNING_RADAR', 1.36, 1.12],
+    ['ENVIRONMENT_SHIELD', 0.1, 1.72],
+    ['RECOVERY_ROUTE', -1.2, 1.12],
+    ['WEEKLY_NAVIGATION', -1.45, -0.36],
+  ];
+  const makeBezel = (label: string, x: number, z: number) => {
+    const module = new THREE.Group();
+    module.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_MODULE_${label}`;
+    module.position.set(x, 0, z);
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.48, 0.52, 0.18, radialSegments, 1),
+      brassDarkMaterial,
+    );
+    base.name = `${module.name}_BODY`;
+    base.position.y = 0.23;
+    base.castShadow = true;
+    const face = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.39, 0.41, 0.11, radialSegments, 1),
+      label === 'ENVIRONMENT_SHIELD'
+        ? tealMaterial
+        : fieldMaterial,
+    );
+    face.name = `${module.name}_FACE`;
+    face.position.y = 0.37;
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.45, 0.055, high ? 8 : 5, radialSegments),
+      brassMaterial,
+    );
+    ring.name = `${module.name}_BEZEL`;
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.43;
+    const innerRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.355, 0.018, high ? 7 : 5, radialSegments),
+      goldMaterial,
+    );
+    innerRing.name = `${module.name}_INNER_BEZEL`;
+    innerRing.rotation.x = Math.PI / 2;
+    innerRing.position.y = 0.475;
+    module.add(base, face, ring, innerRing);
+    const clampCount = high ? 4 : 2;
+    for (let index = 0; index < clampCount; index += 1) {
+      const angle = (index / clampCount) * Math.PI * 2;
+      const clamp = roundedBox(
+        `${module.name}_BEZEL_CLAMP_${index + 1}`,
+        0.11,
+        0.07,
+        0.055,
+        0.012,
+        1,
+        brassMaterial,
+      );
+      clamp.position.set(Math.cos(angle) * 0.47, 0.47, Math.sin(angle) * 0.47);
+      clamp.rotation.y = -angle;
+      module.add(clamp);
+    }
+    const rivetCount = high ? 4 : 2;
+    for (let index = 0; index < rivetCount; index += 1) {
+      const angle = (index / rivetCount) * Math.PI * 2 + Math.PI / 4;
+      const rivet = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 5), goldMaterial);
+      rivet.name = `${module.name}_RIVET_${index + 1}`;
+      rivet.scale.y = 0.45;
+      rivet.position.set(Math.cos(angle) * 0.43, 0.46, Math.sin(angle) * 0.43);
+      module.add(rivet);
+    }
+    systemCluster.add(module);
+    moduleRoots.push(module);
+    return module;
+  };
+  const ignition = makeBezel(...modulePositions[0]);
+  const momentum = makeBezel(...modulePositions[1]);
+  const minimumPower = makeBezel(...modulePositions[2]);
+  const warningRadar = makeBezel(...modulePositions[3]);
+  const environmentShield = makeBezel(...modulePositions[4]);
+  const recoveryRoute = makeBezel(...modulePositions[5]);
+  const weeklyNavigation = makeBezel(...modulePositions[6]);
+
+  const ignitionDome = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, radialSegments, high ? 14 : 8, 0, Math.PI * 2, 0, Math.PI * 0.72),
+    violetMaterial,
+  );
+  ignitionDome.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_IGNITION_DOME';
+  ignitionDome.scale.set(0.72, 0.62, 1.25);
+  ignitionDome.position.y = 0.55;
+  const ignitionCoils = new THREE.Group();
+  ignitionCoils.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_IGNITION_COILS';
+  for (let index = 0; index < (high ? 3 : 2); index += 1) {
+    const coil = new THREE.Mesh(new THREE.TorusGeometry(0.21 + index * 0.065, 0.018, 6, radialSegments), goldMaterial);
+    coil.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_IGNITION_COIL_${index + 1}`;
+    coil.rotation.x = Math.PI / 2;
+    coil.position.y = 0.5;
+    ignitionCoils.add(coil);
+  }
+  ignition.add(ignitionDome, ignitionCoils);
+  const momentumStar = makeStar('COMPASS_BOOK_PERSONAL_PLAYBOOK_MOMENTUM_STAR', 0.34, 0.13, 0.11);
+  momentumStar.position.y = 0.47;
+  const momentumCore = new THREE.Mesh(
+    new THREE.SphereGeometry(0.075, high ? 14 : 8, high ? 9 : 6),
+    amberMaterial,
+  );
+  momentumCore.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_MOMENTUM_CORE';
+  momentumCore.scale.y = 0.52;
+  momentumCore.position.y = 0.59;
+  momentum.add(momentumStar, momentumCore);
+  const crescent = new THREE.Mesh(
+    new THREE.TorusGeometry(0.25, 0.09, high ? 8 : 5, radialSegments, Math.PI * 1.55),
+    cyanMaterial,
+  );
+  crescent.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_MINIMUM_CRESCENT';
+  crescent.rotation.x = Math.PI / 2;
+  crescent.rotation.z = -0.35;
+  crescent.position.y = 0.49;
+  minimumPower.add(crescent);
+
+  const radarLines = new THREE.Group();
+  radarLines.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_WARNING_RADAR_LINES';
+  for (let index = 1; index <= (high ? 3 : 2); index += 1) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(index * 0.1, 0.012, 5, radialSegments), goldMaterial);
+    ring.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_RADAR_RING_${index}`;
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.49;
+    radarLines.add(ring);
+  }
+  for (let index = 0; index < 4; index += 1) {
+    const spoke = roundedBox(
+      `COMPASS_BOOK_PERSONAL_PLAYBOOK_RADAR_SPOKE_${index + 1}`,
+      0.012,
+      0.04,
+      0.62,
+      0.005,
+      1,
+      goldMaterial,
+    );
+    spoke.position.y = 0.48;
+    spoke.rotation.y = index * Math.PI / 4;
+    radarLines.add(spoke);
+  }
+  const radarNeedle = roundedBox(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_RADAR_NEEDLE',
+    0.035,
+    0.055,
+    0.27,
+    0.01,
+    1,
+    amberMaterial,
+  );
+  radarNeedle.position.set(0, 0.53, -0.1);
+  warningRadar.add(radarLines, radarNeedle);
+
+  const shieldCells = new THREE.Group();
+  shieldCells.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_SHIELD_HEX_CELLS';
+  const hexPositions: Array<[number, number]> = [
+    [0, 0], [-0.17, -0.1], [0.17, -0.1], [-0.17, 0.1], [0.17, 0.1], [0, -0.2], [0, 0.2],
+  ];
+  hexPositions.forEach(([x, z], index) => {
+    const cell = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.105, 0.105, 0.08, 6),
+      index % 2 === 0 ? cyanMaterial : tealMaterial,
+    );
+    cell.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_SHIELD_HEX_${index + 1}`;
+    cell.position.set(x, 0.5, z);
+    shieldCells.add(cell);
+  });
+  environmentShield.add(shieldCells);
+  const recoveryCurve: THREE.Vector3[] = [];
+  for (let index = 0; index <= (high ? 40 : 20); index += 1) {
+    const t = (index / (high ? 40 : 20)) * Math.PI * 2;
+    recoveryCurve.push(new THREE.Vector3(Math.sin(t) * 0.3, 0.5, Math.sin(t) * Math.cos(t) * 0.2));
+  }
+  const recoveryLoops = makeTube(
+    'COMPASS_BOOK_PERSONAL_PLAYBOOK_RECOVERY_ROUTE_LOOPS',
+    recoveryCurve,
+    high ? 0.035 : 0.03,
+    goldMaterial,
+  );
+  recoveryRoute.add(recoveryLoops);
+  const navArc = new THREE.Mesh(
+    new THREE.TorusGeometry(0.3, 0.035, high ? 7 : 5, radialSegments, Math.PI),
+    goldMaterial,
+  );
+  navArc.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_NAVIGATION_ARC';
+  navArc.rotation.x = Math.PI / 2;
+  navArc.rotation.z = Math.PI;
+  navArc.position.y = 0.49;
+  const navArmLeft = roundedBox('COMPASS_BOOK_PERSONAL_PLAYBOOK_NAV_ARM_LEFT', 0.04, 0.07, 0.52, 0.01, 1, goldMaterial);
+  navArmLeft.position.set(-0.13, 0.5, -0.02);
+  navArmLeft.rotation.y = -0.35;
+  const navArmRight = navArmLeft.clone();
+  navArmRight.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_NAV_ARM_RIGHT';
+  navArmRight.position.x = 0.13;
+  navArmRight.rotation.y = 0.35;
+  const navGem = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.075, 0),
+    tealMaterial,
+  );
+  navGem.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_NAVIGATION_GEM';
+  navGem.scale.y = 0.62;
+  navGem.position.y = 0.57;
+  weeklyNavigation.add(navArc, navArmLeft, navArmRight, navGem);
+  root.add(systemCluster);
+
+  const connectorHarness = new THREE.Group();
+  connectorHarness.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_CONNECTOR_HARNESS';
+  const connectorCollars = new THREE.Group();
+  connectorCollars.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_CONNECTOR_COLLARS';
+  const connectorGrommets = new THREE.Group();
+  connectorGrommets.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_CONNECTOR_GROMMETS';
+  modulePositions.forEach(([label, x, z], index) => {
+    const modulePoint = new THREE.Vector3(x * 0.72, 0.34, z * 0.72);
+    const rocketPoint = new THREE.Vector3(0.1 + Math.sign(x || 1) * 0.28, 0.38, THREE.MathUtils.clamp(z * 0.38, -0.92, 0.72));
+    const midpoint = modulePoint.clone().lerp(rocketPoint, 0.5);
+    midpoint.y += 0.05;
+    const cable = makeTube(
+      `COMPASS_BOOK_PERSONAL_PLAYBOOK_CONNECTOR_${index + 1}_${label}`,
+      [modulePoint, midpoint, rocketPoint],
+      high ? 0.045 : 0.035,
+      brassMaterial,
+    );
+    connectorHarness.add(cable);
+    [modulePoint, rocketPoint].forEach((point, collarIndex) => {
+      const collar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.075, 0.075, 0.08, high ? 12 : 7),
+        goldMaterial,
+      );
+      collar.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_CONNECTOR_COLLAR_${index + 1}_${collarIndex + 1}`;
+      collar.position.copy(point);
+      connectorCollars.add(collar);
+      const grommet = new THREE.Mesh(
+        new THREE.TorusGeometry(0.082, 0.018, high ? 7 : 5, high ? 14 : 8),
+        brassDarkMaterial,
+      );
+      grommet.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_CONNECTOR_GROMMET_${index + 1}_${collarIndex + 1}`;
+      grommet.rotation.x = Math.PI / 2;
+      grommet.position.copy(point);
+      grommet.position.y += 0.055;
+      connectorGrommets.add(grommet);
+    });
+  });
+  root.add(connectorHarness, connectorCollars, connectorGrommets);
+
+  const launchWindow = new THREE.Group();
+  launchWindow.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_LAUNCH_WINDOW_ASSEMBLY';
+  const launchRailPoints: THREE.Vector3[] = [];
+  for (let index = 0; index <= 24; index += 1) {
+    const x = -1.45 + index * (2.9 / 24);
+    launchRailPoints.push(new THREE.Vector3(x, 0.29, 2.45 + Math.pow(x / 1.5, 2) * 0.12));
+  }
+  const launchRail = makeTube('COMPASS_BOOK_PERSONAL_PLAYBOOK_LAUNCH_WINDOW_ARC', launchRailPoints, 0.055, brassMaterial);
+  launchWindow.add(launchRail);
+  const launchCells: THREE.Mesh[] = [];
+  const launchCellMaterials: THREE.MeshPhysicalMaterial[] = [];
+  for (let index = 0; index < 7; index += 1) {
+    const x = -1.18 + index * (2.36 / 6);
+    const z = 2.46 + Math.pow(x / 1.5, 2) * 0.12;
+    const cellMaterial = amberMaterial.clone();
+    cellMaterial.name = `COMPASS_BOOK_PERSONAL_PLAYBOOK_LAUNCH_CELL_MATERIAL_${index + 1}`;
+    const cell = roundedBox(
+      `COMPASS_BOOK_PERSONAL_PLAYBOOK_LAUNCH_CELL_${index + 1}`,
+      0.28,
+      0.12,
+      0.16,
+      0.035,
+      high ? 3 : 1,
+      cellMaterial,
+    );
+    cell.position.set(x, 0.38, z);
+    cell.rotation.y = -Math.atan2(x * 0.14, 1);
+    launchCells.push(cell);
+    launchCellMaterials.push(cellMaterial);
+    launchWindow.add(cell);
+  }
+  root.add(launchWindow);
+
+  const cyanBounce = new THREE.PointLight(0x20bfff, high ? 0.46 : 0.2, 2.8, 2);
+  cyanBounce.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_CYAN_BOUNCE_LIGHT';
+  cyanBounce.position.set(0, 0.82, 1.85);
+  const violetBounce = new THREE.PointLight(0x8c54ff, high ? 0.42 : 0.18, 2.4, 2);
+  violetBounce.name = 'COMPASS_BOOK_PERSONAL_PLAYBOOK_VIOLET_BOUNCE_LIGHT';
+  violetBounce.position.set(0.1, 0.92, -0.2);
+  root.add(cyanBounce, violetBounce);
+
+  const reliefParts: Record<string, THREE.Object3D> = {
+    root,
+    'relief-frame': contactFrame,
+    'contact-field': contactField,
+    'rocket-assembly': rocket,
+    'rocket-nose': rocketNose,
+    'rocket-hull': rocketHull,
+    'rocket-core': rocketCore,
+    'rocket-core-frame': rocketCoreFrame,
+    'rocket-segmentation': rocketSegmentation,
+    'rocket-fin-left': leftFin,
+    'rocket-fin-right': rightFin,
+    'engine-collar': engineCollar,
+    'exhaust-crystal': exhaustCrystal,
+    'flight-systems': systemCluster,
+    'module-ignition': ignition,
+    'ignition-dome': ignitionDome,
+    'module-momentum': momentum,
+    'momentum-star': momentumStar,
+    'momentum-core': momentumCore,
+    'module-minimum-power': minimumPower,
+    'minimum-crescent': crescent,
+    'module-warning-radar': warningRadar,
+    'warning-radar-grid': radarLines,
+    'module-environment-shield': environmentShield,
+    'shield-hex-array': shieldCells,
+    'module-recovery-route': recoveryRoute,
+    'recovery-route-tubes': recoveryLoops,
+    'module-weekly-navigation': weeklyNavigation,
+    'navigation-sextant': navArc,
+    'navigation-gem': navGem,
+    'connector-harness': connectorHarness,
+    'connector-collars': connectorCollars,
+    'connector-grommets': connectorGrommets,
+    'horizon-assembly': earthHorizon,
+    'earth-horizon': earth,
+    'earth-continents': earthContinents,
+    'orbit-rail': orbitRail,
+    'launch-window-assembly': launchWindow,
+    'launch-window-arc': launchRail,
+    'launch-window-cells': launchWindow,
+    'frame-fasteners': frameFasteners,
+    'warning-radar-lines': radarLines,
+    'shield-hex-cells': shieldCells,
+    'navigation-ticks': weeklyNavigation,
+    'recovery-ridges': recoveryLoops,
+  };
+  Object.entries(reliefParts).forEach(([partId, part]) => {
+    part.userData.sculptPartId = partId;
+  });
+  const attachmentContracts = Object.fromEntries(modulePositions.map(([label, x, z], index) => [
+    `module-${label.toLowerCase().replace(/_/g, '-')}`,
+    {
+      parentSocket: `flight-systems.socket-${index + 1}`,
+      localStart: [x * 0.72, 0.34, z * 0.72],
+      localEnd: [0.1 + Math.sign(x || 1) * 0.28, 0.38, THREE.MathUtils.clamp(z * 0.38, -0.92, 0.72)],
+      contactType: 'tube-and-collar',
+      overlap: 0.045,
+      gapTolerance: 0.01,
+    },
+  ]));
+  Object.entries(attachmentContracts).forEach(([partId, attachment]) => {
+    reliefParts[partId].userData.attachment = attachment;
+  });
+  root.userData.sculptRuntime = {
+    parts: reliefParts,
+    attachmentContracts,
+    sockets: {
+      rocket,
+      ignition,
+      momentum,
+      minimumPower,
+      warningRadar,
+      environmentShield,
+      recoveryRoute,
+      weeklyNavigation,
+      earthHorizon,
+      launchWindow,
+    },
+    colliders: {
+      relief: { type: 'box', center: [0, 0.28, 0], size: [3.82, 0.82, 5.66] },
+    },
+    destructionGroups: {
+      rocket: [rocket],
+      systems: moduleRoots,
+      environment: [earthHorizon, launchWindow],
+    },
+    presentationOnly: true,
+  };
+
+  return {
+    root,
+    rocket,
+    rocketCore,
+    exhaustCrystal,
+    moduleRoots,
+    momentumStar,
+    radarNeedle,
+    shieldCells,
+    orbitRail,
+    launchCells,
+    launchCellMaterials,
+    violetMaterial,
+    cyanMaterial,
+  };
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -4171,6 +5016,11 @@ export function createCompassBookThreeModel(
   questForge.root.rotation.z = Math.PI;
   questForge.root.visible = false;
   frontPivot.add(questForge.root);
+  const personalPlaybook = createPersonalPlaybookRelief(materials, quality);
+  personalPlaybook.root.position.set(COVER_CENTER_X, -0.48, -0.22);
+  personalPlaybook.root.rotation.z = Math.PI;
+  personalPlaybook.root.visible = false;
+  frontPivot.add(personalPlaybook.root);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 3.2 : 2.1, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -4243,6 +5093,7 @@ export function createCompassBookThreeModel(
     'living-horizon-relief': livingHorizon.root,
     'ikigai-map-relief': ikigaiMap.root,
     'quest-forge-relief': questForge.root,
+    'personal-playbook-relief': personalPlaybook.root,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -4293,6 +5144,7 @@ export function createCompassBookThreeModel(
     const livingHorizonVisible = eased > 0.43 && selectedPageId === 'living_horizon';
     const ikigaiMapVisible = eased > 0.43 && selectedPageId === 'ikigai_map';
     const questForgeVisible = eased > 0.43 && selectedPageId === 'quest_forge';
+    const personalPlaybookVisible = eased > 0.43 && selectedPageId === 'personal_playbook';
     readingCompass.root.visible = readingPageVisible;
     readingSignalMarkers.visible = readingPageVisible;
     livingWheel.root.visible = livingWheelVisible;
@@ -4300,6 +5152,7 @@ export function createCompassBookThreeModel(
     livingHorizon.root.visible = livingHorizonVisible;
     ikigaiMap.root.visible = ikigaiMapVisible;
     questForge.root.visible = questForgeVisible;
+    personalPlaybook.root.visible = personalPlaybookVisible;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 3.2 : 2.1, eased);
   }
 
@@ -4324,6 +5177,7 @@ export function createCompassBookThreeModel(
     livingHorizon.root.visible = openProgress > 0.43 && pageId === 'living_horizon';
     ikigaiMap.root.visible = openProgress > 0.43 && pageId === 'ikigai_map';
     questForge.root.visible = openProgress > 0.43 && pageId === 'quest_forge';
+    personalPlaybook.root.visible = openProgress > 0.43 && pageId === 'personal_playbook';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }
@@ -4340,6 +5194,8 @@ export function createCompassBookThreeModel(
     const fragmentCelebration = kind === 'fragment' && selectedPageId === 'ikigai_map';
     const questChapterCelebration = kind === 'chapter' && selectedPageId === 'quest_forge';
     const questFragmentCelebration = kind === 'fragment' && selectedPageId === 'quest_forge';
+    const playbookChapterCelebration = kind === 'chapter' && selectedPageId === 'personal_playbook';
+    const playbookFragmentCelebration = kind === 'fragment' && selectedPageId === 'personal_playbook';
 
     ikigaiMap.forceNodes.forEach((node, index) => {
       const staggeredProgress = THREE.MathUtils.clamp(clampedProgress * 1.8 - index * 0.14, 0, 1);
@@ -4390,6 +5246,23 @@ export function createCompassBookThreeModel(
     );
     questForge.flameMaterial.emissiveIntensity = 0.46 + questPulse * 0.5;
     questForge.releasePathMaterial.emissiveIntensity = 0.18 + questPulse * 0.48;
+
+    const playbookPulse = playbookChapterCelebration || playbookFragmentCelebration
+      ? Math.sin(clampedProgress * Math.PI) * clampedStrength
+      : 0;
+    personalPlaybook.rocket.position.y = reducedMotion ? 0 : playbookPulse * 0.16;
+    personalPlaybook.rocket.scale.setScalar(reducedMotion ? 1 : 1 + playbookPulse * 0.07);
+    personalPlaybook.moduleRoots.forEach((node, index) => {
+      const stagger = THREE.MathUtils.clamp(clampedProgress * 1.75 - index * 0.12, 0, 1);
+      const wave = playbookChapterCelebration ? Math.sin(stagger * Math.PI) * clampedStrength : playbookPulse * 0.42;
+      node.scale.setScalar(reducedMotion ? 1 : 1 + wave * 0.07);
+    });
+    personalPlaybook.launchCellMaterials.forEach((material, index) => {
+      const fill = playbookChapterCelebration
+        ? THREE.MathUtils.clamp(clampedProgress * 1.8 - index * 0.12, 0, 1)
+        : playbookFragmentCelebration ? playbookPulse : 0;
+      material.emissiveIntensity = 0.62 + fill * clampedStrength * 0.58;
+    });
   }
 
   function setPageTurnProgress(progress: number, direction: -1 | 1) {
@@ -4470,6 +5343,23 @@ export function createCompassBookThreeModel(
     questForge.releasePathMaterial.emissiveIntensity = reducedMotion
       ? 0.18
       : 0.14 + (Math.sin(elapsedSeconds * 0.7 - 0.4) + 1) * 0.08;
+    personalPlaybook.momentumStar.rotation.y = reducedMotion ? 0 : elapsedSeconds * 0.08;
+    personalPlaybook.radarNeedle.rotation.y = reducedMotion ? 0 : elapsedSeconds * 0.16;
+    personalPlaybook.exhaustCrystal.rotation.y = reducedMotion ? Math.PI / 7 : elapsedSeconds * 0.2;
+    personalPlaybook.rocketCore.scale.y = reducedMotion
+      ? 1
+      : 1 + (Math.sin(elapsedSeconds * 0.92) + 1) * 0.025;
+    personalPlaybook.violetMaterial.emissiveIntensity = reducedMotion
+      ? 0.52
+      : 0.43 + (Math.sin(elapsedSeconds * 0.95) + 1) * 0.09;
+    personalPlaybook.cyanMaterial.emissiveIntensity = reducedMotion
+      ? 0.82
+      : 0.7 + (Math.sin(elapsedSeconds * 0.62 - 0.3) + 1) * 0.12;
+    personalPlaybook.launchCellMaterials.forEach((material, index) => {
+      material.emissiveIntensity = reducedMotion
+        ? 0.62
+        : 0.5 + (Math.sin(elapsedSeconds * 0.72 - index * 0.38) + 1) * 0.12;
+    });
     spineMedallion.needleRoot.rotation.y = coverNeedleAngle * 0.5;
     bookmark.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.42) * 0.025;
     const pulse = reducedMotion ? 0.14 : 0.12 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.04;

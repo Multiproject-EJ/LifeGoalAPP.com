@@ -45,6 +45,7 @@ function readInitialPage() {
     || requestedPage === 'living_horizon'
     || requestedPage === 'ikigai_map'
     || requestedPage === 'quest_forge'
+    || requestedPage === 'personal_playbook'
   ) return requestedPage;
   return 'reading';
 }
@@ -460,9 +461,15 @@ export default function CompassBookThreeLab() {
       });
     }
     const pageGlow = new THREE.PointLight(
-      activePage === 'quest_forge' ? 0xff7a18 : 0x8745e3,
+      activePage === 'quest_forge'
+        ? 0xff7a18
+        : activePage === 'personal_playbook'
+          ? 0x20bfff
+          : 0x8745e3,
       !neutralLighting && materialProofRelief && (
-        activePage === 'ikigai_map' || activePage === 'quest_forge'
+        activePage === 'ikigai_map'
+        || activePage === 'quest_forge'
+        || activePage === 'personal_playbook'
       )
         ? quality === 'high' ? 1.8 : 1.1
         : 0,
@@ -569,9 +576,19 @@ export default function CompassBookThreeLab() {
 
       const compact = width / height < 0.62;
       if (materialProofRelief) {
-        const proofDistance = Math.max(materialProofSize.x, materialProofSize.z) * (
-          surfaceProof ? 0.92 : colorProof ? 1.25 : activePage === 'quest_forge' ? 2.08 : 1.75
+        const proofDistanceBase = Math.max(materialProofSize.x, materialProofSize.z) * (
+          surfaceProof
+            ? 0.92
+            : colorProof
+              ? 1.25
+              : activePage === 'quest_forge' || activePage === 'personal_playbook'
+                ? 2.08
+                : 1.75
         );
+        const portraitFit = camera.aspect < 0.75
+          ? Math.sqrt(0.75 / Math.max(camera.aspect, 0.35))
+          : 1;
+        const proofDistance = proofDistanceBase * portraitFit;
         camera.up.set(0, 0, -1);
         camera.position.set(
           materialProofCenter.x + orbit * (surfaceProof ? 1.2 : 2.2),
@@ -670,6 +687,8 @@ export default function CompassBookThreeLab() {
                       ? 'Chapter IV relief'
                       : activePage === 'quest_forge'
                         ? 'Chapter V relief'
+                        : activePage === 'personal_playbook'
+                          ? 'Chapter VI relief'
                       : 'The Reading'}
             </strong>
           </div>

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "status": "active",
   "profile": "generic",
-  "currentStep": "spec-authoring",
-  "currentPass": "blockout",
+  "currentStep": "build-current-pass",
+  "currentPass": "material-pass",
   "checklist": [
     {
       "id": "image-analysis",
@@ -76,32 +76,40 @@
     {
       "id": "spec-authoring",
       "scope": "setup",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
     },
     {
       "id": "material-evidence",
       "scope": "setup",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-analysis.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage1_intake/material_region_analysis.py --manifest material-regions.json --out-dir material-evidence --out material-analysis.json (single-crop route: analyze_texture.py + extract_pbr_evidence.py per verified crop; otherwise skip with a reason)"
     },
     {
       "id": "material-spec-wiring",
       "scope": "setup",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage2_spec/apply_material_analysis.py {spec} material-analysis.json --in-place"
     },
     {
       "id": "strict-validation",
       "scope": "setup",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
     },
@@ -196,8 +204,277 @@
     "reference": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
     "spec": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
   },
-  "passHistory": [],
-  "reviewCursor": 0,
-  "iterationAction": "initial",
+  "passHistory": [
+    {
+      "passId": "blockout",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/generated/createPersonalPlaybookModel.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-fixed.png",
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-orbit-left.png",
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-orbit-right.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-fixed-envelope.png",
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-map-stripped-envelope.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-orbit-left.png",
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-orbit-right.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/blockout-c1-comparison-full.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "structural-pass",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/generated/createPersonalPlaybookModel.structural.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-front.png",
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-orbit-left.png",
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-orbit-right.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-diagnostic.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-orbit-left.png",
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-orbit-right.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/structural-s1-comparison.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "form-refinement",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/generated/createPersonalPlaybookModel.form.ts"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-front.png",
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-orbit-left.png",
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-orbit-right.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-diagnostic.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-orbit-left.png",
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-orbit-right.png"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/renders/form-f1-comparison.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/compass-book-personal-playbook/personal-playbook-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    }
+  ],
+  "reviewCursor": 3,
+  "iterationAction": "new-pass",
   "stopReason": ""
 }
