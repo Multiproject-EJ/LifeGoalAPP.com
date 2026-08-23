@@ -11,6 +11,12 @@ function labelOf(id: string | null): string {
   return QUEST_FORGE_LABELS[id] ?? id;
 }
 
+function readingLabel(status: QuestForgeOutput['readingStatus']): string {
+  if (status === 'trial-ready') return 'Ready for a small trial';
+  if (status === 'evidence-backed') return 'Evidence-backed candidate';
+  return 'Candidate under test';
+}
+
 /**
  * App-rendered Quest Forge — the Chapter 5 one-page graphic. A central Quest
  * Crest carrying the Primary Quest, ringed by supporting/maintenance/released
@@ -48,10 +54,15 @@ export function QuestForgeGraphic({ output, mode }: QuestForgeGraphicProps) {
         </text>
       </svg>
 
+      <p className="compass-wheel__proof">
+        <strong>{readingLabel(output.readingStatus)}</strong>
+        <span>{output.evidenceCount} evidence checks recorded</span>
+      </p>
+
       <div className="compass-wheel__mechanics">
         <span className="compass-wheel__mechanic">
           <span aria-hidden="true">🔥</span>
-          <span className="compass-wheel__mechanic-label">Calling</span>
+          <span className="compass-wheel__mechanic-label">Seasonal meaning</span>
           <span className="compass-wheel__mechanic-area">{output.callingText ?? '—'}</span>
         </span>
         <span className="compass-wheel__mechanic">
@@ -73,8 +84,15 @@ export function QuestForgeGraphic({ output, mode }: QuestForgeGraphicProps) {
 
       {mode === 'full' && output.releasedQuestTitle ? (
         <p className="compass-wheel__next">
-          <strong>Released for now:</strong> {output.releasedQuestTitle}
+          <strong>Not-Now vault:</strong> {output.releasedQuestTitle}
+          {output.notNowCondition ? ` · Revisit ${output.notNowCondition}` : ''}
         </p>
+      ) : null}
+      {mode === 'full' && output.smallTest ? (
+        <p className="compass-wheel__next"><strong>Smallest useful test:</strong> {output.smallTest}</p>
+      ) : null}
+      {mode === 'full' && output.counterevidence ? (
+        <p className="compass-wheel__counter"><strong>Reason to reconsider:</strong> {output.counterevidence}</p>
       ) : null}
     </div>
   );

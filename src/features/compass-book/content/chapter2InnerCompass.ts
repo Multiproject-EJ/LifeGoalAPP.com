@@ -123,6 +123,36 @@ const ALIGNMENT_SIGNAL_OPTIONS: readonly CompassBlockOption[] = [
   { id: 'calm', label: 'Calm' },
 ];
 
+const CONFIDENCE_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'tentative', label: 'Tentative — one clue' },
+  { id: 'plausible', label: 'Plausible — a repeating pattern' },
+  { id: 'strong', label: 'Strong — tested across situations' },
+];
+
+const MISSING_REASON_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'circumstances', label: 'Circumstances leave little room for it' },
+  { id: 'outranked', label: 'Another value currently outranks it' },
+  { id: 'aspirational', label: 'It may be more aspirational than lived' },
+  { id: 'combination', label: 'A combination of these' },
+  { id: 'not_sure', label: 'I am not sure yet' },
+];
+
+const ESSENTIAL_NEED_CONTEXT_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'recurring', label: 'It recurs across seasons' },
+  { id: 'recovery', label: 'It may be a temporary recovery need' },
+  { id: 'depends', label: 'It depends on the situation' },
+  { id: 'not_sure', label: 'I am not sure yet' },
+];
+
+const REVIEW_TRIGGER_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'three_months', label: 'In three months' },
+  { id: 'work_change', label: 'When work changes' },
+  { id: 'health_change', label: 'When health changes' },
+  { id: 'relationship_change', label: 'When a relationship changes' },
+  { id: 'home_change', label: 'When home or responsibilities change' },
+  { id: 'season_change', label: 'At the next life-season change' },
+];
+
 /** Combined id → label map for projector/graphic resolution. Later pools win on
  * id collisions, which is fine because colliding ids share a label. */
 export const INNER_COMPASS_LABELS: Record<string, string> = Object.fromEntries(
@@ -146,6 +176,18 @@ function multi(questionId: string, prompt: string, options: readonly CompassBloc
   return { questionId, type: 'multi_choice', prompt, required, options: [...options] };
 }
 
+function evidence(questionId: string, prompt: string, placeholder: string): CompassBlockDefinition {
+  return {
+    questionId,
+    type: 'short_text',
+    prompt,
+    required: false,
+    placeholder,
+    maxLength: 180,
+    helpText: 'Optional · a short private phrase is enough. This helps ground the pattern in evidence.',
+  };
+}
+
 function stageForOrder(order: number): CompassChapterStageIndex {
   if (order <= 4) return 1;
   if (order <= 8) return 2;
@@ -167,67 +209,120 @@ const SEEDS: ActivitySeed[] = [
   // Stage 1 — Moments that reveal me (21–24)
   { order: 1, title: 'Most alive moment', shortTitle: 'Most alive', required: true,
     description: 'East — what gives you life and energy.',
-    blocks: [single('alive_context', 'When you felt most alive, what were you doing?', ENERGY_OPTIONS)] },
-  { order: 2, title: 'Proud of my behaviour', shortTitle: 'Proud', required: true,
-    blocks: [single('proud_value', 'Think of a time you were proud of how you acted. Which value did it honour?', VALUE_OPTIONS)] },
-  { order: 3, title: 'Felt unlike myself', shortTitle: 'Unlike me', required: true,
-    blocks: [single('unlike_self', 'When you felt unlike yourself, what had taken over?', SHADOW_OPTIONS)] },
-  { order: 4, title: 'What I keep seeking', shortTitle: 'Seeking', required: true,
-    blocks: [single('seeking', 'What experience do you keep reaching for?', SEEKING_OPTIONS)] },
+    blocks: [
+      evidence('alive_evidence', 'Recall one recent moment when you felt unusually alive or absorbed. What was happening?', 'e.g. Sketching the solution with two friends after dinner.'),
+      single('alive_context', 'What part of that moment seems most important?', ENERGY_OPTIONS),
+    ] },
+  { order: 2, title: 'A choice I respect', shortTitle: 'A choice I respect', required: true,
+    blocks: [
+      evidence('proud_evidence', 'Recall a time you respected how you acted, especially if it was inconvenient. What did you choose?', 'e.g. I told the difficult truth and accepted the delay.'),
+      single('proud_value', 'Which value might that action have expressed?', VALUE_OPTIONS),
+    ] },
+  { order: 3, title: 'A moment I lost myself', shortTitle: 'Lost myself', required: true,
+    blocks: [
+      evidence('unlike_trigger', 'Recall a specific moment when you acted unlike the person you wanted to be. What pressure or trigger was present?', 'e.g. Public criticism when I was already exhausted.'),
+      single('unlike_self', 'What response took over?', SHADOW_OPTIONS),
+    ] },
+  { order: 4, title: 'What I repeatedly move toward', shortTitle: 'Move toward', required: true,
+    blocks: [
+      evidence('seeking_evidence', 'Across the last year, what have you repeatedly made time for, returned to, or missed when it disappeared?', 'e.g. Long conversations where we make sense of hard things.'),
+      single('seeking', 'What might you have been seeking through it?', SEEKING_OPTIONS),
+    ] },
 
   // Stage 2 — Values in action (25–28)
-  { order: 5, title: 'Protect without recognition', shortTitle: 'Protect', required: true,
-    blocks: [single('protected_value', 'What would you protect even if no one ever noticed?', VALUE_OPTIONS)] },
-  { order: 6, title: "Won't trade for success", shortTitle: 'Non-negotiable', required: true,
-    description: 'North — your core values. Choose up to three.',
-    blocks: [multi('core_values', 'Which values would you never trade for success?', VALUE_OPTIONS)] },
-  { order: 7, title: 'Shows in my behaviour', shortTitle: 'In behaviour', required: true,
-    blocks: [single('behavioral_value', 'Which value actually shows up in how you live right now?', VALUE_OPTIONS)] },
-  { order: 8, title: 'Currently missing', shortTitle: 'Missing', required: true,
-    blocks: [single('missing_value', 'Which value you care about feels missing lately?', VALUE_OPTIONS)] },
+  { order: 5, title: 'What I protected at a cost', shortTitle: 'Protected', required: true,
+    blocks: [
+      evidence('protected_tradeoff', 'When did protecting something important cost you approval, comfort, time, money, or opportunity?', 'e.g. I declined the promotion to stay present for my family.'),
+      single('protected_value', 'What were you protecting?', VALUE_OPTIONS),
+    ] },
+  { order: 6, title: 'Values I claim — and their cost', shortTitle: 'Values at a cost', required: true,
+    description: 'North — candidate values, tested against trade-offs.',
+    blocks: [
+      { ...multi('core_values', 'Choose up to three values that seem most important in this season.', VALUE_OPTIONS), maxSelections: 3 },
+      evidence('core_values_tradeoff', 'If two of these conflict, which one usually wins in your actual behaviour?', 'e.g. Honesty usually wins over comfort.'),
+      evidence('core_values_counterevidence', 'Which choice has the least evidence in your recent life?', 'It is okay if one sounds more aspirational than lived.'),
+    ] },
+  { order: 7, title: 'The value visible this week', shortTitle: 'Visible this week', required: true,
+    blocks: [
+      evidence('behavioral_evidence', 'What did you spend time, attention, or courage on this week?', 'e.g. I made space to coach a teammate through a setback.'),
+      single('behavioral_value', 'Which value is most visible in that behaviour?', VALUE_OPTIONS),
+    ] },
+  { order: 8, title: 'A value missing from my life', shortTitle: 'Missing value', required: true,
+    blocks: [
+      single('missing_value', 'Which value matters but has little room in your current season?', VALUE_OPTIONS),
+      single('missing_reason', 'What is the most plausible reason it is missing?', MISSING_REASON_OPTIONS, false),
+    ] },
 
   // Stage 3 — Needs (29–32)
-  { order: 9, title: 'Foundational needs', shortTitle: 'Foundations', required: true,
+  { order: 9, title: 'What I need to function', shortTitle: 'Function steadily', required: true,
     description: 'South — what you need to function well.',
-    blocks: [multi('foundational_needs', 'Which of these do you most need to function?',
-      NEED_OPTIONS.filter((n) => ['safety', 'autonomy', 'belonging', 'rest'].includes(n.id)))] },
-  { order: 10, title: 'Growth needs', shortTitle: 'Growth needs', required: true,
-    blocks: [multi('growth_needs', 'Which of these help you grow?',
-      NEED_OPTIONS.filter((n) => ['challenge', 'clarity', 'recognition', 'novelty', 'meaning'].includes(n.id)))] },
-  { order: 11, title: 'Most neglected need', shortTitle: 'Neglected', required: true,
-    blocks: [single('neglected_need', 'Which need is most neglected right now?', NEED_OPTIONS)] },
-  { order: 12, title: 'Non-negotiable need', shortTitle: 'Essential', required: true,
-    blocks: [single('essential_need', 'Which need is truly non-negotiable for you?', NEED_OPTIONS)] },
+    blocks: [
+      evidence('functioning_evidence', 'Think of a period when you functioned steadily. What was reliably present?', 'e.g. Enough sleep, clear ownership and unhurried mornings.'),
+      multi('foundational_needs', 'Which conditions seem most necessary for steady functioning?', NEED_OPTIONS.filter((n) => ['safety', 'autonomy', 'belonging', 'rest'].includes(n.id))),
+    ] },
+  { order: 10, title: 'What helps me grow', shortTitle: 'Growth conditions', required: true,
+    blocks: [
+      evidence('growth_evidence', 'Think of a period of genuine growth. What helped without destabilising the rest of your life?', 'e.g. A hard project with clear feedback and protected evenings.'),
+      multi('growth_needs', 'Which conditions seem to have supported that growth?', NEED_OPTIONS.filter((n) => ['challenge', 'clarity', 'recognition', 'novelty', 'meaning'].includes(n.id))),
+    ] },
+  { order: 11, title: 'The absence that shows first', shortTitle: 'First absence', required: true,
+    blocks: [
+      evidence('early_need_signal', 'When your functioning begins to deteriorate, what is the earliest observable sign?', 'e.g. I reread simple messages and postpone replying.'),
+      single('neglected_need', 'Which missing need most often sits beneath that early sign?', NEED_OPTIONS),
+    ] },
+  { order: 12, title: 'The need worth designing around', shortTitle: 'Design around', required: true,
+    blocks: [
+      single('essential_need', 'Which need repeatedly proves costly to ignore?', NEED_OPTIONS),
+      single('essential_need_context', 'How stable does this need seem?', ESSENTIAL_NEED_CONTEXT_OPTIONS, false),
+      single('essential_need_confidence', 'How confident are you in this reading?', CONFIDENCE_OPTIONS, false),
+    ] },
 
   // Stage 4 — Strength and shadow (33–36)
-  { order: 13, title: 'Primary strength', shortTitle: 'Strength', required: true,
-    blocks: [single('strength', 'What is your most natural strength?', STRENGTH_OPTIONS)] },
-  { order: 14, title: 'When strength overextends', shortTitle: 'Overused', required: true,
-    blocks: [single('overuse', 'When that strength is overused, what does it become?', SHADOW_OPTIONS)] },
-  { order: 15, title: 'Shadow pattern', shortTitle: 'Shadow', required: true,
+  { order: 13, title: 'What others repeatedly rely on', shortTitle: 'Relied on', required: true,
+    blocks: [
+      evidence('strength_evidence', 'Name two situations in which someone relied on you. What did you actually do?', 'e.g. I steadied a tense meeting and helped a friend choose a next step.'),
+      single('strength', 'Which strength might connect those situations?', STRENGTH_OPTIONS),
+    ] },
+  { order: 14, title: 'When the strength overshoots', shortTitle: 'Overshoot', required: true,
+    blocks: [
+      evidence('overuse_sequence', 'Under pressure, what does too much of that strength look like — and what short-term problem does it solve?', 'e.g. I take control so uncertainty disappears for a moment.'),
+      single('overuse', 'Which overused pattern is the closest fit?', SHADOW_OPTIONS),
+    ] },
+  { order: 15, title: 'My recurring drift loop', shortTitle: 'Drift loop', required: true,
     description: 'West — what pulls you off course.',
-    blocks: [single('shadow', 'What recurring shadow pattern do you fall into?', SHADOW_OPTIONS)] },
-  { order: 16, title: 'Missing counterbalance', shortTitle: 'Counterbalance', required: true,
-    blocks: [single('counterbalance', 'What counterbalance would help you most?', COUNTERBALANCE_OPTIONS)] },
+    blocks: [
+      evidence('shadow_loop', 'Complete the loop: trigger → automatic response → short-term relief → later cost.', 'e.g. Criticism → overwork → feel in control → exhaustion and distance.'),
+      single('shadow', 'Which recurring drift pattern best names that loop?', SHADOW_OPTIONS),
+    ] },
+  { order: 16, title: 'A counterbalance with evidence', shortTitle: 'Counterbalance', required: true,
+    blocks: [
+      evidence('counterbalance_evidence', 'What has actually helped interrupt this pattern before?', 'e.g. Saying the limit aloud to someone before I overcommit.'),
+      single('counterbalance', 'Which counterbalance is the most plausible next support?', COUNTERBALANCE_OPTIONS),
+    ] },
 
   // Stage 5 — Alignment, drift, set the compass (37–40)
-  { order: 17, title: 'Signs of alignment', shortTitle: 'Alignment', required: true,
-    blocks: [multi('alignment_signals', 'How do you know when you are aligned?', ALIGNMENT_SIGNAL_OPTIONS)] },
-  { order: 18, title: 'What pulls me off course', shortTitle: 'Drift', required: true,
-    blocks: [single('drift_cause', 'What most often pulls you off your own direction?', DRIFT_OPTIONS)] },
-  { order: 19, title: 'Boundary I need', shortTitle: 'Boundary', required: true,
+  { order: 17, title: 'How alignment appears in behaviour', shortTitle: 'Alignment', required: true,
+    blocks: [
+      evidence('alignment_evidence', 'During a reasonably aligned week, what would another person notice you doing differently?', 'e.g. I finish one meaningful thing, ask better questions and leave on time.'),
+      multi('alignment_signals', 'Which signals tend to accompany that behaviour?', ALIGNMENT_SIGNAL_OPTIONS),
+    ] },
+  { order: 18, title: 'The situation that pulls me off course', shortTitle: 'Drift trigger', required: true,
+    blocks: [
+      evidence('drift_episode', 'Recall the last occurrence. What happened immediately before the drift?', 'e.g. I saw someone else announce a result and abandoned my own plan.'),
+      single('drift_cause', 'What is the most likely pull in that episode?', DRIFT_OPTIONS),
+    ] },
+  { order: 19, title: 'A boundary as a testable rule', shortTitle: 'Boundary test', required: true,
     blocks: [
       {
         questionId: 'guardian_boundary',
         type: 'short_text',
-        // Optional mid-chapter free-text: players who want to name a boundary
-        // still can, but only the finale Compass statement (island 20) is
-        // required. The projector tolerates a null boundary.
-        prompt: 'What boundary would protect your direction? (one line, optional)',
+        prompt: 'When [recurring situation], I will [specific protective action], because it protects [value or need].',
         required: false,
-        placeholder: 'e.g. No new commitments until the current one ships.',
+        placeholder: 'e.g. When a new request arrives, I will wait overnight before agreeing, because it protects rest.',
         maxLength: 200,
+        helpText: 'Optional · write it as a small rule you can actually test.',
       },
+      evidence('boundary_failure', 'What is most likely to make this boundary fail?', 'e.g. Wanting to prove I am useful in the moment.'),
     ] },
   { order: 20, title: 'Set the compass', shortTitle: 'Confirm', required: true,
     description: 'Review your compass and seal the chapter.',
@@ -235,13 +330,16 @@ const SEEDS: ActivitySeed[] = [
       {
         questionId: 'compass_statement',
         type: 'short_text',
-        prompt: 'Your Compass statement — one sentence on what guides you.',
+        prompt: 'Write a current Compass statement combining direction, need, drift and return.',
         required: true,
-        placeholder: 'e.g. Create freely, protect rest, return to honesty.',
+        placeholder: 'e.g. Create honestly, protect rest, and return to one meaningful commitment when comparison scatters me.',
         maxLength: 200,
       },
+      single('compass_confidence', 'How confident are you in this current reading?', CONFIDENCE_OPTIONS, false),
+      evidence('compass_counterevidence', 'What does not yet fit this reading?', 'Optional: name one contradiction or unresolved part.'),
+      single('compass_review_trigger', 'When should you review this reading?', REVIEW_TRIGGER_OPTIONS, false),
       { questionId: 'compass_review', type: 'review', prompt: 'Review True North, Life Spark, Shadow Pull and your Guardian Boundary.', required: false },
-      { questionId: 'compass_confirm', type: 'confirmation', prompt: 'This reflects what guides me. Set the Inner Compass.', required: true },
+      { questionId: 'compass_confirm', type: 'confirmation', prompt: 'This is my best current reading. Preserve it in the Inner Compass.', required: true },
     ] },
 ];
 

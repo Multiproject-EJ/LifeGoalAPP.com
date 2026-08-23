@@ -485,6 +485,7 @@ export function CompassBookScreen({
                     returnFocusKey,
                   )
                 }
+                onBeginMethodRevisit={book.beginChapterMethodRevisit}
                 onBack={() => openPage('reading')}
                 onClose={onClose}
               />

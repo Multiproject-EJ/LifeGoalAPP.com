@@ -6,6 +6,7 @@
 import type { Database, Json } from '../../../lib/database.types';
 import {
   COMPASS_CURRICULUM_VERSION,
+  getCompassChapterMethodVersion,
   type CompassAnswerRecord,
   type CompassBook,
   type CompassBookChapterId,
@@ -43,6 +44,7 @@ export function parseAnswers(value: Json | null): CompassAnswerRecord[] {
       sourceMode: (r.sourceMode as CompassAnswerRecord['sourceMode']) ?? 'fixed_guided',
       curriculumVersion:
         typeof r.curriculumVersion === 'string' ? r.curriculumVersion : COMPASS_CURRICULUM_VERSION,
+      methodVersion: typeof r.methodVersion === 'string' ? r.methodVersion : undefined,
       answeredAt: typeof r.answeredAt === 'string' ? r.answeredAt : new Date(0).toISOString(),
       updatedAt: typeof r.updatedAt === 'string' ? r.updatedAt : new Date(0).toISOString(),
       confirmed: r.confirmed === true,
@@ -106,7 +108,7 @@ export function parseBookRow(row: BookRow): CompassBook {
 export function emptyChapterState(chapterId: CompassBookChapterId): CompassChapterState {
   return {
     chapterId,
-    contentVersion: COMPASS_CURRICULUM_VERSION,
+    contentVersion: getCompassChapterMethodVersion(chapterId),
     status: 'unlocked',
     answers: [],
     draftOutput: null,

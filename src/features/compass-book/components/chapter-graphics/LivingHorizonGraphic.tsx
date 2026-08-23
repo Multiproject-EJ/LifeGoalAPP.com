@@ -63,6 +63,11 @@ export function LivingHorizonGraphic({ output, mode }: LivingHorizonGraphicProps
 
       {mode === 'full' ? (
         <>
+          <p className="compass-book__block-help">
+            {output.readingStatus === 'evidence_backed'
+              ? `Current life-design reading · grounded in ${output.evidenceCount} lived clues${output.confidenceId ? ` · ${output.confidenceId} confidence` : ''}`
+              : 'Provisional life-design reading · compare the picture with ordinary days you have actually lived'}
+          </p>
           <div className="compass-wheel__mechanics">
             <span className="compass-wheel__mechanic">
               <span aria-hidden="true">⏳</span>

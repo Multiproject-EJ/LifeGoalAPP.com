@@ -22,7 +22,34 @@ export type InnerCompassOutput = {
   counterbalanceId: string | null;
   guardianBoundary: string | null;
   compassStatement: string | null;
+  /** Additive v2 method metadata; canonical v1 fields above stay unchanged. */
+  evidenceCount: number;
+  confidenceId: string | null;
+  counterevidence: string | null;
+  reviewTriggerId: string | null;
+  readingStatus: 'provisional' | 'evidence_backed';
 };
+
+const EVIDENCE_QUESTION_IDS = [
+  'alive_evidence',
+  'proud_evidence',
+  'unlike_trigger',
+  'seeking_evidence',
+  'protected_tradeoff',
+  'core_values_tradeoff',
+  'core_values_counterevidence',
+  'behavioral_evidence',
+  'functioning_evidence',
+  'growth_evidence',
+  'early_need_signal',
+  'strength_evidence',
+  'overuse_sequence',
+  'shadow_loop',
+  'counterbalance_evidence',
+  'alignment_evidence',
+  'drift_episode',
+  'boundary_failure',
+] as const;
 
 function valueMap(answers: readonly CompassAnswerRecord[]): Map<string, CompassAnswerValue> {
   const map = new Map<string, CompassAnswerValue>();
@@ -48,6 +75,10 @@ function textOf(map: Map<string, CompassAnswerValue>, questionId: string): strin
 export function projectInnerCompass(answers: readonly CompassAnswerRecord[]): InnerCompassOutput {
   const map = valueMap(answers);
   const coreValueIds = optionsOf(map, 'core_values');
+  const evidenceCount = EVIDENCE_QUESTION_IDS.reduce(
+    (count, questionId) => count + (textOf(map, questionId) ? 1 : 0),
+    0,
+  );
 
   return {
     trueNorthValueId:
@@ -62,6 +93,11 @@ export function projectInnerCompass(answers: readonly CompassAnswerRecord[]): In
     counterbalanceId: optionOf(map, 'counterbalance'),
     guardianBoundary: textOf(map, 'guardian_boundary'),
     compassStatement: textOf(map, 'compass_statement'),
+    evidenceCount,
+    confidenceId: optionOf(map, 'compass_confidence'),
+    counterevidence: textOf(map, 'compass_counterevidence'),
+    reviewTriggerId: optionOf(map, 'compass_review_trigger'),
+    readingStatus: evidenceCount >= 4 ? 'evidence_backed' : 'provisional',
   };
 }
 

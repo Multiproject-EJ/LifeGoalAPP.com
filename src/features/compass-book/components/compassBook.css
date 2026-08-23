@@ -329,7 +329,7 @@
 
   /* Only pages with approved physical left-page reliefs use the hybrid spread.
      Remaining pages stay centered until their own relief loop is complete. */
-  .compass-book:not([data-page-id='reading']):not([data-page-id='living_wheel']):not([data-page-id='inner_compass']):not([data-page-id='living_horizon']):not([data-page-id='ikigai_map']):not([data-page-id='quest_forge']) .compass-book__sheet {
+  .compass-book:not([data-page-id='reading']):not([data-page-id='living_wheel']):not([data-page-id='inner_compass']):not([data-page-id='living_horizon']):not([data-page-id='ikigai_map']):not([data-page-id='quest_forge']):not([data-page-id='personal_playbook']) .compass-book__sheet {
     width: min(680px, 82vw);
     margin-left: 0;
     border-radius: 22px;
@@ -965,6 +965,133 @@
   gap: 8px;
 }
 
+.compass-book__choice-group,
+.compass-book__ranking {
+  display: grid;
+  gap: 10px;
+}
+
+.compass-book__choice-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.compass-book__choice-tool {
+  appearance: none;
+  border: 0;
+  padding: 3px 0;
+  background: transparent;
+  color: #385d91;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.compass-book__selection-count {
+  margin: 0;
+  color: var(--cbk-ink-muted);
+  font-size: 0.78rem;
+}
+
+.compass-book__lock-celebration {
+  margin: 2px 0 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(183, 137, 31, 0.38);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 235, 155, 0.48), rgba(255, 255, 255, 0.32));
+  color: #67490f;
+  font-family: var(--cbk-serif);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.compass-book__live-read {
+  display: grid;
+  gap: 5px;
+  margin: 14px 0 18px;
+  padding: 12px;
+  border: 1px solid rgba(67, 91, 125, 0.2);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(232, 240, 245, 0.32));
+}
+
+.compass-book__live-read > span {
+  color: #386183;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.compass-book__live-read > p {
+  margin: 0;
+  color: var(--cbk-ink-muted);
+  font-size: 0.76rem;
+}
+
+.compass-book__live-read .compass-wheel {
+  margin-top: 5px;
+}
+
+.compass-book__ranking-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compass-book__ranking-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid rgba(70, 50, 16, 0.18);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.compass-book__ranking-number {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(60, 90, 143, 0.13);
+  color: #304d78;
+  font-weight: 800;
+  font-size: 0.76rem;
+}
+
+.compass-book__ranking-label {
+  min-width: 0;
+  font-weight: 650;
+}
+
+.compass-book__ranking-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.compass-book__ranking-actions button {
+  width: 28px;
+  height: 32px;
+  border: 1px solid rgba(70, 50, 16, 0.2);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--cbk-ink-soft);
+  cursor: pointer;
+}
+
+.compass-book__ranking-actions button:disabled {
+  cursor: default;
+  opacity: 0.28;
+}
+
 .compass-book__option {
   appearance: none;
   cursor: pointer;
@@ -986,11 +1113,162 @@
   transform: scale(0.96);
 }
 
+.compass-book__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .compass-book__option--on {
   background: rgba(60, 90, 143, 0.16);
   border-color: rgba(60, 90, 143, 0.85);
   color: #26375a;
   box-shadow: 0 0 12px rgba(60, 90, 143, 0.2);
+}
+
+/* Recognition-first option cards. The image supplies a concrete situation;
+   visible copy keeps the choice usable when imagery is unavailable. */
+.compass-scenarios {
+  display: grid;
+  gap: 12px;
+}
+
+.compass-scenarios__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+  gap: 9px;
+}
+
+.compass-scenarios__card {
+  appearance: none;
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px;
+  cursor: pointer;
+  border: 1px solid rgba(70, 50, 16, 0.24);
+  border-radius: 14px;
+  color: var(--cbk-ink-soft);
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 11px rgba(45, 32, 11, 0.06);
+  text-align: left;
+  transition: transform 120ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.compass-scenarios__card:hover {
+  border-color: rgba(60, 90, 143, 0.62);
+  transform: translateY(-2px);
+}
+
+.compass-scenarios__card:active {
+  transform: scale(0.985);
+}
+
+.compass-scenarios__card:focus-visible {
+  outline: 3px solid rgba(57, 115, 175, 0.42);
+  outline-offset: 2px;
+}
+
+.compass-scenarios__card--on {
+  border-color: rgba(46, 107, 79, 0.88);
+  background: linear-gradient(145deg, rgba(223, 247, 235, 0.72), rgba(255, 249, 222, 0.58));
+  box-shadow: 0 0 0 2px rgba(46, 107, 79, 0.12), 0 9px 20px rgba(38, 98, 75, 0.13);
+}
+
+.compass-scenarios__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid rgba(70, 50, 16, 0.16);
+  border-radius: 10px;
+  background-color: rgba(54, 64, 78, 0.12);
+  background-repeat: no-repeat;
+}
+
+.compass-scenarios__visual i {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  color: #fff;
+  background: #2e6b4f;
+  box-shadow: 0 3px 10px rgba(13, 55, 42, 0.32);
+  font-style: normal;
+  font-size: 0.75rem;
+}
+
+.compass-scenarios__copy {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 9px 7px 7px;
+}
+
+.compass-scenarios__copy strong {
+  color: var(--cbk-ink);
+  font-family: var(--cbk-serif);
+  font-size: 0.83rem;
+  line-height: 1.2;
+}
+
+.compass-scenarios__copy > span {
+  color: var(--cbk-ink-muted);
+  font-size: 0.69rem;
+  line-height: 1.34;
+}
+
+.compass-scenarios__copy small {
+  justify-self: start;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #37556b;
+  background: rgba(56, 97, 131, 0.09);
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.compass-scenarios__card--escape {
+  grid-column: 1 / -1;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  padding: 8px;
+  border-style: dashed;
+  background: rgba(236, 243, 247, 0.38);
+}
+
+.compass-scenarios__card--escape .compass-scenarios__visual {
+  aspect-ratio: 1;
+  color: #315f82;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 239, 169, 0.78), rgba(69, 111, 151, 0.15));
+  font-family: var(--cbk-serif);
+  font-size: 1.55rem;
+}
+
+@media (max-width: 360px) {
+  .compass-scenarios__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-scenarios__card {
+    transition: none;
+  }
+
+  .compass-scenarios__card:hover,
+  .compass-scenarios__card:active {
+    transform: none;
+  }
 }
 
 .compass-life-wheel {
@@ -1381,6 +1659,30 @@
   color: var(--cbk-gold);
 }
 
+.compass-wheel__proof {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 9px;
+  margin: 6px 0 2px;
+  color: var(--cbk-ink-muted);
+  font-size: 0.68rem;
+}
+
+.compass-wheel__proof strong {
+  color: #286b5a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.compass-wheel__proof--dark {
+  color: rgba(213, 242, 255, 0.74);
+}
+
+.compass-wheel__proof--dark strong {
+  color: #83efcb;
+}
+
 .compass-wheel__mechanics {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1440,6 +1742,17 @@
   margin: 12px 0 0;
   font-size: 0.85rem;
   color: var(--cbk-ink-soft);
+  text-align: left;
+}
+
+.compass-wheel__counter {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid rgba(194, 119, 52, 0.56);
+  color: var(--cbk-ink-muted);
+  background: rgba(194, 119, 52, 0.07);
+  font-size: 0.78rem;
+  line-height: 1.4;
   text-align: left;
 }
 

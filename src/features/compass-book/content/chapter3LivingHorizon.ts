@@ -184,6 +184,20 @@ const PRICE_OPTIONS: readonly CompassBlockOption[] = [
   { id: 'peace', label: 'My peace' },
 ];
 
+const CONFIDENCE_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'tentative', label: 'Tentative — mostly imagined' },
+  { id: 'plausible', label: 'Plausible — supported by lived clues' },
+  { id: 'strong', label: 'Strong — parts have been tested in real life' },
+];
+
+const REVIEW_TRIGGER_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'three_months', label: 'In three months' },
+  { id: 'responsibility_change', label: 'When responsibilities change' },
+  { id: 'work_change', label: 'When work changes' },
+  { id: 'home_relationship_change', label: 'When home or relationships change' },
+  { id: 'health_change', label: 'When health or capacity changes' },
+];
+
 export const LIVING_HORIZON_LABELS: Record<string, string> = Object.fromEntries(
   [
     ...MORNING_OPTIONS,
@@ -215,6 +229,17 @@ function single(questionId: string, prompt: string, options: readonly CompassBlo
 function multi(questionId: string, prompt: string, options: readonly CompassBlockOption[], required = true): CompassBlockDefinition {
   return { questionId, type: 'multi_choice', prompt, required, options: [...options] };
 }
+function evidence(questionId: string, prompt: string, placeholder: string): CompassBlockDefinition {
+  return {
+    questionId,
+    type: 'short_text',
+    prompt,
+    required: false,
+    placeholder,
+    maxLength: 180,
+    helpText: 'Optional · use a short private phrase. A lived clue is stronger than an idealised picture.',
+  };
+}
 
 function stageForOrder(order: number): CompassChapterStageIndex {
   if (order <= 4) return 1;
@@ -236,76 +261,134 @@ type ActivitySeed = {
 const SEEDS: ActivitySeed[] = [
   // Stage 1 — The ordinary good day (41–44)
   { order: 1, title: 'The ordinary morning', shortTitle: 'Morning', required: true,
-    description: 'Picture a good ordinary day — not a holiday.',
-    blocks: [single('morning', 'How does the morning feel?', MORNING_OPTIONS)] },
-  { order: 2, title: 'Meaningful daytime', shortTitle: 'Daytime', required: true,
+    description: 'Start with an ordinary day that actually worked—not a holiday fantasy.',
+    blocks: [
+      evidence('morning_evidence', 'Recall a recent ordinary morning that fitted you unusually well. What made it work?', 'e.g. No rush, daylight, breakfast together and one quiet hour.'),
+      single('morning', 'Which morning quality seems most important in that evidence?', MORNING_OPTIONS),
+    ] },
+  { order: 2, title: 'A meaningful ordinary daytime', shortTitle: 'Daytime', required: true,
     description: 'Essential Scene — the heart of your good day.',
-    blocks: [single('essential_scene', 'What are you mostly doing in the day?', SCENE_OPTIONS)] },
-  { order: 3, title: 'Structure vs freedom', shortTitle: 'Rhythm', required: true,
+    blocks: [
+      evidence('essential_scene_evidence', 'When has an ordinary workday or care day felt meaningfully used? What were you actually doing?', 'e.g. Making something useful with long focus and one collaborative session.'),
+      single('essential_scene', 'Which activity best names the essential scene?', SCENE_OPTIONS),
+    ] },
+  { order: 3, title: 'A rhythm that has worked before', shortTitle: 'Rhythm', required: true,
     description: 'Desired Rhythm.',
-    blocks: [single('rhythm', 'How structured is the day?', RHYTHM_OPTIONS)] },
-  { order: 4, title: 'A good evening', shortTitle: 'Evening', required: true,
-    blocks: [single('evening', 'How does the evening feel?', EVENING_OPTIONS)] },
+    blocks: [
+      evidence('rhythm_evidence', 'Compare a period with too much structure and one with too little. What balance helped you function?', 'e.g. Fixed mornings and deadlines, open afternoons.'),
+      single('rhythm', 'What degree of structure is the best current hypothesis?', RHYTHM_OPTIONS),
+    ] },
+  { order: 4, title: 'An evening that restores rather than compensates', shortTitle: 'Evening', required: true,
+    blocks: [
+      evidence('evening_evidence', 'What kind of ordinary evening leaves tomorrow easier—not merely today escaped?', 'e.g. Dinner with family, a walk and enough quiet before sleep.'),
+      single('evening', 'Which evening quality is the closest fit?', EVENING_OPTIONS),
+    ] },
 
   // Stage 2 — Place and people (45–48)
-  { order: 5, title: 'Ideal environment', shortTitle: 'Environment', required: true,
+  { order: 5, title: 'An environment where I function', shortTitle: 'Environment', required: true,
     description: 'Sanctuary — where you live.',
-    blocks: [single('environment', 'Where does this life happen?', ENVIRONMENT_OPTIONS)] },
-  { order: 6, title: 'Rooted or mobile', shortTitle: 'Rooted', required: true,
-    blocks: [single('rooted_mobile', 'Rooted in one place, or mobile?', ROOTED_OPTIONS)] },
-  { order: 7, title: 'Social intensity', shortTitle: 'Social', required: true,
+    blocks: [
+      evidence('environment_evidence', 'In which real places have you felt both more yourself and more able to handle ordinary responsibilities? What helped?', 'e.g. Walkable coast, familiar people and a quiet room.'),
+      single('environment', 'Which environment is the strongest current hypothesis?', ENVIRONMENT_OPTIONS),
+    ] },
+  { order: 6, title: 'Rootedness as a trade-off', shortTitle: 'Rootedness', required: true,
+    blocks: [
+      evidence('rooted_tradeoff', 'What do you gain—and what do you lose—when you stay rooted or move often?', 'e.g. Roots deepen relationships; travel restores curiosity but fragments routine.'),
+      single('rooted_mobile', 'Which balance best fits this season?', ROOTED_OPTIONS),
+    ] },
+  { order: 7, title: 'The social dose that restores', shortTitle: 'Social dose', required: true,
     description: 'Gathering Place — your people.',
-    blocks: [single('social_intensity', 'How much social life fits you?', SOCIAL_OPTIONS)] },
+    blocks: [
+      evidence('social_intensity_evidence', 'Recall a week with too little connection and one with too much. What social dose left you most present?', 'e.g. Two close evenings and one group day; not constant availability.'),
+      single('social_intensity', 'Which social pattern is the closest fit?', SOCIAL_OPTIONS),
+    ] },
   { order: 8, title: 'Relationships that belong', shortTitle: 'Relationships', required: true,
-    blocks: [multi('relationships', 'Who belongs in this ordinary life?', RELATIONSHIP_OPTIONS)] },
+    blocks: [
+      evidence('relationships_evidence', 'Who needs reliable time and presence—not only good intentions—for this life to feel worthwhile?', 'e.g. Partner, two close friends and collaborators I trust.'),
+      { ...multi('relationships', 'Which relationships need a protected place in the ordinary week?', RELATIONSHIP_OPTIONS), allowSelectAll: true },
+    ] },
 
   // Stage 3 — Work that fits (49–52)
-  { order: 9, title: 'Problems I prefer', shortTitle: 'Problems', required: true,
+  { order: 9, title: 'Problems that hold me without consuming me', shortTitle: 'Work problems', required: true,
     description: 'Workshop — work that fits.',
-    blocks: [single('work_problems', 'What kind of problems do you like working on?', WORK_PROBLEM_OPTIONS)] },
-  { order: 10, title: 'How I work', shortTitle: 'Work mode', required: true,
-    blocks: [single('work_mode', 'What is your main mode of work?', WORK_MODE_OPTIONS)] },
-  { order: 11, title: 'Depth vs variety', shortTitle: 'Depth', required: true,
-    blocks: [single('depth_variety', 'Deep focus or high variety?', DEPTH_OPTIONS)] },
+    blocks: [
+      evidence('work_problems_evidence', 'Which real problem have you willingly stayed with through difficulty—and still had energy afterward?', 'e.g. Untangling a system that confused everyone.'),
+      single('work_problems', 'Which problem family best matches that evidence?', WORK_PROBLEM_OPTIONS),
+    ] },
+  { order: 10, title: 'A work mode visible in behaviour', shortTitle: 'Work mode', required: true,
+    blocks: [
+      evidence('work_mode_evidence', 'Across your better work, what do you repeatedly spend your effort doing?', 'e.g. Building a first version, then explaining it to others.'),
+      single('work_mode', 'Which mode is most visible?', WORK_MODE_OPTIONS),
+    ] },
+  { order: 11, title: 'Depth and variety in practice', shortTitle: 'Depth & variety', required: true,
+    blocks: [
+      evidence('depth_variety_evidence', 'When did you have too much repetition or too much switching? What mix helped?', 'e.g. One deep project plus a few smaller conversations.'),
+      single('depth_variety', 'Which balance is the best current fit?', DEPTH_OPTIONS),
+    ] },
   { order: 12, title: 'What work makes possible', shortTitle: 'Enables', required: true,
-    blocks: [single('work_enables', 'What should work make possible outside work?', ENABLES_OPTIONS)] },
+    blocks: [
+      single('work_enables', 'What should work make possible outside work?', ENABLES_OPTIONS),
+      evidence('work_enables_tradeoff', 'What work benefit are you willing to have less of to protect this?', 'e.g. Less status and maximum income to protect time freedom.'),
+    ] },
 
   // Stage 4 — Challenge and responsibility (53–55) + Enough (56)
-  { order: 13, title: 'Desired responsibility', shortTitle: 'Responsibility', required: true,
+  { order: 13, title: 'Responsibility I can carry repeatedly', shortTitle: 'Responsibility', required: true,
     description: 'Vital Path — challenge & responsibility.',
-    blocks: [single('responsibility', 'How much responsibility do you want?', RESPONSIBILITY_OPTIONS)] },
-  { order: 14, title: 'Meaningful challenge', shortTitle: 'Challenge', required: true,
-    blocks: [single('challenge', 'What kind of challenge feels meaningful?', CHALLENGE_OPTIONS)] },
-  { order: 15, title: 'Scale vs mastery', shortTitle: 'Scale', required: true,
-    blocks: [single('scale_mastery', 'Depth & mastery, or scale & reach?', SCALE_OPTIONS)] },
+    blocks: [
+      evidence('responsibility_evidence', 'What level of responsibility have you carried well without relying on permanent overextension?', 'e.g. Owning one team and outcome, not every decision.'),
+      single('responsibility', 'What level is the strongest sustainable hypothesis?', RESPONSIBILITY_OPTIONS),
+    ] },
+  { order: 14, title: 'Challenge that strengthens rather than proves', shortTitle: 'Challenge', required: true,
+    blocks: [
+      evidence('challenge_evidence', 'Which difficult experience expanded you—and which merely depleted or impressed others?', 'e.g. Learning a craft strengthened me; public scale mostly fed proving.'),
+      single('challenge', 'Which challenge is most worth carrying forward?', CHALLENGE_OPTIONS),
+    ] },
+  { order: 15, title: 'Depth, reach and their price', shortTitle: 'Depth or reach', required: true,
+    blocks: [
+      evidence('scale_mastery_tradeoff', 'If depth and reach conflict, which loss would you regret more in this season?', 'e.g. I would regret shallow work more than a smaller audience.'),
+      single('scale_mastery', 'Which balance follows from that trade-off?', SCALE_OPTIONS),
+    ] },
   { order: 16, title: 'Financial enough', shortTitle: 'Enough', required: true,
     description: 'Open Gate — your definition of enough.',
-    blocks: [single('financial_enough', 'What level of money is genuinely enough?', ENOUGH_OPTIONS)] },
+    blocks: [
+      evidence('financial_enough_evidence', 'In your actual life, what must “enough” reliably cover—including buffer, care, health and chosen freedoms?', 'No exact number is required, but name the real obligations.'),
+      single('financial_enough', 'Which level best describes that current threshold?', ENOUGH_OPTIONS),
+    ] },
 
   // Stage 5 — Enough cont., anti-vision, horizon (57–60)
   { order: 17, title: 'Time & proving', shortTitle: 'Time', required: true,
     blocks: [
       single('time_freedom', 'How much time freedom do you want?', TIME_FREEDOM_OPTIONS),
       single('no_longer_prove', 'What do you no longer need to prove?', PROVE_OPTIONS),
+      evidence('time_proving_tradeoff', 'What would you stop doing if you truly no longer had to prove that?', 'e.g. Accepting visible work that fragments every week.'),
     ] },
   { order: 18, title: 'Success that still fails', shortTitle: 'Anti-vision', required: true,
     description: 'The kind of success that would still feel like failure.',
-    blocks: [single('anti_vision', 'Which "success" would still feel like failure?', ANTI_VISION_OPTIONS)] },
+    blocks: [
+      evidence('anti_vision_evidence', 'Recall a smaller version you have already experienced or observed. What looked successful but felt wrong?', 'e.g. Praise rose while health, presence and honest work declined.'),
+      single('anti_vision', 'Which anti-vision best names the pattern?', ANTI_VISION_OPTIONS),
+    ] },
   { order: 19, title: 'Price I will not pay', shortTitle: 'Price', required: true,
-    blocks: [single('price_not_paid', 'What will you not sacrifice for any success?', PRICE_OPTIONS)] },
+    blocks: [
+      evidence('price_boundary_evidence', 'When have you paid part of this price before, and what early sign should warn you next time?', 'e.g. Sleep shortened, patience vanished and I stopped calling people back.'),
+      single('price_not_paid', 'Which price will you explicitly refuse in this season?', PRICE_OPTIONS),
+    ] },
   { order: 20, title: 'Create the horizon', shortTitle: 'Confirm', required: true,
     description: 'Review your horizon and seal the chapter.',
     blocks: [
       {
         questionId: 'horizon_statement',
         type: 'short_text',
-        prompt: 'Your Horizon statement — one sentence describing the life that fits you.',
+        prompt: 'Write a current Horizon statement describing an ordinary life worth testing—not a perfect future.',
         required: true,
         placeholder: 'e.g. A quiet coastal base, creative mornings, work that helps and still leaves time.',
         maxLength: 220,
       },
+      single('horizon_confidence', 'How confident are you in this current life-design reading?', CONFIDENCE_OPTIONS, false),
+      evidence('horizon_counterevidence', 'What does not fit, remains constrained, or may be idealised?', 'Optional: name one contradiction, obligation or unresolved trade-off.'),
+      single('horizon_review_trigger', 'When should you review this Horizon?', REVIEW_TRIGGER_OPTIONS, false),
       { questionId: 'horizon_review', type: 'review', prompt: 'Review your Desired Rhythm, Essential Scene and the Price You Will Not Pay.', required: false },
-      { questionId: 'horizon_confirm', type: 'confirmation', prompt: 'This is a life that would fit me. Set the Horizon.', required: true },
+      { questionId: 'horizon_confirm', type: 'confirmation', prompt: 'This is my best current reading of a life worth testing. Preserve the Horizon.', required: true },
     ] },
 ];
 

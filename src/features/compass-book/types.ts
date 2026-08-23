@@ -12,8 +12,11 @@
 
 import type { Json } from '../../lib/database.types';
 
-/** Curriculum bundle version. Bump when activity/question wording changes in a
- * way that should produce a new answer bundle while keeping old answers readable. */
+/**
+ * Stable identity of the six-chapter book bundle used by the book row. Do not
+ * bump this for a single chapter's method rewrite: fetches use it as an exact
+ * key, so doing so would make existing books appear absent.
+ */
 export const COMPASS_CURRICULUM_VERSION = 'v1';
 
 /** Stable chapter identifiers (never reorder/rename — they are persisted). */
@@ -27,6 +30,21 @@ export const COMPASS_BOOK_CHAPTER_IDS = [
 ] as const;
 
 export type CompassBookChapterId = (typeof COMPASS_BOOK_CHAPTER_IDS)[number];
+
+/** Chapter-local method/content versions. These can evolve independently while
+ * the global book identity and previously sealed snapshots remain readable. */
+export const COMPASS_CHAPTER_METHOD_VERSIONS: Record<CompassBookChapterId, string> = {
+  living_wheel: 'living-wheel-v2',
+  inner_compass: 'inner-compass-v2',
+  living_horizon: 'living-horizon-v2',
+  ikigai_map: 'ikigai-map-v2',
+  quest_forge: 'quest-forge-v2',
+  personal_playbook: 'personal-playbook-v2',
+};
+
+export function getCompassChapterMethodVersion(chapterId: CompassBookChapterId): string {
+  return COMPASS_CHAPTER_METHOD_VERSIONS[chapterId];
+}
 
 export const COMPASS_ACTIVITIES_PER_CHAPTER = 20;
 export const COMPASS_TOTAL_ISLANDS = 120;
@@ -72,6 +90,28 @@ export type CompassBlockOption = {
   /** Stable id, unique within the block. */
   id: string;
   label: string;
+  /** Concrete situation shown above the more abstract option label. */
+  scenarioTitle?: string;
+  /** Plain-language detail that helps the player recognise the situation. */
+  description?: string;
+  /** Optional visual recognition aid. Text remains authoritative and visible. */
+  visual?:
+    | {
+        kind: 'sprite';
+        src: string;
+        column: number;
+        row: number;
+        columns: number;
+        rows: number;
+        alt: string;
+      }
+    | {
+        kind: 'symbol';
+        symbol: string;
+        alt: string;
+      };
+  /** Overrides the block's normal completion copy for this option. */
+  selectionMessage?: string;
 };
 
 /**
@@ -99,6 +139,22 @@ export type CompassBlockDefinition = {
   required: boolean;
   /** For choice/emotion/ranking blocks. */
   options?: CompassBlockOption[];
+  /** Restrict this block's options to ids selected in another answer. */
+  optionsFromQuestionId?: string;
+  /**
+   * Restrict reference options to earlier text questions that currently have
+   * an answer. Option ids must match the referenced question ids. This lets a
+   * ranking omit empty candidate slots without changing saved answer shapes.
+   */
+  optionsFromAnsweredQuestionIds?: string[];
+  /** Show select-all/clear-all for broad multi-choice capture. */
+  allowSelectAll?: boolean;
+  /** Optional minimum selection count for multi-choice completion. */
+  minSelections?: number;
+  /** Optional selection cap for multi-choice blocks. */
+  maxSelections?: number;
+  /** Shown when a compatible choice answer satisfies its selection bounds. */
+  completionMessage?: string;
   /** For scale blocks. */
   min?: number;
   max?: number;
@@ -129,6 +185,8 @@ export type CompassBookActivityDefinition = {
   title: string;
   shortTitle: string;
   description?: string;
+  /** Earned, non-punitive synthesis shown once the activity is answerable. */
+  completionMessage?: string;
   /** Whether the activity must be completed for the chapter to be confirmable. */
   required: boolean;
   /**
@@ -175,7 +233,10 @@ export type CompassAnswerRecord = {
   questionId: string;
   value: CompassAnswerValue;
   sourceMode: CompassAnswerSourceMode;
+  /** Global book bundle identity retained for storage compatibility. */
   curriculumVersion: string;
+  /** Chapter-local elicitation method used when this answer was recorded. */
+  methodVersion?: string;
   answeredAt: string;
   updatedAt: string;
   /** Player has explicitly confirmed this answer (required for completion). */

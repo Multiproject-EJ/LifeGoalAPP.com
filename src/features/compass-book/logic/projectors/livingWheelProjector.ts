@@ -39,6 +39,11 @@ export type LivingWheelOutput = {
   emotionalPattern: string | null;
   nextMove: { areaId: string | null; text: string | null } | null;
   wheelStatement: string | null;
+  evidenceCount: number;
+  confidenceId: string | null;
+  counterevidence: string | null;
+  reviewTriggerId: string | null;
+  readingStatus: 'provisional' | 'evidence-backed' | 'trial-ready';
 };
 
 const NEGATIVE_EMOTIONS = new Set(['restless', 'anxious', 'frustrated', 'sad', 'drained', 'numb']);
@@ -106,6 +111,14 @@ function pickBest(
 export function projectLivingWheel(answers: readonly CompassAnswerRecord[]): LivingWheelOutput {
   const map = valueMap(answers);
   const areas = buildLivingWheelAreas(answers);
+  const evidenceCount = [
+    'strongest_evidence',
+    'strained_evidence',
+    'mental_space_evidence',
+    'avoided_evidence',
+  ].filter((questionId) => textOf(map, questionId) != null).length;
+  const confidenceId = optionOf(map, 'wheel_confidence');
+  const hasTest = textOf(map, 'next_move') != null && optionOf(map, 'wheel_review_trigger') != null;
 
   const hasCurrent = (a: LivingWheelAreaSummary) => a.current != null;
 
@@ -165,6 +178,15 @@ export function projectLivingWheel(answers: readonly CompassAnswerRecord[]): Liv
       text: textOf(map, 'next_move'),
     },
     wheelStatement: textOf(map, 'wheel_statement'),
+    evidenceCount,
+    confidenceId,
+    counterevidence: textOf(map, 'wheel_counterevidence'),
+    reviewTriggerId: optionOf(map, 'wheel_review_trigger'),
+    readingStatus: hasTest
+      ? 'trial-ready'
+      : evidenceCount >= 3 && confidenceId != null
+        ? 'evidence-backed'
+        : 'provisional',
   };
 }
 

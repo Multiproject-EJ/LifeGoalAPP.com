@@ -84,6 +84,11 @@ export function InnerCompassGraphic({ output, mode }: InnerCompassGraphicProps) 
 
       {mode === 'full' ? (
         <>
+          <p className="compass-book__block-help">
+            {output.readingStatus === 'evidence_backed'
+              ? `Current reading · grounded in ${output.evidenceCount} evidence notes${output.confidenceId ? ` · ${output.confidenceId} confidence` : ''}`
+              : 'Provisional reading · add concrete moments as you go'}
+          </p>
           {output.guardianBoundary ? (
             <p className="compass-wheel__next">
               <strong>Guardian Boundary:</strong> {output.guardianBoundary}

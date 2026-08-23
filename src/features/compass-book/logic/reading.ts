@@ -42,7 +42,7 @@ export function chapterNumeral(order: number): string {
  */
 const HEADLINE_LABEL: Record<CompassBookChapterId, string> = {
   living_wheel: 'Your wheel',
-  inner_compass: 'Your true north',
+  inner_compass: 'Your current True North reading',
   living_horizon: 'Your horizon',
   ikigai_map: 'Your trial',
   quest_forge: 'Your calling',
@@ -104,10 +104,14 @@ export type CompassReadingRow = {
   order: number;
   numeral: string;
   title: string;
-  /** e.g. "Your true north" — what this row is showing. */
+  /** e.g. "Your current True North reading" — what this row is showing. */
   headlineLabel: string;
   /** The player's own sentence, or null when they have not written it yet. */
   headline: string | null;
+  /** Inner Compass v2 evidence qualifier; null for other chapter methods. */
+  readingQuality: 'provisional' | 'evidence_backed' | 'trial_ready' | null;
+  /** Timestamp of the preserved reading, when the chapter has been sealed. */
+  lastReviewedAt: string | null;
   /** Shown in place of a headline so an unwritten row still says something. */
   promise: string;
   status: CompassReadingStatus;
@@ -137,13 +141,23 @@ export type CompassReadingInput = {
 export function buildCompassReading(input: CompassReadingInput): CompassReadingRow[] {
   return COMPASS_BOOK_CHAPTERS.map((chapter) => {
     const progress = input.getProgress(chapter.id);
+    const state = input.getChapterState(chapter.id);
+    const readingQuality = (() => {
+      if ((state?.answers.length ?? 0) === 0) return null;
+      if (chapter.id === 'inner_compass') return projectInnerCompass(state?.answers ?? []).readingStatus;
+      if (chapter.id === 'living_horizon') return projectLivingHorizon(state?.answers ?? []).readingStatus;
+      if (chapter.id === 'ikigai_map') return projectIkigaiMap(state?.answers ?? []).readingStatus;
+      return null;
+    })();
     return {
       chapterId: chapter.id,
       order: chapter.order,
       numeral: chapterNumeral(chapter.order),
       title: chapter.title,
       headlineLabel: HEADLINE_LABEL[chapter.id],
-      headline: chapterHeadline(chapter.id, input.getChapterState(chapter.id)),
+      headline: chapterHeadline(chapter.id, state),
+      readingQuality,
+      lastReviewedAt: state?.confirmedAt ?? null,
       promise: chapter.coreQuestion,
       status: readingStatus(progress),
       completedCount: progress.completedCount,
