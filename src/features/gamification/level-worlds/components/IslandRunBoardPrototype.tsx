@@ -18129,17 +18129,6 @@ export function IslandRunBoardPrototype({
                         <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">✦</span>
                         <span>Caretaker</span>
                       </button>
-                      <button
-                        type="button"
-                        className="island-concord-hub-modal__channel"
-                        onClick={() => {
-                          closeConcordHub();
-                          openGlobalStoryReader();
-                        }}
-                      >
-                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
-                        <span>Story</span>
-                      </button>
                 </div>
                 <button type="button" className="island-concord-hub-modal__return" onClick={closeConcordHub}>Return to island</button>
               </section>

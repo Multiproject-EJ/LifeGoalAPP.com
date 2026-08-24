@@ -49,6 +49,7 @@ export default function Island001StoryPreview() {
   };
 
   const activeEpisode = activeEpisodeIndex === null ? null : EPISODES[activeEpisodeIndex];
+  const hasNextEpisode = playCompleteSequence && activeEpisodeIndex === 0;
 
   return (
     <main className="island-story-preview">
@@ -96,9 +97,9 @@ export default function Island001StoryPreview() {
         <IslandStoryReader
           manifestPath={activeEpisode.manifestPath}
           isOpen
-          completionTitle={playCompleteSequence && activeEpisodeIndex !== 2 ? 'Chapter complete' : 'Story preview complete'}
-          completionText={playCompleteSequence && activeEpisodeIndex !== 2 ? 'Continue to the next chapter.' : 'Return to the Island 001 preview.'}
-          completionButtonLabel={playCompleteSequence && activeEpisodeIndex !== 2 ? 'Continue story' : 'Return to preview'}
+          completionTitle={hasNextEpisode ? 'Chapter complete' : 'Story preview complete'}
+          completionText={hasNextEpisode ? 'Continue to the next chapter.' : 'Return to the Island 001 preview.'}
+          completionButtonLabel={hasNextEpisode ? 'Continue story' : 'Return to preview'}
           onClose={closeEpisode}
         />
       )}
