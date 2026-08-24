@@ -25,7 +25,7 @@ const FLIGHT_MOMENTS: Record<number, FlightMomentDefinition> = {
   8: { callSign: 'PAYLOAD', title: 'Lock in the real habit', story: 'This is the human action the whole control panel is being built to protect.', action: 'Secure payload', kind: 'engine' },
   9: { callSign: 'TELEMETRY', title: 'Make completion visible', story: 'Mission Control needs one signal that clearly says the action happened.', action: 'Check telemetry', kind: 'power' },
   10: { callSign: 'LOW POWER', title: 'Build the busy-day engine', story: 'A smaller engine keeps direction when the day cannot support full thrust.', action: 'Charge small cell', kind: 'power' },
-  11: { callSign: 'RESERVE', title: 'Protect emergency power', story: 'The minimum version is enough to keep identity and direction alive on a hard day.', action: 'Seal reserve cell', kind: 'power' },
+  11: { callSign: 'RESERVE', title: 'Protect emergency power', story: 'The minimum version keeps direction available on a hard day without turning a miss into an identity claim.', action: 'Seal reserve cell', kind: 'power' },
   12: { callSign: 'RETURN', title: 'Program automatic re-entry', story: 'A missed day becomes a known orbit, not an invitation to disappear.', action: 'Plot return arc', kind: 'route' },
   13: { callSign: 'RADAR', title: 'Locate the earliest warning', story: 'Catch drift while it is still a quiet signal rather than a full emergency.', action: 'Sweep for signal', kind: 'radar' },
   14: { callSign: 'RESPONSE', title: 'Choose the gentle correction', story: 'Pre-decide what the cockpit does when your warning light turns on.', action: 'Open response card', kind: 'radar' },
@@ -34,7 +34,7 @@ const FLIGHT_MOMENTS: Record<number, FlightMomentDefinition> = {
   17: { callSign: 'RECOVERY', title: 'Plot a route home', story: 'A break is navigable when the return path already exists.', action: 'Trace recovery route', kind: 'route' },
   18: { callSign: 'LIFE SUPPORT', title: 'Protect what the quest must not harm', story: 'No mission is a success if it burns the life system carrying the player.', action: 'Lock life support', kind: 'power' },
   19: { callSign: 'NAVIGATION', title: 'Choose one weekly bearing', story: 'A short recurring question keeps the ship pointed toward the life you meant to build.', action: 'Align the stars', kind: 'route' },
-  20: { callSign: 'FINAL CHECK', title: 'Seal the flight principle', story: 'Name how you begin, reduce, recover and continue — then clear the tower.', action: 'Run launch check', kind: 'launch' },
+  20: { callSign: 'FINAL CHECK', title: 'Seal a testable flight principle', story: 'Name how you begin, reduce, recover and continue — then choose when to inspect the flight data.', action: 'Run launch check', kind: 'launch' },
 };
 
 function displayValue(

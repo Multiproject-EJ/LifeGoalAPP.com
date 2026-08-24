@@ -1,0 +1,32 @@
+[
+  {
+    "id": "eight-region-palette",
+    "score": 0.88,
+    "critical": true,
+    "notes": "All eight named material regions pass visible-footprint comparison; scores range from 0.726 for brass to 0.912 for ember."
+  },
+  {
+    "id": "roughness-and-grazing-response",
+    "score": 0.78,
+    "critical": true,
+    "notes": "Grazing and opposite-axis views show distinct glossy enamel, satin metal, and dim Mirage responses, but high-tier texture resolution is below contract."
+  },
+  {
+    "id": "independent-pbr-channels",
+    "score": 0.72,
+    "critical": true,
+    "notes": "Roughness and bump are independent, but enamel still lacks independent albedo and AO maps in the live Three.js implementation."
+  },
+  {
+    "id": "material-hierarchy",
+    "score": 0.88,
+    "critical": true,
+    "notes": "Gilt structure, five force colors, luminous Trial, and subdued Mirage remain ordered at the fixed view."
+  },
+  {
+    "id": "controlled-material-evidence",
+    "score": 0.91,
+    "critical": true,
+    "notes": "Eight component crops, four controlled capture classes, material compatibility, and the component-aware gate all pass."
+  }
+]

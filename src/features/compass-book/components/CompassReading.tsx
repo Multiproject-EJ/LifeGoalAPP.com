@@ -15,6 +15,21 @@ const STATUS_LABEL: Record<CompassReadingRow['status'], string> = {
   sealed: 'Sealed',
 };
 
+function formatReviewedDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function readingQualityLabel(quality: NonNullable<CompassReadingRow['readingQuality']>): string {
+  if (quality === 'trial_ready') return 'Trial ready';
+  return quality === 'evidence_backed' ? 'Evidence-backed' : 'Provisional';
+}
+
 export type CompassReadingProps = {
   currentIslandNumber: number;
   getProgress: CompassGetProgress;
@@ -154,6 +169,16 @@ export function CompassReading({
                         · {row.completedCount}/{row.totalCount}
                       </span>
                     )}
+                    {row.readingQuality ? (
+                      <span className="compass-book__count">
+                        · {readingQualityLabel(row.readingQuality)}
+                      </span>
+                    ) : null}
+                    {row.lastReviewedAt ? (
+                      <span className="compass-book__count">
+                        · Reviewed {formatReviewedDate(row.lastReviewedAt)}
+                      </span>
+                    ) : null}
                   </span>
                 </span>
                 {/* One badge carries the invitation; the rest stay quiet. A

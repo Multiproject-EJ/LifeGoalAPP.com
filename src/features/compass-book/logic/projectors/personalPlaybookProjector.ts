@@ -26,6 +26,14 @@ export type PersonalPlaybookOutput = {
   operatingPrinciple: string | null;
   /** Canonical habit id when the habit was picked from an existing habit. */
   habitSourceId: string | null;
+  cuePlan: string | null;
+  returnPlan: string | null;
+  warningPlan: string | null;
+  recoveryFirstStep: string | null;
+  confidenceId: string | null;
+  reviewPointId: string | null;
+  evidenceCount: number;
+  readingStatus: 'provisional' | 'evidence-backed' | 'trial-ready';
 };
 
 function valueMap(answers: readonly CompassAnswerRecord[]): Map<string, CompassAnswerValue> {
@@ -54,6 +62,19 @@ export function projectPersonalPlaybook(
   answers: readonly CompassAnswerRecord[],
 ): PersonalPlaybookOutput {
   const map = valueMap(answers);
+  const cuePlan = textOf(map, 'cue_detail');
+  const returnPlan = textOf(map, 'return_plan');
+  const warningPlan = textOf(map, 'warning_plan');
+  const recoveryFirstStep = textOf(map, 'recovery_first_step');
+  const confidenceId = optionOf(map, 'playbook_confidence');
+  const reviewPointId = optionOf(map, 'playbook_review_point');
+  const evidenceCount = [
+    'sustained_evidence',
+    'abandoned_evidence',
+    'difference_evidence',
+    'momentum_evidence',
+    'warning_evidence',
+  ].filter((questionId) => textOf(map, questionId) != null).length;
   return {
     startEngineId: optionOf(map, 'start_style'),
     firstStep: textOf(map, 'first_step'),
@@ -73,6 +94,19 @@ export function projectPersonalPlaybook(
     weeklyCheckId: optionOf(map, 'weekly_check'),
     operatingPrinciple: textOf(map, 'operating_principle'),
     habitSourceId: sourceHabitIdOf(map, 'the_habit'),
+    cuePlan,
+    returnPlan,
+    warningPlan,
+    recoveryFirstStep,
+    confidenceId,
+    reviewPointId,
+    evidenceCount,
+    readingStatus:
+      cuePlan != null && returnPlan != null && warningPlan != null && reviewPointId != null
+        ? 'trial-ready'
+        : evidenceCount >= 3 && confidenceId != null
+          ? 'evidence-backed'
+          : 'provisional',
   };
 }
 

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "traversable-atrium-volume",
+    "score": 0.62,
+    "notes": "The structure is now physically real and camera-traversable."
+  },
+  {
+    "id": "central-living-atrium",
+    "score": 0.48,
+    "notes": "Tree and central void read, but planting and architecture remain coarse."
+  },
+  {
+    "id": "occupied-room-ring",
+    "score": 0.46,
+    "notes": "Room portals, decks, glazing and lights establish habitation without reference-level finish."
+  },
+  {
+    "id": "human-eye-pov-clearance",
+    "score": 0.44,
+    "notes": "Anchors are truly inside, though framing needs a later art-direction pass."
+  }
+]

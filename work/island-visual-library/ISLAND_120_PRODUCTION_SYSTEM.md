@@ -106,6 +106,7 @@ Create this structure before approval:
 work/island-visual-library/island-NNN-slug/
   BRIEF.md
   ASSET_TRACKER.md
+  SOURCE_LOCK.md
   references/
   masters/
   technical/
@@ -134,6 +135,14 @@ continuity, and any landmark-specific exception. Variant islands reuse their
 routed source language unless the variant changes construction as a declared
 sensory delta. Never generate a second rectangular scaffold envelope around
 the whole site.
+
+`SOURCE_LOCK.md` records the immutable external `NNN-source` filename/hash,
+runtime island mapping, embedded-label discrepancies, authoritative visual
+features, approved board adaptations and forbidden drift. Blockout,
+terrain/background, landmarks, materials/life, integration and final review
+must each include a source/current comparison recorded by the Source Fidelity
+Workloop. A later generated target may refine construction detail but may not
+silently replace the original composition target.
 
 ## Required QA sequence
 

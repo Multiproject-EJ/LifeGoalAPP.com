@@ -88,13 +88,17 @@ import {
 } from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 import {
+  advanceSunkenSandsTreasureForRoll,
+  collectCactusCanyonDynamiteForLanding,
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
   resolveRootheartPowerworksProgress,
+  startCactusCanyonSpiralMission,
   type RootheartPowerComponentId,
 } from './islandRunSignatureMissions';
 import {
+  getIslandMissionBriefingBeatId,
   markIslandMissionBriefingSeen,
   resolveIslandMissionBriefingTrigger,
   type IslandMissionBriefingTrigger,
@@ -241,6 +245,8 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
+  /** Canonical number of dynamite sticks collected on this Island 013 landing. */
+  cactusCanyonDynamiteCollected?: number;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
   rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
   /**
@@ -249,6 +255,10 @@ export interface IslandRunRollActionResult {
    * persisted mission state remains the authority.
    */
   rootheartPowerworksUnlocked?: boolean;
+  /** Canonical Island 012 chamber turn after this successful roll. */
+  sunkenSandsTreasureRollsCompleted?: number;
+  /** True only for the twentieth roll that makes the first treasure claimable. */
+  sunkenSandsTreasureBecameReady?: boolean;
   /**
    * Cycle-scoped first-lap briefing beat crossed by this roll. Presentation
    * opens only after the authoritative hop animation and any higher-priority
@@ -455,6 +465,34 @@ async function performRollAction(options: {
         narrativeSeenState: state.narrativeSeenState,
       })
     : null;
+  const cactusCanyonBriefingWasAlreadySeen = state.currentIslandNumber === 13
+    && typeof state.narrativeSeenState?.beats?.[
+      getIslandMissionBriefingBeatId(state.cycleIndex, state.currentIslandNumber)
+    ] === 'number';
+  const missionStartedLedger = missionBriefingTrigger?.islandNumber === 13 || cactusCanyonBriefingWasAlreadySeen
+    ? startCactusCanyonSpiralMission({
+        ledger: rootheartLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        nowMs,
+      })
+    : rootheartLanding.ledger;
+  const cactusCanyonLanding = ordinaryTileGameplayActive
+    ? collectCactusCanyonDynamiteForLanding({
+        ledger: missionStartedLedger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        tileCount: boardProfile.tileCount,
+        nowMs,
+      })
+    : { ledger: missionStartedLedger, dynamiteCollected: 0 };
+  const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
+    ledger: cactusCanyonLanding.ledger,
+    islandNumber: state.currentIslandNumber,
+    cycleIndex: state.cycleIndex,
+    nowMs,
+  });
   const missionNarrativeSeenState = markIslandMissionBriefingSeen(
     state.narrativeSeenState,
     missionBriefingTrigger,
@@ -491,7 +529,7 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
-    signatureMissionProgressByIsland: rootheartLanding.ledger,
+    signatureMissionProgressByIsland: sunkenSandsTreasureRoll.ledger,
     narrativeSeenState: livingTicketLanding.narrativeSeenState,
     minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };
@@ -529,8 +567,11 @@ async function performRollAction(options: {
     ordinaryTileGameplayActive,
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
+    cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
+    sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,
+    sunkenSandsTreasureBecameReady: sunkenSandsTreasureRoll.becameReady,
     missionBriefingTrigger,
     livingTicketPickup: livingTicketLanding.pickup,
   };

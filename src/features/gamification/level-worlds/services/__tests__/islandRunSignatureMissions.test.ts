@@ -1,21 +1,33 @@
 import {
+  CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_DRILL_TILE_INDICES,
   ROOTHEART_POWER_COMPONENTS,
+  SUNKEN_SANDS_FIRST_TREASURE_DICE,
+  SUNKEN_SANDS_FIRST_TREASURE_ID,
+  SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  advanceSunkenSandsTreasureForRoll,
+  collectCactusCanyonDynamiteForLanding,
   collectRootheartPowerComponentForLanding,
+  getCactusCanyonAvailableDynamite,
+  getCactusCanyonDynamiteQuantityForTile,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   grantFrostwellDrillSpinForLanding,
   mergeIslandRunSignatureMissionProgress,
   resolveFrostwellIceworksProgress,
+  resolveCactusCanyonSpiralProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
+  resolveSunkenSandsTreasureProgress,
   sanitizeIslandRunSignatureMissionProgress,
 } from '../islandRunSignatureMissions';
 import {
+  claimSunkenSandsFirstTreasure,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
+  blastCactusCanyonSpiralSection,
   spinFrostwellDrillWheel,
 } from '../islandRunSignatureMissionAction';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
@@ -104,7 +116,216 @@ async function seedRootheart(options: {
   refreshIslandRunStateFromLocal(session);
 }
 
+async function seedSunkenSandsTreasure(rollsCompleted: number): Promise<void> {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+  const session = makeSession();
+  const base = readIslandRunGameStateRecord(session);
+  const key = getIslandRunSignatureMissionKey(0, 12);
+  await writeIslandRunGameStateRecord({
+    session,
+    client: null,
+    record: {
+      ...base,
+      currentIslandNumber: 12,
+      cycleIndex: 0,
+      dicePool: 10,
+      essence: 50,
+      essenceLifetimeEarned: 70,
+      signatureMissionProgressByIsland: {
+        [key]: {
+          missionId: 'sunken-sands-first-treasure',
+          version: 1,
+          treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+          rollsCompleted,
+          revealedAtMs: rollsCompleted >= SUNKEN_SANDS_TREASURE_ROLL_TARGET ? 100 : null,
+          claimedAtMs: null,
+          updatedAtMs: 100,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(session);
+}
+
+async function seedCactusCanyon(options: {
+  segments?: number;
+  dynamiteEarned?: number;
+  dynamiteSpent?: number;
+  completedAtMs?: number | null;
+} = {}): Promise<void> {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+  const session = makeSession();
+  const base = readIslandRunGameStateRecord(session);
+  const key = getIslandRunSignatureMissionKey(0, 13);
+  await writeIslandRunGameStateRecord({
+    session,
+    client: null,
+    record: {
+      ...base,
+      currentIslandNumber: 13,
+      cycleIndex: 0,
+      signatureMissionProgressByIsland: {
+        [key]: {
+          missionId: 'cactus-canyon-spiral-rail',
+          version: 2,
+          segmentsExcavated: options.segments ?? 0,
+          dynamiteEarned: options.dynamiteEarned ?? 0,
+          dynamiteSpent: options.dynamiteSpent ?? 0,
+          lastBlastSegments: null,
+          startedAtMs: 1,
+          completedAtMs: options.completedAtMs ?? null,
+          updatedAtMs: 1,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(session);
+}
+
 export const islandRunSignatureMissionTests: TestCase[] = [
+  {
+    name: 'Cactus Canyon distributes mostly single dynamite caches with rare triple bundles after mission start',
+    run: () => {
+      const map = applyLandmarkDoorTiles(
+        generateTileMap(13, getIslandRarity(13), 'cactus-canyon', 2),
+        { expandedActiveStopId: 'hatchery' },
+      );
+      const caches = map.filter((entry) => entry.signatureMissionKind === 'cactus_canyon_dynamite');
+      assertEqual(caches.length, 8, 'eight authored dynamite caches are distributed around the route');
+      assertEqual(caches.filter((entry) => entry.signatureMissionAmount === 1).length, 6, 'most caches carry one stick');
+      assertEqual(caches.filter((entry) => entry.signatureMissionAmount === 3).length, 2, 'two rare caches carry three sticks');
+      assert(caches.every((entry) => entry.tileType !== 'landmark_door'), 'dynamite caches remain clear of landmark doors');
+      const locked = collectCactusCanyonDynamiteForLanding({
+        ledger: {}, islandNumber: 13, cycleIndex: 0, tileIndex: 19, tileCount: 36, nowMs: 9,
+      });
+      assertEqual(locked.dynamiteCollected, 0, 'collection remains locked before the briefing starts the mission');
+      const startedKey = getIslandRunSignatureMissionKey(0, 13);
+      const first = collectCactusCanyonDynamiteForLanding({
+        ledger: { [startedKey]: { ...resolveCactusCanyonSpiralProgress({ ledger: {}, islandNumber: 13, cycleIndex: 0 }), startedAtMs: 10 } },
+        islandNumber: 13, cycleIndex: 0, tileIndex: 19, tileCount: 36, nowMs: 11,
+      });
+      const progress = resolveCactusCanyonSpiralProgress({ ledger: first.ledger, islandNumber: 13, cycleIndex: 0 });
+      assertEqual(first.dynamiteCollected, 1, 'single cache grants one stick');
+      assertEqual(getCactusCanyonAvailableDynamite(progress), 1, 'dynamite is durably queued');
+      assertEqual(getCactusCanyonDynamiteQuantityForTile(13, 10, 36), 3, 'rare cache resolves three sticks');
+      assertEqual(getCactusCanyonDynamiteQuantityForTile(12, 19, 36), 0, 'other islands do not grant');
+      assertEqual(resolveCactusCanyonSpiralProgress({ ledger: first.ledger, islandNumber: 13, cycleIndex: 1 }).segmentsExcavated, 0, 'next cycle starts independently');
+    },
+  },
+  {
+    name: 'Cactus Canyon blast consumes one dynamite, builds one section, caps the helix, and completes exactly once',
+    run: async () => {
+      await seedCactusCanyon({ segments: 15, dynamiteEarned: 2 });
+      const first = await blastCactusCanyonSpiralSection({ session: makeSession(), client: null });
+      const after = readIslandRunGameStateRecord(makeSession());
+      const progress = resolveCactusCanyonSpiralProgress({ ledger: after.signatureMissionProgressByIsland, islandNumber: 13, cycleIndex: 0 });
+      assertEqual(first.status, 'ok', 'earned dynamite blast resolves');
+      if (first.status !== 'ok') return;
+      assertEqual(first.segments, 1, 'one stick opens exactly one authored rail section');
+      assertEqual(progress.segmentsExcavated, CACTUS_CANYON_SPIRAL_MAX_SEGMENTS, 'helix caps at sixteen sections');
+      assertEqual(progress.dynamiteSpent, 1, 'exactly one dynamite is consumed');
+      assert(progress.completedAtMs !== null, 'completion timestamp persists');
+      assertEqual((await blastCactusCanyonSpiralSection({ session: makeSession(), client: null })).status, 'already_complete', 'completed railway is idempotent');
+    },
+  },
+  {
+    name: 'Cactus Canyon sanitizer and conflict merge preserve furthest excavation and first completion',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 13);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'cactus-canyon-spiral-rail', segments_excavated: 7, spins_earned: 4, updated_at_ms: 12 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'cactus-canyon-spiral-rail', segments_excavated: 16, spins_earned: 7, spins_used: 6, completed_at_ms: 30, updated_at_ms: 40 },
+      });
+      const progress = resolveCactusCanyonSpiralProgress({
+        ledger: mergeIslandRunSignatureMissionProgress(remote, local), islandNumber: 13, cycleIndex: 0,
+      });
+      assertEqual(progress.segmentsExcavated, 16, 'furthest excavation wins');
+      assertEqual(progress.dynamiteEarned, 7, 'legacy earned-spin counter migrates to dynamite without value loss');
+      assertEqual(progress.completedAtMs, 30, 'first completion survives merge');
+    },
+  },
+  {
+    name: 'Sunken Sands advances one chamber turn per canonical roll and caps at twenty',
+    run: () => {
+      const first = advanceSunkenSandsTreasureForRoll({
+        ledger: {}, islandNumber: 12, cycleIndex: 0, nowMs: 10,
+      });
+      assertEqual(first.rollsCompleted, 1, 'first successful Island 012 roll opens one turn');
+      assertEqual(first.becameReady, false, 'first turn is not claimable');
+      const key = getIslandRunSignatureMissionKey(0, 12);
+      const almostReady = {
+        [key]: {
+          ...resolveSunkenSandsTreasureProgress({ ledger: first.ledger, cycleIndex: 0, islandNumber: 12 }),
+          rollsCompleted: 19,
+        },
+      };
+      const ready = advanceSunkenSandsTreasureForRoll({
+        ledger: almostReady, islandNumber: 12, cycleIndex: 0, nowMs: 20,
+      });
+      assertEqual(ready.rollsCompleted, 20, 'twentieth turn opens the chamber fully');
+      assertEqual(ready.becameReady, true, 'twentieth turn exposes one ready edge');
+      const capped = advanceSunkenSandsTreasureForRoll({
+        ledger: ready.ledger, islandNumber: 12, cycleIndex: 0, nowMs: 30,
+      });
+      assertEqual(capped.rollsCompleted, 20, 'later rolls cannot overfill the chamber');
+      assertEqual(capped.becameReady, false, 'ready edge cannot repeat');
+      assertEqual(
+        advanceSunkenSandsTreasureForRoll({ ledger: {}, islandNumber: 11, cycleIndex: 0, nowMs: 40 }).rollsCompleted,
+        0,
+        'other islands never advance this treasure',
+      );
+    },
+  },
+  {
+    name: 'Sunken Sands first treasure claim is gated, rewarding, persisted, and idempotent',
+    run: async () => {
+      await seedSunkenSandsTreasure(19);
+      const blocked = await claimSunkenSandsFirstTreasure({ session: makeSession(), client: null });
+      assertEqual(blocked.status, 'not_ready', 'nineteen rolls cannot claim');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).dicePool, 10, 'blocked claim leaves dice untouched');
+
+      await seedSunkenSandsTreasure(20);
+      const first = await claimSunkenSandsFirstTreasure({ session: makeSession(), client: null });
+      const afterFirst = readIslandRunGameStateRecord(makeSession());
+      const repeated = await claimSunkenSandsFirstTreasure({ session: makeSession(), client: null });
+      assertEqual(first.status, 'ok', 'ready chamber claims');
+      if (first.status !== 'ok') return;
+      assertEqual(first.treasureId, SUNKEN_SANDS_FIRST_TREASURE_ID, 'the first treasure keeps a durable identity');
+      assertEqual(afterFirst.dicePool, 10 + SUNKEN_SANDS_FIRST_TREASURE_DICE, 'claim pays the configured dice once');
+      assert(afterFirst.essence > 50, 'claim pays scaled Essence');
+      assert(
+        resolveSunkenSandsTreasureProgress({ ledger: afterFirst.signatureMissionProgressByIsland, cycleIndex: 0, islandNumber: 12 }).claimedAtMs !== null,
+        'claim timestamp persists in the cycle-scoped ledger',
+      );
+      assertEqual(repeated.status, 'already_claimed', 'repeat claim is rejected');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).dicePool, afterFirst.dicePool, 'repeat claim cannot double-pay');
+    },
+  },
+  {
+    name: 'Sunken Sands sanitizer and conflict merge preserve furthest reveal and first claim',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 12);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'sunken-sands-first-treasure', rolls_completed: 12, updated_at_ms: 12 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'sunken-sands-first-treasure', rolls_completed: 20, revealed_at_ms: 20, claimed_at_ms: 30, updated_at_ms: 30 },
+      });
+      const merged = mergeIslandRunSignatureMissionProgress(remote, local);
+      const progress = resolveSunkenSandsTreasureProgress({ ledger: merged, cycleIndex: 0, islandNumber: 12 });
+      assertEqual(progress.rollsCompleted, 20, 'furthest chamber turn wins');
+      assertEqual(progress.revealedAtMs, 20, 'reveal timestamp survives');
+      assertEqual(progress.claimedAtMs, 30, 'claim survives cross-device merge');
+    },
+  },
   {
     name: 'Rootheart exposes eight stable Powerworks caches clear of doors and special economy stations',
     run: () => {

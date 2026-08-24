@@ -1,0 +1,208 @@
+{
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/78-wide-chapter-5-goal.png",
+  "zonesDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 12,
+    "details": [
+      {
+        "id": "frame-double-bevel",
+        "kind": "bevel",
+        "description": "Continuous outer and inner gilt frame rails use real raised chamfers that catch grazing light and hold the dark field flush to the page.",
+        "region": {
+          "x": 0.1,
+          "y": 0.07,
+          "width": 0.45,
+          "height": 0.82,
+          "units": "normalized"
+        },
+        "scale": "macro border; bevel radius about 0.012 of plate width",
+        "affects": "silhouette, page contact and gilt edge response",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "double-bevel"
+        },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/contact-frame.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "frame-corner-fasteners",
+        "kind": "fastener",
+        "description": "Four violet cabochon corner studs and smaller brass frame screws form a disciplined repeated attachment system.",
+        "region": { "x": 0.1, "y": 0.07, "width": 0.45, "height": 0.82, "units": "normalized" },
+        "scale": "4 primary studs plus small secondary screws",
+        "affects": "instanced geometry and polished highlight response",
+        "mapsTo": { "type": "component.localFeatures", "ref": "corner-fasteners" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/contact-frame.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "ring-engraved-marks",
+        "kind": "linework",
+        "description": "The outer maintenance ring carries shallow repeated rectangular/rune engravings that remain subordinate to the crest.",
+        "region": {
+          "x": 0.18,
+          "y": 0.08,
+          "width": 0.36,
+          "height": 0.53,
+          "units": "normalized"
+        },
+        "scale": "micro radial marks, 28-36 instances",
+        "affects": "recessed geometry, cavity AO and radial repetition",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "radial-engravings"
+        },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/maintenance-ring.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "ring-socket-rivets",
+        "kind": "fastener",
+        "description": "Small brass studs repeat around the inner rail and terminate attachment brackets without floating gaps.",
+        "region": { "x": 0.18, "y": 0.08, "width": 0.36, "height": 0.53, "units": "normalized" },
+        "scale": "micro hemispheres, 8-12 instances",
+        "affects": "instanced geometry, seam overlap and specular points",
+        "mapsTo": { "type": "component.localFeatures", "ref": "socket-rivets" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/maintenance-ring.png",
+        "confidence": 0.95
+      },
+      {
+        "id": "crest-faceted-topology",
+        "kind": "ridge",
+        "description": "The violet Quest Crest is a thick irregular polygon with countable planar facets, raised facet seams and a pointed lower tip over the anvil glow.",
+        "region": {
+          "x": 0.25,
+          "y": 0.14,
+          "width": 0.22,
+          "height": 0.29,
+          "units": "normalized"
+        },
+        "scale": "dominant meso solid, about 0.20 of full image width",
+        "affects": "primary silhouette, true cross-section and crystal material response",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "facet-ridges"
+        },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/quest-crest.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "crest-accepted-cost-notch",
+        "kind": "chip",
+        "description": "One large deliberate missing facet interrupts the crest's right perimeter and must change silhouette rather than appear as painted damage.",
+        "region": { "x": 0.25, "y": 0.14, "width": 0.22, "height": 0.29, "units": "normalized" },
+        "scale": "meso notch, about 0.22 of crest width",
+        "affects": "identity silhouette and exposed dark fracture face",
+        "mapsTo": { "type": "component.localFeatures", "ref": "accepted-cost-notch" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/quest-crest.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "primary-token-pronged-bezel",
+        "kind": "bevel",
+        "description": "A gold diamond primary token is embedded in a concentric violet-and-gilt socket with four cardinal retaining prongs.",
+        "region": { "x": 0.25, "y": 0.14, "width": 0.22, "height": 0.29, "units": "normalized" },
+        "scale": "meso token socket, about 0.36 of crest width",
+        "affects": "candidate count, socket depth and polished gold hierarchy",
+        "mapsTo": { "type": "component.localFeatures", "ref": "pronged-bezel" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/quest-crest.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "milestone-anvil-stepped-bevels",
+        "kind": "bevel",
+        "description": "The First Milestone is a compact dark anvil with a broad top, narrower waist, stepped gold lower collar and readable real edge chamfers.",
+        "region": {
+          "x": 0.25,
+          "y": 0.38,
+          "width": 0.18,
+          "height": 0.39,
+          "units": "normalized"
+        },
+        "scale": "meso forge plate, about 0.13 of full image width",
+        "affects": "forge path silhouette, metal contact and stepped hierarchy",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "stepped-bevels"
+        },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/forge-spine.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "protected-flame-cage",
+        "kind": "emissive",
+        "description": "A compact amber flame solid sits inside repeated curved brass cage ribs, with nearby warm spill but no smoke or fluid volume.",
+        "region": { "x": 0.25, "y": 0.38, "width": 0.18, "height": 0.39, "units": "normalized" },
+        "scale": "meso flame plus 6-8 repeated cage ribs",
+        "affects": "emissive material, instanced/tube geometry and protected-flame identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "cage-ribs" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/forge-spine.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "support-token-gloss-bezel",
+        "kind": "gloss",
+        "description": "The one supporting token is a teal enamel disc in a double gilt socket, with a single raised diamond inset and controlled clearcoat highlight.",
+        "region": {
+          "x": 0.39,
+          "y": 0.08,
+          "width": 0.16,
+          "height": 0.34,
+          "units": "normalized"
+        },
+        "scale": "meso token, about 0.10 of full image width",
+        "affects": "candidate count, low-roughness enamel and layered bezel geometry",
+        "mapsTo": {
+          "type": "material.localOverrides",
+          "ref": "support-token-clearcoat"
+        },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/support-review.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "review-clock-markers",
+        "kind": "linework",
+        "description": "A small clock/rune socket at the ring's upper tangent uses twelve radial marks and two raised hands inside a gilt bezel.",
+        "region": { "x": 0.30, "y": 0.04, "width": 0.13, "height": 0.16, "units": "normalized" },
+        "scale": "micro review socket, about 0.08 of image width",
+        "affects": "review-point identity, radial repetition and shallow relief",
+        "mapsTo": { "type": "component.localFeatures", "ref": "clock-markers" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/quest-forge-admission-reference-white.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "vault-hinges-latch-seams",
+        "kind": "seam",
+        "description": "The closed charcoal vault door has vertical panel seams, two right-side hinge straps, a centre latch emblem and an annular bolted bezel.",
+        "region": {
+          "x": 0.36,
+          "y": 0.51,
+          "width": 0.2,
+          "height": 0.28,
+          "units": "normalized"
+        },
+        "scale": "meso door with micro hardware",
+        "affects": "closed-vault readability, attachment geometry and cavity AO",
+        "mapsTo": {
+          "type": "component.localFeatures",
+          "ref": "hinges-latch-seams"
+        },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/not-now-vault.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "released-fragment-cooling-facets",
+        "kind": "ridge",
+        "description": "One small violet released fragment has its own closed faceted solid and lower emission while contacting a short path into the vault.",
+        "region": { "x": 0.36, "y": 0.51, "width": 0.2, "height": 0.28, "units": "normalized" },
+        "scale": "micro/meso fragment, about 0.045 of full image width",
+        "affects": "third candidate state, true thickness and transfer-path contact",
+        "mapsTo": { "type": "component.localFeatures", "ref": "cooling-facets" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-quest-forge/detail-zones/not-now-vault.png",
+        "confidence": 0.99
+      }
+    ]
+  },
+  "authoringInstruction": "Open each zone crop under zonesDir and replace every detail stub's kind, description, scale, affects, mapsTo, and confidence with what is actually observed. Add more detail entries per zone if a single zone contains multiple distinct marks; do not leave stubs unfilled or unlinked (mapsTo must reference a real component.localFeatures or material.localOverrides entry)."
+}

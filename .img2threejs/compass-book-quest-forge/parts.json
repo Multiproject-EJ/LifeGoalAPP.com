@@ -1,0 +1,149 @@
+{
+  "model": "habitgame-compass-book-v2",
+  "parts": [
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_RELIEF",
+      "triangles": 7736
+    },
+    {
+      "name": "contact-frame",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_CONTACT_FRAME",
+      "triangles": 900
+    },
+    {
+      "name": "contact-field",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_CONTACT_FIELD",
+      "triangles": 300
+    },
+    {
+      "name": "maintenance-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_MAINTENANCE_SYSTEM",
+      "triangles": 1476
+    },
+    {
+      "name": "maintenance-ring",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_MAINTENANCE_RING",
+      "triangles": 688
+    },
+    {
+      "name": "review-socket",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_REVIEW_SOCKET",
+      "triangles": 368
+    },
+    {
+      "name": "supporting-token",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_SUPPORTING_TOKEN",
+      "triangles": 420
+    },
+    {
+      "name": "forge-spine",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_SPINE",
+      "triangles": 2688
+    },
+    {
+      "name": "quest-crest",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_CREST",
+      "triangles": 84
+    },
+    {
+      "name": "primary-token",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_PRIMARY_TOKEN",
+      "triangles": 204
+    },
+    {
+      "name": "milestone-anvil",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_MILESTONE_ANVIL",
+      "triangles": 92
+    },
+    {
+      "name": "protected-flame",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_PROTECTED_FLAME",
+      "triangles": 656
+    },
+    {
+      "name": "not-now-vault-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_VAULT_SYSTEM",
+      "triangles": 2072
+    },
+    {
+      "name": "not-now-vault",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_NOT_NOW_VAULT",
+      "triangles": 1904
+    },
+    {
+      "name": "released-fragment",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_RELEASED_FRAGMENT",
+      "triangles": 8
+    },
+    {
+      "name": "release-path",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_RELEASE_PATH",
+      "triangles": 80
+    },
+    {
+      "name": "frame-fasteners",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_FRAME_FASTENERS",
+      "triangles": 36
+    },
+    {
+      "name": "ring-mark-array",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_RING_MARK_ARRAY",
+      "triangles": 12
+    },
+    {
+      "name": "ring-rivet-array",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_RING_RIVET_ARRAY",
+      "triangles": 36
+    },
+    {
+      "name": "flame-cage",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_FLAME_CAGE",
+      "triangles": 232
+    },
+    {
+      "name": "vault-hardware",
+      "kind": "part",
+      "module": "COMPASS_BOOK_QUEST_FORGE_VAULT_HARDWARE",
+      "triangles": 1568
+    }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 85,
+  "sockets": [
+    "primary",
+    "supporting",
+    "released",
+    "review",
+    "flame",
+    "vault"
+  ],
+  "colliders": [
+    "relief"
+  ],
+  "destructionGroups": [
+    "forge",
+    "maintenance",
+    "release"
+  ]
+}

@@ -146,6 +146,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
             doorStopId={tileMap[index]?.doorStopId}
             isActiveDoorCluster={tileMap[index]?.isActiveDoorCluster}
             signatureMissionKind={tileMap[index]?.signatureMissionKind}
+            signatureMissionAmount={tileMap[index]?.signatureMissionAmount}
             isEncounter={isEncounter}
             isEncounterCompleted={isEncounterCompleted}
             isTokenCurrent={index === tokenIndex}

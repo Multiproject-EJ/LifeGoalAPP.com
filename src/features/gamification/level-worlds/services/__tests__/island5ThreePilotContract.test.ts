@@ -10,6 +10,7 @@ import {
   getIsland3DTokenHopPosition,
   getIsland3DTileImpactPose,
   getIsland3DRendererPixelRatio,
+  getIsland5CameraPreset,
   getIsland5TokenGroundPosition,
   ISLAND_3D_QUALITY_PROFILES,
   ISLAND_3D_PERFORMANCE_TARGETS,
@@ -109,6 +110,25 @@ import {
   createIsland10RootheartMaterials,
 } from '../../dev/Island10RootheartThreeWorld';
 import { buildLandmark, createPilotMaterials } from '../../dev/Island5ThreePilot';
+import {
+  ISLAND_12_PALM_PLACEMENTS,
+  isIsland12RouteCorridorClear,
+} from '../../dev/Island12SunkenSandsThreeWorld';
+import {
+  buildIsland13CactusCanyonLandmark,
+  collectIsland13LandmarkTrainClearanceViolations,
+  collectIsland13RuntimePartManifest,
+  createIsland13CactusCanyonLivingAmbience,
+  createIsland13CactusCanyonMaterials,
+  isIsland13RouteCorridorClear,
+  isIsland13SummitRailCorridorClear,
+  ISLAND_13_LANDMARK_RAIL_PASSAGE_LOCAL_Z,
+  ISLAND_13_LANDMARK_RAIL_SETBACK_LOCAL_Z,
+  ISLAND_13_RUNTIME_PART_IDS,
+  ISLAND_13_SUMMIT_RAIL_RADIUS,
+  ISLAND_13_TRAIN_CLEARANCE_HEIGHT,
+  ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH,
+} from '../../dev/Island13CactusCanyonThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
@@ -377,6 +397,257 @@ export const island5ThreePilotContractTests: TestCase[] = [
       }));
       Object.values(materials).forEach((material) => {
         material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'keeps Cactus Canyon source-locked to a railway mesa with five distinct frontier landmarks',
+    run: () => {
+      const materials = createIsland13CactusCanyonMaterials();
+      assertEqual((materials.sandstone.map?.image as { width?: number } | undefined)?.width, 1024, 'hero sandstone needs a quality-first 1024px procedural albedo map');
+      assert(Boolean(materials.sandstone.roughnessMap), 'sandstone needs an independent roughness channel');
+      assert(Boolean(materials.sandstone.bumpMap), 'sandstone needs an independent relief channel');
+      assert(materials.sandstone.map !== materials.sandstone.roughnessMap, 'sandstone albedo may not be reused as roughness');
+      assert(materials.sandstone.map !== materials.sandstone.bumpMap, 'sandstone albedo may not be reused as relief');
+      assertEqual(materials.sandstone.roughnessMap?.colorSpace, THREE.NoColorSpace, 'sandstone roughness must remain linear data');
+      assertEqual((materials.timber.map?.image as { width?: number } | undefined)?.width, 1024, 'hero timber needs a quality-first 1024px procedural albedo map');
+      assert(materials.timber.map !== materials.timber.roughnessMap, 'timber albedo may not be reused as roughness');
+      assert(materials.cactus.map !== materials.cactus.bumpMap, 'cactus colour and rib relief must remain independent channels');
+      const scene = new THREE.Scene();
+      const runtime = createIsland13CactusCanyonLivingAmbience(scene, ISLAND_3D_QUALITY_PROFILES.low, materials);
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_FRACTURED_MESA_CLIFF')), 'Island 013 needs the floating red-rock mesa silhouette from its source');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_PILLAR_UPPER')), 'Island 013 needs a tall mountain pillar supporting the playable mesa');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_PILLAR_LOWER')), 'the canyon pillar must continue well below the playable mesa');
+      const pillarCore = runtime.root.getObjectByName('ISLAND_13_CANYON_PILLAR_CONTINUOUS_CORE') as THREE.Mesh<THREE.BufferGeometry> | undefined;
+      assert(Boolean(pillarCore), 'the mountain needs a continuous solid sandstone core behind the excavated rail shelf');
+      assert((pillarCore?.geometry.index?.count ?? 0) > 14 * 8 * 6, 'the continuous pillar core needs closed top and bottom caps rather than an open shell');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_FRACTURED_BLOCK_SKIN')), 'the pillar needs deep columnar sandstone blocks rather than a smooth cylinder');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_FRACTURED_BLOCK_SUNLIT_SKIN')), 'the columnar cliff needs a restrained sunlit rock family for meso-scale separation');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_FRONTIER_MAIN_FLAGSTONES')), 'the summit town floor needs route-clear irregular frontier paving');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CACTUS_ROUNDED_TRUNK_CAPS')), 'summit cacti need rounded organic crowns rather than flat cylinder tops');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CACTUS_ROUNDED_ARM_ELBOWS')), 'summit cactus arms need rounded, independently varied joints');
+      const cactusTrunks = runtime.root.getObjectByName('ISLAND_13_CACTUS_TRUNKS') as THREE.InstancedMesh | undefined;
+      assert(Boolean(cactusTrunks), 'the summit cactus field must expose its rail-clear instance positions');
+      const cactusMatrix = new THREE.Matrix4();
+      const cactusPosition = new THREE.Vector3();
+      for (let cactusIndex = 0; cactusIndex < (cactusTrunks?.count ?? 0); cactusIndex += 1) {
+        cactusTrunks?.getMatrixAt(cactusIndex, cactusMatrix);
+        cactusPosition.setFromMatrixPosition(cactusMatrix);
+        assert(isIsland13SummitRailCorridorClear(cactusPosition.x, cactusPosition.z, 0.18), `summit cactus ${cactusIndex + 1} must remain outside the moving consist`);
+      }
+      for (let fenceIndex = 1; fenceIndex <= 8; fenceIndex += 1) {
+        const fence = runtime.root.getObjectByName(`ISLAND_13_SUMMIT_RAIL_CLEAR_FENCE_${fenceIndex}`);
+        assert(Boolean(fence), `low-quality summit fence ${fenceIndex} must remain authored`);
+        assert(isIsland13SummitRailCorridorClear(fence?.position.x ?? 0, fence?.position.z ?? 0, 0.35), `summit fence ${fenceIndex} must remain outside the moving consist`);
+      }
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_ROUTE_CLEAR_DRY_GRASS_BLADES')), 'the 360-degree summit floor needs route-clear dry-grass life');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_LOOP_LOCOMOTIVE')), 'the source-defining locomotive must remain real animated geometry');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_TRAIN_TENDER')), 'the train needs an independently posed tender');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_TRAIN_PASSENGER_CARRIAGE_1')), 'the train needs a first independently posed passenger carriage');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_TRAIN_PASSENGER_CARRIAGE_2')), 'the train needs a second independently posed passenger carriage');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_LOCOMOTIVE_BLACK_LACQUER_BOILER')), 'the hero locomotive needs a named glorious black boiler finish');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_LOCOMOTIVE_BRASS_STEAM_DOME')), 'the luxury locomotive needs phone-readable brass engineering detail');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_ROYAL_CARRIAGE_INTERIOR')), 'the second carriage must contain a real luxury western interior');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_ROYAL_CARRIAGE_OPEN_SIDE_WINDOW')), 'the passenger ride view needs a real open sash rather than looking through opaque glass');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_TRAIN_RIDE_HIT_TARGET')), 'the moving train needs a stable double-tap target');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_RAIL_TUNNEL_OPEN_CLEARANCE')), 'the train tunnel must contain a real open clearance rather than a solid rock box');
+      const locomotiveOrbit = runtime.root.getObjectByName('ISLAND_13_LOCOMOTIVE_ORBIT');
+      const locomotiveEngine = runtime.root.getObjectByName('ISLAND_13_CANYON_LOOP_LOCOMOTIVE');
+      runtime.animate(0);
+      const startingTrainPosition = locomotiveEngine?.position.clone() ?? new THREE.Vector3();
+      runtime.animate(5);
+      assert((locomotiveEngine?.position.distanceTo(startingTrainPosition) ?? 0) > 1, 'the articulated train must travel around the summit rail rather than rotate as one rigid prop');
+      assert(Math.abs((locomotiveEngine?.position.length() ?? 0) - 5.28) < 0.25, 'the locomotive wheels must remain centred on the summit railway');
+      runtime.updateSpiralRail?.({ segmentsExcavated: 1, maxSegments: 16, completed: false });
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SPIRAL_RAIL_SEGMENT_16')?.visible, true, 'excavation begins at the summit connection');
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SPIRAL_RAIL_SEGMENT_1')?.visible, false, 'canyon-floor rail remains hidden until later construction');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SPIRAL_CUT_GALLERY_16')), 'mission rail must read as a gallery cut into the mountain');
+      const lowerGalleryRockShell = runtime.root.getObjectByName('ISLAND_13_SPIRAL_CAVE_ROCK_SHELL_1') as THREE.InstancedMesh | undefined;
+      assert(Boolean(lowerGalleryRockShell), 'every excavated railway section needs an attached rock-cut shell');
+      assert((lowerGalleryRockShell?.count ?? 0) >= 8, 'each rock-cut shell bay needs crown, back wall, under-shelf support and flanking geology');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SPIRAL_ROCK_CUT_PORTAL_1')), 'rock-cut railway needs authored tunnel portals');
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SUMMIT_RAIL_TURNOUT')?.visible, true, 'the summit must expose real switch geometry as soon as excavation begins');
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SUMMIT_NATURAL_DESCENT_PORTAL')?.visible, true, 'the summit turnout must feed a readable natural rock-cut descent opening');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SUMMIT_SWITCH_TIE_PLATES')), 'the summit turnout needs gauge-aligned tie plates');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SUMMIT_SWITCH_CONNECTING_ROD')), 'the summit turnout needs visible mechanical linkage');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SUMMIT_DESCENT_ROCK_SHOULDERS')), 'the natural portal needs separated rock shoulders that preserve its opening');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SUMMIT_DESCENT_PORTAL_LANTERNS')), 'the descent portal needs readable public-transport lighting');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_UPPER_GALLERY_BALLAST_16')), 'the upper descent needs a maintained ballast shoulder');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_UPPER_GALLERY_DRAIN_16')), 'the upper descent needs path-following drainage');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_UPPER_GALLERY_SIGNAL_CONDUIT_16')), 'the upper descent needs a path-following signal conduit');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_LOWER_GALLERY_STONEWORK_1')), 'the lower rear railway needs combined ballast and masonry parapet stonework');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_LOWER_GALLERY_DRAIN_1')), 'the lower rear railway needs path-following drainage');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_LOWER_MAINTENANCE_ALCOVE_3')), 'the lower rear railway needs embedded illuminated maintenance refuges');
+      runtime.updateSpiralRail?.({ segmentsExcavated: 2, maxSegments: 16, completed: false, blastProgress: 0.4 });
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SPIRAL_RAIL_SEGMENT_15')?.visible, false, 'the newest rail remains hidden through the fuse and initial blast');
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SPIRAL_CONTROLLED_BLAST_EFFECT')?.visible, true, 'a canonical section build drives a visible controlled-blast effect');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SPIRAL_ACTIVE_DYNAMITE_CHARGE')), 'the work face needs a real 3D dynamite charge before detonation');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_SPIRAL_BLAST_DEBRIS_18')), 'the blast needs individually animated rock debris');
+      runtime.updateSpiralRail?.({ segmentsExcavated: 2, maxSegments: 16, completed: false, blastProgress: 0.8 });
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_SPIRAL_RAIL_SEGMENT_15')?.visible, true, 'the new sleepers and rails reveal only after the rock clears');
+      runtime.updateSpiralRail?.({ segmentsExcavated: 16, maxSegments: 16, completed: true });
+      runtime.animate(32);
+      assertEqual(locomotiveOrbit?.userData.servicePhase, 'summit-station-stop', 'completed service waits after three summit circuits');
+      runtime.animate(46);
+      assertEqual(locomotiveOrbit?.userData.servicePhase, 'descending', 'completed service descends through the mountain gallery');
+      assert((locomotiveEngine?.position.y ?? 0) < 0, 'descending service leaves the summit elevation');
+      const tender = runtime.root.getObjectByName('ISLAND_13_TRAIN_TENDER');
+      const firstCoach = runtime.root.getObjectByName('ISLAND_13_TRAIN_PASSENGER_CARRIAGE_1');
+      const secondCoach = runtime.root.getObjectByName('ISLAND_13_TRAIN_PASSENGER_CARRIAGE_2');
+      const consistUnits = [locomotiveEngine, tender, firstCoach, secondCoach];
+      consistUnits.slice(1).forEach((unit, index) => {
+        const leader = consistUnits[index];
+        const spacing = unit && leader ? unit.position.distanceTo(leader.position) : 0;
+        assert(spacing > 0.65 && spacing < 1.5, `consist unit ${index + 2} must follow its leader at natural rail spacing`);
+        assert((unit && leader ? unit.quaternion.angleTo(leader.quaternion) : 0) > 0.02, `consist unit ${index + 2} must own an independent curve tangent`);
+      });
+      runtime.animate(60);
+      assertEqual(locomotiveOrbit?.userData.servicePhase, 'canyon-floor-stop', 'service waits at the canyon-floor terminus');
+      runtime.animate(72);
+      assertEqual(locomotiveOrbit?.userData.servicePhase, 'ascending', 'service climbs back to Union Station before repeating');
+      const driverRidePose = runtime.getTrainRidePose?.('driver');
+      const rearRidePose = runtime.getTrainRidePose?.('rear');
+      const sideRidePose = runtime.getTrainRidePose?.('side');
+      [driverRidePose, rearRidePose, sideRidePose].forEach((pose, index) => {
+        assert(Boolean(pose), `train ride camera ${index + 1} must resolve from its moving consist socket`);
+        assert((pose?.position.distanceTo(pose.target) ?? 0) > 1, `train ride camera ${index + 1} needs a useful viewing ray`);
+      });
+      assert((driverRidePose?.position.distanceTo(rearRidePose?.position ?? new THREE.Vector3()) ?? 0) > 1, 'driver and rear ride cameras must occupy different consist vehicles');
+      assert((sideRidePose?.position.distanceTo(rearRidePose?.position ?? new THREE.Vector3()) ?? 0) > 0.1, 'side-seat and rear-deck views must not collapse into one camera socket');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_BACKGROUND_CANYON')), 'the deep canyon butte horizon must remain authored scenery');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_BACKGROUND_CONTINENTAL_SHELF')), 'the far mesas need a connected continental rim instead of floating chimneys');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_BACKGROUND_MESA_CROWNS')), 'the far canyon skyline needs broad stepped mesa crowns');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_BACKGROUND_ATTACHED_SPIRES')), 'distant spires must remain attached to their mesa groups');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_360_CANYON_HORIZON_BASES')), 'broad canyon mesas must close the distant world around all orbit angles');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_FIXED_WORLD_SUN')), 'the late-day sun must exist as world-space geometry');
+      assertEqual(runtime.root.getObjectByName('ISLAND_13_FIXED_WORLD_SUN')?.userData.worldLocked, true, 'the sun may not follow the camera');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_HEAT_SHIMMER')), 'the canyon atmosphere needs a restrained animated heat layer');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_WESTERN_WAYFINDING_4')), 'western rail-town wayfinding must continue around all four settlement quadrants');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_360_CANYON_SYSTEM')), 'the mountain pillar needs authored canyon erosion around its full circumference');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_CANYON_SCAR_MONUMENTAL_RAVINE')), 'the canyon network needs one dominant monumental chasm');
+      for (let canyonIndex = 1; canyonIndex <= 8; canyonIndex += 1) {
+        assert(Boolean(runtime.root.getObjectByName(`ISLAND_13_CANYON_SCAR_MINOR_${canyonIndex}`)), `minor canyon ${canyonIndex} must survive every 360-degree refinement pass`);
+      }
+      assert(Boolean(runtime.root.children.find((child) => child.name === 'ISLAND_13_360_CANYON_SYSTEM')
+        ?.children.some((child) => child.name.startsWith('ISLAND_13_MONUMENTAL_CANYON_RAIL_BRIDGE_'))), 'the public railway needs structural crossings over the monumental chasm');
+
+      const landmarks = ISLAND_5_LANDMARKS.map((landmark) => buildIsland13CactusCanyonLandmark(landmark, 3, 'low', materials));
+      const unionStation = landmarks.find((root) => root.userData.landmarkId === 'boss');
+      const railNestWaterworks = landmarks.find((root) => root.userData.landmarkId === 'hatchery');
+      const windmillRanch = landmarks.find((root) => root.userData.landmarkId === 'habit');
+      const sheriffArchive = landmarks.find((root) => root.userData.landmarkId === 'wisdom');
+      const signalYard = landmarks.find((root) => root.userData.landmarkId === 'event');
+      const satelliteLandmarks = [railNestWaterworks, windmillRanch, sheriffArchive, signalYard];
+      satelliteLandmarks.forEach((landmark) => {
+        assert(Boolean(landmark), 'all four satellite landmarks must exist before railway-clearance review');
+        landmark?.updateMatrixWorld(true);
+        const id = String(landmark?.userData.landmarkId ?? '').toUpperCase();
+        const passage = landmark?.getObjectByName(`ISLAND_13_${id}_RAIL_PASSAGE`);
+        const clearance = landmark?.getObjectByName(`ISLAND_13_${id}_RAIL_PASSAGE_OPEN_TRAIN_CLEARANCE`);
+        const setback = landmark?.getObjectByName(`ISLAND_13_${id}_RAIL_PASSAGE_ARCHITECTURE_SETBACK`);
+        assert(Boolean(passage), `${id} must provide a real railway throughpass rather than leave its building on the track`);
+        assert(Boolean(clearance), `${id} must expose a measurable open train envelope`);
+        assert(Boolean(passage?.getObjectByName(`ISLAND_13_${id}_RAIL_PASSAGE_OPEN_PORTAL_1`)), `${id} needs an entry portal around the train, not a solid facade`);
+        assert(Boolean(passage?.getObjectByName(`ISLAND_13_${id}_RAIL_PASSAGE_OPEN_PORTAL_2`)), `${id} needs an exit portal around the train, not a solid facade`);
+        assertEqual(setback?.position.z, -ISLAND_13_LANDMARK_RAIL_SETBACK_LOCAL_Z, `${id} architecture must yield to the fixed summit railway`);
+        assertEqual(clearance?.userData.clearance?.centerLocalZ, ISLAND_13_LANDMARK_RAIL_PASSAGE_LOCAL_Z, `${id} train envelope must use the shared tangent alignment`);
+        assertEqual(clearance?.userData.clearance?.halfWidthWorld, ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH, `${id} passage must preserve the articulated consist width`);
+        assertEqual(clearance?.userData.clearance?.heightWorld, ISLAND_13_TRAIN_CLEARANCE_HEIGHT, `${id} passage must preserve the locomotive and steam-stack height`);
+        const clearancePosition = clearance?.getWorldPosition(new THREE.Vector3()) ?? new THREE.Vector3();
+        assert(Math.abs(Math.hypot(clearancePosition.x, clearancePosition.z) - ISLAND_13_SUMMIT_RAIL_RADIUS) < 0.02, `${id} passage must be centred on the actual summit railway`);
+        const clearanceViolations = landmark ? collectIsland13LandmarkTrainClearanceViolations(landmark) : ['missing-landmark'];
+        assertEqual(clearanceViolations.length, 0, `${id} L3 geometry must not intersect the train's swept annulus: ${clearanceViolations.join(', ')}`);
+      });
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION')), 'the central hero must be the stepped Union Station');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_ROTOR')), 'the ranch landmark needs the source-observed windmill rotor');
+      ['FRONT', 'REAR', 'LEFT', 'RIGHT'].forEach((side) => {
+        assert(Boolean(unionStation?.getObjectByName(`ISLAND_13_UNION_MAIN_${side}_WINDOW`)), `the Union Station ${side.toLowerCase()} elevation needs authored detail`);
+        assert(Boolean(windmillRanch?.getObjectByName(`ISLAND_13_WINDMILL_WORKSHOP_${side}_WINDOW`)), `the windmill workshop ${side.toLowerCase()} elevation needs authored detail`);
+        assert(Boolean(sheriffArchive?.getObjectByName(`ISLAND_13_SHERIFF_OFFICE_${side}_WINDOW`)), `the sheriff office ${side.toLowerCase()} elevation needs authored detail`);
+      });
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_DOOR')), 'the Union Station rear elevation needs a working-service-side read');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_AWNING')), 'the Union Station rear elevation needs porch depth rather than a flat wall');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_SERVICE_CRATE_1')), 'the Union Station service side needs lived-in ground dressing');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_CROSS_BRACE_1')), 'the Union Station rear elevation needs structural timber articulation');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_SERVICE_SIGN')), 'the Union Station rear elevation needs readable service-side identity');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_CLOCK')), 'the L3 station tower needs civic detail on its rear elevation');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_CLOCK_RIM')), 'the station clock must sit visibly outside the enlarged front tower shell');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_CLOCK_RIM')), 'the rear station elevation needs an equally readable clock assembly');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_CUPOLA_REAR_WINDOW')), 'the station cupola needs lit civic detail around all four sides');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_MAIN_REAR_GABLE_RAFTER_1')), 'the station gable construction must continue around the rear elevation');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_ENTRY_PAVILION')), 'the station needs the source-specific projecting civic entrance volume');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_SALOON_WEST_SWING_HINGE')), 'the station front entrance needs a genuinely hinged western saloon door leaf');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_SALOON_EAST_SWING_HINGE')), 'the station front entrance needs a paired saloon door rather than one flat door panel');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_SALOON_WEST_DOOR_PLANK_1')), 'the saloon doors need visible timber construction at phone scale');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_WEST_WING_FALSE_FRONT')), 'the lower west roofline needs a frontier false-front storefront silhouette');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_EAST_WING_FALSE_FRONT')), 'the lower east roofline needs a matching but independently dressed western storefront');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_WEST_WING_CROSSED_RAIL_ART')), 'the west storefront sign needs rail-town artwork instead of an unbroken blank roof');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_EAST_WING_HORSESHOE_ART')), 'the east storefront sign needs western identity artwork');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_WESTERN_ENTRY_SIGN')), 'the central saloon entrance needs a readable painted signboard');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_FRONT_WESTERN_STAR_BADGE')), 'the central entrance sign needs unmistakable western artwork rather than a generic plaque');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_FLAG_POLE')), 'the station silhouette needs a civic railway flag pole rather than reading as a church steeple');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_FLAG_POLE_ROOF_SOCKET')), 'the railway flag pole must visibly terminate in roof structure rather than float in air');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_FLAG_POLE_BRACE_FRONT')), 'the flag pole needs a front roof stay that exposes its load path');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_FLAG_POLE_BRACE_REAR')), 'the flag pole needs a rear roof stay for 360-degree attachment quality');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_CUPOLA_ROOF_SADDLE')), 'the cupola needs a broad roof saddle instead of balancing on the roof apex');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_CUPOLA_ROOF_SADDLE_TRIM')), 'the cupola-to-roof joint needs visible trim that reads from orbit views');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG')), 'the western station needs a cloth flag that can respond to the canyon wind');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_STATION_WESTERN_RAILWAY_FLAG_STAR')), 'the station flag needs rail-town artwork that matches the western frontage');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_MAIN_FOUR_SIDE_SIDING_COURSES')), 'station material detail must wrap around all four elevations');
+      assert(Boolean(unionStation?.getObjectByName('ISLAND_13_UNION_REAR_WEST_ROOF_DORMER')), 'the station roof needs authored stepped forms on the rear elevation');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_TOWER_LEG_EAST_REAR')), 'the windmill tower must be four-legged rather than a front-only prop');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_REAR_BRACE_1')), 'the windmill trestle needs structural bracing on its rear face');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_RANCH_STABLE')), 'the ranch landmark needs an attached stable volume instead of a lone windmill prop');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_SAIL_PANEL_1')), 'the ranch windmill needs broad readable sail panels rather than bare wire spokes');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_OUTER_RIM')), 'the ranch windmill needs an engineered outer wheel rim');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_PUMP_LINKAGE')), 'the ranch windmill needs a visible mechanical connection to its waterworks');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_RANCH_STABLE_REAR_WINDOW')), 'the ranch stable needs authored detail on the elevation opposite the route');
+      assert(Boolean(windmillRanch?.getObjectByName('ISLAND_13_WINDMILL_RANCH_WATER_TROUGH')), 'the ranch yard needs a functional water trough');
+      assert(Boolean(railNestWaterworks?.getObjectByName('ISLAND_13_WATERWORKS_VERTICAL_TANK_STAVES')), 'the waterworks tank needs legible vertical timber stave construction');
+      assert(Boolean(railNestWaterworks?.getObjectByName('ISLAND_13_WATERWORKS_TANK_SERVICE_DECK')), 'the waterworks tank needs a full-circumference service deck');
+      assert(Boolean(railNestWaterworks?.getObjectByName('ISLAND_13_WATERWORKS_PRESSURE_GAUGE_FACE')), 'the waterworks pump shed needs working mechanical detail');
+      assert(Boolean(railNestWaterworks?.getObjectByName('ISLAND_13_WATERWORKS_OVERFLOW_DOWNPIPE')), 'the waterworks tank needs believable overflow plumbing');
+      assert(Boolean(railNestWaterworks?.getObjectByName('ISLAND_13_WATERWORKS_DEPOT_REAR_DOOR')), 'the waterworks depot needs an authored rear service elevation');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_REAR_DOOR')), 'the sheriff archive rear elevation needs a working-service-side read');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_FRONT_AWNING')), 'the sheriff archive needs a projecting civic entrance rather than a flat facade');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_MAP_ROOM_REAR_WINDOW')), 'the attached map room needs authored detail on its neglected elevation');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_LOOKOUT_REAR_WINDOW')), 'the sheriff lookout needs lit construction on all four sides');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_RECORDS_SAFE_DOOR')), 'the wisdom landmark needs its source-specific blue records safe');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_RECORDS_SAFE_WHEEL')), 'the records safe needs readable working hardware');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_REAR_MAP_CHEST')), 'the archive rear porch needs lived-in records handling detail');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_REAR_RECORDS_HATCH')), 'the archive service elevation needs a second readable blue records access point');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_REAR_BADGE')), 'the sheriff identity must survive the neglected rear elevation');
+      assert(Boolean(sheriffArchive?.getObjectByName('ISLAND_13_SHERIFF_CLAIM_MARKER_4')), 'the prospector archive needs claim markers around its complete footprint');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_CHALLENGE_DECK')), 'the Mystery landmark needs a functional circular challenge floor');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_SHOWDOWN_COMPASS')), 'the challenge floor needs a readable civic showdown emblem');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_CORRAL_POSTS')), 'the Showdown corral needs full-circumference structural posts');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_SWITCH_RAIL_A')), 'the Signal Yard needs a visible railway switch rather than a decorative mast alone');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_SWITCH_LEVER')), 'the yard switch needs readable working control hardware');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_SEMAPHORE_ARM')), 'the signal mast needs a readable semaphore silhouette');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_GANTRY_BEAM')), 'the restored signal yard needs a phone-readable rail signal gantry');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_YARD_GANTRY_LAMP_3')), 'the signal gantry needs a complete working lamp set');
+      assert(Boolean(signalYard?.getObjectByName('ISLAND_13_SIGNAL_SWITCH_HOUSE_REAR_DOOR')), 'the switch house needs an authored rear service elevation');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_COACH_PORT_WINDOW_1')), 'the train needs visible port-side coach detailing');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_COACH_STARBOARD_WINDOW_1')), 'the train needs visible starboard-side coach detailing');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_13_COACH_REAR_DOOR')), 'the train needs an authored rear elevation');
+      ISLAND_5_LANDMARKS.filter((landmark) => landmark.id !== 'boss').forEach((landmark) => {
+        assert(isIsland13RouteCorridorClear(landmark.position[0], landmark.position[2], 0.55), `${landmark.id} must not collide with the canonical board route`);
+      });
+      const manifest = collectIsland13RuntimePartManifest([runtime.root, ...landmarks]);
+      assert(manifest.parts.some((part) => part.name === 'railway-system'), 'runtime manifest must expose the railway system');
+      assert(manifest.parts.some((part) => part.name === 'spiral-rail-mission'), 'runtime manifest must expose the rock-cut signature mission');
+      assert(manifest.parts.some((part) => part.name === 'canyon-system'), 'runtime manifest must expose the complete 360-degree canyon network');
+      assert(manifest.parts.some((part) => part.name === 'union-station'), 'runtime manifest must expose the Union Station hero');
+      assertEqual(new Set(ISLAND_13_RUNTIME_PART_IDS).size, ISLAND_13_RUNTIME_PART_IDS.length, 'Island 013 runtime part IDs must remain unique');
+
+      [runtime.root, ...landmarks].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.roughnessMap?.dispose();
+        material.bumpMap?.dispose();
         material.dispose();
       });
     },
@@ -994,11 +1265,90 @@ export const island5ThreePilotContractTests: TestCase[] = [
   {
     name: 'maps canonical board tiles to presentation-only 3D reward identities',
     run: () => {
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'free_ticket', isActiveDoorCluster: false }), 'golden_event_ticket', 'ticket tiles need a readable golden ticket');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', isActiveDoorCluster: false }), 'essence_crystal', 'currency tiles keep the canonical Essence identity');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false }), 'universal_reward_token', 'ordinary reward progress may use the Universal Reward Token visual language');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true }), 'active_landmark_door', 'only the active door cluster gets a door sigil');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: false }), null, 'inactive doors must not imply a collectible reward');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'free_ticket', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'golden_event_ticket', 'ticket tiles need a readable golden ticket');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'essence_crystal', 'currency tiles keep the canonical Essence identity');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'universal_reward_token', 'ordinary reward progress may use the Universal Reward Token visual language');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: 'cactus_canyon_dynamite' }), 'cactus_canyon_dynamite', 'Cactus Canyon cache gets a distinct 3D dynamite identity');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true, signatureMissionKind: undefined }), 'active_landmark_door', 'only the active door cluster gets a door sigil');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: false, signatureMissionKind: undefined }), null, 'inactive doors must not imply a collectible reward');
+    },
+  },
+  {
+    name: 'batches the Island 012 canonical route and tile rewards without adding gameplay authority',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
+      assert(pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon;'), 'Islands 012 and 013 should use the proven per-material instanced route path');
+      assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
+      assert(pilotSource.includes('compactCollectibles: isAbyssalPearlKingdom || isSunkenSands'), 'Island 012 rewards should collapse their static submeshes while retaining per-tile transforms');
+      assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
+      assert(pilotSource.includes('canvas.dataset.island12ScenePerformanceInventory'), 'the full Island 012 scene must expose read-only renderer-family evidence');
+      assert(rewardSource.includes('root.userData.sculptRuntime = {'), 'reward objects must keep explicit presentation-only runtime metadata');
+      assert(rewardSource.includes("authority: 'canonical-island-tile-map'"), 'reward batching must continue to project the canonical tile map rather than own reward logic');
+    },
+  },
+  {
+    name: 'keeps Island 012 palm families varied and civic ground life route-clear',
+    run: async () => {
+      ISLAND_12_PALM_PLACEMENTS.forEach(([x, z], index) => {
+        assert(isIsland12RouteCorridorClear(x, z, 0.18), `palm trunk ${index} must stay outside the protected route corridor`);
+      });
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island12SunkenSandsThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const templateKitSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx', 'utf8');
+      assert(worldSource.includes('const highFrondCounts = [12, 3, 5, 3] as const;'), 'lush, wind-thinned, sun-yellowed and young palms need distinct crown densities');
+      assert(worldSource.includes("frondInstances.name = 'ISLAND_12_MIXED_DENSITY_PALM_FROND_ARRAY'"), 'mixed crowns must remain one batched palm-frond family');
+      assert(worldSource.includes("civicCobbles.name = 'ISLAND_12_CIVIC_COBBLE_POCKET_ARRAY'"), 'outer civic districts need named cobblestone ground pockets');
+      assert(worldSource.includes("groundRosettes.name = 'ISLAND_12_OASIS_GROUND_ROSETTE_ARRAY'"), 'oasis ground cover needs a named batched rosette family');
+      assert(worldSource.includes("groundBlooms.name = 'ISLAND_12_OASIS_GROUND_BLOOM_ARRAY'"), 'small colour accents should remain a named batched bloom family');
+      assert(worldSource.includes('const levelPalmCount = level <= 1 ? 2 : level === 2 ? 14 : positions.length;'), 'L0 and L1 need two old palms, L2 a partial grove, and L3 the full palm population');
+      assert(worldSource.includes('const grassLevelScale = level === 0 ? 0 : level === 1 ? 0.4 : level === 2 ? 0.72 : 1;'), 'small ground plants must visibly begin at L1 and mature through L3');
+      assert(worldSource.includes("mesh.name = `ISLAND_12_TRAVELING_OCEAN_WAVE_LAYER_${layerIndex + 1}`"), 'ocean wave fronts must stay named, batched, and addressable for animation');
+      assert(worldSource.includes('oceanWaves.animate(elapsed);'), 'the ocean wave field must advance in the ambience loop rather than remain static');
+      assert(worldSource.includes("shorelineBreakers.name = 'ISLAND_12_FOREGROUND_ANIMATED_SHORE_BREAKER_ARRAY'"), 'foreground quay foam must use broken moving ribbons rather than static white bars');
+      assert(worldSource.includes('waterDetails.animateShoreBreakers(elapsed);'), 'localized shoreline breakers must advance inside the shared ambience clock');
+      assert(worldSource.includes("tidelineSaltBands.name = 'ISLAND_12_IRREGULAR_TIDELINE_SALT_BAND_ARRAY'"), 'quay walls need a visible wet-to-dry mineral transition at the ocean line');
+      assert(worldSource.includes("erodedSandLips.name = 'ISLAND_12_FOREGROUND_ERODED_SAND_LIP_ARRAY'"), 'foreground sand must break into irregular shoreline lips instead of ending as a clean polygon');
+      assert(worldSource.includes("tidelineDebris.name = 'ISLAND_12_FOREGROUND_TIDELINE_DEBRIS_ARRAY'"), 'the sand-water contact needs a restrained named family of tide-worn debris');
+      assert(worldSource.includes("token.name = 'ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN'"), 'the L3 Citadel needs an explicit placeholder reward token');
+      assert(worldSource.includes('token.userData.presentationOnly = true;'), 'the placeholder reward must remain presentation-only and never grant gameplay rewards');
+      assert(worldSource.includes("pivot.name = `ISLAND_12_CITADEL_REWARD_GLASS_HINGE_${index + 1}`"), 'the L3 glass chamber must expose six separately addressable hinges');
+      assert(worldSource.includes('Math.cos(angle) * domeRadius'), 'each chamber hinge must sit on the lower dome rim rather than at the shell centre');
+      assert(worldSource.includes('panel.position.x = -domeRadius;'), 'each glass panel must be offset back from its rim-mounted pivot');
+      assert(worldSource.includes("hingeAxle.name = `ISLAND_12_CITADEL_REWARD_GLASS_HINGE_AXLE_${index + 1}`"), 'the glass opening needs visible mechanical hinge hardware');
+      assert(worldSource.includes('const panelReveal = THREE.MathUtils.smoothstep('), 'the hinged panels should peel back progressively across the canonical reveal');
+      assert(worldSource.includes('updateTreasureProgress'), 'the 3D chamber must consume presentation progress without owning gameplay state');
+      assert(pilotSource.includes("scene.getObjectByName('ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN')"), 'only the revealed treasure token should intercept the special collectible click');
+      assert(boardSource.includes('sunkenSandsTreasurePresentation={{'), 'the live board must project canonical chamber progress into Three.js');
+      assert(templateKitSource.includes("params.get('treasureRolls')"), 'the dev kit must expose deterministic chamber-turn evidence states');
+      assert(boardSource.includes('claimSunkenSandsFirstTreasure({ session, client })'), 'treasure collection must route through the mutex-protected action service');
+      assert(worldSource.includes("forecourtLife.name = 'ISLAND_12_CITADEL_CIVIC_FORECOURT_LIFE'"), 'the Citadel needs a readable civic terrace outside its portal axis');
+      assert(worldSource.includes("petitionTablets.name = 'ISLAND_12_CITADEL_FORECOURT_PETITION_TABLET_ARRAY'"), 'restored Citadel seating needs small signs of civic use');
+      assert(worldSource.includes("registerIsland12RuntimePart('citadel-forecourt-life'"), 'Citadel forecourt life must remain an addressable presentation-only family');
+    },
+  },
+  {
+    name: 'builds the Scarab Egg Vault as a route-clear working hatchery instead of an empty rib cage',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island12SunkenSandsThreeWorld.ts', 'utf8');
+      assert(worldSource.includes("retainingRing.name = 'ISLAND_12_VAULT_EXCAVATED_RETAINING_RING'"), 'the Vault needs a readable excavated chamber boundary');
+      assert(worldSource.includes("entranceSteps.name = 'ISLAND_12_VAULT_DESCENDING_ENTRANCE_STAIR_ARRAY'"), 'the hatchery approach must remain visible at phone scale');
+      assert(worldSource.includes("coolingChannels.name = 'ISLAND_12_VAULT_COOLING_CHANNEL_ARRAY'"), 'the egg nest needs a connected incubation-water function');
+      assert(worldSource.includes("ribButtresses.name = 'ISLAND_12_VAULT_RIB_SOCKET_BUTTRESS_ARRAY'"), 'every segmented rib family needs visible structural sockets');
+      assert(worldSource.includes("caretakingProps.name = 'ISLAND_12_VAULT_CARETAKING_TERRACES'"), 'the Vault needs compact tools and jars that make its hatchery use legible');
+      assert(worldSource.includes("registerIsland12RuntimePart('vault-caretaking-props'"), 'new hatchery life must stay under the existing action-ready landmark hierarchy');
+      assert(worldSource.includes("'ISLAND_12_VAULT_GYPSUM_GARDEN_GROUND_LIFE'"), 'the Vault perimeter needs level-scaled low gypsum-garden life');
+      assert(worldSource.includes("registerIsland12RuntimePart('vault-ground-life'"), 'Vault ground life must remain an addressable presentation-only landmark family');
+      assert(worldSource.includes("'ISLAND_12_PAVILION_DYE_GARDEN_GROUND_LIFE'"), 'the Pavilion perimeter needs level-scaled dye-garden ground life');
+      assert(worldSource.includes("registerIsland12RuntimePart('pavilion-ground-life'"), 'Pavilion ground life must remain an addressable presentation-only landmark family');
+      assert(worldSource.includes("compactIsland12StaticPresentationGeometry(caretakingProps"), 'new static hatchery props must remain material-compacted');
     },
   },
   {
@@ -1300,11 +1650,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'defines reusable overview, orbit, survey, five landmarks, and the Frostwell inspection preset',
+    name: 'defines reusable overview, orbit, survey, five landmarks, and signature-mission inspection presets',
     run: () => {
-      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 11, 'camera rig should expose eleven reusable presets');
-      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 11, 'camera preset ids must be unique');
-      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'powerworks', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
+      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 12, 'camera rig should expose twelve reusable presets');
+      assertEqual(getIsland5CameraPreset('canyon-spiral').id, 'canyon-spiral', 'Cactus Canyon needs a full-column railway inspection camera');
+      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 12, 'camera preset ids must be unique');
+      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'powerworks', 'canyon-spiral', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
         assert(ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === id), `missing camera preset ${id}`);
       });
       ISLAND_5_CAMERA_PRESETS.forEach((preset) => {
@@ -1551,13 +1902,22 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(islandParam)'), 'the workbench should expose all ten authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13].includes(islandParam)'), 'the workbench should expose all twelve authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
-      assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
+      assert(
+        mainSource.includes('&& !ISLAND_3D_PROFILER_BUILD_ENABLED')
+          && mainSource.includes('&& !COMPASS_BOOK_PROFILER_BUILD_ENABLED'),
+        'internal profiler bundles must not register the production service worker',
+      );
       assert(pilotSource.includes('new THREE.WebGLRenderer'), 'pilot should use an actual GPU renderer');
       assert(pilotSource.includes('renderer.forceContextLoss()'), 'fast level changes must release retired WebGL contexts before WebKit accumulates them');
       assert(pilotSource.includes('new OrbitControls'), 'pilot should provide touch and pointer orbit controls');
+      assert(pilotSource.includes('material.polygonOffsetUnits = -4'), 'Cactus Canyon tiles need a deterministic depth bias so camera motion cannot reveal z-fighting');
+      assert(pilotSource.includes('tappedAt - lastTrainTapAt <= 430'), 'Cactus Canyon must support a deliberate mouse double-click and mobile double-tap on the moving train');
+      assert(pilotSource.includes("const ISLAND_13_TRAIN_RIDE_PHASE_MS = 15_000"), 'each train ride viewpoint must hold for the requested fifteen seconds');
+      assert(pilotSource.includes("['driver', 'rear', 'side']"), 'the train ride must retain the engineer, rear observation, and open-window sequence');
+      assert(pilotSource.includes('livingAmbience.getTrainRidePose?.(view)'), 'ride cameras must follow consist-owned world-space sockets rather than orbit independently');
       assert(pilotSource.includes("root.name = 'ISLAND_5_LIVING_AMBIENCE'"), 'all M13 scenery should stay under one removable ambience root');
       assert(pilotSource.includes('buildIsland5AmbienceLayout(profile)'), 'living scenery should use the deterministic quality-budgeted garden contract');
       assert(pilotSource.includes("ISLAND_5_SKY_DOME_SRC = '/assets/islands/island-005/background/sky-dome-v2.webp'"), '3D view should use the optimized panoramic WebP sky');

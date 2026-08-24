@@ -1,0 +1,37 @@
+[
+  {
+    "id": "contained-room-envelope",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.68,
+    "notes": "Rear boundary, side pressure cheeks and ceiling cassette read as one contained workshop; the faceted glass insets remain subtle and the side wall still lacks the reference's curved yacht-like reveal."
+  },
+  {
+    "id": "workshop-vertical-machinery",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.58,
+    "notes": "The paired articulated lift rigs establish a hero operation and clear shoulder/elbow/tool-head hierarchy, but the members remain boxy and lack premium joint housings, cables and end-effector detail."
+  },
+  {
+    "id": "continuous-workshop-perimeter",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.57,
+    "notes": "Cabinets, drawer bands and repeated service cradles now wrap the rear and sides, although the comparison still reads sparse beside the reference's dense tool wall."
+  },
+  {
+    "id": "layered-service-ceiling",
+    "tier": "important",
+    "visible": true,
+    "score": 0.62,
+    "notes": "Nested rings, transverse ribs, travelling gantry and cyan practicals create multiple overhead bands; broad black panels still dominate between them."
+  },
+  {
+    "id": "reference-material-lighting",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.43,
+    "notes": "Bronze/cyan zoning is coherent, but surfaces remain clean, flat and game-like with insufficient roughness variation, contact shadow, upholstered detail and warm practical-light hierarchy."
+  }
+]

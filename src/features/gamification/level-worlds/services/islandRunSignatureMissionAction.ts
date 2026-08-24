@@ -2,19 +2,105 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import {
+  ISLAND_RUN_ECONOMY_SOURCES,
+  recordIslandRunDiceInflow,
+} from './islandRunEconomyTelemetry';
+import {
+  CACTUS_CANYON_ISLAND_NUMBER,
+  CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
   ROOTHEART_POWERWORKS_MAX_STAGE,
+  SUNKEN_SANDS_FIRST_TREASURE_DICE,
+  SUNKEN_SANDS_FIRST_TREASURE_ID,
+  SUNKEN_SANDS_ISLAND_NUMBER,
+  SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  getCactusCanyonAvailableDynamite,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   getRootheartPowerworksStageCost,
+  getSunkenSandsTreasureEssenceReward,
   isRootheartPowerworksCollectionComplete,
+  resolveCactusCanyonSpiralProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
+  resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
+
+export type BlastCactusCanyonSpiralSectionResult =
+  | {
+      status: 'ok';
+      segments: number;
+      segmentsBefore: number;
+      segmentsAfter: number;
+      dynamiteRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_dynamite' | 'mission_locked' | 'already_complete' };
+
+export function blastCactusCanyonSpiralSection(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<BlastCactusCanyonSpiralSectionResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== CACTUS_CANYON_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveCactusCanyonSpiralProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (progress.completedAtMs !== null || progress.segmentsExcavated >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS) {
+      return { status: 'already_complete' };
+    }
+    if (progress.startedAtMs === null) return { status: 'mission_locked' };
+    if (getCactusCanyonAvailableDynamite(progress) <= 0) return { status: 'no_dynamite' };
+
+    const segmentsBefore = progress.segmentsExcavated;
+    // One player-earned stick clears one authored gallery section. Keeping the
+    // exchange deterministic makes the 3D blast and the persisted rail reveal
+    // describe exactly the same event.
+    const segmentsAfter = Math.min(CACTUS_CANYON_SPIRAL_MAX_SEGMENTS, segmentsBefore + 1);
+    const segments = segmentsAfter - segmentsBefore;
+    const nowMs = Date.now();
+    const completedAtMs = segmentsAfter >= CACTUS_CANYON_SPIRAL_MAX_SEGMENTS
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    const nextProgress = {
+      ...progress,
+      segmentsExcavated: segmentsAfter,
+      dynamiteSpent: progress.dynamiteSpent + 1,
+      lastBlastSegments: segments,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: 'blast_cactus_canyon_spiral_section',
+    });
+    return {
+      status: 'ok',
+      segments,
+      segmentsBefore,
+      segmentsAfter,
+      dynamiteRemaining: getCactusCanyonAvailableDynamite(nextProgress),
+      completedAtMs,
+    };
+  });
+}
 
 export type SpinFrostwellDrillWheelResult =
   | { status: 'ok'; meters: number; wheelMeters: number; metersBefore: number; metersAfter: number; spinsRemaining: number }
@@ -180,5 +266,86 @@ export function fundRootheartPowerworksStage(options: {
       triggerSource: 'fund_rootheart_powerworks_stage',
     });
     return { status: 'ok', cost, buildStage, activatedAtMs };
+  });
+}
+
+export type ClaimSunkenSandsFirstTreasureResult =
+  | {
+      status: 'ok';
+      treasureId: typeof SUNKEN_SANDS_FIRST_TREASURE_ID;
+      diceAwarded: number;
+      essenceAwarded: number;
+      claimedAtMs: number;
+    }
+  | {
+      status: 'wrong_island' | 'not_ready' | 'already_claimed';
+      rollsCompleted: number;
+    };
+
+export function claimSunkenSandsFirstTreasure(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ClaimSunkenSandsFirstTreasureResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    const progress = resolveSunkenSandsTreasureProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (state.currentIslandNumber !== SUNKEN_SANDS_ISLAND_NUMBER) {
+      return { status: 'wrong_island', rollsCompleted: progress.rollsCompleted };
+    }
+    if (progress.claimedAtMs !== null) {
+      return { status: 'already_claimed', rollsCompleted: progress.rollsCompleted };
+    }
+    if (progress.rollsCompleted < SUNKEN_SANDS_TREASURE_ROLL_TARGET) {
+      return { status: 'not_ready', rollsCompleted: progress.rollsCompleted };
+    }
+
+    const claimedAtMs = Date.now();
+    const diceAwarded = SUNKEN_SANDS_FIRST_TREASURE_DICE;
+    const essenceAwarded = getSunkenSandsTreasureEssenceReward(state.cycleIndex);
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        dicePool: state.dicePool + diceAwarded,
+        essence: state.essence + essenceAwarded,
+        essenceLifetimeEarned: state.essenceLifetimeEarned + essenceAwarded,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: {
+            ...progress,
+            treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+            rollsCompleted: SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+            revealedAtMs: progress.revealedAtMs ?? claimedAtMs,
+            claimedAtMs,
+            updatedAtMs: claimedAtMs,
+          },
+        },
+      },
+      triggerSource: 'claim_sunken_sands_first_treasure',
+    });
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.signatureTreasureDice,
+      amount: diceAwarded,
+      sessionId: options.session.user.id,
+      atMs: claimedAtMs,
+      metadata: {
+        islandNumber: SUNKEN_SANDS_ISLAND_NUMBER,
+        treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+      },
+    });
+    return {
+      status: 'ok',
+      treasureId: SUNKEN_SANDS_FIRST_TREASURE_ID,
+      diceAwarded,
+      essenceAwarded,
+      claimedAtMs,
+    };
   });
 }

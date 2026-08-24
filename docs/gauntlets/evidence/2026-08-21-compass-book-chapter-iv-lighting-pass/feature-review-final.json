@@ -1,0 +1,20 @@
+[
+  {
+    "id": "page-contact-depth",
+    "score": 0.85,
+    "passed": true,
+    "notes": "Softer key shadows preserve contact beneath the node bezels and central ring stack without swallowing socket thickness or rail overlap."
+  },
+  {
+    "id": "material-light-hierarchy",
+    "score": 0.83,
+    "passed": true,
+    "notes": "Warm key and rim separate gilt, cool fill protects teal/violet identities, and the neutral proof confirms that the navy, enamel, crystal, and Mirage hierarchy is material-driven."
+  },
+  {
+    "id": "lighting-separation",
+    "score": 0.82,
+    "passed": true,
+    "notes": "Reference-matched, neutral, grazing, orbit, and production-shell captures remain readable; no single light direction hides the underlying relief or surface response."
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "referenceId": "compass-book-chapter-iv-goal-iteration-2",
+  "targetThreshold": 0.7,
+  "regions": [
+    {
+      "componentId": "chart-field",
+      "regionId": "chart-field-navy-leather",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 190, "y": 684, "width": 138, "height": 92 },
+      "materialId": "leather.matte",
+      "materialSpecId": "base"
+    },
+    {
+      "componentId": "rail-system",
+      "regionId": "gilt-rail-and-bezel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 168, "y": 185, "width": 242, "height": 58 },
+      "materialId": "metal.brass",
+      "materialSpecId": "brass"
+    },
+    {
+      "componentId": "curiosity-node",
+      "regionId": "curiosity-violet-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 442, "y": 215, "width": 108, "height": 108 },
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "violet"
+    },
+    {
+      "componentId": "capability-node",
+      "regionId": "capability-teal-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 548, "y": 356, "width": 112, "height": 112 },
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "teal"
+    },
+    {
+      "componentId": "contribution-node",
+      "regionId": "contribution-rose-copper",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 508, "y": 544, "width": 118, "height": 118 },
+      "materialId": "metal.copper",
+      "materialSpecId": "rose"
+    },
+    {
+      "componentId": "viability-node",
+      "regionId": "viability-amber-brass",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 296, "y": 548, "width": 118, "height": 112 },
+      "materialId": "metal.brass",
+      "materialSpecId": "amber"
+    },
+    {
+      "componentId": "willingness-node",
+      "regionId": "willingness-ember-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 263, "y": 354, "width": 116, "height": 116 },
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "ember"
+    },
+    {
+      "componentId": "mirage-node",
+      "regionId": "mirage-dim-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "bbox": { "x": 570, "y": 670, "width": 104, "height": 104 },
+      "materialId": "plastic.matte",
+      "materialSpecId": "mirage"
+    }
+  ]
+}

@@ -1,0 +1,363 @@
+{
+  "targetName": "Compass Book Personal Playbook Rocket Cockpit Relief",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "page-bound rocket cockpit relief",
+      "primaryDomain": "object",
+      "formLanguage": ["hard-surface", "mechanical", "sculptural", "radial"],
+      "structureKind": ["compound object", "layered shell", "repeated modules", "articulated assembly"],
+      "motionPotential": ["component pivots", "effect emitters", "bounded completion ceremony"],
+      "materialFamilies": ["indigo leather", "aged brass", "clear-coated enamel", "faceted crystal"],
+      "notes": "Generated art-direction reference for a stylized presentation-only Three.js relief. The real DOM retains labels, answers, progress, focus, and persistence."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 2,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 6,
+        "mesoComponents": 24,
+        "microFeatureGroups": 16,
+        "materialLayers": 7,
+        "repetitionSystems": 6
+      },
+      "reasoning": [
+        "Exactly one rocket, seven independent system modules, seven connector sockets, an Earth horizon, and a seven-cell launch arc create a dense but bounded compound hierarchy.",
+        "Fidelity depends on off-axis bezel/collar thickness, repeated rivets and cells, independent brass/enamel/crystal response, and stable animation pivots.",
+        "The reference is a generated three-quarter art-direction target, so hidden backs and exact depth are inferred and must not be presented as measured geometry."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Exact rear faces and undercuts are hidden; use shallow page-contact geometry with explicit inferred confidence.",
+      "Connector-to-rocket socket overlap is partially occluded; preserve visible continuity and a minimum seam overlap without claiming unseen construction accuracy.",
+      "Surface mottling is an achievable visual ceiling; approximate it procedurally within the production texture and draw-call budgets.",
+      "The existing Compass Book shell, page, spine, tabs, and right-side DOM are outside this reconstruction target."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 16,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {"id":"leather-grain","kind":"ridge","mapsTo":{"type":"material.localOverrides","ref":"leather-grain"},"evidenceRef":"detail-inventory/zone-r0c1.png","confidence":0.96},
+        {"id":"relief-frame-bevel","kind":"bevel","mapsTo":{"type":"component.localFeatures","ref":"relief-frame-bevel"},"evidenceRef":"detail-inventory/zone-r0c1.png","confidence":0.95},
+        {"id":"bezel-rivets","kind":"fastener","mapsTo":{"type":"component.localFeatures","ref":"bezel-rivet-system"},"evidenceRef":"detail-inventory/zone-r1c1.png","confidence":0.92},
+        {"id":"ignition-dome-gloss","kind":"gloss","mapsTo":{"type":"material.localOverrides","ref":"ignition-dome-gloss"},"evidenceRef":"detail-inventory/zone-r0c1.png","confidence":0.94},
+        {"id":"momentum-star-bevel","kind":"bevel","mapsTo":{"type":"component.localFeatures","ref":"momentum-star-bevel"},"evidenceRef":"detail-inventory/zone-r0c2.png","confidence":0.97},
+        {"id":"rocket-collar-seams","kind":"seam","mapsTo":{"type":"component.localFeatures","ref":"rocket-collar-seams"},"evidenceRef":"detail-inventory/zone-r1c1.png","confidence":0.96},
+        {"id":"rocket-core-emissive","kind":"emissive","mapsTo":{"type":"material.localOverrides","ref":"rocket-core-emissive"},"evidenceRef":"detail-inventory/zone-r1c1.png","confidence":0.95},
+        {"id":"connector-collars","kind":"fastener","mapsTo":{"type":"component.localFeatures","ref":"connector-collar-system"},"evidenceRef":"detail-inventory/zone-r1c1.png","confidence":0.91},
+        {"id":"minimum-cell-divider","kind":"ridge","mapsTo":{"type":"component.localFeatures","ref":"minimum-cell-divider"},"evidenceRef":"detail-inventory/zone-r1c2.png","confidence":0.95},
+        {"id":"warning-radar-grid","kind":"groove","mapsTo":{"type":"component.localFeatures","ref":"warning-radar-grid"},"evidenceRef":"detail-inventory/zone-r1c2.png","confidence":0.96},
+        {"id":"recovery-route-ridges","kind":"ridge","mapsTo":{"type":"component.localFeatures","ref":"recovery-route-ridges"},"evidenceRef":"detail-inventory/zone-r1c1.png","confidence":0.96},
+        {"id":"navigation-sextant-ticks","kind":"linework","mapsTo":{"type":"component.localFeatures","ref":"navigation-sextant-ticks"},"evidenceRef":"detail-inventory/zone-r1c0.png","confidence":0.94},
+        {"id":"shield-hex-cells","kind":"bevel","mapsTo":{"type":"component.localFeatures","ref":"shield-hex-cells"},"evidenceRef":"detail-inventory/zone-r2c1.png","confidence":0.98},
+        {"id":"earth-limb-emissive","kind":"emissive","mapsTo":{"type":"material.localOverrides","ref":"earth-limb-emissive"},"evidenceRef":"detail-inventory/zone-r2c1.png","confidence":0.93},
+        {"id":"launch-window-cells","kind":"emissive","mapsTo":{"type":"component.localFeatures","ref":"launch-window-cell-system"},"evidenceRef":"detail-inventory/zone-r2c1.png","confidence":0.98},
+        {"id":"brass-patina","kind":"stain","mapsTo":{"type":"material.localOverrides","ref":"brass-patina"},"evidenceRef":"detail-inventory/zone-r1c1.png","confidence":0.90}
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The production relief reads as one rocket cockpit with exactly seven independently countable flight systems, seven attached connector sockets, one Earth/orbit horizon, and one separate seven-cell launch-window arc.",
+      "Every visible bezel, connector, module face, rocket collar, fin, crystal, and launch cell retains off-axis thickness in the fixed view and two meaningful orbit views.",
+      "The relief remains presentation-only: it exposes animation anchors but never owns canonical labels, answers, progress, focus, persistence, or Island Run gameplay state.",
+      "High and low quality tiers retain the seven-system semantic count; constrained quality reduces tessellation, micro fasteners, and effect density without changing identity."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 6,
+      "mesoComponents": 24,
+      "microFeatureGroups": 16,
+      "materialLayers": 7,
+      "repetitionSystems": 6,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "seven-flight-system-semantics",
+        "name": "Exactly seven independent flight systems",
+        "required": true,
+        "qualityCriteria": [
+          "Ignition, momentum, minimum power, warning radar, environment shield, recovery route, and weekly navigation remain seven separately countable modules with distinct emblems and pivots.",
+          "The seven-cell launch arc is subordinate and cannot be mistaken for an eighth system module."
+        ],
+        "evidenceRefs": ["full-object", "detail-inventory/zone-r1c1.png"],
+        "failureModes": [
+          "fewer or more than seven system modules are visible",
+          "two system meanings collapse into the same emblem",
+          "progress cells read as additional system nodes"
+        ]
+      },
+      {
+        "id": "rocket-orbit-composition",
+        "name": "Central rocket and orbit hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Exactly one central rocket retains nose, hull, violet core, paired fins, engine collar, and exhaust crystal as raised geometry.",
+          "The Earth/orbit horizon stays behind the rocket and lower modules without becoming a flat photographic plate."
+        ],
+        "evidenceRefs": ["full-object", "detail-inventory/zone-r2c1.png"],
+        "failureModes": [
+          "rocket reads as a flat icon or generic missile",
+          "horizon obscures system modules or becomes a second focal object"
+        ]
+      },
+      {
+        "id": "presentation-state-separation",
+        "name": "Presentation-only state ownership",
+        "required": true,
+        "qualityCriteria": [
+          "The hierarchy exposes stable animation anchors for the rocket, seven system modules, horizon, and launch cells.",
+          "No generated label, answer, progress value, persistence path, or Island Run runtime-state owner enters the Three.js model."
+        ],
+        "evidenceRefs": ["canonical Chapter VI content contract"],
+        "failureModes": [
+          "3D model duplicates canonical player data or gameplay state",
+          "completion animation requires a local gameplay write path"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "exactly one central rocket and exactly seven separately readable system modules",
+      "seven connector sockets with no visible gaps or floating roots",
+      "one subordinate seven-cell launch arc distinct from the system count",
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Compass Book Personal Playbook Rocket Cockpit Relief radial cockpit seven independent pivots sockets relief hammered brass enamel crystal independent PBR channels",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-hand-painted-vs-pbr-texture",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[12]",
+        "score": 6.910741157758,
+        "snippets": [
+          "... baked directly into color (static, stylized) from textures that respond dynamically to scene lighting via separate PBR channels. Phân biệt kết cấu có ánh sáng được nướng trực tiếp vào màu (tĩnh, cách điệu) với kết cấu phản hồi động ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[12]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-meshphysicalmaterial-core-pbr-fields",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[0]",
+        "score": 4.632717063119,
+        "snippets": [
+          "The baseline Three.js material exposing direct scalar/map fields for the standard PBR channel set. Vật liệu Three.js cơ bản cung cấp trực tiếp các trường vô hướng/bản đồ cho bộ kênh PBR tiêu chuẩn. Recognition cues: Use whenever a static ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[0]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.runtime-hierarchy",
+        "file_path": "grimoire/readiness/action_rigging.md",
+        "heading": "Hierarchy Pattern",
+        "key_path": null,
+        "score": 4.377257479872,
+        "snippets": [
+          "An action-ready model uses a root, component pivot groups, visual meshes, sockets, collider metadata or proxies, and destruction-group metadata."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/readiness/action_rigging.md",
+            "heading": "Hierarchy Pattern",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/readiness/action_rigging.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      }
+    ]
+  }
+}

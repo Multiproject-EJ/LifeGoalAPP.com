@@ -1,0 +1,78 @@
+{
+  "referenceId": "compass-book-chapter-vi-personal-playbook-goal",
+  "targetThreshold": 0.7,
+  "regions": [
+    {
+      "componentId": "contact-field",
+      "regionId": "indigo-field-grain",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 500, "y": 104, "width": 150, "height": 64},
+      "materialId": "leather.matte",
+      "materialSpecId": "indigo-field"
+    },
+    {
+      "componentId": "relief-frame",
+      "regionId": "aged-brass-frame",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 319, "y": 110, "width": 235, "height": 32},
+      "materialId": "metal.brass",
+      "materialSpecId": "aged-brass"
+    },
+    {
+      "componentId": "rocket-hull",
+      "regionId": "warm-gold-rocket",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 548, "y": 204, "width": 76, "height": 286},
+      "materialId": "metal.gold",
+      "materialSpecId": "warm-gold"
+    },
+    {
+      "componentId": "rocket-core",
+      "regionId": "violet-core-crystal",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 568, "y": 304, "width": 43, "height": 118},
+      "materialId": "gemstone.quartz",
+      "materialSpecId": "violet-crystal"
+    },
+    {
+      "componentId": "minimum-crescent",
+      "regionId": "teal-crescent-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 759, "y": 341, "width": 68, "height": 83},
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "teal-enamel"
+    },
+    {
+      "componentId": "engine-collar",
+      "regionId": "obsidian-engine-alloy",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 548, "y": 476, "width": 75, "height": 24},
+      "materialId": "coating.painted-metal",
+      "materialSpecId": "obsidian-alloy"
+    },
+    {
+      "componentId": "earth-horizon",
+      "regionId": "earth-ocean-enamel",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 460, "y": 644, "width": 195, "height": 102},
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "earth-enamel"
+    },
+    {
+      "componentId": "orbit-rail",
+      "regionId": "cyan-orbit-emission",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 411, "y": 628, "width": 226, "height": 24},
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "cyan-emissive"
+    },
+    {
+      "componentId": "launch-window-cells",
+      "regionId": "amber-launch-emission",
+      "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/personal-playbook-relief-reference-final.png",
+      "bbox": {"x": 370, "y": 787, "width": 302, "height": 35},
+      "materialId": "ceramic.glazed",
+      "materialSpecId": "amber-emissive"
+    }
+  ]
+}

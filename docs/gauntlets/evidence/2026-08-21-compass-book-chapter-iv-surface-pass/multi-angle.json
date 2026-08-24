@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9355913580246914,
+  "angles": [
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/grazing-left-corrected.png",
+      "areaFraction": 0.9358839506172839,
+      "ratio": 1.0003127354587908,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/grazing-right-corrected.png",
+      "areaFraction": 0.9174271604938271,
+      "ratio": 0.980585329935909,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Deterministic multi-angle check passed. The dark lab background broadens the foreground mask, so the angled captures remain the stronger relief-depth and grazing-highlight evidence."
+}

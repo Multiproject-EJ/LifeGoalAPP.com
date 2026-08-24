@@ -1,0 +1,37 @@
+[
+  {
+    "id": "contained-room-scale-and-envelope",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.73,
+    "notes": "The standing camera now sees a cleaner contained bay with open service-floor depth, and the opposite view retains the same pressure volume. The room still lacks the reference's layered wall depth and ceiling coffers."
+  },
+  {
+    "id": "continuous-workshop-perimeter",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.65,
+    "notes": "Two continuous rear fascia rails bind the cabinets and repeated modules more coherently, while the side and rear perimeter survives the opposite camera. Cabinet and tool density remains far below the cinematic reference."
+  },
+  {
+    "id": "workshop-vertical-machinery-density",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.63,
+    "notes": "The paired manipulators are smaller, lower, and moved from z=-0.43 to z=-0.56 around the booster, so they no longer consume the room. Their joints and the repeated wall arms still read as simplified low-segment blockout geometry."
+  },
+  {
+    "id": "curved-pressure-architecture",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.64,
+    "notes": "Continuous bronze canopy edge tubes replace the floating maintenance rings and black X lattice, giving the bowed surface a more plausible thickness cue. Panel relief, gasket seams, bevel layers, and glass/frame contact remain underdeveloped."
+  },
+  {
+    "id": "reference-material-lighting",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.52,
+    "notes": "Bronze guidance rails and a reduced cyan practical make the floor calmer and more engineered, but large surfaces remain single-frequency color zones with weak contact shadow, roughness variation, and reflected environment detail."
+  }
+]

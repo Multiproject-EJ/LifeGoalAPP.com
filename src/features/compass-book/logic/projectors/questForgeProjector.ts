@@ -24,6 +24,13 @@ export type QuestForgeOutput = {
   reviewPointId: string | null;
   /** Canonical goal id when the Primary Quest was picked from an existing goal. */
   primaryQuestSourceGoalId: string | null;
+  preferenceOrder: string[];
+  smallTest: string | null;
+  confidenceId: string | null;
+  counterevidence: string | null;
+  notNowCondition: string | null;
+  evidenceCount: number;
+  readingStatus: 'provisional' | 'evidence-backed' | 'trial-ready';
 };
 
 function valueMap(answers: readonly CompassAnswerRecord[]): Map<string, CompassAnswerValue> {
@@ -40,6 +47,11 @@ function optionOf(map: Map<string, CompassAnswerValue>, questionId: string): str
 function textOf(map: Map<string, CompassAnswerValue>, questionId: string): string | null {
   const v = map.get(questionId);
   return v && v.kind === 'text' && v.text.trim() ? v.text.trim() : null;
+}
+
+function rankingOf(map: Map<string, CompassAnswerValue>, questionId: string): string[] {
+  const value = map.get(questionId);
+  return value?.kind === 'ranking' ? [...value.orderedOptionIds] : [];
 }
 
 /** Resolve a quest reference (quest_a|quest_b|quest_c|none) to its written text. */
@@ -67,8 +79,19 @@ function resolveQuestSourceGoalId(
 
 export function projectQuestForge(answers: readonly CompassAnswerRecord[]): QuestForgeOutput {
   const map = valueMap(answers);
+  const preferenceOrder = rankingOf(map, 'quest_preference_ranking');
+  const smallTest = textOf(map, 'quest_small_test');
+  const confidenceId = optionOf(map, 'quest_confidence');
+  const evidenceCount = [
+    'motive_evidence',
+    'process_evidence',
+    'protection_evidence',
+  ].filter((questionId) => textOf(map, questionId) != null).length;
   return {
-    primaryQuestTitle: resolveQuest(map, 'primary_candidate') ?? textOf(map, 'quest_a'),
+    primaryQuestTitle:
+      resolveQuest(map, 'primary_candidate')
+      ?? (preferenceOrder[0] ? textOf(map, preferenceOrder[0]) : null)
+      ?? textOf(map, 'quest_a'),
     supportingQuestTitle: resolveQuest(map, 'support_quest'),
     releasedQuestTitle: resolveQuest(map, 'release_quest'),
     motiveId: optionOf(map, 'motive'),
@@ -84,7 +107,21 @@ export function projectQuestForge(answers: readonly CompassAnswerRecord[]): Ques
     protectedFlame: textOf(map, 'protected_flame'),
     reviewPointId: optionOf(map, 'review_point'),
     primaryQuestSourceGoalId:
-      resolveQuestSourceGoalId(map, 'primary_candidate') ?? sourceGoalIdOf(map, 'quest_a'),
+      resolveQuestSourceGoalId(map, 'primary_candidate')
+      ?? (preferenceOrder[0] ? sourceGoalIdOf(map, preferenceOrder[0]) : null)
+      ?? sourceGoalIdOf(map, 'quest_a'),
+    preferenceOrder,
+    smallTest,
+    confidenceId,
+    counterevidence: textOf(map, 'quest_counterevidence'),
+    notNowCondition: textOf(map, 'not_now_condition'),
+    evidenceCount,
+    readingStatus:
+      smallTest != null && optionOf(map, 'review_point') != null
+        ? 'trial-ready'
+        : evidenceCount >= 2 && confidenceId != null
+          ? 'evidence-backed'
+          : 'provisional',
   };
 }
 

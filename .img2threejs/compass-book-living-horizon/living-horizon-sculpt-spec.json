@@ -1,0 +1,4079 @@
+{
+  "targetName": "Compass Book Living Horizon relief",
+  "targetId": "compass-book-living-horizon-relief",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": ".img2threejs/compass-book-living-horizon/living-horizon-admission-reference-white.png",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "page-mounted architectural landscape bas-relief",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "hard-surface",
+        "architectural",
+        "sculptural",
+        "layered terrain"
+      ],
+      "structureKind": [
+        "compound object",
+        "layered shell",
+        "repeated modules",
+        "branching hierarchy"
+      ],
+      "motionPotential": [
+        "static prop",
+        "whole-object transform",
+        "effect-emitter"
+      ],
+      "materialFamilies": [
+        "brass",
+        "enamel",
+        "stone-like terrain",
+        "timber",
+        "parchment"
+      ],
+      "notes": "A shallow procedural relief attached to the existing Compass Book left page. Presentation-only; the DOM owns all player text, answers, controls and persistence."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 2,
+        "materialLayerCount": 3,
+        "localDetailDensity": 2,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 1
+      },
+      "estimatedCounts": {
+        "macroComponents": 7,
+        "mesoComponents": 21,
+        "microFeatureGroups": 12,
+        "materialLayers": 6,
+        "repetitionSystems": 4
+      },
+      "reasoning": [
+        "The target combines a framed terrain field, continuous curved path, three architectural zones, a circular gathering arena, and a gate/sun horizon system.",
+        "Dense generated micro-detail is deliberately reduced; the five semantic zones and path continuity remain strict identity gates.",
+        "Separate brass, violet enamel, teal enamel, terrain, timber and emissive amber responses require multiple material layers and local overrides."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "resolvedImplementationAssumptions": [
+      "Undersides are shallow closed solids embedded into the parchment contact plate by 0.01-0.03 book units.",
+      "Tree, rock and masonry counts are deterministic production simplifications and are not pixel-exact commitments.",
+      "Generated shadows are excluded from albedo; existing book scene lights own illumination."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "open-gate-leaves",
+          "kind": "contour",
+          "description": "Paired open gilt lattice leaves and posts frame the path terminus.",
+          "region": "upper-center",
+          "scale": "meso",
+          "affects": "silhouette and horizon identity",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "horizon-system.gate-leaves"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.98
+        },
+        {
+          "id": "sun-ray-fan",
+          "kind": "ridge",
+          "description": "Raised amber sun is backed by a fan of thin gilt rays and low sky arcs.",
+          "region": "upper-center",
+          "scale": "meso/micro",
+          "affects": "focal hierarchy and depth",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "horizon-system.sun-rays"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.96
+        },
+        {
+          "id": "continuous-s-path",
+          "kind": "ridge",
+          "description": "One violet core with paired gilt rails connects foreground to gate without a break.",
+          "region": "vertical-center",
+          "scale": "macro",
+          "affects": "primary identity and composition",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "vital-path.continuous-core-and-rails"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.99
+        },
+        {
+          "id": "path-milestones",
+          "kind": "fastener",
+          "description": "Circular milestones repeat at controlled intervals inside the violet path.",
+          "region": "center-to-foreground",
+          "scale": "micro",
+          "affects": "path rhythm and crafted finish",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "vital-path.milestone-studs"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.94
+        },
+        {
+          "id": "workshop-roof-stack",
+          "kind": "contour",
+          "description": "Teal pitched roofs, chimney and entry steps form a distinct left-middle workshop silhouette.",
+          "region": "middle-left",
+          "scale": "meso",
+          "affects": "workshop readability",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "workshop-zone.roof-chimney-steps"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.93
+        },
+        {
+          "id": "workshop-gear-medallion",
+          "kind": "fastener",
+          "description": "Raised brass wheel or gear medallion anchors the workshop facade.",
+          "region": "middle-left",
+          "scale": "micro",
+          "affects": "zone identity",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "workshop-zone.gear-medallion"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.92
+        },
+        {
+          "id": "gathering-seating-ring",
+          "kind": "contour",
+          "description": "Concentric stepped floor and low segmented seating preserve a readable circular gathering place.",
+          "region": "middle-right",
+          "scale": "meso",
+          "affects": "zone silhouette and depth",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "gathering-zone.seating-ring"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.97
+        },
+        {
+          "id": "gathering-hearth",
+          "kind": "emissive",
+          "description": "Small raised amber hearth sits at the arena center with a brass bezel.",
+          "region": "middle-right",
+          "scale": "micro",
+          "affects": "warm focal hierarchy",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "gathering-zone.central-hearth"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.97
+        },
+        {
+          "id": "sanctuary-cottage",
+          "kind": "contour",
+          "description": "Foreground cottage has a pitched teal roof, warm doorway and attached jetty.",
+          "region": "lower-left",
+          "scale": "meso",
+          "affects": "sanctuary readability",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "sanctuary-zone.cottage-roof-door-jetty"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.91
+        },
+        {
+          "id": "teal-inlet",
+          "kind": "gloss",
+          "description": "A shallow teal inlet surrounds the sanctuary terrace and meets the jetty.",
+          "region": "lower-left",
+          "scale": "meso",
+          "affects": "sanctuary separation and color balance",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "water-enamel.inlet-sheen"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.95
+        },
+        {
+          "id": "terrain-contour-steps",
+          "kind": "contour",
+          "description": "Three shallow terrace heights use darker edge walls and olive top faces.",
+          "region": "full-relief",
+          "scale": "macro/meso",
+          "affects": "volume and page attachment",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "terrain-field.contour-terraces"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.96
+        },
+        {
+          "id": "sparse-terrain-clusters",
+          "kind": "ridge",
+          "description": "Small conifer and rock clusters break contour edges without obscuring zone silhouettes.",
+          "region": "terrain margins",
+          "scale": "micro",
+          "affects": "depth rhythm and material breakup",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "terrain-field.tree-and-rock-clusters"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.86
+        },
+        {
+          "id": "page-bound-brass-frame",
+          "kind": "bevel",
+          "description": "Double brass tooling frame and compass medallions keep the landscape visibly attached to the page.",
+          "region": "relief perimeter",
+          "scale": "macro/micro",
+          "affects": "page attachment and family resemblance",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "contact-frame.double-frame-and-medallions"
+          },
+          "evidenceRef": "full-object",
+          "confidence": 0.96
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/living-horizon-admission-reference-white.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The open Chapter III spread reads immediately as the Living Horizon: one continuous violet-and-gold S-path joins sanctuary, workshop, gathering place, vital path and open horizon gate.",
+      "The relief is visibly volumetric from the reference view and two orbit views, remains attached to parchment, and preserves distinct brass, enamel, terrain, timber and emissive responses.",
+      "At 390x844 the cottage/inlet, workshop, circular gathering place and gate/sun remain separate silhouettes; text and player values remain DOM-owned.",
+      "High tier maintains at least 50 FPS and low tier at least 30 FPS without removing any macro zone."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 7,
+      "mesoComponents": 18,
+      "microFeatureGroups": 10,
+      "materialLayers": 6,
+      "repetitionSystems": 4,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "continuous-vital-path",
+        "name": "Continuous foreground-to-horizon path",
+        "required": true,
+        "qualityCriteria": [
+          "One S-curve violet core with two raised gilt rails remains visually continuous through every terrain terrace and terminates inside the open gate.",
+          "Repeated milestone studs follow the curve with deterministic spacing and no floating segments."
+        ],
+        "evidenceRefs": [
+          "full-object",
+          "path-visible-footprint"
+        ],
+        "failureModes": [
+          "path reads as disconnected badges",
+          "path disappears behind terrain",
+          "rails detach from the path core"
+        ]
+      },
+      {
+        "id": "five-zone-readability",
+        "name": "Five canonical zone silhouettes",
+        "required": true,
+        "qualityCriteria": [
+          "Sanctuary cottage/inlet, workshop, circular gathering arena, vital path, and gate/sun horizon remain distinguishable at desktop and phone scale.",
+          "Zone structures attach to their terrain sockets and share the same shallow-relief depth language."
+        ],
+        "evidenceRefs": [
+          "full-object",
+          "phone-view"
+        ],
+        "failureModes": [
+          "zones collapse into generic village clutter",
+          "one zone dominates enough to hide another",
+          "components float above the page"
+        ]
+      },
+      {
+        "id": "horizon-gate-system",
+        "name": "Open gate, sun and ray system",
+        "required": true,
+        "qualityCriteria": [
+          "Two separate open gate leaves and posts frame a raised amber sun with readable radial rays.",
+          "The path terminates between the gate leaves and the gate remains the brightest upper-page focal point."
+        ],
+        "evidenceRefs": [
+          "upper-horizon"
+        ],
+        "failureModes": [
+          "gate reads as one closed arch",
+          "sun floats without a backing socket",
+          "gate is lost against the terrain"
+        ]
+      },
+      {
+        "id": "page-attachment-and-depth",
+        "name": "Page attachment and shallow relief depth",
+        "required": true,
+        "qualityCriteria": [
+          "A contact plate and frame remain flush with the left parchment while all terrain and structures overlap their parent sockets.",
+          "Orbit views prove shallow volume without turning the relief into a free-standing island."
+        ],
+        "evidenceRefs": [
+          "orbit-positive",
+          "orbit-negative",
+          "map-stripped"
+        ],
+        "failureModes": [
+          "contact gap exposes floating relief",
+          "orbit collapses into a texture plane",
+          "depth protrudes far enough to intersect the right page"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ],
+    "mustNotDo": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "three-quarter",
+      "side",
+      "thickness-axis",
+      "long-axis"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "living-horizon-vital-path",
+      "name": "Uninterrupted violet-and-gilt S-path",
+      "tier": "critical",
+      "passIds": [
+        "blockout",
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.82,
+      "mustPass": true,
+      "componentRefs": [
+        "vital-path",
+        "path-core",
+        "path-rails"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "living-horizon-five-zones",
+      "name": "Distinct sanctuary, workshop, gathering, path and horizon zones",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "sanctuary-zone",
+        "workshop-zone",
+        "gathering-zone",
+        "vital-path",
+        "horizon-system"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "living-horizon-open-gate",
+      "name": "Open gate, amber sun and ray fan",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement",
+        "lighting-pass"
+      ],
+      "minimumScore": 0.82,
+      "mustPass": true,
+      "componentRefs": [
+        "gate-posts",
+        "gate-leaves",
+        "horizon-sun",
+        "horizon-rays"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "living-horizon-page-attachment",
+      "name": "Shallow page-bound depth and brass frame",
+      "tier": "critical",
+      "passIds": [
+        "blockout",
+        "form-refinement"
+      ],
+      "minimumScore": 0.78,
+      "mustPass": true,
+      "componentRefs": [
+        "root",
+        "contact-frame",
+        "terrain-field"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "living-horizon-material-family",
+      "name": "Brass, violet, teal, timber, terrain and amber response",
+      "tier": "important",
+      "passIds": [
+        "material-pass",
+        "surface-pass",
+        "lighting-pass"
+      ],
+      "minimumScore": 0.72,
+      "mustPass": true,
+      "componentRefs": [
+        "contact-frame",
+        "terrain-field",
+        "vital-path",
+        "sanctuary-zone",
+        "workshop-zone",
+        "gathering-zone",
+        "horizon-system"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "complete",
+    "completedPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "lastCompletedPass": "optimization-pass",
+    "blockedReason": "all build passes completed",
+    "nextRequiredEvidence": []
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "",
+    "aspectRatios": [],
+    "symmetry": "",
+    "dominantCurves": [],
+    "negativeSpaces": [],
+    "landmarks": []
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [],
+      "confidence": 0.5
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "root",
+      "name": "Living Horizon relief root",
+      "level": "macro",
+      "role": "presentation-body",
+      "importance": 1,
+      "confidence": 1,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A shallow closed contact plate anchors every relief system to the page.",
+      "parent": null,
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(126, 105, 67, 1)",
+        "secondaryAlbedo": "rgba(67, 57, 34, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.85
+      },
+      "localFeatures": [],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "contact-frame",
+      "name": "Page-bound brass contact frame",
+      "level": "macro",
+      "role": "presentation-frame",
+      "importance": 0.95,
+      "confidence": 0.96,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Two raised rectangular tool lines and corner medallions visibly bind the panorama to parchment.",
+      "parent": "root",
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(190, 137, 49, 1)",
+        "secondaryAlbedo": "rgba(91, 55, 19, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.95
+      },
+      "localFeatures": [
+        {
+          "id": "contact-frame.double-frame-and-medallions",
+          "type": "raised-ridge",
+          "geometryEffect": "double extruded frame plus four medallions",
+          "confidence": 0.96
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "terrain-field",
+      "name": "Layered future landscape terrain",
+      "level": "macro",
+      "role": "terrain-field",
+      "importance": 1,
+      "confidence": 0.96,
+      "primitive": "extrude",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "Interlocking curved terraces create the dominant landscape silhouette and real height variation.",
+      "parent": "root",
+      "material": "terrain",
+      "materialLayers": [
+        "terrain"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(82, 85, 45, 1)",
+        "secondaryAlbedo": "rgba(44, 48, 29, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.78
+      },
+      "localFeatures": [
+        {
+          "id": "terrain-field.contour-terraces",
+          "type": "raised-ridge",
+          "geometryEffect": "three overlapping closed terrace solids",
+          "confidence": 0.96
+        },
+        {
+          "id": "terrain-field.tree-and-rock-clusters",
+          "type": "raised-ridge",
+          "geometryEffect": "deterministic conifer and stone clusters",
+          "confidence": 0.86
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "vital-path",
+      "name": "Continuous vital path",
+      "level": "macro",
+      "role": "identity-path",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "curve-sweep",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A continuous S-curve visibly rises above and crosses every terrain layer.",
+      "parent": "terrain-field",
+      "material": "violet-enamel",
+      "materialLayers": [
+        "violet-enamel",
+        "brass"
+      ],
+      "attachment": {
+        "parentId": "terrain-field",
+        "parentSocket": "terrain-top",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.18,
+          -2.3
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.02,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(74, 42, 103, 1)",
+        "secondaryAlbedo": "rgba(202, 151, 56, 1)",
+        "materialClass": "ceramic",
+        "materialClassConfidence": 0.86
+      },
+      "localFeatures": [
+        {
+          "id": "vital-path.continuous-core-and-rails",
+          "type": "raised-ridge",
+          "geometryEffect": "violet tube core with paired gilt rails",
+          "confidence": 0.99
+        },
+        {
+          "id": "vital-path.milestone-studs",
+          "type": "fastener",
+          "geometryEffect": "instanced circular studs sampled along the curve",
+          "confidence": 0.94
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "sanctuary-zone",
+      "name": "Sanctuary cottage and inlet zone",
+      "level": "macro",
+      "role": "semantic-zone",
+      "importance": 0.95,
+      "confidence": 0.93,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Cottage, water basin and jetty form one readable foreground architectural assembly.",
+      "parent": "terrain-field",
+      "material": "timber",
+      "materialLayers": [
+        "timber",
+        "teal-enamel",
+        "amber-light"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(92, 57, 31, 1)",
+        "secondaryAlbedo": "rgba(35, 111, 111, 1)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.84
+      },
+      "localFeatures": [
+        {
+          "id": "sanctuary-zone.cottage-roof-door-jetty",
+          "type": "raised-ridge",
+          "geometryEffect": "pitched cottage roof, luminous door and three-plank jetty",
+          "confidence": 0.91
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "workshop-zone",
+      "name": "Workshop zone",
+      "level": "macro",
+      "role": "semantic-zone",
+      "importance": 0.95,
+      "confidence": 0.94,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Stepped body, pitched roofs, chimney and facade medallion create a distinct making-place silhouette.",
+      "parent": "terrain-field",
+      "material": "timber",
+      "materialLayers": [
+        "timber",
+        "teal-enamel",
+        "brass"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(82, 50, 29, 1)",
+        "secondaryAlbedo": "rgba(30, 116, 119, 1)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.82
+      },
+      "localFeatures": [
+        {
+          "id": "workshop-zone.roof-chimney-steps",
+          "type": "raised-ridge",
+          "geometryEffect": "two roof wedges, chimney and entrance steps",
+          "confidence": 0.93
+        },
+        {
+          "id": "workshop-zone.gear-medallion",
+          "type": "fastener",
+          "geometryEffect": "radial brass gear medallion on facade",
+          "confidence": 0.92
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "gathering-zone",
+      "name": "Gathering place zone",
+      "level": "macro",
+      "role": "semantic-zone",
+      "importance": 0.95,
+      "confidence": 0.97,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Concentric circular solids, segmented seats and central hearth define a social arena.",
+      "parent": "terrain-field",
+      "material": "brass",
+      "materialLayers": [
+        "brass",
+        "terrain",
+        "amber-light"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(178, 126, 43, 1)",
+        "secondaryAlbedo": "rgba(81, 69, 38, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.9
+      },
+      "localFeatures": [
+        {
+          "id": "gathering-zone.seating-ring",
+          "type": "raised-ridge",
+          "geometryEffect": "segmented concentric seats around a stepped floor",
+          "confidence": 0.97
+        },
+        {
+          "id": "gathering-zone.central-hearth",
+          "type": "emissive",
+          "geometryEffect": "raised amber hearth with brass bezel",
+          "confidence": 0.97
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "horizon-system",
+      "name": "Open horizon gate and sun",
+      "level": "macro",
+      "role": "semantic-zone",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Paired open gates, independent sun disk and ray fan form the dominant upper focal system.",
+      "parent": "terrain-field",
+      "material": "brass",
+      "materialLayers": [
+        "brass",
+        "amber-light"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(208, 151, 51, 1)",
+        "secondaryAlbedo": "rgba(120, 67, 20, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.93
+      },
+      "localFeatures": [
+        {
+          "id": "horizon-system.gate-leaves",
+          "type": "raised-ridge",
+          "geometryEffect": "two open lattice leaves with posts and finials",
+          "confidence": 0.98
+        },
+        {
+          "id": "horizon-system.sun-rays",
+          "type": "raised-ridge",
+          "geometryEffect": "separate amber disk and instanced radial ray fan",
+          "confidence": 0.96
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "terrain-lower",
+      "name": "Lower sanctuary terrace",
+      "level": "meso",
+      "role": "terrain-piece",
+      "primitive": "extrude",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "A closed curved profile forms the deepest foreground land shelf.",
+      "parent": "terrain-field",
+      "material": "terrain",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(91, 92, 49, 1)",
+        "secondaryAlbedo": "rgba(48, 51, 30, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.8
+      }
+    },
+    {
+      "id": "terrain-middle-left",
+      "name": "Workshop terrace",
+      "level": "meso",
+      "role": "terrain-piece",
+      "primitive": "extrude",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "A separate rounded plateau supports and silhouettes the workshop.",
+      "parent": "terrain-field",
+      "material": "terrain",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 82, 43, 1)",
+        "secondaryAlbedo": "rgba(42, 45, 27, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.8
+      }
+    },
+    {
+      "id": "terrain-middle-right",
+      "name": "Gathering terrace",
+      "level": "meso",
+      "role": "terrain-piece",
+      "primitive": "extrude",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "A separate rounded plateau supports the circular gathering arena.",
+      "parent": "terrain-field",
+      "material": "terrain",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(76, 78, 42, 1)",
+        "secondaryAlbedo": "rgba(40, 43, 26, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.8
+      }
+    },
+    {
+      "id": "terrain-horizon",
+      "name": "Horizon ridge",
+      "level": "meso",
+      "role": "terrain-piece",
+      "primitive": "extrude",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "A narrow raised ridge supports the gate and creates visible depth separation.",
+      "parent": "terrain-field",
+      "material": "terrain",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(69, 72, 40, 1)",
+        "secondaryAlbedo": "rgba(38, 41, 25, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.8
+      }
+    },
+    {
+      "id": "path-core",
+      "name": "Violet path core",
+      "level": "meso",
+      "role": "path-piece",
+      "primitive": "curve-sweep",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A continuous rounded sweep supplies the violet path body.",
+      "parent": "vital-path",
+      "material": "violet-enamel",
+      "attachment": {
+        "parentId": "vital-path",
+        "parentSocket": "path-origin",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.15,
+          -2.3
+        ],
+        "contactType": "overlap",
+        "overlap": 0.03,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(78, 43, 109, 1)",
+        "secondaryAlbedo": "rgba(113, 71, 141, 1)",
+        "materialClass": "ceramic",
+        "materialClassConfidence": 0.86
+      }
+    },
+    {
+      "id": "path-rails",
+      "name": "Paired gilt path rails",
+      "level": "meso",
+      "role": "path-piece",
+      "primitive": "curve-sweep",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Two narrow continuous sweeps edge the path and preserve its crafted-book language.",
+      "parent": "vital-path",
+      "material": "brass",
+      "attachment": {
+        "parentId": "vital-path",
+        "parentSocket": "path-origin",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.17,
+          -2.3
+        ],
+        "contactType": "overlap",
+        "overlap": 0.025,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(194, 139, 45, 1)",
+        "secondaryAlbedo": "rgba(92, 56, 20, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "sanctuary-inlet",
+      "name": "Teal sanctuary inlet",
+      "level": "meso",
+      "role": "water-basin",
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A shallow closed basin is visually inset into the lower terrace.",
+      "parent": "sanctuary-zone",
+      "material": "water-enamel",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(25, 117, 123, 1)",
+        "secondaryAlbedo": "rgba(72, 168, 163, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.72
+      }
+    },
+    {
+      "id": "sanctuary-cottage-body",
+      "name": "Sanctuary cottage body",
+      "level": "meso",
+      "role": "building-piece",
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A beveled closed body carries the door and roof.",
+      "parent": "sanctuary-zone",
+      "material": "timber",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(93, 57, 30, 1)",
+        "secondaryAlbedo": "rgba(146, 98, 54, 1)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9
+      }
+    },
+    {
+      "id": "sanctuary-cottage-roof",
+      "name": "Sanctuary teal pitched roof",
+      "level": "meso",
+      "role": "building-piece",
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A triangular closed roof profile creates the cottage silhouette.",
+      "parent": "sanctuary-zone",
+      "material": "teal-enamel",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(31, 118, 121, 1)",
+        "secondaryAlbedo": "rgba(18, 72, 77, 1)",
+        "materialClass": "ceramic",
+        "materialClassConfidence": 0.82
+      }
+    },
+    {
+      "id": "sanctuary-jetty",
+      "name": "Sanctuary jetty",
+      "level": "meso",
+      "role": "building-piece",
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Three shallow timber planks physically bridge cottage and inlet edge.",
+      "parent": "sanctuary-zone",
+      "material": "timber",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(112, 70, 35, 1)",
+        "secondaryAlbedo": "rgba(72, 43, 25, 1)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9
+      }
+    },
+    {
+      "id": "workshop-body",
+      "name": "Workshop stepped body",
+      "level": "meso",
+      "role": "building-piece",
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Two connected beveled volumes form the making-place mass.",
+      "parent": "workshop-zone",
+      "material": "timber",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(84, 51, 29, 1)",
+        "secondaryAlbedo": "rgba(133, 88, 49, 1)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9
+      }
+    },
+    {
+      "id": "workshop-roofs",
+      "name": "Workshop roof pair",
+      "level": "meso",
+      "role": "building-piece",
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Two pitched closed profiles establish the workshop skyline.",
+      "parent": "workshop-zone",
+      "material": "teal-enamel",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(28, 111, 116, 1)",
+        "secondaryAlbedo": "rgba(17, 65, 71, 1)",
+        "materialClass": "ceramic",
+        "materialClassConfidence": 0.82
+      }
+    },
+    {
+      "id": "workshop-gear",
+      "name": "Workshop gear medallion",
+      "level": "meso",
+      "role": "building-detail",
+      "primitive": "torus",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A separate toothed medallion gives the workshop its readable symbol.",
+      "parent": "workshop-zone",
+      "material": "brass",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(196, 141, 46, 1)",
+        "secondaryAlbedo": "rgba(93, 58, 21, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.95
+      }
+    },
+    {
+      "id": "gathering-floor",
+      "name": "Gathering stepped floor",
+      "level": "meso",
+      "role": "arena-piece",
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Two low circular solids create the arena floor profile.",
+      "parent": "gathering-zone",
+      "material": "terrain",
+      "attachment": {
+        "parentId": "gathering-zone",
+        "parentSocket": "arena-center",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.08,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.02,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(91, 85, 48, 1)",
+        "secondaryAlbedo": "rgba(54, 50, 30, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.82
+      }
+    },
+    {
+      "id": "gathering-seats",
+      "name": "Gathering segmented seats",
+      "level": "meso",
+      "role": "arena-piece",
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separated arc segments create visible social seating rather than an ornamental ring.",
+      "parent": "gathering-zone",
+      "material": "brass",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(177, 126, 44, 1)",
+        "secondaryAlbedo": "rgba(91, 57, 23, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "gathering-hearth",
+      "name": "Gathering amber hearth",
+      "level": "meso",
+      "role": "arena-piece",
+      "primitive": "sphere",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A small raised closed ember form provides the arena focal point.",
+      "parent": "gathering-zone",
+      "material": "amber-light",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(239, 152, 42, 1)",
+        "secondaryAlbedo": "rgba(125, 53, 16, 1)",
+        "materialClass": "ceramic",
+        "materialClassConfidence": 0.75
+      }
+    },
+    {
+      "id": "gate-posts",
+      "name": "Horizon gate posts",
+      "level": "meso",
+      "role": "horizon-piece",
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Two beveled upright posts visibly root the gate in the horizon ridge.",
+      "parent": "horizon-system",
+      "material": "brass",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(201, 144, 48, 1)",
+        "secondaryAlbedo": "rgba(98, 59, 21, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "gate-leaves",
+      "name": "Open horizon gate leaves",
+      "level": "meso",
+      "role": "horizon-piece",
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Two thin lattice panels rotate away from the path and preserve a clear central opening.",
+      "parent": "horizon-system",
+      "material": "brass",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(211, 154, 53, 1)",
+        "secondaryAlbedo": "rgba(107, 65, 23, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "horizon-sun",
+      "name": "Amber horizon sun",
+      "level": "meso",
+      "role": "horizon-piece",
+      "primitive": "sphere",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately addressable shallow sphere rises behind the gate.",
+      "parent": "horizon-system",
+      "material": "amber-light",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(241, 164, 54, 1)",
+        "secondaryAlbedo": "rgba(151, 73, 20, 1)",
+        "materialClass": "ceramic",
+        "materialClassConfidence": 0.78
+      }
+    },
+    {
+      "id": "horizon-rays",
+      "name": "Gilt horizon ray fan",
+      "level": "meso",
+      "role": "horizon-piece",
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Repeated thin solid rays radiate from the sun and remain separately animatable.",
+      "parent": "horizon-system",
+      "material": "brass",
+      "geometryDescriptor": {
+        "instancedPrimitive": "box",
+        "topologyIntent": "radial repeated shallow rays"
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(197, 139, 43, 1)",
+        "secondaryAlbedo": "rgba(92, 54, 18, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "base",
+      "name": "Base material",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#8A7A5F",
+      "color": "#8A7A5F",
+      "albedo": {
+        "dominant": "#161008",
+        "secondary": [
+          "#48391B",
+          "#B08F65",
+          "#D9BF98"
+        ],
+        "samplingNotes": "Reference-derived from foreground pixels; de-lit to reduce baked shadows/highlights.",
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_albedo.png",
+          "url": "/compass-book/pbr/living-horizon/base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        }
+      },
+      "colorVariation": {
+        "palette": [
+          "#161008",
+          "#48391B",
+          "#B08F65",
+          "#D9BF98",
+          "#151B21",
+          "#7C623B"
+        ],
+        "pattern": "reference-derived pixel palette",
+        "amplitude": 0.319,
+        "heightCorrelation": 0.42
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.52,
+          "role": "reference-derived broad albedo and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 14.0,
+          "amplitude": 0.35,
+          "role": "reference-derived cracks, ridges, pores, grain, or leaf clusters"
+        },
+        {
+          "id": "micro",
+          "frequency": 72.0,
+          "amplitude": 0.14,
+          "role": "reference-derived micro highlight breakup under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.725,
+        "variation": 0.136,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_roughness.png",
+          "url": "/compass-book/pbr/living-horizon/base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "localResponse": "reference-derived roughness estimate; cavities and textured zones trend rougher, bright highlights trend smoother"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "reference-derived height-gradient normal map",
+        "strength": 0.235,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_normal.png",
+          "url": "/compass-book/pbr/living-horizon/base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "heightSource": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/living-horizon/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "reference-derived height field",
+        "amplitude": 0.03,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/living-horizon/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        }
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.38,
+        "contactShadowBias": 0.35,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_ao.png",
+          "url": "/compass-book/pbr/living-horizon/base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        },
+        "notes": "Reference-derived cavity estimate from local height minima; verify against grazing-light screenshot."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "reference-pbr-pixel-evidence",
+          "type": "material-map-evidence",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "channels": [
+            "albedo",
+            "roughness",
+            "height",
+            "normal",
+            "ambient-occlusion"
+          ],
+          "notes": "Use generated maps as material evidence, then refine after browser screenshot comparison."
+        },
+        {
+          "id": "reference-pbr-pixel-evidence",
+          "type": "material-map-evidence",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "channels": [
+            "albedo",
+            "roughness",
+            "height",
+            "normal",
+            "ambient-occlusion"
+          ],
+          "notes": "Use generated maps as material evidence, then refine after browser screenshot comparison."
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there.",
+        "Reference-derived maps are estimates from image pixels; verify with neutral, grazing, and reference-matched renders.",
+        "Do not treat baked image shadows as final albedo; rerun extraction with a tighter material crop if highlights/shadows pollute the maps.",
+        "Reference-derived maps are estimates from image pixels; verify with neutral, grazing, and reference-matched renders.",
+        "Do not treat baked image shadows as final albedo; rerun extraction with a tighter material crop if highlights/shadows pollute the maps."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_albedo.png",
+            "url": "/compass-book/pbr/living-horizon/base_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_roughness.png",
+            "url": "/compass-book/pbr/living-horizon/base_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_height.png",
+            "url": "/compass-book/pbr/living-horizon/base_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_normal.png",
+            "url": "/compass-book/pbr/living-horizon/base_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_ao.png",
+            "url": "/compass-book/pbr/living-horizon/base_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 1536,
+          "sourceHeight": 1024,
+          "mapSize": 1024,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "mask": {
+            "backgroundColor": "#05090E",
+            "backgroundNoise": 15.78,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9821
+          },
+          "mapStats": {
+            "valueRange": 0.7601,
+            "heightP90Gradient": 0.06685,
+            "roughnessBase": 0.725,
+            "roughnessVariation": 0.136,
+            "normalStrength": 0.235,
+            "blurRadius": 21
+          },
+          "palette": [
+            "#161008",
+            "#48391B",
+            "#B08F65",
+            "#D9BF98",
+            "#151B21",
+            "#7C623B"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      }
+    },
+    {
+      "id": "brass",
+      "name": "Aged gilt brass",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#B87B2A",
+      "color": "#B87B2A",
+      "albedo": {
+        "dominant": "#B87B2A",
+        "secondary": [
+          "#6E3D16",
+          "#E0AE4D"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#6E3D16",
+          "#B87B2A",
+          "#E0AE4D"
+        ],
+        "pattern": "edge-and-cavity",
+        "amplitude": 0.12
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          2
+        ],
+        "texelDensityIntent": "stable book-relative detail"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.12
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.06
+        },
+        {
+          "id": "micro",
+          "frequency": 58,
+          "amplitude": 0.02
+        }
+      ],
+      "roughness": {
+        "base": 0.31,
+        "variation": 0.12,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0.88,
+        "variation": 0.07
+      },
+      "normal": {
+        "pattern": "independent brushed grain",
+        "strength": 0.16,
+        "scale": 32
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.3,
+        "contactShadowBias": 0.35
+      },
+      "clearcoat": 0.18,
+      "localOverrides": [
+        {
+          "id": "brass.edge-polish",
+          "roughness": 0.2,
+          "notes": "raised rims catch warmer cleaner highlights"
+        }
+      ]
+    },
+    {
+      "id": "terrain",
+      "name": "Layered olive terrain",
+      "qualityTier": "utility",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#4F532F",
+      "color": "#4F532F",
+      "albedo": {
+        "dominant": "#4F532F",
+        "secondary": [
+          "#30341E",
+          "#747349"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#30341E",
+          "#4F532F",
+          "#747349"
+        ],
+        "pattern": "terrace-height",
+        "amplitude": 0.14
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "triplanar",
+        "repeat": [
+          3,
+          3
+        ],
+        "texelDensityIntent": "stable across terrace solids"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.16
+        },
+        {
+          "id": "meso",
+          "frequency": 11,
+          "amplitude": 0.08
+        },
+        {
+          "id": "micro",
+          "frequency": 50,
+          "amplitude": 0.025
+        }
+      ],
+      "roughness": {
+        "base": 0.76,
+        "variation": 0.13,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0,
+        "variation": 0
+      },
+      "normal": {
+        "pattern": "independent stone grain",
+        "strength": 0.24,
+        "scale": 25
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.35,
+        "contactShadowBias": 0.42
+      },
+      "localOverrides": [
+        {
+          "id": "terrain.cut-edges",
+          "roughness": 0.84,
+          "notes": "terrace sidewalls are darker and more matte"
+        }
+      ]
+    },
+    {
+      "id": "timber",
+      "name": "Warm dark timber",
+      "qualityTier": "utility",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#6E4325",
+      "color": "#6E4325",
+      "albedo": {
+        "dominant": "#6E4325",
+        "secondary": [
+          "#3F281A",
+          "#956139"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#3F281A",
+          "#6E4325",
+          "#956139"
+        ],
+        "pattern": "linear-grain",
+        "amplitude": 0.1
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          3
+        ],
+        "texelDensityIntent": "grain follows architectural axes"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 16,
+          "amplitude": 0.07
+        },
+        {
+          "id": "micro",
+          "frequency": 64,
+          "amplitude": 0.025
+        }
+      ],
+      "roughness": {
+        "base": 0.67,
+        "variation": 0.12,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0,
+        "variation": 0
+      },
+      "normal": {
+        "pattern": "independent longitudinal grain",
+        "strength": 0.19,
+        "scale": 36
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.28,
+        "contactShadowBias": 0.36
+      },
+      "localOverrides": [
+        {
+          "id": "timber.worn-thresholds",
+          "roughness": 0.5,
+          "notes": "door and step edges are slightly polished"
+        }
+      ]
+    },
+    {
+      "id": "teal-enamel",
+      "name": "Teal architectural enamel",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#1C7477",
+      "color": "#1C7477",
+      "albedo": {
+        "dominant": "#1C7477",
+        "secondary": [
+          "#10484D",
+          "#46A7A1"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#10484D",
+          "#1C7477",
+          "#46A7A1"
+        ],
+        "pattern": "height-glaze",
+        "amplitude": 0.08
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          2
+        ],
+        "texelDensityIntent": "stable roof-scale glaze"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.08
+        },
+        {
+          "id": "meso",
+          "frequency": 12,
+          "amplitude": 0.04
+        },
+        {
+          "id": "micro",
+          "frequency": 56,
+          "amplitude": 0.015
+        }
+      ],
+      "roughness": {
+        "base": 0.3,
+        "variation": 0.1,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0.08,
+        "variation": 0.02
+      },
+      "normal": {
+        "pattern": "independent fine glaze",
+        "strength": 0.1,
+        "scale": 40
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.2,
+        "contactShadowBias": 0.3
+      },
+      "clearcoat": 0.48,
+      "localOverrides": [
+        {
+          "id": "teal-enamel.highlight-ridges",
+          "roughness": 0.2,
+          "notes": "roof ridges carry a brighter glaze response"
+        }
+      ]
+    },
+    {
+      "id": "violet-enamel",
+      "name": "Violet path enamel",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#512D73",
+      "color": "#512D73",
+      "albedo": {
+        "dominant": "#512D73",
+        "secondary": [
+          "#321D4E",
+          "#8053A1"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#321D4E",
+          "#512D73",
+          "#8053A1"
+        ],
+        "pattern": "curve-gradient",
+        "amplitude": 0.08
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          4,
+          1
+        ],
+        "texelDensityIntent": "continuous along path arc length"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.08
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.04
+        },
+        {
+          "id": "micro",
+          "frequency": 60,
+          "amplitude": 0.015
+        }
+      ],
+      "roughness": {
+        "base": 0.27,
+        "variation": 0.09,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0.05,
+        "variation": 0.02
+      },
+      "normal": {
+        "pattern": "independent fine enamel",
+        "strength": 0.08,
+        "scale": 42
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.2,
+        "contactShadowBias": 0.3
+      },
+      "clearcoat": 0.55,
+      "localOverrides": [
+        {
+          "id": "violet-enamel.center-gloss",
+          "roughness": 0.19,
+          "notes": "path center remains glossy between gilt rails"
+        }
+      ]
+    },
+    {
+      "id": "water-enamel",
+      "name": "Teal inlet enamel",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#157C82",
+      "color": "#157C82",
+      "albedo": {
+        "dominant": "#157C82",
+        "secondary": [
+          "#0D4D56",
+          "#5AC4BD"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#0D4D56",
+          "#157C82",
+          "#5AC4BD"
+        ],
+        "pattern": "radial-inlet",
+        "amplitude": 0.09
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "planar",
+        "repeat": [
+          1,
+          1
+        ],
+        "texelDensityIntent": "single coherent inlet sheen"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.08
+        },
+        {
+          "id": "meso",
+          "frequency": 10,
+          "amplitude": 0.035
+        },
+        {
+          "id": "micro",
+          "frequency": 50,
+          "amplitude": 0.012
+        }
+      ],
+      "roughness": {
+        "base": 0.18,
+        "variation": 0.08,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0.04,
+        "variation": 0.01
+      },
+      "normal": {
+        "pattern": "independent low ripples",
+        "strength": 0.1,
+        "scale": 28
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.14,
+        "contactShadowBias": 0.25
+      },
+      "clearcoat": 0.72,
+      "localOverrides": [
+        {
+          "id": "water-enamel.inlet-sheen",
+          "roughness": 0.12,
+          "notes": "brighter curved sheen inside sanctuary basin",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "amber-light",
+      "name": "Warm amber focal light",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#E99A30",
+      "color": "#E99A30",
+      "albedo": {
+        "dominant": "#E99A30",
+        "secondary": [
+          "#8E3F13",
+          "#FFD06A"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#8E3F13",
+          "#E99A30",
+          "#FFD06A"
+        ],
+        "pattern": "radial-emission",
+        "amplitude": 0.16
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "texelDensityIntent": "radial focal gradients"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.12
+        },
+        {
+          "id": "meso",
+          "frequency": 10,
+          "amplitude": 0.04
+        },
+        {
+          "id": "micro",
+          "frequency": 48,
+          "amplitude": 0.01
+        }
+      ],
+      "roughness": {
+        "base": 0.28,
+        "variation": 0.08,
+        "map": "independent-procedural-field"
+      },
+      "metalness": {
+        "base": 0.02,
+        "variation": 0.01
+      },
+      "normal": {
+        "pattern": "independent fine glaze",
+        "strength": 0.06,
+        "scale": 32
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.12,
+        "contactShadowBias": 0.2
+      },
+      "emissive": {
+        "color": "#C85F18",
+        "intensity": 0.75
+      },
+      "clearcoat": 0.4,
+      "localOverrides": [
+        {
+          "id": "amber-light.hot-center",
+          "roughness": 0.16,
+          "notes": "sun and hearth centers carry strongest emission"
+        }
+      ]
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "path-milestones",
+      "parent": "vital-path",
+      "realization": "instanced-geometry",
+      "buildsGeometry": true,
+      "geometry": "shallow circular studs sampled along Catmull-Rom arc length",
+      "instances": 9,
+      "acceptance": "even visual rhythm without breaking the continuous path"
+    },
+    {
+      "id": "horizon-ray-fan",
+      "parent": "horizon-system",
+      "realization": "instanced-geometry",
+      "buildsGeometry": true,
+      "geometry": "thin beveled boxes rotated radially behind sun",
+      "instances": 9,
+      "acceptance": "rays remain subordinate to open gate silhouette"
+    },
+    {
+      "id": "terrain-clusters",
+      "parent": "terrain-field",
+      "realization": "deterministic-geometry",
+      "buildsGeometry": true,
+      "geometry": "paired cone conifers and ellipsoid rocks",
+      "instances": 12,
+      "acceptance": "clusters frame zones without obscuring them"
+    },
+    {
+      "id": "gathering-seat-arcs",
+      "parent": "gathering-zone",
+      "realization": "repeated-geometry",
+      "buildsGeometry": true,
+      "geometry": "six low torus arc segments",
+      "instances": 6,
+      "acceptance": "arena remains visibly open toward the path"
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-08-20T22:25:06.553847+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production three-quarter spread plus two lab orbits",
+      "notes": "Map-stripped and orbit views prove dimensional construction. Deterministic full-frame pixel metrics are advisory because reference and render framing differ.",
+      "aiVisionNotes": "The production render preserves the target semantic spine and color hierarchy. Simplified buildings are readable after pass-2 gable, window and step fixes; sparse environmental clutter is an intentional mobile simplification, not missing identity geometry."
+    },
+    {
+      "timestamp": "2026-08-20T22:25:42.238934+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.82,
+      "aiVisionScore": 0.82,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread and two axial orbits",
+      "notes": "",
+      "aiVisionNotes": "The final integrated screenshot is reused honestly as structural evidence: all macro zones are distinct and every meso assembly visibly contacts its terrain parent."
+    },
+    {
+      "timestamp": "2026-08-20T22:26:15.574874+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.81,
+      "aiVisionScore": 0.81,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread, neutral orbit and grazing orbit",
+      "notes": "",
+      "aiVisionNotes": "The final geometry reads clearly from the production view and both axial orbits; map-stripped evidence retains all identity forms."
+    },
+    {
+      "timestamp": "2026-08-20T22:26:15.756252+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread, neutral orbit and grazing orbit",
+      "notes": "",
+      "aiVisionNotes": "Material families respond independently to the existing book scene. Extracted PBR maps remain evidence only; runtime uses authored physical responses."
+    },
+    {
+      "timestamp": "2026-08-20T22:26:15.956530+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread, neutral orbit and grazing orbit",
+      "notes": "",
+      "aiVisionNotes": "Neutral and grazing orbit captures preserve distinct surface responses. No albedo channel is aliased into roughness or normal."
+    },
+    {
+      "timestamp": "2026-08-20T22:26:16.164913+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.79,
+      "aiVisionScore": 0.79,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread, neutral orbit and grazing orbit",
+      "notes": "",
+      "aiVisionNotes": "Production, neutral-orbit and grazing-orbit views all remain legible; the scene owns lighting and the generated target does not."
+    },
+    {
+      "timestamp": "2026-08-20T22:26:16.391852+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread, neutral orbit and grazing orbit",
+      "notes": "",
+      "aiVisionNotes": "Runtime metadata supports future completion and fill animations without gameplay writes or DOM-owned text."
+    },
+    {
+      "timestamp": "2026-08-20T22:26:16.636114+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+      "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+      "cameraView": "production spread, neutral orbit and grazing orbit",
+      "notes": "",
+      "aiVisionNotes": "The asset is launch-usable but performance evidence is honest: the full-book lab remained interactive, while this capture environment did not prove 50 FPS."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-20T22:25:06.553847+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "Pass 2 establishes the complete page-bound Living Horizon silhouette and production hierarchy.",
+      "matched": [
+        "continuous path",
+        "five readable semantic zones",
+        "open gate and sun",
+        "double page frame",
+        "real relief depth"
+      ],
+      "mismatches": [
+        "generated goal contains denser trees, masonry and patina than the production mobile relief"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "pass 1 cottage gable and chimney",
+        "pass 1 workshop window and steps",
+        "pass 1 gate and sun separation"
+      ],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production three-quarter spread plus two lab orbits",
+        "notes": "Map-stripped and orbit views prove dimensional construction. Deterministic full-frame pixel metrics are advisory because reference and render framing differ.",
+        "aiVisionNotes": "The production render preserves the target semantic spine and color hierarchy. Simplified buildings are readable after pass-2 gable, window and step fixes; sparse environmental clutter is an intentional mobile simplification, not missing identity geometry."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:25:42.238934+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.82,
+      "aiVisionScore": 0.82,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "Named terrain, path, three life zones and horizon gate form a complete page-attached hierarchy with no visible floating roots.",
+      "matched": [
+        "28 specified components",
+        "four repetition systems",
+        "zone pivots and runtime sockets",
+        "closed terrain solids",
+        "no orbit-view gaps"
+      ],
+      "mismatches": [
+        "generated micro-masonry and foliage remain intentionally sparse"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread and two axial orbits",
+        "notes": "",
+        "aiVisionNotes": "The final integrated screenshot is reused honestly as structural evidence: all macro zones are distinct and every meso assembly visibly contacts its terrain parent."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:26:15.574874+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.81,
+      "aiVisionScore": 0.81,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "Pass 2 refines the cottage, workshop and horizon focal system while preserving the continuous path.",
+      "matched": [
+        "cottage gable, window and chimney",
+        "workshop facade, gear and steps",
+        "wider open gate",
+        "separated amber sun"
+      ],
+      "mismatches": [
+        "generated goal retains finer masonry, vegetation and cloud relief"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread, neutral orbit and grazing orbit",
+        "notes": "",
+        "aiVisionNotes": "The final geometry reads clearly from the production view and both axial orbits; map-stripped evidence retains all identity forms."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:26:15.756252+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "Independent brass, violet, teal, timber, terrain, water and amber materials preserve the goal palette hierarchy.",
+      "matched": [
+        "violet path",
+        "teal sanctuary and workshop",
+        "warm gilt frame and gate",
+        "olive terrain",
+        "amber focal points"
+      ],
+      "mismatches": [
+        "single-image micro-patina is reduced and not projected"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread, neutral orbit and grazing orbit",
+        "notes": "",
+        "aiVisionNotes": "Material families respond independently to the existing book scene. Extracted PBR maps remain evidence only; runtime uses authored physical responses."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:26:15.956530+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "Paper-derived independent roughness and bump response breaks flat highlights without baking goal-image lighting.",
+      "matched": [
+        "terrain and timber tactile breakup",
+        "enamel clearcoat",
+        "gilt roughness variation",
+        "contact AO from real relief depth"
+      ],
+      "mismatches": [
+        "sparse production relief has less micro-weathering than the ImageGen ceiling"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread, neutral orbit and grazing orbit",
+        "notes": "",
+        "aiVisionNotes": "Neutral and grazing orbit captures preserve distinct surface responses. No albedo channel is aliased into roughness or normal."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:26:16.164913+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.79,
+      "aiVisionScore": 0.79,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "The existing warm-key book scene explains terrain height, contact shadows and enamel highlights without hiding the forms.",
+      "matched": [
+        "soft parchment contact shadows",
+        "warm gilt separation",
+        "visible path clearcoat",
+        "readable amber focal points"
+      ],
+      "mismatches": [
+        "goal illustration has denser painted atmospheric light than the live scene"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread, neutral orbit and grazing orbit",
+        "notes": "",
+        "aiVisionNotes": "Production, neutral-orbit and grazing-orbit views all remain legible; the scene owns lighting and the generated target does not."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:26:16.391852+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "The relief exposes named zone pivots, sockets, collider intent and animation anchors for Island Run ceremonies.",
+      "matched": [
+        "named part hierarchy",
+        "path and horizon sockets",
+        "relief collider",
+        "zone destruction groups",
+        "sun, gate, ray, hearth and emissive anchors"
+      ],
+      "mismatches": [
+        "no destructive gameplay behavior is enabled because the relief is presentation-only"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread, neutral orbit and grazing orbit",
+        "notes": "",
+        "aiVisionNotes": "Runtime metadata supports future completion and fill animations without gameplay writes or DOM-owned text."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T22:26:16.636114+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.84,
+        "componentStructure": 0.83,
+        "formDetail": 0.74,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.78
+      },
+      "featureReviews": [
+        {
+          "id": "living-horizon-vital-path",
+          "score": 0.92,
+          "notes": "One continuous violet-and-gilt sweep remains unbroken from foreground through the open gate."
+        },
+        {
+          "id": "living-horizon-five-zones",
+          "score": 0.84,
+          "notes": "Sanctuary/inlet, workshop/gear, gathering/hearth, path, and horizon each retain distinct silhouettes at the production camera."
+        },
+        {
+          "id": "living-horizon-open-gate",
+          "score": 0.86,
+          "notes": "Pass 2 separates the amber sun from a wider pair of open lattice leaves and preserves the central path opening."
+        },
+        {
+          "id": "living-horizon-page-attachment",
+          "score": 0.94,
+          "notes": "Double brass frame, contact plate, shadows, and orbit views keep every system visibly attached to parchment."
+        },
+        {
+          "id": "living-horizon-material-family",
+          "score": 0.78,
+          "notes": "Brass, violet enamel, teal enamel, timber, olive terrain, water, and amber respond separately; goal-image micro-patina is intentionally reduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "High and low geometry tiers preserve every macro zone; repeated details are bounded and reduced motion freezes decorative animation.",
+      "matched": [
+        "quality-tier curve segments",
+        "bounded tree and seat repetitions",
+        "sparse milestone studs",
+        "reduced-motion stability",
+        "131.5k full-book rendered triangles in lab evidence"
+      ],
+      "mismatches": [
+        "lab browser frame rate varied between 24 and 41 FPS under capture, so the 50 FPS aspirational high-tier target is not claimed"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png",
+        "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+      "reviewViewpoints": [
+        "front",
+        "three-quarter",
+        "side",
+        "thickness-axis",
+        "long-axis",
+        "map-stripped"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png",
+        "comparisonImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png",
+        "cameraView": "production spread, neutral orbit and grazing orbit",
+        "notes": "",
+        "aiVisionNotes": "The asset is launch-usable but performance evidence is honest: the full-book lab remained interactive, while this capture environment did not prove 50 FPS."
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "reference-fidelity",
+    "targetTriangles": 250000,
+    "maxDrawCalls": 160,
+    "textureSize": 2048,
+    "fpsTarget": 30,
+    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers."
+  },
+  "lightingFromPhoto": [
+    "Scene-owned warm key light from upper-left at soft intensity 2.2; reference shadows are excluded from albedo.",
+    "Cool-neutral fill light from camera-right at intensity 0.65 and ambient hemisphere contribution around 0.45.",
+    "Warm rim or environment reflection separates gilt silhouettes; use ACES filmic tone mapping with exposure near 1.0.",
+    "Existing parchment receives soft contact shadows and ambient occlusion beneath every relief zone; no independent ground plane."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Living Horizon relief page-mounted bas relief layered terrain extruded path brass enamel architectural miniature PBR mobile realtime repeated modules instancing",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-hand-painted-vs-pbr-texture",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[12]",
+        "score": 4.661903223664,
+        "snippets": [
+          "... baked directly into color (static, stylized) from textures that respond dynamically to scene lighting via separate PBR channels. Phân biệt kết cấu có ánh sáng được nướng trực tiếp vào màu (tĩnh, cách điệu) với kết cấu phản hồi động ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[12]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-meshphysicalmaterial-core-pbr-fields",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[0]",
+        "score": 4.632717063119,
+        "snippets": [
+          "The baseline Three.js material exposing direct scalar/map fields for the standard PBR channel set. Vật liệu Three.js cơ bản cung cấp trực tiếp các trường vô hướng/bản đồ cho bộ kênh PBR tiêu chuẩn. Recognition cues: Use whenever a static ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[0]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.description-pbr-vocabulary-caption-calibration",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[7]",
+        "score": 3.665318856211,
+        "snippets": [
+          "Embedding a technical material-attribute block (Albedo, Metalness, Roughness, Normals) with measured reflectance ranges directly into the structured description, not just prose. Nhúng một khối thuộc tính vật liệu kỹ thuật (Albedo, Metalness, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[7]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "pbrExtractionHistory": [
+    {
+      "materialId": "base",
+      "confidence": 0.86,
+      "verdict": "pass",
+      "usable": true,
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_albedo.png",
+          "url": "/compass-book/pbr/living-horizon/base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_roughness.png",
+          "url": "/compass-book/pbr/living-horizon/base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/living-horizon/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_normal.png",
+          "url": "/compass-book/pbr/living-horizon/base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_ao.png",
+          "url": "/compass-book/pbr/living-horizon/base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "materialId": "base",
+      "confidence": 0.86,
+      "verdict": "pass",
+      "usable": true,
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_albedo.png",
+          "url": "/compass-book/pbr/living-horizon/base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_roughness.png",
+          "url": "/compass-book/pbr/living-horizon/base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/living-horizon/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_normal.png",
+          "url": "/compass-book/pbr/living-horizon/base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-living-horizon/pbr-evidence/base_ao.png",
+          "url": "/compass-book/pbr/living-horizon/base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9699,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0271,
+        "colorDelta": {
+          "checked": 28,
+          "maxDeltaE": 50.42,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 16.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.38
+            },
+            {
+              "componentId": null,
+              "deltaE": 33.11
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 11.4
+            },
+            {
+              "componentId": null,
+              "deltaE": 30.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.77
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.09
+            },
+            {
+              "componentId": null,
+              "deltaE": 11.59
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.96
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.39
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.09
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.73
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 50.42
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.75
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 47.46
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.12
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "5b3b01c35493501b",
+      "passId": "blockout",
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9699,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0271,
+        "colorDelta": {
+          "checked": 28,
+          "maxDeltaE": 50.42,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 16.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.38
+            },
+            {
+              "componentId": null,
+              "deltaE": 33.11
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 11.4
+            },
+            {
+              "componentId": null,
+              "deltaE": 30.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.77
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.09
+            },
+            {
+              "componentId": null,
+              "deltaE": 11.59
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.96
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.39
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.09
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.73
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 50.42
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.75
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 47.46
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.12
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "5b3b01c35493501b",
+      "passId": "blockout",
+      "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png"
+    }
+  ]
+}

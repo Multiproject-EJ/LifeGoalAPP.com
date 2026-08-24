@@ -1,0 +1,476 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped",
+  "profile": "generic",
+  "currentStep": "stopped",
+  "currentPass": "blockout",
+  "checklist": [
+    {
+      "id": "image-analysis",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/workshop-fidelity-analysis.md"
+      ],
+      "reason": "",
+      "command": "Read grimoire/intake/image_analysis.md and analyze {reference}"
+    },
+    {
+      "id": "reference-suitability",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/workshop-fidelity-analysis.md"
+      ],
+      "reason": "",
+      "command": "Read grimoire/intake/validation_rubric.md and record a pass, conditional, or reject verdict for {reference}"
+    },
+    {
+      "id": "reference-admission",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/reference-admission-workshop-fidelity.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage1_intake/check_reference_admission.py {reference}"
+    },
+    {
+      "id": "local-spec-search",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/pre-spec-workshop-fidelity.json"
+      ],
+      "reason": "",
+      "command": "Run the local evidence search before authoring the assessment"
+    },
+    {
+      "id": "pre-spec-assessment",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/pre-spec-workshop-fidelity.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/new_pre_spec_assessment.py \"<name>\" --image {reference} --out assessment.json"
+    },
+    {
+      "id": "detail-inventory",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/detail-inventory-workshop-fidelity.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage1_intake/build_detail_inventory.py {reference} --mode grid-3x3 --out-dir detail-inventory --out di.json"
+    },
+    {
+      "id": "projection-route",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "Free-look multi-angle architectural glass must remain procedural and view-consistent; single-view projection would bake the illustrated landscape into the room and is deliberately not used.",
+      "command": "Record whether projection is required; if required run solve_camera_pose.py, delight_albedo.py, and bake_projected_texture.py, otherwise skip with a reason"
+    },
+    {
+      "id": "spec-authoring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
+    },
+    {
+      "id": "material-evidence",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+      ],
+      "reason": "The phase reuses the already-validated independent pressure-glass, dark-metal, bronze-trim, warm-emissive and cyan-diagnostic PBR families; only geometry and camera placement change.",
+      "command": "python3 forge/stage1_intake/material_region_analysis.py --manifest material-regions.json --out-dir material-evidence --out material-analysis.json (single-crop route: analyze_texture.py + extract_pbr_evidence.py per verified crop; otherwise skip with a reason)"
+    },
+    {
+      "id": "material-spec-wiring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+      ],
+      "reason": "The new conforming-shell window component is wired to the existing pressure-glass material and structural frame materials in the fresh spec.",
+      "command": "python3 forge/stage2_spec/apply_material_analysis.py {spec} material-analysis.json --in-place"
+    },
+    {
+      "id": "strict-validation",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+      ],
+      "reason": "",
+      "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
+    },
+    {
+      "id": "build-current-pass",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+    },
+    {
+      "id": "render-capture",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+    },
+    {
+      "id": "review-contract-read",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+    },
+    {
+      "id": "tier1-diagnostics",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+    },
+    {
+      "id": "multi-angle-review",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+    },
+    {
+      "id": "pass-gate-check",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+    },
+    {
+      "id": "ai-review-recorded",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+    },
+    {
+      "id": "pipeline-sync",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+    },
+    {
+      "id": "part-coverage",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
+    },
+    {
+      "id": "action-ready",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
+    }
+  ],
+  "loops": {
+    "perPass": {
+      "blockout": 3
+    },
+    "total": 3,
+    "maxPerPass": 3,
+    "maxTotal": 6
+  },
+  "artifacts": {
+    "reference": "docs/design/expedition-ship/references/fabrication-deck-panoramic-master-v1.png",
+    "spec": ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+  },
+  "passHistory": [
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Hand-refined the established factory: added one 32-triangle continuous bowed glass surface, a 12-triangle solid sill, a zero-triangle sparse line frame, and named internal camera anchors without regenerating the ship.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-38/fabrication-window.png",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-38/fabrication-overview.png",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-38/fabrication-room-to-window.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/feedback/render_capture.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "Tier-1 recorded two honest hard failures: room-to-window IoU 0.808 and fixed outward POV IoU 0.831 versus 0.85. AI review was not run. Root cause is the dark empty docked exterior behind otherwise-present glass.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-38/multi-angle.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "Gate check correctly failed because the best Tier-1 IoU is 0.834 < 0.85.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [],
+          "reason": "Tier 1 hard-failed, so the mandatory contract prohibits formal AI-vision scoring and comparison-sheet acceptance.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Correction 2 begins with the test-driven performance repair: replace the high-cost rounded glass sill with a 12-triangle solid bar while preserving the same attachment silhouette.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-38/fabrication-window-vista.png"
+          ],
+          "reason": "The sill substitution is visually equivalent at the fixed edge-on POV; the existing post-material capture remains valid evidence.",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/feedback/render_capture.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "Tier 1 hard-failed honestly: fixed workshop window POV silhouette IoU 0.8334 is below the 0.85 threshold; AI review remains prohibited.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-39/multi-angle.json"
+          ],
+          "reason": "No silhouette-area collapse. The two room captures are intentionally flagged as visually duplicated by the current fixed workshop camera, so this proves non-degeneracy but not full viewpoint diversity.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "Gate check correctly failed because the current Tier-1 IoU is 0.8334, below the required 0.85.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [],
+          "reason": "Tier 1 hard-failed, so formal AI vision scoring and comparison-sheet acceptance are prohibited. Exactly one deterministic-only refine-code review entry was recorded instead.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/ExpeditionShipThreeModel.ts"
+          ],
+          "reason": "Final bounded blockout correction: add a physical bowed 3-radial-segment pressure header, remove the 44-triangle ring/circle diagnostic glyph, and replace two repeated 6-sided arm cylinders with shorter folded box links. Projected full-ship metrics are Low 46,964 and High 71,964 triangles; the full 1,815-test suite and TypeScript both pass.",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-40/fabrication-window.png",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-40/fabrication-room-to-window.png",
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-40/fabrication-overview.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/feedback/render_capture.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "Final Tier 1 still hard-fails: fixed workshop window POV IoU is 0.8330 versus 0.85. The physical header improved visible pressure architecture but not the global reference mask.",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/gauntlets/evidence/expedition-ship-checkpoint-40/multi-angle.json"
+          ],
+          "reason": "No silhouette collapse. The duplicated room cameras remain a known lab-view limitation, not evidence of full angle diversity.",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "Final gate check correctly failed because Tier-1 IoU is 0.8330, below 0.85.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [],
+          "reason": "Tier 1 hard-failed, so formal AI vision scoring and comparison-sheet acceptance are prohibited. Exactly one deterministic-only final refine-code review was recorded.",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/expedition-ship/object-sculpt-spec-workshop-fidelity.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    }
+  ],
+  "reviewCursor": 3,
+  "iterationAction": "refine-code",
+  "stopReason": "max-correction-loops-reached:blockout:3/3"
+}

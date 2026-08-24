@@ -22645,6 +22645,61 @@
 
 .island-run-board__three-preview .island-5-three-pilot__canvas { touch-action: none; }
 
+.island-run-board__three-preview .island-5-three-pilot__train-ride-prompt {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: max(calc(env(safe-area-inset-bottom) + 154px), 168px);
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 218, 127, .6);
+  border-radius: 999px;
+  color: #fff5cf;
+  background: rgba(28, 15, 9, .72);
+  box-shadow: 0 8px 28px rgba(25, 8, 2, .28);
+  font: 800 10px/1.2 ui-sans-serif, system-ui, sans-serif;
+  transform: translateX(-50%);
+  backdrop-filter: blur(9px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud {
+  position: absolute;
+  z-index: 12;
+  top: max(calc(env(safe-area-inset-top) + 76px), 86px);
+  left: 50%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  width: min(88%, 430px);
+  padding: 10px 11px 10px 14px;
+  border: 1px solid rgba(232, 184, 86, .76);
+  border-radius: 15px;
+  color: #fff2cf;
+  background: linear-gradient(135deg, rgba(20, 13, 10, .92), rgba(49, 26, 16, .84));
+  box-shadow: 0 10px 32px rgba(19, 7, 2, .38), inset 0 1px rgba(255, 241, 203, .1);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud span,
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud strong,
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud small { display: block; }
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud span { color: #e3b65e; font-size: 7px; font-weight: 900; letter-spacing: .14em; }
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud strong { margin-top: 2px; font: 800 12px/1.16 Georgia, serif; }
+.island-run-board__three-preview .island-5-three-pilot__train-ride-hud small { margin-top: 3px; color: rgba(255, 239, 205, .7); font-size: 7px; }
+.island-run-board__three-preview .island-5-three-pilot__train-ride-actions { display: grid; gap: 5px; align-content: center; }
+.island-run-board__three-preview .island-5-three-pilot__train-ride-actions button {
+  min-width: 68px;
+  min-height: 27px;
+  border: 1px solid rgba(246, 207, 124, .48);
+  border-radius: 8px;
+  color: #fff3ce;
+  background: rgba(95, 49, 24, .78);
+  font-size: 7px;
+  font-weight: 900;
+}
+
 .island-run-board__three-preview-loading {
   position: absolute;
   inset: 0;
@@ -22948,6 +23003,151 @@
 .frostwell-mission-modal__status--online { border-left-color: #69ecbd; background: rgba(44, 151, 119, 0.14); }
 .frostwell-mission-modal__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 17px; }
 
+.cactus-canyon-spiral-modal__backdrop {
+  z-index: 10045;
+  place-items: center;
+  background: linear-gradient(to bottom, transparent 0 22%, rgba(44, 19, 7, .12) 34%, rgba(32, 14, 6, .78) 69%, rgba(20, 9, 5, .94));
+}
+
+.cactus-canyon-spiral-modal {
+  border-color: rgba(242, 179, 83, .72);
+  background:
+    radial-gradient(circle at 84% 9%, rgba(255, 192, 70, .22), transparent 36%),
+    linear-gradient(160deg, rgba(91, 42, 19, .98), rgba(48, 25, 18, .99) 60%, rgba(26, 21, 22, .99));
+  box-shadow: 0 24px 70px rgba(20, 7, 2, .62), inset 0 0 34px rgba(255, 176, 63, .08);
+}
+
+.cactus-canyon-spiral-modal .frostwell-mission-modal__eyebrow { color: #ffc366; }
+.cactus-canyon-spiral-modal .frostwell-mission-modal__lede { color: #f1d8bb; }
+.cactus-canyon-spiral-modal .frostwell-mission-modal__depth-track span {
+  background: linear-gradient(90deg, #c85e29, #f0a53f 68%, #ffe28a);
+  box-shadow: 0 0 12px rgba(244, 144, 49, .72);
+}
+.island-run-board__signature-mission-pill--canyon-spiral {
+  border-color: rgba(236, 159, 64, .8);
+  background: linear-gradient(145deg, rgba(102, 46, 19, .96), rgba(34, 29, 28, .97));
+  box-shadow: 0 8px 24px rgba(30, 12, 5, .4), inset 0 0 20px rgba(255, 176, 60, .12);
+}
+
+.cactus-canyon-spiral-modal__mountain {
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+  border: 1px solid rgba(241, 174, 76, .34);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 116%, rgba(227, 119, 39, .42), transparent 44%),
+    linear-gradient(#d7a05c 0 18%, #8a4828 19% 64%, #3f271f 100%);
+  box-shadow: inset 0 -22px 36px rgba(30, 13, 7, .35);
+}
+
+.cactus-canyon-spiral-modal__mesa {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 50%;
+  width: 66%;
+  padding: 8px 4px;
+  border: 2px solid #e7b66d;
+  border-radius: 48% 48% 12px 12px;
+  color: #fff2b7;
+  background: linear-gradient(#8b3c20, #4c271e);
+  box-shadow: 0 5px 10px rgba(37, 13, 4, .42);
+  transform: translateX(-50%);
+  font: 900 .62rem/1 ui-sans-serif, system-ui;
+  letter-spacing: .08em;
+  text-align: center;
+}
+
+.cactus-canyon-spiral-modal__column {
+  position: absolute;
+  inset: 45px 24% -8px;
+  border-radius: 38% 38% 26% 26% / 8% 8% 5% 5%;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 198, 102, .1) 0 8px, rgba(66, 26, 14, .1) 9px 13px),
+    linear-gradient(90deg, #5e2d20, #a95a2f 24%, #c3783e 52%, #7a3925 82%, #48251e);
+  box-shadow: inset 11px 0 18px rgba(255, 181, 82, .12), inset -12px 0 20px rgba(42, 15, 8, .36);
+}
+
+.cactus-canyon-spiral-modal__rails { position: absolute; z-index: 3; inset: 52px 13% 9px; }
+.cactus-canyon-spiral-modal__rails i {
+  position: absolute;
+  left: var(--spiral-inset);
+  right: var(--spiral-inset);
+  top: var(--spiral-top);
+  height: 10px;
+  border: 3px solid rgba(79, 55, 45, .42);
+  border-top-color: rgba(112, 85, 72, .46);
+  border-radius: 50%;
+  transform: rotate(var(--spiral-rotation));
+  transition: border-color 360ms ease, filter 360ms ease;
+}
+.cactus-canyon-spiral-modal__rails i.is-built {
+  border-color: #4c403b;
+  border-top-color: #f1d38e;
+  filter: drop-shadow(0 2px 2px rgba(20, 8, 4, .74));
+}
+.cactus-canyon-spiral-modal__mountain--building .cactus-canyon-spiral-modal__rails i.is-built:last-child {
+  animation: cactus-canyon-rail-build 420ms ease-in-out infinite alternate;
+}
+.cactus-canyon-spiral-modal__train {
+  position: absolute;
+  z-index: 6;
+  right: 13%;
+  top: 52%;
+  font-size: 1.1rem;
+  filter: drop-shadow(0 2px 2px rgba(35, 10, 3, .75));
+}
+.cactus-canyon-spiral-modal__readout {
+  position: absolute;
+  z-index: 7;
+  left: 10px;
+  bottom: 10px;
+  display: grid;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 207, 127, .34);
+  border-radius: 9px;
+  color: #fff0ae;
+  background: rgba(39, 18, 11, .82);
+}
+.cactus-canyon-spiral-modal__readout strong { font-size: 1rem; }
+.cactus-canyon-spiral-modal__readout small { color: #deb98e; font-size: .55rem; }
+.cactus-canyon-spiral-modal__wheel-panel { background: radial-gradient(circle at 50% 108%, rgba(236, 128, 48, .27), transparent 57%), rgba(31, 15, 9, .56); }
+
+.cactus-canyon-spiral-modal__blast-panel {
+  position: relative;
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(242, 179, 83, .34);
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 18%, rgba(255, 177, 66, .23), transparent 46%), rgba(31, 15, 9, .56);
+}
+.cactus-canyon-spiral-modal__charge { position: relative; width: 122px; height: 58px; filter: drop-shadow(0 8px 8px rgba(15, 5, 2, .52)); }
+.cactus-canyon-spiral-modal__charge > i { position: absolute; top: 11px; width: 78px; height: 17px; border: 2px solid #6d160e; border-radius: 8px; background: linear-gradient(#ef5a3f, #a52119); box-shadow: inset 7px 0 #d8a44d, inset -7px 0 #d8a44d; }
+.cactus-canyon-spiral-modal__charge > i:nth-child(1) { left: 5px; transform: rotate(-7deg); }
+.cactus-canyon-spiral-modal__charge > i:nth-child(2) { left: 20px; top: 25px; transform: rotate(4deg); }
+.cactus-canyon-spiral-modal__charge > i:nth-child(3) { left: 36px; top: 8px; transform: rotate(8deg); }
+.cactus-canyon-spiral-modal__charge > b { position: absolute; right: -2px; bottom: 0; padding: 4px 7px; border-radius: 999px; color: #2a160c; background: #ffd36d; font: 950 .72rem/1 ui-sans-serif, system-ui; }
+.cactus-canyon-spiral-modal__fuse { position: absolute; z-index: 2; top: 2px; right: 4px; width: 35px; height: 23px; border-top: 3px solid #2b2118; border-right: 3px solid #2b2118; border-radius: 0 18px 0 0; }
+.cactus-canyon-spiral-modal__fuse::after { content: ''; position: absolute; top: -7px; right: -7px; width: 8px; height: 8px; border-radius: 50%; background: #ffef9b; box-shadow: 0 0 7px 3px #ff8c32; opacity: 0; }
+.cactus-canyon-spiral-modal__charge.is-burning { animation: cactus-canyon-charge-rattle 130ms linear infinite; }
+.cactus-canyon-spiral-modal__charge.is-burning .cactus-canyon-spiral-modal__fuse::after { opacity: 1; animation: cactus-canyon-fuse-spark 420ms ease-out infinite; }
+.cactus-canyon-spiral-modal__blast-button { min-width: 205px; min-height: 54px; display: grid; place-items: center; gap: 3px; border: 2px solid #ffe19a; border-radius: 14px; color: #241008; background: linear-gradient(#ffcf66, #d36a2d); box-shadow: 0 7px 20px rgba(15, 5, 2, .48), inset 0 2px rgba(255,255,255,.36); font: 950 .75rem/1 ui-sans-serif, system-ui; letter-spacing: .045em; cursor: pointer; }
+.cactus-canyon-spiral-modal__blast-button small { font-size: .57rem; letter-spacing: 0; }
+.cactus-canyon-spiral-modal__blast-button:disabled { opacity: .5; filter: saturate(.5); cursor: default; }
+.cactus-canyon-spiral-modal__blast-panel > em { color: #ffe08a; font: 850 .7rem/1 ui-sans-serif, system-ui; font-style: normal; }
+@keyframes cactus-canyon-charge-rattle { 0%, 100% { transform: translate(0); } 50% { transform: translate(1px, -1px) rotate(.5deg); } }
+@keyframes cactus-canyon-fuse-spark { from { transform: scale(.7); opacity: 1; } to { transform: translate(5px, -6px) scale(1.5); opacity: 0; } }
+
+@keyframes cactus-canyon-rail-build {
+  from { filter: brightness(1) drop-shadow(0 1px 1px rgba(20, 8, 4, .6)); }
+  to { filter: brightness(1.8) drop-shadow(0 0 8px rgba(255, 191, 70, .95)); }
+}
+
 .island-tile--frostwell-drill .island-tile__face { border-color: #81e9f6; background: radial-gradient(circle, #dffbff 0 12%, #3c9abb 25%, #233b77 70%); box-shadow: inset 0 0 12px rgba(190, 250, 255, .72), 0 0 11px rgba(68, 218, 244, .75); }
 .island-tile--frostwell-drill .island-tile__value { color: #fff1ac; filter: drop-shadow(0 2px 2px #08223c); }
 
@@ -22969,6 +23169,16 @@
   border-color: rgba(226, 174, 78, .72);
   background: linear-gradient(145deg, rgba(41, 75, 55, .94), rgba(70, 42, 24, .96));
   box-shadow: 0 8px 24px rgba(22, 14, 8, .35), inset 0 0 18px rgba(255, 187, 65, .08);
+}
+
+.island-run-board__signature-mission-pill--sunken-treasure {
+  border-color: rgba(120, 237, 220, .82);
+  background: linear-gradient(145deg, rgba(20, 74, 79, .95), rgba(70, 48, 24, .96));
+  box-shadow: 0 8px 24px rgba(22, 14, 8, .34), inset 0 0 20px rgba(107, 255, 225, .13);
+}
+.island-run-board__signature-mission-pill--sunken-treasure:not(:disabled):hover {
+  border-color: rgba(255, 224, 133, .95);
+  box-shadow: 0 8px 26px rgba(22, 14, 8, .38), 0 0 18px rgba(107, 255, 225, .2);
 }
 
 .island-run-board__rootheart-completion {

@@ -51,7 +51,11 @@ const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const CARETAKER_CHARACTER_LAB_PATH = '/dev/caretaker-character-lab';
 const EGG_HATCH_THREE_LAB_PATH = '/dev/egg-hatch-3d';
 const ROBOT_FAMILY_THREE_LAB_PATH = '/dev/robot-family-3d';
+const EXPEDITION_SHIP_THREE_LAB_PATH = '/dev/expedition-ship-3d';
+const EXPEDITION_SHIP_GARAGE_PREVIEW_PATH = '/dev/expedition-ship-garage';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
+const COMPASS_BOOK_PROFILER_BUILD_ENABLED = import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true';
+const COMPASS_BOOK_PROFILER_PATH = '/dev/compass-book-profiler';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
@@ -255,6 +259,22 @@ function IslandTemplateKitRoute() {
   return TemplateKit ? <TemplateKit /> : null;
 }
 
+function CompassBookProfilerRoute() {
+  const [Profiler, setProfiler] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/compass-book/dev/CompassBookDeviceProfilerRoute').then((module) => {
+      if (isMounted) setProfiler(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Profiler ? <Profiler /> : null;
+}
+
 function CaretakerCharacterLabRoute() {
   const [CharacterLab, setCharacterLab] = useState<ComponentType | null>(null);
 
@@ -295,6 +315,43 @@ function RobotFamilyThreeLabRoute() {
   }, []);
 
   return RobotFamilyLab ? <RobotFamilyLab /> : null;
+}
+
+function ExpeditionShipThreeLabRoute() {
+  const [ExpeditionShipLab, setExpeditionShipLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/dev/ExpeditionShipThreeLab').then((module) => {
+      if (isMounted) setExpeditionShipLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return ExpeditionShipLab ? <ExpeditionShipLab /> : null;
+}
+
+function ExpeditionShipGaragePreviewRoute() {
+  const [GaragePreview, setGaragePreview] = useState<ComponentType<{
+    onOpenUpgrades: () => void;
+    onOpenCosmetics: () => void;
+  }> | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/components/ExpeditionShipGarageShowcase').then((module) => {
+      if (isMounted) setGaragePreview(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return GaragePreview ? (
+    <main style={{minHeight: '100vh', padding: 'clamp(12px, 3vw, 36px)', background: '#050b10'}}>
+      <div style={{width: 'min(1120px, 100%)', margin: '0 auto'}}>
+        <GaragePreview onOpenUpgrades={() => undefined} onOpenCosmetics={() => undefined} />
+      </div>
+    </main>
+  ) : null;
 }
 
 function Island001StoryPreviewRoute() {
@@ -372,6 +429,12 @@ function RootCrashFallback() {
 }
 
 function Root() {
+  const isCompassBookProfilerRoute =
+    COMPASS_BOOK_PROFILER_BUILD_ENABLED || (
+      import.meta.env.DEV &&
+      typeof window !== 'undefined' &&
+      window.location.pathname.replace(/\/+$/, '') === COMPASS_BOOK_PROFILER_PATH
+    );
   const isQuestVisualSystemPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -398,6 +461,14 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === ROBOT_FAMILY_THREE_LAB_PATH;
+  const isExpeditionShipThreeLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === EXPEDITION_SHIP_THREE_LAB_PATH;
+  const isExpeditionShipGaragePreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === EXPEDITION_SHIP_GARAGE_PREVIEW_PATH;
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -474,6 +545,10 @@ function Root() {
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  if (isCompassBookProfilerRoute) {
+    return <CompassBookProfilerRoute />;
+  }
 
   if (isQuestVisualSystemPreviewRoute) {
     return <QuestVisualSystemPreviewRoute />;
@@ -561,6 +636,14 @@ function Root() {
 
   if (isRobotFamilyThreeLabRoute) {
     return <RobotFamilyThreeLabRoute />;
+  }
+
+  if (isExpeditionShipThreeLabRoute) {
+    return <ExpeditionShipThreeLabRoute />;
+  }
+
+  if (isExpeditionShipGaragePreviewRoute) {
+    return <ExpeditionShipGaragePreviewRoute />;
   }
 
   if (
@@ -678,6 +761,10 @@ if (typeof window !== 'undefined') {
   });
 }
 
-if (import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED) {
+if (
+  import.meta.env.PROD
+  && !ISLAND_3D_PROFILER_BUILD_ENABLED
+  && !COMPASS_BOOK_PROFILER_BUILD_ENABLED
+) {
   registerServiceWorker();
 }

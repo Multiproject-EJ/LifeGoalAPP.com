@@ -130,6 +130,26 @@ export function validateCompassCurriculum(): CompassCurriculumValidationResult {
           errors.push(`Activity "${activity.id}" has duplicate questionId "${block.questionId}".`);
         }
         seen.add(block.questionId);
+        for (const option of block.options ?? []) {
+          if (option.visual?.kind === 'sprite') {
+            if (!option.visual.src || !option.visual.alt.trim()) {
+              errors.push(`Option "${option.id}" in "${activity.id}" has incomplete sprite metadata.`);
+            }
+            if (
+              option.visual.columns < 1
+              || option.visual.rows < 1
+              || option.visual.column < 0
+              || option.visual.column >= option.visual.columns
+              || option.visual.row < 0
+              || option.visual.row >= option.visual.rows
+            ) {
+              errors.push(`Option "${option.id}" in "${activity.id}" has an invalid sprite crop.`);
+            }
+          }
+          if (option.visual?.kind === 'symbol' && !option.visual.alt.trim()) {
+            errors.push(`Option "${option.id}" in "${activity.id}" has no visual text equivalent.`);
+          }
+        }
       }
     });
   }

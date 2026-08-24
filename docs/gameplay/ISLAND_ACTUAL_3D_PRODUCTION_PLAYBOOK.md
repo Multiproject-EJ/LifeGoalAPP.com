@@ -93,7 +93,8 @@ system. Reuse structure; create a different visit.
 
 Create before broad 3D implementation:
 
-1. one selected vertical goal image in
+1. one immutable `NNN-source.<ext>` image admitted through the Source Fidelity
+   Workloop, plus one selected repository copy in
    `docs/visual-references/island-NNN-<slug>/`;
 2. a dated Gauntlet/brief in `docs/gauntlets/`;
 3. a 3×3 detail inventory of the selected image;
@@ -105,6 +106,12 @@ Create before broad 3D implementation:
 
 Do not require ten arbitrary images. Start with one coherent master overview;
 add only the focus/turnaround evidence needed to remove actual ambiguity.
+
+The source image is a recurring visual target, not a one-time prompt. Read
+[`2026-08-21-island-source-fidelity-workloop.md`](../gauntlets/2026-08-21-island-source-fidelity-workloop.md)
+before intake. Preserve its SHA-256, keep runtime island numbering separate
+from text embedded in the concept, and never overwrite a source or accepted
+`done-vNNN` proof.
 
 ## Production loop
 
@@ -118,7 +125,10 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
 
 ### 1. Reference admission
 
-- Save the chosen master under `docs/visual-references/`.
+- Dry-run then apply `scripts/island_source_workloop.py intake` so an exact
+  dropped `NNN.<ext>` becomes immutable `NNN-source.<ext>`.
+- Resolve collisions and ambiguous names instead of guessing their island.
+- Save the chosen repository copy under `docs/visual-references/`.
 - Record its role as inspiration/goal, never runtime board art.
 - Lock island role (ordinary or every-fifth arena), identity, palette,
   landmark names, ambience, avoid list and phone composition.
@@ -126,6 +136,9 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
   base/shared dependencies and set the expected deployed-byte tier.
 - Reject reference tile counts and approximate geometry; the real 36-tile ring
   remains authoritative.
+- Write the reference-lock sheet: landmark identities/placement, depth stack,
+  palette/materials, critical features, approved board adaptations, forbidden
+  drift and hidden-side limitations.
 
 ### 2. img2threejs intake
 
@@ -194,7 +207,43 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
 - Capture working, post-click tail, settled resting and reduced-motion evidence
   at the real phone modal before approval.
 
-### 7. Gauntlet evidence loop
+### 7. Signature missions and moving infrastructure
+
+When an island contains a buildable railway, bridge, lift, excavation or other
+moving system, define its complete player loop before adding final scenery:
+
+- mission briefing and unlock condition;
+- route-relative pickup positions and authored pickup quantities;
+- canonical inventory, spend action and monotonic completion state;
+- one deterministic visible construction result per spend;
+- presentation-only cinematic, focus camera, reduced-motion path and replayable
+  developer preview;
+- completion beat and safe compatibility for saves created before the mission.
+
+Commit gameplay through the canonical action service before starting the
+cinematic. The cinematic may read the committed before/after state, but must not
+own or duplicate inventory, reward or completion authority. It must also be
+interrupt-safe: closing a modal, changing focus or using reduced motion cannot
+lose or repeat the gameplay result.
+
+Audit two clearances separately and early:
+
+- the protected 36-tile board corridor against every landscape/landmark object;
+- the complete swept envelope of each moving vehicle—including carriages—against
+  every L3 landmark mesh, instance, tunnel, switch and camera focus volume.
+
+Run the vehicle-clearance audit again whenever a landmark grows, a track moves
+or a review camera changes. A decorative doorway or facade painted over a track
+is not a tunnel; show a physically open throughpass with enough width, height
+and turning clearance on both elevations. Keep shared transport construction
+language consistent without making the five landmarks repeat silhouettes.
+
+Environmental anchors that establish direction—especially a sun, moon or
+distant landmark—must live in world space. Verify them from overview, left,
+right and rear orbits so they do not follow the camera. Review background depth,
+360 construction and moving-system clearance at blockout, before micro-detail.
+
+### 8. Gauntlet evidence loop
 
 After each meaningful pass capture:
 
@@ -206,11 +255,24 @@ After each meaningful pass capture:
 - timed ambience proof (for example t0/t6 or a short clip);
 - goal/current comparison.
 
+At blockout, terrain/background, landmark, materials/life, integration and
+final review, also return to the original `NNN-source` image. Record the five
+Source Fidelity scores (`composition`, `landmarkIdentity`,
+`paletteMaterials`, `terrainBackground`, `phoneReadability`), critical
+mismatches and one decision (`pass`, `revise`, `user-accepted-drift`) with the
+workloop helper. The latest generated target never replaces this source check.
+
 Critique the largest observed mismatch first. Change one bounded problem group,
 recapture and log the delta. Do not claim 10/10 from code inspection or a
 single flattering camera.
 
-### 8. Mobile optimization and release
+For animated construction, also preserve a deterministic query/toggle that can
+replay each segment and capture before, ignition, impact and completed frames.
+The safest review camera usually uses a bounded exterior arc that keeps the work
+face visible; a literal full spin is wrong when the terrain itself occludes the
+action.
+
+### 9. Mobile optimization and release
 
 - Quality tiers must change real cost, not only labels.
 - Profile the representative High scene on the physical target phone.
@@ -234,6 +296,8 @@ An island is complete only when:
 - it has a unique authored 3D world and stable routing identity;
 - all five L1–L3 landmarks are coherent and readable at phone scale;
 - the real board, token, rewards, clicks, Build flow and caretaker still work;
+- any signature mission has canonical, save-compatible progression and its
+  moving geometry passes swept-envelope clearance from all relevant views;
 - ambience is alive but quality-scalable and reduced-motion safe;
 - overview/orbits/focus/level/motion evidence matches current code;
 - physical-device and static budgets pass, or any review/waiver is explicit;
@@ -241,6 +305,11 @@ An island is complete only when:
   bytes are recorded without avoidable duplicated binaries;
 - the normal app—not a lab—is installed for user testing;
 - its Gauntlet records delivered work, known gaps and the next optional pass.
+- its original source hash is intact and the final source/current review has
+  overall fidelity ≥0.80, every dimension ≥0.75 and no critical mismatch, or
+  Eivind explicitly recorded a `user-accepted-drift` exception;
+- its accepted overview exists as immutable `NNN-done-vNNN.<ext>` evidence and
+  `_workflow/NNN/status.json` records the version.
 
 ## New-chat starter
 
@@ -252,5 +321,9 @@ Use this prompt, replacing `NNN` and the slug:
 > existing work. Run the img2threejs state gate, then continue from its exact
 > next step. Keep the real 36-tile board and gameplay authority unchanged. Use
 > the selected goal image in docs/visual-references as the visual target. Work
-> one landmark at a time, capture phone/360 evidence, enforce High mobile
-> budgets, and never leave a profiler build installed in place of HabitGame.
+> one landmark at a time. Return to the immutable NNN-source image at every
+> major pass, record the five source-fidelity scores and block unresolved
+> identity drift. Capture phone/360 evidence, enforce High mobile
+> budgets, define signature-mission gameplay before its final infrastructure,
+> audit moving-vehicle swept clearance separately from board clearance, and
+> never leave a profiler build installed in place of HabitGame.

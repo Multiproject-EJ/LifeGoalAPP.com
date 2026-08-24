@@ -1,0 +1,26 @@
+[
+  {
+    "id": "optimization-visual-parity",
+    "score": 0.99,
+    "passed": true,
+    "notes": "The pre/post focused comparison preserves navy grain, gilt breakup, enamel response, node identities, Trial facets, candidate paths, and Mirage separation."
+  },
+  {
+    "id": "tier-semantic-parity",
+    "score": 0.93,
+    "passed": true,
+    "notes": "The low tier keeps all five forces, central Trial, three candidate paths, and external Mirage countable while reducing tessellation, data maps, and shadow cost."
+  },
+  {
+    "id": "runtime-budget",
+    "score": 0.95,
+    "passed": true,
+    "notes": "Focused high stays at 69 calls and 31.5k rendered triangles; full high records 296/118.4k and low 137/19k, with repeated rails, spokes, bezels, sockets, stars, rivets, and tether beads instanced."
+  },
+  {
+    "id": "texture-upload-budget",
+    "score": 0.96,
+    "passed": true,
+    "notes": "Five non-color full-book maps move from 1024 to 512 for about 15 MiB RGBA-equivalent savings while 1024 color and Chapter IV enamel channels remain intact."
+  }
+]

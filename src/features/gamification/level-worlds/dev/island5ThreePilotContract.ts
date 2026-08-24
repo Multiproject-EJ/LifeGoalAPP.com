@@ -106,6 +106,7 @@ export type Island5CameraPresetId =
   | 'orbit-right'
   | 'frostwell'
   | 'powerworks'
+  | 'canyon-spiral'
   | Island5LandmarkId;
 
 export interface Island5CameraPreset {
@@ -658,6 +659,7 @@ export const ISLAND_5_CAMERA_PRESETS: readonly Island5CameraPreset[] = [
   { id: 'orbit-right', label: 'Right orbit', position: [24, 23, 28], target: [0, 0.25, 0], durationMs: 1100 },
   { id: 'frostwell', label: 'Frostwell drill', position: [0, 5.4, 2.8], target: [0, 0.82, -9.4], durationMs: 880 },
   { id: 'powerworks', label: 'Rootheart Powerworks', position: [0, 1.6, 19.5], target: [0, -3.1, 5.35], durationMs: 920 },
+  { id: 'canyon-spiral', label: 'Canyon Spiral Railway', position: [22, 9, 31], target: [0, -5.8, 0], durationMs: 980 },
   { id: 'boss', label: 'Crown Citadel', position: [0, 9.2, 13.5], target: [0, 1.85, 0], durationMs: 980 },
   { id: 'hatchery', label: 'Coral Cradle', position: [-8.5, 7, 4.5], target: [-4.36, 0.72, -3.9], durationMs: 900 },
   { id: 'habit', label: 'Tidekeeper Hall', position: [8.5, 7, 4.5], target: [4.36, 0.86, -3.9], durationMs: 900 },

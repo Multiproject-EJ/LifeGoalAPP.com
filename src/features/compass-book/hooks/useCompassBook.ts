@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   COMPASS_CURRICULUM_VERSION,
+  getCompassChapterMethodVersion,
   type CompassAnswerValue,
   type CompassBookChapterId,
   type CompassChapterProgress,
@@ -21,7 +22,7 @@ import {
 } from '../types';
 import { getChapterActivities } from '../content/compassBookCurriculum';
 import { buildDemoChapterStates } from '../content/demoBook';
-import { computeChapterProgress, isActivityComplete } from '../logic/progress';
+import { computeChapterProgress, mergeCompletedActivityIds } from '../logic/progress';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import {
   emptyChapterState,
@@ -57,6 +58,8 @@ export type UseCompassBook = {
   ) => Promise<void>;
   /** Seal a chapter: run its projector, snapshot confirmed output, mark complete. */
   sealChapter: (chapterId: CompassBookChapterId) => Promise<void>;
+  /** Adopt the latest chapter method without changing its sealed snapshot. */
+  beginChapterMethodRevisit: (chapterId: CompassBookChapterId) => Promise<void>;
 };
 
 export type UseCompassBookOptions = {
@@ -161,6 +164,7 @@ export function useCompassBook(
           value: entry.value,
           sourceMode: 'fixed_guided',
           curriculumVersion: COMPASS_CURRICULUM_VERSION,
+          methodVersion: getCompassChapterMethodVersion(chapterId),
           answeredAt: now,
           updatedAt: now,
           confirmed: entry.confirmed ?? true,
@@ -168,9 +172,11 @@ export function useCompassBook(
       }
 
       const activitiesDef = getChapterActivities(chapterId);
-      const completedActivityIds = activitiesDef
-        .filter((activity) => isActivityComplete(activity, answers))
-        .map((activity) => activity.id);
+      const completedActivityIds = mergeCompletedActivityIds(
+        activitiesDef,
+        base.completedActivityIds,
+        answers,
+      );
 
       let next: CompassChapterState = {
         ...base,
@@ -222,5 +228,28 @@ export function useCompassBook(
     [states, persist],
   );
 
-  return { ready, saving, getChapterState, getProgress, saveActivityAnswers, sealChapter };
+  /**
+   * Opt a chapter into its latest elicitation method without unsealing or
+   * replacing the historical output. New supplementary answers record the new
+   * method version; the player decides if and when to revise the reading.
+   */
+  const beginChapterMethodRevisit = useCallback(
+    async (chapterId: CompassBookChapterId) => {
+      const base = states[chapterId] ?? emptyChapterState(chapterId);
+      const contentVersion = getCompassChapterMethodVersion(chapterId);
+      if (base.contentVersion === contentVersion) return;
+      await persist({ ...base, contentVersion });
+    },
+    [states, persist],
+  );
+
+  return {
+    ready,
+    saving,
+    getChapterState,
+    getProgress,
+    saveActivityAnswers,
+    sealChapter,
+    beginChapterMethodRevisit,
+  };
 }

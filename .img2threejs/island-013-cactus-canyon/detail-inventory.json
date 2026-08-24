@@ -1,0 +1,209 @@
+{
+  "sourceImage": "docs/visual-references/island-013-cactus-canyon/013-source.png",
+  "zonesDir": ".img2threejs/island-013-cactus-canyon/detail-zones",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 16,
+    "details": [
+      {
+        "id": "sunset-cloud-haze",
+        "kind": "stain",
+        "description": "Peach-gold sky transitions into lower-value lavender haze behind the far buttes; soft cloud bands remain atmospheric rather than solid scenery.",
+        "region": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 0.34, "units": "normalized"},
+        "scale": "macro",
+        "affects": "background value and depth separation",
+        "mapsTo": {"type": "material.localOverrides", "ref": "sky-material.sunset-haze-gradient"},
+        "evidenceRef": "detail-zones/zone-r0c0.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "far-butte-strata",
+        "kind": "ridge",
+        "description": "Distant vertical buttes use stacked horizontal strata shelves and softened eroded corners with decreasing contrast through depth.",
+        "region": {"x": 0.24, "y": 0.18, "width": 0.58, "height": 0.32, "units": "normalized"},
+        "scale": "meso",
+        "affects": "far canyon silhouette and atmospheric depth",
+        "mapsTo": {"type": "component.localFeatures", "ref": "background-buttes.layered-strata"},
+        "evidenceRef": "detail-zones/zone-r0c1.png",
+        "confidence": 0.91
+      },
+      {
+        "id": "station-gabled-tiering",
+        "kind": "contour",
+        "description": "The central station stacks a broad gabled base, narrower upper rooms and a steep bell-tower roof into one dominant stepped silhouette.",
+        "region": {"x": 0.25, "y": 0.29, "width": 0.45, "height": 0.35, "units": "normalized"},
+        "scale": "macro",
+        "affects": "central landmark identity",
+        "mapsTo": {"type": "component.localFeatures", "ref": "union-station.stepped-gable-silhouette"},
+        "evidenceRef": "detail-zones/zone-r1c1.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "station-warm-windows",
+        "kind": "emissive",
+        "description": "Repeated narrow arched windows emit restrained amber light from recessed dark openings across the station tiers.",
+        "region": {"x": 0.32, "y": 0.34, "width": 0.34, "height": 0.25, "units": "normalized"},
+        "scale": "micro",
+        "affects": "inhabited station read and warm/cool separation",
+        "mapsTo": {"type": "material.localOverrides", "ref": "window-material.amber-recess-emission"},
+        "evidenceRef": "detail-zones/zone-r1c1.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "station-timber-bracing",
+        "kind": "linework",
+        "description": "Dark timber posts, cross braces, plank seams and lighter worn edges articulate each gabled volume.",
+        "region": {"x": 0.27, "y": 0.35, "width": 0.40, "height": 0.28, "units": "normalized"},
+        "scale": "meso",
+        "affects": "frontier construction language",
+        "mapsTo": {"type": "component.localFeatures", "ref": "union-station.timber-frame-system"},
+        "evidenceRef": "detail-zones/zone-r1c1.png",
+        "confidence": 0.95
+      },
+      {
+        "id": "bell-flag-finial",
+        "kind": "fastener",
+        "description": "A small star flag, pole finial and visible bell/cupola hardware terminate the station tower.",
+        "region": {"x": 0.42, "y": 0.20, "width": 0.17, "height": 0.20, "units": "normalized"},
+        "scale": "micro",
+        "affects": "central tower crown identity",
+        "mapsTo": {"type": "component.localFeatures", "ref": "union-station.bell-flag-crown"},
+        "evidenceRef": "detail-zones/zone-r0c1.png",
+        "confidence": 0.90
+      },
+      {
+        "id": "windmill-radial-blades",
+        "kind": "fastener",
+        "description": "A dense radial set of tapered metal blades attaches to one hub above the timber trestle and ranch roof.",
+        "region": {"x": 0.63, "y": 0.19, "width": 0.25, "height": 0.28, "units": "normalized"},
+        "scale": "meso",
+        "affects": "rear-right landmark silhouette and motion",
+        "mapsTo": {"type": "component.localFeatures", "ref": "windmill-ranch.radial-rotor-system"},
+        "evidenceRef": "detail-zones/zone-r0c2.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "water-tower-trestle",
+        "kind": "linework",
+        "description": "The cylindrical tank sits on four tall timber legs with cross-braced bays, a conical metal roof and projecting pipework.",
+        "region": {"x": 0.07, "y": 0.32, "width": 0.28, "height": 0.27, "units": "normalized"},
+        "scale": "meso",
+        "affects": "rear-left landmark silhouette",
+        "mapsTo": {"type": "component.localFeatures", "ref": "rail-nest-waterworks.trestle-bracing"},
+        "evidenceRef": "detail-zones/zone-r1c0.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "rail-paired-steel-bands",
+        "kind": "ridge",
+        "description": "Two continuous steel rails form a dark elliptical band with a narrow bright upper highlight and rusty side response.",
+        "region": {"x": 0.0, "y": 0.44, "width": 1.0, "height": 0.23, "units": "normalized"},
+        "scale": "macro",
+        "affects": "railway identity and town enclosure",
+        "mapsTo": {"type": "component.localFeatures", "ref": "railway-system.paired-rail-curves"},
+        "evidenceRef": "detail-zones/zone-r1c0.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "rail-repeated-sleepers",
+        "kind": "fastener",
+        "description": "Closely spaced timber sleepers and small spikes repeat beneath the rails with even path spacing and slight value variation.",
+        "region": {"x": 0.0, "y": 0.44, "width": 1.0, "height": 0.23, "units": "normalized"},
+        "scale": "micro",
+        "affects": "railway density and scale",
+        "mapsTo": {"type": "component.localFeatures", "ref": "railway-system.instanced-sleepers-fasteners"},
+        "evidenceRef": "detail-zones/zone-r1c2.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "locomotive-wheel-rods",
+        "kind": "fastener",
+        "description": "Multiple dark wheels with brass rims are linked by a horizontal connecting rod below the blue-black boiler and cab.",
+        "region": {"x": 0.15, "y": 0.52, "width": 0.50, "height": 0.14, "units": "normalized"},
+        "scale": "meso",
+        "affects": "locomotive articulation",
+        "mapsTo": {"type": "component.localFeatures", "ref": "locomotive.wheel-and-rod-assembly"},
+        "evidenceRef": "detail-zones/zone-r1c1.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "locomotive-steam-soot",
+        "kind": "stain",
+        "description": "White steam exits the chimney while soot-darkening concentrates around the upper stack and boiler seams.",
+        "region": {"x": 0.24, "y": 0.48, "width": 0.22, "height": 0.16, "units": "normalized"},
+        "scale": "micro",
+        "affects": "locomotive motion and material history",
+        "mapsTo": {"type": "material.localOverrides", "ref": "locomotive-material.steam-soot-mask"},
+        "evidenceRef": "detail-zones/zone-r1c1.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "tunnel-stone-arch",
+        "kind": "hole",
+        "description": "A deep black rail opening cuts through an orange rock mound with a blocky weathered arch and small sign plate above.",
+        "region": {"x": 0.72, "y": 0.37, "width": 0.23, "height": 0.20, "units": "normalized"},
+        "scale": "meso",
+        "affects": "rail continuity and right-side negative space",
+        "mapsTo": {"type": "component.localFeatures", "ref": "rail-tunnel.deep-arch-opening"},
+        "evidenceRef": "detail-zones/zone-r1c2.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "sheriff-porch-sign",
+        "kind": "contour",
+        "description": "The compact two-storey sheriff office uses a deep porch, square roof lantern, projecting sign silhouette and side fence.",
+        "region": {"x": 0.65, "y": 0.55, "width": 0.28, "height": 0.19, "units": "normalized"},
+        "scale": "meso",
+        "affects": "front-right landmark identity",
+        "mapsTo": {"type": "component.localFeatures", "ref": "sheriff-archive.porch-roof-sign-silhouette"},
+        "evidenceRef": "detail-zones/zone-r1c2.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "mesa-vertical-strata",
+        "kind": "groove",
+        "description": "The floating cliff face is broken into vertical fins by deep dark grooves, with horizontal shelf bands and irregular chipped rim blocks.",
+        "region": {"x": 0.0, "y": 0.58, "width": 1.0, "height": 0.28, "units": "normalized"},
+        "scale": "meso",
+        "affects": "floating mesa depth and geological read",
+        "mapsTo": {"type": "component.localFeatures", "ref": "mesa-cliff.vertical-strata-and-shelf-bands"},
+        "evidenceRef": "detail-zones/zone-r2c0.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "sandstone-cavity-edge-variation",
+        "kind": "stain",
+        "description": "Broken sandstone edges are brighter ochre while recessed cracks and undersides shift to dark terracotta/brown.",
+        "region": {"x": 0.0, "y": 0.31, "width": 1.0, "height": 0.55, "units": "normalized"},
+        "scale": "micro",
+        "affects": "sandstone depth and weathering",
+        "mapsTo": {"type": "material.localOverrides", "ref": "sandstone-material.edge-cavity-weathering"},
+        "evidenceRef": "detail-zones/zone-r1c0.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "saguaro-ribs-arms",
+        "kind": "ridge",
+        "description": "Saguaro cacti vary in height, arm count and sage/olive value; longitudinal ribs catch thin highlights.",
+        "region": {"x": 0.02, "y": 0.32, "width": 0.94, "height": 0.38, "units": "normalized"},
+        "scale": "micro",
+        "affects": "biome identity and ground-life variation",
+        "mapsTo": {"type": "component.localFeatures", "ref": "cactus-system.varied-ribbed-saguaro-family"},
+        "evidenceRef": "detail-zones/zone-r1c0.png",
+        "confidence": 0.95
+      },
+      {
+        "id": "frontier-fence-prop-density",
+        "kind": "fastener",
+        "description": "Short timber fences, crates, barrels, sheds and posts create irregular clusters between buildings and cliff edges without filling every gap.",
+        "region": {"x": 0.05, "y": 0.39, "width": 0.90, "height": 0.30, "units": "normalized"},
+        "scale": "micro",
+        "affects": "miniature town storytelling density",
+        "mapsTo": {"type": "component.localFeatures", "ref": "frontier-props.instanced-fence-crate-clusters"},
+        "evidenceRef": "detail-zones/zone-r1c2.png",
+        "confidence": 0.91
+      }
+    ]
+  },
+  "authoringInstruction": "All 18 observed details must map to matching component localFeatures or material localOverrides in the sculpt spec."
+}

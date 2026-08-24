@@ -25,7 +25,7 @@ import type {
   CompassBookChapterDefinition,
   CompassChapterStageIndex,
 } from '../types';
-import { COMPASS_CURRICULUM_VERSION } from '../types';
+import { getCompassChapterMethodVersion } from '../types';
 
 const CHAPTER_ID = 'living_wheel' as const;
 
@@ -64,6 +64,31 @@ const MOMENTUM_OPTIONS: readonly CompassBlockOption[] = [
   { id: 'flat', label: 'Flat' },
   { id: 'declining', label: 'Declining' },
 ];
+
+const CONFIDENCE_OPTIONS: readonly CompassBlockOption[] = [
+  { id: 'tentative', label: 'Tentative — first impression' },
+  { id: 'plausible', label: 'Plausible — some evidence' },
+  { id: 'strong', label: 'Strong — repeated evidence' },
+];
+
+const REVIEW_TRIGGER_OPTIONS: readonly CompassBlockOption[] = [
+  { id: '2_weeks', label: 'After 2 weeks of testing' },
+  { id: '4_weeks', label: 'After 4 weeks' },
+  { id: 'season_change', label: 'When this season changes' },
+  { id: 'major_change', label: 'After a major life change' },
+];
+
+function evidence(questionId: string, prompt: string, placeholder: string): CompassBlockDefinition {
+  return {
+    questionId,
+    type: 'short_text',
+    prompt,
+    required: true,
+    placeholder,
+    helpText: 'A private phrase is enough. Name what happened, not what it says about you.',
+    maxLength: 180,
+  };
+}
 
 function areaChoice(questionId: string, prompt: string): CompassBlockDefinition {
   return {
@@ -128,6 +153,7 @@ type ActivitySeed = {
   title: string;
   shortTitle: string;
   description?: string;
+  completionMessage?: string;
   required: boolean;
   blocks: CompassBlockDefinition[];
 };
@@ -136,32 +162,46 @@ const SEEDS: ActivitySeed[] = [
   // Stage 1 — Reveal the wheel (1–4)
   {
     order: 1,
-    title: 'Your strongest area',
+    title: 'A moment life worked',
     shortTitle: 'Strongest',
-    description: 'Reveal the wheel by naming where life already works.',
+    description: 'Start with one recent scene. The label comes second.',
     required: true,
-    blocks: [areaChoice('strongest_area', 'Which part of life feels most alive right now?')],
+    blocks: [
+      evidence('strongest_evidence', 'Recall a recent moment when life felt unusually steady or alive. What was happening?', 'e.g. Cooking with friends after a calm workday'),
+      areaChoice('strongest_area', 'Which spoke does that moment most clearly belong to?'),
+    ],
   },
   {
     order: 2,
-    title: 'Your most strained area',
+    title: 'A moment of strain',
     shortTitle: 'Strained',
     required: true,
-    blocks: [areaChoice('strained_area', 'Which part of life feels most strained?')],
+    blocks: [
+      evidence('strained_evidence', 'Recall a recent moment when life felt stretched or costly. What happened?', 'e.g. I cancelled plans because work had emptied me'),
+      areaChoice('strained_area', 'Which spoke carried most of that strain?'),
+    ],
   },
   {
     order: 3,
-    title: 'Most mental space',
+    title: 'What keeps returning',
     shortTitle: 'Mental space',
     required: true,
-    blocks: [areaChoice('mental_space_area', 'Which area takes up the most of your mental space?')],
+    blocks: [
+      evidence('mental_space_evidence', 'What thought, decision, or unfinished concern has repeatedly returned this week?', 'e.g. Whether I can afford to change roles'),
+      areaChoice('mental_space_area', 'Which spoke is using that mental space?'),
+    ],
   },
   {
     order: 4,
-    title: 'What you avoid',
+    title: 'The unopened door',
     shortTitle: 'Avoided',
+    description: 'Avoidance can mean fear, fatigue, low priority, or poor timing. We will not assume which.',
+    completionMessage: 'First-impression map complete. Next, all eight spokes get an equal scan.',
     required: true,
-    blocks: [areaChoice('avoided_area', 'Which area are you quietly avoiding?')],
+    blocks: [
+      evidence('avoided_evidence', 'What small task, conversation, or decision have you repeatedly postponed?', 'e.g. Opening the pension statement'),
+      areaChoice('avoided_area', 'Which spoke does that unopened door belong to?'),
+    ],
   },
 
   // Stage 2 — Score now & good enough (5–8), four areas per island
@@ -193,6 +233,7 @@ const SEEDS: ActivitySeed[] = [
     title: 'Good-enough — life four',
     shortTitle: 'Enough B',
     required: true,
+    completionMessage: 'The useful gap is now visible: not “perfect versus now,” but “good enough for this season versus now.”',
     blocks: perAreaScales('good_enough', 'Good-enough level for this season', 'Low', 'High', GROUP_B),
   },
 
@@ -225,6 +266,7 @@ const SEEDS: ActivitySeed[] = [
     title: 'Emotional weather — life four',
     shortTitle: 'Weather B',
     required: true,
+    completionMessage: 'Emotional weather added. It colours the map, but it does not define the territory.',
     blocks: perAreaEmotion(GROUP_B),
   },
 
@@ -257,6 +299,7 @@ const SEEDS: ActivitySeed[] = [
     title: 'Spillover — life four',
     shortTitle: 'Spillover B',
     required: true,
+    completionMessage: 'Scan complete. The book can now offer mechanics as hypotheses for you to challenge.',
     blocks: perAreaScales('spillover', 'When this improves, how much do other areas improve', 'Barely', 'A lot', GROUP_B),
   },
 
@@ -265,7 +308,7 @@ const SEEDS: ActivitySeed[] = [
     order: 17,
     title: 'Pattern & Engine',
     shortTitle: 'Pattern',
-    description: 'A first read of your wheel’s mechanics — you can revise these at the end.',
+    description: 'Predict first, then compare your answer with the pattern drawn by the wheel.',
     required: true,
     blocks: [
       {
@@ -275,7 +318,8 @@ const SEEDS: ActivitySeed[] = [
         required: true,
         options: [...EMOTION_OPTIONS],
       },
-      areaChoice('candidate_engine', 'Engine — which area most powers the rest of your life?'),
+      areaChoice('candidate_engine', 'Engine hypothesis — which spoke seems to help several others when it is healthy?'),
+      singleChoice('wheel_confidence', 'How much real-life evidence supports that reading?', CONFIDENCE_OPTIONS),
     ],
   },
   {
@@ -284,8 +328,16 @@ const SEEDS: ActivitySeed[] = [
     shortTitle: 'Brake',
     required: true,
     blocks: [
-      areaChoice('candidate_brake', 'Brake — which area most holds you back?'),
-      areaChoice('candidate_fragile', 'Fragile Spoke — which area is most at risk if ignored?'),
+      areaChoice('candidate_brake', 'Brake hypothesis — which strained spoke seems to tax other areas?'),
+      areaChoice('candidate_fragile', 'Fragile Spoke hypothesis — which area most needs protection this season?'),
+      {
+        questionId: 'wheel_counterevidence',
+        type: 'short_text',
+        prompt: 'What fact does not fit this reading? (optional but useful)',
+        required: false,
+        placeholder: 'e.g. Work is strained, but it does not actually harm home life',
+        maxLength: 180,
+      },
     ],
   },
   {
@@ -294,7 +346,7 @@ const SEEDS: ActivitySeed[] = [
     shortTitle: 'Lever',
     required: true,
     blocks: [
-      areaChoice('candidate_lever', 'Lever — the smallest change that would lift several areas?'),
+      areaChoice('candidate_lever', 'Lever hypothesis — where could a small experiment plausibly help more than one spoke?'),
       areaChoice('next_move_area', 'Which area will your next move focus on?'),
       {
         questionId: 'next_move',
@@ -303,7 +355,7 @@ const SEEDS: ActivitySeed[] = [
         // required signal. Players who want to name the move still can, and the
         // finale statement (island 20) remains the one required line.
         required: false,
-        prompt: 'In one line, what is the single next move? (optional)',
+        prompt: 'Design a small test, not a life overhaul. What will you try? (optional)',
         placeholder: 'e.g. Walk 15 minutes after lunch on weekdays.',
         maxLength: 200,
       },
@@ -313,7 +365,8 @@ const SEEDS: ActivitySeed[] = [
     order: 20,
     title: 'Confirm the wheel',
     shortTitle: 'Confirm',
-    description: 'Review the projected wheel and seal the chapter.',
+    description: 'Preserve a dated working model. You are sealing the reading, not declaring permanent truth.',
+    completionMessage: 'Wheel preserved. You now have a testable reading, a counterweight, and a reason to revisit it.',
     required: true,
     blocks: [
       {
@@ -324,6 +377,7 @@ const SEEDS: ActivitySeed[] = [
         placeholder: 'e.g. Steady the body, protect home, push gently on work.',
         maxLength: 200,
       },
+      singleChoice('wheel_review_trigger', 'When should this reading be reviewed?', REVIEW_TRIGGER_OPTIONS),
       {
         questionId: 'wheel_review',
         type: 'review',
@@ -350,6 +404,7 @@ function buildActivity(seed: ActivitySeed): CompassBookActivityDefinition {
     title: seed.title,
     shortTitle: seed.shortTitle,
     description: seed.description,
+    completionMessage: seed.completionMessage,
     required: seed.required,
     authored: true,
     blocks: seed.blocks,
@@ -378,4 +433,12 @@ export const chapter1LivingWheel: CompassBookChapterDefinition = {
 };
 
 /** Re-exported so the curriculum version is visible at the chapter module boundary. */
-export const CHAPTER1_CURRICULUM_VERSION = COMPASS_CURRICULUM_VERSION;
+export const CHAPTER1_CURRICULUM_VERSION = getCompassChapterMethodVersion(CHAPTER_ID);
+
+function singleChoice(
+  questionId: string,
+  prompt: string,
+  options: readonly CompassBlockOption[],
+): CompassBlockDefinition {
+  return { questionId, type: 'single_choice', prompt, required: true, options: [...options] };
+}

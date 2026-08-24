@@ -1,0 +1,32 @@
+[
+  {
+    "id": "approved-pillar-mesa-silhouette",
+    "score": 0.74,
+    "threshold": 0.8,
+    "notes": "The user-approved tall mountain support now keeps nearly full width to its base, and attached shoulder masses replace much of the two-drum silhouette. The broad horizontal cylinder bands remain visible and still need a later material/form breakup pass."
+  },
+  {
+    "id": "monumental-and-secondary-canyon-network",
+    "score": 0.72,
+    "threshold": 0.8,
+    "notes": "One dominant full-height ravine, eight secondary cuts and eight short tributaries are visible across the four surveys. The monumental cut reads clearly; some minor cuts still rely on dark overlays rather than true recessed cliff topology."
+  },
+  {
+    "id": "railway-cut-into-mountain",
+    "score": 0.64,
+    "threshold": 0.8,
+    "notes": "The railway remains a shelf-and-gallery public transport line with bridge supports across the major chasm. The close canyon camera proves continuity, but the rails are visually thin and the shaft interiors need stronger rock engineering detail."
+  },
+  {
+    "id": "source-composition-and-frontier-identity",
+    "score": 0.52,
+    "threshold": 0.8,
+    "notes": "Frontier town, railway, red rock and sunset identity remain recognizable, but literal source composition diverges because the user explicitly replaced the source's broad floating plateau with a tall pillar and spiral mission. The sculpt spec must record this accepted exception rather than treating it as an implementation defect."
+  },
+  {
+    "id": "rock-material-and-lighting-readability",
+    "score": 0.45,
+    "threshold": 0.78,
+    "notes": "Warm red-rock value separation improved around canyon lips and shoulders, but the pillar is still very dark and horizontally repetitive compared with the source's luminous, varied sandstone."
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "wide-relief",
+    "sourcePath": "personal-playbook-relief-reference-final.png",
+    "width": 900,
+    "height": 1024,
+    "foregroundCoverage": 0.8184,
+    "largestComponentFraction": 1.0,
+    "pHash": 16925074719318840196,
+    "duplicateOfHash": null
+  }
+}

@@ -1,0 +1,72 @@
+.compass-book-device-profiler {
+  position: fixed;
+  z-index: 10020;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  width: min(260px, calc(100vw - 20px));
+  max-height: min(520px, calc(100vh - 20px));
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid rgba(129, 232, 229, .7);
+  border-radius: 14px;
+  color: #edf8ff;
+  background: rgba(5, 13, 27, .94);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .5);
+  font: 700 11px/1.35 system-ui, sans-serif;
+  backdrop-filter: blur(12px);
+}
+
+.compass-book-device-profiler[data-rating="pass"] { border-color: rgba(103, 239, 183, .9); }
+.compass-book-device-profiler[data-rating="review"] { border-color: rgba(255, 211, 112, .9); }
+.compass-book-device-profiler[data-rating="fail"] { border-color: rgba(255, 120, 135, .9); }
+.compass-book-device-profiler header,
+.compass-book-device-profiler dl div,
+.compass-book-device-profiler__actions,
+.compass-book-device-profiler__quality {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.compass-book-device-profiler header span { color: #81e8e5; font-size: 9px; letter-spacing: .09em; }
+.compass-book-device-profiler header strong { color: #fff0b5; }
+.compass-book-device-profiler[data-rating="pass"] header strong { color: #77f0bc; }
+.compass-book-device-profiler[data-rating="review"] header strong { color: #ffd676; }
+.compass-book-device-profiler[data-rating="fail"] header strong { color: #ff8b9a; }
+.compass-book-device-profiler__progress { height: 5px; margin: 9px 0; overflow: hidden; border-radius: 5px; background: rgba(160, 210, 225, .2); }
+.compass-book-device-profiler__progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #61d7e9, #78efbd); }
+.compass-book-device-profiler input,
+.compass-book-device-profiler textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 9px;
+  padding: 8px;
+  border: 1px solid rgba(146, 211, 226, .34);
+  border-radius: 8px;
+  color: #fff;
+  background: rgba(6, 21, 35, .9);
+  font: inherit;
+}
+.compass-book-device-profiler textarea { height: 96px; resize: vertical; font: 9px/1.35 ui-monospace, monospace; }
+.compass-book-device-profiler dl { margin: 9px 0; }
+.compass-book-device-profiler dl div { padding: 3px 0; border-top: 1px solid rgba(159, 211, 225, .13); }
+.compass-book-device-profiler dt { color: rgba(213, 238, 246, .7); }
+.compass-book-device-profiler dd { margin: 0; color: #fff; }
+.compass-book-device-profiler__actions { margin-top: 9px; }
+.compass-book-device-profiler__quality { margin-top: 8px; }
+.compass-book-device-profiler__quality button[aria-pressed="true"] { border-color: #78efbd; color: #071c1d; background: #78efbd; }
+.compass-book-device-profiler button { flex: 1; padding: 7px; border: 1px solid rgba(129, 232, 229, .55); border-radius: 8px; color: #eafcff; background: rgba(21, 71, 89, .72); font: inherit; }
+.compass-book-device-profiler button:disabled { opacity: .55; }
+.compass-book-device-profiler p { margin: 8px 0 0; color: rgba(218, 240, 248, .76); font-size: 9px; }
+.compass-book-device-profiler__copy-notice { color: #83efc3 !important; }
+
+@media (max-width: 520px) {
+  .compass-book-device-profiler {
+    right: max(6px, env(safe-area-inset-right));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: min(220px, calc(100vw - 12px));
+    max-height: 42vh;
+    padding: 9px;
+  }
+}

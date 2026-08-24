@@ -1,0 +1,27 @@
+[
+  {
+    "id": "lower-deck-local-lighting-hierarchy",
+    "score": 0.62,
+    "note": "Warm and cyan local sources now separate work surfaces, habitat zones and pressure ceilings, although the sanctuary still has broad highlights and lacks the restrained practical-light density of the reference."
+  },
+  {
+    "id": "sanctuary-material-zone-legibility",
+    "score": 0.68,
+    "note": "Brown floor, green fabric residences, cyan water and dark pressure structure are now distinct enough to read as separate habitat systems; surface richness remains simple and procedural."
+  },
+  {
+    "id": "workshop-suspended-equipment-garage-read",
+    "score": 0.64,
+    "note": "Three overhead umbilicals add a useful second equipment layer above the vehicle-scale service bays, but the room is still sparse and blocky beside the billionaire engineering workshop authority."
+  },
+  {
+    "id": "contained-floor-weighted-povs",
+    "score": 0.9,
+    "note": "Both lower-deck cameras remain inside their assigned pressure rooms, with the fabrication view weighted toward machinery and floor rather than a dead ceiling."
+  },
+  {
+    "id": "premium-material-and-lighting-finish",
+    "score": 0.4,
+    "note": "Material zoning and local illumination are more coherent, but the current flat-shaded forms remain far below the goal's bronze, glass, water, upholstery, reflections and densely integrated practical lighting."
+  }
+]
