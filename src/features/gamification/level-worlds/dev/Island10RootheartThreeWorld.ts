@@ -9,6 +9,10 @@ import {
   ISLAND_3D_ROUTE_RADIUS,
   ISLAND_3D_TILE_RADIAL_DEPTH,
 } from './island5ThreePilotContract';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_10_ROOTHEART_WORLD_NAME = 'Rootheart Canopy City';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -1121,45 +1125,47 @@ function createSpiralLibrary(level: 1 | 2 | 3, quality: Island3DQuality, materia
 function createPulleyWorkshop(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island10RootheartMaterials) {
   const root = new THREE.Group();
   root.name = 'ISLAND_10_FIREFLY_PULLEY_WORKSHOP_ARCHITECTURE';
-  const platformRadius = level === 1 ? 0.9 : level === 2 ? 1.06 : 1.2;
+  // Preserve the funded workshop cabin and gear. Later levels bolt on the
+  // crane, upper deck, and full waterwheel rather than inflating the cabin.
+  const platformRadius = 0.9;
   addPlatform(root, platformRadius, materials, quality);
   addCraftedLandmarkDeck(root, platformRadius * 0.97, 0.2, materials, quality, {
     posts: qualityAmount(quality, 14, 11, 8),
-    lanterns: level === 3 ? 4 : 2,
+    lanterns: 2,
     openFront: true,
   });
-  const cabinWidth = level === 1 ? 0.88 : level === 2 ? 1.14 : 1.3;
-  const cabinHeight = level === 1 ? 0.78 : level === 2 ? 1.05 : 1.22;
+  const cabinWidth = 0.88;
+  const cabinHeight = 0.78;
   const cabin = box(cabinWidth, cabinHeight, 0.74, materials.timberDark);
   cabin.position.set(-0.18, 0.3 + cabinHeight / 2, -0.12);
   root.add(cabin);
-  const beamCount = level === 1 ? 3 : 5;
+  const beamCount = 3;
   for (let index = 0; index < beamCount; index += 1) {
     const x = THREE.MathUtils.lerp(-cabinWidth * 0.42, cabinWidth * 0.42, index / (beamCount - 1));
     const beam = cylinder(0.026, 0.034, cabinHeight * 0.92, index % 2 ? materials.bamboo : materials.brass, 6);
     beam.position.set(x - 0.18, cabin.position.y, 0.27);
     root.add(beam);
   }
-  addWarmWindow(root, new THREE.Vector3(-0.2, 0.78, 0.285), materials, level === 1 ? 0.3 : 0.42, level === 1 ? 0.3 : 0.4);
-  const smallWheel = addWheel(root, level === 1 ? 0.3 : 0.42, new THREE.Vector3(-0.58, 0.72, 0.5), materials, level === 3 ? 'ISLAND_10_WORKSHOP_WATERWHEEL_PIVOT' : 'ISLAND_10_WORKSHOP_GEAR_PIVOT', level === 1 ? 7 : 9);
+  addWarmWindow(root, new THREE.Vector3(-0.2, 0.78, 0.285), materials, 0.3, 0.3);
+  const smallWheel = addWheel(root, 0.3, new THREE.Vector3(-0.58, 0.72, 0.5), materials, 'ISLAND_10_WORKSHOP_GEAR_PIVOT', 7);
   smallWheel.rotation.y = 0.08;
   if (level >= 2) {
     const crane = new THREE.Group();
     crane.name = 'ISLAND_10_WORKSHOP_CRANE_PIVOT';
     crane.position.set(0.38, 1.12, -0.08);
-    crane.add(tubeBetween(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.1, level === 3 ? 1.3 : 1.02, 0), 0.06, materials.bamboo, 7));
-    crane.add(tubeBetween(new THREE.Vector3(0.06, level === 3 ? 1.12 : 0.88, 0), new THREE.Vector3(-0.92, level === 3 ? 0.92 : 0.72, 0.16), 0.05, materials.bamboo, 7));
+    crane.add(tubeBetween(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.1, 1.02, 0), 0.06, materials.bamboo, 7));
+    crane.add(tubeBetween(new THREE.Vector3(0.06, 0.88, 0), new THREE.Vector3(-0.92, 0.72, 0.16), 0.05, materials.bamboo, 7));
     crane.add(tubeBetween(
-      new THREE.Vector3(0.06, level === 3 ? 0.36 : 0.28, -0.03),
-      new THREE.Vector3(-0.82, level === 3 ? 0.92 : 0.72, 0.13),
+      new THREE.Vector3(0.06, 0.28, -0.03),
+      new THREE.Vector3(-0.82, 0.72, 0.13),
       0.026,
       materials.rope,
       5,
     ));
-    const cable = tubeBetween(new THREE.Vector3(-0.86, level === 3 ? 0.92 : 0.72, 0.16), new THREE.Vector3(-0.86, 0.08, 0.16), 0.018, materials.rope, 5);
+    const cable = tubeBetween(new THREE.Vector3(-0.86, 0.72, 0.16), new THREE.Vector3(-0.86, 0.08, 0.16), 0.018, materials.rope, 5);
     crane.add(cable);
     const pulley = torus(0.11, 0.022, materials.brass, 18);
-    pulley.position.set(-0.84, level === 3 ? 0.9 : 0.7, 0.16);
+    pulley.position.set(-0.84, 0.7, 0.16);
     pulley.rotation.z = Math.PI / 2;
     crane.add(pulley);
     root.add(crane);
@@ -1170,8 +1176,8 @@ function createPulleyWorkshop(level: 1 | 2 | 3, quality: Island3DQuality, materi
     addBuilderAt(root, new THREE.Vector3(-0.62, 0.42, 0.52), 0.4, materials, quality, 61, 0.66);
   }
   if (level >= 3) {
-    smallWheel.scale.setScalar(1.92);
-    smallWheel.position.set(-0.78, 1.12, 0.72);
+    const waterwheel = addWheel(root, 0.58, new THREE.Vector3(-0.78, 1.12, 0.72), materials, 'ISLAND_10_WORKSHOP_WATERWHEEL_PIVOT', 10);
+    waterwheel.rotation.y = 0.08;
     const upperTier = cylinder(0.76, 0.82, 0.12, materials.timber, radialSegments(quality));
     upperTier.position.set(-0.18, 1.47, -0.12);
     root.add(upperTier);
@@ -1309,6 +1315,7 @@ export function buildIsland10RootheartLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island10RootheartMaterials,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_10_ROOTHEART_${definition.id.toUpperCase()}_ROOT`;
@@ -1378,9 +1385,18 @@ export function buildIsland10RootheartLandmark(
     if (definition.id === 'boss') {
       architecture.scale.setScalar(1);
     } else {
-      const footprintScale = resolved === 3 ? 1.48 : resolved === 2 ? 1.32 : 1.14;
-      const verticalScale = resolved === 3 ? 1.78 : resolved === 2 ? 1.48 : 1.24;
+      const footprintScale = options.constructionPreview ? 1.32 : resolved === 3 ? 1.48 : resolved === 2 ? 1.32 : 1.14;
+      const verticalScale = options.constructionPreview ? 1.48 : resolved === 3 ? 1.78 : resolved === 2 ? 1.48 : 1.24;
       architecture.scale.set(footprintScale, verticalScale, footprintScale);
+    }
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: architecture,
+        worldSourceNumber: 10,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
     }
     root.add(architecture);
     const detailPart: Island10RuntimePartId = definition.id === 'hatchery'
@@ -1405,7 +1421,7 @@ export function buildIsland10RootheartLandmark(
     additionalParts.forEach((id) => runtimeParts.push(registerIsland10RuntimePart(id, architecture, 'landmark-detail')));
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });
-  mergeStaticMeshesByMaterial(root);
+  if (!options.constructionPreview) mergeStaticMeshesByMaterial(root);
   markShadows(root, quality === 'high');
   return root;
 }

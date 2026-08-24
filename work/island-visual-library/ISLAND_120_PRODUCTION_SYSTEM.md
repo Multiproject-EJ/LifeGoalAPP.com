@@ -116,6 +116,10 @@ work/island-visual-library/island-NNN-slug/
       l2/
       l3/
       focus/
+      construction/
+        resting/
+        working/
+        reduced-motion/
     short-phone/
     wide-phone/
 ```
@@ -123,6 +127,13 @@ work/island-visual-library/island-NNN-slug/
 The `390x844/l3/` folder must include one clean-art screenshot with all four L3
 buildings present simultaneously. The `focus/` folder must include one capture
 after tapping and then closing each landmark modal.
+
+Each island brief and asset tracker must also declare its authored construction
+profile: compact façade-scaffold material/motif, L1→L2 and L2→L3 additive
+continuity, and any landmark-specific exception. Variant islands reuse their
+routed source language unless the variant changes construction as a declared
+sensory delta. Never generate a second rectangular scaffold envelope around
+the whole site.
 
 ## Required QA sequence
 
@@ -137,6 +148,20 @@ after tapping and then closing each landmark modal.
 9. Tap every landmark, close its modal, and confirm the camera remains focused.
 10. Roll once and confirm the camera resumes board-follow behavior.
 11. Spot-check a short and wide phone plus reduced-motion mode.
+12. Open a build modal without pressing anything; confirm the crew is in
+    `resting`, has no tools/dust, and does not jitter or relocate.
+13. Press a part button and hold auto-build; confirm `working` is time-bounded,
+    all three robots move across distinct stations, and vibration occurs only
+    at an active tool contact.
+14. Inspect L1→L2 and L2→L3: the funded level stays solid, only additive meshes
+    reveal, compact authored façade scaffolding appears where needed, and no
+    site-wide scaffold cage appears or flickers.
+15. Trace robot occupancy throughout a work burst: pair-overlap and landmark-
+    penetration counters remain zero, including while a robot relocates.
+16. Confirm the build POV is unchanged during work and for seven seconds after
+    the latest input; then confirm only a gentle same-landmark orbit is allowed.
+17. Close Build and confirm board POV variation does not begin before forty
+    seconds of inactivity and cancels immediately on interaction.
 
 Approval fails if any landmark is hidden by fog during the only clearance
 inspection, if a route circle is baked into the art, if the plot/building looks

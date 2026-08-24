@@ -6,7 +6,7 @@ Upload story episodes under this folder.
 
 ```text
 public/storyline/
-  episode-001/
+  episode-example/
     manifest.json
     001.webp
     002.webp
@@ -26,12 +26,12 @@ You can add soundtrack metadata at the episode level and/or per-panel:
 
 ```json
 {
-  "soundtrack": { "src": "/storyline/episode-001/bgm.mp3", "loop": true, "volume": 0.35 },
+  "soundtrack": { "src": "/storyline/episode-example/bgm.mp3", "loop": true, "volume": 0.35 },
   "panels": [
     {
       "type": "image",
-      "src": "/storyline/episode-001/001.webp",
-      "soundtrack": { "src": "/storyline/episode-001/scene-1.mp3", "loop": true, "volume": 0.5 }
+      "src": "/storyline/episode-example/001.webp",
+      "soundtrack": { "src": "/storyline/episode-example/scene-1.mp3", "loop": true, "volume": 0.5 }
     }
   ]
 }

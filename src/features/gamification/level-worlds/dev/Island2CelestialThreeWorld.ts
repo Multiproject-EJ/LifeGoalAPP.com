@@ -5,6 +5,10 @@ import type {
   Island5LandmarkDefinition,
 } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_2_CELESTIAL_WORLD_NAME = 'Celestial Sky Kingdom';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -385,16 +389,19 @@ function createSkyArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials:
   const group = new THREE.Group();
   group.name = `ISLAND_2_SKY_ARCHIVE_L${level}`;
   addPlinth(group, 1.4, materials, quality);
-  const hallWidth = 1.2 + level * 0.18;
-  const hallHeight = 0.58 + level * 0.24;
-  const hallDepth = 0.88 + level * 0.08;
+  // The funded archive remains physically present between upgrades. Larger
+  // levels add annexes, shelves, and a clerestory instead of replacing the
+  // whole hall with a differently sized box.
+  const hallWidth = 1.38;
+  const hallHeight = 0.82;
+  const hallDepth = 0.96;
   const hall = box(hallWidth, hallHeight, hallDepth, materials.ivory);
   hall.position.y = 0.46 + hallHeight / 2;
   const backBand = box(hallWidth + 0.12, 0.11, hallDepth + 0.08, materials.gold);
   backBand.position.y = 0.46 + hallHeight - 0.1;
   group.add(hall, backBand);
-  addArch(group, level === 3 ? 0.76 : 0.62, 0.46, hallDepth / 2 + 0.08, materials);
-  addArch(group, level === 3 ? 0.76 : 0.62, 0.46, -hallDepth / 2 - 0.08, materials, Math.PI);
+  addArch(group, 0.62, 0.46, hallDepth / 2 + 0.08, materials);
+  addArch(group, 0.62, 0.46, -hallDepth / 2 - 0.08, materials, Math.PI);
   const shelfRows = level === 1 ? 1 : level === 2 ? 2 : 3;
   [-1, 1].forEach((direction) => {
     for (let row = 0; row < shelfRows; row += 1) {
@@ -409,13 +416,22 @@ function createSkyArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials:
       }
     }
   });
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(hallWidth * 0.62, 0.48 + level * 0.1, 4), level === 3 ? materials.sapphireLight : materials.sapphire);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(hallWidth * 0.62, 0.58, 4), materials.sapphire);
   roof.position.y = 0.46 + hallHeight + 0.21;
   roof.rotation.y = Math.PI / 4;
   roof.scale.z = hallDepth / hallWidth;
   group.add(roof);
   if (level >= 2) {
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.24 + level * 0.03, segmentsFor(quality), 10), materials.cyanCrystal);
+    [-1, 1].forEach((side) => {
+      const annex = box(0.42, 0.58, 0.72, materials.ivoryShade);
+      annex.position.set(side * 0.9, 0.75, -0.04);
+      const annexRoof = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.36, 4), materials.sapphireLight);
+      annexRoof.position.set(side * 0.9, 1.18, -0.04);
+      annexRoof.rotation.y = Math.PI / 4;
+      annexRoof.scale.z = 0.82;
+      group.add(annex, annexRoof);
+    });
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.3, segmentsFor(quality), 10), materials.cyanCrystal);
     globe.position.set(-0.58, 0.72, hallDepth / 2 + 0.44);
     const orbit = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.025, 5, 20), materials.gold);
     orbit.position.copy(globe.position);
@@ -423,6 +439,13 @@ function createSkyArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials:
     group.add(globe, orbit);
   }
   if (level === 3) {
+    const clerestory = box(0.74, 0.34, 0.58, materials.ivory);
+    clerestory.position.set(0, 1.43, 0);
+    const clerestoryRoof = new THREE.Mesh(new THREE.ConeGeometry(0.49, 0.42, 4), materials.sapphireLight);
+    clerestoryRoof.position.set(0, 1.78, 0);
+    clerestoryRoof.rotation.y = Math.PI / 4;
+    clerestoryRoof.scale.z = 0.78;
+    group.add(clerestory, clerestoryRoof);
     [-1, 1].forEach((side) => addSpire(group, side * 0.92, -0.1, 0.42, 0.72, materials, quality, side > 0));
     const lectern = box(0.46, 0.5, 0.32, materials.wood);
     lectern.position.set(0.45, 0.72, hallDepth / 2 + 0.4);
@@ -438,11 +461,14 @@ function createSkyArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials:
 function createSolspirePalace(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island2CelestialMaterials) {
   const group = new THREE.Group();
   group.name = `ISLAND_2_SOLSPIRE_PALACE_L${level}`;
-  addPlinth(group, level === 3 ? 2.08 : 1.9, materials, quality, 0.16);
+  // A construction transition must preserve funded masonry. All core palace
+  // dimensions and materials are therefore stable; wings, outer towers, and
+  // crown architecture are strictly additive upgrades.
+  addPlinth(group, 1.9, materials, quality, 0.16);
   const baseY = 0.46;
-  const hallWidth = 1.2 + level * 0.25;
-  const hallDepth = 0.96 + level * 0.18;
-  const hallHeight = 0.68 + level * 0.28;
+  const hallWidth = 1.45;
+  const hallDepth = 1.14;
+  const hallHeight = 0.96;
   const hall = box(hallWidth, hallHeight, hallDepth, materials.ivory);
   hall.position.y = baseY + hallHeight / 2;
   const lowerBand = box(hallWidth + 0.14, 0.13, hallDepth + 0.14, materials.ivoryShade);
@@ -455,15 +481,15 @@ function createSolspirePalace(level: 1 | 2 | 3, quality: Island3DQuality, materi
   // earlier flat white roof made the palace read like a civic block rather
   // than the celestial castle promised by the reference.
   const palaceRoof = new THREE.Mesh(
-    new THREE.ConeGeometry(hallWidth * 0.62, 0.42 + level * 0.09, 4),
-    level === 3 ? materials.sapphireLight : materials.sapphire,
+    new THREE.ConeGeometry(hallWidth * 0.62, 0.51, 4),
+    materials.sapphire,
   );
   palaceRoof.position.y = baseY + hallHeight + 0.18;
   palaceRoof.rotation.y = Math.PI / 4;
   palaceRoof.scale.z = hallDepth / hallWidth;
   group.add(palaceRoof);
 
-  const facadePilasters = level === 3 ? 5 : level === 2 ? 4 : 3;
+  const facadePilasters = 3;
   for (let index = 0; index < facadePilasters; index += 1) {
     const x = -hallWidth * 0.43 + index / Math.max(1, facadePilasters - 1) * hallWidth * 0.86;
     const pilaster = box(0.08, hallHeight * 0.82, 0.07, materials.gold);
@@ -472,13 +498,13 @@ function createSolspirePalace(level: 1 | 2 | 3, quality: Island3DQuality, materi
     capital.position.set(x, baseY + hallHeight * 0.9, hallDepth / 2 + 0.06);
     group.add(pilaster, capital);
   }
-  const royalDoor = box(level === 3 ? 0.42 : 0.34, level === 3 ? 0.7 : 0.58, 0.06, materials.sapphire);
+  const royalDoor = box(0.34, 0.58, 0.06, materials.sapphire);
   royalDoor.position.set(0, baseY + royalDoor.geometry.parameters.height / 2, hallDepth / 2 + 0.07);
   group.add(royalDoor);
 
-  const windowRows = level === 3 ? 2 : 1;
+  const windowRows = 1;
   for (let row = 0; row < windowRows; row += 1) {
-    const count = level === 1 ? 3 : level === 2 ? 4 : 5;
+    const count = 3;
     for (let index = 0; index < count; index += 1) {
       const x = -hallWidth * 0.36 + index / Math.max(1, count - 1) * hallWidth * 0.72;
       const window = box(0.13, 0.26, 0.045, materials.cyanCrystal);
@@ -489,23 +515,23 @@ function createSolspirePalace(level: 1 | 2 | 3, quality: Island3DQuality, materi
     }
   }
 
-  const towerRadius = 0.38 + level * 0.07;
-  const towerHeight = 0.58 + level * 0.2;
+  const towerRadius = 0.45;
+  const towerHeight = 0.78;
   const tower = cylinder(towerRadius, towerRadius + 0.07, towerHeight, materials.ivory, segmentsFor(quality));
   const hallTop = baseY + hallHeight;
   tower.position.y = hallTop + towerHeight / 2 - 0.04;
   group.add(tower);
-  addWindowBand(group, towerRadius + 0.012, hallTop + towerHeight * 0.5, level === 1 ? 4 : level === 2 ? 6 : 8, materials, quality);
+  addWindowBand(group, towerRadius + 0.012, hallTop + towerHeight * 0.5, 4, materials, quality);
   const dome = new THREE.Mesh(
     new THREE.SphereGeometry(towerRadius * 1.15, segmentsFor(quality), 10, 0, Math.PI * 2, 0, Math.PI / 2),
-    level === 3 ? materials.sapphireLight : materials.sapphire,
+    materials.sapphire,
   );
   dome.position.y = hallTop + towerHeight - 0.05;
   dome.scale.y = 0.8;
   const domeRing = new THREE.Mesh(new THREE.TorusGeometry(towerRadius * 0.86, 0.045, 6, 28), materials.gold);
   domeRing.rotation.x = Math.PI / 2;
   domeRing.position.y = dome.position.y + 0.04;
-  const lantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.12 + level * 0.02), level === 3 ? materials.warmGlow : materials.gold);
+  const lantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.14), materials.gold);
   lantern.position.y = dome.position.y + towerRadius * 0.88;
   lantern.scale.y = 1.75;
   group.add(dome, domeRing, lantern);
@@ -534,20 +560,38 @@ function createSolspirePalace(level: 1 | 2 | 3, quality: Island3DQuality, materi
     const rail = box(hallWidth * 0.68, 0.04, 0.04, materials.gold);
     rail.position.set(0, railY + 0.18, hallDepth / 2 + 0.37);
     group.add(rail);
+
+    // Second-phase façade work fills the spaces between the original three
+    // pilasters without moving any of them.
+    [-hallWidth * 0.215, hallWidth * 0.215].forEach((x) => {
+      const pilaster = box(0.065, hallHeight * 0.72, 0.06, materials.gold);
+      pilaster.position.set(x, baseY + hallHeight * 0.47, hallDepth / 2 + 0.06);
+      group.add(pilaster);
+    });
   }
 
-  const towerPositions: Array<[number, number]> = level === 1
-    ? [[-0.86, 0.2], [0.86, 0.2]]
-    : level === 2
-      ? [[-1.18, -0.56], [1.18, -0.56], [-1.18, 0.56], [1.18, 0.56]]
-      : [[-1.48, -0.72], [1.48, -0.72], [-1.48, 0.72], [1.48, 0.72], [-0.72, -1.0], [0.72, -1.0]];
-  towerPositions.forEach(([x, z], index) => {
-    addSpire(group, x, z, 0.42, level === 3 && index < 4 ? 0.96 : 0.76, materials, quality, index % 2 === 0);
+  const fundedTowerPositions: Array<[number, number]> = [[-0.86, 0.2], [0.86, 0.2]];
+  fundedTowerPositions.forEach(([x, z], index) => {
+    addSpire(group, x, z, 0.42, 0.76, materials, quality, index % 2 === 0);
   });
-
-  addStairs(group, 1, level === 3 ? 1.08 : 0.86, materials, level);
-  addArch(group, level === 3 ? 0.82 : 0.64, 0.44, hallDepth / 2 + 0.12, materials);
+  if (level >= 2) {
+    const wingTowerPositions: Array<[number, number]> = [[-1.18, -0.56], [1.18, -0.56], [-1.18, 0.56], [1.18, 0.56]];
+    wingTowerPositions.forEach(([x, z], index) => addSpire(group, x, z, 0.42, 0.76, materials, quality, index % 2 === 0));
+  }
   if (level === 3) {
+    const crownTowerPositions: Array<[number, number]> = [[-1.48, -0.72], [1.48, -0.72], [-1.48, 0.72], [1.48, 0.72], [-0.72, -1], [0.72, -1]];
+    crownTowerPositions.forEach(([x, z], index) => addSpire(group, x, z, 0.42, 0.96, materials, quality, index % 2 === 0));
+  }
+
+  addStairs(group, 1, 0.86, materials, 1);
+  addArch(group, 0.64, 0.44, hallDepth / 2 + 0.12, materials);
+  if (level === 3) {
+    const doorSurround = box(0.5, 0.78, 0.035, materials.gold);
+    doorSurround.position.set(0, baseY + 0.39, hallDepth / 2 + 0.105);
+    const glowingLantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.09), materials.warmGlow);
+    glowingLantern.position.set(0, lantern.position.y + 0.05, 0);
+    glowingLantern.scale.y = 1.8;
+    group.add(doorSurround, glowingLantern);
     [-1, 1].forEach((side) => {
       const crownTower = cylinder(0.18, 0.22, 0.7, materials.ivory, segmentsFor(quality));
       crownTower.position.set(side * hallWidth * 0.34, hallTop + 0.34, 0);
@@ -571,6 +615,7 @@ export function buildIsland2CelestialLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island2CelestialMaterials,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_2_CELESTIAL_${definition.id.toUpperCase()}_ROOT`;
@@ -590,11 +635,24 @@ export function buildIsland2CelestialLandmark(
             ? createAstralGate(resolved, quality, materials)
             : createSolspirePalace(resolved, quality, materials);
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
-    const scale = definition.id === 'boss'
-      ? (resolved === 3 ? 1.2 : resolved === 2 ? 1.1 : 1.03)
-      : (resolved === 3 ? 1.12 : resolved === 2 ? 1.06 : 1);
+    // Construction continuity requires one stable object-space scale. Growth
+    // comes from additive geometry, never from enlarging every funded mesh.
+    const scale = definition.id === 'boss' ? 1.1 : 1.06;
     building.scale.setScalar(scale);
-    compactStaticGeometry(building, `ISLAND2_CELESTIAL_${definition.id.toUpperCase()}_L${resolved}`);
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber: 2,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
+    // Keep normal board models batched. Preview current/target models retain
+    // their semantic meshes so the delta matcher can preserve funded parts.
+    if (!options.constructionPreview) {
+      compactStaticGeometry(building, `ISLAND2_CELESTIAL_${definition.id.toUpperCase()}_L${resolved}`);
+    }
     root.add(building);
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });

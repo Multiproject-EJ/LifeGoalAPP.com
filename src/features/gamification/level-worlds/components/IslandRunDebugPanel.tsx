@@ -38,6 +38,7 @@ interface DebugPanelProps {
   devTimedEventOverrideEventId: string | null;
   onSetDevTimedEventOverride: (eventType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null) => void;
   onGrantDevTimedEventTickets: (amount: number) => void;
+  onGrantDevEssence?: (amount: number) => void;
   showLuckyRollDevLauncher?: boolean;
   onOpenLuckyRollDevOverlay?: (targetIslandNumber: number) => void;
   onStartLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
@@ -158,6 +159,7 @@ export function IslandRunDebugPanel({
   devTimedEventOverrideEventId,
   onSetDevTimedEventOverride,
   onGrantDevTimedEventTickets,
+  onGrantDevEssence,
   showLuckyRollDevLauncher = false,
   onOpenLuckyRollDevOverlay,
   onStartLuckyRollDevSession,
@@ -630,6 +632,28 @@ export function IslandRunDebugPanel({
             </div>
             {isDevModeEnabled && (
               <div style={{ display: 'grid', gap: '0.6rem', padding: '0.5rem 0.2rem' }}>
+                {onGrantDevEssence ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: '0.82rem' }}>Build-modal QA wallet</strong>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      onClick={() => onGrantDevEssence(1_000)}
+                    >
+                      Grant 1,000 Money
+                    </button>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      onClick={() => onGrantDevEssence(10_000)}
+                    >
+                      Grant 10,000 Money
+                    </button>
+                    <span style={{ fontSize: '0.76rem', opacity: 0.82 }}>
+                      Canonical dev action; useful for full 15-step construction traces.
+                    </span>
+                  </div>
+                ) : null}
                 <label style={{ fontSize: '0.82rem', opacity: 0.9 }}>
                   Timed event override (local/session only)
                 </label>

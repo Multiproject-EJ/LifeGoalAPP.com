@@ -5,6 +5,10 @@ import type {
   Island5LandmarkDefinition,
 } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_2_WORLD_ID = 2 as const;
 export const ISLAND_2_WORLD_NAME = 'Sunshore Atoll';
@@ -694,13 +698,23 @@ export function buildIsland2Landmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island2WorldMaterials,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_2_${definition.id.toUpperCase()}_ROOT`;
   root.position.set(...definition.position);
   if (definition.id === 'boss') {
     const arena = createIsland5SunwheelArena(level, quality, materials);
-    compactStaticGeometry(arena, `ISLAND5_SUNWHEEL_L${level}`);
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: arena,
+        worldSourceNumber: 5,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
+    if (!options.constructionPreview) compactStaticGeometry(arena, `ISLAND5_SUNWHEEL_L${level}`);
     root.userData.sculptRuntime = arena.userData.sculptRuntime;
     root.add(arena);
   } else if (level === 0) {
@@ -717,7 +731,18 @@ export function buildIsland2Landmark(
           ? createStarArchive(resolved, quality, materials)
           : createTideglassOracle(resolved, quality, materials);
     building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
-    compactStaticGeometry(building, `ISLAND2_${definition.id.toUpperCase()}_L${resolved}`);
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber: 5,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
+    if (!options.constructionPreview) {
+      compactStaticGeometry(building, `ISLAND2_${definition.id.toUpperCase()}_L${resolved}`);
+    }
     root.add(building);
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });

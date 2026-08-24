@@ -10,7 +10,6 @@ const hookPath = 'src/features/gamification/level-worlds/narrative/useIslandNarr
 // StoryPlayer engine, so several UI-contract assertions target it directly.
 const storyPlayerPath = 'src/features/story/StoryPlayer.tsx';
 const storyPlayerCssPath = 'src/features/story/StoryPlayer.css';
-const globalPrologueManifestPath = 'public/storyline/episode-001/manifest.json';
 
 const readerSource = readFileSync(readerPath, 'utf8');
 const readerCss = readFileSync(readerCssPath, 'utf8');
@@ -18,15 +17,14 @@ const boardSource = readFileSync(boardPath, 'utf8');
 const hookSource = readFileSync(hookPath, 'utf8');
 const storyPlayerSource = readFileSync(storyPlayerPath, 'utf8');
 const storyPlayerCss = readFileSync(storyPlayerCssPath, 'utf8');
-const globalPrologueManifest = readFileSync(globalPrologueManifestPath, 'utf8');
 
 function assertIncludes(source: string, expected: string, message: string) {
   assert(source.includes(expected), message);
 }
 
 export const islandStoryReaderComponentTests: TestCase[] = [
-  { name: 'final CTA is a button with accessible label wired to reward completion', run: () => {
-    // The CTA now lives in the shared StoryPlayer; the reader wires reward completion into it.
+  { name: 'final CTA is a button with accessible label wired to story completion', run: () => {
+    // The CTA now lives in the shared StoryPlayer; the reader wires story completion into it.
     assertIncludes(storyPlayerSource, 'type="button"', 'StoryPlayer CTA must be an explicit button');
     assertIncludes(storyPlayerSource, "aria-label={isLast ? completionLabel : 'Next'}", 'Final CTA must expose the completion label as its accessible name');
     assertIncludes(readerSource, 'onComplete={handleCompletion}', 'Reader must wire completion to the StoryPlayer CTA via onComplete');
@@ -38,10 +36,11 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assertIncludes(readerSource, 'onClose();', 'Non-reward completion must invoke close');
     assert(!readerSource.includes('onTouchEnd'), 'CTA must not depend exclusively on touch handlers');
   } },
-  { name: 'global prologue reward claim behavior remains reward-only', run: () => {
-    assertIncludes(readerSource, 'onRewardClaim?.(rewardCoins);', 'Reward claim callback should remain available for rewarded prologue manifests');
+  { name: 'future Webtoon rewards remain supported without wiring them into onboarding', run: () => {
+    assertIncludes(readerSource, 'onRewardClaim?.(rewardCoins);', 'Reward claim callback should remain available for future rewarded manifests');
     assertIncludes(readerSource, 'setRewardClaimed(true);', 'Rewarded path should retain claim guard');
-    assertIncludes(boardSource, "onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}", 'Only global prologue should receive reward callback');
+    assert(!boardSource.includes('onRewardClaim='), 'The retired onboarding story must not wire a gameplay reward callback');
+    assert(!boardSource.includes("kind: 'global_prologue'"), 'The retired global-prologue episode kind must stay removed');
   } },
   { name: 'arrival and resolution close through narrative close branch without reward callback', run: () => {
     assertIncludes(boardSource, "activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution'", 'Arrival and resolution should share narrative close branch');
@@ -54,8 +53,8 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assertIncludes(readerSource, 'completionTitle?: string;', 'StoryReader must accept display-only completion title');
     assertIncludes(readerSource, 'completionText?: string;', 'StoryReader must accept display-only completion text');
     assertIncludes(readerSource, 'completionButtonLabel?: string;', 'StoryReader must accept display-only completion button label');
-    assertIncludes(boardSource, "completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits'", 'Arrival should use approved completion title');
-    assertIncludes(boardSource, "activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open'", 'Resolution should use approved completion title');
+    assertIncludes(boardSource, "completionTitle={activeStoryEpisode.kind === 'island_arrival' ? 'Luma Isle awaits'", 'Arrival should use approved completion title');
+    assertIncludes(boardSource, "activeStoryEpisode.kind === 'island_resolution' ? 'The route is open'", 'Resolution should use approved completion title');
     assertIncludes(boardSource, "? 'Return to the island' : undefined", 'Arrival/resolution should use approved return copy');
   } },
   { name: 'StoryReader root declares game-owned text and surface tokens', run: () => {
@@ -99,10 +98,9 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assertIncludes(storyPlayerSource, 'prefersReducedMotion && panel.poster', 'Reduced-motion video panels must render their poster');
     assertIncludes(storyPlayerSource, 'Visual unavailable. The story can continue.', 'Media failures need an explicit non-blocking fallback');
   } },
-  { name: 'Island story exposes an explicit skip label and the prologue has no reward field', run: () => {
+  { name: 'Island stories keep an explicit skip label and onboarding has no retired prologue reference', run: () => {
     assertIncludes(readerSource, 'closeLabel="Skip story"', 'Island StoryReader should label its close action as Skip story');
-    assert(!globalPrologueManifest.includes('"reward"'), 'Global prologue must not contain a gameplay reward');
-    assert(!globalPrologueManifest.includes('"coins"'), 'Retired coins must not appear in the global prologue manifest');
+    assert(!boardSource.includes('/storyline/episode-001/'), 'Board onboarding must not load the retired prologue assets');
   } },
   { name: 'portrait micro-film manifests receive phone-native Story Mode framing', run: () => {
     assertIncludes(readerSource, "manifest.presentation === 'portrait-microfilm'", 'Reader must recognize portrait micro-film manifests');

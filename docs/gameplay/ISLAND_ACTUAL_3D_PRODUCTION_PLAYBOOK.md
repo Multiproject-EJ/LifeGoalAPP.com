@@ -170,6 +170,30 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
 - Reuse the shared caretaker LOD; apply the island outfit/material module.
 - Add/update structural and routing tests. No component-level gameplay writes.
 
+### 6A. Construction-modal integration
+
+- Preserve the current funded landmark as solid geometry and classify the next
+  level into retained versus additive meshes. Reveal only the additive set.
+- Author compact façade scaffolding inside the landmark's own level factory.
+  Never mount a second rectangular scaffold envelope around the whole site.
+- Treat construction as two explicit modes: `resting` while the modal is merely
+  open, and `working` while auto-build is held or during the short tail after a
+  part purchase.
+- Resting mode permits slow hover, a rare spin/camera greeting and five-state
+  facial variety. Working mode owns relocations, tools, materials, dust,
+  façade scaffolding and tool-contact vibration.
+- Keep every robot body outside a height-aware landmark shell and every other
+  robot's occupied volume; hands and tools may reach inward to authored contact
+  points. This constraint applies throughout relocation, not only at stations.
+- Lock the current POV while building and for seven seconds after the most
+  recent build input. Quiet modal POV changes preserve the current landmark;
+  main-board ambient POV changes wait for forty seconds of inactivity.
+- Give each robot root one transform owner. Measure consecutive screen-space
+  samples in resting and working QA; unexplained alternating displacement is a
+  vibration failure.
+- Capture working, post-click tail, settled resting and reduced-motion evidence
+  at the real phone modal before approval.
+
 ### 7. Gauntlet evidence loop
 
 After each meaningful pass capture:

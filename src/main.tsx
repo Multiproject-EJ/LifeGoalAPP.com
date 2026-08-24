@@ -50,6 +50,7 @@ const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const CARETAKER_CHARACTER_LAB_PATH = '/dev/caretaker-character-lab';
 const EGG_HATCH_THREE_LAB_PATH = '/dev/egg-hatch-3d';
+const ROBOT_FAMILY_THREE_LAB_PATH = '/dev/robot-family-3d';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
@@ -282,6 +283,20 @@ function EggHatchThreeLabRoute() {
   return EggHatchLab ? <EggHatchLab /> : null;
 }
 
+function RobotFamilyThreeLabRoute() {
+  const [RobotFamilyLab, setRobotFamilyLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/dev/RobotFamilyThreeLab').then((module) => {
+      if (isMounted) setRobotFamilyLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return RobotFamilyLab ? <RobotFamilyLab /> : null;
+}
+
 function Island001StoryPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
 
@@ -379,6 +394,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === EGG_HATCH_THREE_LAB_PATH;
+  const isRobotFamilyThreeLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === ROBOT_FAMILY_THREE_LAB_PATH;
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -538,6 +557,10 @@ function Root() {
 
   if (isEggHatchThreeLabRoute) {
     return <EggHatchThreeLabRoute />;
+  }
+
+  if (isRobotFamilyThreeLabRoute) {
+    return <RobotFamilyThreeLabRoute />;
   }
 
   if (

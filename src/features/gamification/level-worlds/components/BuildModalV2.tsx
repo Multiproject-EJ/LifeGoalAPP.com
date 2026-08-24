@@ -97,7 +97,7 @@ function BuildModalV2LevelReviewState({
       >
         <span aria-hidden="true">{review.isAdvanceQueued ? '✓' : '🔨'}</span>
         <strong>{actionLabel}</strong>
-        <small>{review.isAdvanceReady ? 'Continue now' : 'Available after 1 second'}</small>
+        <small>{review.isAdvanceReady ? 'Continue now' : 'Available in half a second'}</small>
       </button>
       <span className="bm2-level-review__timer" aria-hidden="true" />
     </div>
@@ -281,11 +281,15 @@ export function BuildModalV2({
           ) : (
             <>
               <div className="bm2-dock__summary" aria-live="polite">
-                <div className="bm2-hero__copy">
+                <div className="bm2-dock__topline">
                   <p className="bm2-hero__eyebrow">Step {active.sequencePosition} of {active.totalSequenceSteps}</p>
+                  <BuildModalV2LevelRail viewModel={viewModel} />
+                </div>
+                <div className="bm2-dock__identity">
                   <h3 className="bm2-hero__title">{active.title}</h3>
-                  <p className="bm2-hero__subtitle">Level {active.targetLevel} · Part {activePart}/5</p>
-                  <p className="bm2-hero__status">{statusLine}</p>
+                  <p className="bm2-hero__meta">Level {active.targetLevel} · Part {activePart}/5 · {statusLine}</p>
+                </div>
+                <div className="bm2-dock__funding">
                   <div
                     className="bm2-progress"
                     role="progressbar"
@@ -302,7 +306,6 @@ export function BuildModalV2({
                       : `Need ${Math.max(0, active.nextTapEssenceCost - essenceAvailable)} more Money for the next tap`}
                   </p>
                 </div>
-                <BuildModalV2LevelRail viewModel={viewModel} />
               </div>
 
               <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Choose any unfinished milestone or hold to build steadily.</p>

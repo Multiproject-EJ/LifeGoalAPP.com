@@ -22,7 +22,7 @@ import {
 import { getNarrativeBeatForPlayback } from './islandNarrativeTrack';
 
 export type ActiveIslandStoryEpisode = {
-  kind: 'global_prologue' | 'island_arrival' | 'island_resolution' | 'island_travel_arrival' | 'championship';
+  kind: 'island_arrival' | 'island_resolution' | 'island_travel_arrival' | 'championship';
   manifestPath: string;
 } | null;
 
@@ -60,8 +60,7 @@ export type IslandNarrativeOpeningFlowInput = {
   currentIslandNumber: number;
   cycleIndex: number;
   hasHydratedRuntimeState: boolean;
-  isGlobalPrologueActive: boolean;
-  isGlobalPrologueSeen: boolean;
+  isOpeningBriefingComplete: boolean;
   firstSessionTutorialState: IslandRunFirstSessionTutorialState;
   isNarrativeSurfaceBlocked: boolean;
   canDisplayTravelReadyClosingOverClaimedCelebration: boolean;
@@ -241,8 +240,7 @@ export function useIslandNarrativeOpeningFlow({
   currentIslandNumber,
   cycleIndex,
   hasHydratedRuntimeState,
-  isGlobalPrologueActive,
-  isGlobalPrologueSeen,
+  isOpeningBriefingComplete,
   firstSessionTutorialState,
   isNarrativeSurfaceBlocked,
   canDisplayTravelReadyClosingOverClaimedCelebration,
@@ -371,11 +369,7 @@ export function useIslandNarrativeOpeningFlow({
   }, [persistedNarrativeSeenState, storageKey, isSeen]);
 
   useEffect(() => {
-    if (!isEligible || !isGlobalPrologueSeen || isGlobalPrologueActive) return;
-    if (!isSeen('I001-B02')) {
-      enqueueBeat('I001-B02');
-      return;
-    }
+    if (!isEligible || !isOpeningBriefingComplete) return;
     if (firstSessionTutorialState === 'awaiting_first_orders' && !isSeen('I001-B00')) {
       enqueueBeat('I001-B00');
       return;
@@ -383,7 +377,7 @@ export function useIslandNarrativeOpeningFlow({
     if (!isSeen('I001-B03')) {
       enqueueBeat('I001-B03');
     }
-  }, [enqueueBeat, firstSessionTutorialState, isEligible, isGlobalPrologueActive, isGlobalPrologueSeen, isSeen]);
+  }, [enqueueBeat, firstSessionTutorialState, isEligible, isOpeningBriefingComplete, isSeen]);
 
   useEffect(() => {
     const previous = previousActiveStopIdRef.current;
@@ -477,7 +471,7 @@ export function useIslandNarrativeOpeningFlow({
   }, [activeStoryEpisode]);
 
   useEffect(() => {
-    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || activeExpeditionTransmission || isGlobalPrologueActive || storyReaderClosingRef.current) return;
+    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || activeExpeditionTransmission || storyReaderClosingRef.current) return;
     const nextBeatId = queue[0];
     if (!nextBeatId) return;
     if (isNarrativeSurfaceBlockingBeat(nextBeatId, isNarrativeSurfaceBlocked, canDisplayTravelReadyClosingOverClaimedCelebration)) return;
@@ -558,7 +552,7 @@ export function useIslandNarrativeOpeningFlow({
     sessionDisplayedRef.current.add(nextBeatId);
     setQueue((current) => current.slice(1));
     setActiveDialogue(dialogue);
-  }, [activeDialogue, activeExpeditionTransmission, activeStoryEpisode, activeToast, canChallengeCurrentBoss, canDisplayTravelReadyClosingOverClaimedCelebration, currentIslandNumber, cycleIndex, firstSessionTutorialState, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
+  }, [activeDialogue, activeExpeditionTransmission, activeStoryEpisode, activeToast, canChallengeCurrentBoss, canDisplayTravelReadyClosingOverClaimedCelebration, currentIslandNumber, cycleIndex, firstSessionTutorialState, isCurrentIslandBossDefeated, isEligible, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
 
   // --- Reaction layer (data-driven; stop/landmark/majority/boss-start beats) ---
   // Stable string keys keep the watcher from running on unrelated re-renders.
@@ -647,7 +641,7 @@ export function useIslandNarrativeOpeningFlow({
   useEffect(() => {
     if (!reactionEligible) return;
     // Story reader, legacy surfaces, and the legacy queue always take priority.
-    if (activeStoryEpisode || isGlobalPrologueActive) return;
+    if (activeStoryEpisode) return;
     if (activeDialogue || activeToast || queue.length > 0) return;
     if (activeReactionDialogue || activeReactionToast || activeExpeditionTransmission) return;
     const nextId = reactionQueue[0];
@@ -707,7 +701,7 @@ export function useIslandNarrativeOpeningFlow({
     }
     // Unsupported surface for a reaction (e.g. story_reader) — drop safely.
     setReactionQueue((current) => current.slice(1));
-  }, [activeDialogue, activeExpeditionTransmission, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, reactionEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
+  }, [activeDialogue, activeExpeditionTransmission, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, reactionEligible, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind === 'island_arrival') {

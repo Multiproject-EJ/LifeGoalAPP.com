@@ -9,6 +9,10 @@ import {
   ISLAND_3D_ROUTE_RADIUS,
   ISLAND_3D_TILE_RADIAL_DEPTH,
 } from './island5ThreePilotContract';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_9_HEARTSHAFT_WORLD_NAME = 'The Heartshaft Crucible';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -587,6 +591,7 @@ export function buildIsland9HeartshaftLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island9HeartshaftMaterials,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_9_HEARTSHAFT_${definition.id.toUpperCase()}_ROOT`;
@@ -625,13 +630,26 @@ export function buildIsland9HeartshaftLandmark(
             ? createSeismicSwitchyard(resolved, quality, materials)
             : createHeartshaftCrucible(resolved, quality, materials);
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
-    const scale = definition.id === 'boss'
+    const scale = options.constructionPreview
+      ? (definition.id === 'boss' ? 1.02 : 1.31)
+      : definition.id === 'boss'
       ? resolved === 3 ? 1.08 : resolved === 2 ? 1.02 : 0.96
       : resolved === 3 ? 1.42 : resolved === 2 ? 1.31 : 1.2;
     building.scale.setScalar(scale);
     if (definition.id === 'boss') {
-      const verticalEmphasis = resolved === 3 ? 1.3 : resolved === 2 ? 1.16 : 1.04;
+      const verticalEmphasis = options.constructionPreview
+        ? 1.16
+        : resolved === 3 ? 1.3 : resolved === 2 ? 1.16 : 1.04;
       building.scale.y *= verticalEmphasis;
+    }
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber: 9,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
     }
     root.add(building);
     const extraPart: Island9RuntimePartId = definition.id === 'boss' ? 'heartshaft-gantry-array' : definition.id === 'hatchery' ? 'incubator-cage-array' : definition.id === 'habit' ? 'fuse-segment-array' : definition.id === 'wisdom' ? 'memory-rune-array' : 'switchyard-valve-array';
@@ -649,8 +667,10 @@ export function buildIsland9HeartshaftLandmark(
   root.traverse((object) => {
     if (object !== root && object instanceof THREE.Group && object.userData.keepSeparate) animatedGroups.push(object);
   });
-  animatedGroups.reverse().forEach((group) => mergeStaticMeshesByMaterial(group));
-  mergeStaticMeshesByMaterial(root);
+  if (!options.constructionPreview) {
+    animatedGroups.reverse().forEach((group) => mergeStaticMeshesByMaterial(group));
+    mergeStaticMeshesByMaterial(root);
+  }
   markShadows(root, quality === 'high');
   return root;
 }
