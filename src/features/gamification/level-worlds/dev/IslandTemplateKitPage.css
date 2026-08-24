@@ -473,6 +473,9 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
   position: absolute;
   z-index: 4;
   inset: 42% 22px auto;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
   padding: 18px;
   border: 1px solid #f7b0b7;
   border-radius: 14px;
@@ -481,6 +484,17 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
   font-size: 12px;
   line-height: 1.45;
   text-align: center;
+}
+
+.island-5-three-pilot__error button {
+  min-height: 34px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 999px;
+  color: #46101d;
+  background: #fff;
+  font: inherit;
+  font-weight: 900;
 }
 
 @media (prefers-reduced-motion: reduce) {

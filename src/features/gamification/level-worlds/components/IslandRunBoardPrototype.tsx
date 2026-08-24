@@ -1821,9 +1821,6 @@ export function IslandRunBoardPrototype({
     boardRotateZDeg,
   } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
-  const [isIsland5ThreeEnabled, setIsIsland5ThreeEnabled] = useState(
-    () => !isIslandVisualPreview || isIsland5ThreePreviewRequested,
-  );
   const [devIsland5ThreeQuality, setDevIsland5ThreeQuality] = useState<Island3DQualitySelection>(readDevIsland5ThreeQuality);
   const [devIslandJumpDigits, setDevIslandJumpDigits] = useState<DevIslandJumpDigits>([0, 0, 1]);
   const [isDevIslandJumpPending, setIsDevIslandJumpPending] = useState(false);
@@ -2289,7 +2286,11 @@ export function IslandRunBoardPrototype({
   const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
   const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
-  const shouldRenderIsland5Three = canUseIsland5Three && isIsland5ThreeEnabled;
+  // Authored 3D islands are the production runtime. The legacy 2D board remains
+  // available only to the explicit visual-production preview surface; it must
+  // never replace a live 3D island after a renderer restart or build beat.
+  const shouldRenderIsland5Three = canUseIsland5Three
+    && (!isIslandVisualPreview || isIsland5ThreePreviewRequested);
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
@@ -13805,23 +13806,7 @@ export function IslandRunBoardPrototype({
               >
                 ◈ Board symbol guide
               </button>
-              {isDevModeEnabled && island3DWorldNumber !== null ? (
-                <button
-                  type="button"
-                  className="island-run-board__topbar-menu-item"
-                  role="menuitemcheckbox"
-                  aria-checked={isIsland5ThreeEnabled}
-                  onClick={() => {
-                    setIsIsland5ThreeEnabled((current) => !current);
-                    setShowTopbarMenu(false);
-                  }}
-                >
-                  <span>{isIsland5ThreeEnabled ? '✓' : '○'}</span>
-                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : `Use 3D Island ${islandArtPreviewNumber}`}</span>
-                  <span aria-hidden="true">🏝️</span>
-                </button>
-              ) : null}
-              {isDevModeEnabled && island3DWorldNumber !== null && isIsland5ThreeEnabled ? (
+              {isDevModeEnabled && shouldRenderIsland5Three ? (
                 <label className="island-run-board__dev-three-quality">
                   <span>3D quality</span>
                   <select
@@ -14153,7 +14138,7 @@ export function IslandRunBoardPrototype({
           </button>
         )}
 
-        <BoardStage
+        {!shouldRenderIsland5Three ? <BoardStage
           anchors={activeTileAnchors}
           theme={activeTheme}
           islandArtManifest={islandArtManifest}
@@ -14237,7 +14222,7 @@ export function IslandRunBoardPrototype({
             diceRollCompleteResolverRef.current?.();
             diceRollCompleteResolverRef.current = null;
           }}
-        />
+        /> : null}
         {shouldRenderIsland5Three ? (
           <div className="island-run-board__three-preview">
             <Suspense
@@ -14344,7 +14329,6 @@ export function IslandRunBoardPrototype({
                   if (showBuildPanel) return;
                   openCaretakerFlow('caretaker_board_tap');
                 }}
-                onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}
               />
             </Suspense>
             {isIslandVisualPreview ? (

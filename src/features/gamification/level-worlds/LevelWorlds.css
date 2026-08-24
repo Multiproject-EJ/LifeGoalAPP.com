@@ -22618,8 +22618,8 @@
     animation: none !important;
   }
 }
-/* Island 5 actual-3D vertical slice. BoardStage stays mounted beneath this
-   presentation layer as the gameplay/state authority and WebGL fallback. */
+/* Authored actual-3D island runtime. Gameplay remains owned by the canonical
+   shell/store; the legacy BoardStage does not mount beneath this visual layer. */
 .island-run-board__three-preview {
   position: absolute;
   inset: 0;
@@ -22644,6 +22644,34 @@
 }
 
 .island-run-board__three-preview .island-5-three-pilot__canvas { touch-action: none; }
+
+.island-run-board__three-preview .island-5-three-pilot__error {
+  position: absolute;
+  z-index: 14;
+  inset: 42% 22px auto;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #f7b0b7;
+  border-radius: 14px;
+  color: #fff;
+  background: rgba(83, 22, 38, .94);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.island-run-board__three-preview .island-5-three-pilot__error button {
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 999px;
+  color: #46101d;
+  background: #fff;
+  font: inherit;
+  font-weight: 900;
+}
 
 .island-run-board__three-preview .island-5-three-pilot__train-ride-prompt {
   position: absolute;
