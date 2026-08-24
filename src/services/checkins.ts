@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { guardedCloudCall } from './service-health';
@@ -20,13 +20,12 @@ type ServiceResponse<T> = {
 };
 
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to manage check-ins.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 const CHECKINS_CACHE_MAX_ROWS = 50;

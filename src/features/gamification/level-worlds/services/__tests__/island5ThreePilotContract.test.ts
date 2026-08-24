@@ -1940,7 +1940,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(routingSource.includes('runtimeIslandNumber: 4, worldSourceNumber: 4') && routingSource.includes('runtimeIslandNumber: 5, worldSourceNumber: 5'), 'the citadel and tropical arena worlds must retain stable Island 004/005 identities');
       assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
       assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
-      assert(boardSource.includes('() => !isIslandVisualPreview || isIsland5ThreePreviewRequested'), 'normal Island 5 gameplay should default to 3D while QA previews remain explicit');
+      assert(
+        boardSource.includes('const shouldRenderIsland5Three = canUseIsland5Three')
+          && boardSource.includes('&& (!isIslandVisualPreview || isIsland5ThreePreviewRequested);'),
+        'authored live islands should default to 3D while legacy visual previews remain explicit',
+      );
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
       assert(pilotSource.includes('qualityOverride?: Island3DQualitySelection'), 'embedded renderer should accept a presentation-only dev quality override');
       assert(pilotSource.includes('qualityOverride ?? productionQualitySelection'), 'dev override should take precedence without changing production auto selection');

@@ -2077,6 +2077,7 @@ export interface Database {
           gamification_enabled: boolean;
           combined_journey_level: number;
           combined_journey_xp: number;
+          zen_tokens: number;
           created_at: string;
           updated_at: string;
         };
@@ -2095,6 +2096,7 @@ export interface Database {
           gamification_enabled?: boolean;
           combined_journey_level?: number;
           combined_journey_xp?: number;
+          zen_tokens?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -2113,6 +2115,7 @@ export interface Database {
           gamification_enabled?: boolean;
           combined_journey_level?: number;
           combined_journey_xp?: number;
+          zen_tokens?: number;
           created_at?: string;
           updated_at?: string;
         };

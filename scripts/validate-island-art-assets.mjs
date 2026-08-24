@@ -223,10 +223,12 @@ function validateLandmarkRouteClearance(manifestPath, manifest) {
   landmarks.forEach((landmark, index) => {
     if (!isRecord(landmark)) return;
     const basePath = `landmarks[${index}]`;
+    let hasExplicitGroundFootprint = false;
 
     if (isRecord(landmark.levelZeroPlacement)) {
       const plot = landmark.levelZeroPlacement;
       if ([plot.x, plot.y, plot.width, plot.height].every(isFiniteNumber)) {
+        hasExplicitGroundFootprint = true;
         const plotClearance = rectangleDistanceFromPoint(plot, boardCenter);
         if (plotClearance < protectedRadius) {
           addError(
@@ -238,11 +240,21 @@ function validateLandmarkRouteClearance(manifestPath, manifest) {
       }
     }
 
+    // A final-angle landmark raster contains the full upright silhouette. Its
+    // towers and canopy can project inward in the authored camera while the
+    // structure remains physically seated on an outside plot. When that
+    // persistent plot is declared, it is the collision/route footprint; using
+    // the whole sprite rectangle produces false positives for tall isometric
+    // buildings. Older manifests without a plot retain the conservative visual
+    // bounds fallback below.
+    if (hasExplicitGroundFootprint) return;
+
     if (![landmark.x, landmark.y, landmark.width, landmark.height].every(isFiniteNumber)) return;
     const imageScale = isFiniteNumber(landmark.imageScale) && landmark.imageScale > 0 ? landmark.imageScale : 1;
-    const levelScale = Array.isArray(landmark.levelScales)
-      ? Math.max(1, ...landmark.levelScales.filter((scale) => isFiniteNumber(scale) && scale > 0))
-      : 1;
+    const positiveLevelScales = Array.isArray(landmark.levelScales)
+      ? landmark.levelScales.filter((scale) => isFiniteNumber(scale) && scale > 0)
+      : [];
+    const levelScale = positiveLevelScales.length > 0 ? Math.max(...positiveLevelScales) : 1;
     const scale = imageScale * levelScale;
     const scaledWidth = landmark.width * scale;
     const scaledHeight = landmark.height * scale;
