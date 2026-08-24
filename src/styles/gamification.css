@@ -4244,3 +4244,168 @@
   outline: 3px solid rgba(255, 255, 255, 0.9);
   outline-offset: 2px;
 }
+
+/* Score Garage is a viewport-level destination. It is portalled to document.body
+   so controller transforms and Score scrolling can never clip the hangar. */
+.score-tab__garage-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(43, 151, 187, 0.2), transparent 38%),
+    linear-gradient(155deg, #09151c, #02070a 60%, #030509);
+  color: #edf9fd;
+  animation: score-garage-arrive 360ms cubic-bezier(0.2, 0.8, 0.16, 1) both;
+}
+
+.score-tab__garage-fullscreen::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.38;
+  background-image:
+    linear-gradient(rgba(69, 184, 217, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(69, 184, 217, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+}
+
+.score-tab__garage-fullscreen-shell {
+  width: min(100%, 1680px);
+  min-height: 100%;
+  margin: 0 auto;
+  padding:
+    max(0.72rem, env(safe-area-inset-top))
+    max(0.78rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(0.78rem, env(safe-area-inset-left));
+}
+
+.score-tab__garage-fullscreen-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(117, 202, 229, 0.18);
+  border-radius: 18px;
+  padding: 0.64rem 0.72rem;
+  background: rgba(4, 13, 18, 0.86);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.score-tab__garage-fullscreen-header p,
+.score-tab__garage-fullscreen-header h2 {
+  margin: 0;
+}
+
+.score-tab__garage-fullscreen-header p {
+  color: #65d9f8;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.score-tab__garage-fullscreen-header h2 {
+  margin-top: 0.08rem;
+  color: #fff7e8;
+  font-size: clamp(0.9rem, 2vw, 1.18rem);
+  letter-spacing: -0.015em;
+}
+
+.score-tab__garage-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(126, 213, 241, 0.32);
+  border-radius: 999px;
+  padding: 0.58rem 0.76rem;
+  background: rgba(255, 255, 255, 0.055);
+  color: #dff8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.score-tab__garage-back:hover {
+  border-color: rgba(121, 225, 255, 0.74);
+  background: rgba(40, 149, 184, 0.18);
+}
+
+.score-tab__garage-back:focus-visible {
+  outline: 2px solid #6ce1ff;
+  outline-offset: 2px;
+}
+
+.score-tab__garage-fullscreen-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(94, 226, 159, 0.2);
+  border-radius: 999px;
+  padding: 0.42rem 0.6rem;
+  background: rgba(12, 89, 61, 0.18);
+  color: #bef5d9;
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.score-tab__garage-fullscreen-status i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #5be4a4;
+  box-shadow: 0 0 12px rgba(91, 228, 164, 0.82);
+}
+
+.score-tab__garage-fullscreen-content {
+  width: 100%;
+  padding-bottom: 1rem;
+}
+
+.score-tab__garage-fullscreen .expedition-ship-garage__stage {
+  height: clamp(380px, 66vh, 860px);
+}
+
+@keyframes score-garage-arrive {
+  from {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .score-tab__garage-fullscreen-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .score-tab__garage-fullscreen-status {
+    display: none;
+  }
+
+  .score-tab__garage-fullscreen-header p {
+    display: none;
+  }
+
+  .score-tab__garage-fullscreen .expedition-ship-garage__stage {
+    height: min(58vh, 520px);
+    min-height: 330px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-tab__garage-fullscreen {
+    animation-duration: 0.01ms !important;
+  }
+}

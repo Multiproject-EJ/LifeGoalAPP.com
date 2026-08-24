@@ -4,6 +4,7 @@ import type {
   CompassChapterState,
   CompassGetProgress,
 } from '../types';
+import { getCompassChapterMethodVersion } from '../types';
 import { getChapterDefinition, getChapterActivities } from '../content/compassBookCurriculum';
 import { chapterNumeral } from '../logic/reading';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
@@ -16,7 +17,8 @@ export type CompassChapterScreenProps = {
   session: Session | null;
   getProgress: CompassGetProgress;
   getChapterState: (chapterId: CompassBookChapterId) => CompassChapterState | null;
-  onStartFlow: (activityId?: string) => void;
+  onStartFlow: (activityId: string | undefined, returnFocusKey: string) => void;
+  onBeginMethodRevisit: (chapterId: CompassBookChapterId) => Promise<void>;
   onBack: () => void;
   onClose: () => void;
 };
@@ -36,6 +38,7 @@ export function CompassChapterScreen({
   getProgress,
   getChapterState,
   onStartFlow,
+  onBeginMethodRevisit,
   onBack,
   onClose,
 }: CompassChapterScreenProps) {
@@ -48,6 +51,11 @@ export function CompassChapterScreen({
   const hasUnlocked = progress.unlockedCount > 0;
   const hasProgress = progress.completedCount > 0;
   const islandsAway = Math.max(0, chapter.islandRange[0] - currentIslandNumber);
+  const hasLegacyInnerCompassReading =
+    chapterId === 'inner_compass' &&
+    progress.status === 'complete' &&
+    chapterState !== null &&
+    chapterState.contentVersion !== getCompassChapterMethodVersion('inner_compass');
 
   return (
     <>
@@ -101,9 +109,27 @@ export function CompassChapterScreen({
           />
         </div>
 
-        {progress.status === 'complete' ? (
+        {hasLegacyInnerCompassReading ? (
+          <section className="compass-book__note">
+            <p>
+              ✓ Your original reading remains sealed. The newer evidence method grounds patterns
+              in concrete moments and preserves uncertainty without erasing what you wrote.
+            </p>
+            <button
+              type="button"
+              className="compass-book__secondary"
+              data-compass-flow-trigger="inner-compass-method-revisit"
+              onClick={async () => {
+                await onBeginMethodRevisit(chapterId);
+                onStartFlow('inner_compass.a01', 'inner-compass-method-revisit');
+              }}
+            >
+              Revisit with the evidence method
+            </button>
+          </section>
+        ) : progress.status === 'complete' ? (
           <p className="compass-book__note">
-            ✓ This chapter is sealed. You can revisit any fragment to revise it.
+            ✓ This chapter is sealed as a dated reading. You can revisit any fragment when life changes.
           </p>
         ) : null}
 
@@ -119,7 +145,8 @@ export function CompassChapterScreen({
           <button
             type="button"
             className="compass-book__primary compass-book__primary--block"
-            onClick={() => onStartFlow(progress.nextActivityId ?? undefined)}
+            data-compass-flow-trigger="chapter-primary"
+            onClick={() => onStartFlow(progress.nextActivityId ?? undefined, 'chapter-primary')}
           >
             {hasProgress
               ? `Continue · ${progress.completedCount}/${progress.totalCount}`
@@ -148,7 +175,8 @@ export function CompassChapterScreen({
                   type="button"
                   className={`compass-book__activity ${locked ? 'compass-book__activity--locked' : ''}`}
                   disabled={locked}
-                  onClick={() => onStartFlow(activity.id)}
+                  data-compass-flow-trigger={activity.id}
+                  onClick={() => onStartFlow(activity.id, activity.id)}
                   aria-label={`${activity.title} — ${locked ? 'locked' : done ? 'done' : 'available'}`}
                 >
                   <span className="compass-book__activity-order" aria-hidden="true">

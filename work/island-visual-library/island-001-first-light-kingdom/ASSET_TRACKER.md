@@ -142,3 +142,36 @@ existing caretaker interaction while reading as a magical affordance at
 390 × 844. Both assets were generated against the approved First Light world
 reference on uniform magenta, converted locally to alpha, and compressed to
 transparent WebP.
+
+## Actual-3D construction choreography
+
+The procedural Lantern Hatchery, Rhythm Tree Sanctuary, Echo Lens Observatory,
+Sava's Star Archive, and Aureon's Sun Court now have complete Island 001
+construction vertical slices.
+L0→L1, L1→L2 and L2→L3 preserve
+funded geometry, reveal only additive parts through five authored stages, and
+use landmark-specific temporary staging. The Hatchery uses compact entrance
+façade towers; the Tree uses a narrow root ladder, pruning platform, and branch
+hoist; Echo Lens uses an optics-transfer rail, lens carriage, and one telescope
+maintenance gantry; the Archive uses folio rails, a page carriage, and a narrow
+scribe gantry with binding clamp; the Sun Court uses a radial prism track and
+low solar collimator. Finished board levels and resting build-modal states
+contain none of that scaffold, hoist, crane, gantry, rail, clamp, collimator, or
+supply dressing.
+
+Live phone-workbench QA covered working, resting, completed reveal and manual
+orbit views. All sampled transitions remained bottom-grounded and reported no
+robot/body occupancy violations. Hatchery previews use 24–29 stage/material
+batches; Rhythm Tree previews use 17–25; Echo Lens uses 15–17. The funded L2
+tree remains stable through the L3 ancient-oak growth, and Observatory optics
+are installed only after their masonry and mechanical mounts. The Archive's
+great codex and armillary instruments now form a distinct fourth reveal phase.
+The Sun Court preserves its low, open center while commissioning the council
+table and gateways in later stages. All five per-landmark slices and the
+whole-build-modal choreography gate are complete. The final 12,600-frame matrix
+across five representative envelopes and all seven phases reported zero body
+overlap, zero landmark penetration, and zero settled root drift. The live
+miniature crew measures 39,922 family triangles plus 2,216 theatre triangles
+at a combined 72 draw calls. Island 001 is now the authored construction
+reference for later island production; those later islands still require their
+own landmark-specific staging and visual QA.

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-comparison",
+  "materialId": "violet",
+  "reference": {
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/02-curiosity-violet-enamel.png",
+    "meanRgb": [
+      75,
+      47,
+      57
+    ],
+    "features": {
+      "meanLuma": 0.21012302004649733,
+      "lumaVariance": 0.03241077927017176,
+      "horizontalGradient": 0.08468603706021405,
+      "verticalGradient": 0.10129632978723387,
+      "anisotropyProxy": 1.1961396861115305
+    },
+    "width": 108,
+    "height": 108,
+    "foregroundCoverage": 0.9701,
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence"
+    ],
+    "readback": true,
+    "diagnostics": {
+      "backgroundColor": "#212028",
+      "backgroundNoise": 13.077,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.9716
+    }
+  },
+  "render": {
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/material-regions/render-violet.png",
+    "meanRgb": [
+      90,
+      51,
+      84
+    ],
+    "features": {
+      "meanLuma": 0.24125927488621973,
+      "lumaVariance": 0.012533543254626845,
+      "horizontalGradient": 0.0352083044778195,
+      "verticalGradient": 0.03644290606313445,
+      "anisotropyProxy": 1.0350656358954384
+    },
+    "width": 122,
+    "height": 126,
+    "foregroundCoverage": 0.9948,
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence"
+    ],
+    "readback": true,
+    "diagnostics": {
+      "backgroundColor": "#232225",
+      "backgroundNoise": 12.207,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.994
+    }
+  },
+  "metrics": {
+    "deltaE00": 8.903,
+    "scores": {
+      "baseColor": 0.8219343651787567,
+      "meanLuma": 0.9308083225783946,
+      "microstructure": 0.8343563665371256,
+      "directionalResponse": 0.9194629748919539,
+      "overall": 0.8614
+    }
+  },
+  "mismatches": [],
+  "passed": true,
+  "nextAction": "continue",
+  "limitation": "Deterministic crop metrics are evidence; material identity still requires vision review for ambiguous cases."
+}

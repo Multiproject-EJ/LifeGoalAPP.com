@@ -97,6 +97,13 @@ export function IkigaiMapGraphic({ output, mode }: IkigaiMapGraphicProps) {
 
       {mode === 'full' ? (
         <>
+          <p className="compass-book__block-help">
+            {output.readingStatus === 'trial_ready'
+              ? `Trial ready · ${output.evidenceCount} evidence notes · direction remains a hypothesis until tested`
+              : output.readingStatus === 'evidence_backed'
+                ? `Evidence-backed direction hypothesis · ${output.evidenceCount} evidence notes`
+                : 'Provisional direction hypothesis · gather evidence before making a larger commitment'}
+          </p>
           {output.trialExperiment ? (
             <p className="compass-wheel__next">
               <strong>Experiment:</strong> {output.trialExperiment}

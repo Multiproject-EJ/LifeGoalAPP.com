@@ -3,7 +3,7 @@
   "status": "active",
   "profile": "generic",
   "currentStep": "build-current-pass",
-  "currentPass": "",
+  "currentPass": "blockout",
   "checklist": [
     {
       "id": "image-analysis",

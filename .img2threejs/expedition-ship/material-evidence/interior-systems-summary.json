@@ -1,0 +1,10 @@
+{
+  "targetThreshold": 0.7,
+  "verdict": "pass-with-limitations",
+  "materials": [
+    {"id":"dark-structural-metal","crop":"detail-interior-systems/zone-r0c1.png","confidence":0.86,"mapsDir":"material-evidence/workshop-metal"},
+    {"id":"sanctuary-terrain","crop":"detail-interior-systems/zone-r3c0.png","confidence":0.859,"mapsDir":"material-evidence/sanctuary-hardscape"},
+    {"id":"habitat-textile","crop":"detail-interior-systems/zone-r3c1.png","confidence":0.86,"mapsDir":"material-evidence/sanctuary-textile"}
+  ],
+  "limitation": "Single-image extraction from mixed architectural crops is an estimate, not inverse rendering. Water, glass, foliage, bronze and emissive materials remain authored utility materials for the blockout pass and must receive controlled material reviews later."
+}

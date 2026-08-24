@@ -1,0 +1,93 @@
+.robot-family-lab {
+  --ink: #122331;
+  --glass: rgba(244, 251, 253, 0.88);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: #d9e4e7;
+  font-family: Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.robot-family-lab__canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+
+.robot-family-lab__header {
+  position: fixed;
+  inset: 20px 22px auto 22px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.robot-family-lab__header > div:first-child,
+.robot-family-lab__metrics,
+.robot-family-lab__panel,
+.robot-family-lab__note {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: var(--glass);
+  box-shadow: 0 18px 52px rgba(36, 72, 90, 0.17), inset 0 1px 0 #fff;
+  backdrop-filter: blur(22px) saturate(1.18);
+}
+
+.robot-family-lab__header > div:first-child { padding: 14px 18px 16px; border-radius: 20px; }
+.robot-family-lab__header p { margin: 0 0 4px; color: #347995; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.robot-family-lab__header h1 { margin: 0; font-size: clamp(1.35rem, 2.3vw, 2rem); line-height: 1.05; }
+.robot-family-lab__header span { display: block; margin-top: 6px; color: #526875; font-size: 0.78rem; }
+.robot-family-lab__metrics { display: flex; gap: 12px; align-items: center; padding: 11px 14px; border-radius: 16px; font-size: 0.72rem; }
+.robot-family-lab__metrics strong { color: #087f9e; }
+
+.robot-family-lab__panel {
+  position: fixed;
+  top: 128px;
+  right: 22px;
+  bottom: 52px;
+  width: min(286px, calc(100vw - 44px));
+  padding: 14px;
+  border-radius: 22px;
+  overflow: auto;
+}
+
+.robot-family-lab__panel section { padding: 10px 4px 13px; border-bottom: 1px solid rgba(69, 104, 121, 0.13); }
+.robot-family-lab__panel section:last-child { border-bottom: 0; }
+.robot-family-lab__panel h2 { margin: 0 0 9px; color: #486876; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.robot-family-lab__panel select,
+.robot-family-lab__panel button {
+  border: 1px solid rgba(69, 104, 121, 0.2);
+  border-radius: 10px;
+  color: #16303d;
+  background: rgba(255, 255, 255, 0.7);
+  font: inherit;
+}
+.robot-family-lab__panel select { width: 100%; margin: 0 0 7px; padding: 8px 9px; font-size: 0.77rem; }
+.robot-family-lab__panel button { padding: 7px 8px; cursor: pointer; font-size: 0.7rem; }
+.robot-family-lab__panel button.is-active { border-color: #43cfe7; color: #006c85; background: #d8f8ff; box-shadow: inset 0 0 0 1px #fff; }
+.robot-family-lab__segmented { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.robot-family-lab__segmented:has(button:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.robot-family-lab__purpose { margin: 8px 2px 0; color: #5b707a; font-size: 0.72rem; line-height: 1.35; }
+.robot-family-lab__panel label { color: #405a67; font-size: 0.74rem; }
+.robot-family-lab__panel label output { float: right; color: #168aa5; }
+.robot-family-lab__panel input[type="range"] { width: 100%; accent-color: #19b8d5; }
+.robot-family-lab__check { display: block; margin-bottom: 8px; }
+.robot-family-lab__addon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.robot-family-lab__addon-grid label,
+.robot-family-lab__switches label { display: flex; gap: 5px; align-items: center; }
+.robot-family-lab__switches { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.robot-family-lab__panel input[type="checkbox"] { accent-color: #16b3cf; }
+
+.robot-family-lab__note { position: fixed; left: 22px; bottom: 18px; padding: 8px 12px; border-radius: 13px; color: #526d79; font-size: 0.68rem; pointer-events: none; }
+.robot-family-lab__error { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); padding: 18px; border-radius: 16px; color: #fff; background: #7d2530; }
+.robot-family-lab--phone-proof .robot-family-lab__canvas { width: 100%; height: 100%; }
+
+@media (max-width: 760px) {
+  .robot-family-lab__header { inset: 10px 10px auto 10px; }
+  .robot-family-lab__header > div:first-child { padding: 10px 12px; }
+  .robot-family-lab__header span { display: none; }
+  .robot-family-lab__metrics { display: none; }
+  .robot-family-lab__panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 40dvh; padding: 10px; border-radius: 18px; }
+  .robot-family-lab__panel section { padding: 7px 3px 9px; }
+  .robot-family-lab__note { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .robot-family-lab * { scroll-behavior: auto !important; } }

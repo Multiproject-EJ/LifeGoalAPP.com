@@ -20,7 +20,34 @@ export type LivingHorizonOutput = {
   priceNotPaidId: string | null;
   relationshipIds: string[];
   horizonStatement: string | null;
+  evidenceCount: number;
+  confidenceId: string | null;
+  counterevidence: string | null;
+  reviewTriggerId: string | null;
+  readingStatus: 'provisional' | 'evidence_backed';
 };
+
+const EVIDENCE_QUESTION_IDS = [
+  'morning_evidence',
+  'essential_scene_evidence',
+  'rhythm_evidence',
+  'evening_evidence',
+  'environment_evidence',
+  'rooted_tradeoff',
+  'social_intensity_evidence',
+  'relationships_evidence',
+  'work_problems_evidence',
+  'work_mode_evidence',
+  'depth_variety_evidence',
+  'work_enables_tradeoff',
+  'responsibility_evidence',
+  'challenge_evidence',
+  'scale_mastery_tradeoff',
+  'financial_enough_evidence',
+  'time_proving_tradeoff',
+  'anti_vision_evidence',
+  'price_boundary_evidence',
+] as const;
 
 function valueMap(answers: readonly CompassAnswerRecord[]): Map<string, CompassAnswerValue> {
   const map = new Map<string, CompassAnswerValue>();
@@ -45,6 +72,10 @@ function textOf(map: Map<string, CompassAnswerValue>, questionId: string): strin
 
 export function projectLivingHorizon(answers: readonly CompassAnswerRecord[]): LivingHorizonOutput {
   const map = valueMap(answers);
+  const evidenceCount = EVIDENCE_QUESTION_IDS.reduce(
+    (count, questionId) => count + (textOf(map, questionId) ? 1 : 0),
+    0,
+  );
   return {
     desiredRhythmId: optionOf(map, 'rhythm'),
     essentialSceneId: optionOf(map, 'essential_scene'),
@@ -59,6 +90,11 @@ export function projectLivingHorizon(answers: readonly CompassAnswerRecord[]): L
     priceNotPaidId: optionOf(map, 'price_not_paid'),
     relationshipIds: optionsOf(map, 'relationships'),
     horizonStatement: textOf(map, 'horizon_statement'),
+    evidenceCount,
+    confidenceId: optionOf(map, 'horizon_confidence'),
+    counterevidence: textOf(map, 'horizon_counterevidence'),
+    reviewTriggerId: optionOf(map, 'horizon_review_trigger'),
+    readingStatus: evidenceCount >= 5 ? 'evidence_backed' : 'provisional',
   };
 }
 

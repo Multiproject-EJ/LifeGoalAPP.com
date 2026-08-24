@@ -1,0 +1,197 @@
+{
+  "model": "habitgame-compass-book-v2",
+  "parts": [
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_MAP_RELIEF",
+      "triangles": 15900
+    },
+    {
+      "name": "contact-frame",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CONTACT_FRAME",
+      "triangles": 4824
+    },
+    {
+      "name": "chart-field",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CHART_FIELD",
+      "triangles": 972
+    },
+    {
+      "name": "force-graph",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_FIVE_FORCE_GRAPH",
+      "triangles": 3396
+    },
+    {
+      "name": "rail-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_RAIL_SYSTEM",
+      "triangles": 640
+    },
+    {
+      "name": "outer-rails",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_OUTER_RAILS",
+      "triangles": 300
+    },
+    {
+      "name": "hub-spokes",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_HUB_SPOKES",
+      "triangles": 300
+    },
+    {
+      "name": "frame-bezel",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_OUTER_FRAME",
+      "triangles": 2352
+    },
+    {
+      "name": "node-bezel-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_NODE_BEZELS",
+      "triangles": 384
+    },
+    {
+      "name": "socket-collars",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_SOCKET_COLLARS",
+      "triangles": 40
+    },
+    {
+      "name": "curiosity-node",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CURIOSITY_NODE",
+      "triangles": 172
+    },
+    {
+      "name": "capability-node",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CAPABILITY_NODE",
+      "triangles": 284
+    },
+    {
+      "name": "contribution-node",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CONTRIBUTION_NODE",
+      "triangles": 716
+    },
+    {
+      "name": "viability-node",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_VIABILITY_NODE",
+      "triangles": 584
+    },
+    {
+      "name": "willingness-node",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_WILLINGNESS_NODE",
+      "triangles": 280
+    },
+    {
+      "name": "trial-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_TRIAL_SYSTEM",
+      "triangles": 1680
+    },
+    {
+      "name": "trial-rings",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_TRIAL_RING_STACK",
+      "triangles": 1536
+    },
+    {
+      "name": "trial-crystal",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_TRIAL_CRYSTAL",
+      "triangles": 36
+    },
+    {
+      "name": "candidate-paths",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CANDIDATE_PATHS",
+      "triangles": 1512
+    },
+    {
+      "name": "mirage-node",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_MIRAGE_NODE",
+      "triangles": 520
+    },
+    {
+      "name": "mirage-tether",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_MIRAGE_BROKEN_TETHER",
+      "triangles": 80
+    },
+    {
+      "name": "chart-stars",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CHART_STAR_STUDS",
+      "triangles": 8
+    },
+    {
+      "name": "chart-orbits",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CHART_ORBITS",
+      "triangles": 2016
+    },
+    {
+      "name": "curiosity-insert",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CURIOSITY_INSERT",
+      "triangles": 76
+    },
+    {
+      "name": "capability-insert",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CAPABILITY_INSERT",
+      "triangles": 188
+    },
+    {
+      "name": "contribution-insert",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_CONTRIBUTION_INSERT",
+      "triangles": 620
+    },
+    {
+      "name": "viability-insert",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_VIABILITY_INSERT",
+      "triangles": 488
+    },
+    {
+      "name": "willingness-insert",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_WILLINGNESS_INSERT",
+      "triangles": 184
+    },
+    {
+      "name": "radial-rivets",
+      "kind": "part",
+      "module": "COMPASS_BOOK_IKIGAI_RADIAL_RIVETS",
+      "triangles": 120
+    }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 49,
+  "sockets": [
+    "trial",
+    "curiosity",
+    "capability",
+    "contribution",
+    "viability",
+    "willingness",
+    "mirage"
+  ],
+  "colliders": [
+    "relief"
+  ],
+  "destructionGroups": [
+    "validGraph",
+    "invalidSatellite"
+  ]
+}

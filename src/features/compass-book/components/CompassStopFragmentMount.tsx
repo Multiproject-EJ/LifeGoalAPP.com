@@ -32,8 +32,10 @@ export function CompassStopFragmentMount({
 
   const state = book.getChapterState(fragment.chapterId);
   const savedValues: Record<string, CompassAnswerValue | undefined> = {};
+  const optionSourceValues: Record<string, CompassAnswerValue | undefined> = {};
   if (state) {
     for (const answer of state.answers) {
+      optionSourceValues[answer.questionId] = answer.value;
       if (answer.activityId === fragment.activityId) {
         savedValues[answer.questionId] = answer.value;
       }
@@ -46,6 +48,7 @@ export function CompassStopFragmentMount({
       slot={slot}
       userId={session?.user?.id ?? null}
       savedValues={savedValues}
+      optionSourceValues={optionSourceValues}
       saving={book.saving}
       onSave={(activityId, entries) =>
         book.saveActivityAnswers(fragment.chapterId, activityId, entries)

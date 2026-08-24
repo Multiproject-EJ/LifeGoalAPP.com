@@ -8,6 +8,10 @@ import {
   ISLAND_3D_ROUTE_RADIUS,
   ISLAND_3D_TILE_RADIAL_DEPTH,
 } from './island5ThreePilotContract';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_8_EVERBLOSSOM_WORLD_NAME = 'The Everblossom Kingdom';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -1207,6 +1211,7 @@ export function buildIsland8EverblossomLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island8EverblossomMaterials,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_8_EVERBLOSSOM_${definition.id.toUpperCase()}_ROOT`;
@@ -1250,10 +1255,21 @@ export function buildIsland8EverblossomLandmark(
             : createBlossomCrownCitadel(resolved, quality, materials);
     building.name = `ISLAND_8_${definition.id.toUpperCase()}_ARCHITECTURE_PIVOT`;
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
-    const scale = definition.id === 'boss'
+    const scale = options.constructionPreview
+      ? 1.08
+      : definition.id === 'boss'
       ? resolved === 3 ? 1.18 : resolved === 2 ? 1.08 : 0.98
       : resolved === 3 ? 1.16 : resolved === 2 ? 1.08 : 1;
     building.scale.setScalar(scale);
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber: 8,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
     root.add(building);
     runtimeParts.push(registerIsland8RuntimePart(
       definition.id === 'boss' ? 'citadel-petal-balcony-array' : 'five-entrance-system',

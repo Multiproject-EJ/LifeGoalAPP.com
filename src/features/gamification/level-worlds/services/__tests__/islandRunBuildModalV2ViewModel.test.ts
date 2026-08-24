@@ -117,7 +117,7 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
-    name: 'live-board Build owns input and completed levels honor queued one-to-three-second review timing',
+    name: 'live-board Build owns input and completed levels honor queued half-to-one-and-a-half-second review timing',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -127,8 +127,8 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
 
       assert(modalSource.includes('role="dialog"') && modalSource.includes('aria-modal="true"'), 'Build should expose its exclusive live-board session as an accessible modal dialog');
       assert(!modalSource.includes('<img') && !modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
-      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_000'), 'completed levels should remain visible for at least one second');
-      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 3_000'), 'completed levels should auto-advance after a three-second review');
+      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 500'), 'completed levels should remain visible for at least half a second');
+      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 1_500'), 'completed levels should auto-advance after a one-and-a-half-second review');
       assert(boardSource.includes('isAdvanceQueued: true') && boardSource.includes('Date.now() < current.minAdvanceAtMs'), 'an early review tap should queue rather than skip the minimum dwell');
       assert(!boardSource.includes("completionPresentation && nextRuntimeState.firstSessionTutorialState !== 'hatchery_l1_built'"), 'the first tutorial landmark must receive the same completed-level review as every later build');
       assert(boardSource.includes('buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId'), 'the camera should keep the just-completed landmark focused throughout review');
@@ -137,8 +137,13 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(boardSource.includes('role="status"') && !boardSource.includes('bm2-level-complete__continue'), 'level celebration should announce itself without a blocking continue button');
       assert(cssSource.includes('.bm2-build-mode') && cssSource.includes('pointer-events: auto;'), 'transparent Build space should absorb board input for the exclusive session');
       assert(cssSource.includes('.island-run-prototype--build-exclusive > .island-run-overlay-root:not(.bm2-build-mode):not(.bm2-level-complete)'), 'unrelated overlay surfaces should stay hidden until Build closes');
+      assert(cssSource.includes('.island-run-prototype--build-exclusive .island-run-board__topbar'), 'Build must replace rather than stack underneath the ordinary game top bar');
+      assert(cssSource.includes("top: max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))"), 'Build header must occupy the top safe-area slot instead of sitting below the game header');
+      assert(cssSource.includes('background: linear-gradient(180deg, #ef5757 0%, #ad1717 100%)'), 'Build and board close controls should use a high-contrast red surface');
+      assert(cssSource.includes('.bm2-build-mode .bm2-header__close') && cssSource.includes('.island-run-board__topbar-exit'), 'both close controls must share the red and white visibility treatment');
       assert(cssSource.includes('.bm2-level-review__advance--queued') && cssSource.includes('#327cb5'), 'an early queued advance should have explicit blue feedback');
-      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 3s linear both'), 'auto-dismiss celebration should visualize the full three-second dwell');
+      assert(modalSource.includes('bm2-dock__topline') && modalSource.includes('bm2-dock__funding'), 'the active build summary should keep level, identity, and funding information in compact rows');
+      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 1.5s linear both'), 'auto-dismiss celebration should visualize the full one-and-a-half-second dwell');
     },
   },
 ];

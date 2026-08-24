@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-08-20",
+  "environment": "Codex in-app Chromium browser; measurements are browser evidence, not physical-device proof",
+  "high": {
+    "viewportCssPixels": "970x1194",
+    "fps": 60,
+    "renderCalls": 677,
+    "renderedTriangles": 182080,
+    "modelTriangles": 104428
+  },
+  "low": {
+    "viewportCssPixels": "390x844",
+    "fps": 60,
+    "renderCalls": 279,
+    "renderedTriangles": 25332,
+    "modelTriangles": 25984
+  },
+  "qualityReduction": {
+    "renderCallsPercent": 58.8,
+    "renderedTrianglesPercent": 86.1,
+    "modelTrianglesPercent": 75.1
+  },
+  "physicalDeviceVerified": false
+}

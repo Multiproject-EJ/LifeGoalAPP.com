@@ -1,0 +1,28 @@
+{
+  "surface": "Compass Book 3D Lab · Chapter V focused relief",
+  "capture": {
+    "viewport": "in-app browser desktop workbench",
+    "reducedMotion": true,
+    "note": "Browser FPS is scheduling-sensitive evidence only and is not a supported-iPhone launch certification."
+  },
+  "high": {
+    "fpsSample": 37,
+    "renderCalls": 143,
+    "renderedTriangles": 41416,
+    "meshes": 670,
+    "pbrTexturePolicy": "Seven independent material regions load roughness, normal and ambient-occlusion maps."
+  },
+  "low": {
+    "fpsSample": 47,
+    "renderCalls": 87,
+    "renderedTriangles": 8580,
+    "meshes": 584,
+    "pbrTexturePolicy": "questPbr is null; Chapter V does not request its 21 roughness, normal or ambient-occlusion maps."
+  },
+  "delta": {
+    "renderCallsPercent": -39.2,
+    "renderedTrianglesPercent": -79.3,
+    "meshesPercent": -12.8,
+    "semanticResult": "Exactly one primary, one supporting and one released state remain visible; the crest, forge path and closed vault remain legible."
+  }
+}

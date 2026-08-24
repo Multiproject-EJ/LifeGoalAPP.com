@@ -1,0 +1,17 @@
+[
+  {
+    "id": "traversable-atrium-volume",
+    "score": 0.58,
+    "notes": "Oval galleries and denser room openings create a more credible continuous interior."
+  },
+  {
+    "id": "cinematic-inhabited-atrium",
+    "score": 0.34,
+    "notes": "More human-scale detail exists, but the current camera crops out the tree canopy and ceiling composition."
+  },
+  {
+    "id": "inhabited-sanctuary-scale",
+    "score": 0.43,
+    "notes": "Repeated portals and furniture improve scale, while the trunk and nearby slabs still read oversized."
+  }
+]

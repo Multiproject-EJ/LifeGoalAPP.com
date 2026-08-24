@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "fixed-front",
+    "sourcePath": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/ikigai-map-admission-reference-white.png",
+    "width": 1122,
+    "height": 1402,
+    "foregroundCoverage": 0.5046,
+    "largestComponentFraction": 1.0,
+    "pHash": 18422230062144727210,
+    "duplicateOfHash": null
+  }
+}

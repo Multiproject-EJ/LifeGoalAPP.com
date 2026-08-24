@@ -26,6 +26,7 @@ export interface CrownCitadelModelOptions {
   level: CrownCitadelBuildLevel;
   quality: Island3DQuality;
   materials: CrownCitadelMaterials;
+  compact?: boolean;
 }
 
 const mesh = (geometry: THREE.BufferGeometry, material: THREE.Material) => new THREE.Mesh(geometry, material);
@@ -580,7 +581,7 @@ function addFoundationStageArchitecture(
   parent.add(thresholdInlay);
 }
 
-export function createCrownCitadelModel({ level, quality, materials }: CrownCitadelModelOptions) {
+export function createCrownCitadelModel({ level, quality, materials, compact = true }: CrownCitadelModelOptions) {
   const detail = CROWN_CITADEL_DETAIL_PROFILES[quality];
   const root = new THREE.Group();
   root.name = 'CROWN_CITADEL_MODEL';
@@ -599,10 +600,16 @@ export function createCrownCitadelModel({ level, quality, materials }: CrownCita
   markStructural(pearlTerrace);
   addFrontStair(root, materials);
 
-  const keepFoundation = mesh(new THREE.BoxGeometry(2.16, level === 1 ? 0.86 : 1.62, 1.6), materials.limestone);
-  keepFoundation.position.y = level === 1 ? 0.92 : 1.29;
+  const keepFoundation = mesh(new THREE.BoxGeometry(2.16, 0.86, 1.6), materials.limestone);
+  keepFoundation.position.y = 0.92;
   markStructural(keepFoundation);
   root.add(keepFoundation);
+  if (level >= 2) {
+    const upperKeep = mesh(new THREE.BoxGeometry(2.08, 0.76, 1.54), materials.limestone);
+    upperKeep.position.y = 1.73;
+    markStructural(upperKeep);
+    root.add(upperKeep);
+  }
 
   const gate = mesh(new THREE.BoxGeometry(0.5, 0.58, 0.045), materials.deepWindow);
   gate.position.set(0, 0.86, 0.824);
@@ -701,6 +708,6 @@ export function createCrownCitadelModel({ level, quality, materials }: CrownCita
       child.receiveShadow = true;
     }
   });
-  compactStaticGeometry(root);
+  if (compact) compactStaticGeometry(root);
   return root;
 }

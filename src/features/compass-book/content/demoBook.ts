@@ -21,6 +21,7 @@
 
 import {
   COMPASS_CURRICULUM_VERSION,
+  getCompassChapterMethodVersion,
   type CompassAnswerRecord,
   type CompassAnswerValue,
   type CompassBlockDefinition,
@@ -130,9 +131,15 @@ export function demoValueForBlock(block: CompassBlockDefinition): CompassAnswerV
 
     case 'multi_choice': {
       if (options.length === 0) return null;
-      const first = options[seed % options.length].id;
-      const second = options[(seed + 3) % options.length].id;
-      const ids = first === second ? [first] : [first, second];
+      const targetCount = Math.min(
+        options.length,
+        Math.max(block.minSelections ?? 2, Math.min(block.maxSelections ?? 2, 2)),
+      );
+      const ids: string[] = [];
+      for (let offset = 0; ids.length < targetCount && offset < options.length * 2; offset += 1) {
+        const id = options[(seed + offset) % options.length].id;
+        if (!ids.includes(id)) ids.push(id);
+      }
       return { kind: 'multi_choice', optionIds: ids };
     }
 
@@ -239,7 +246,41 @@ export function buildDemoChapterStates(
     for (const activity of activities.slice(0, upTo)) {
       let answeredAny = false;
       for (const block of activity.blocks) {
-        const value = demoValueForBlock(block);
+        const sourceAnswer = block.optionsFromQuestionId
+          ? [...answers].reverse().find((answer) => answer.questionId === block.optionsFromQuestionId)
+          : undefined;
+        const sourceIds = sourceAnswer?.value.kind === 'multi_choice'
+          ? sourceAnswer.value.optionIds
+          : sourceAnswer?.value.kind === 'ranking'
+            ? sourceAnswer.value.orderedOptionIds
+            : sourceAnswer?.value.kind === 'choice' || sourceAnswer?.value.kind === 'emotion'
+              ? [sourceAnswer.value.optionId]
+              : null;
+        const answeredTextIds = block.optionsFromAnsweredQuestionIds
+          ? new Set(
+              block.optionsFromAnsweredQuestionIds.filter((questionId) =>
+                answers.some(
+                  (answer) => answer.questionId === questionId
+                    && answer.value.kind === 'text'
+                    && answer.value.text.trim().length > 0,
+                ),
+              ),
+            )
+          : null;
+        const demoBlock = answeredTextIds
+          ? {
+              ...block,
+              options: (block.options ?? []).filter(
+                (option) => option.id === 'none' || answeredTextIds.has(option.id),
+              ),
+            }
+          : sourceIds
+          ? {
+              ...block,
+              options: (block.options ?? []).filter((option) => sourceIds.includes(option.id)),
+            }
+          : block;
+        const value = demoValueForBlock(demoBlock);
         if (!value) continue;
         answers.push({
           activityId: activity.id,
@@ -247,6 +288,7 @@ export function buildDemoChapterStates(
           value,
           sourceMode: 'fixed_guided',
           curriculumVersion: COMPASS_CURRICULUM_VERSION,
+          methodVersion: getCompassChapterMethodVersion(chapter.id),
           answeredAt: DEMO_AT,
           updatedAt: DEMO_AT,
           confirmed: true,
@@ -262,7 +304,7 @@ export function buildDemoChapterStates(
 
     states[chapter.id] = {
       chapterId: chapter.id,
-      contentVersion: COMPASS_CURRICULUM_VERSION,
+      contentVersion: getCompassChapterMethodVersion(chapter.id),
       status: confirmedOutput != null ? 'complete' : 'in_progress',
       answers,
       draftOutput: null,

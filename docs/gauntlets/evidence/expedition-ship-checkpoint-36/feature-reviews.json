@@ -1,0 +1,37 @@
+[
+  {
+    "id": "contained-room-scale-and-envelope",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.72,
+    "notes": "The new standing-height three-quarter camera and shared gunmetal floor/canopy surface make the fabrication deck read as a contained room with real depth. The canopy edge remains abrupt and the foreground floor still consumes too much of the frame."
+  },
+  {
+    "id": "continuous-workshop-perimeter",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.62,
+    "notes": "The opposite-side capture holds a continuous rear and side equipment perimeter, but repeated workstation modules remain sparse, evenly spaced, and visibly procedural beside the dense yacht workshop reference."
+  },
+  {
+    "id": "workshop-vertical-machinery-density",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.6,
+    "notes": "The rotary service subject and overhead handling system stay legible from both interior angles. The paired manipulators are oversized relative to the room and their low-segment joints dominate the composition."
+  },
+  {
+    "id": "curved-pressure-architecture",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.61,
+    "notes": "Warm longitudinal coves now reveal fore-aft continuity in the bowed canopy and the alternate angle verifies a real pressure volume. Structural thickness, panel seams, edge bevels, and glass-to-frame transitions are still too weak."
+  },
+  {
+    "id": "reference-material-lighting",
+    "tier": "critical",
+    "visible": true,
+    "score": 0.52,
+    "notes": "A workshop-only clear-coated gunmetal finish and dedicated amber floor wash recover the floor from near-black and preserve the bronze/cyan palette. Large surfaces remain textureless, floor inlays read mostly as reflections, and the lighting lacks the reference's layered practicals and contact response."
+  }
+]

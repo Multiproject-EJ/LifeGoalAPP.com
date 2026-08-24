@@ -1,0 +1,9 @@
+{
+  "referenceAreaFraction": 0.9850271267361111,
+  "angles": [
+    {"path":"docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png","areaFraction":0.9977387152777778,"ratio":1.0129048106358112,"degenerate":false},
+    {"path":"docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png","areaFraction":0.9994900173611111,"ratio":1.0146827333303223,"degenerate":false}
+  ],
+  "degenerate": false,
+  "manualThreeDimensionalityCheck": "Both orbit captures show separate terrace heights, building volumes, ring depth, raised path rails, and gate solids; the deterministic background mask is advisory because the full book fills the frame."
+}

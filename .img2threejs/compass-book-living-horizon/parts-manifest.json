@@ -1,0 +1,383 @@
+{
+  "model": "habitgame-compass-book-v2",
+  "parts": [
+    {
+      "name": "back-cover",
+      "kind": "part",
+      "module": "COMPASS_BOOK_BACK_COVER",
+      "triangles": 1452
+    },
+    {
+      "name": "back-panel-field",
+      "kind": "part",
+      "module": "COMPASS_BOOK_BACK_COVER_EDGE",
+      "triangles": 972
+    },
+    {
+      "name": "page-block",
+      "kind": "part",
+      "module": "COMPASS_BOOK_PAGE_BLOCK_ASSEMBLY",
+      "triangles": 6372
+    },
+    {
+      "name": "page-leaf-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_PAGE_LEAF_1",
+      "triangles": 300
+    },
+    {
+      "name": "right-reading-page",
+      "kind": "part",
+      "module": "COMPASS_BOOK_RIGHT_READING_PAGE",
+      "triangles": 972
+    },
+    {
+      "name": "spine-shell",
+      "kind": "part",
+      "module": "COMPASS_BOOK_SPINE_SHELL",
+      "triangles": 144
+    },
+    {
+      "name": "spine-ribs",
+      "kind": "part",
+      "module": "COMPASS_BOOK_SPINE_RIBS",
+      "triangles": 3240
+    },
+    {
+      "name": "spine-medallion",
+      "kind": "part",
+      "module": "COMPASS_BOOK_SPINE_MEDALLION",
+      "triangles": 13072
+    },
+    {
+      "name": "front-cover-hinge",
+      "kind": "part",
+      "module": "COMPASS_BOOK_FRONT_COVER_HINGE",
+      "triangles": 88699
+    },
+    {
+      "name": "front-cover",
+      "kind": "part",
+      "module": "COMPASS_BOOK_FRONT_COVER",
+      "triangles": 1452
+    },
+    {
+      "name": "front-panel-field",
+      "kind": "part",
+      "module": "COMPASS_BOOK_FRONT_PANEL_FIELD",
+      "triangles": 972
+    },
+    {
+      "name": "cover-frame",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_FRAME_OUTER",
+      "triangles": 2352
+    },
+    {
+      "name": "corner-plates",
+      "kind": "part",
+      "module": "COMPASS_BOOK_CORNER_NW",
+      "triangles": 2360
+    },
+    {
+      "name": "title-relief",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_TITLE_LETTERING",
+      "triangles": 2
+    },
+    {
+      "name": "cover-studs",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_STUD_1",
+      "triangles": 8
+    },
+    {
+      "name": "cover-compass",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_COMPASS",
+      "triangles": 13072
+    },
+    {
+      "name": "compass-rings",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_COMPASS_BEZEL_1",
+      "triangles": 1280
+    },
+    {
+      "name": "compass-ticks",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_COMPASS_DIAL_TICKS",
+      "triangles": 3456
+    },
+    {
+      "name": "compass-needle-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_COMPASS_NEEDLE_SYSTEM",
+      "triangles": 2208
+    },
+    {
+      "name": "compass-cabochon",
+      "kind": "part",
+      "module": "COMPASS_BOOK_COVER_COMPASS_CABOCHON",
+      "triangles": 1088
+    },
+    {
+      "name": "chapter-tab-rail",
+      "kind": "part",
+      "module": "COMPASS_BOOK_CHAPTER_TAB_RAIL",
+      "triangles": 8246
+    },
+    {
+      "name": "chapter-tabs",
+      "kind": "part",
+      "module": "COMPASS_BOOK_TAB_1",
+      "triangles": 588
+    },
+    {
+      "name": "fore-edge-clasp",
+      "kind": "part",
+      "module": "COMPASS_BOOK_FORE_EDGE_CLASP",
+      "triangles": 2532
+    },
+    {
+      "name": "clasp-receiver",
+      "kind": "part",
+      "module": "COMPASS_BOOK_CLASP_RECEIVER",
+      "triangles": 972
+    },
+    {
+      "name": "bookmark",
+      "kind": "part",
+      "module": "COMPASS_BOOK_BOOKMARK",
+      "triangles": 620
+    },
+    {
+      "name": "left-reading-page",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LEFT_READING_PAGE",
+      "triangles": 972
+    },
+    {
+      "name": "reading-compass",
+      "kind": "part",
+      "module": "COMPASS_BOOK_READING_COMPASS",
+      "triangles": 13072
+    },
+    {
+      "name": "reading-signal-markers",
+      "kind": "part",
+      "module": "COMPASS_BOOK_READING_SIGNAL_MARKERS",
+      "triangles": 1280
+    },
+    {
+      "name": "living-wheel-relief",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_WHEEL_RELIEF",
+      "triangles": 10480
+    },
+    {
+      "name": "inner-compass-relief",
+      "kind": "part",
+      "module": "COMPASS_BOOK_INNER_COMPASS_RELIEF",
+      "triangles": 7056
+    },
+    {
+      "name": "living-horizon-relief",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_RELIEF",
+      "triangles": 17191
+    },
+    {
+      "name": "page-turn-socket",
+      "kind": "part",
+      "module": "COMPASS_BOOK_PAGE_TURN_SOCKET",
+      "triangles": 0
+    },
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_RELIEF",
+      "triangles": 17191
+    },
+    {
+      "name": "contact-frame",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_OUTER_FRAME",
+      "triangles": 2352
+    },
+    {
+      "name": "terrain-field",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_FIELD",
+      "triangles": 372
+    },
+    {
+      "name": "vital-path",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_VITAL_PATH",
+      "triangles": 2160
+    },
+    {
+      "name": "sanctuary-zone",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ZONE",
+      "triangles": 2307
+    },
+    {
+      "name": "workshop-zone",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ZONE",
+      "triangles": 3396
+    },
+    {
+      "name": "gathering-zone",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_ZONE",
+      "triangles": 924
+    },
+    {
+      "name": "horizon-system",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATE_SYSTEM",
+      "triangles": 2164
+    },
+    {
+      "name": "terrain-lower",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_SANCTUARY",
+      "triangles": 92
+    },
+    {
+      "name": "terrain-middle-left",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_WORKSHOP",
+      "triangles": 68
+    },
+    {
+      "name": "terrain-middle-right",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_GATHERING",
+      "triangles": 56
+    },
+    {
+      "name": "terrain-horizon",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_HORIZON",
+      "triangles": 92
+    },
+    {
+      "name": "path-core",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_PATH_CORE",
+      "triangles": 768
+    },
+    {
+      "name": "path-rails",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_PATH_RAILS",
+      "triangles": 1152
+    },
+    {
+      "name": "sanctuary-inlet",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_INLET",
+      "triangles": 96
+    },
+    {
+      "name": "sanctuary-cottage-body",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_COTTAGE",
+      "triangles": 588
+    },
+    {
+      "name": "sanctuary-cottage-roof",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ROOF_LEFT",
+      "triangles": 300
+    },
+    {
+      "name": "sanctuary-jetty",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_JETTY_1",
+      "triangles": 108
+    },
+    {
+      "name": "workshop-body",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_BODY",
+      "triangles": 588
+    },
+    {
+      "name": "workshop-roofs",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ROOF_LEFT",
+      "triangles": 300
+    },
+    {
+      "name": "workshop-gear",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_GEAR",
+      "triangles": 384
+    },
+    {
+      "name": "gathering-floor",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_FLOOR",
+      "triangles": 96
+    },
+    {
+      "name": "gathering-seats",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_RING",
+      "triangles": 432
+    },
+    {
+      "name": "gathering-hearth",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_HEARTH",
+      "triangles": 144
+    },
+    {
+      "name": "gate-posts",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATE_POST_1",
+      "triangles": 300
+    },
+    {
+      "name": "gate-leaves",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_GATE_LEAF_LEFT",
+      "triangles": 648
+    },
+    {
+      "name": "horizon-sun",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_SUN",
+      "triangles": 96
+    },
+    {
+      "name": "horizon-rays",
+      "kind": "part",
+      "module": "COMPASS_BOOK_LIVING_HORIZON_RAY_FAN",
+      "triangles": 108
+    }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 536,
+  "sockets": [
+    "coverHinge",
+    "coverNeedles",
+    "readingNeedles",
+    "chapterTabs",
+    "bookmark",
+    "pageTurn"
+  ],
+  "colliders": [
+    "closedBook"
+  ],
+  "destructionGroups": [
+    "binding",
+    "pages",
+    "interaction"
+  ]
+}

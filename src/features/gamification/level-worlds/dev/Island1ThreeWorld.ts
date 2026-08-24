@@ -10,6 +10,10 @@ export const ISLAND_1_WORLD_ID = 1 as const;
 export const ISLAND_1_WORLD_NAME = 'First Light Kingdom';
 type BuildLevel = 0 | 1 | 2 | 3;
 
+export interface Island1LandmarkBuildOptions {
+  constructionPreview?: 'current' | 'target';
+}
+
 export const ISLAND_1_LANDMARK_LABELS = {
   boss: 'Aureon’s Sun Court',
   hatchery: 'Lantern Hatchery',
@@ -542,7 +546,77 @@ function addRadialStairs(
   }
 }
 
-function createLanternHatchery(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island1WorldMaterials) {
+function applyLanternHatcheryConstructionStages(group: THREE.Group) {
+  // Island 001 is the production vertical slice for the reusable five-part
+  // construction cadence. These authored height bands describe meaningful
+  // architectural systems rather than allowing the modal to divide a merged
+  // material batch into arbitrary fades.
+  const stageBreaks = [0.62, 1.46, 2.18, 3.12] as const;
+  group.updateWorldMatrix(true, true);
+  group.traverse((entry) => {
+    if (!(entry instanceof THREE.Mesh) || entry.userData.constructionStage !== undefined) return;
+    const centerY = new THREE.Box3().setFromObject(entry).getCenter(new THREE.Vector3()).y;
+    const stage = centerY <= stageBreaks[0]
+      ? 1
+      : centerY <= stageBreaks[1]
+        ? 2
+        : centerY <= stageBreaks[2]
+          ? 3
+          : centerY <= stageBreaks[3]
+            ? 4
+            : 5;
+    entry.userData.constructionStage = stage;
+  });
+  group.userData.constructionRevealProfile = {
+    id: 'island-001-lantern-hatchery-five-stage',
+    stageCount: 5,
+    stages: [
+      'foundation-and-terrace',
+      'lower-shell-and-entrance',
+      'sanctuary-wings-and-egg-cradles',
+      'lantern-tower-and-dome',
+      'crown-light-and-finish-details',
+    ],
+  };
+}
+
+function addLanternHatcheryConstructionDress(
+  group: THREE.Group,
+  targetLevel: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+) {
+  const dress = new THREE.Group();
+  dress.name = `ISLAND_1_LANTERN_HATCHERY_L${targetLevel}_FACADE_CONSTRUCTION_DRESS`;
+  dress.userData.constructionTemporary = true;
+  dress.userData.constructionStage = 1;
+
+  const scaffoldHeight = targetLevel === 1 ? 1.9 : targetLevel === 2 ? 2.58 : 3.18;
+  const scaffoldWidth = targetLevel === 1 ? 0.4 : 0.46;
+  // Keep the staging on the entrance façade. The old six-tower radial cage
+  // obscured the whole landmark and read as a modal overlay rather than part
+  // of the Hatchery's construction story.
+  addScaffoldTower(dress, -0.76, 1.02, scaffoldWidth, scaffoldHeight, materials, quality);
+  addScaffoldTower(dress, 0.76, 1.02, scaffoldWidth, scaffoldHeight, materials, quality);
+  addConstructionCrane(
+    dress,
+    -1.42,
+    targetLevel === 3 ? -0.48 : -0.22,
+    targetLevel === 1 ? 2.72 : targetLevel === 2 ? 3.28 : 3.92,
+    0.25,
+    materials,
+  );
+  addConstructionSupplies(dress, 1.52, 1.34, materials, quality);
+  group.add(dress);
+  return dress;
+}
+
+function createLanternHatchery(
+  level: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+  options: { includeConstructionDress?: boolean } = {},
+) {
   const group = new THREE.Group();
   group.name = `ISLAND_1_LANTERN_HATCHERY_L${level}`;
   const segments = radialSegmentsFor(quality);
@@ -864,23 +938,144 @@ function createLanternHatchery(level: 1 | 2 | 3, quality: Island3DQuality, mater
     }
   }
 
-  if (level < 3) {
-    const scaffoldCount = level === 1 ? 6 : 2;
-    for (let index = 0; index < scaffoldCount; index += 1) {
-      const angle = index / scaffoldCount * Math.PI * 2 + 0.26;
-      addScaffoldTower(group, Math.sin(angle) * 1.08, Math.cos(angle) * 1.08, 0.5, level === 1 ? 2.75 : 2.15, materials, quality);
-    }
-    addConstructionCrane(group, -1.18, -0.72, level === 1 ? 3.7 : 3.25, 0.25, materials);
-    addConstructionSupplies(group, 2.2, 1.28, materials, quality);
-    addConstructionSupplies(group, 4.45, 1.28, materials, quality);
+  if (options.includeConstructionDress) {
+    addLanternHatcheryConstructionDress(group, level, quality, materials);
   }
 
+  applyLanternHatcheryConstructionStages(group);
   group.scale.setScalar(0.94);
   shadow(group, quality !== 'low');
   return group;
 }
 
-function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island1WorldMaterials) {
+function applyRhythmTreeConstructionStages(
+  group: THREE.Group,
+  materials: Island1WorldMaterials,
+) {
+  // The tree grows in a readable biological/architectural order: its stone
+  // court first, then roots and trunk, then the inhabited arcade, followed by
+  // the branch structure, and finally leaves, lanterns, fruit, and crown light.
+  // Leaf materials override height so the canopy never appears before the
+  // branches supporting it.
+  const stageBreaks = [0.6, 1.42, 2.24, 3.28] as const;
+  group.updateWorldMatrix(true, true);
+  group.traverse((entry) => {
+    if (!(entry instanceof THREE.Mesh) || entry.userData.constructionStage !== undefined) return;
+    const meshMaterials = Array.isArray(entry.material) ? entry.material : [entry.material];
+    const isCanopy = meshMaterials.some((material) => (
+      material === materials.leaf
+      || material === materials.leafLight
+      || material === materials.leafDark
+    ));
+    const centerY = new THREE.Box3().setFromObject(entry).getCenter(new THREE.Vector3()).y;
+    const stage = isCanopy
+      ? 5
+      : centerY <= stageBreaks[0]
+        ? 1
+        : centerY <= stageBreaks[1]
+          ? 2
+          : centerY <= stageBreaks[2]
+            ? 3
+            : centerY <= stageBreaks[3]
+              ? 4
+              : 5;
+    entry.userData.constructionStage = stage;
+  });
+  group.userData.constructionRevealProfile = {
+    id: 'island-001-rhythm-tree-five-stage',
+    stageCount: 5,
+    stages: [
+      'sanctuary-terrace-and-root-bed',
+      'roots-heart-and-lower-trunk',
+      'inhabited-arcade-and-trunk-sanctuary',
+      'branch-lattice-and-upper-crown',
+      'canopy-crystal-fruit-and-lantern-light',
+    ],
+  };
+}
+
+function addRhythmTreeConstructionDress(
+  group: THREE.Group,
+  targetLevel: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+) {
+  const dress = new THREE.Group();
+  dress.name = `ISLAND_1_RHYTHM_TREE_L${targetLevel}_ROOT_LADDER_CONSTRUCTION_DRESS`;
+  dress.userData.constructionTemporary = true;
+  dress.userData.constructionStage = 1;
+
+  const topY = targetLevel === 1 ? 2.42 : targetLevel === 2 ? 2.76 : 3.72;
+  const rungCount = quality === 'low' ? 4 : targetLevel === 3 ? 7 : 6;
+  // Two leaning rootwood rails and their rungs form a narrow pruning ladder
+  // against the public-facing side of the trunk. This stays inside the tree's
+  // silhouette instead of wrapping the whole landmark in a flickering cage.
+  const leftFoot = new THREE.Vector3(-0.82, 0.5, 0.92);
+  const rightFoot = new THREE.Vector3(-0.48, 0.5, 0.96);
+  const leftTop = new THREE.Vector3(-0.3, topY, 0.36);
+  const rightTop = new THREE.Vector3(-0.08, topY, 0.44);
+  addBeamBetween(dress, leftFoot, leftTop, 0.035, materials.bark, 6);
+  addBeamBetween(dress, rightFoot, rightTop, 0.035, materials.bark, 6);
+  for (let rungIndex = 1; rungIndex <= rungCount; rungIndex += 1) {
+    const t = rungIndex / (rungCount + 1);
+    addBeamBetween(
+      dress,
+      leftFoot.clone().lerp(leftTop, t),
+      rightFoot.clone().lerp(rightTop, t),
+      0.022,
+      rungIndex % 2 === 0 ? materials.gold : materials.bark,
+      5,
+    );
+  }
+
+  const platformY = targetLevel === 1 ? 1.64 : targetLevel === 2 ? 1.94 : 2.54;
+  const platform = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.07, 0.34), materials.bark);
+  platform.name = 'ISLAND_1_RHYTHM_TREE_PRUNING_PLATFORM';
+  platform.position.set(0.28, platformY, 0.72);
+  platform.rotation.y = -0.16;
+  dress.add(platform);
+  const railLeft = new THREE.Vector3(-0.2, platformY + 0.08, 0.87);
+  const railRight = new THREE.Vector3(0.78, platformY + 0.08, 0.72);
+  addBeamBetween(dress, railLeft, railLeft.clone().setY(platformY + 0.48), 0.023, materials.gold, 5);
+  addBeamBetween(dress, railRight, railRight.clone().setY(platformY + 0.48), 0.023, materials.gold, 5);
+  addBeamBetween(
+    dress,
+    railLeft.clone().setY(platformY + 0.48),
+    railRight.clone().setY(platformY + 0.48),
+    0.022,
+    materials.gold,
+    5,
+  );
+
+  // A compact branch hoist gives the workers a plausible lift path without
+  // introducing the generic tower crane used by masonry landmarks.
+  const hoistRoot = new THREE.Vector3(0.66, 0.53, 0.64);
+  const hoistElbow = new THREE.Vector3(1.02, topY - 0.08, 0.48);
+  const hoistTip = new THREE.Vector3(0.22, topY + 0.28, 0.42);
+  addBeamBetween(dress, hoistRoot, hoistElbow, 0.045, materials.bark, 7);
+  addBeamBetween(dress, hoistElbow, hoistTip, 0.038, materials.gold, 7);
+  const pulley = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.026, 5, 10), materials.gold);
+  pulley.name = 'ISLAND_1_RHYTHM_TREE_CANOPY_HOIST_PULLEY';
+  pulley.position.copy(hoistTip);
+  pulley.rotation.y = Math.PI / 2;
+  const ropeLength = targetLevel === 3 ? 1.2 : 0.86;
+  const rope = cylinder(0.012, 0.012, ropeLength, 5, materials.navy);
+  rope.position.copy(hoistTip).add(new THREE.Vector3(0, -ropeLength / 2, 0));
+  const seedBasket = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.12, 0.16, 8), materials.ivoryShade);
+  seedBasket.name = 'ISLAND_1_RHYTHM_TREE_SEED_BASKET';
+  seedBasket.position.copy(hoistTip).add(new THREE.Vector3(0, -ropeLength - 0.08, 0));
+  dress.add(pulley, rope, seedBasket);
+  addConstructionSupplies(dress, 1.05, 1.34, materials, quality);
+  group.add(dress);
+  return dress;
+}
+
+function createRhythmTree(
+  level: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+  options: { includeConstructionDress?: boolean } = {},
+) {
   const group = new THREE.Group();
   group.name = `ISLAND_1_RHYTHM_TREE_SANCTUARY_L${level}`;
   const segments = radialSegmentsFor(quality);
@@ -1060,16 +1255,7 @@ function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials:
     addPointedWindow(group, 1.255, angle, 0.77, materials.crystal, materials.gold, 0.72);
   }
 
-  if (level < 3) {
-    const scaffoldCount = level === 1 ? 4 : 2;
-    for (let index = 0; index < scaffoldCount; index += 1) {
-      const angle = index / scaffoldCount * Math.PI * 2 + 0.35;
-      addScaffoldTower(group, Math.cos(angle) * 0.82, Math.sin(angle) * 0.82, 0.55, level === 1 ? 2.8 : 2.35, materials, quality);
-    }
-    addConstructionCrane(group, -1.1, -0.62, level === 1 ? 3.2 : 2.8, 0.25, materials);
-    addConstructionSupplies(group, 2.2, 1.08, materials, quality);
-    addConstructionSupplies(group, 4.6, 1.08, materials, quality);
-  } else {
+  if (level === 3) {
     const gardenCount = quality === 'high' ? 18 : quality === 'medium' ? 12 : 8;
     for (let index = 0; index < gardenCount; index += 1) {
       const angle = index / gardenCount * Math.PI * 2;
@@ -1079,12 +1265,164 @@ function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials:
       group.add(shrub);
     }
   }
-  group.scale.set(level === 3 ? 0.98 : 0.92, level === 3 ? 1 : 0.92, level === 3 ? 0.98 : 0.92);
+  applyRhythmTreeConstructionStages(group, materials);
+  if (options.includeConstructionDress) {
+    addRhythmTreeConstructionDress(group, level, quality, materials);
+  }
+  // Keep one stable landmark-space scale across all funded levels. Changing
+  // the whole root at L3 made the already-funded terrace, arcade, and trunk
+  // jump in size, so the construction comparator correctly found nothing it
+  // could retain and the whole sanctuary appeared to rebuild from scratch.
+  group.scale.setScalar(0.92);
   shadow(group, quality !== 'low');
   return group;
 }
 
-function createStarArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island1WorldMaterials) {
+function applyStarArchiveConstructionStages(
+  group: THREE.Group,
+  materials: Island1WorldMaterials,
+) {
+  // Archive construction reads as knowledge being assembled: establish the
+  // court, fill the reading hall, raise the towers, align the celestial study
+  // instruments, then install the fragile illuminated details. Keeping that
+  // order authored makes every upgrade legible instead of a random dissolve.
+  const stageBreaks = [0.62, 1.34, 2.18, 2.86] as const;
+  group.updateWorldMatrix(true, true);
+  group.traverse((entry) => {
+    if (!(entry instanceof THREE.Mesh) || entry.userData.constructionStage !== undefined) return;
+    let ancestor: THREE.Object3D | null = entry.parent;
+    let isGreatCodexPart = false;
+    while (ancestor && ancestor !== group) {
+      if (ancestor.name === 'ISLAND_1_STAR_ARCHIVE_GREAT_CODEX') {
+        isGreatCodexPart = true;
+        break;
+      }
+      ancestor = ancestor.parent;
+    }
+    const meshMaterials = Array.isArray(entry.material) ? entry.material : [entry.material];
+    const isFinalIllumination = meshMaterials.some((material) => (
+      material === materials.crystal || material === materials.warmGlow
+    ));
+    const centerY = new THREE.Box3().setFromObject(entry).getCenter(new THREE.Vector3()).y;
+    const stage = isFinalIllumination
+      ? 5
+      : isGreatCodexPart
+        ? 4
+        : centerY <= stageBreaks[0]
+          ? 1
+          : centerY <= stageBreaks[1]
+            ? 2
+            : centerY <= stageBreaks[2]
+              ? 3
+              : centerY <= stageBreaks[3]
+                ? 4
+                : 5;
+    entry.userData.constructionStage = stage;
+  });
+  group.userData.constructionRevealProfile = {
+    id: 'island-001-savas-star-archive-five-stage',
+    stageCount: 5,
+    stages: [
+      'foundation-court-and-archive-bed',
+      'reading-hall-shelves-and-lower-turrets',
+      'central-and-side-tower-shells',
+      'great-codex-domes-and-armillary-instruments',
+      'books-crystals-finial-and-final-illumination',
+    ],
+  };
+}
+
+function addStarArchiveConstructionDress(
+  group: THREE.Group,
+  targetLevel: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+) {
+  const dress = new THREE.Group();
+  dress.name = `ISLAND_1_STAR_ARCHIVE_L${targetLevel}_MANUSCRIPT_RIG_CONSTRUCTION_DRESS`;
+  dress.userData.constructionTemporary = true;
+  dress.userData.constructionStage = 1;
+
+  // Two short rails deliver folios to the front reading chamber. They stop at
+  // the façade and never wrap the whole landmark, so the archive remains the
+  // visual subject while the robots work.
+  const railStartX = -0.84;
+  const railEndX = 0.82;
+  const railZ = 1.31;
+  [-0.12, 0.12].forEach((zOffset) => {
+    addBeamBetween(
+      dress,
+      new THREE.Vector3(railStartX, 0.55, railZ + zOffset),
+      new THREE.Vector3(railEndX, 0.55, railZ + zOffset),
+      0.025,
+      materials.gold,
+      6,
+    );
+  });
+  const sleeperCount = quality === 'low' ? 4 : 6;
+  for (let index = 0; index < sleeperCount; index += 1) {
+    const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.34), materials.bark);
+    sleeper.position.set(
+      THREE.MathUtils.lerp(railStartX, railEndX, index / (sleeperCount - 1)),
+      0.54,
+      railZ,
+    );
+    dress.add(sleeper);
+  }
+
+  const carriage = new THREE.Mesh(new THREE.BoxGeometry(0.43, 0.11, 0.42), materials.ivoryShade);
+  carriage.name = 'ISLAND_1_STAR_ARCHIVE_FOLIO_CARRIAGE';
+  carriage.position.set(-0.24 + targetLevel * 0.18, 0.64, railZ);
+  const folio = new THREE.Group();
+  folio.name = 'ISLAND_1_STAR_ARCHIVE_UNBOUND_FOLIO';
+  const leftSheet = new THREE.Mesh(new THREE.BoxGeometry(0.29, 0.025, 0.26), materials.ivory);
+  leftSheet.position.x = -0.14;
+  leftSheet.rotation.z = 0.08;
+  const rightSheet = leftSheet.clone();
+  rightSheet.position.x = 0.14;
+  rightSheet.rotation.z = -0.08;
+  const folioBinding = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.05, 0.29), materials.gold);
+  folio.add(leftSheet, rightSheet, folioBinding);
+  folio.position.set(carriage.position.x, 0.73, railZ);
+  dress.add(carriage, folio);
+
+  // A narrow scribe gantry and binding clamp service only the giant codex.
+  // Its asymmetric footprint gives the crew a plausible reachable work zone
+  // without recreating the distracting radial scaffolding cage.
+  const gantryHeight = targetLevel === 1 ? 1.78 : targetLevel === 2 ? 2.08 : 2.42;
+  const postA = new THREE.Vector3(0.63, 0.53, 0.91);
+  const postB = new THREE.Vector3(1.08, 0.53, 0.72);
+  const postATop = postA.clone().setY(gantryHeight);
+  const postBTop = postB.clone().setY(gantryHeight);
+  addBeamBetween(dress, postA, postATop, 0.032, materials.bark, 6);
+  addBeamBetween(dress, postB, postBTop, 0.032, materials.bark, 6);
+  addBeamBetween(dress, postATop, postBTop, 0.03, materials.gold, 6);
+  addBeamBetween(dress, postA, postBTop, 0.02, materials.gold, 5);
+  const scribeDeck = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.065, 0.32), materials.bark);
+  scribeDeck.name = 'ISLAND_1_STAR_ARCHIVE_SCRIBE_SERVICE_DECK';
+  scribeDeck.position.set(0.85, gantryHeight - 0.34, 0.82);
+  scribeDeck.rotation.y = -0.4;
+  const bindingPulley = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.022, 5, 10), materials.gold);
+  bindingPulley.position.copy(postATop).add(new THREE.Vector3(0.1, 0.015, -0.02));
+  bindingPulley.rotation.y = Math.PI / 2;
+  const bindingLineLength = targetLevel === 3 ? 0.88 : 0.62;
+  const bindingLine = cylinder(0.01, 0.01, bindingLineLength, 5, materials.navy);
+  bindingLine.position.copy(bindingPulley.position).add(new THREE.Vector3(0, -bindingLineLength / 2, 0));
+  const bindingClamp = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.12), materials.gold);
+  bindingClamp.name = 'ISLAND_1_STAR_ARCHIVE_BINDING_CLAMP';
+  bindingClamp.position.copy(bindingPulley.position).add(new THREE.Vector3(0, -bindingLineLength - 0.05, 0));
+  dress.add(scribeDeck, bindingPulley, bindingLine, bindingClamp);
+
+  group.add(dress);
+  return dress;
+}
+
+function createStarArchive(
+  level: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+  options: { includeConstructionDress?: boolean } = {},
+) {
   const group = new THREE.Group();
   group.name = `ISLAND_1_SAVAS_STAR_ARCHIVE_L${level}`;
   const segments = radialSegmentsFor(quality);
@@ -1146,6 +1484,7 @@ function createStarArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials
   }
 
   const book = new THREE.Group();
+  book.name = 'ISLAND_1_STAR_ARCHIVE_GREAT_CODEX';
   const leftPageShape = new THREE.Shape();
   leftPageShape.moveTo(-0.56, -0.34);
   leftPageShape.quadraticCurveTo(-0.26, -0.39, 0, -0.28);
@@ -1240,25 +1579,149 @@ function createStarArchive(level: 1 | 2 | 3, quality: Island3DQuality, materials
     }
   }
 
-  if (level < 3) {
-    const scaffoldCount = level === 1 ? 4 : 2;
-    for (let index = 0; index < scaffoldCount; index += 1) {
-      const angle = index / scaffoldCount * Math.PI * 2 + 0.44;
-      addScaffoldTower(group, Math.sin(angle) * 0.92, Math.cos(angle) * 0.92, 0.52, level === 1 ? 2.55 : 2.2, materials, quality);
-    }
-    addConstructionCrane(group, -1.08, -0.45, 3.15, -0.2, materials);
-    addConstructionSupplies(group, 2.15, 1.12, materials, quality);
-    addConstructionSupplies(group, 4.82, 1.12, materials, quality);
-  } else {
+  if (level === 3) {
     addBanner(group, -0.78, 1.55, 0.58, 0.55, materials);
     addBanner(group, 0.78, 1.55, 0.58, -0.55, materials);
+  }
+  applyStarArchiveConstructionStages(group, materials);
+  if (options.includeConstructionDress) {
+    addStarArchiveConstructionDress(group, level, quality, materials);
   }
   group.scale.setScalar(0.9);
   shadow(group, quality !== 'low');
   return group;
 }
 
-function createEchoObservatory(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island1WorldMaterials) {
+function applyEchoObservatoryConstructionStages(
+  group: THREE.Group,
+  materials: Island1WorldMaterials,
+) {
+  // Observatory construction moves from the court and masonry shell through
+  // instrument towers and mechanical axes, then installs the fragile optics
+  // and celestial light last. Material-aware classification prevents lenses
+  // and star cores from appearing before their housings.
+  const stageBreaks = [0.62, 1.2, 1.95, 2.72] as const;
+  group.updateWorldMatrix(true, true);
+  group.traverse((entry) => {
+    if (!(entry instanceof THREE.Mesh) || entry.userData.constructionStage !== undefined) return;
+    const meshMaterials = Array.isArray(entry.material) ? entry.material : [entry.material];
+    const isFinalOptic = meshMaterials.some((material) => (
+      material === materials.celestial
+      || material === materials.crystal
+      || material === materials.warmGlow
+    ));
+    const centerY = new THREE.Box3().setFromObject(entry).getCenter(new THREE.Vector3()).y;
+    const stage = isFinalOptic
+      ? 5
+      : centerY <= stageBreaks[0]
+        ? 1
+        : centerY <= stageBreaks[1]
+          ? 2
+          : centerY <= stageBreaks[2]
+            ? 3
+            : centerY <= stageBreaks[3]
+              ? 4
+              : 5;
+    entry.userData.constructionStage = stage;
+  });
+  group.userData.constructionRevealProfile = {
+    id: 'island-001-echo-lens-observatory-five-stage',
+    stageCount: 5,
+    stages: [
+      'foundation-court-and-instrument-bed',
+      'main-drum-and-lower-tower-shells',
+      'observatory-domes-and-lens-chamber',
+      'telescope-axes-armillary-and-canopy-frame',
+      'celestial-globe-lenses-stars-and-final-light',
+    ],
+  };
+}
+
+function addEchoObservatoryConstructionDress(
+  group: THREE.Group,
+  targetLevel: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+) {
+  const dress = new THREE.Group();
+  dress.name = `ISLAND_1_ECHO_LENS_L${targetLevel}_OPTICS_CALIBRATION_CONSTRUCTION_DRESS`;
+  dress.userData.constructionTemporary = true;
+  dress.userData.constructionStage = 1;
+
+  // A short foreground rail moves the delicate lens into the chamber. It is
+  // deliberately asymmetric and instrument-sized, not a ring around the site.
+  const railStartX = -0.52;
+  const railEndX = 0.92;
+  const railZ = 1.29;
+  [-0.11, 0.11].forEach((zOffset) => {
+    addBeamBetween(
+      dress,
+      new THREE.Vector3(railStartX, 0.55, railZ + zOffset),
+      new THREE.Vector3(railEndX, 0.55, railZ + zOffset),
+      0.025,
+      materials.gold,
+      6,
+    );
+  });
+  for (let sleeperIndex = 0; sleeperIndex < (quality === 'low' ? 4 : 7); sleeperIndex += 1) {
+    const t = sleeperIndex / ((quality === 'low' ? 4 : 7) - 1);
+    const sleeperX = THREE.MathUtils.lerp(railStartX, railEndX, t);
+    addBeamBetween(
+      dress,
+      new THREE.Vector3(sleeperX, 0.53, railZ - 0.18),
+      new THREE.Vector3(sleeperX, 0.53, railZ + 0.18),
+      0.02,
+      materials.bark,
+      5,
+    );
+  }
+  const carriage = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.1, 0.34), materials.ivoryShade);
+  carriage.name = 'ISLAND_1_ECHO_LENS_CALIBRATION_CARRIAGE';
+  carriage.position.set(0.38, 0.63, railZ);
+  const lensCradle = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.035, 6, 12), materials.gold);
+  lensCradle.position.set(0.38, 0.88, railZ);
+  lensCradle.rotation.y = Math.PI / 2;
+  const lensBlank = new THREE.Mesh(new THREE.CylinderGeometry(0.145, 0.145, 0.045, 12), materials.crystal);
+  lensBlank.name = 'ISLAND_1_ECHO_LENS_UNCALIBRATED_OPTIC';
+  lensBlank.position.copy(lensCradle.position);
+  lensBlank.rotation.z = Math.PI / 2;
+  dress.add(carriage, lensCradle, lensBlank);
+
+  // A two-post maintenance gantry serves the eastern telescope only. Its
+  // counterweight and narrow deck explain how robots reach the barrel axis
+  // without surrounding the observatory with a large square scaffold.
+  const gantryHeight = targetLevel === 1 ? 1.62 : targetLevel === 2 ? 2.02 : 2.34;
+  const postA = new THREE.Vector3(0.63, 0.52, 0.48);
+  const postB = new THREE.Vector3(1.17, 0.52, 0.36);
+  const postATop = postA.clone().setY(gantryHeight);
+  const postBTop = postB.clone().setY(gantryHeight);
+  addBeamBetween(dress, postA, postATop, 0.032, materials.bark, 6);
+  addBeamBetween(dress, postB, postBTop, 0.032, materials.bark, 6);
+  addBeamBetween(dress, postATop, postBTop, 0.03, materials.gold, 6);
+  addBeamBetween(dress, postA, postBTop, 0.02, materials.gold, 5);
+  const serviceDeck = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.07, 0.34), materials.bark);
+  serviceDeck.name = 'ISLAND_1_ECHO_LENS_TELESCOPE_SERVICE_DECK';
+  serviceDeck.position.set(0.9, gantryHeight - 0.35, 0.42);
+  serviceDeck.rotation.y = -0.22;
+  const pulley = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.024, 5, 10), materials.gold);
+  pulley.position.copy(postATop).add(new THREE.Vector3(0.12, 0.02, 0));
+  pulley.rotation.y = Math.PI / 2;
+  const ropeLength = targetLevel === 3 ? 0.92 : 0.66;
+  const rope = cylinder(0.011, 0.011, ropeLength, 5, materials.navy);
+  rope.position.copy(pulley.position).add(new THREE.Vector3(0, -ropeLength / 2, 0));
+  const counterweight = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 0.13), materials.ivoryShade);
+  counterweight.position.copy(pulley.position).add(new THREE.Vector3(0, -ropeLength - 0.1, 0));
+  dress.add(serviceDeck, pulley, rope, counterweight);
+  group.add(dress);
+  return dress;
+}
+
+function createEchoObservatory(
+  level: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+  options: { includeConstructionDress?: boolean } = {},
+) {
   const group = new THREE.Group();
   group.name = `ISLAND_1_ECHO_LENS_OBSERVATORY_L${level}`;
   const segments = radialSegmentsFor(quality);
@@ -1356,9 +1819,6 @@ function createEchoObservatory(level: 1 | 2 | 3, quality: Island3DQuality, mater
       window.rotation.y = angle;
       group.add(window);
     }
-    if (!towerComplete) {
-      addScaffoldTower(group, x, z, 0.48, towerHeight + 0.48, materials, quality);
-    }
   });
 
   const lensChamber = cylinder(0.46, 0.53, 0.62, segments, materials.ivory);
@@ -1420,24 +1880,144 @@ function createEchoObservatory(level: 1 | 2 | 3, quality: Island3DQuality, mater
     }
   }
 
-  if (level < 3) {
-    const scaffoldCount = level === 1 ? 5 : 2;
-    for (let index = 0; index < scaffoldCount; index += 1) {
-      const angle = index / scaffoldCount * Math.PI * 2 + 0.18;
-      addScaffoldTower(group, Math.sin(angle) * 1.02, Math.cos(angle) * 1.02, 0.5, level === 1 ? 2.35 : 1.92, materials, quality);
-    }
-    if (level === 1) addConstructionCrane(group, -1.16, -0.72, 3.1, 0.4, materials);
-    addConstructionSupplies(group, 2.42, 1.12, materials, quality);
-  } else {
+  if (level === 3) {
     addBanner(group, -0.92, 1.48, 0.66, 0.3, materials);
     addBanner(group, 0.78, 1.48, 0.7, -0.3, materials);
+  }
+  applyEchoObservatoryConstructionStages(group, materials);
+  if (options.includeConstructionDress) {
+    addEchoObservatoryConstructionDress(group, level, quality, materials);
   }
   group.scale.setScalar(0.9);
   shadow(group, quality !== 'low');
   return group;
 }
 
-function createSunCourt(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island1WorldMaterials) {
+function applySunCourtConstructionStages(
+  group: THREE.Group,
+  materials: Island1WorldMaterials,
+) {
+  // The central court is commissioned outward and upward: stone platform,
+  // sun-dial inlay, inhabited arcade and seating, ceremonial goldwork, then
+  // light-bearing crystals and the live sun core.
+  const stageBreaks = [0.52, 0.72, 1.35, 1.7] as const;
+  group.updateWorldMatrix(true, true);
+  group.traverse((entry) => {
+    if (!(entry instanceof THREE.Mesh) || entry.userData.constructionStage !== undefined) return;
+    const meshMaterials = Array.isArray(entry.material) ? entry.material : [entry.material];
+    const isFinalLight = meshMaterials.some((material) => (
+      material === materials.crystal
+      || material === materials.warmGlow
+      || material === materials.cyanGlass
+    ));
+    const centerY = new THREE.Box3().setFromObject(entry).getCenter(new THREE.Vector3()).y;
+    const isRaisedGoldwork = centerY > stageBreaks[1]
+      && meshMaterials.some((material) => material === materials.gold);
+    const stage = isFinalLight
+      ? 5
+      : isRaisedGoldwork
+        ? 4
+        : centerY <= stageBreaks[0]
+          ? 1
+          : centerY <= stageBreaks[1]
+            ? 2
+            : centerY <= stageBreaks[2]
+              ? 3
+              : centerY <= stageBreaks[3]
+                ? 4
+                : 5;
+    entry.userData.constructionStage = stage;
+  });
+  group.userData.constructionRevealProfile = {
+    id: 'island-001-aureons-sun-court-five-stage',
+    stageCount: 5,
+    stages: [
+      'foundation-and-compass-court',
+      'sun-dial-rays-socket-and-floor-inlay',
+      'arcade-pylons-council-table-and-seating',
+      'caps-frieze-gateways-and-ceremonial-goldwork',
+      'sun-core-crystals-crests-and-final-light',
+    ],
+  };
+}
+
+function addSunCourtConstructionDress(
+  group: THREE.Group,
+  targetLevel: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+) {
+  const dress = new THREE.Group();
+  dress.name = `ISLAND_1_SUN_COURT_L${targetLevel}_SOLAR_ALIGNMENT_CONSTRUCTION_DRESS`;
+  dress.userData.constructionTemporary = true;
+  dress.userData.constructionStage = 1;
+
+  // A short radial calibration track carries the sun prism toward the central
+  // socket. It occupies one aisle only and preserves the court's open circle.
+  const railNearZ = 0.74;
+  const railFarZ = 1.92;
+  [-0.12, 0.12].forEach((x) => {
+    addBeamBetween(
+      dress,
+      new THREE.Vector3(x, 0.55, railNearZ),
+      new THREE.Vector3(x, 0.55, railFarZ),
+      0.024,
+      materials.gold,
+      6,
+    );
+  });
+  const sleeperCount = quality === 'low' ? 4 : 6;
+  for (let index = 0; index < sleeperCount; index += 1) {
+    const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.035, 0.035), materials.bark);
+    sleeper.position.set(0, 0.54, THREE.MathUtils.lerp(railNearZ, railFarZ, index / (sleeperCount - 1)));
+    dress.add(sleeper);
+  }
+  const prismCarriageZ = 1.7 - targetLevel * 0.21;
+  const prismCarriage = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.1, 0.35), materials.ivoryShade);
+  prismCarriage.name = 'ISLAND_1_SUN_COURT_PRISM_CARRIAGE';
+  prismCarriage.position.set(0, 0.64, prismCarriageZ);
+  const unlitPrism = new THREE.Mesh(new THREE.OctahedronGeometry(0.13), materials.cyanGlass);
+  unlitPrism.name = 'ISLAND_1_SUN_COURT_UNCALIBRATED_PRISM';
+  unlitPrism.position.set(0, 0.82, prismCarriageZ);
+  unlitPrism.scale.set(0.78, 1.42, 0.78);
+  dress.add(prismCarriage, unlitPrism);
+
+  // A low asymmetric collimator holds the ceremonial halo at eye level for
+  // the crew. This is a precision fixture, not a site-wide scaffold.
+  const rigHeight = targetLevel === 1 ? 1.18 : targetLevel === 2 ? 1.42 : 1.66;
+  const postA = new THREE.Vector3(0.92, 0.52, 0.72);
+  const postB = new THREE.Vector3(1.36, 0.52, 0.52);
+  const postATop = postA.clone().setY(rigHeight);
+  const postBTop = postB.clone().setY(rigHeight);
+  addBeamBetween(dress, postA, postATop, 0.03, materials.bark, 6);
+  addBeamBetween(dress, postB, postBTop, 0.03, materials.bark, 6);
+  addBeamBetween(dress, postATop, postBTop, 0.028, materials.gold, 6);
+  addBeamBetween(dress, postA, postBTop, 0.018, materials.gold, 5);
+  const collimatorDeck = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.06, 0.28), materials.bark);
+  collimatorDeck.name = 'ISLAND_1_SUN_COURT_COLLIMATOR_DECK';
+  collimatorDeck.position.set(1.14, rigHeight - 0.31, 0.62);
+  collimatorDeck.rotation.y = -0.42;
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.025, 5, 12), materials.gold);
+  halo.name = 'ISLAND_1_SUN_COURT_ALIGNMENT_HALO';
+  halo.position.set(1.14, rigHeight - 0.12, 0.62);
+  halo.rotation.y = Math.PI / 2;
+  const plumbLineLength = targetLevel === 3 ? 0.48 : 0.34;
+  const plumbLine = cylinder(0.009, 0.009, plumbLineLength, 5, materials.navy);
+  plumbLine.position.set(1.14, rigHeight - 0.12 - plumbLineLength / 2, 0.62);
+  const plumbWeight = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.13, 6), materials.gold);
+  plumbWeight.position.set(1.14, rigHeight - 0.18 - plumbLineLength, 0.62);
+  dress.add(collimatorDeck, halo, plumbLine, plumbWeight);
+
+  group.add(dress);
+  return dress;
+}
+
+function createSunCourt(
+  level: 1 | 2 | 3,
+  quality: Island3DQuality,
+  materials: Island1WorldMaterials,
+  options: { includeConstructionDress?: boolean } = {},
+) {
   const group = new THREE.Group();
   group.name = `ISLAND_1_FIRST_LIGHT_SUN_COURT_L${level}`;
   const segments = radialSegmentsFor(quality);
@@ -1604,6 +2184,10 @@ function createSunCourt(level: 1 | 2 | 3, quality: Island3DQuality, materials: I
       );
     }
   }
+  applySunCourtConstructionStages(group, materials);
+  if (options.includeConstructionDress) {
+    addSunCourtConstructionDress(group, level, quality, materials);
+  }
   shadow(group, quality !== 'low');
   return group;
 }
@@ -1613,6 +2197,7 @@ export function buildIsland1Landmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island1WorldMaterials,
+  options: Island1LandmarkBuildOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_1_${definition.id.toUpperCase()}_ROOT`;
@@ -1630,18 +2215,33 @@ export function buildIsland1Landmark(
   } else {
     const resolvedLevel = level as 1 | 2 | 3;
     const building = definition.id === 'hatchery'
-      ? createLanternHatchery(resolvedLevel, quality, materials)
+      ? createLanternHatchery(resolvedLevel, quality, materials, {
+          includeConstructionDress: options.constructionPreview === 'target',
+        })
       : definition.id === 'habit'
-        ? createRhythmTree(resolvedLevel, quality, materials)
+        ? createRhythmTree(resolvedLevel, quality, materials, {
+            includeConstructionDress: options.constructionPreview === 'target',
+          })
         : definition.id === 'wisdom'
-          ? createStarArchive(resolvedLevel, quality, materials)
+          ? createStarArchive(resolvedLevel, quality, materials, {
+              includeConstructionDress: options.constructionPreview === 'target',
+            })
           : definition.id === 'event'
-            ? createEchoObservatory(resolvedLevel, quality, materials)
-            : createSunCourt(resolvedLevel, quality, materials);
+            ? createEchoObservatory(resolvedLevel, quality, materials, {
+                includeConstructionDress: options.constructionPreview === 'target',
+              })
+            : createSunCourt(resolvedLevel, quality, materials, {
+                includeConstructionDress: options.constructionPreview === 'target',
+              });
     if (definition.id !== 'boss') {
       building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
     }
-    compactStaticGeometry(building, `ISLAND1_${definition.id.toUpperCase()}_L${resolvedLevel}`);
+    // Construction comparison needs semantic mesh granularity so shared
+    // walls can be retained and only true additions revealed. The ordinary
+    // board still receives the mobile-friendly material batches.
+    if (!options.constructionPreview) {
+      compactStaticGeometry(building, `ISLAND1_${definition.id.toUpperCase()}_L${resolvedLevel}`);
+    }
     root.add(building);
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });

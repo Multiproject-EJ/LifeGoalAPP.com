@@ -23,8 +23,13 @@ import {
   isActivityComplete,
   areRequiredBlocksAnswered,
   isAnswerValuePresent,
+  mergeCompletedActivityIds,
 } from '../logic/progress';
-import { parseAnswers, upsertAnswer } from '../services/compassBookSerialization';
+import {
+  emptyChapterState,
+  parseAnswers,
+  upsertAnswer,
+} from '../services/compassBookSerialization';
 import {
   projectLivingWheel,
   buildLivingWheelAreas,
@@ -67,8 +72,12 @@ import {
   coercePersonalityScores,
 } from '../logic/shadowBridge';
 import { SHADOW_OPTIONS, VALUE_OPTIONS, chapter2InnerCompass } from '../content/chapter2InnerCompass';
+import { DOMAIN_OPTIONS } from '../content/chapter4IkigaiMap';
 import { ARCHETYPE_DECK } from '../../identity/archetypes/archetypeDeck';
-import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
+import {
+  COMPASS_BOOK_CHAPTER_IDS,
+  getCompassChapterMethodVersion,
+} from '../types';
 import {
   COMPASS_BOOK_PAGE_IDS,
   chapterHeadline,
@@ -92,6 +101,16 @@ import {
   turnDistance,
   turnDurationMs,
 } from '../logic/pageTurn';
+import {
+  parseCompassBookPresentationMode,
+  resolveCompassBookPresentation,
+  shouldStageCompassBookIslandEntrance,
+} from '../logic/presentation';
+import {
+  getCompassBookProfileTargetFps,
+  parseCompassBookProfileQuality,
+  summarizeCompassBookPerformance,
+} from '../logic/deviceProfiling';
 import type {
   CompassAnswerRecord,
   CompassAnswerValue,
@@ -211,6 +230,7 @@ function testProgress(): void {
 
   // Started but not confirmed.
   const startedState: CompassChapterState = baseState([
+    makeAnswer(a1.id, 'strongest_evidence', { kind: 'text', text: 'A steady morning walk' }, false),
     makeAnswer(a1.id, 'strongest_area', { kind: 'choice', optionId: 'health_fitness' }, false),
   ]);
   const startedProgress = computeChapterProgress('living_wheel', startedState, {
@@ -222,6 +242,7 @@ function testProgress(): void {
 
   // Complete activity (required block confirmed).
   const completeState: CompassChapterState = baseState([
+    makeAnswer(a1.id, 'strongest_evidence', { kind: 'text', text: 'A steady morning walk' }, true),
     makeAnswer(a1.id, 'strongest_area', { kind: 'choice', optionId: 'health_fitness' }, true),
   ]);
   assert(isActivityComplete(a1, completeState.answers), 'confirmed required answer → complete');
@@ -254,6 +275,7 @@ function testAnswerParsing(): void {
       value: { kind: 'choice', optionId: 'health_fitness' },
       sourceMode: 'fixed_guided',
       curriculumVersion: 'v1',
+      methodVersion: 'inner-compass-v2',
       answeredAt: '2026-06-20T00:00:00.000Z',
       updatedAt: '2026-06-20T00:00:00.000Z',
       confirmed: true,
@@ -267,6 +289,7 @@ function testAnswerParsing(): void {
   const parsed = parseAnswers(valid as unknown as DbJson);
   assert(parsed.length === 1, 'malformed answer entries should be dropped');
   assert(parsed[0].questionId === 'strongest_area', 'valid answer survives parse');
+  assert(parsed[0].methodVersion === 'inner-compass-v2', 'chapter method version survives parse');
 
   // Non-array JSON → empty.
   assert(parseAnswers({ not: 'an array' } as unknown as DbJson).length === 0, 'object → no answers');
@@ -292,6 +315,42 @@ function testAnswerParsing(): void {
   assert(answers[0].answeredAt === first.answeredAt, 'original answeredAt preserved on edit');
 }
 
+function testChapterMethodVersioning(): void {
+  assert(
+    getCompassChapterMethodVersion('inner_compass') === 'inner-compass-v2',
+    'Inner Compass uses its chapter-local v2 method',
+  );
+  assert(
+    getCompassChapterMethodVersion('living_wheel') === 'living-wheel-v2',
+    'Living Wheel uses its chapter-local v2 method',
+  );
+  assert(
+    getCompassChapterMethodVersion('ikigai_map') === 'ikigai-map-v2',
+    'Ikigai Map can evolve without changing the global book identity',
+  );
+  assert(
+    getCompassChapterMethodVersion('living_horizon') === 'living-horizon-v2',
+    'Living Horizon has an independent evidence-method version',
+  );
+  assert(
+    emptyChapterState('inner_compass').contentVersion === 'inner-compass-v2',
+    'new Inner Compass state starts on v2',
+  );
+
+  const activity = getActivityDefinition('inner_compass.a01');
+  assert(activity !== null, 'Inner Compass first fragment exists');
+  const legacyAnswers = [choice('inner_compass.a01', 'alive_context', 'creating')];
+  const retained = mergeCompletedActivityIds(
+    [activity!],
+    [activity!.id],
+    legacyAnswers,
+  );
+  assert(
+    retained.includes(activity!.id),
+    'v1 completion remains earned after optional v2 evidence is introduced',
+  );
+}
+
 function baseState(answers: CompassAnswerRecord[]): CompassChapterState {
   return {
     chapterId: 'living_wheel',
@@ -306,15 +365,16 @@ function baseState(answers: CompassAnswerRecord[]): CompassChapterState {
 }
 
 function testGuidedFlowAnswering(): void {
-  // Single required choice.
+  // Evidence first, then the required area choice.
   const a1 = getActivityDefinition('living_wheel.a01');
   assert(a1 !== null, 'a01 should exist');
   assert(!areRequiredBlocksAnswered(a1!, {}), 'a01 empty draft is not satisfied');
   assert(
     areRequiredBlocksAnswered(a1!, {
+      strongest_evidence: { kind: 'text', text: 'A steady morning walk' },
       strongest_area: { kind: 'choice', optionId: 'health_fitness' },
     }),
-    'a01 satisfied once the choice is set',
+    'a01 satisfied once evidence and interpretation are set',
   );
 
   // Value presence edges.
@@ -370,6 +430,10 @@ function testGuidedFlowAnswering(): void {
   // Save/resume parity: the hook upserts confirmed answers then recomputes
   // completion exactly this way.
   let answers: CompassAnswerRecord[] = [];
+  answers = upsertAnswer(
+    answers,
+    makeAnswer('living_wheel.a01', 'strongest_evidence', { kind: 'text', text: 'A steady morning walk' }),
+  );
   answers = upsertAnswer(
     answers,
     makeAnswer('living_wheel.a01', 'strongest_area', { kind: 'choice', optionId: 'health_fitness' }),
@@ -494,6 +558,51 @@ function testInnerCompassProjector(): void {
   assert(out.counterbalanceId === 'boundaries', 'counterbalance passes through');
   assert(out.guardianBoundary === 'Protect mornings for deep work', 'guardian boundary text');
   assert(out.coreValueIds.length === 3, 'core values captured');
+  assert(out.evidenceCount === 0, 'legacy answers remain readable without invented evidence');
+  assert(out.readingStatus === 'provisional', 'legacy answer-only projection is honestly provisional');
+
+  const evidenceBacked = projectInnerCompass([
+    ...answers,
+    makeAnswer('inner_compass.a01', 'alive_evidence', { kind: 'text', text: 'Built a tiny prototype with friends.' }),
+    makeAnswer('inner_compass.a05', 'protected_tradeoff', { kind: 'text', text: 'Declined prestige to protect family time.' }),
+    makeAnswer('inner_compass.a11', 'early_need_signal', { kind: 'text', text: 'Small decisions became unusually difficult.' }),
+    makeAnswer('inner_compass.a15', 'shadow_loop', { kind: 'text', text: 'Criticism → overwork → control → exhaustion.' }),
+    choice('inner_compass.a20', 'compass_confidence', 'plausible'),
+    makeAnswer('inner_compass.a20', 'compass_counterevidence', { kind: 'text', text: 'Novelty sometimes matters more than stability.' }),
+    choice('inner_compass.a20', 'compass_review_trigger', 'three_months'),
+  ]);
+  assert(evidenceBacked.evidenceCount === 4, 'v2 projection counts concrete evidence notes');
+  assert(evidenceBacked.readingStatus === 'evidence_backed', 'four evidence notes ground the reading');
+  assert(evidenceBacked.confidenceId === 'plausible', 'confidence remains player-authored metadata');
+  assert(evidenceBacked.counterevidence !== null, 'counterevidence remains visible in output');
+  assert(evidenceBacked.reviewTriggerId === 'three_months', 'review trigger survives projection');
+
+  const innerActivities = getChapterActivities('inner_compass');
+  for (const activity of innerActivities) {
+    const answerable = activity.blocks.filter((block) => !['review', 'confirmation'].includes(block.type));
+    assert(answerable.length <= 4, `${activity.id} stays within four answerable inputs`);
+  }
+  const evidenceBeforeLabel: Array<[string, string, string]> = [
+    ['inner_compass.a01', 'alive_evidence', 'alive_context'],
+    ['inner_compass.a02', 'proud_evidence', 'proud_value'],
+    ['inner_compass.a03', 'unlike_trigger', 'unlike_self'],
+    ['inner_compass.a05', 'protected_tradeoff', 'protected_value'],
+    ['inner_compass.a13', 'strength_evidence', 'strength'],
+    ['inner_compass.a15', 'shadow_loop', 'shadow'],
+    ['inner_compass.a18', 'drift_episode', 'drift_cause'],
+  ];
+  for (const [activityId, evidenceId, labelId] of evidenceBeforeLabel) {
+    const blocks = getActivityDefinition(activityId)!.blocks;
+    assert(
+      blocks.findIndex((block) => block.questionId === evidenceId) <
+        blocks.findIndex((block) => block.questionId === labelId),
+      `${activityId} asks for evidence before offering a label`,
+    );
+  }
+  assert(
+    getActivityDefinition('inner_compass.a06')!.blocks.find((block) => block.questionId === 'core_values')?.maxSelections === 3,
+    'candidate core values are capped at three',
+  );
 
   // Fallbacks + empty.
   const fallback = projectInnerCompass([
@@ -538,6 +647,31 @@ function testLivingHorizonProjector(): void {
   assert(out.priceNotPaidId === 'health', 'price not paid mapped');
   assert(out.relationshipIds.length === 2, 'relationships captured');
   assert(out.horizonStatement === 'Coastal, creative, unhurried', 'horizon statement passes through');
+  assert(out.evidenceCount === 0 && out.readingStatus === 'provisional', 'legacy Horizon remains readable and provisional');
+
+  const evidenceBacked = projectLivingHorizon([
+    ...answers,
+    makeAnswer('living_horizon.a01', 'morning_evidence', { kind: 'text', text: 'Quiet start and daylight.' }),
+    makeAnswer('living_horizon.a02', 'essential_scene_evidence', { kind: 'text', text: 'Built something useful with focus.' }),
+    makeAnswer('living_horizon.a03', 'rhythm_evidence', { kind: 'text', text: 'Fixed mornings and open afternoons.' }),
+    makeAnswer('living_horizon.a07', 'social_intensity_evidence', { kind: 'text', text: 'Two close evenings restored me.' }),
+    makeAnswer('living_horizon.a13', 'responsibility_evidence', { kind: 'text', text: 'Owned one team without constant overwork.' }),
+    choice('living_horizon.a20', 'horizon_confidence', 'plausible'),
+    makeAnswer('living_horizon.a20', 'horizon_counterevidence', { kind: 'text', text: 'Care responsibilities constrain mobility.' }),
+    choice('living_horizon.a20', 'horizon_review_trigger', 'responsibility_change'),
+  ]);
+  assert(evidenceBacked.evidenceCount === 5, 'Horizon counts lived clues');
+  assert(evidenceBacked.readingStatus === 'evidence_backed', 'five clues ground the life-design reading');
+  assert(evidenceBacked.confidenceId === 'plausible', 'Horizon confidence stays player-authored');
+  assert(evidenceBacked.counterevidence !== null, 'Horizon keeps constraints visible');
+
+  for (const activityId of ['living_horizon.a01', 'living_horizon.a05', 'living_horizon.a09', 'living_horizon.a13', 'living_horizon.a18']) {
+    const blocks = getActivityDefinition(activityId)!.blocks;
+    assert(
+      blocks[0].questionId.includes('evidence') || blocks[0].questionId.includes('tradeoff'),
+      `${activityId} grounds the label in a lived clue or trade-off`,
+    );
+  }
   assert(projectLivingHorizon([]).essentialSceneId === null, 'empty → null');
   assert(getChapterConfirmedOutput('living_horizon', answers) !== null, 'living_horizon has a projector');
 }
@@ -551,8 +685,86 @@ function testIkigaiMapProjector(): void {
     getChapterActivities('ikigai_map').every((a) => a.islandNumber >= 61 && a.islandNumber <= 80),
     'chapter 4 covers islands 61–80',
   );
+  assert(DOMAIN_OPTIONS.length >= 30, 'interest inventory offers a genuinely broad possibility space');
+
+  const interestField = getActivityDefinition('ikigai_map.a01');
+  assert(interestField !== null && interestField.blocks.length === 4, 'Island 61 is a four-step interest funnel');
+  assert(interestField!.blocks[0].type === 'multi_choice', 'interest capture is inclusive multi-select');
+  assert(interestField!.blocks[0].allowSelectAll === true, 'interest capture offers select all');
+  assert(
+    interestField!.blocks[1].type === 'ranking' && interestField!.blocks[2].type === 'ranking',
+    'preference and actual time are ranked separately',
+  );
+  assert(
+    interestField!.blocks[3].minSelections === 3 && interestField!.blocks[3].maxSelections === 5,
+    'priority lock carries 3–5 interests forward',
+  );
+
+  const situationPull = getActivityDefinition('ikigai_map.a02');
+  assert(situationPull !== null, 'Island 62 visual situation activity exists');
+  const situationChoice = situationPull!.blocks[0];
+  assert(situationChoice.questionId === 'attention_problem', 'Island 62 leads with scene recognition');
+  assert(situationChoice.options?.length === 9, 'eight scenes plus an uncertainty escape are offered');
+  assert(
+    situationChoice.options!.slice(0, 8).every(
+      (option) => option.scenarioTitle && option.description && option.visual?.kind === 'sprite',
+    ),
+    'every abstract problem family has a concrete visible situation and text fallback',
+  );
+  assert(
+    situationChoice.options![situationChoice.options!.length - 1]?.id === 'not_sure'
+      && situationChoice.options![situationChoice.options!.length - 1]?.visual?.kind === 'symbol',
+    'I do not know yet is a deliberate visual escape',
+  );
+  assert(
+    areRequiredBlocksAnswered(situationPull!, {
+      attention_problem: { kind: 'choice', optionId: 'not_sure' },
+    }),
+    'uncertainty is a complete answer and optional evidence never traps the player',
+  );
+
+  const inventoryValues: Record<string, CompassAnswerValue | undefined> = {
+    repeated_interest: {
+      kind: 'multi_choice',
+      optionIds: ['technology', 'writing', 'games', 'art'],
+    },
+    interest_preference_ranking: {
+      kind: 'ranking',
+      orderedOptionIds: ['writing', 'games', 'technology', 'art'],
+    },
+    interest_time_ranking: {
+      kind: 'ranking',
+      orderedOptionIds: ['technology', 'games', 'writing', 'art'],
+    },
+    interest_priorities: {
+      kind: 'multi_choice',
+      optionIds: ['writing', 'games'],
+    },
+  };
+  assert(!areRequiredBlocksAnswered(interestField!, inventoryValues), 'two priorities cannot prematurely lock');
+  inventoryValues.interest_priorities = {
+    kind: 'multi_choice',
+    optionIds: ['writing', 'games', 'art'],
+  };
+  assert(areRequiredBlocksAnswered(interestField!, inventoryValues), 'three priorities complete the funnel');
 
   const base: CompassAnswerRecord[] = [
+    makeAnswer('ikigai_map.a01', 'repeated_interest', {
+      kind: 'multi_choice',
+      optionIds: ['technology', 'writing', 'games', 'art'],
+    }),
+    makeAnswer('ikigai_map.a01', 'interest_preference_ranking', {
+      kind: 'ranking',
+      orderedOptionIds: ['writing', 'games', 'technology', 'art'],
+    }),
+    makeAnswer('ikigai_map.a01', 'interest_time_ranking', {
+      kind: 'ranking',
+      orderedOptionIds: ['technology', 'games', 'writing', 'art'],
+    }),
+    makeAnswer('ikigai_map.a01', 'interest_priorities', {
+      kind: 'multi_choice',
+      optionIds: ['writing', 'games', 'art'],
+    }),
     choice('ikigai_map.a04', 'spark_pick', 'writing'),
     choice('ikigai_map.a08', 'gift_pick', 'teaching'),
     choice('ikigai_map.a12', 'need_pick', 'education'),
@@ -572,6 +784,12 @@ function testIkigaiMapProjector(): void {
     choice('ikigai_map.a17', 'beginner_willingness', 'eager'),
   ]);
   assert(willing.sparkId === 'writing', 'spark mapped');
+  assert(willing.interestIds.length === 4, 'broad interests remain available as evidence');
+  assert(willing.preferenceRankIds[0] === 'writing', 'preference ranking survives projection');
+  assert(willing.timeRankIds[0] === 'technology', 'actual-time ranking remains distinct');
+  assert(willing.priorityInterestIds.length === 3, '3–5 priority field survives projection');
+  assert(willing.readingStatus === 'trial_ready', 'a specified real-world experiment makes the direction trial-ready');
+  assert(willing.evidenceCount === 0, 'trial readiness does not invent supporting evidence');
   assert(willing.giftId === 'teaching', 'gift mapped');
   assert(willing.needId === 'education', 'need mapped');
   assert(willing.paths.length === 2, 'paths collected');
@@ -585,6 +803,16 @@ function testIkigaiMapProjector(): void {
     choice('ikigai_map.a17', 'beginner_willingness', 'eager'),
   ]);
   assert(mirage.mirageWarning === true, 'disliking the daily work raises a mirage warning');
+
+  const evidenceBackedIkigai = projectIkigaiMap([
+    ...base,
+    makeAnswer('ikigai_map.a02', 'attention_problem_evidence', { kind: 'text', text: 'Kept mapping why learners got stuck.' }),
+    makeAnswer('ikigai_map.a05', 'demonstrated_strength_evidence', { kind: 'text', text: 'People relied on clear explanations.' }),
+    makeAnswer('ikigai_map.a09', 'people_understood_evidence', { kind: 'text', text: 'Listened closely to first-time builders.' }),
+    makeAnswer('ikigai_map.a13', 'income_evidence', { kind: 'text', text: 'Teams already fund adjacent workshops.' }),
+    makeAnswer('ikigai_map.a16', 'process_evidence', { kind: 'text', text: 'Recruitment was tedious but tolerable.' }),
+  ]);
+  assert(evidenceBackedIkigai.evidenceCount === 5, 'Ikigai keeps evidence separate from attractive labels');
 
   // Quest Leap proposal (architecture seam): proposes from the chosen trial.
   const proposal = buildQuestLeapProposalFromIkigai(willing);
@@ -753,9 +981,9 @@ function testPersonalPlaybookAndHabitBridge(): void {
     ],
     nowMs: missionStart + 6 * 24 * 60 * 60 * 1000,
   });
-  assert(launchInTime.launched, 'seven ready systems inside seven days launch the rocket');
+  assert(launchInTime.launched, 'seven ready systems launch the rocket without a countdown');
 
-  const launchTooLate = calculatePersonalPlaybookMission({
+  const launchAfterEightDays = calculatePersonalPlaybookMission({
     systemReady: [true, true, true, true, true, true, true],
     answers: [
       timedAnswer('personal_playbook.a01', new Date(missionStart).toISOString()),
@@ -763,8 +991,8 @@ function testPersonalPlaybookAndHabitBridge(): void {
     ],
     nowMs: missionStart + 8 * 24 * 60 * 60 * 1000,
   });
-  assert(!launchTooLate.launched, 'finishing after the seven-day window does not fake a launch');
-  assert(launchTooLate.readyCount === 7, 'missing the launch window never deletes completed systems');
+  assert(launchAfterEightDays.launched, 'taking longer never withholds the earned launch');
+  assert(launchAfterEightDays.readyCount === 7, 'timing never deletes completed systems');
 }
 
 function testCompassAiCore(): void {
@@ -846,13 +1074,13 @@ function testIslandFragment(): void {
   assert(!isIslandFragmentComplete(19, {}), 'island 19 incomplete with no answers');
   assert(isIslandFragmentComplete(19, bothTaps), 'island 19 complete once required taps are answered');
 
-  // Seal island (living_wheel.a20): the confirmation/review blocks are excluded;
-  // only the finale statement remains an answerable input.
+  // Seal island (living_wheel.a20): confirmation/review are excluded; the
+  // seasonal statement and review trigger remain useful island inputs.
   const f20 = getIslandFragment(20);
-  assert(f20 !== null && f20.inputs.length === 1, 'seal island exposes only the finale statement input');
+  assert(f20 !== null && f20.inputs.length === 2, 'seal island exposes statement and review trigger');
   assert(
-    f20!.inputs[0].questionId === 'wheel_statement',
-    'seal island input is the statement (confirmation/review excluded)',
+    f20!.inputs.map((input) => input.questionId).join(',') === 'wheel_statement,wheel_review_trigger',
+    'seal island inputs preserve the dated statement and revisit condition',
   );
 
   // No activity for the island → no fragment, and gating is trivially satisfied.
@@ -1098,6 +1326,38 @@ function testReading(): void {
   assert(reached.focusChapterId === 'living_wheel', 'focus is the first unfinished open chapter');
   assert(reached.writtenRows.length === 1, 'one chapter carries a written line');
   assert(reached.rows[0].headline === 'Steady on health, easing off work.', 'row shows the line');
+  assert(
+    reached.rows[1].headlineLabel === 'Your current True North reading',
+    'Inner Compass avoids fixed-identity language in the Reading',
+  );
+
+  const innerState: CompassChapterState = {
+    chapterId: 'inner_compass',
+    contentVersion: 'inner-compass-v2',
+    status: 'complete',
+    answers: [
+      makeAnswer('inner_compass.a20', 'compass_statement', {
+        kind: 'text',
+        text: 'Protect rest and return to honest work.',
+      }),
+    ],
+    draftOutput: null,
+    confirmedOutput: {} as DbJson,
+    completedActivityIds: ['inner_compass.a20'],
+    confirmedAt: '2026-08-21T12:00:00.000Z',
+  };
+  const innerReading = summarizeCompassReading({
+    getProgress: (chapterId) =>
+      computeChapterProgress(chapterId, chapterId === 'inner_compass' ? innerState : null, {
+        currentIslandNumber: 40,
+      }),
+    getChapterState: (chapterId) => (chapterId === 'inner_compass' ? innerState : null),
+  });
+  assert(innerReading.rows[1].readingQuality === 'provisional', 'Reading exposes evidence quality');
+  assert(
+    innerReading.rows[1].lastReviewedAt === '2026-08-21T12:00:00.000Z',
+    'Reading exposes the preserved review date',
+  );
 
   // A sealed chapter reads as sealed regardless of how many fragments are done.
   const sealed: CompassChapterState = { ...stateWithStatement, confirmedOutput: {} };
@@ -1186,7 +1446,16 @@ function testDemoBook(): void {
       );
       assert(isAnswerValuePresent(answer.value), `demo answer carries a value: ${answer.questionId}`);
     }
-    assert(state.contentVersion === 'v1', 'demo state uses the current curriculum version');
+    assert(
+      state.contentVersion === getCompassChapterMethodVersion(chapterId),
+      'demo state uses the current chapter method version',
+    );
+    assert(
+      state.answers.every(
+        (answer) => answer.methodVersion === getCompassChapterMethodVersion(chapterId),
+      ),
+      'demo answers record their chapter method version',
+    );
   }
 
   // Choice answers must reference real option ids, not invented ones.
@@ -1313,11 +1582,95 @@ function testWisdomCompassUsefulness(): void {
   assert(testedActivities === 120, 'all 120 island reflections pass the usefulness gate');
 }
 
+function testPresentationPolicy(): void {
+  assert(parseCompassBookPresentationMode('2d') === '2d', '2D preference parses');
+  assert(parseCompassBookPresentationMode('3d') === '3d', '3D preference parses');
+  assert(parseCompassBookPresentationMode('unknown') === 'auto', 'unknown preference is safe');
+
+  const resolve = (
+    preference: 'auto' | '2d' | '3d',
+    context: 'pwa' | 'island_run',
+    surface: 'page' | 'flow',
+    reducedMotion = false,
+    threeAvailable = true,
+  ) => resolveCompassBookPresentation({
+    preference,
+    context,
+    surface,
+    reducedMotion,
+    threeAvailable,
+  });
+
+  assert(resolve('auto', 'pwa', 'page') === '2d', 'PWA Auto defaults to clear 2D');
+  assert(resolve('auto', 'island_run', 'page') === '3d', 'Island Run Auto browses in 3D');
+  assert(resolve('auto', 'island_run', 'flow') === '2d', 'Island Run Auto answers in 2D');
+  assert(resolve('auto', 'island_run', 'page', true) === '2d', 'Auto respects reduced motion');
+  assert(resolve('3d', 'pwa', 'flow', true) === '3d', 'explicit 3D remains available with reduced animation');
+  assert(resolve('3d', 'island_run', 'page', false, false) === '2d', 'WebGL failure falls back to 2D');
+  assert(resolve('2d', 'island_run', 'page') === '2d', 'explicit 2D wins in Island Run');
+
+  assert(
+    shouldStageCompassBookIslandEntrance({
+      context: 'island_run',
+      initialActivityId: 'living_wheel.a01',
+      preference: 'auto',
+      reducedMotion: false,
+    }),
+    'Island Run Auto stages a deep-linked fragment through the physical book',
+  );
+  assert(
+    !shouldStageCompassBookIslandEntrance({
+      context: 'island_run',
+      initialActivityId: 'living_wheel.a01',
+      preference: '2d',
+      reducedMotion: false,
+    }),
+    'explicit 2D skips the Island Run entrance',
+  );
+  assert(
+    !shouldStageCompassBookIslandEntrance({
+      context: 'island_run',
+      initialActivityId: 'living_wheel.a01',
+      preference: 'auto',
+      reducedMotion: true,
+    }),
+    'reduced motion skips the Island Run entrance',
+  );
+  assert(
+    !shouldStageCompassBookIslandEntrance({
+      context: 'pwa',
+      initialActivityId: 'living_wheel.a01',
+      preference: '3d',
+      reducedMotion: false,
+    }),
+    'PWA deep links do not borrow the Island Run entrance',
+  );
+}
+
+function testDeviceProfiling(): void {
+  assert(parseCompassBookProfileQuality('high') === 'high', 'High profiling override parses');
+  assert(parseCompassBookProfileQuality('low') === 'low', 'Low profiling override parses');
+  assert(parseCompassBookProfileQuality('auto') === null, 'Auto cannot masquerade as forced evidence');
+  assert(getCompassBookProfileTargetFps('high') === 50, 'High keeps the approved 50 FPS gate');
+  assert(getCompassBookProfileTargetFps('low') === 55, 'Low keeps the approved 55 FPS gate');
+
+  const highPass = summarizeCompassBookPerformance(Array.from({ length: 1_800 }, () => 16.67), 'high');
+  assert(highPass.rating === 'pass', '60 FPS High evidence passes');
+  assert(highPass.averageFps >= 59.9, 'High report computes average FPS');
+  assert(highPass.p95FrameMs === 16.7, 'High report keeps p95 frame time');
+
+  const lowReview = summarizeCompassBookPerformance(Array.from({ length: 1_410 }, () => 20), 'low');
+  assert(lowReview.rating === 'review', '50 FPS Low evidence remains review below its 55 FPS gate');
+  const failed = summarizeCompassBookPerformance([], 'high');
+  assert(failed.rating === 'fail' && failed.sampleCount === 0, 'Empty evidence can never pass');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
   testProgress();
   testAnswerParsing();
+  testChapterMethodVersioning();
   testGuidedFlowAnswering();
   testLivingWheelProjector();
   testInnerCompassProjector();
@@ -1332,5 +1685,7 @@ export function runAllCompassBookTests(): void {
   testReading();
   testPageTurn();
   testDemoBook();
+  testPresentationPolicy();
+  testDeviceProfiling();
   testWisdomCompassUsefulness();
 }

@@ -1,0 +1,32 @@
+{
+  "query": "articulated hard surface transform pivot hierarchy clearance envelope spaceship vehicle",
+  "collection": "core_3d",
+  "decision": "use action-ready root/pivot/visual/socket/collider hierarchy for the macro transform rig",
+  "matches": [
+    {
+      "recordId": "core.socket-pivot",
+      "sourceRef": "grimoire/readiness/action_rigging.md#Hierarchy Pattern",
+      "appliedTo": ["wing hinge pivots", "engine sockets", "effect sockets", "camera anchors"]
+    },
+    {
+      "recordId": "core.runtime-hierarchy",
+      "sourceRef": "grimoire/readiness/action_rigging.md#Hierarchy Pattern",
+      "appliedTo": ["root sculptRuntime metadata", "compound collider proxies", "named occupied-volume clearance groups"]
+    },
+    {
+      "recordId": "core.component-hierarchy",
+      "sourceRef": "grimoire/intake/image_analysis.md#Layer 3 — Macro → meso → micro decomposition",
+      "appliedTo": ["center spine", "left/right wings", "atrium", "keel", "power towers"]
+    },
+    {
+      "recordId": "core.topology-intent",
+      "sourceRef": "grimoire/glossary/3d_vocabulary.md#Geometry And Topology",
+      "appliedTo": ["hard-surface blockout shell", "transparent atrium", "organic tree core"]
+    },
+    {
+      "recordId": "core.description-honest-uncertainty-single-image-limits-convention",
+      "sourceRef": "docs/raw/img2threejs-skill-dataset.json#categories.description_conventions[6]",
+      "appliedTo": ["rear", "top", "belly", "high-speed closure inference"]
+    }
+  ]
+}

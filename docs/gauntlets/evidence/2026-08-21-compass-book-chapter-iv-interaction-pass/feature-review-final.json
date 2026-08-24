@@ -1,0 +1,26 @@
+[
+  {
+    "id": "trial-path-mirage",
+    "score": 0.95,
+    "passed": true,
+    "notes": "The completion frame brightens the three candidate routes and pulses Trial while Mirage remains outside the valid graph and visibly recedes instead of becoming a sixth force."
+  },
+  {
+    "id": "completion-pivot-integrity",
+    "score": 0.94,
+    "passed": true,
+    "notes": "Five force discs cascade inside stable bezels, Trial retains its independent ring/crystal pivot, and the authored idle transforms are restored when the transient ceremony ends."
+  },
+  {
+    "id": "reduced-motion-ceremony",
+    "score": 0.96,
+    "passed": true,
+    "notes": "Reduced-motion proof keeps all pivots at authored transforms and limits the ceremony to restrained material-state emphasis."
+  },
+  {
+    "id": "presentation-state-ownership",
+    "score": 0.99,
+    "passed": true,
+    "notes": "The shell passes transient celebration progress to the model; no gameplay field, answer, persistence path, or UI runtime-state mirror is introduced."
+  }
+]

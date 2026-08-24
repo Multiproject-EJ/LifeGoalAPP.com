@@ -30,6 +30,9 @@ import {
   getIsland5CameraPreset,
   getIsland5TokenGroundPosition,
   ISLAND_CAMERA_TOUR_STEPS,
+  ISLAND_3D_AMBIENT_POV_INTERVAL_MS,
+  ISLAND_3D_BOARD_POV_IDLE_DELAY_MS,
+  ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS,
   ISLAND_3D_PROFILE_DURATION_MS,
   ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
   ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
@@ -57,6 +60,18 @@ import {
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
 import { createCrownDrifterModel } from './CrownDrifterThreeModel';
+import { createRobotFamilyModel } from './RobotFamilyThreeModel';
+import { createRobotConstructionTheatre } from './RobotConstructionTheatre';
+import {
+  prepareIslandConstructionLevelDelta,
+  type IslandConstructionLevelDelta,
+} from './IslandConstructionLevelDelta';
+import {
+  applyIslandConstructionAuthoring,
+  resolveIslandLandmarkConstructionProfile,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
+import type { IslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import {
   resolveIslandRunArenaCreatureMotion,
   shouldPresentIslandRunArenaCreature,
@@ -219,6 +234,8 @@ interface Island5ThreePilotProps {
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
+  /** Read-only build-modal choreography. It cannot mutate gameplay state. */
+  constructionPresentation?: IslandRunConstructionPresentation | null;
   arenaBattlePresentation?: IslandRunArenaBattlePresentation | null;
   onRendererUnavailable?: () => void;
 }
@@ -1986,7 +2003,7 @@ interface PilotMaterials extends CrownCitadelMaterials {
   waterGlow: THREE.MeshStandardMaterial;
 }
 
-function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: IslandRunAuthored3DWorldSource = 5): PilotMaterials {
+export function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: IslandRunAuthored3DWorldSource = 5): PilotMaterials {
   const detail = CROWN_CITADEL_DETAIL_PROFILES[quality];
   const stoneMap = createCitadelPatternTexture(detail.textureSize, 'reef-stone');
   const roofMap = createCitadelPatternTexture(detail.textureSize, 'roof-tile');
@@ -2118,11 +2135,13 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
   };
 }
 
-function buildLandmark(
+export function buildLandmark(
   definition: Island5LandmarkDefinition,
   level: BuildLevel,
   quality: Island3DQuality,
   materials: PilotMaterials,
+  worldSourceNumber: IslandRunAuthored3DWorldSource = 5,
+  options: IslandConstructionFactoryOptions = {},
 ): THREE.Group {
   const root = new THREE.Group();
   root.position.set(...definition.position);
@@ -2141,7 +2160,7 @@ function buildLandmark(
   if (level > 0) {
     const builtLevel = level as 1 | 2 | 3;
     const building = definition.id === 'boss'
-      ? createCrownCitadelModel({ level: builtLevel, quality, materials })
+      ? createCrownCitadelModel({ level: builtLevel, quality, materials, compact: !options.constructionPreview })
       : definition.id === 'hatchery'
         ? createHatcheryLandmark(builtLevel, quality, materials)
         : definition.id === 'habit'
@@ -2150,12 +2169,25 @@ function buildLandmark(
             ? createWisdomLandmark(builtLevel, quality, materials)
             : createEventLandmark(builtLevel, quality, materials);
     if (definition.id === 'boss') {
-      const scale = CROWN_CITADEL_LEVEL_SCALES[builtLevel];
+      const scale = options.constructionPreview
+        ? CROWN_CITADEL_LEVEL_SCALES[2]
+        : CROWN_CITADEL_LEVEL_SCALES[builtLevel];
       building.scale.set(scale[0], scale[1], scale[2]);
     } else {
       building.scale.setScalar(1);
     }
-    if (definition.id !== 'boss') compactStaticGeometry(building, `ISLAND5_${definition.id.toUpperCase()}`);
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
+    if (definition.id !== 'boss' && !options.constructionPreview) {
+      compactStaticGeometry(building, `ISLAND5_${definition.id.toUpperCase()}`);
+    }
     root.add(building);
   }
 
@@ -3261,6 +3293,7 @@ export default function Island5ThreePilot({
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
+  constructionPresentation = null,
   arenaBattlePresentation = null,
   onRendererUnavailable,
 }: Island5ThreePilotProps) {
@@ -3331,6 +3364,8 @@ export default function Island5ThreePilot({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
   landmarkBuildLevelsRef.current = landmarkBuildLevels;
+  const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
+  constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
   const previousCameraFocusPresetRef = useRef<Island5CameraPresetId | null>(null);
   const previousCameraFocusTransitionRef = useRef<'standard' | 'quick'>('standard');
@@ -4451,18 +4486,43 @@ export default function Island5ThreePilot({
     let wasCaretakerEncounterOpen = false;
     let caretakerEncounterStartedAt = 0;
 
-    const clickableLandmarks: THREE.Object3D[] = [];
-    const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
-    for (const landmark of ISLAND_5_LANDMARKS) {
-      const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
-      const landmarkRoot = isFirstLightKingdom && island1Materials
-        ? buildIsland1Landmark(landmark, resolvedBuildLevel, qualityProfile.id, island1Materials)
+    const buildAuthoredLandmark = (
+      landmark: Island5LandmarkDefinition,
+      resolvedBuildLevel: BuildLevel,
+      constructionPreview?: 'current' | 'target',
+    ) => (
+      isFirstLightKingdom && island1Materials
+        ? buildIsland1Landmark(
+            landmark,
+            resolvedBuildLevel,
+            qualityProfile.id,
+            island1Materials,
+            { constructionPreview },
+          )
         : isCelestialSkyKingdom && island2CelestialMaterials
-          ? buildIsland2CelestialLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island2CelestialMaterials)
+          ? buildIsland2CelestialLandmark(
+              landmark,
+              resolvedBuildLevel,
+              qualityProfile.id,
+              island2CelestialMaterials,
+              { constructionPreview },
+            )
           : isFrostmoonHaven && island3FrostmoonMaterials
-            ? buildIsland3FrostmoonLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island3FrostmoonMaterials)
+            ? buildIsland3FrostmoonLandmark(
+                landmark,
+                resolvedBuildLevel,
+                qualityProfile.id,
+                island3FrostmoonMaterials,
+                { constructionPreview },
+              )
             : isSunshoreAtoll && island5SunshoreMaterials
-              ? buildIsland5SunshoreLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island5SunshoreMaterials)
+              ? buildIsland5SunshoreLandmark(
+                  landmark,
+                  resolvedBuildLevel,
+                  qualityProfile.id,
+                  island5SunshoreMaterials,
+                  { constructionPreview },
+                )
               : isMoonveilNexus && island6MoonveilMaterials
                 ? buildIsland6MoonveilLandmark(
                     landmark,
@@ -4470,20 +4530,59 @@ export default function Island5ThreePilot({
                     qualityProfile.id,
                     island6MoonveilMaterials,
                     journeyDiscArenaCenterActive,
+                    { constructionPreview },
                   )
               : isAbyssalPearlKingdom && island7UnderwaterMaterials
-                ? buildIsland7UnderwaterLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island7UnderwaterMaterials)
+                ? buildIsland7UnderwaterLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island7UnderwaterMaterials,
+                    { constructionPreview },
+                  )
               : isEverblossomKingdom && island8EverblossomMaterials
-                ? buildIsland8EverblossomLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island8EverblossomMaterials)
+                ? buildIsland8EverblossomLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island8EverblossomMaterials,
+                    { constructionPreview },
+                  )
               : isHeartshaftCrucible && island9HeartshaftMaterials
-                ? buildIsland9HeartshaftLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island9HeartshaftMaterials)
+                ? buildIsland9HeartshaftLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island9HeartshaftMaterials,
+                    { constructionPreview },
+                  )
               : isRootheartCanopyCity && island10RootheartMaterials
-                ? buildIsland10RootheartLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island10RootheartMaterials)
+                ? buildIsland10RootheartLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island10RootheartMaterials,
+                    { constructionPreview },
+                  )
               : isSunkenSands && island12SunkenSandsMaterials
                 ? buildIsland12SunkenSandsLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island12SunkenSandsMaterials)
               : isCactusCanyon && island13CactusCanyonMaterials
                 ? buildIsland13CactusCanyonLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island13CactusCanyonMaterials)
-              : buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
+              : buildLandmark(
+                  landmark,
+                  resolvedBuildLevel,
+                  qualityProfile.id,
+                  materials,
+                  resolvedWorldSourceNumber,
+                  { constructionPreview },
+                )
+    );
+
+    const clickableLandmarks: THREE.Object3D[] = [];
+    const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
+    for (const landmark of ISLAND_5_LANDMARKS) {
+      const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
+      const landmarkRoot = buildAuthoredLandmark(landmark, resolvedBuildLevel);
       if (landmark.id === 'boss') makeLandmarkMaterialsIndependent(landmarkRoot);
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
@@ -4492,6 +4591,257 @@ export default function Island5ThreePilot({
       scene.add(hitTarget);
       clickableLandmarks.push(hitTarget);
     }
+    // The live construction crew shares this renderer and reads the real
+    // landmark bounds. It is intentionally absent from clickableLandmarks.
+    const constructionFamily = createRobotFamilyModel({ quality: 'low', showAddonRack: false });
+    const constructionTheatre = createRobotConstructionTheatre({
+      family: constructionFamily,
+      quality: 'low',
+      showBuildingEnvelope: false,
+    });
+    // The family lab keeps showroom scale. On a live landmark these are a
+    // coordinated miniature work crew, with matching tools and payloads.
+    constructionTheatre.setCrewScale(0.11);
+    const constructionAnchor = new THREE.Group();
+    constructionAnchor.name = 'ISLAND_RUN_BUILD_MODAL_CONSTRUCTION_ANCHOR';
+    constructionAnchor.visible = false;
+    const constructionStageBuilding = new THREE.Group();
+    constructionStageBuilding.name = 'ISLAND_RUN_BUILD_MODAL_AUTHORED_BUILDING_STAGE';
+    constructionFamily.root.visible = false;
+    constructionAnchor.add(constructionStageBuilding, constructionFamily.root, constructionTheatre.root);
+    scene.add(constructionAnchor);
+    canvas.dataset.constructionCrewAllocatedTriangles = String(
+      constructionFamily.metrics.triangles + constructionTheatre.metrics.triangles,
+    );
+    canvas.dataset.constructionCrewAllocatedDrawCalls = String(
+      constructionFamily.metrics.drawCalls + constructionTheatre.metrics.drawCalls,
+    );
+    // Allocation is deliberately distinguished from render cost. The hidden
+    // parent prevents renderer traversal and the animation loop below is also
+    // gated, so an idle/closed build theatre contributes zero frame work.
+    canvas.dataset.constructionCrewTriangles = '0';
+    canvas.dataset.constructionCrewDrawCalls = '0';
+    canvas.dataset.constructionCrewRuntime = 'parked';
+    const constructionBounds = new THREE.Box3();
+    const constructionBoundsSize = new THREE.Vector3();
+    const constructionBoundsCenter = new THREE.Vector3();
+    const constructionScreenProbe = new THREE.Vector3();
+    const constructionPreviewBounds = new THREE.Box3();
+    const constructionPreviewSize = new THREE.Vector3();
+    const constructionPreviewCenter = new THREE.Vector3();
+    let constructionPreviewRoot: THREE.Group | null = null;
+    let constructionPreviewKey = '';
+    let constructionLevelDelta: IslandConstructionLevelDelta | null = null;
+    let constructionSourceRoot: THREE.Object3D | null = null;
+    const disposeDetachedConstructionRoot = (root: THREE.Object3D) => {
+      root.traverse((entry) => {
+        if (!(entry instanceof THREE.Mesh)) return;
+        entry.geometry.dispose();
+        const entryMaterials = Array.isArray(entry.material) ? entry.material : [entry.material];
+        entryMaterials.forEach((material) => material.dispose());
+      });
+    };
+    const ensureConstructionPreview = (
+      landmarkId: Island5LandmarkId,
+      currentLevel: BuildLevel,
+      targetLevel: BuildLevel,
+    ) => {
+      const previewKey = `${landmarkId}:${currentLevel}->${targetLevel}`;
+      if (previewKey === constructionPreviewKey && constructionPreviewRoot) return;
+      if (constructionPreviewRoot) {
+        constructionStageBuilding.remove(constructionPreviewRoot);
+        disposeDetachedConstructionRoot(constructionPreviewRoot);
+      }
+      constructionLevelDelta = null;
+      constructionPreviewKey = previewKey;
+      const definition = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === landmarkId);
+      if (!definition) {
+        constructionPreviewRoot = null;
+        return;
+      }
+      const stage = new THREE.Group();
+      stage.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_TO_L${targetLevel}_DELTA_STAGE`;
+      const current = buildAuthoredLandmark(definition, currentLevel, 'current');
+      current.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED_LEVEL`;
+      const target = buildAuthoredLandmark(definition, targetLevel, 'target');
+      target.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${targetLevel}_ADDITIVE_TARGET`;
+      [current, target].forEach((root) => {
+        root.position.set(0, 0, 0);
+        root.rotation.set(0, 0, 0);
+        root.scale.set(1, 1, 1);
+        stage.add(root);
+      });
+      stage.updateWorldMatrix(true, true);
+      constructionPreviewBounds.setFromObject(target);
+      constructionPreviewBounds.getSize(constructionPreviewSize);
+      constructionLevelDelta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+      if (isFirstLightKingdom && currentLevel > 0) {
+        compactStaticGeometry(current, `ISLAND1_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED`);
+      }
+      makeLandmarkMaterialsIndependent(current);
+      constructionPreviewRoot = stage;
+      constructionStageBuilding.add(stage);
+      canvas.dataset.constructionCrewBuilding = `${landmarkId}:L${currentLevel}->L${targetLevel}:additive-delta`;
+      canvas.dataset.constructionCrewLevelDelta = `${constructionLevelDelta.retainedMeshCount}:${constructionLevelDelta.additiveMeshCount}`;
+      canvas.dataset.constructionCrewRevealStages = JSON.stringify(constructionLevelDelta.stageCounts);
+      canvas.dataset.constructionCrewRevealBatches = String(constructionLevelDelta.revealBatchCount);
+    };
+    const applyConstructionPreviewProgress = (progress: number, working: boolean) => {
+      constructionLevelDelta?.applyProgress(progress, { working });
+    };
+    const updateConstructionFacing = () => {
+      if (!constructionAnchor.visible) return;
+      constructionAnchor.rotation.y = Math.atan2(
+        camera.position.x - constructionBoundsCenter.x,
+        camera.position.z - constructionBoundsCenter.z,
+      );
+      if (constructionPreviewRoot) {
+        // The crew's semantic +Z axis follows the camera, but the building
+        // retains its authored world orientation throughout camera travel.
+        constructionPreviewRoot.rotation.y = -constructionAnchor.rotation.y;
+      }
+    };
+    let appliedConstructionKey = '';
+    const updateConstructionPresentation = () => {
+      const next = constructionPresentationRef.current;
+      const mappedStopId = next?.targetStopId === 'mystery' ? 'event' : next?.targetStopId;
+      const targetRoot = mappedStopId
+        ? landmarkRootsById.get(mappedStopId as Island5LandmarkId)
+        : undefined;
+      const nextKey = next
+        ? [next.active, next.working, next.phase, next.progress.toFixed(4), next.sequence, next.cloudCover.toFixed(3), mappedStopId, next.targetLevel, next.reducedMotion].join(':')
+        : 'inactive';
+      if (nextKey === appliedConstructionKey) return;
+      appliedConstructionKey = nextKey;
+      const isActive = Boolean(next?.active && targetRoot);
+      const authoredConstructionProfile = mappedStopId
+        ? resolveIslandLandmarkConstructionProfile(
+          resolvedWorldSourceNumber,
+          mappedStopId as Island5LandmarkId,
+        )
+        : null;
+      constructionAnchor.visible = isActive;
+      constructionFamily.root.visible = isActive;
+      constructionStageBuilding.visible = isActive;
+      constructionTheatre.setPresentation({
+        active: isActive,
+        working: next?.working ?? false,
+        phase: next?.phase ?? 'arrive',
+        progress: next?.progress ?? 0,
+        sequence: next?.sequence ?? 0,
+        cloudCover: next?.cloudCover ?? 0,
+        choreography: authoredConstructionProfile?.choreography,
+      });
+      canvas.dataset.constructionCrewTriangles = String(isActive
+        ? constructionFamily.metrics.triangles + constructionTheatre.metrics.visibleTriangles
+        : 0);
+      canvas.dataset.constructionCrewDrawCalls = String(isActive
+        ? constructionFamily.metrics.drawCalls + constructionTheatre.metrics.visibleDrawCalls
+        : 0);
+      canvas.dataset.constructionCrewRuntime = isActive ? 'rendering' : 'parked';
+      canvas.dataset.constructionCrewActive = isActive ? 'true' : 'false';
+      canvas.dataset.constructionCrewTarget = mappedStopId ?? '';
+      canvas.dataset.constructionCrewPhase = next?.phase ?? 'arrive';
+      canvas.dataset.constructionCrewMode = next?.working ? 'working' : 'resting';
+      canvas.dataset.constructionChoreography = authoredConstructionProfile
+        ? `${authoredConstructionProfile.choreography.styleId}:station-${authoredConstructionProfile.choreography.stationOffset}`
+        : '';
+      if (!isActive || !targetRoot) {
+        if (constructionSourceRoot) constructionSourceRoot.visible = true;
+        constructionSourceRoot = null;
+        return;
+      }
+
+      if (constructionSourceRoot && constructionSourceRoot !== targetRoot) constructionSourceRoot.visible = true;
+      constructionSourceRoot = targetRoot;
+      constructionSourceRoot.visible = false;
+
+      const currentLevel = landmarkBuildLevelsRef.current?.[mappedStopId as Island5LandmarkId] ?? buildLevel;
+      const previewLevel = THREE.MathUtils.clamp(
+        next?.targetLevel ?? Math.min(3, currentLevel + 1),
+        1,
+        3,
+      ) as BuildLevel;
+      ensureConstructionPreview(mappedStopId as Island5LandmarkId, currentLevel, previewLevel);
+      applyConstructionPreviewProgress(next?.progress ?? 0, next?.working ?? false);
+
+      constructionBounds.setFromObject(targetRoot);
+      constructionBounds.getCenter(constructionBoundsCenter);
+      constructionBounds.getSize(constructionBoundsSize);
+      const horizontalExtent = Math.max(constructionBoundsSize.x, constructionBoundsSize.z, 1);
+      const crewScale = THREE.MathUtils.clamp(horizontalExtent / 8.5, 0.22, 0.38);
+      constructionAnchor.position.set(
+        constructionBoundsCenter.x,
+        // The authored preview replaces the hidden source landmark, so its
+        // bottom must stay on the source landmark's exact foundation datum.
+        // Camera framing owns screen-space composition; lifting this anchor
+        // makes a heavy building visibly hover and causes level-to-level drift.
+        constructionBounds.min.y,
+        constructionBoundsCenter.z,
+      );
+      constructionAnchor.scale.setScalar(crewScale);
+      canvas.dataset.constructionLandmarkGrounding = JSON.stringify({
+        sourceFloorY: Number(constructionBounds.min.y.toFixed(4)),
+        previewFloorY: Number(constructionAnchor.position.y.toFixed(4)),
+        verticalError: Number((constructionAnchor.position.y - constructionBounds.min.y).toFixed(4)),
+      });
+      updateConstructionFacing();
+      if (constructionPreviewRoot) {
+        constructionPreviewBounds.getCenter(constructionPreviewCenter);
+        const previewHorizontalSize = Math.max(constructionPreviewSize.x, constructionPreviewSize.z, 0.001);
+        const crewVisualScale = THREE.MathUtils.clamp(
+          0.19 * (constructionPreviewSize.y / previewHorizontalSize),
+          0.084,
+          0.2,
+        );
+        constructionTheatre.setCrewScale(crewVisualScale);
+        canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3);
+        // Tall restored landmarks (especially tree/citadel L3s) need the same
+        // visible-stage ceiling as broad buildings. Otherwise their upper
+        // scaffold and work stations disappear beneath the modal header.
+        const verticalFit = THREE.MathUtils.clamp(
+          (previewHorizontalSize * 1.38) / Math.max(constructionPreviewSize.y, 0.001),
+          0.72,
+          1,
+        );
+        const previewStageScale = (0.58 / crewScale) * verticalFit;
+        constructionPreviewRoot.scale.setScalar(previewStageScale);
+        constructionPreviewRoot.position.set(
+          -constructionPreviewCenter.x * previewStageScale,
+          -constructionPreviewBounds.min.y * previewStageScale,
+          -constructionPreviewCenter.z * previewStageScale,
+        );
+        constructionTheatre.setTargetEnvelope(
+          previewHorizontalSize * previewStageScale * 0.5,
+          constructionPreviewSize.y * previewStageScale,
+        );
+        // The target landmark already owns its stage-specific façade
+        // scaffolding. A second rectangular cage around the entire plot was
+        // visually dominant and flickered whenever work entered/exited its
+        // burst window, so the live modal deliberately adds no site-wide rig.
+        canvas.dataset.constructionScaffoldMode = 'authored-landmark-only';
+      } else {
+        constructionTheatre.setCrewScale(0.18);
+        canvas.dataset.constructionCrewScale = '0.180';
+        constructionTheatre.setTargetEnvelope(
+          horizontalExtent / (crewScale * 2),
+          constructionBoundsSize.y / crewScale,
+        );
+      }
+      constructionFamily.setFaceFocus('heavy-worker', 0, -0.12);
+      constructionFamily.setFaceFocus('project-manager', 0, -0.08);
+      constructionFamily.setFaceFocus('mini-artist', 0, -0.16);
+      canvas.dataset.constructionCrewTriangles = String(
+        constructionFamily.metrics.triangles
+        + constructionTheatre.metrics.visibleTriangles,
+      );
+      canvas.dataset.constructionCrewDrawCalls = String(
+        constructionFamily.metrics.drawCalls
+        + constructionTheatre.metrics.visibleDrawCalls,
+      );
+    };
+    updateConstructionPresentation();
+
     if (isArchiveAlbedoLookdev) {
       const archiveRoot = landmarkRootsById.get('wisdom');
       const albedoMaterialCache = new Map<THREE.Material, THREE.Material>();
@@ -4870,6 +5220,19 @@ export default function Island5ThreePilot({
       finalImpactTriggered: boolean;
     } | null = null;
     let idleOverviewAt: number | null = null;
+    let ambientCameraContext: 'board' | 'build-modal' = constructionPresentationRef.current?.active
+      ? 'build-modal'
+      : 'board';
+    let ambientCameraEligibleAt = performance.now() + (
+      ambientCameraContext === 'build-modal'
+        ? ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS
+        : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
+    );
+    let ambientCameraStep = 0;
+    let wasConstructionCameraLocked = Boolean(
+      constructionPresentationRef.current?.active
+      && constructionPresentationRef.current?.cameraLocked,
+    );
     let activeInspectionPreset: Island5CameraPresetId | 'manual' = 'overview';
     let lastCameraAuthoringPublishAt = 0;
     let lastCameraAuthoringPayload = '';
@@ -4966,7 +5329,7 @@ export default function Island5ThreePilot({
       }
     };
 
-    const applyPreset = (id: Island5CameraPresetId, durationScale = 1) => {
+    const applyPreset = (id: Island5CameraPresetId, durationScale = 1, instant = false) => {
       const basePreset = getIsland5CameraPreset(id);
       const firstLightFocusOverrides: Partial<Record<Island5CameraPresetId, {
         position: readonly [number, number, number];
@@ -5156,7 +5519,7 @@ export default function Island5ThreePilot({
       const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       setBoardActorsVisibleForPreset(id);
       setActivePreset(id);
-      if (isReducedMotion) {
+      if (isReducedMotion || instant) {
         camera.position.set(...preset.position);
         controls.target.set(...preset.target);
         camera.lookAt(controls.target);
@@ -5177,6 +5540,29 @@ export default function Island5ThreePilot({
         toPosition,
         toTarget: new THREE.Vector3(...preset.target),
       };
+    };
+    const applyAmbientCameraNudge = (context: 'board' | 'build-modal', now: number) => {
+      const offset = camera.position.clone().sub(controls.target);
+      const yawDirection = ambientCameraStep % 2 === 0 ? 1 : -1;
+      const yaw = yawDirection * (context === 'build-modal' ? 0.105 : 0.145);
+      const destinationOffset = offset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+      destinationOffset.y += Math.sin(ambientCameraStep * 1.7) * Math.min(0.42, Math.abs(offset.y) * 0.035);
+      const toPosition = controls.target.clone().add(destinationOffset);
+      const controlPosition = camera.position.clone().lerp(toPosition, 0.5);
+      controlPosition.y += context === 'build-modal' ? 0.28 : 0.48;
+      transition = {
+        startedAt: now,
+        durationMs: context === 'build-modal' ? 1_650 : 2_250,
+        fromPosition: camera.position.clone(),
+        fromTarget: controls.target.clone(),
+        controlPosition,
+        toPosition,
+        toTarget: controls.target.clone(),
+      };
+      ambientCameraStep += 1;
+      ambientCameraEligibleAt = now + ISLAND_3D_AMBIENT_POV_INTERVAL_MS;
+      canvas.dataset.ambientCameraMode = `${context}-gentle-orbit`;
+      canvas.dataset.ambientCameraStep = String(ambientCameraStep);
     };
     const applyCaretakerFocus = (durationScale = 1) => {
       setBoardActorsVisibleForPreset('manual');
@@ -5310,7 +5696,22 @@ export default function Island5ThreePilot({
       if (request.version <= appliedControlledCameraFocusVersionRef.current) return;
       appliedControlledCameraFocusVersionRef.current = request.version;
       idleOverviewAt = null;
-      applyPreset(request.preset, request.durationScale);
+      ambientCameraEligibleAt = performance.now() + (
+        constructionPresentationRef.current?.active
+          ? ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS
+          : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
+      );
+      const snapInitialLockedConstructionFocus = Boolean(
+        constructionPresentationRef.current?.active
+        && constructionPresentationRef.current?.cameraLocked
+        && activeInspectionPreset === 'overview'
+        && request.preset !== 'overview',
+      );
+      // If the modal and its construction lock mount in the same React frame,
+      // a normal transition is canceled on the first render tick and leaves
+      // the crew stranded in the overview. Place that one initial shot
+      // directly; later build input still locks every POV change.
+      applyPreset(request.preset, request.durationScale, snapInitialLockedConstructionFocus);
     };
     applyControlledCameraFocusRef.current = applyControlledCameraFocus;
     if (controlledCameraFocusRequestRef.current) {
@@ -5405,6 +5806,11 @@ export default function Island5ThreePilot({
     const cancelTransition = () => {
       transition = null;
       idleOverviewAt = null;
+      ambientCameraEligibleAt = performance.now() + (
+        constructionPresentationRef.current?.active
+          ? ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS
+          : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
+      );
       setBoardActorsVisibleForPreset('manual');
       setActivePreset('manual');
     };
@@ -5424,6 +5830,11 @@ export default function Island5ThreePilot({
 
     const handlePointerDown = (event: PointerEvent) => {
       pointerDown.set(event.clientX, event.clientY);
+      ambientCameraEligibleAt = performance.now() + (
+        constructionPresentationRef.current?.active
+          ? ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS
+          : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
+      );
     };
     const handlePointerUp = (event: PointerEvent) => {
       if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion || activeTrainRide) return;
@@ -5481,12 +5892,53 @@ export default function Island5ThreePilot({
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointerup', handlePointerUp);
 
+    let appliedConstructionCameraKey = '';
     const animate = (now: number) => {
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
       const elapsed = timer.getElapsed();
       const frameDeltaSeconds = Math.min(0.05, Math.max(0, (now - lastAnimationFrameAt) / 1000));
       lastAnimationFrameAt = now;
+      const constructionCameraPresentation = constructionPresentationRef.current;
+      const constructionCameraActive = Boolean(constructionCameraPresentation?.active);
+      const constructionCameraWorking = Boolean(
+        constructionCameraActive && constructionCameraPresentation?.working,
+      );
+      const constructionCameraLocked = Boolean(
+        constructionCameraActive
+        && (constructionCameraPresentation?.cameraLocked || constructionCameraWorking),
+      );
+      const nextAmbientCameraContext = constructionCameraActive ? 'build-modal' : 'board';
+      if (nextAmbientCameraContext !== ambientCameraContext) {
+        ambientCameraContext = nextAmbientCameraContext;
+        ambientCameraEligibleAt = now + (
+          ambientCameraContext === 'build-modal'
+            ? ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS
+            : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
+        );
+        ambientCameraStep = 0;
+      }
+      if (constructionCameraLocked) {
+        // Active and recently active construction owns the shot. Repeated
+        // taps/hold frames continually extend the lock instead of initiating
+        // a distracting camera transition mid-action. Stop an idle orbit that
+        // was already in flight too: a lock that only blocks new transitions
+        // still makes a grounded landmark appear to float beneath the camera.
+        if (transition) transition = null;
+        ambientCameraEligibleAt = Number.POSITIVE_INFINITY;
+        wasConstructionCameraLocked = true;
+        canvas.dataset.ambientCameraMode = constructionCameraWorking
+          ? 'build-locked'
+          : 'build-recent-cooldown';
+      } else if (wasConstructionCameraLocked) {
+        wasConstructionCameraLocked = false;
+        // The choreography burst is intentionally shorter than the camera
+        // cooldown. Start a fresh full idle window when renderer ownership is
+        // released so no React scheduling edge can collapse the promised
+        // seven-second stable shot into the old 600 ms handoff.
+        ambientCameraEligibleAt = now + ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS;
+        canvas.dataset.ambientCameraMode = 'build-recent-cooldown';
+      }
       let cactusCanyonBlastCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
@@ -5642,6 +6094,65 @@ export default function Island5ThreePilot({
         // reflecting canonical token occupancy so the landed-on reward does
         // not clip through the player piece.
         tileRewardObjects.animate(0, tokenIndexRef.current);
+      }
+
+      updateConstructionPresentation();
+      if (constructionAnchor.visible) {
+        const activeConstruction = constructionPresentationRef.current;
+        const constructionPreset = activeConstruction?.targetStopId === 'mystery'
+          ? 'event'
+          : activeConstruction?.targetStopId;
+        const constructionCameraKey = activeConstruction && constructionPreset
+          ? `${constructionPreset}:${activeConstruction.targetLevel}`
+          : '';
+        if (
+          constructionCameraKey
+          && !activeConstruction?.cameraLocked
+          && (
+            constructionCameraKey !== appliedConstructionCameraKey
+            || activeInspectionPreset !== constructionPreset
+          )
+          && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === constructionPreset)
+        ) {
+          // A queued level remains the same modal session. Reassert the close
+          // landmark shot so a prior roll's idle-overview timer or level
+          // completion transition cannot strand the crew under the header.
+          appliedConstructionCameraKey = constructionCameraKey;
+          idleOverviewAt = null;
+          applyPreset(constructionPreset as Island5CameraPresetId, 0.24);
+        }
+        // Camera-preset visibility updates may run after the modal adapter.
+        // Keep the original plot hidden while its exact authored build-stage
+        // preview occupies the focused construction theatre.
+        if (constructionSourceRoot) constructionSourceRoot.visible = false;
+        updateConstructionFacing();
+        const constructionReducedMotion = isReducedMotion
+          || Boolean(constructionPresentationRef.current?.reducedMotion);
+        constructionFamily.update(elapsed, frameDeltaSeconds, constructionReducedMotion);
+        constructionTheatre.update(elapsed, frameDeltaSeconds, constructionReducedMotion);
+        canvas.dataset.constructionCrewOccupancy = JSON.stringify(
+          constructionTheatre.root.userData.constructionOccupancy ?? {},
+        );
+        canvas.dataset.constructionCrewScreen = JSON.stringify(Object.fromEntries(
+          Object.entries(constructionFamily.members).map(([role, member]) => {
+            member.getWorldPosition(constructionScreenProbe).project(camera);
+            return [role, {
+              x: Number(constructionScreenProbe.x.toFixed(3)),
+              y: Number(constructionScreenProbe.y.toFixed(3)),
+              z: Number(constructionScreenProbe.z.toFixed(3)),
+              localX: Number(member.position.x.toFixed(3)),
+              localY: Number(member.position.y.toFixed(3)),
+              localZ: Number(member.position.z.toFixed(3)),
+              scale: Number(member.scale.x.toFixed(3)),
+              rotationY: Number(member.rotation.y.toFixed(3)),
+              emotion: constructionFamily.memberEmotions[role as keyof typeof constructionFamily.memberEmotions]
+                ?? constructionFamily.emotion,
+            }];
+          }),
+        ));
+        canvas.dataset.constructionManagerBrain = constructionFamily.brainState;
+      } else {
+        appliedConstructionCameraKey = '';
       }
 
       if (crownDrifter && crownDrifterPresentationRoot) {
@@ -5832,6 +6343,7 @@ export default function Island5ThreePilot({
       if (pendingTokenMotion && pendingTokenMotion.id !== consumedTokenMotionRequestId) {
         consumedTokenMotionRequestId = pendingTokenMotion.id;
         idleOverviewAt = null;
+        ambientCameraEligibleAt = now + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;
         transition = null;
         controls.enabled = false;
         setBoardActorsVisibleForPreset('manual');
@@ -6055,9 +6567,25 @@ export default function Island5ThreePilot({
         && !activeProfiler
         && !activeTrainRide
         && !caretakerEncounterOpenRef.current
+        && !constructionPresentationRef.current?.active
       ) {
         idleOverviewAt = null;
         applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE);
+      }
+      const ambientCameraAllowed = !isReducedMotion
+        && now >= ambientCameraEligibleAt
+        && !transition
+        && !activeTokenMotion
+        && !activeTour
+        && !activeProfiler
+        && !caretakerEncounterOpenRef.current
+        && (
+          ambientCameraContext === 'build-modal'
+            ? constructionCameraActive && !constructionCameraLocked
+            : !constructionCameraActive && !interactionPausedRef.current
+        );
+      if (ambientCameraAllowed) {
+        applyAmbientCameraNudge(ambientCameraContext, now);
       }
       controls.update();
       publishCameraAuthoringPose(now);
@@ -6106,6 +6634,10 @@ export default function Island5ThreePilot({
         }
       }
       renderer.render(scene, camera);
+      if (constructionAnchor.visible) {
+        canvas.dataset.constructionSceneDrawCalls = String(renderer.info.render.calls);
+        canvas.dataset.constructionSceneTriangles = String(renderer.info.render.triangles);
+      }
       if (!firstFrameRendered && renderer.info.render.calls > 0) {
         firstFrameRendered = true;
         setHasRenderedFrame(true);
@@ -6263,7 +6795,11 @@ export default function Island5ThreePilot({
       moonveilTileEdgeMaterials.forEach((material) => material.dispose());
       abyssalTileEdgeGeometry?.dispose();
       abyssalTileEdgeMaterials.forEach((material) => material.dispose());
+      // Fast-building can advance several authored levels in a few seconds.
+      // WebKit may otherwise retain each retired WebGL context until a later
+      // GC pass, accumulating GPU resources until the native WebView reloads.
       renderer.dispose();
+      renderer.forceContextLoss();
       applyPresetRef.current = () => undefined;
       applyControlledCameraFocusRef.current = () => undefined;
       startTourRef.current = () => undefined;

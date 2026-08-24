@@ -2779,10 +2779,23 @@
 }
 
 .island-run-board__topbar-exit {
-  border-color: rgba(215, 122, 105, 0.82);
-  background: linear-gradient(180deg, #fff3ed 0%, #ffd6ca 100%);
-  color: #7f251c;
+  border-color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(180deg, #ef5757 0%, #ad1717 100%);
+  box-shadow:
+    0 0 0 2px rgba(150, 16, 16, 0.22),
+    0 3px 8px rgba(91, 10, 10, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  color: #fff;
   font-weight: 900;
+  text-shadow: 0 1px 1px rgba(69, 0, 0, 0.7);
+}
+
+.island-run-board__topbar-exit:hover,
+.island-run-board__topbar-exit:focus-visible {
+  border-color: #fff;
+  background: linear-gradient(180deg, #ff6c6c 0%, #c51b1b 100%);
+  outline: 2px solid rgba(255, 255, 255, 0.92);
+  outline-offset: 2px;
 }
 
 .island-run-board__topbar-avatar-img {
@@ -23601,8 +23614,9 @@
 
 .bm2-build-mode .bm2-header {
   position: absolute;
-  top: max(4.6rem, calc(env(safe-area-inset-top, 0px) + 4.35rem));
+  top: max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.35rem));
   left: 50%;
+  z-index: 3;
   width: min(35rem, calc(100vw - 1rem));
   min-height: 3.65rem;
   padding: 0.42rem 0.48rem;
@@ -23693,15 +23707,27 @@
   padding: 0;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 50%;
-  background: rgba(3, 13, 22, 0.54);
+  background: linear-gradient(180deg, #ef5757 0%, #ad1717 100%);
+  box-shadow:
+    0 0 0 2px rgba(121, 8, 8, 0.24),
+    0 5px 11px rgba(64, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
   color: #fff;
+  font-weight: 900;
+  text-shadow: 0 1px 1px rgba(69, 0, 0, 0.72);
+}
+
+.bm2-build-mode .bm2-header__close:hover,
+.bm2-build-mode .bm2-header__close:focus-visible {
+  border-color: #fff;
+  background: linear-gradient(180deg, #ff6c6c 0%, #c51b1b 100%);
 }
 
 .bm2-build-mode__messages {
   position: absolute;
-  top: max(8.55rem, calc(env(safe-area-inset-top, 0px) + 8.3rem));
+  top: max(4.45rem, calc(env(safe-area-inset-top, 0px) + 4.45rem));
   left: 50%;
   width: min(26rem, calc(100vw - 2rem));
   display: grid;
@@ -23769,48 +23795,93 @@
 
 .bm2-dock__summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 9.4rem;
+  gap: 0.28rem;
+  padding: 0.45rem 0.58rem 0.4rem;
+}
+
+.bm2-dock__topline,
+.bm2-dock__identity,
+.bm2-dock__funding {
+  min-width: 0;
+  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.62rem 0.72rem 0.48rem;
+}
+
+.bm2-dock__topline {
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bm2-dock__identity {
+  gap: 0.48rem;
+}
+
+.bm2-dock__funding {
+  gap: 0.5rem;
 }
 
 .bm2-dock .bm2-hero__eyebrow {
   margin: 0;
   font-size: 0.58rem;
+  white-space: nowrap;
 }
 
 .bm2-dock .bm2-hero__title {
-  margin-top: 0.1rem;
-  font-size: 1.05rem;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.94rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.bm2-dock .bm2-hero__subtitle,
-.bm2-dock .bm2-hero__status,
+.bm2-dock .bm2-hero__meta,
 .bm2-dock .bm2-hero__cost {
-  display: inline;
-  margin: 0.18rem 0.42rem 0 0;
-  font-size: 0.68rem;
+  margin: 0;
+  font-size: 0.62rem;
+  line-height: 1.15;
+}
+
+.bm2-dock .bm2-hero__meta {
+  flex: 1;
+  overflow: hidden;
+  color: rgba(232, 247, 249, 0.76);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bm2-dock .bm2-hero__cost {
+  flex: 0 1 auto;
+  max-width: 48%;
+  color: rgba(255, 223, 156, 0.95);
+  font-weight: 800;
+  text-align: right;
 }
 
 .bm2-dock .bm2-progress {
+  flex: 1;
   height: 6px;
-  margin-top: 0.42rem;
+  margin: 0;
 }
 
 .bm2-dock .bm2-level-rail {
   grid-area: auto;
   flex-direction: row;
-  gap: 0.28rem;
-  padding: 0.3rem;
-  border-radius: 14px;
+  flex: 0 0 auto;
+  gap: 0.18rem;
+  padding: 0.12rem;
+  border-radius: 999px;
 }
 
 .bm2-dock .bm2-level-rail__item {
-  min-height: 2.45rem;
-  flex: 1;
-  border-radius: 10px;
-  font-size: 0.72rem;
+  min-width: 1.68rem;
+  min-height: 1.3rem;
+  padding: 0 0.28rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  font-size: 0.56rem;
 }
 
 .bm2-hold-build {
@@ -24048,7 +24119,7 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 3s linear both;
+  animation: bm2-level-toast-timer 1.5s linear both;
 }
 
 /* Build mode owns the viewport. Any already-mounted secondary surface remains
@@ -24059,9 +24130,10 @@
   pointer-events: none !important;
 }
 
-/* Build owns the island view, but it deliberately preserves the real top bar.
-   Everything else in the ordinary board HUD is removed so the focused 3D
-   landmark and the compact Build controls remain the only competing layers. */
+/* Build owns the island view and replaces the ordinary game top bar with its
+   own restoration header in the same safe-area slot. The underlying header
+   and remaining HUD stay hidden so the focused landmark has one clear frame. */
+.island-run-prototype--build-exclusive .island-run-board__topbar,
 .island-run-prototype--build-exclusive .island-run-board__rewardbar-cluster,
 .island-run-prototype--build-exclusive .island-run-prototype__best-next-action-chip,
 .island-run-prototype--build-exclusive .island-run-board__dice-roll-overlay,
@@ -24086,7 +24158,7 @@
 
 @media (max-width: 480px) {
   .bm2-build-mode .bm2-header {
-    top: max(4.5rem, calc(env(safe-area-inset-top, 0px) + 4.15rem));
+    top: max(0.28rem, calc(env(safe-area-inset-top, 0px) + 0.28rem));
     width: calc(100vw - 0.8rem);
     grid-template-columns: 2.3rem minmax(0, 1fr) auto 2rem;
     gap: 0.34rem;
@@ -24099,27 +24171,27 @@
   .bm2-build-mode .bm2-header__essence { padding: 0.32rem 0.4rem; font-size: 0.7rem; }
   .bm2-build-mode .bm2-header__close { width: 1.9rem; height: 1.9rem; }
   .bm2-build-mode__messages {
-    top: max(8.15rem, calc(env(safe-area-inset-top, 0px) + 7.8rem));
+    top: max(4.12rem, calc(env(safe-area-inset-top, 0px) + 4.12rem));
   }
   .bm2-dock {
     width: calc(100vw - 0.55rem);
     border-radius: 18px;
   }
   .bm2-dock__summary {
-    grid-template-columns: minmax(0, 1fr) 7.4rem;
-    gap: 0.48rem;
-    padding: 0.5rem 0.54rem 0.38rem;
+    gap: 0.22rem;
+    padding: 0.38rem 0.48rem 0.32rem;
   }
-  .bm2-dock .bm2-hero__title { font-size: 0.92rem; }
-  .bm2-dock .bm2-hero__subtitle,
-  .bm2-dock .bm2-hero__status,
-  .bm2-dock .bm2-hero__cost { font-size: 0.59rem; }
-  .bm2-dock .bm2-level-rail__item { min-height: 2.2rem; font-size: 0.63rem; }
-  .bm2-hold-build { min-height: 2.9rem; padding: 0.38rem 0.58rem; }
+  .bm2-dock__identity { gap: 0.38rem; }
+  .bm2-dock__funding { gap: 0.4rem; }
+  .bm2-dock .bm2-hero__title { font-size: 0.84rem; }
+  .bm2-dock .bm2-hero__meta,
+  .bm2-dock .bm2-hero__cost { font-size: 0.54rem; }
+  .bm2-dock .bm2-level-rail__item { min-width: 1.5rem; min-height: 1.18rem; font-size: 0.5rem; }
+  .bm2-hold-build { min-height: 2.65rem; padding: 0.32rem 0.54rem; }
   .bm2-hold-build__copy strong { font-size: 0.67rem; }
   .bm2-hold-build__copy small { font-size: 0.51rem; }
   .bm2-dock .bm2-tray { gap: 0.24rem; padding-inline: 0.35rem; }
-  .bm2-dock .bm2-part { min-height: 3.3rem; }
+  .bm2-dock .bm2-part { min-height: 3rem; }
   .bm2-dock .bm2-part__title { font-size: 0.58rem; }
   .bm2-dock .bm2-part__meta { font-size: 0.51rem; }
   .bm2-dock .bm2-complete-state {
@@ -24237,7 +24309,7 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 3s linear both;
+  animation: bm2-level-toast-timer 1.5s linear both;
 }
 
 @keyframes bm2-level-toast-arrive {

@@ -33,6 +33,8 @@ export type CompassStopFragmentProps = {
   userId?: string | null;
   /** Previously saved answers for this island's activity (questionId → value). */
   savedValues?: DraftValues;
+  /** Earlier chapter answers used to narrow dependent option pools. */
+  optionSourceValues?: DraftValues;
   saving?: boolean;
   /** Persist the answered slice. The caller writes to `compass_chapter_states`. */
   onSave: (activityId: string, entries: CompassAnswerEntry[]) => Promise<void> | void;
@@ -45,6 +47,7 @@ export function CompassStopFragment({
   slot = 'wisdom',
   userId,
   savedValues,
+  optionSourceValues,
   saving = false,
   onSave,
   onSkip,
@@ -113,6 +116,7 @@ export function CompassStopFragment({
       <CompassActivityRenderer
         blocks={blocks}
         values={draft}
+        optionSourceValues={{ ...(optionSourceValues ?? {}), ...draft }}
         onChange={handleChange}
         renderContext={makeInnerCompassHintSlot(fragment.chapterId, shadowBridge, draft, handleChange)}
         renderPick={makePickSlot(playerData, handleChange)}

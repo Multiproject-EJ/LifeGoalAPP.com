@@ -1,6 +1,17 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import './compassBook.css';
+import { lockPageScroll } from '../../../utils/scrollLock';
 import type { CompassBookChapterId } from '../types';
 import { isChapterPage, type CompassBookPageId } from '../logic/reading';
 import { CompassQuestLedger, type CompassQuestLedgerEntry } from './CompassQuestLedger';
@@ -16,11 +27,45 @@ import { CompassBookCoverPlate } from './CompassBookCoverPlate';
 import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
+import { CompassBookPresentationControl } from './CompassBookPresentationControl';
+import {
+  COMPASS_BOOK_ISLAND_ENTRANCE_MS,
+  COMPASS_BOOK_PRESENTATION_STORAGE_KEY,
+  parseCompassBookPresentationMode,
+  resolveCompassBookPresentation,
+  shouldStageCompassBookIslandEntrance,
+  type CompassBookPresentationContext,
+  type CompassBookPresentationMode,
+} from '../logic/presentation';
+
+const CompassBookThreeShell = lazy(() =>
+  import('./CompassBookThreeShell').then((module) => ({ default: module.CompassBookThreeShell })),
+);
 
 /** True when the player has asked the OS for less motion. */
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function readPresentationPreference(): CompassBookPresentationMode {
+  if (typeof window === 'undefined') return 'auto';
+  try {
+    return parseCompassBookPresentationMode(
+      window.localStorage.getItem(COMPASS_BOOK_PRESENTATION_STORAGE_KEY),
+    );
+  } catch {
+    return 'auto';
+  }
+}
+
+function storePresentationPreference(mode: CompassBookPresentationMode) {
+  try {
+    window.localStorage.setItem(COMPASS_BOOK_PRESENTATION_STORAGE_KEY, mode);
+  } catch {
+    // Private browsing and hardened storage settings may reject writes. The
+    // selected mode still remains active for this mounted book session.
+  }
 }
 
 export type CompassBookScreenProps = {
@@ -59,6 +104,12 @@ export type CompassBookScreenProps = {
   allowDemo?: boolean;
   /** Start already in demo mode (used by the dev preview harness). */
   initialDemo?: boolean;
+  /** Host context used only to resolve the `auto` presentation policy. */
+  presentationContext?: CompassBookPresentationContext;
+  /** Optional host/dev override; otherwise the locally saved preference wins. */
+  initialPresentationMode?: CompassBookPresentationMode;
+  /** Dev-preview timing override for deterministic choreography screenshots. */
+  islandEntranceDurationMs?: number;
   onClose: () => void;
 };
 
@@ -87,10 +138,34 @@ export function CompassBookScreen({
   hasBlockingOverlay = false,
   allowDemo = false,
   initialDemo = false,
+  presentationContext = 'pwa',
+  initialPresentationMode,
+  islandEntranceDurationMs,
   onClose,
 }: CompassBookScreenProps) {
+  const initialSetupRef = useRef<{
+    preference: CompassBookPresentationMode;
+    reducedMotion: boolean;
+    stageIslandEntrance: boolean;
+  } | null>(null);
+  if (!initialSetupRef.current) {
+    const preference = initialPresentationMode ?? readPresentationPreference();
+    const reducedMotion = prefersReducedMotion();
+    initialSetupRef.current = {
+      preference,
+      reducedMotion,
+      stageIslandEntrance: shouldStageCompassBookIslandEntrance({
+        context: presentationContext,
+        initialActivityId,
+        preference,
+        reducedMotion,
+      }),
+    };
+  }
+  const initialSetup = initialSetupRef.current;
+
   const [view, setView] = useState<CompassBookView>(() => {
-    if (initialChapterId && initialActivityId) {
+    if (initialChapterId && initialActivityId && !initialSetup.stageIslandEntrance) {
       return { kind: 'flow', chapterId: initialChapterId, startActivityId: initialActivityId };
     }
     if (initialPageId) return { kind: 'page', pageId: initialPageId };
@@ -98,6 +173,25 @@ export function CompassBookScreen({
     return { kind: 'page', pageId: 'reading' };
   });
   const [demo, setDemo] = useState(allowDemo && initialDemo);
+  const [presentationPreference, setPresentationPreference] =
+    useState<CompassBookPresentationMode>(
+      initialSetup.preference,
+    );
+  const [reducedMotion, setReducedMotion] = useState(initialSetup.reducedMotion);
+  const [threeAvailable, setThreeAvailable] = useState(true);
+  const [pendingInitialFlow, setPendingInitialFlow] = useState<{
+    chapterId: CompassBookChapterId;
+    activityId: string;
+  } | null>(() => (
+    initialSetup.stageIslandEntrance && initialChapterId && initialActivityId
+      ? { chapterId: initialChapterId, activityId: initialActivityId }
+      : null
+  ));
+  const [completionMoment, setCompletionMoment] = useState<{
+    key: number;
+    kind: 'fragment' | 'chapter';
+    issuedAt: number;
+  }>({ key: 0, kind: 'fragment', issuedAt: -Infinity });
   const book = useCompassBook(session, { demo });
   const userId = session?.user?.id ?? 'local';
 
@@ -105,7 +199,8 @@ export function CompassBookScreen({
   // straight to a fragment or a specific page skips it — the player asked for
   // that destination, not to browse.
   const [coverOpen, setCoverOpen] = useState(
-    () => !initialActivityId && !initialPageId && !prefersReducedMotion(),
+    () => initialSetup.stageIslandEntrance
+      || (!initialActivityId && !initialPageId && !initialSetup.reducedMotion),
   );
 
   // Page-turn state. `turnKey` restarts the CSS animation on every turn, even
@@ -116,6 +211,39 @@ export function CompassBookScreen({
     key: 0,
   });
   const turnSeqRef = useRef(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+  const flowReturnFocusRef = useRef<{
+    chapterId: CompassBookChapterId;
+    key: string;
+  } | null>(null);
+
+  useEffect(() => {
+    lastFocusedRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const releaseScroll = lockPageScroll(['body', 'documentElement']);
+    const focusFrame = window.requestAnimationFrame(() => {
+      const closeButton = dialogRef.current?.querySelector<HTMLElement>(
+        '[aria-label="Close Compass Book"]',
+      );
+      (closeButton ?? dialogRef.current)?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      releaseScroll();
+      lastFocusedRef.current?.focus?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(media?.matches ?? false);
+    update();
+    media?.addEventListener?.('change', update);
+    return () => media?.removeEventListener?.('change', update);
+  }, []);
 
   const openPage = useCallback((pageId: CompassBookPageId) => {
     setView((current) => {
@@ -145,11 +273,34 @@ export function CompassBookScreen({
     openPage(initialPageId);
   }, [initialPageId, openPage]);
 
-  const startFlow = useCallback(
-    (chapterId: CompassBookChapterId, startActivityId?: string) =>
-      setView({ kind: 'flow', chapterId, startActivityId }),
-    [],
-  );
+  const startFlow = useCallback((
+    chapterId: CompassBookChapterId,
+    startActivityId?: string,
+    returnFocusKey?: string,
+  ) => {
+    flowReturnFocusRef.current = returnFocusKey ? { chapterId, key: returnFocusKey } : null;
+    setView({ kind: 'flow', chapterId, startActivityId });
+  }, []);
+
+  useEffect(() => {
+    if (view.kind !== 'page' || !isChapterPage(view.pageId)) return undefined;
+    const pending = flowReturnFocusRef.current;
+    if (!pending || pending.chapterId !== view.pageId) return undefined;
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      const triggers = dialogRef.current?.querySelectorAll<HTMLElement>(
+        '[data-compass-flow-trigger]',
+      );
+      const target = triggers
+        ? Array.from(triggers).find(
+            (trigger) => trigger.dataset.compassFlowTrigger === pending.key,
+          )
+        : null;
+      target?.focus();
+      flowReturnFocusRef.current = null;
+    });
+    return () => window.cancelAnimationFrame(focusFrame);
+  }, [view]);
 
   useEffect(() => {
     // Escape belongs to whatever is on top. While an overlay covers the book,
@@ -173,10 +324,95 @@ export function CompassBookScreen({
   // The rail highlights the chapter a flow belongs to, so answering a fragment
   // never looks like it left the book.
   const activePageId: CompassBookPageId = view.kind === 'flow' ? view.chapterId : view.pageId;
+  const resolvedPresentation = resolveCompassBookPresentation({
+    preference: presentationPreference,
+    context: presentationContext,
+    surface: view.kind,
+    reducedMotion,
+    threeAvailable,
+  });
+  const resolvedIslandEntranceDurationMs = import.meta.env.DEV && islandEntranceDurationMs
+    ? Math.max(COMPASS_BOOK_ISLAND_ENTRANCE_MS, islandEntranceDurationMs)
+    : COMPASS_BOOK_ISLAND_ENTRANCE_MS;
 
-  return (
-    <div className="compass-book" role="dialog" aria-modal="true" aria-label="Compass Book">
+  useEffect(() => {
+    if (!pendingInitialFlow) return undefined;
+
+    const enterFlow = () => {
+      setCoverOpen(false);
+      setView({
+        kind: 'flow',
+        chapterId: pendingInitialFlow.chapterId,
+        startActivityId: pendingInitialFlow.activityId,
+      });
+      setPendingInitialFlow(null);
+    };
+
+    // Explicit 2D, a newly enabled reduced-motion preference, or WebGL failure
+    // must never make a player wait for a cinematic they cannot see.
+    if (resolvedPresentation === '2d') {
+      enterFlow();
+      return undefined;
+    }
+
+    const timer = window.setTimeout(enterFlow, resolvedIslandEntranceDurationMs);
+    return () => window.clearTimeout(timer);
+  }, [pendingInitialFlow, resolvedIslandEntranceDurationMs, resolvedPresentation]);
+
+  const changePresentation = useCallback((mode: CompassBookPresentationMode) => {
+    setPresentationPreference(mode);
+    storePresentationPreference(mode);
+    if (mode !== '2d') setThreeAvailable(true);
+  }, []);
+
+  return createPortal(
+    <div
+      ref={dialogRef}
+      className="compass-book"
+      data-page-id={activePageId}
+      data-presentation={resolvedPresentation}
+      data-presentation-preference={presentationPreference}
+      data-presentation-context={presentationContext}
+      data-entry-choreography={pendingInitialFlow ? 'island_summon' : 'idle'}
+      data-entry-duration-ms={resolvedIslandEntranceDurationMs}
+      style={{
+        '--cbk-island-entrance-ms': `${resolvedIslandEntranceDurationMs}ms`,
+      } as CSSProperties}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Compass Book"
+      tabIndex={-1}
+    >
       <div className="compass-book__backdrop" aria-hidden="true" onClick={onClose} />
+      {resolvedPresentation === '3d' ? (
+        <Suspense fallback={null}>
+          <CompassBookThreeShell
+            activePageId={activePageId}
+            open={!coverOpen}
+            turnKey={turn.key}
+            turnMs={turn.ms}
+            showQuestLedger={Boolean(questLedger)}
+            celebrationKey={completionMoment.key}
+            celebrationKind={completionMoment.kind}
+            celebrationIssuedAt={completionMoment.issuedAt}
+            islandEntranceActive={Boolean(pendingInitialFlow)}
+            islandEntranceDurationMs={resolvedIslandEntranceDurationMs}
+            onAvailabilityChange={setThreeAvailable}
+            onSelectPage={openPage}
+            onBackgroundClick={onClose}
+          />
+        </Suspense>
+      ) : null}
+      <CompassBookPresentationControl
+        preference={presentationPreference}
+        resolved={resolvedPresentation}
+        onChange={changePresentation}
+      />
+      {pendingInitialFlow ? (
+        <p className="compass-book__entrance-status" role="status" aria-live="polite">
+          Opening your next fragment…
+        </p>
+      ) : null}
       <div className="compass-book__sheet">
         {coverOpen ? <CompassBookCoverPlate onOpened={() => setCoverOpen(false)} /> : null}
         <div className="compass-book__spread">
@@ -242,9 +478,14 @@ export function CompassBookScreen({
                 session={session}
                 getProgress={book.getProgress}
                 getChapterState={book.getChapterState}
-                onStartFlow={(activityId) =>
-                  startFlow(view.pageId as CompassBookChapterId, activityId)
+                onStartFlow={(activityId, returnFocusKey) =>
+                  startFlow(
+                    view.pageId as CompassBookChapterId,
+                    activityId,
+                    returnFocusKey,
+                  )
                 }
+                onBeginMethodRevisit={book.beginChapterMethodRevisit}
                 onBack={() => openPage('reading')}
                 onClose={onClose}
               />
@@ -268,6 +509,22 @@ export function CompassBookScreen({
                 startActivityId={view.startActivityId}
                 getChapterState={book.getChapterState}
                 onSaveActivity={book.saveActivityAnswers}
+                onActivityCompleted={({ chapterSealed }) => {
+                  const shouldCelebrateInThree = threeAvailable && (
+                    presentationPreference === '3d'
+                    || (
+                      presentationPreference === 'auto'
+                      && presentationContext === 'island_run'
+                      && !reducedMotion
+                    )
+                  );
+                  if (!shouldCelebrateInThree) return;
+                  setCompletionMoment((current) => ({
+                    key: current.key + 1,
+                    kind: chapterSealed ? 'chapter' : 'fragment',
+                    issuedAt: performance.now(),
+                  }));
+                }}
                 saving={book.saving}
                 onExit={() => openPage(view.chapterId)}
               />
@@ -283,6 +540,7 @@ export function CompassBookScreen({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

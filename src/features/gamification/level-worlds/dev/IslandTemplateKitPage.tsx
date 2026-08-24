@@ -4,6 +4,7 @@ import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRoutin
 import { SUNKEN_SANDS_TREASURE_ROLL_TARGET } from '../services/islandRunSignatureMissions';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
+import type { IslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import './IslandTemplateKitPage.css';
 
 type ViewMode = 'blueprint' | 'clay' | 'proof' | '3d';
@@ -19,6 +20,11 @@ function readInitialPreviewState() {
   const islandParam = Number(params.get('island'));
   const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
+  const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
+  const requestedLandmark = params.get('landmark');
+  const constructionLandmark = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'].includes(requestedLandmark ?? '')
+    ? requestedLandmark!
+    : 'hatchery';
   const treasureRollsParam = Number(params.get('treasureRolls'));
   const treasureRolls = Number.isFinite(treasureRollsParam)
     ? Math.max(0, Math.min(SUNKEN_SANDS_TREASURE_ROLL_TARGET, Math.floor(treasureRollsParam)))
@@ -32,6 +38,11 @@ function readInitialPreviewState() {
     worldSourceNumber,
     treasureRolls,
     overlays: params.get('guides') !== '0',
+    construction: params.get('construction') === '1',
+    constructionWorking: params.get('working') !== '0',
+    constructionProgress: Number.isFinite(constructionProgress) ? constructionProgress : 0.58,
+    constructionLandmark,
+    constructionReducedMotion: params.get('reduced') === '1',
   };
 }
 
@@ -142,6 +153,27 @@ export default function IslandTemplateKitPage() {
   const [overlays, setOverlays] = useState(initialState.overlays);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
+  const constructionPresentation = useMemo<IslandRunConstructionPresentation | null>(() => {
+    if (!initialState.construction) return null;
+    return {
+      active: true,
+      working: initialState.constructionWorking,
+      cameraLocked: initialState.constructionWorking,
+      phase: initialState.constructionProgress < 0.2
+        ? 'foundation'
+        : initialState.constructionProgress < 0.45
+          ? 'frame'
+          : initialState.constructionProgress < 0.8
+            ? 'assemble'
+            : 'finish',
+      progress: initialState.constructionProgress,
+      sequence: 1,
+      cloudCover: initialState.constructionWorking ? 0.46 : 0,
+      targetStopId: initialState.constructionLandmark,
+      targetLevel: Math.min(3, initialState.buildLevel + 1),
+      reducedMotion: initialState.constructionReducedMotion,
+    };
+  }, [initialState]);
   const evidenceCapture = useMemo(
     () => new URLSearchParams(window.location.search).get('island3dEvidence') === '1',
     [],
@@ -203,6 +235,19 @@ export default function IslandTemplateKitPage() {
               islandNumber={initialState.islandNumber}
               worldSourceNumber={initialState.worldSourceNumber}
               buildLevel={buildLevel}
+              landmarkBuildLevels={initialState.construction ? {
+                hatchery: initialState.constructionLandmark === 'hatchery' ? buildLevel : 3,
+                habit: initialState.constructionLandmark === 'habit' ? buildLevel : 3,
+                event: initialState.constructionLandmark === 'mystery' ? buildLevel : 3,
+                wisdom: initialState.constructionLandmark === 'wisdom' ? buildLevel : 3,
+                boss: initialState.constructionLandmark === 'boss' ? buildLevel : 3,
+              } : undefined}
+              cameraFocusPreset={initialState.construction
+                ? initialState.constructionLandmark === 'mystery'
+                  ? 'event'
+                  : initialState.constructionLandmark as 'hatchery' | 'habit' | 'wisdom' | 'boss'
+                : null}
+              constructionPresentation={constructionPresentation}
               sunkenSandsTreasurePresentation={{
                 revealProgress: initialState.treasureRolls / SUNKEN_SANDS_TREASURE_ROLL_TARGET,
                 ready: initialState.treasureRolls >= SUNKEN_SANDS_TREASURE_ROLL_TARGET,

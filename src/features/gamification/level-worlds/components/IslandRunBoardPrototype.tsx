@@ -627,10 +627,15 @@ import {
   resolveBuildLevelCompletionPresentation,
   type BuildLevelCompletionPresentation,
 } from '../services/islandRunBuildModalV2ViewModel';
+import { deriveIslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
-import type { Island3DQualitySelection, Island5CameraPresetId } from '../dev/island5ThreePilotContract';
+import {
+  ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS,
+  type Island3DQualitySelection,
+  type Island5CameraPresetId,
+} from '../dev/island5ThreePilotContract';
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 
@@ -705,8 +710,8 @@ const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_REPEAT_DELAY_MS = 520;
-const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_000;
-const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 3_000;
+const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 500;
+const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 1_500;
 
 type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
   reviewId: number;
@@ -1890,7 +1895,10 @@ export function IslandRunBoardPrototype({
   }, [showBoardLegendPreview]);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(() => (
+    import.meta.env.DEV
+    && new URLSearchParams(window.location.search).get('islandRunDebugPanel') === '1'
+  ));
   const [showDevLuckyRollOverlay, setShowDevLuckyRollOverlay] = useState(false);
   const [devLuckyRollTargetIsland, setDevLuckyRollTargetIsland] = useState<number | null>(null);
   const [devLuckyRollCollectMode, setDevLuckyRollCollectMode] = useState<'bank_only' | 'post_rare_collect_travel'>('bank_only');
@@ -2607,6 +2615,8 @@ export function IslandRunBoardPrototype({
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
+  const [isBuildBurstActive, setIsBuildBurstActive] = useState(false);
+  const [isBuildCameraCooldownActive, setIsBuildCameraCooldownActive] = useState(false);
   const [isBuildOpenQueued, setIsBuildOpenQueued] = useState(false);
   const [buildCameraFocusRequest, setBuildCameraFocusRequest] = useState<{
     preset: Island5CameraPresetId;
@@ -2669,7 +2679,6 @@ export function IslandRunBoardPrototype({
   const [showWelcomePackModal, setShowWelcomePackModal] = useState(false);
   const [welcomePackDismissedThisSession, setWelcomePackDismissedThisSession] = useState(false);
   const [showFirstVoyageDepartureModal, setShowFirstVoyageDepartureModal] = useState(false);
-  const [hasConfirmedFirstVoyageDeparture, setHasConfirmedFirstVoyageDeparture] = useState(false);
   const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimFullWelcomePackResult | null>(null);
   const [welcomePackBundleOnlyResult, setWelcomePackBundleOnlyResult] = useState<ClaimWelcomePackRewardBundleResult | null>(null);
   const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
@@ -3300,11 +3309,27 @@ export function IslandRunBoardPrototype({
   const buildTapQueueRef = useRef<Array<{ stopIndex: number; targetPartNumber: 1 | 2 | 3 | 4 | 5 }>>([]);
   const isBuildTapQueueProcessingRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
+  const buildBurstTimeoutRef = useRef<number | null>(null);
+  const buildCameraCooldownTimeoutRef = useRef<number | null>(null);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
+  const markBuildChoreographyActive = useCallback((lingerMs = 2400): void => {
+    setIsBuildBurstActive(true);
+    setIsBuildCameraCooldownActive(true);
+    if (buildBurstTimeoutRef.current !== null) window.clearTimeout(buildBurstTimeoutRef.current);
+    if (buildCameraCooldownTimeoutRef.current !== null) window.clearTimeout(buildCameraCooldownTimeoutRef.current);
+    buildBurstTimeoutRef.current = window.setTimeout(() => {
+      buildBurstTimeoutRef.current = null;
+      if (!holdBuildSpendActiveRef.current) setIsBuildBurstActive(false);
+    }, lingerMs);
+    buildCameraCooldownTimeoutRef.current = window.setTimeout(() => {
+      buildCameraCooldownTimeoutRef.current = null;
+      if (!holdBuildSpendActiveRef.current) setIsBuildCameraCooldownActive(false);
+    }, Math.max(ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS, lingerMs));
+  }, []);
   useEffect(() => {
     buildTapQueueRef.current = [];
     clearBuildLevelReview();
@@ -3315,6 +3340,16 @@ export function IslandRunBoardPrototype({
       buildTapQueueRef.current = [];
       holdBuildSpendActiveRef.current = false;
       setIsBuildHoldActive(false);
+      setIsBuildBurstActive(false);
+      setIsBuildCameraCooldownActive(false);
+      if (buildBurstTimeoutRef.current !== null) {
+        window.clearTimeout(buildBurstTimeoutRef.current);
+        buildBurstTimeoutRef.current = null;
+      }
+      if (buildCameraCooldownTimeoutRef.current !== null) {
+        window.clearTimeout(buildCameraCooldownTimeoutRef.current);
+        buildCameraCooldownTimeoutRef.current = null;
+      }
       clearBuildLevelReview();
     }
   }, [clearBuildLevelReview, showBuildPanel]);
@@ -3336,6 +3371,8 @@ export function IslandRunBoardPrototype({
   useEffect(() => () => {
     buildTapQueueRef.current = [];
     holdBuildSpendActiveRef.current = false;
+    if (buildBurstTimeoutRef.current !== null) window.clearTimeout(buildBurstTimeoutRef.current);
+    if (buildCameraCooldownTimeoutRef.current !== null) window.clearTimeout(buildCameraCooldownTimeoutRef.current);
   }, []);
 
   const updateMarketOwnedBundles = useCallback((
@@ -6378,16 +6415,6 @@ export function IslandRunBoardPrototype({
   }, [showFirstVoyageDepartureModal]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !hasHydratedRuntimeState) return;
-    const hasSeenStory = runtimeState.storyPrologueSeen
-      || window.localStorage.getItem(storySeenStorageKey) === 'true';
-    if (hasSeenStory || isArcadeStoryJourney) return;
-    void fetch('/storyline/episode-001/manifest.json').catch(() => undefined);
-    const lumaApproach = new Image();
-    lumaApproach.src = '/storyline/episode-001/006-luma-approach.webp';
-  }, [hasHydratedRuntimeState, isArcadeStoryJourney, runtimeState.storyPrologueSeen, storySeenStorageKey]);
-
-  useEffect(() => {
     if (
       typeof window === 'undefined'
       || !hasHydratedRuntimeState
@@ -6397,7 +6424,6 @@ export function IslandRunBoardPrototype({
       || showEntryAudioModal
       || showWelcomePackModal
       || welcomePackAutoShowEligibility !== 'already_claimed'
-      || hasConfirmedFirstVoyageDeparture
     ) {
       return;
     }
@@ -6405,7 +6431,6 @@ export function IslandRunBoardPrototype({
       || window.localStorage.getItem(storySeenStorageKey) === 'true';
     if (!hasSeenStory) setShowFirstVoyageDepartureModal(true);
   }, [
-    hasConfirmedFirstVoyageDeparture,
     hasDismissedEntryAudioModal,
     hasHydratedRuntimeState,
     isArcadeStoryJourney,
@@ -6415,34 +6440,6 @@ export function IslandRunBoardPrototype({
     showWelcomePackModal,
     storySeenStorageKey,
     welcomePackAutoShowEligibility,
-  ]);
-
-  useEffect(() => {
-    if (
-      typeof window === 'undefined'
-      || !hasHydratedRuntimeState
-      || isIslandVisualPreview
-      || isArcadeStoryJourney
-      || showWelcomePackModal
-      || showFirstVoyageDepartureModal
-      || !hasConfirmedFirstVoyageDeparture
-    ) {
-      return;
-    }
-
-    const hasSeenStory = runtimeState.storyPrologueSeen || window.localStorage.getItem(storySeenStorageKey) === 'true';
-    if (!hasSeenStory) {
-      setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
-    }
-  }, [
-    hasHydratedRuntimeState,
-    hasConfirmedFirstVoyageDeparture,
-    isArcadeStoryJourney,
-    isIslandVisualPreview,
-    runtimeState.storyPrologueSeen,
-    showFirstVoyageDepartureModal,
-    showWelcomePackModal,
-    storySeenStorageKey,
   ]);
 
   useEffect(() => {
@@ -6561,6 +6558,15 @@ export function IslandRunBoardPrototype({
       : null
   ), [buildLevelCompletion, buildModalV2ViewModel.activeLandmark]);
 
+  const constructionPresentation = useMemo(() => deriveIslandRunConstructionPresentation({
+    isOpen: showBuildPanel,
+    isBuildHoldActive,
+    isBuildBurstActive,
+    isCameraLocked: isBuildCameraCooldownActive,
+    viewModel: buildModalV2ViewModel,
+    levelReview: buildModalLevelReview,
+  }), [buildModalLevelReview, buildModalV2ViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
+
   const activeBuildCameraStopId = showBuildPanel
     ? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
     : null;
@@ -6575,6 +6581,10 @@ export function IslandRunBoardPrototype({
       }
       return;
     }
+    // Construction owns the current shot. If completing a part/level advances
+    // the sequential target, defer that landmark-to-landmark camera move until
+    // the build burst (including its existing recent-action linger) is quiet.
+    if (constructionPresentation.cameraLocked) return;
     // A completed final landmark has no next sequential target. While Build is
     // still open, preserve the last close-up instead of zooming to overview.
     if (!activeBuildCameraStopId) return;
@@ -6591,7 +6601,7 @@ export function IslandRunBoardPrototype({
     });
     setFocusedStopId(activeBuildCameraStopId);
     setCameraMode('stop_focus');
-  }, [activeBuildCameraStopId, showBuildPanel]);
+  }, [activeBuildCameraStopId, constructionPresentation.cameraLocked, showBuildPanel]);
 
   // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
   // landmark has a next build step the player can pay for right now with their
@@ -10711,6 +10721,7 @@ export function IslandRunBoardPrototype({
       handleAdvanceBuildLevelReview();
       return;
     }
+    markBuildChoreographyActive();
     buildTapQueueRef.current.push({
       stopIndex,
       targetPartNumber,
@@ -10719,17 +10730,19 @@ export function IslandRunBoardPrototype({
       isBuildTapQueueProcessingRef.current = true;
       void processBuildTapQueue();
     }
-  }, [handleAdvanceBuildLevelReview, processBuildTapQueue]);
+  }, [handleAdvanceBuildLevelReview, markBuildChoreographyActive, processBuildTapQueue]);
 
   const stopBuildHold = useCallback((): void => {
     holdBuildSpendActiveRef.current = false;
     setIsBuildHoldActive(false);
-  }, []);
+    markBuildChoreographyActive(1800);
+  }, [markBuildChoreographyActive]);
 
   const startBuildHold = useCallback((stopIndex: number): void => {
     if (holdBuildSpendActiveRef.current || buildLevelCompletionRef.current) return;
     holdBuildSpendActiveRef.current = true;
     setIsBuildHoldActive(true);
+    markBuildChoreographyActive(4000);
     setBuildHoldFeedbackLabel('⚒️ Building steadily…');
     void (async () => {
       while (holdBuildSpendActiveRef.current) {
@@ -10745,7 +10758,7 @@ export function IslandRunBoardPrototype({
         await wait(BUILD_HOLD_REPEAT_DELAY_MS);
       }
     })();
-  }, [handleSpendEssenceOnBuild, stopBuildHold]);
+  }, [handleSpendEssenceOnBuild, markBuildChoreographyActive, stopBuildHold]);
 
   const handleCompleteActiveStop = (successMessage?: string) => {
     if (!activeStopId) return;
@@ -12266,13 +12279,6 @@ export function IslandRunBoardPrototype({
         },
       });
     },
-    storyRewardClaim: (essenceReward: number) => {
-      if (essenceReward <= 0) {
-        return;
-      }
-      awardContractV2Essence(essenceReward, 'island_story_episode_reward');
-      setLandingText(`Story reward claimed: +${essenceReward} money.`);
-    },
     awardBondXp: (creatureId: string, xpAmount: number) => {
       const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
       if (!target || xpAmount <= 0) return;
@@ -12719,12 +12725,12 @@ export function IslandRunBoardPrototype({
     isIslandClearTravelReady && !isNarrativeSurfaceBlockedByNonClearCelebration
   );
 
-  let isGlobalPrologueSeenForNarrative = runtimeState.storyPrologueSeen;
-  if (!isGlobalPrologueSeenForNarrative && typeof window !== 'undefined') {
+  let isOpeningBriefingCompleteForNarrative = runtimeState.storyPrologueSeen;
+  if (!isOpeningBriefingCompleteForNarrative && typeof window !== 'undefined') {
     try {
-      isGlobalPrologueSeenForNarrative = window.localStorage.getItem(storySeenStorageKey) === 'true';
+      isOpeningBriefingCompleteForNarrative = window.localStorage.getItem(storySeenStorageKey) === 'true';
     } catch {
-      isGlobalPrologueSeenForNarrative = false;
+      isOpeningBriefingCompleteForNarrative = false;
     }
   }
 
@@ -12762,8 +12768,7 @@ export function IslandRunBoardPrototype({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
     hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
-    isGlobalPrologueActive: activeStoryEpisode?.kind === 'global_prologue',
-    isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
+    isOpeningBriefingComplete: isOpeningBriefingCompleteForNarrative,
     firstSessionTutorialState: runtimeState.firstSessionTutorialState,
     isNarrativeSurfaceBlocked,
     canDisplayTravelReadyClosingOverClaimedCelebration,
@@ -12846,6 +12851,9 @@ export function IslandRunBoardPrototype({
     }
 
     setActiveStoryEpisode(null);
+  };
+
+  const handleBeginFirstVoyage = useCallback(() => {
     try {
       window.localStorage.setItem(storySeenStorageKey, 'true');
     } catch {
@@ -12855,10 +12863,14 @@ export function IslandRunBoardPrototype({
       session,
       client,
       storyPrologueSeen: true,
-      triggerSource: 'close_story_reader_marker',
+      triggerSource: 'first_voyage_briefing_complete',
     });
     setRuntimeState(next);
-  };
+    runtimeStateRef.current = next;
+    setShowFirstVoyageDepartureModal(false);
+    playIslandRunSound('island_travel');
+    triggerIslandRunHaptic('island_travel');
+  }, [client, session, storySeenStorageKey]);
   const shouldShowCaretakerTalkAction = hasCaretakerContent;
   const inhabitantCommunicationAccess = useMemo(
     () => getIslandCommunicationAccess(runtimeState, 'inhabitant'),
@@ -12872,14 +12884,11 @@ export function IslandRunBoardPrototype({
   );
   const concordHubEntryState = useMemo(
     () => resolveIslandRunConcordHubEntryState(runtimeState, {
-      hasUnreadStory: !isGlobalPrologueSeenForNarrative,
+      hasUnreadStory: false,
     }),
-    [isGlobalPrologueSeenForNarrative, runtimeState],
+    [runtimeState],
   );
   const concordEntryButtonState = concordHubEntryState;
-  const openGlobalStoryReader = useCallback(() => {
-    setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
-  }, []);
   const openCurrentChampionshipCeremony = useCallback(() => {
     if (!championshipPresentation) return;
     setShowChampionshipOpeningModal(true);
@@ -12902,13 +12911,9 @@ export function IslandRunBoardPrototype({
     });
   }, [championshipPresentation, closeCurrentChampionshipOpening]);
   const handleConcordEntryClick = useCallback(() => {
-    if (concordEntryButtonState.primaryAction === 'open-story') {
-      openGlobalStoryReader();
-      return;
-    }
     setTechCollectionModal(null);
     setShowConcordHubModal(true);
-  }, [concordEntryButtonState.primaryAction, openGlobalStoryReader]);
+  }, []);
   const closeConcordHub = useCallback(() => {
     setShowConcordHubModal(false);
     setTechCollectionModal(null);
@@ -14259,6 +14264,7 @@ export function IslandRunBoardPrototype({
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
                 interactionPaused={doesModalOwnAttention}
+                constructionPresentation={constructionPresentation}
                 journeyDiscArenaCenterActive={journeyDiscCenterActive}
                 arenaBattlePresentation={arenaBattlePresentation}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
@@ -17773,32 +17779,26 @@ export function IslandRunBoardPrototype({
           <section className="first-voyage-departure__card">
             <img
               className="first-voyage-departure__art"
-              src="/storyline/episode-001/006-luma-approach.webp"
-              alt="The expedition vessel approaching the illuminated islands of Luma at sunrise"
+              src="/islands/001/story/arrival/001-covered-lights.webp"
+              alt="Luma Isle at dawn with its landmark lights covered"
             />
             <div className="first-voyage-departure__shade" aria-hidden="true" />
             <div className="first-voyage-departure__content">
-              <p className="first-voyage-departure__eyebrow">Your first voyage</p>
-              <h2 id="first-voyage-departure-title">Luma Isle is on the horizon</h2>
-              <p>Your issue is secured and the island is ready below deck. The opening story begins during the final approach.</p>
+              <p className="first-voyage-departure__eyebrow">Mission 001 · Luma Isle</p>
+              <h2 id="first-voyage-departure-title">Wake the island’s lights</h2>
+              <p>The five landmarks have gone dark. Your builder crew is ready to restore them and reopen the route to the Arena.</p>
               <div className="first-voyage-departure__ready" role="status">
                 <span aria-hidden="true" />
-                Island Run ready
+                Builder crew ready
               </div>
               <button
                 type="button"
                 className="first-voyage-departure__sail"
-                onClick={() => {
-                  setHasConfirmedFirstVoyageDeparture(true);
-                  setShowFirstVoyageDepartureModal(false);
-                  setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
-                  playIslandRunSound('island_travel');
-                  triggerIslandRunHaptic('island_travel');
-                }}
+                onClick={handleBeginFirstVoyage}
               >
-                Sail to Luma Isle
+                Begin the expedition
               </button>
-              <small>The loaded island will be waiting when the story ends.</small>
+              <small>You will enter the live island board immediately.</small>
             </div>
           </section>
         </div>,
@@ -18129,17 +18129,6 @@ export function IslandRunBoardPrototype({
                         <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">✦</span>
                         <span>Caretaker</span>
                       </button>
-                      <button
-                        type="button"
-                        className="island-concord-hub-modal__channel"
-                        onClick={() => {
-                          closeConcordHub();
-                          openGlobalStoryReader();
-                        }}
-                      >
-                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
-                        <span>Story</span>
-                      </button>
                 </div>
                 <button type="button" className="island-concord-hub-modal__return" onClick={closeConcordHub}>Return to island</button>
               </section>
@@ -18190,17 +18179,18 @@ export function IslandRunBoardPrototype({
         onOpenStory={championshipPresentation?.manifestPath ? openCurrentChampionshipStory : undefined}
       />
 
-      <IslandStoryReader
-        manifestPath={activeStoryEpisode?.manifestPath ?? '/storyline/episode-001/manifest.json'}
-        isOpen={showStoryReader}
-        onClose={handleCloseStoryReader}
-        onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}
-        completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode?.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : activeStoryEpisode?.kind === 'championship' ? `${championshipPresentation?.title ?? 'The championship'} begins` : undefined}
-        completionText={activeStoryEpisode?.kind === 'championship' ? 'The opening ceremony is complete. The Arena is waiting.' : activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
-        completionButtonLabel={activeStoryEpisode?.kind === 'championship' ? 'Enter the Arena' : activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
-        musicEnabled={musicEnabled}
-        onMusicEnabledChange={(enabled) => updateAudioPreferences({ musicEnabled: enabled })}
-      />
+      {activeStoryEpisode ? (
+        <IslandStoryReader
+          manifestPath={activeStoryEpisode.manifestPath}
+          isOpen={showStoryReader}
+          onClose={handleCloseStoryReader}
+          completionTitle={activeStoryEpisode.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : activeStoryEpisode.kind === 'championship' ? `${championshipPresentation?.title ?? 'The championship'} begins` : undefined}
+          completionText={activeStoryEpisode.kind === 'championship' ? 'The opening ceremony is complete. The Arena is waiting.' : activeStoryEpisode.kind === 'island_arrival' || activeStoryEpisode.kind === 'island_resolution' || activeStoryEpisode.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
+          completionButtonLabel={activeStoryEpisode.kind === 'championship' ? 'Enter the Arena' : activeStoryEpisode.kind === 'island_arrival' || activeStoryEpisode.kind === 'island_resolution' || activeStoryEpisode.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
+          musicEnabled={musicEnabled}
+          onMusicEnabledChange={(enabled) => updateAudioPreferences({ musicEnabled: enabled })}
+        />
+      ) : null}
 
       {islandNarrativeOpeningFlow.activeDialogue ? (
         <IslandNarrativeDialogue
@@ -18912,6 +18902,7 @@ export function IslandRunBoardPrototype({
           devTimedEventOverrideEventId={devTimedEventOverrideEventId}
           onSetDevTimedEventOverride={handleSetDevTimedEventOverride}
           onGrantDevTimedEventTickets={handleGrantDevTimedEventTickets}
+          onGrantDevEssence={handleDevGrantEssence}
           showLuckyRollDevLauncher={isDevModeEnabled}
           onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}
           onStartLuckyRollDevSession={handleDevStartLuckyRollSession}

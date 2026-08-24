@@ -16,6 +16,9 @@ import {
   ISLAND_3D_PERFORMANCE_TARGETS,
   ISLAND_3D_PROFILE_DURATION_MS,
   ISLAND_3D_ROUTE_RADIUS,
+  ISLAND_3D_AMBIENT_POV_INTERVAL_MS,
+  ISLAND_3D_BOARD_POV_IDLE_DELAY_MS,
+  ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS,
   ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
   ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
   ISLAND_3D_TOKEN_HOP_ARC_HEIGHT,
@@ -38,24 +41,41 @@ import {
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
 } from '../../dev/Island1ThreeWorld';
+import { prepareIslandConstructionLevelDelta } from '../../dev/IslandConstructionLevelDelta';
 import {
+  ISLAND_LANDMARK_CONSTRUCTION_PROFILES,
+  resolveIslandLandmarkConstructionProfile,
+} from '../../dev/IslandConstructionAuthoring';
+import {
+  buildIsland2Landmark as buildIsland5SunshoreLandmark,
   createIsland2WorldMaterials as createIsland5SunshoreWorldMaterials,
   createIsland5SunwheelArena,
   ISLAND_5_SUNWHEEL_OPENING_PRESENTATION_BASELINE_LEVEL,
 } from '../../dev/Island2ThreeWorld';
-import { createIsland3FrostmoonMaterials } from '../../dev/Island3FrostmoonThreeWorld';
+import {
+  buildIsland2CelestialLandmark,
+  createIsland2CelestialMaterials,
+} from '../../dev/Island2CelestialThreeWorld';
+import {
+  buildIsland3FrostmoonLandmark,
+  createIsland3FrostmoonMaterials,
+} from '../../dev/Island3FrostmoonThreeWorld';
 import {
   createFrostwellIceworks,
   FROSTWELL_OFFSHORE_POSITION,
   FROSTWELL_PLATFORM_RADIUS,
 } from '../../dev/FrostwellIceworksThreeModel';
 import {
+  buildIsland6MoonveilLandmark,
+  createIsland6MoonveilMaterials,
   isIsland6RouteCorridorClear,
   ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS,
   ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS,
 } from '../../dev/Island6MoonveilThreeWorld';
 import {
+  buildIsland7UnderwaterLandmark,
   collectIsland7RuntimePartManifest,
+  createIsland7UnderwaterMaterials,
   isIsland7RouteCorridorClear,
   ISLAND_7_RUNTIME_PART_IDS,
   ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS,
@@ -86,6 +106,11 @@ import {
   registerIsland9RuntimePart,
 } from '../../dev/Island9HeartshaftThreeWorld';
 import {
+  buildIsland10RootheartLandmark,
+  createIsland10RootheartMaterials,
+} from '../../dev/Island10RootheartThreeWorld';
+import { buildLandmark, createPilotMaterials } from '../../dev/Island5ThreePilot';
+import {
   ISLAND_12_PALM_PLACEMENTS,
   isIsland12RouteCorridorClear,
 } from '../../dev/Island12SunkenSandsThreeWorld';
@@ -113,6 +138,269 @@ import {
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'requires authored five-stage landmark construction across Islands 002 through 010',
+    run: () => {
+      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 45, 'nine authored worlds need five landmark construction profiles each');
+      const frostmoonProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
+        resolveIslandLandmarkConstructionProfile(3, landmark.id)
+      ));
+      assert(
+        frostmoonProfiles.every(Boolean),
+        'Frostmoon needs a construction choreography for every landmark',
+      );
+      assertEqual(
+        new Set(frostmoonProfiles.map((profile) => profile?.choreography.styleId)).size,
+        5,
+        'Frostmoon landmarks must not share one generic robot choreography',
+      );
+      assert(
+        new Set(frostmoonProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4,
+        'Frostmoon must fan its five landmarks across at least four collision-tested work-station paths',
+      );
+      assert(
+        frostmoonProfiles.every((profile) => profile?.stageNames.some((name) => /snow|frost|ice|aurora|moon/i.test(name))),
+        'Frostmoon reveal stories must describe the actual cold-biome construction language',
+      );
+      const crownTidesProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
+        resolveIslandLandmarkConstructionProfile(4, landmark.id)
+      ));
+      assert(
+        crownTidesProfiles.every(Boolean),
+        'Crown of Tides needs a construction choreography for every landmark',
+      );
+      assertEqual(
+        new Set(crownTidesProfiles.map((profile) => profile?.choreography.styleId)).size,
+        5,
+        'Crown of Tides landmarks must not share one generic robot choreography',
+      );
+      assert(
+        new Set(crownTidesProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4,
+        'Crown of Tides must fan its five landmarks across at least four collision-tested base routes',
+      );
+      assert(
+        crownTidesProfiles.some((profile) => profile?.choreography.stationStep === -1)
+          && crownTidesProfiles.some((profile) => profile?.choreography.stationStep === 1),
+        'Crown of Tides landmarks should build in both clockwise and counter-clockwise directions',
+      );
+      assert(
+        crownTidesProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4),
+        'Crown of Tides landmarks need phase-shaped routes rather than one rotated generic loop',
+      );
+      assert(
+        crownTidesProfiles.every((profile) => profile?.stageNames.some((name) => /tide|coral|pearl|sail|reef|floodgate|arena|archive/i.test(name))),
+        'Crown of Tides reveal stories must describe the actual maritime construction language',
+      );
+      const sunshoreProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
+        resolveIslandLandmarkConstructionProfile(5, landmark.id)
+      ));
+      assert(sunshoreProfiles.every(Boolean), 'Sunshore Atoll needs a construction choreography for every landmark');
+      assertEqual(
+        new Set(sunshoreProfiles.map((profile) => profile?.choreography.styleId)).size,
+        5,
+        'Sunshore landmarks must not share one generic robot choreography',
+      );
+      assert(
+        new Set(sunshoreProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4,
+        'Sunshore must fan its five landmarks across at least four collision-tested base routes',
+      );
+      assert(
+        sunshoreProfiles.some((profile) => profile?.choreography.stationStep === -1)
+          && sunshoreProfiles.some((profile) => profile?.choreography.stationStep === 1),
+        'Sunshore landmarks should build in both clockwise and counter-clockwise directions',
+      );
+      assert(
+        sunshoreProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4),
+        'Sunshore landmarks need phase-shaped routes rather than one rotated generic loop',
+      );
+      assert(
+        sunshoreProfiles.every((profile) => profile?.stageNames.some((name) => /sun|beach|bamboo|palm|shell|tide|star|arena|grotto/i.test(name))),
+        'Sunshore reveal stories must describe the actual tropical construction language',
+      );
+      const moonveilProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(6, landmark.id));
+      assert(moonveilProfiles.every(Boolean), 'Moonveil Nexus needs a construction choreography for every landmark');
+      assertEqual(new Set(moonveilProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Moonveil landmarks must not share one generic robot choreography');
+      assert(new Set(moonveilProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Moonveil must use at least four collision-tested base routes');
+      assert(moonveilProfiles.some((profile) => profile?.choreography.stationStep === -1) && moonveilProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Moonveil needs clockwise and counter-clockwise routes');
+      assert(moonveilProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Moonveil landmarks need phase-shaped relocation routes');
+      assert(moonveilProfiles.every((profile) => profile?.stageNames.some((name) => /moon|violet|rift|arc|constellation|neon|midnight/i.test(name))), 'Moonveil reveal stories must use the actual dark-neon construction language');
+      const abyssalProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(7, landmark.id));
+      assert(abyssalProfiles.every(Boolean), 'Abyssal Pearl Kingdom needs a construction choreography for every landmark');
+      assertEqual(new Set(abyssalProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Abyssal landmarks must not share one generic robot choreography');
+      assert(new Set(abyssalProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Abyssal must use at least four collision-tested base routes');
+      assert(abyssalProfiles.some((profile) => profile?.choreography.stationStep === -1) && abyssalProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Abyssal needs clockwise and counter-clockwise routes');
+      assert(abyssalProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Abyssal landmarks need phase-shaped relocation routes');
+      assert(abyssalProfiles.every((profile) => profile?.stageNames.some((name) => /pearl|coral|reef|current|tide|shell|nautilus/i.test(name))), 'Abyssal reveal stories must use the actual underwater construction language');
+      const everblossomProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(8, landmark.id));
+      assert(everblossomProfiles.every(Boolean), 'Everblossom Kingdom needs a construction choreography for every landmark');
+      assertEqual(new Set(everblossomProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Everblossom landmarks must not share one generic robot choreography');
+      assert(new Set(everblossomProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Everblossom must use at least four collision-tested base routes');
+      assert(everblossomProfiles.some((profile) => profile?.choreography.stationStep === -1) && everblossomProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Everblossom needs clockwise and counter-clockwise routes');
+      assert(everblossomProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Everblossom landmarks need phase-shaped relocation routes');
+      assert(everblossomProfiles.every((profile) => profile?.stageNames.some((name) => /flower|blossom|petal|vine|orchid|tulip|sunflower|leaf/i.test(name))), 'Everblossom reveal stories must use the actual flower-kingdom construction language');
+      const heartshaftProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(9, landmark.id));
+      assert(heartshaftProfiles.every(Boolean), 'Heartshaft Crucible needs a construction choreography for every landmark');
+      assertEqual(new Set(heartshaftProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Heartshaft landmarks must not share one generic robot choreography');
+      assert(new Set(heartshaftProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Heartshaft must use at least four collision-tested base routes');
+      assert(heartshaftProfiles.some((profile) => profile?.choreography.stationStep === -1) && heartshaftProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Heartshaft needs clockwise and counter-clockwise routes');
+      assert(heartshaftProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Heartshaft landmarks need phase-shaped relocation routes');
+      assert(heartshaftProfiles.every((profile) => profile?.stageNames.some((name) => /iron|blast|fuse|seismic|press|crucible|ember|magma/i.test(name))), 'Heartshaft reveal stories must use the actual forge construction language');
+      const rootheartProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(10, landmark.id));
+      assert(rootheartProfiles.every(Boolean), 'Rootheart Canopy City needs a construction choreography for every landmark');
+      assertEqual(new Set(rootheartProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Rootheart landmarks must not share one generic robot choreography');
+      assert(new Set(rootheartProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Rootheart must use at least four collision-tested base routes');
+      assert(rootheartProfiles.some((profile) => profile?.choreography.stationStep === -1) && rootheartProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Rootheart needs clockwise and counter-clockwise routes');
+      assert(rootheartProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Rootheart landmarks need phase-shaped relocation routes');
+      assert(rootheartProfiles.every((profile) => profile?.stageNames.some((name) => /root|canopy|branch|leaf|acorn|firefly|spiralwood|saplight/i.test(name))), 'Rootheart reveal stories must use the actual canopy-city construction language');
+      const levels = [[0, 1], [1, 2], [2, 3]] as const;
+      const island2Materials = createIsland2CelestialMaterials();
+      const island3Materials = createIsland3FrostmoonMaterials();
+      const island4Materials = createPilotMaterials('low', 4);
+      const island5Materials = createIsland5SunshoreWorldMaterials();
+      const island6Materials = createIsland6MoonveilMaterials();
+      const island7Materials = createIsland7UnderwaterMaterials();
+      const island8Materials = createIsland8EverblossomMaterials();
+      const island9Materials = createIsland9HeartshaftMaterials();
+      const island10Materials = createIsland10RootheartMaterials();
+      const worldFactories = [
+        {
+          world: 2,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland2CelestialLandmark(landmark, level, 'low', island2Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 3,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland3FrostmoonLandmark(landmark, level, 'low', island3Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 4,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildLandmark(landmark, level, 'low', island4Materials, 4, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 5,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland5SunshoreLandmark(landmark, level, 'low', island5Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 6,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland6MoonveilLandmark(landmark, level, 'low', island6Materials, false, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 7,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland7UnderwaterLandmark(landmark, level, 'low', island7Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 8,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland8EverblossomLandmark(landmark, level, 'low', island8Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 9,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland9HeartshaftLandmark(landmark, level, 'low', island9Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 10,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland10RootheartLandmark(landmark, level, 'low', island10Materials, { constructionPreview: mode })
+          ),
+        },
+      ];
+
+      worldFactories.forEach((factory) => {
+        ISLAND_5_LANDMARKS.forEach((landmark) => {
+          assert(
+            Boolean(resolveIslandLandmarkConstructionProfile(factory.world, landmark.id)),
+            `Island ${factory.world} ${landmark.id} needs its own authored construction profile`,
+          );
+          levels.forEach(([currentLevel, targetLevel]) => {
+            const current = factory.build(landmark, currentLevel, 'current');
+            const target = factory.build(landmark, targetLevel, 'target');
+            current.position.set(0, 0, 0);
+            target.position.set(0, 0, 0);
+            current.updateWorldMatrix(true, true);
+            target.updateWorldMatrix(true, true);
+            const delta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+            if (currentLevel > 0) {
+              assert(
+                delta.retainedMeshCount > 0,
+                `Island ${factory.world} ${landmark.id} L${currentLevel}->L${targetLevel} must preserve funded geometry`,
+              );
+            }
+            [1, 2, 3, 4, 5].forEach((stage) => {
+              assert(
+                (delta.stageCounts[stage] ?? 0) > 0,
+                `Island ${factory.world} ${landmark.id} L${currentLevel}->L${targetLevel} needs reveal stage ${stage}`,
+              );
+            });
+            const temporaryParts = delta.revealParts.filter((part) => part.temporary);
+            assertEqual(temporaryParts.length, 5, `Island ${factory.world} ${landmark.id} needs one compact local rig batch per stage`);
+            delta.applyProgress(0.72, { working: false });
+            assert(temporaryParts.every((part) => !part.mesh.visible), 'construction rigs must not remain visible while the modal rests');
+            delta.applyProgress(0.72, { working: true });
+            assert(temporaryParts.some((part) => part.mesh.visible), 'construction rigs must appear only while the crew is working');
+          });
+          const funded = factory.build(landmark, 3);
+          let leakedTemporaryPart = false;
+          funded.traverse((entry: THREE.Object3D) => {
+            if (entry.userData.constructionTemporary) leakedTemporaryPart = true;
+          });
+          assert(!leakedTemporaryPart, `Island ${factory.world} ${landmark.id} must remove construction dressing at its funded level`);
+        });
+      });
+    },
+  },
+  {
+    name: 'authors Island 001 Hatchery construction as five additive stages with temporary facade staging',
+    run: () => {
+      const materials = createIsland1WorldMaterials();
+      const hatchery = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'hatchery');
+      assert(Boolean(hatchery), 'First Light needs its Lantern Hatchery definition');
+      const finishedL1 = buildIsland1Landmark(hatchery!, 1, 'low', materials);
+      assert(
+        !finishedL1.children[0]?.getObjectByName('ISLAND_1_LANTERN_HATCHERY_L1_FACADE_CONSTRUCTION_DRESS'),
+        'a funded Hatchery level must not retain temporary scaffolding',
+      );
+
+      const currentL1 = buildIsland1Landmark(hatchery!, 1, 'low', materials, { constructionPreview: 'current' });
+      const targetL2 = buildIsland1Landmark(hatchery!, 2, 'low', materials, { constructionPreview: 'target' });
+      assert(
+        Boolean(targetL2.children[0]?.getObjectByName('ISLAND_1_LANTERN_HATCHERY_L2_FACADE_CONSTRUCTION_DRESS')),
+        'the active L1-to-L2 preview needs compact authored facade staging',
+      );
+      const delta = prepareIslandConstructionLevelDelta({ currentRoot: currentL1, targetRoot: targetL2 });
+      assert(delta.retainedMeshCount > 0, 'shared funded Hatchery geometry must remain opaque instead of being re-faded');
+      [1, 2, 3, 4, 5].forEach((stage) => {
+        assert((delta.stageCounts[stage] ?? 0) > 0, `Hatchery reveal stage ${stage} must contain authored geometry`);
+      });
+      const temporaryParts = delta.revealParts.filter((part) => part.temporary);
+      assert(temporaryParts.length > 0, 'the construction delta must identify its temporary scaffold and supply dressing');
+      delta.applyProgress(0.6, { working: false });
+      assert(temporaryParts.every((part) => !part.mesh.visible), 'temporary staging must disappear while the modal rests');
+      delta.applyProgress(0.6, { working: true });
+      assert(temporaryParts.some((part) => part.mesh.visible), 'temporary staging must appear during active building');
+
+      [finishedL1, currentL1, targetL2].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
   {
     name: 'keeps Cactus Canyon source-locked to a railway mesa with five distinct frontier landmarks',
     run: () => {
@@ -396,6 +684,61 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
+    name: 'builds the Rhythm Tree through five additive stages with a working-only root ladder and canopy hoist',
+    run: () => {
+      const materials = createIsland1WorldMaterials();
+      const habit = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'habit');
+      assert(Boolean(habit), 'First Light needs its Rhythm Tree definition');
+      const finishedL1 = buildIsland1Landmark(habit!, 1, 'low', materials);
+      assert(
+        !finishedL1.children[0]?.getObjectByName('ISLAND_1_RHYTHM_TREE_L1_ROOT_LADDER_CONSTRUCTION_DRESS'),
+        'a funded Rhythm Tree level must not retain temporary pruning equipment',
+      );
+
+      const currentL1 = buildIsland1Landmark(habit!, 1, 'low', materials, { constructionPreview: 'current' });
+      const targetL2 = buildIsland1Landmark(habit!, 2, 'low', materials, { constructionPreview: 'target' });
+      assert(
+        Boolean(targetL2.children[0]?.getObjectByName('ISLAND_1_RHYTHM_TREE_L2_ROOT_LADDER_CONSTRUCTION_DRESS')),
+        'the active L1-to-L2 tree preview needs its narrow root ladder and canopy hoist',
+      );
+      const delta = prepareIslandConstructionLevelDelta({ currentRoot: currentL1, targetRoot: targetL2 });
+      assert(delta.retainedMeshCount > 0, 'shared funded tree geometry must stay opaque while new growth appears');
+      [1, 2, 3, 4, 5].forEach((stage) => {
+        assert((delta.stageCounts[stage] ?? 0) > 0, `Rhythm Tree reveal stage ${stage} must contain authored geometry`);
+      });
+      const temporaryParts = delta.revealParts.filter((part) => part.temporary);
+      assert(temporaryParts.length > 0, 'the tree construction delta must identify its temporary pruning equipment');
+      delta.applyProgress(0.6, { working: false });
+      assert(temporaryParts.every((part) => !part.mesh.visible), 'tree staging must disappear while the modal rests');
+      delta.applyProgress(0.6, { working: true });
+      assert(temporaryParts.some((part) => part.mesh.visible), 'tree staging must appear during active building');
+
+      const targetL1 = buildIsland1Landmark(habit!, 1, 'low', materials, { constructionPreview: 'target' });
+      const currentL2 = buildIsland1Landmark(habit!, 2, 'low', materials, { constructionPreview: 'current' });
+      const targetL3 = buildIsland1Landmark(habit!, 3, 'low', materials, { constructionPreview: 'target' });
+      const otherTransitions = [
+        prepareIslandConstructionLevelDelta({ currentRoot: null, targetRoot: targetL1 }),
+        prepareIslandConstructionLevelDelta({ currentRoot: currentL2, targetRoot: targetL3 }),
+      ];
+      otherTransitions.forEach((transition, transitionIndex) => {
+        if (transitionIndex === 1) {
+          assert(transition.retainedMeshCount > 0, 'L2-to-L3 must retain the funded sanctuary instead of rescaling the whole tree');
+        }
+        [1, 2, 3, 4, 5].forEach((stage) => {
+          assert((transition.stageCounts[stage] ?? 0) > 0, `Rhythm Tree transition ${transitionIndex === 0 ? 'L0-L1' : 'L2-L3'} stage ${stage} must contain geometry`);
+        });
+      });
+
+      [finishedL1, currentL1, targetL2, targetL1, currentL2, targetL3].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
     name: 'gives Island 005 a Level-2-quality opening arena and four additive restoration silhouettes',
     run: () => {
       assertEqual(ISLAND_5_SUNWHEEL_OPENING_PRESENTATION_BASELINE_LEVEL, 2, 'the Island 005 opening composition must declare its richer visual baseline');
@@ -420,6 +763,171 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(heights[1] > heights[0], 'L1 signal architecture must rise above the opening arena');
       assert(heights[2] > heights[1], 'L2 crown arches must rise above L1');
       assert(heights[3] > heights[2], 'L3 restored halo and crown fins must rise above L2');
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'assembles the Echo Lens Observatory in five stages with working-only optics calibration equipment',
+    run: () => {
+      const materials = createIsland1WorldMaterials();
+      const mystery = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'event');
+      assert(Boolean(mystery), 'First Light needs its Echo Lens Observatory definition');
+      const finishedL1 = buildIsland1Landmark(mystery!, 1, 'low', materials);
+      assert(
+        !finishedL1.children[0]?.getObjectByName('ISLAND_1_ECHO_LENS_L1_OPTICS_CALIBRATION_CONSTRUCTION_DRESS'),
+        'a funded Observatory level must not retain temporary calibration equipment',
+      );
+
+      const transitionRoots = [
+        {
+          current: null,
+          target: buildIsland1Landmark(mystery!, 1, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L0-L1',
+        },
+        {
+          current: buildIsland1Landmark(mystery!, 1, 'low', materials, { constructionPreview: 'current' }),
+          target: buildIsland1Landmark(mystery!, 2, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L1-L2',
+        },
+        {
+          current: buildIsland1Landmark(mystery!, 2, 'low', materials, { constructionPreview: 'current' }),
+          target: buildIsland1Landmark(mystery!, 3, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L2-L3',
+        },
+      ];
+      transitionRoots.forEach(({ current, target, label }, transitionIndex) => {
+        const delta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+        if (transitionIndex > 0) {
+          assert(delta.retainedMeshCount > 0, `${label} must retain funded Observatory geometry`);
+        }
+        [1, 2, 3, 4, 5].forEach((stage) => {
+          assert((delta.stageCounts[stage] ?? 0) > 0, `Echo Lens ${label} reveal stage ${stage} must contain geometry`);
+        });
+        const temporaryParts = delta.revealParts.filter((part) => part.temporary);
+        assert(temporaryParts.length > 0, `${label} must identify temporary optics calibration equipment`);
+        delta.applyProgress(0.6, { working: false });
+        assert(temporaryParts.every((part) => !part.mesh.visible), `${label} calibration equipment must hide while resting`);
+        delta.applyProgress(0.6, { working: true });
+        assert(temporaryParts.some((part) => part.mesh.visible), `${label} calibration equipment must appear while building`);
+      });
+
+      [finishedL1, ...transitionRoots.flatMap(({ current, target }) => current ? [current, target] : [target])]
+        .forEach((root) => root.traverse((object) => {
+          if (object instanceof THREE.Mesh) object.geometry.dispose();
+        }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: "assembles Sava's Star Archive in five stages with working-only manuscript handling equipment",
+    run: () => {
+      const materials = createIsland1WorldMaterials();
+      const wisdom = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'wisdom');
+      assert(Boolean(wisdom), "First Light needs Sava's Star Archive definition");
+      const finishedL1 = buildIsland1Landmark(wisdom!, 1, 'low', materials);
+      assert(
+        !finishedL1.children[0]?.getObjectByName('ISLAND_1_STAR_ARCHIVE_L1_MANUSCRIPT_RIG_CONSTRUCTION_DRESS'),
+        'a funded Archive level must not retain temporary manuscript equipment',
+      );
+
+      const transitionRoots = [
+        {
+          current: null,
+          target: buildIsland1Landmark(wisdom!, 1, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L0-L1',
+        },
+        {
+          current: buildIsland1Landmark(wisdom!, 1, 'low', materials, { constructionPreview: 'current' }),
+          target: buildIsland1Landmark(wisdom!, 2, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L1-L2',
+        },
+        {
+          current: buildIsland1Landmark(wisdom!, 2, 'low', materials, { constructionPreview: 'current' }),
+          target: buildIsland1Landmark(wisdom!, 3, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L2-L3',
+        },
+      ];
+      transitionRoots.forEach(({ current, target, label }, transitionIndex) => {
+        const delta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+        if (transitionIndex > 0) {
+          assert(delta.retainedMeshCount > 0, `${label} must retain funded Archive geometry`);
+        }
+        [1, 2, 3, 4, 5].forEach((stage) => {
+          assert((delta.stageCounts[stage] ?? 0) > 0, `Star Archive ${label} reveal stage ${stage} must contain geometry`);
+        });
+        const temporaryParts = delta.revealParts.filter((part) => part.temporary);
+        assert(temporaryParts.length > 0, `${label} must identify temporary manuscript equipment`);
+        delta.applyProgress(0.6, { working: false });
+        assert(temporaryParts.every((part) => !part.mesh.visible), `${label} manuscript equipment must hide while resting`);
+        delta.applyProgress(0.6, { working: true });
+        assert(temporaryParts.some((part) => part.mesh.visible), `${label} manuscript equipment must appear while building`);
+      });
+
+      [finishedL1, ...transitionRoots.flatMap(({ current, target }) => current ? [current, target] : [target])]
+        .forEach((root) => root.traverse((object) => {
+          if (object instanceof THREE.Mesh) object.geometry.dispose();
+        }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: "commissions Aureon's Sun Court in five stages with working-only solar alignment equipment",
+    run: () => {
+      const materials = createIsland1WorldMaterials();
+      const boss = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'boss');
+      assert(Boolean(boss), "First Light needs Aureon's Sun Court definition");
+      const finishedL1 = buildIsland1Landmark(boss!, 1, 'low', materials);
+      assert(
+        !finishedL1.children[0]?.getObjectByName('ISLAND_1_SUN_COURT_L1_SOLAR_ALIGNMENT_CONSTRUCTION_DRESS'),
+        'a funded Sun Court level must not retain temporary alignment equipment',
+      );
+
+      const transitionRoots = [
+        {
+          current: null,
+          target: buildIsland1Landmark(boss!, 1, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L0-L1',
+        },
+        {
+          current: buildIsland1Landmark(boss!, 1, 'low', materials, { constructionPreview: 'current' }),
+          target: buildIsland1Landmark(boss!, 2, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L1-L2',
+        },
+        {
+          current: buildIsland1Landmark(boss!, 2, 'low', materials, { constructionPreview: 'current' }),
+          target: buildIsland1Landmark(boss!, 3, 'low', materials, { constructionPreview: 'target' }),
+          label: 'L2-L3',
+        },
+      ];
+      transitionRoots.forEach(({ current, target, label }, transitionIndex) => {
+        const delta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+        if (transitionIndex > 0) {
+          assert(delta.retainedMeshCount > 0, `${label} must retain funded Sun Court geometry`);
+        }
+        [1, 2, 3, 4, 5].forEach((stage) => {
+          assert((delta.stageCounts[stage] ?? 0) > 0, `Sun Court ${label} reveal stage ${stage} must contain geometry`);
+        });
+        const temporaryParts = delta.revealParts.filter((part) => part.temporary);
+        assert(temporaryParts.length > 0, `${label} must identify temporary solar alignment equipment`);
+        delta.applyProgress(0.6, { working: false });
+        assert(temporaryParts.every((part) => !part.mesh.visible), `${label} alignment equipment must hide while resting`);
+        delta.applyProgress(0.6, { working: true });
+        assert(temporaryParts.some((part) => part.mesh.visible), `${label} alignment equipment must appear while building`);
+      });
+
+      [finishedL1, ...transitionRoots.flatMap(({ current, target }) => current ? [current, target] : [target])]
+        .forEach((root) => root.traverse((object) => {
+          if (object instanceof THREE.Mesh) object.geometry.dispose();
+        }));
       Object.values(materials).forEach((material) => {
         material.map?.dispose();
         material.dispose();
@@ -924,12 +1432,15 @@ export const island5ThreePilotContractTests: TestCase[] = [
     run: async () => {
       assert(ISLAND_3D_IDLE_OVERVIEW_DELAY_MS >= 3_000, 'overview drift should wait long enough for another roll to interrupt it');
       assert(ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE >= 2.5, 'idle return should be substantially slower than a normal camera cut');
+      assertEqual(ISLAND_3D_BOARD_POV_IDLE_DELAY_MS, 40_000, 'main-board ambient POV must wait forty seconds of inactivity');
+      assert(ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS >= 7_000, 'Build ambient POV must wait through the recent-work quiet period');
+      assert(ISLAND_3D_AMBIENT_POV_INTERVAL_MS >= 12_000, 'ambient POV changes must remain occasional');
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       assert(pilotSource.includes('idleOverviewAt = now + ISLAND_3D_IDLE_OVERVIEW_DELAY_MS'), 'landing should schedule a delayed overview instead of snapping out immediately');
-      assert(pilotSource.includes('idleOverviewAt = null;\n        transition = null;'), 'a new roll must cancel any pending idle overview');
+      assert(pilotSource.includes('idleOverviewAt = null;') && pilotSource.includes('transition = null;'), 'a new roll must cancel any pending idle overview and camera transition');
       assert(pilotSource.includes("applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE)"), 'idle framing should use the deliberately slow drift');
       assert(boardSource.includes('cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}'), 'live board must connect its overview request to the 3D renderer');
       assert(boardSource.includes('setThreeCameraOverviewRequestVersion((current) => current + 1)'), 'magnifier presses must remain repeatable even when already in overview mode');
@@ -1326,18 +1837,51 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const theatreSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/RobotConstructionTheatre.ts', 'utf8');
       const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/BuildModalV2.tsx', 'utf8');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const debugPanelSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunDebugPanel.tsx', 'utf8');
       assert(!pilotSource.includes('Island5LandmarkBuildPreview'), 'Build mode must not create a duplicate Island 5 WebGL renderer');
       assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
       assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
       assert(boardSource.includes("if (stopId === 'mystery') return 'event'"), 'Build camera should resolve Mystery to the authored Concord Arena preset');
       assert(boardSource.includes('cameraFocusPreset={threeCameraFocusPreset}'), 'the live 3D board must receive Build and ordinary landmark focus requests');
-      assert(boardSource.includes("transition: previousStopId === null ? 'standard' : 'quick'"), 'landmark-to-landmark Build handoff should use the quick camera path');
+      assert(boardSource.includes('if (constructionPresentation.cameraLocked) return;'), 'landmark-to-landmark Build handoff must wait until active/recent construction is quiet');
+      assert(boardSource.includes('Math.max(ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS, lingerMs)'), 'the canonical seven-second Build quiet-period constant must own the recent-action camera lock');
+      assert(pilotSource.includes('&& !activeConstruction?.cameraLocked'), 'the renderer-level camera reassertion must also remain locked during active/recent construction');
+      assert(pilotSource.includes("? 'build-locked'") && pilotSource.includes(": 'build-recent-cooldown'"), 'working and recent construction must expose distinct camera-lock evidence');
+      assert(pilotSource.includes('if (transition) transition = null;'), 'a build lock must stop any idle camera orbit already in flight');
+      assert(pilotSource.includes('snapInitialLockedConstructionFocus'), 'a simultaneous modal mount and build lock must still establish the intended landmark shot once');
+      assert(pilotSource.includes("applyAmbientCameraNudge(ambientCameraContext, now)"), 'idle Build and board states should share the gentle POV variation path');
+      assert(pilotSource.includes('ambientCameraEligibleAt = now + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;'), 'a board roll must restart the forty-second ambient POV timer');
       assert(pilotSource.includes("cameraFocusTransition === 'quick' ? 0.48 : 0.82"), 'the actual 3D camera should shorten Build handoff timing without changing its preset geometry');
+      assert(pilotSource.includes("constructionScaffoldMode = 'authored-landmark-only'"), 'the live modal must use only building-authored façade scaffolding');
+      assert(pilotSource.includes("buildAuthoredLandmark(definition, currentLevel, 'current')"), 'construction comparison must retain unbatched funded geometry');
+      assert(pilotSource.includes("buildAuthoredLandmark(definition, targetLevel, 'target')"), 'construction comparison must expose semantic target-level parts');
+      assert(pilotSource.includes('constructionCrewRevealStages'), 'the five-stage reveal distribution must be exposed for live QA');
+      assert(pilotSource.includes('constructionTheatre.setCrewScale(0.11)'), 'the live construction crew must remain miniature beside the authored landmark');
+      assert(theatreSource.includes('THREE.MathUtils.clamp(scale, 0.035, 1.25)'), 'the theatre must honor the authored low-profile landmark crew scale instead of silently raising it');
+      assert(theatreSource.includes('THREE.MathUtils.clamp(crewScale / 0.58, 0.18, 1.25)'), 'miniature crew occupancy must contract with the rendered workers while retaining a conservative floor');
+      assert(pilotSource.includes('0.19 * (constructionPreviewSize.y / previewHorizontalSize)'), 'crew scale must respond to low-wide versus tall landmark silhouettes while remaining readable on a physical phone');
+      assert(pilotSource.includes("canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3)"), 'live QA must expose the resolved building-aware miniature scale');
+      assert(theatreSource.includes('keepMiniatureCrewInPhoneForecourt(targetPosition, role)'), 'the physical-phone crew must stay in distinct camera-facing work lanes instead of disappearing beyond the modal crop');
+      assert(!theatreSource.includes('const workPulse ='), 'working robot roots must remain stabilized; vibration belongs to explicit contact tools only');
+      assert(theatreSource.includes('const contactVibration = TOOL_CONTACT_VIBRATION[toolId]'), 'drill, saw and impact vibration must remain localized to the active tool');
+      assert(theatreSource.includes('presentation.choreography?.phaseStationOffsets?.[presentation.phase]'), 'landmark choreography must be able to change its work route by construction phase');
+      assert(theatreSource.includes('completedRoleMoves * stationStep'), 'landmark choreography must support authored clockwise and counter-clockwise relocation');
+      assert(theatreSource.includes('const shellClearanceMargin = targetEnvelope.radius * 0.0015'), 'robot occupancy projection must keep a stable positive shell margin instead of snapping to an exact floating-point boundary');
+      assert(theatreSource.includes('const correctedRadius = minimumShellRadius + shellClearanceMargin'), 'robot shell correction must converge in one stable projection rather than retriggering as visible tremor');
+      assert(theatreSource.includes('targetPosition.x *= 0.84'), 'resting workers must stay fully readable inside the phone edges while retaining legal shell clearance');
+      assert(pilotSource.includes('applyProgress(progress, { working })'), 'temporary construction dressing must follow active/resting mode');
+      assert(pilotSource.includes('constructionLandmarkGrounding'), 'the live modal must expose foundation-grounding evidence');
+      assert(pilotSource.includes('previewFloorY: Number(constructionAnchor.position.y.toFixed(4))'), 'the construction preview must report its actual floor datum');
+      assert(!pilotSource.includes('constructionBounds.min.y + horizontalExtent * 0.4'), 'the construction preview must never lift the whole landmark above its plot');
+      assert(!pilotSource.includes('createIslandConstructionScaffold'), 'the distracting site-wide scaffold cage must not be mounted by the live modal');
       assert(modalSource.includes('onBuildPartChoice={onBuildPartChoice}') && modalSource.includes('onBuildPartChoice(activeStopIndex, part.partNumber)'), 'independent part choices must remain presentational callbacks into the canonical board action owner');
       assert(modalSource.includes('onStartBuildHold={onStartBuildHold}') && modalSource.includes('onStopBuildHold={onStopBuildHold}'), 'the dedicated hold control must delegate building to the canonical board action owner');
       assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(modalSource), 'presentational modal must not add a gameplay persistence path');
+      assert(boardSource.includes("get('islandRunDebugPanel') === '1'"), 'the real gameplay modal must have a direct dev-only QA route for repeatable construction traces');
+      assert(debugPanelSource.includes('Grant 10,000 Money') && boardSource.includes('onGrantDevEssence={handleDevGrantEssence}'), 'full 15-step QA funding must use the existing canonical dev action instead of bypassing gameplay state');
     },
   },
   {
@@ -1361,8 +1905,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13].includes(islandParam)'), 'the workbench should expose all twelve authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
-      assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
+      assert(
+        mainSource.includes('&& !ISLAND_3D_PROFILER_BUILD_ENABLED')
+          && mainSource.includes('&& !COMPASS_BOOK_PROFILER_BUILD_ENABLED'),
+        'internal profiler bundles must not register the production service worker',
+      );
       assert(pilotSource.includes('new THREE.WebGLRenderer'), 'pilot should use an actual GPU renderer');
+      assert(pilotSource.includes('renderer.forceContextLoss()'), 'fast level changes must release retired WebGL contexts before WebKit accumulates them');
       assert(pilotSource.includes('new OrbitControls'), 'pilot should provide touch and pointer orbit controls');
       assert(pilotSource.includes('material.polygonOffsetUnits = -4'), 'Cactus Canyon tiles need a deterministic depth bias so camera motion cannot reveal z-fighting');
       assert(pilotSource.includes('tappedAt - lastTrainTapAt <= 430'), 'Cactus Canyon must support a deliberate mouse double-click and mobile double-tap on the moving train');

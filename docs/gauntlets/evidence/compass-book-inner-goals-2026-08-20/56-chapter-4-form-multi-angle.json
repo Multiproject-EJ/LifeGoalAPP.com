@@ -1,0 +1,22 @@
+{
+  "referenceAreaFraction": 0.9967847222222223,
+  "angles": [
+    {
+      "path": "54-wide-chapter-4-form-orbit-right.png",
+      "areaFraction": 0.9973090277777777,
+      "ratio": 1.0005259967813176,
+      "degenerate": false,
+      "viewpoint": "long-axis"
+    },
+    {
+      "path": "55-wide-chapter-4-form-orbit-left.png",
+      "areaFraction": 0.9992020833333334,
+      "ratio": 1.00242515866989,
+      "degenerate": false,
+      "viewpoint": "thickness-axis"
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Deterministic multi-angle gate; neither orbit silhouette collapses."
+}

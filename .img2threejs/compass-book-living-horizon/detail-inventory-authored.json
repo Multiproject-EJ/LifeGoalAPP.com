@@ -1,0 +1,150 @@
+{
+  "sourceImage": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png",
+  "scanMethod": "grid-3x3 plus semantic component review",
+  "targetMinDetails": 10,
+  "details": [
+    {
+      "id": "open-gate-leaves",
+      "kind": "contour",
+      "description": "Paired open gilt lattice leaves and posts frame the path terminus.",
+      "region": "upper-center",
+      "scale": "meso",
+      "affects": "silhouette and horizon identity",
+      "mapsTo": { "type": "component.localFeatures", "ref": "horizon-system.gate-leaves" },
+      "evidenceRef": "detail-zones-original/zone-r0c1.png",
+      "confidence": 0.98
+    },
+    {
+      "id": "sun-ray-fan",
+      "kind": "ridge",
+      "description": "Raised amber sun is backed by a fan of thin gilt rays and low sky arcs.",
+      "region": "upper-center",
+      "scale": "meso/micro",
+      "affects": "focal hierarchy and depth",
+      "mapsTo": { "type": "component.localFeatures", "ref": "horizon-system.sun-rays" },
+      "evidenceRef": "detail-zones-original/zone-r0c1.png",
+      "confidence": 0.96
+    },
+    {
+      "id": "continuous-s-path",
+      "kind": "ridge",
+      "description": "One violet core with paired gilt rails connects foreground to gate without a break.",
+      "region": "vertical-center",
+      "scale": "macro",
+      "affects": "primary identity and composition",
+      "mapsTo": { "type": "component.localFeatures", "ref": "vital-path.continuous-core-and-rails" },
+      "evidenceRef": "detail-zones-original/zone-r1c1.png",
+      "confidence": 0.99
+    },
+    {
+      "id": "path-milestones",
+      "kind": "fastener",
+      "description": "Circular milestones repeat at controlled intervals inside the violet path.",
+      "region": "center-to-foreground",
+      "scale": "micro",
+      "affects": "path rhythm and crafted finish",
+      "mapsTo": { "type": "component.localFeatures", "ref": "vital-path.milestone-studs" },
+      "evidenceRef": "detail-zones-original/zone-r2c1.png",
+      "confidence": 0.94
+    },
+    {
+      "id": "workshop-roof-stack",
+      "kind": "contour",
+      "description": "Teal pitched roofs, chimney and entry steps form a distinct left-middle workshop silhouette.",
+      "region": "middle-left",
+      "scale": "meso",
+      "affects": "workshop readability",
+      "mapsTo": { "type": "component.localFeatures", "ref": "workshop-zone.roof-chimney-steps" },
+      "evidenceRef": "detail-zones-original/zone-r1c1.png",
+      "confidence": 0.93
+    },
+    {
+      "id": "workshop-gear-medallion",
+      "kind": "fastener",
+      "description": "Raised brass wheel/gear medallion anchors the workshop facade.",
+      "region": "middle-left",
+      "scale": "micro",
+      "affects": "zone identity",
+      "mapsTo": { "type": "component.localFeatures", "ref": "workshop-zone.gear-medallion" },
+      "evidenceRef": "detail-zones-original/zone-r1c1.png",
+      "confidence": 0.92
+    },
+    {
+      "id": "gathering-seating-ring",
+      "kind": "contour",
+      "description": "Concentric stepped floor and low segmented seating preserve a readable circular gathering place.",
+      "region": "middle-right",
+      "scale": "meso",
+      "affects": "zone silhouette and depth",
+      "mapsTo": { "type": "component.localFeatures", "ref": "gathering-zone.seating-ring" },
+      "evidenceRef": "detail-zones-original/zone-r1c1.png",
+      "confidence": 0.97
+    },
+    {
+      "id": "gathering-hearth",
+      "kind": "emissive",
+      "description": "Small raised amber hearth sits at the arena center with a brass bezel.",
+      "region": "middle-right",
+      "scale": "micro",
+      "affects": "warm focal hierarchy",
+      "mapsTo": { "type": "component.localFeatures", "ref": "gathering-zone.central-hearth" },
+      "evidenceRef": "detail-zones-original/zone-r1c1.png",
+      "confidence": 0.97
+    },
+    {
+      "id": "sanctuary-cottage",
+      "kind": "contour",
+      "description": "Foreground cottage has a pitched teal roof, warm doorway and attached jetty.",
+      "region": "lower-left",
+      "scale": "meso",
+      "affects": "sanctuary readability",
+      "mapsTo": { "type": "component.localFeatures", "ref": "sanctuary-zone.cottage-roof-door-jetty" },
+      "evidenceRef": "detail-zones-original/zone-r2c0.png",
+      "confidence": 0.91
+    },
+    {
+      "id": "teal-inlet",
+      "kind": "gloss",
+      "description": "A shallow teal inlet surrounds the sanctuary terrace and meets the jetty.",
+      "region": "lower-left",
+      "scale": "meso",
+      "affects": "sanctuary separation and color balance",
+      "mapsTo": { "type": "material.localOverrides", "ref": "water-enamel.inlet-sheen" },
+      "evidenceRef": "detail-zones-original/zone-r2c1.png",
+      "confidence": 0.95
+    },
+    {
+      "id": "terrain-contour-steps",
+      "kind": "contour",
+      "description": "Three shallow terrace heights use darker edge walls and olive top faces.",
+      "region": "full-relief",
+      "scale": "macro/meso",
+      "affects": "volume and page attachment",
+      "mapsTo": { "type": "component.localFeatures", "ref": "terrain-field.contour-terraces" },
+      "evidenceRef": "detail-zones-original/zone-r1c1.png",
+      "confidence": 0.96
+    },
+    {
+      "id": "sparse-terrain-clusters",
+      "kind": "ridge",
+      "description": "Small conifer and rock clusters break contour edges without obscuring zone silhouettes.",
+      "region": "terrain margins",
+      "scale": "micro",
+      "affects": "depth rhythm and material breakup",
+      "mapsTo": { "type": "component.localFeatures", "ref": "terrain-field.tree-and-rock-clusters" },
+      "evidenceRef": "detail-zones-original/zone-r0c1.png",
+      "confidence": 0.86
+    },
+    {
+      "id": "page-bound-brass-frame",
+      "kind": "bevel",
+      "description": "Double brass tooling frame and compass medallions keep the landscape visibly attached to the page.",
+      "region": "relief perimeter",
+      "scale": "macro/micro",
+      "affects": "page attachment and family resemblance",
+      "mapsTo": { "type": "component.localFeatures", "ref": "contact-frame.double-frame-and-medallions" },
+      "evidenceRef": "detail-zones-original/zone-r2c1.png",
+      "confidence": 0.96
+    }
+  ]
+}

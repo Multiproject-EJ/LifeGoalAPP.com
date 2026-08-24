@@ -24,11 +24,17 @@ function labelOf(id: string | null): string {
   return PLAYBOOK_LABELS[id] ?? id;
 }
 
+function readingLabel(status: PersonalPlaybookOutput['readingStatus']): string {
+  if (status === 'trial-ready') return 'Flight test ready';
+  if (status === 'evidence-backed') return 'Evidence-backed system';
+  return 'System under calibration';
+}
+
 /**
  * The Personal Playbook is presented as a seven-system rocket cockpit.
  *
- * Every answered system illuminates a control. Completing all seven within the
- * first seven days launches the little ship out of orbit. In full mode the
+ * Every answered system illuminates a control. Completing all seven launches
+ * the little ship out of orbit whenever the player is ready. In full mode the
  * controls are interactive: tapping one opens its own pop-up flight card.
  */
 export function PersonalPlaybookGraphic({
@@ -102,29 +108,29 @@ export function PersonalPlaybookGraphic({
     }),
     [answers, output],
   );
-  const { readyCount, launched: withinLaunchWindow, missionStartedAt, daysLeft } = mission;
+  const { readyCount, launched } = mission;
   const [activeSystemId, setActiveSystemId] = useState<string | null>(null);
   const activeSystem = systems.find((system) => system.id === activeSystemId) ?? null;
 
-  const missionStatus = withinLaunchWindow
+  const missionStatus = launched
     ? 'ORBIT CLEARED'
-    : readyCount === systems.length
-      ? 'SYSTEMS READY · LAUNCH WINDOW OPEN'
-      : missionStartedAt == null
-        ? '7-DAY WINDOW STARTS WITH YOUR FIRST CONTROL'
-        : daysLeft > 0
-          ? `${daysLeft} DAY${daysLeft === 1 ? '' : 'S'} LEFT IN THIS LAUNCH WINDOW`
-          : 'WINDOW PASSED · KEEP BUILDING WITHOUT PENALTY';
+    : readyCount === 0
+      ? 'NO COUNTDOWN · BEGIN WITH ANY USEFUL SYSTEM'
+      : 'ASSEMBLE AT YOUR OWN PACE · PROGRESS IS SAFE';
 
   return (
     <div
-      className={`compass-wheel compass-wheel--${mode} playbook-mission${withinLaunchWindow ? ' playbook-mission--launched' : ''}`}
+      className={`compass-wheel compass-wheel--${mode} playbook-mission${launched ? ' playbook-mission--launched' : ''}`}
     >
       <div className="playbook-mission__brief">
         <span className="playbook-mission__brief-kicker">Mission · Break Orbit</span>
         <strong>{readyCount} / {systems.length} flight systems online</strong>
         <span>{missionStatus}</span>
       </div>
+      <p className="compass-wheel__proof compass-wheel__proof--dark">
+        <strong>{readingLabel(output.readingStatus)}</strong>
+        <span>{output.evidenceCount} real-life signals recorded</span>
+      </p>
 
       <svg
         viewBox="0 0 260 172"
@@ -187,14 +193,14 @@ export function PersonalPlaybookGraphic({
           <path d="M130 45C143 57 148 75 145 99L130 109L115 99C112 75 117 57 130 45Z" fill="url(#playbook-rocket)" stroke="#e7f7ff" strokeWidth="1.3" />
           <circle cx="130" cy="74" r="7" fill="#2d739d" stroke="#d9f6ff" strokeWidth="1.4" />
           <path d="M115 86L104 104L116 100M145 86L156 104L144 100" fill="#b78730" stroke="#ffe89a" strokeWidth="1" />
-          <path className="playbook-mission__flame" d="M121 103C123 122 127 130 130 140C133 130 138 121 139 103Z" fill={withinLaunchWindow ? '#9af3ff' : readyCount > 0 ? '#ffbf47' : '#53657d'} />
+          <path className="playbook-mission__flame" d="M121 103C123 122 127 130 130 140C133 130 138 121 139 103Z" fill={launched ? '#9af3ff' : readyCount > 0 ? '#ffbf47' : '#53657d'} />
           <path className="playbook-mission__flame-core" d="M126 104C127 116 129 121 130 127C132 120 134 114 134 104Z" fill="#fff5ad" />
         </g>
 
         <path d="M7 151Q130 114 253 151V169H7Z" fill="url(#playbook-earth)" />
         <path d="M7 151Q130 114 253 151" fill="none" stroke="#b6f2ff" strokeWidth="2.2" opacity="0.8" />
         <text x="130" y="163" textAnchor="middle" fill="#f8fdff" fontSize="7.5" fontWeight="800" letterSpacing="1.3">
-          {withinLaunchWindow ? 'ESCAPE VELOCITY ACHIEVED' : 'BUILD YOUR ESCAPE VELOCITY'}
+          {launched ? 'ESCAPE VELOCITY ACHIEVED' : 'BUILD YOUR ESCAPE VELOCITY'}
         </text>
       </svg>
 
@@ -242,13 +248,16 @@ export function PersonalPlaybookGraphic({
 
       {mode === 'full' ? (
         <p className="playbook-mission__story">
-          Your playbook is the ship’s control panel. Bring all seven systems online within one
-          seven-day launch window and the rocket breaks orbit — with no perfect streak required.
+          Your playbook is the ship’s control panel. Bring all seven useful systems online and
+          the rocket breaks orbit whenever you are ready — with no countdown or perfect streak.
         </p>
       ) : null}
 
       {mode === 'full' && output.operatingPrinciple ? (
         <p className="compass-wheel__statement">Flight principle: “{output.operatingPrinciple}”</p>
+      ) : null}
+      {mode === 'full' && output.warningPlan ? (
+        <p className="playbook-mission__story"><strong>Automatic correction:</strong> {output.warningPlan}</p>
       ) : null}
     </div>
   );

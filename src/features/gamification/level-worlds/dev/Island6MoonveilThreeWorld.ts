@@ -9,6 +9,10 @@ import {
   ISLAND_3D_TILE_RADIAL_DEPTH,
 } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_6_MOONVEIL_WORLD_NAME = 'Moonveil Nexus';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -1019,6 +1023,18 @@ function addJourneyDiscArenaTransformation(
 }
 
 function createSoftGlowSprite(color: number, opacity: number, scale: number) {
+  if (typeof document === 'undefined') {
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      color,
+      transparent: true,
+      opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+    }));
+    sprite.scale.set(scale, scale, 1);
+    return sprite;
+  }
   const canvas = document.createElement('canvas');
   canvas.width = 128;
   canvas.height = 128;
@@ -1134,6 +1150,7 @@ export function buildIsland6MoonveilLandmark(
   quality: Island3DQuality,
   materials: Island6MoonveilMaterials,
   journeyDiscArenaActive = false,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_6_MOONVEIL_${definition.id.toUpperCase()}_ROOT`;
@@ -1158,7 +1175,9 @@ export function buildIsland6MoonveilLandmark(
             ? createVioletRift(resolved, quality, materials)
             : createMoonGate(resolved, quality, materials);
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-districtPosition[0], -districtPosition[2]);
-    const scale = definition.id === 'boss'
+    const scale = options.constructionPreview
+      ? (definition.id === 'boss' ? 1.02 : 1.14)
+      : definition.id === 'boss'
       // Moonveil's visual goal is an open, readable astral board. The gate
       // remains the tallest landmark, but it must not swallow the 36-tile
       // route the way a conventional centre castle can.
@@ -1199,21 +1218,32 @@ export function buildIsland6MoonveilLandmark(
       materials,
       quality,
     );
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber: 6,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
     // Authoring remains modular, while runtime delivery is batched by shared
     // material. Moving portal pieces are lifted out before the merge so Low
     // really reduces CPU/draw-call pressure without sacrificing the island's
     // essential motion language.
-    root.updateMatrixWorld(true);
-    const animatedParts: THREE.Object3D[] = [];
-    building.traverse((child) => {
-      if (
-        child.name === 'ISLAND_6_SPINNER'
-        || child.name === 'ISLAND_6_ORBITING_MOONS'
-        || child.name === 'ISLAND_6_PORTAL_SURFACE'
-      ) animatedParts.push(child);
-    });
-    animatedParts.forEach((part) => root.attach(part));
-    compactStaticGeometry(building, `ISLAND6_${definition.id.toUpperCase()}`);
+    if (!options.constructionPreview) {
+      root.updateMatrixWorld(true);
+      const animatedParts: THREE.Object3D[] = [];
+      building.traverse((child) => {
+        if (
+          child.name === 'ISLAND_6_SPINNER'
+          || child.name === 'ISLAND_6_ORBITING_MOONS'
+          || child.name === 'ISLAND_6_PORTAL_SURFACE'
+        ) animatedParts.push(child);
+      });
+      animatedParts.forEach((part) => root.attach(part));
+      compactStaticGeometry(building, `ISLAND6_${definition.id.toUpperCase()}`);
+    }
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });
   markShadows(root, quality !== 'low');

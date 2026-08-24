@@ -29,6 +29,7 @@ export const WISDOM_STOP_MAX_INPUTS = 4;
 const ANSWERABLE_BLOCK_TYPES: ReadonlySet<CompassBlockType> = new Set([
   'single_choice',
   'multi_choice',
+  'ranking',
   'scale',
   'emotion_choice',
   'short_text',

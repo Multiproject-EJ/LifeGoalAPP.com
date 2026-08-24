@@ -6,14 +6,6 @@ import './Island001StoryPreview.css';
 
 const EPISODES = [
   {
-    id: 'prologue',
-    eyebrow: 'Global intro',
-    title: 'Before the Lights Went Quiet',
-    description: 'The connected islands, the Great Drift, and the first signal from Luma.',
-    sceneCount: 7,
-    manifestPath: '/storyline/episode-001/manifest.json',
-  },
-  {
     id: 'arrival',
     eyebrow: 'Island 001 arrival',
     title: 'The Light Under Glass',
@@ -31,7 +23,7 @@ const EPISODES = [
   },
 ] as const;
 
-type EpisodeIndex = 0 | 1 | 2;
+type EpisodeIndex = 0 | 1;
 
 export default function Island001StoryPreview() {
   const [activeEpisodeIndex, setActiveEpisodeIndex] = useState<EpisodeIndex | null>(null);
@@ -57,6 +49,7 @@ export default function Island001StoryPreview() {
   };
 
   const activeEpisode = activeEpisodeIndex === null ? null : EPISODES[activeEpisodeIndex];
+  const hasNextEpisode = playCompleteSequence && activeEpisodeIndex === 0;
 
   return (
     <main className="island-story-preview">
@@ -64,15 +57,15 @@ export default function Island001StoryPreview() {
         <p className="island-story-preview__kicker">Development story preview</p>
         <h1>Island 001 — Luma Isle</h1>
         <p>
-          A working motion-webtoon concept for testing story order, pacing, copy,
-          transitions, and the handoff into gameplay. Artwork and wording are intentionally replaceable.
+          A development-only motion-webtoon lab for later island chapters. The
+          retired global intro is intentionally not part of onboarding or this sequence.
         </p>
         <button
           type="button"
           className="island-story-preview__play-all"
           onClick={openCompleteSequence}
         >
-          Play complete 20-scene concept
+          Play both island chapters
         </button>
       </section>
 
@@ -104,9 +97,9 @@ export default function Island001StoryPreview() {
         <IslandStoryReader
           manifestPath={activeEpisode.manifestPath}
           isOpen
-          completionTitle={playCompleteSequence && activeEpisodeIndex !== 2 ? 'Chapter complete' : 'Story preview complete'}
-          completionText={playCompleteSequence && activeEpisodeIndex !== 2 ? 'Continue to the next chapter.' : 'Return to the Island 001 preview.'}
-          completionButtonLabel={playCompleteSequence && activeEpisodeIndex !== 2 ? 'Continue story' : 'Return to preview'}
+          completionTitle={hasNextEpisode ? 'Chapter complete' : 'Story preview complete'}
+          completionText={hasNextEpisode ? 'Continue to the next chapter.' : 'Return to the Island 001 preview.'}
+          completionButtonLabel={hasNextEpisode ? 'Continue story' : 'Return to preview'}
           onClose={closeEpisode}
         />
       )}

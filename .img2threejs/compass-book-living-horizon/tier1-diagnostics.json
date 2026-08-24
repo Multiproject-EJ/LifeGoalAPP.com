@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "passId": "blockout",
+  "renderHash": "5b3b01c35493501b",
+  "checks": {
+    "silhouetteIoU": 0.9699,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0271,
+    "colorDeltaGated": false
+  },
+  "mapStrippedRender": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png",
+  "limitation": "Both full-spread images lack isolated backgrounds, so silhouette numbers support framing consistency rather than exact relief likeness."
+}

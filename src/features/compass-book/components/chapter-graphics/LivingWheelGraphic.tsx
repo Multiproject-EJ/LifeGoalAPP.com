@@ -25,6 +25,12 @@ function emotionColor(emotion: string | null): string {
   return '#60a5fa';
 }
 
+function readingLabel(status: LivingWheelOutput['readingStatus']): string {
+  if (status === 'trial-ready') return 'Trial ready';
+  if (status === 'evidence-backed') return 'Evidence backed';
+  return 'Provisional reading';
+}
+
 function polar(cx: number, cy: number, r: number, deg: number) {
   const a = ((deg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
@@ -137,13 +143,17 @@ export function LivingWheelGraphic({ output, mode }: LivingWheelGraphicProps) {
         </text>
       </svg>
 
+      <p className="compass-wheel__proof">
+        <strong>{readingLabel(output.readingStatus)}</strong>
+        <span>{output.evidenceCount} / 4 opening moments captured</span>
+      </p>
       {output.season ? <p className="compass-wheel__season">{output.season}</p> : null}
 
       <div className="compass-wheel__mechanics">
-        <Mechanic emoji={MECHANIC_EMOJI.engine} label="Engine" area={labelFor(output.engineAreaId)} />
-        <Mechanic emoji={MECHANIC_EMOJI.brake} label="Brake" area={labelFor(output.brakeAreaId)} />
-        <Mechanic emoji={MECHANIC_EMOJI.fragile} label="Fragile" area={labelFor(output.fragileAreaId)} />
-        <Mechanic emoji={MECHANIC_EMOJI.lever} label="Lever" area={labelFor(output.leverAreaId)} />
+        <Mechanic emoji={MECHANIC_EMOJI.engine} label="Engine hypothesis" area={labelFor(output.engineAreaId)} />
+        <Mechanic emoji={MECHANIC_EMOJI.brake} label="Brake hypothesis" area={labelFor(output.brakeAreaId)} />
+        <Mechanic emoji={MECHANIC_EMOJI.fragile} label="Protect this spoke" area={labelFor(output.fragileAreaId)} />
+        <Mechanic emoji={MECHANIC_EMOJI.lever} label="Lever to test" area={labelFor(output.leverAreaId)} />
       </div>
 
       {mode === 'full' ? (
@@ -151,6 +161,11 @@ export function LivingWheelGraphic({ output, mode }: LivingWheelGraphicProps) {
           {output.nextMove?.text ? (
             <p className="compass-wheel__next">
               <strong>Next move:</strong> {output.nextMove.text}
+            </p>
+          ) : null}
+          {output.counterevidence ? (
+            <p className="compass-wheel__counter">
+              <strong>Doesn’t fit yet:</strong> {output.counterevidence}
             </p>
           ) : null}
           {output.wheelStatement ? (

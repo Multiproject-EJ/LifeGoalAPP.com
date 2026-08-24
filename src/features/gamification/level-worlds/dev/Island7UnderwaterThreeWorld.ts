@@ -10,6 +10,10 @@ import {
   ISLAND_3D_TILE_RADIAL_DEPTH,
 } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
+import {
+  applyIslandConstructionAuthoring,
+  type IslandConstructionFactoryOptions,
+} from './IslandConstructionAuthoring';
 
 export const ISLAND_7_UNDERWATER_WORLD_NAME = 'Abyssal Pearl Kingdom';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -1139,10 +1143,12 @@ function createCompassPortal(level: 1 | 2 | 3, quality: Island3DQuality, materia
 function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island7UnderwaterMaterials) {
   const root = new THREE.Group();
   root.name = 'ISLAND_7_PEARL_THRONE_PALACE';
-  addPlinth(root, 1.38 + level * 0.11, materials, quality, 0.13);
-  addStairs(root, 0.95 + level * 0.08, 0.82, materials, level + 3);
-  const base = cylinder(0.83 + level * 0.08, 1.02 + level * 0.08, 0.82 + level * 0.18, materials.turquoise, segmentCount(quality));
-  base.position.y = 0.74 + level * 0.08;
+  // Keep the funded palace core intact. Higher tiers build galleries and
+  // crown architecture around it instead of resizing every shell surface.
+  addPlinth(root, 1.49, materials, quality, 0.13);
+  addStairs(root, 1.03, 0.82, materials, 4);
+  const base = cylinder(0.91, 1.1, 1, materials.turquoise, segmentCount(quality));
+  base.position.y = 0.82;
   root.add(base);
   if (level === 3) {
     // Break the cylindrical mass into an inhabited, tiered palace facade.
@@ -1184,46 +1190,46 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
       addPointedShellPanel(root, angle, 1.04, 0.84, 0.4, 1.04, materials);
     }
   }
-  const baseGoldBands = level === 3 ? 3 : 2;
+  const baseGoldBands = 2;
   for (let band = 0; band < baseGoldBands; band += 1) {
-    addRing(root, 0.89 + level * 0.075, 0.028, 0.48 + band * 0.31, materials.gold, quality);
+    addRing(root, 0.965, 0.028, 0.48 + band * 0.31, materials.gold, quality);
   }
   const facadePanels = quality === 'high' ? 12 : quality === 'medium' ? 8 : 6;
   for (let index = 0; index < facadePanels; index += 1) {
     const angle = index / facadePanels * Math.PI * 2;
-    const panel = box(0.16, 0.62 + level * 0.08, 0.065, index % 2 ? materials.shell : materials.gold);
-    panel.position.set(Math.cos(angle) * (0.87 + level * 0.075), 0.72 + level * 0.08, Math.sin(angle) * (0.87 + level * 0.075));
+    const panel = box(0.16, 0.7, 0.065, index % 2 ? materials.shell : materials.gold);
+    panel.position.set(Math.cos(angle) * 0.945, 0.8, Math.sin(angle) * 0.945);
     panel.rotation.y = -angle + Math.PI / 2;
     root.add(panel);
   }
   const windowCount = quality === 'high' ? 10 : quality === 'medium' ? 7 : 4;
   for (let index = 0; index < windowCount; index += 1) {
     const angle = index / windowCount * Math.PI * 2;
-    addArchedWindow(root, Math.cos(angle) * (0.86 + level * 0.07), 0.78 + level * 0.1, Math.sin(angle) * (0.86 + level * 0.07), 0.9, materials, -angle + Math.PI / 2);
+    addArchedWindow(root, Math.cos(angle) * 0.93, 0.88, Math.sin(angle) * 0.93, 0.9, materials, -angle + Math.PI / 2);
   }
   const roof = createOnionSpire(
-    level === 3 ? 0.49 : 0.72 + level * 0.065,
-    level === 3 ? 1.02 : 1.08 + level * 0.25,
+    0.785,
+    1.33,
     materials,
     quality,
     materials.shell,
   );
-  roof.position.y = level === 3 ? 2.02 : 1.08 + level * 0.18;
+  roof.position.y = 1.26;
   root.add(roof);
   const entrance = new THREE.Group();
   entrance.name = 'ISLAND_7_PALACE_ENTRANCE';
-  const doorway = box(0.42 + level * 0.035, 0.62 + level * 0.08, 0.08, materials.warmWindow);
-  doorway.position.set(0, 0.74 + level * 0.06, 0.95 + level * 0.08);
+  const doorway = box(0.455, 0.7, 0.08, materials.warmWindow);
+  doorway.position.set(0, 0.8, 1.03);
   const entranceArch = new THREE.Mesh(
-    new THREE.TorusGeometry(0.25 + level * 0.018, 0.045, 6, segmentCount(quality), Math.PI),
+    new THREE.TorusGeometry(0.268, 0.045, 6, segmentCount(quality), Math.PI),
     materials.gold,
   );
-  entranceArch.position.set(0, 1.01 + level * 0.1, 1.02 + level * 0.08);
+  entranceArch.position.set(0, 1.11, 1.1);
   entranceArch.rotation.z = Math.PI;
   entrance.add(doorway, entranceArch);
   for (const x of [-0.34, 0.34]) {
-    const doorColumn = cylinder(0.045, 0.065, 0.62 + level * 0.08, materials.gold, 8);
-    doorColumn.position.set(x, 0.72 + level * 0.06, 1.01 + level * 0.08);
+    const doorColumn = cylinder(0.045, 0.065, 0.7, materials.gold, 8);
+    doorColumn.position.set(x, 0.78, 1.09);
     entrance.add(doorColumn);
   }
   root.add(entrance);
@@ -1235,31 +1241,35 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
     root.add(transept, transeptRoof);
     for (const x of [-0.27, 0.27]) addArchedWindow(root, x, 0.92, 1.25, 0.92, materials, 0);
   }
-  const towerCount = level === 1 ? 2 : 4;
-  for (let index = 0; index < towerCount; index += 1) {
-    const angle = index / towerCount * Math.PI * 2 + Math.PI / 4;
-    const radius = level === 1 ? 0.68 : 0.92 + level * 0.04;
-    const height = 0.72 + level * 0.18 + (index === 0 && level === 3 ? 0.18 : 0);
-    const tower = createPalaceTower(0.19, height, materials, quality, index % 2 ? materials.shell : materials.turquoise);
-    tower.position.set(Math.cos(angle) * radius, level === 3 ? 0.38 : 0.46, Math.sin(angle) * radius);
-    if (level === 3) tower.scale.set(0.86, 1.18 + index % 2 * 0.08, 0.86);
+  for (let index = 0; index < 2; index += 1) {
+    const angle = index / 2 * Math.PI * 2 + Math.PI / 4;
+    const tower = createPalaceTower(0.19, 0.9, materials, quality, index % 2 ? materials.shell : materials.turquoise);
+    tower.position.set(Math.cos(angle) * 0.68, 0.46, Math.sin(angle) * 0.68);
     root.add(tower);
   }
-  const pearlSize = 0.16 + level * 0.055;
+  if (level >= 2) {
+    for (let index = 0; index < 4; index += 1) {
+      const angle = index / 4 * Math.PI * 2 + Math.PI / 4;
+      const tower = createPalaceTower(0.19, 1.08, materials, quality, index % 2 ? materials.shell : materials.turquoise);
+      tower.position.set(Math.cos(angle) * 1, 0.42, Math.sin(angle) * 1);
+      root.add(tower);
+    }
+  }
+  const pearlSize = 0.215;
   const pearlMaterial = materials.pearl.clone();
   pearlMaterial.map = null;
   pearlMaterial.bumpMap = null;
   pearlMaterial.emissiveIntensity = 0.55;
   const pearl = new THREE.Mesh(new THREE.SphereGeometry(pearlSize, segmentCount(quality), Math.max(8, segmentCount(quality) / 2)), pearlMaterial);
   pearl.name = 'ISLAND_7_PALACE_PEARL_CORE';
-  pearl.position.set(0, level === 3 ? 1.66 : 1.28 + level * 0.25, level === 3 ? 1.03 : 0.89);
+  pearl.position.set(0, 1.53, 0.89);
   pearl.userData.baseScale = 1;
   root.add(pearl);
   if (level >= 2) {
     const crown = new THREE.Group();
     crown.name = 'ISLAND_7_PALACE_CROWN';
-    addRing(crown, 0.34 + level * 0.04, 0.025, 0, materials.gold, quality, true);
-    crown.position.set(0, 1.87 + level * 0.25, 0);
+    addRing(crown, 0.42, 0.025, 0, materials.gold, quality, true);
+    crown.position.set(0, 2.37, 0);
     root.add(crown);
   }
   if (level === 3) {
@@ -1287,6 +1297,7 @@ export function buildIsland7UnderwaterLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island7UnderwaterMaterials,
+  options: IslandConstructionFactoryOptions = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_7_UNDERWATER_${definition.id.toUpperCase()}_ROOT`;
@@ -1338,9 +1349,22 @@ export function buildIsland7UnderwaterLandmark(
             : createPearlPalace(resolved, quality, materials);
     building.name = `ISLAND_7_${definition.id.toUpperCase()}_ARCHITECTURE_PIVOT`;
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
-    building.scale.setScalar(definition.id === 'boss' ? (resolved === 3 ? 1.34 : resolved === 2 ? 1.14 : 1) : (resolved === 3 ? 1.34 : resolved === 2 ? 1.16 : 1));
-    compactUnderwaterLandmark(building, definition.id, materials);
+    building.scale.setScalar(options.constructionPreview
+      ? (definition.id === 'boss' ? 1.14 : 1.16)
+      : definition.id === 'boss'
+        ? (resolved === 3 ? 1.34 : resolved === 2 ? 1.14 : 1)
+        : (resolved === 3 ? 1.34 : resolved === 2 ? 1.16 : 1));
+    if (!options.constructionPreview) compactUnderwaterLandmark(building, definition.id, materials);
     if (resolved === 3) addHeroFacade(building, definition.id, materials, quality);
+    if (options.constructionPreview === 'target') {
+      applyIslandConstructionAuthoring({
+        root: building,
+        worldSourceNumber: 7,
+        landmarkId: definition.id,
+        quality,
+        includeTemporaryRig: true,
+      });
+    }
     root.add(building);
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });

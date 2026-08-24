@@ -6,7 +6,7 @@ Owner: Eivind / Codex
 
 ## Mission and observable outcome
 
-Make the live-board Build experience the sole interaction owner while it is open. The island remains visible, but the board, landmarks, caretaker, camera gestures, footer, and unrelated modals cannot interrupt construction. Each completed building level remains visibly framed for three seconds, with a one-second minimum dwell and an optional queued/manual advance.
+Make the live-board Build experience the sole interaction owner while it is open. The island remains visible, but the board, landmarks, caretaker, camera gestures, footer, and unrelated modals cannot interrupt construction. Each completed building level remains visibly framed for one and a half seconds, with a half-second minimum dwell and an optional queued/manual advance.
 
 ## Sources of truth
 
@@ -29,10 +29,10 @@ Make the live-board Build experience the sole interaction owner while it is open
 ## Level-review timing contract
 
 1. The completed level and its real board landmark appear immediately.
-2. Minimum dwell is 1,000 ms.
-3. A tap during that first second queues advance and turns the advance control blue; advance occurs when the minimum dwell completes.
-4. A tap after one second advances immediately without the queued-blue state.
-5. Without a tap, review auto-advances after 3,000 ms.
+2. Minimum dwell is 500 ms.
+3. A tap during that first half-second queues advance and turns the advance control blue; advance occurs when the minimum dwell completes.
+4. A tap after half a second advances immediately without the queued-blue state.
+5. Without a tap, review auto-advances after 1,500 ms.
 6. Pre-completion rapid taps are discarded at the level boundary and cannot fund the next landmark invisibly.
 
 ## Milestones and evidence
@@ -51,6 +51,12 @@ The review state, exclusivity styling, and 3D callback guards are independently 
 Implemented and verified on the live Island 001 actual-3D board at a 390×844 phone aspect ratio.
 
 ## Results
+
+The August 10 measurements below are the original acceptance evidence. The
+timing values were superseded on 2026-08-23 by the fast-builder adjustment in
+the contract above. Current phone QA at 390×844 measured a 178 px control dock,
+all five part controls fully inside the viewport, a locked page scroll, a
+500 ms manual-advance gate, and automatic continuation at 1,500 ms.
 
 - Transparent Build space resolves to `.bm2-build-mode` with `pointer-events: auto`; the board carries `inert` for the full session and body scrolling is locked.
 - A coordinate tap on a visible board landmark and a drag through the island both left Build open, opened no stop modal, and preserved the `hatchery` camera preset.

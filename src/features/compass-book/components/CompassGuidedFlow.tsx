@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   COMPASS_CURRICULUM_VERSION,
+  getCompassChapterMethodVersion,
   type CompassAnswerRecord,
   type CompassAnswerValue,
   type CompassBookActivityDefinition,
@@ -38,6 +39,7 @@ function buildPreviewAnswers(
         value,
         sourceMode: 'fixed_guided',
         curriculumVersion: COMPASS_CURRICULUM_VERSION,
+        methodVersion: getCompassChapterMethodVersion(activity.chapterId),
         answeredAt: now,
         updatedAt: now,
         confirmed: false,
@@ -59,6 +61,11 @@ export type CompassGuidedFlowProps = {
     activityId: string,
     entries: CompassAnswerEntry[],
   ) => Promise<void>;
+  onActivityCompleted?: (event: {
+    chapterId: CompassBookChapterId;
+    activityId: string;
+    chapterSealed: boolean;
+  }) => void;
   saving: boolean;
   onExit: () => void;
 };
@@ -77,6 +84,12 @@ function savedValuesFor(
   return draft;
 }
 
+function savedChapterValues(state: CompassChapterState | null): DraftValues {
+  const values: DraftValues = {};
+  for (const answer of state?.answers ?? []) values[answer.questionId] = answer.value;
+  return values;
+}
+
 export function CompassGuidedFlow({
   chapterId,
   currentIslandNumber,
@@ -84,6 +97,7 @@ export function CompassGuidedFlow({
   startActivityId,
   getChapterState,
   onSaveActivity,
+  onActivityCompleted,
   saving,
   onExit,
 }: CompassGuidedFlowProps) {
@@ -111,6 +125,10 @@ export function CompassGuidedFlow({
   const [draft, setDraft] = useState<DraftValues>(() =>
     savedValuesFor(getChapterState(chapterId), activity?.id ?? ''),
   );
+  const optionSourceValues = {
+    ...savedChapterValues(getChapterState(chapterId)),
+    ...draft,
+  };
 
   // Re-seed the draft from saved answers whenever the active activity changes.
   useEffect(() => {
@@ -164,6 +182,7 @@ export function CompassGuidedFlow({
   }
 
   const requiredSatisfied = areRequiredBlocksAnswered(activity, draft);
+  const previewAnswers = buildPreviewAnswers(getChapterState(chapterId), activity, draft);
 
   const isLast = index === unlockedActivities.length - 1;
   const isSealActivity = activity.blocks.some((block) => block.type === 'confirmation');
@@ -176,6 +195,11 @@ export function CompassGuidedFlow({
     }
 
     await onSaveActivity(chapterId, activity.id, entries);
+    onActivityCompleted?.({
+      chapterId,
+      activityId: activity.id,
+      chapterSealed: isSealActivity,
+    });
 
     if (isLast) {
       onExit();
@@ -227,19 +251,36 @@ export function CompassGuidedFlow({
         {isSealActivity ? (
           <CompassChapterGraphic
             chapterId={chapterId}
-            answers={buildPreviewAnswers(getChapterState(chapterId), activity, draft)}
+            answers={previewAnswers}
             mode="full"
           />
+        ) : chapterId === 'living_wheel' || chapterId === 'quest_forge' ? (
+          <section className="compass-book__live-read" aria-label="Live chapter reading">
+            <span>{chapterId === 'living_wheel' ? 'LIVE WHEEL' : 'LIVE FORGE'}</span>
+            <p>
+              {chapterId === 'living_wheel'
+                ? 'The wheel changes as evidence reaches each spoke.'
+                : 'The crest takes shape as a candidate survives each test.'}
+            </p>
+            <CompassChapterGraphic chapterId={chapterId} answers={previewAnswers} mode="compact" />
+          </section>
         ) : null}
 
         <CompassActivityRenderer
           blocks={activity.blocks}
           values={draft}
+          optionSourceValues={optionSourceValues}
           onChange={handleChange}
           renderContext={makeInnerCompassHintSlot(chapterId, shadowBridge, draft, handleChange)}
           renderPick={makePickSlot(playerData, handleChange)}
           renderHelp={makeHelpSlot(chapterId, draft, handleChange)}
         />
+
+        {requiredSatisfied && activity.completionMessage ? (
+          <p className="compass-book__lock-celebration" role="status">
+            ✨ {activity.completionMessage}
+          </p>
+        ) : null}
 
         <div className="compass-book__flow-actions">
           {index > 0 ? (

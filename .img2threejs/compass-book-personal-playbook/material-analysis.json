@@ -1,0 +1,4375 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-analysis",
+  "referenceId": "compass-book-chapter-vi-personal-playbook-goal",
+  "manifest": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-regions.json",
+  "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+  "targetThreshold": 0.7,
+  "notObservedMaterials": [],
+  "unresolvedNotObservedMaterials": [],
+  "regions": [
+    {
+      "componentId": "contact-field",
+      "regionId": "indigo-field-grain",
+      "materialSpecId": "indigo-field",
+      "hypothesis": {
+        "componentId": "contact-field",
+        "regionId": "indigo-field-grain",
+        "materialId": "leather.matte",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.794,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "leather.matte",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/00-indigo-field-grain.png",
+            "bbox": {
+              "x": 500,
+              "y": 104,
+              "width": 150,
+              "height": 64
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0104
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.794,
+            "estimatedFidelity": 0.794,
+            "targetThreshold": 0.7,
+            "materialId": "indigo-field",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/00-indigo-field-grain.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain",
+            "palette": [
+              "#293240",
+              "#19202F",
+              "#444C55",
+              "#0A0B11",
+              "#CAA267"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_albedo.png",
+                "url": "indigo-field_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_roughness.png",
+                "url": "indigo-field_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_height.png",
+                "url": "indigo-field_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_normal.png",
+                "url": "indigo-field_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_ao.png",
+                "url": "indigo-field_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 150,
+              "sourceHeight": 64,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 150,
+                "height": 64
+              },
+              "mask": {
+                "backgroundColor": "#1F2637",
+                "backgroundNoise": 30.166,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9878
+              },
+              "mapStats": {
+                "valueRange": 0.3396,
+                "heightP90Gradient": 0.18235,
+                "roughnessBase": 0.87,
+                "roughnessVariation": 0.151,
+                "normalStrength": 0.37,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#293240",
+                "#19202F",
+                "#444C55",
+                "#0A0B11",
+                "#CAA267"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#262C39",
+              "#725536",
+              "#232C3C",
+              "#222C3C",
+              "#242C3C"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#262C39",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  57,
+                  44,
+                  38
+                ]
+              },
+              {
+                "stop": "#232C3C",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  60,
+                  44,
+                  35
+                ]
+              },
+              {
+                "stop": "#222C3C",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  60,
+                  44,
+                  34
+                ]
+              },
+              {
+                "stop": "#242C3C",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  60,
+                  44,
+                  36
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 48.1,
+              "meanSaturation": 0.429,
+              "gradientStrength": 0.408,
+              "mottle": 0.063,
+              "streakRatio": 0.66,
+              "hueSpread": 0.224,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "leather.matte",
+        "family": "leather",
+        "subtype": "natural-or-synthetic",
+        "finish": "matte-worn",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.62,
+          "clearcoat": 0.08,
+          "clearcoatRoughness": 0.45
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.mesh-standard",
+          "adobe.pbr-guide-2",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "irregular grain",
+          "worn edges become smoother",
+          "creases darken without becoming metallic"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/00-indigo-field-grain.png",
+        "bbox": {
+          "x": 500,
+          "y": 104,
+          "width": 150,
+          "height": 64
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0104
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#262C39",
+          "#725536",
+          "#232C3C",
+          "#222C3C",
+          "#242C3C"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#262C39",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              57,
+              44,
+              38
+            ]
+          },
+          {
+            "stop": "#232C3C",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              60,
+              44,
+              35
+            ]
+          },
+          {
+            "stop": "#222C3C",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              60,
+              44,
+              34
+            ]
+          },
+          {
+            "stop": "#242C3C",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              60,
+              44,
+              36
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 48.1,
+          "meanSaturation": 0.429,
+          "gradientStrength": 0.408,
+          "mottle": 0.063,
+          "streakRatio": 0.66,
+          "hueSpread": 0.224,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.794,
+        "estimatedFidelity": 0.794,
+        "targetThreshold": 0.7,
+        "materialId": "indigo-field",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/00-indigo-field-grain.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain",
+        "palette": [
+          "#293240",
+          "#19202F",
+          "#444C55",
+          "#0A0B11",
+          "#CAA267"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_albedo.png",
+            "url": "indigo-field_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_roughness.png",
+            "url": "indigo-field_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_height.png",
+            "url": "indigo-field_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_normal.png",
+            "url": "indigo-field_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_ao.png",
+            "url": "indigo-field_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 150,
+          "sourceHeight": 64,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 150,
+            "height": 64
+          },
+          "mask": {
+            "backgroundColor": "#1F2637",
+            "backgroundNoise": 30.166,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9878
+          },
+          "mapStats": {
+            "valueRange": 0.3396,
+            "heightP90Gradient": 0.18235,
+            "roughnessBase": 0.87,
+            "roughnessVariation": 0.151,
+            "normalStrength": 0.37,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#293240",
+            "#19202F",
+            "#444C55",
+            "#0A0B11",
+            "#CAA267"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/00-indigo-field-grain.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.794,
+        "estimatedFidelity": 0.794,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_albedo.png",
+            "url": "indigo-field_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_roughness.png",
+            "url": "indigo-field_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_height.png",
+            "url": "indigo-field_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_normal.png",
+            "url": "indigo-field_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_ao.png",
+            "url": "indigo-field_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 150,
+          "sourceHeight": 64,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 150,
+            "height": 64
+          },
+          "mask": {
+            "backgroundColor": "#1F2637",
+            "backgroundNoise": 30.166,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9878
+          },
+          "mapStats": {
+            "valueRange": 0.3396,
+            "heightP90Gradient": 0.18235,
+            "roughnessBase": 0.87,
+            "roughnessVariation": 0.151,
+            "normalStrength": 0.37,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#293240",
+            "#19202F",
+            "#444C55",
+            "#0A0B11",
+            "#CAA267"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_albedo.png",
+          "url": "indigo-field_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_roughness.png",
+          "url": "indigo-field_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_height.png",
+          "url": "indigo-field_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_normal.png",
+          "url": "indigo-field_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-00-indigo-field-grain/indigo-field_ao.png",
+          "url": "indigo-field_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "relief-frame",
+      "regionId": "aged-brass-frame",
+      "materialSpecId": "aged-brass",
+      "hypothesis": {
+        "componentId": "relief-frame",
+        "regionId": "aged-brass-frame",
+        "materialId": "metal.brass",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "metal.brass",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/01-aged-brass-frame.png",
+            "bbox": {
+              "x": 319,
+              "y": 110,
+              "width": 235,
+              "height": 32
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0082
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "aged-brass",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/01-aged-brass-frame.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame",
+            "palette": [
+              "#232C39",
+              "#141A26",
+              "#090A0F",
+              "#B8894B",
+              "#4E4439"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_albedo.png",
+                "url": "aged-brass_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_roughness.png",
+                "url": "aged-brass_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_height.png",
+                "url": "aged-brass_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_normal.png",
+                "url": "aged-brass_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_ao.png",
+                "url": "aged-brass_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 235,
+              "sourceHeight": 32,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 235,
+                "height": 32
+              },
+              "mask": {
+                "backgroundColor": "#161C21",
+                "backgroundNoise": 51.672,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9875
+              },
+              "mapStats": {
+                "valueRange": 0.4971,
+                "heightP90Gradient": 0.12255,
+                "roughnessBase": 0.781,
+                "roughnessVariation": 0.179,
+                "normalStrength": 0.3,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#232C39",
+                "#141A26",
+                "#090A0F",
+                "#B8894B",
+                "#4E4439"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#151A23",
+              "#131923",
+              "#222937",
+              "#1F2632",
+              "#1D2633"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#151A23",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  35,
+                  26,
+                  21
+                ]
+              },
+              {
+                "stop": "#131923",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  35,
+                  25,
+                  19
+                ]
+              },
+              {
+                "stop": "#222937",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  55,
+                  41,
+                  34
+                ]
+              },
+              {
+                "stop": "#1F2632",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  50,
+                  38,
+                  31
+                ]
+              },
+              {
+                "stop": "#1D2633",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  51,
+                  38,
+                  29
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 43.4,
+              "meanSaturation": 0.493,
+              "gradientStrength": 0.269,
+              "mottle": 0.054,
+              "streakRatio": 0.98,
+              "hueSpread": 0.457,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "metal.brass",
+        "family": "metal",
+        "subtype": "brass-bronze",
+        "finish": "polished-or-aged",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.3
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "warm yellow-to-brown conductor reflection",
+          "aged recesses darken and roughen"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/01-aged-brass-frame.png",
+        "bbox": {
+          "x": 319,
+          "y": 110,
+          "width": 235,
+          "height": 32
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0082
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#151A23",
+          "#131923",
+          "#222937",
+          "#1F2632",
+          "#1D2633"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#151A23",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              35,
+              26,
+              21
+            ]
+          },
+          {
+            "stop": "#131923",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              35,
+              25,
+              19
+            ]
+          },
+          {
+            "stop": "#222937",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              55,
+              41,
+              34
+            ]
+          },
+          {
+            "stop": "#1F2632",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              50,
+              38,
+              31
+            ]
+          },
+          {
+            "stop": "#1D2633",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              51,
+              38,
+              29
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 43.4,
+          "meanSaturation": 0.493,
+          "gradientStrength": 0.269,
+          "mottle": 0.054,
+          "streakRatio": 0.98,
+          "hueSpread": 0.457,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "aged-brass",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/01-aged-brass-frame.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame",
+        "palette": [
+          "#232C39",
+          "#141A26",
+          "#090A0F",
+          "#B8894B",
+          "#4E4439"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_albedo.png",
+            "url": "aged-brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_roughness.png",
+            "url": "aged-brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_height.png",
+            "url": "aged-brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_normal.png",
+            "url": "aged-brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_ao.png",
+            "url": "aged-brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 235,
+          "sourceHeight": 32,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 235,
+            "height": 32
+          },
+          "mask": {
+            "backgroundColor": "#161C21",
+            "backgroundNoise": 51.672,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9875
+          },
+          "mapStats": {
+            "valueRange": 0.4971,
+            "heightP90Gradient": 0.12255,
+            "roughnessBase": 0.781,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.3,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#232C39",
+            "#141A26",
+            "#090A0F",
+            "#B8894B",
+            "#4E4439"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/01-aged-brass-frame.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_albedo.png",
+            "url": "aged-brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_roughness.png",
+            "url": "aged-brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_height.png",
+            "url": "aged-brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_normal.png",
+            "url": "aged-brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_ao.png",
+            "url": "aged-brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 235,
+          "sourceHeight": 32,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 235,
+            "height": 32
+          },
+          "mask": {
+            "backgroundColor": "#161C21",
+            "backgroundNoise": 51.672,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9875
+          },
+          "mapStats": {
+            "valueRange": 0.4971,
+            "heightP90Gradient": 0.12255,
+            "roughnessBase": 0.781,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.3,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#232C39",
+            "#141A26",
+            "#090A0F",
+            "#B8894B",
+            "#4E4439"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_albedo.png",
+          "url": "aged-brass_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_roughness.png",
+          "url": "aged-brass_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_height.png",
+          "url": "aged-brass_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_normal.png",
+          "url": "aged-brass_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-01-aged-brass-frame/aged-brass_ao.png",
+          "url": "aged-brass_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "rocket-hull",
+      "regionId": "warm-gold-rocket",
+      "materialSpecId": "warm-gold",
+      "hypothesis": {
+        "componentId": "rocket-hull",
+        "regionId": "warm-gold-rocket",
+        "materialId": "metal.gold",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "metal.gold",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/02-warm-gold-rocket.png",
+            "bbox": {
+              "x": 548,
+              "y": 204,
+              "width": 76,
+              "height": 286
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0236
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "warm-gold",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/02-warm-gold-rocket.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket",
+            "palette": [
+              "#1B1311",
+              "#5E4121",
+              "#A6845B",
+              "#ECD9B5",
+              "#342B5A"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_albedo.png",
+                "url": "warm-gold_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_roughness.png",
+                "url": "warm-gold_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_height.png",
+                "url": "warm-gold_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_normal.png",
+                "url": "warm-gold_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_ao.png",
+                "url": "warm-gold_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 76,
+              "sourceHeight": 286,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 76,
+                "height": 286
+              },
+              "mask": {
+                "backgroundColor": "#121C25",
+                "backgroundNoise": 43.784,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9752
+              },
+              "mapStats": {
+                "valueRange": 0.8975,
+                "heightP90Gradient": 0.163,
+                "roughnessBase": 0.773,
+                "roughnessVariation": 0.187,
+                "normalStrength": 0.347,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#1B1311",
+                "#5E4121",
+                "#A6845B",
+                "#ECD9B5",
+                "#342B5A"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#23201B",
+              "#2A1D1C",
+              "#A8978E",
+              "#7B6655",
+              "#3C2D1E"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 81.4,
+              "meanSaturation": 0.553,
+              "gradientStrength": 0.5,
+              "mottle": 0.11,
+              "streakRatio": 0.75,
+              "hueSpread": 0.467,
+              "specularFraction": 0.045
+            }
+          }
+        },
+        "profileId": "metal.gold",
+        "family": "metal",
+        "subtype": "gold",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.22
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "yellow conductor reflection rather than yellow diffuse paint",
+          "strong environment-dependent highlight"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/02-warm-gold-rocket.png",
+        "bbox": {
+          "x": 548,
+          "y": 204,
+          "width": 76,
+          "height": 286
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0236
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#23201B",
+          "#2A1D1C",
+          "#A8978E",
+          "#7B6655",
+          "#3C2D1E"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 81.4,
+          "meanSaturation": 0.553,
+          "gradientStrength": 0.5,
+          "mottle": 0.11,
+          "streakRatio": 0.75,
+          "hueSpread": 0.467,
+          "specularFraction": 0.045
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "warm-gold",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/02-warm-gold-rocket.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket",
+        "palette": [
+          "#1B1311",
+          "#5E4121",
+          "#A6845B",
+          "#ECD9B5",
+          "#342B5A"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_albedo.png",
+            "url": "warm-gold_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_roughness.png",
+            "url": "warm-gold_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_height.png",
+            "url": "warm-gold_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_normal.png",
+            "url": "warm-gold_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_ao.png",
+            "url": "warm-gold_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 76,
+          "sourceHeight": 286,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 76,
+            "height": 286
+          },
+          "mask": {
+            "backgroundColor": "#121C25",
+            "backgroundNoise": 43.784,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9752
+          },
+          "mapStats": {
+            "valueRange": 0.8975,
+            "heightP90Gradient": 0.163,
+            "roughnessBase": 0.773,
+            "roughnessVariation": 0.187,
+            "normalStrength": 0.347,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#1B1311",
+            "#5E4121",
+            "#A6845B",
+            "#ECD9B5",
+            "#342B5A"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/02-warm-gold-rocket.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_albedo.png",
+            "url": "warm-gold_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_roughness.png",
+            "url": "warm-gold_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_height.png",
+            "url": "warm-gold_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_normal.png",
+            "url": "warm-gold_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_ao.png",
+            "url": "warm-gold_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 76,
+          "sourceHeight": 286,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 76,
+            "height": 286
+          },
+          "mask": {
+            "backgroundColor": "#121C25",
+            "backgroundNoise": 43.784,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9752
+          },
+          "mapStats": {
+            "valueRange": 0.8975,
+            "heightP90Gradient": 0.163,
+            "roughnessBase": 0.773,
+            "roughnessVariation": 0.187,
+            "normalStrength": 0.347,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#1B1311",
+            "#5E4121",
+            "#A6845B",
+            "#ECD9B5",
+            "#342B5A"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_albedo.png",
+          "url": "warm-gold_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_roughness.png",
+          "url": "warm-gold_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_height.png",
+          "url": "warm-gold_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_normal.png",
+          "url": "warm-gold_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-02-warm-gold-rocket/warm-gold_ao.png",
+          "url": "warm-gold_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "rocket-core",
+      "regionId": "violet-core-crystal",
+      "materialSpecId": "violet-crystal",
+      "hypothesis": {
+        "componentId": "rocket-core",
+        "regionId": "violet-core-crystal",
+        "materialId": "gemstone.quartz",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "gemstone.quartz",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/03-violet-core-crystal.png",
+            "bbox": {
+              "x": 568,
+              "y": 304,
+              "width": 43,
+              "height": 118
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0055
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "violet-crystal",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/03-violet-core-crystal.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal",
+            "palette": [
+              "#2E1E52",
+              "#21151D",
+              "#E7D4BF",
+              "#5E4A85",
+              "#AA8A66"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_albedo.png",
+                "url": "violet-crystal_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_roughness.png",
+                "url": "violet-crystal_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_height.png",
+                "url": "violet-crystal_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_normal.png",
+                "url": "violet-crystal_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_ao.png",
+                "url": "violet-crystal_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 43,
+              "sourceHeight": 118,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 43,
+                "height": 118
+              },
+              "mask": {
+                "backgroundColor": "#2A2224",
+                "backgroundNoise": 110.082,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9913
+              },
+              "mapStats": {
+                "valueRange": 0.8735,
+                "heightP90Gradient": 0.14493,
+                "roughnessBase": 0.769,
+                "roughnessVariation": 0.186,
+                "normalStrength": 0.326,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#2E1E52",
+                "#21151D",
+                "#E7D4BF",
+                "#5E4A85",
+                "#AA8A66"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#271D31",
+              "#402F57",
+              "#624E6B",
+              "#614E62",
+              "#BEA377"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#271D31",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  49,
+                  29,
+                  39
+                ]
+              },
+              {
+                "stop": "#402F57",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  87,
+                  47,
+                  64
+                ]
+              },
+              {
+                "stop": "#624E6B",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  107,
+                  78,
+                  98
+                ]
+              },
+              {
+                "stop": "#614E62",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  98,
+                  78,
+                  97
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 85.8,
+              "meanSaturation": 0.53,
+              "gradientStrength": 0.607,
+              "mottle": 0.082,
+              "streakRatio": 0.58,
+              "hueSpread": 0.478,
+              "specularFraction": 0.037
+            }
+          }
+        },
+        "profileId": "gemstone.quartz",
+        "family": "gemstone",
+        "subtype": "quartz-like",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.06,
+          "transmission": 0.9,
+          "ior": 1.54,
+          "dispersion": 0.0
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "faceted interface reflections",
+          "transmitted or internally varied colour",
+          "thickness-dependent appearance"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/03-violet-core-crystal.png",
+        "bbox": {
+          "x": 568,
+          "y": 304,
+          "width": 43,
+          "height": 118
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0055
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#271D31",
+          "#402F57",
+          "#624E6B",
+          "#614E62",
+          "#BEA377"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#271D31",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              49,
+              29,
+              39
+            ]
+          },
+          {
+            "stop": "#402F57",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              87,
+              47,
+              64
+            ]
+          },
+          {
+            "stop": "#624E6B",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              107,
+              78,
+              98
+            ]
+          },
+          {
+            "stop": "#614E62",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              98,
+              78,
+              97
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 85.8,
+          "meanSaturation": 0.53,
+          "gradientStrength": 0.607,
+          "mottle": 0.082,
+          "streakRatio": 0.58,
+          "hueSpread": 0.478,
+          "specularFraction": 0.037
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "violet-crystal",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/03-violet-core-crystal.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal",
+        "palette": [
+          "#2E1E52",
+          "#21151D",
+          "#E7D4BF",
+          "#5E4A85",
+          "#AA8A66"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_albedo.png",
+            "url": "violet-crystal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_roughness.png",
+            "url": "violet-crystal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_height.png",
+            "url": "violet-crystal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_normal.png",
+            "url": "violet-crystal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_ao.png",
+            "url": "violet-crystal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 43,
+          "sourceHeight": 118,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 43,
+            "height": 118
+          },
+          "mask": {
+            "backgroundColor": "#2A2224",
+            "backgroundNoise": 110.082,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9913
+          },
+          "mapStats": {
+            "valueRange": 0.8735,
+            "heightP90Gradient": 0.14493,
+            "roughnessBase": 0.769,
+            "roughnessVariation": 0.186,
+            "normalStrength": 0.326,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#2E1E52",
+            "#21151D",
+            "#E7D4BF",
+            "#5E4A85",
+            "#AA8A66"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/03-violet-core-crystal.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_albedo.png",
+            "url": "violet-crystal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_roughness.png",
+            "url": "violet-crystal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_height.png",
+            "url": "violet-crystal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_normal.png",
+            "url": "violet-crystal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_ao.png",
+            "url": "violet-crystal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 43,
+          "sourceHeight": 118,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 43,
+            "height": 118
+          },
+          "mask": {
+            "backgroundColor": "#2A2224",
+            "backgroundNoise": 110.082,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9913
+          },
+          "mapStats": {
+            "valueRange": 0.8735,
+            "heightP90Gradient": 0.14493,
+            "roughnessBase": 0.769,
+            "roughnessVariation": 0.186,
+            "normalStrength": 0.326,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#2E1E52",
+            "#21151D",
+            "#E7D4BF",
+            "#5E4A85",
+            "#AA8A66"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_albedo.png",
+          "url": "violet-crystal_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_roughness.png",
+          "url": "violet-crystal_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_height.png",
+          "url": "violet-crystal_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_normal.png",
+          "url": "violet-crystal_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-03-violet-core-crystal/violet-crystal_ao.png",
+          "url": "violet-crystal_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "minimum-crescent",
+      "regionId": "teal-crescent-enamel",
+      "materialSpecId": "teal-enamel",
+      "hypothesis": {
+        "componentId": "minimum-crescent",
+        "regionId": "teal-crescent-enamel",
+        "materialId": "ceramic.glazed",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "ceramic.glazed",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/04-teal-crescent-enamel.png",
+            "bbox": {
+              "x": 759,
+              "y": 341,
+              "width": 68,
+              "height": 83
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0061
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "teal-enamel",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/04-teal-crescent-enamel.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel",
+            "palette": [
+              "#0C1722",
+              "#1EAEDA",
+              "#0A5F97",
+              "#D2C196",
+              "#7D5C31"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_albedo.png",
+                "url": "teal-enamel_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_roughness.png",
+                "url": "teal-enamel_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_height.png",
+                "url": "teal-enamel_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_normal.png",
+                "url": "teal-enamel_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_ao.png",
+                "url": "teal-enamel_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 68,
+              "sourceHeight": 83,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 68,
+                "height": 83
+              },
+              "mask": {
+                "backgroundColor": "#2E2022",
+                "backgroundNoise": 188.417,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9424
+              },
+              "mapStats": {
+                "valueRange": 0.7853,
+                "heightP90Gradient": 0.14051,
+                "roughnessBase": 0.775,
+                "roughnessVariation": 0.185,
+                "normalStrength": 0.321,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#0C1722",
+                "#1EAEDA",
+                "#0A5F97",
+                "#D2C196",
+                "#7D5C31"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#123562",
+              "#192D3F",
+              "#23647B",
+              "#4B9AA6",
+              "#97784B"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#123562",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  98,
+                  53,
+                  18
+                ]
+              },
+              {
+                "stop": "#192D3F",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  63,
+                  45,
+                  25
+                ]
+              },
+              {
+                "stop": "#23647B",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  123,
+                  100,
+                  35
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 93.1,
+              "meanSaturation": 0.712,
+              "gradientStrength": 0.487,
+              "mottle": 0.122,
+              "streakRatio": 1.18,
+              "hueSpread": 0.335,
+              "specularFraction": 0.036
+            }
+          }
+        },
+        "profileId": "ceramic.glazed",
+        "family": "ceramic",
+        "subtype": "glazed",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.26,
+          "clearcoat": 0.7,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "hard dielectric body",
+          "smooth glaze reflection",
+          "small chips reveal matte body"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/04-teal-crescent-enamel.png",
+        "bbox": {
+          "x": 759,
+          "y": 341,
+          "width": 68,
+          "height": 83
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0061
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#123562",
+          "#192D3F",
+          "#23647B",
+          "#4B9AA6",
+          "#97784B"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#123562",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              98,
+              53,
+              18
+            ]
+          },
+          {
+            "stop": "#192D3F",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              63,
+              45,
+              25
+            ]
+          },
+          {
+            "stop": "#23647B",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              123,
+              100,
+              35
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 93.1,
+          "meanSaturation": 0.712,
+          "gradientStrength": 0.487,
+          "mottle": 0.122,
+          "streakRatio": 1.18,
+          "hueSpread": 0.335,
+          "specularFraction": 0.036
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "teal-enamel",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/04-teal-crescent-enamel.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel",
+        "palette": [
+          "#0C1722",
+          "#1EAEDA",
+          "#0A5F97",
+          "#D2C196",
+          "#7D5C31"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_albedo.png",
+            "url": "teal-enamel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_roughness.png",
+            "url": "teal-enamel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_height.png",
+            "url": "teal-enamel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_normal.png",
+            "url": "teal-enamel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_ao.png",
+            "url": "teal-enamel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 68,
+          "sourceHeight": 83,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 68,
+            "height": 83
+          },
+          "mask": {
+            "backgroundColor": "#2E2022",
+            "backgroundNoise": 188.417,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9424
+          },
+          "mapStats": {
+            "valueRange": 0.7853,
+            "heightP90Gradient": 0.14051,
+            "roughnessBase": 0.775,
+            "roughnessVariation": 0.185,
+            "normalStrength": 0.321,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0C1722",
+            "#1EAEDA",
+            "#0A5F97",
+            "#D2C196",
+            "#7D5C31"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/04-teal-crescent-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_albedo.png",
+            "url": "teal-enamel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_roughness.png",
+            "url": "teal-enamel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_height.png",
+            "url": "teal-enamel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_normal.png",
+            "url": "teal-enamel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_ao.png",
+            "url": "teal-enamel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 68,
+          "sourceHeight": 83,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 68,
+            "height": 83
+          },
+          "mask": {
+            "backgroundColor": "#2E2022",
+            "backgroundNoise": 188.417,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9424
+          },
+          "mapStats": {
+            "valueRange": 0.7853,
+            "heightP90Gradient": 0.14051,
+            "roughnessBase": 0.775,
+            "roughnessVariation": 0.185,
+            "normalStrength": 0.321,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0C1722",
+            "#1EAEDA",
+            "#0A5F97",
+            "#D2C196",
+            "#7D5C31"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_albedo.png",
+          "url": "teal-enamel_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_roughness.png",
+          "url": "teal-enamel_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_height.png",
+          "url": "teal-enamel_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_normal.png",
+          "url": "teal-enamel_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-04-teal-crescent-enamel/teal-enamel_ao.png",
+          "url": "teal-enamel_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "engine-collar",
+      "regionId": "obsidian-engine-alloy",
+      "materialSpecId": "obsidian-alloy",
+      "hypothesis": {
+        "componentId": "engine-collar",
+        "regionId": "obsidian-engine-alloy",
+        "materialId": "coating.painted-metal",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "coating.painted-metal",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/05-obsidian-engine-alloy.png",
+            "bbox": {
+              "x": 548,
+              "y": 476,
+              "width": 75,
+              "height": 24
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.002
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "obsidian-alloy",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/05-obsidian-engine-alloy.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy",
+            "palette": [
+              "#070405",
+              "#1E120F",
+              "#3F2E29",
+              "#74635A",
+              "#E5D6B4"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_albedo.png",
+                "url": "obsidian-alloy_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_roughness.png",
+                "url": "obsidian-alloy_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_height.png",
+                "url": "obsidian-alloy_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_normal.png",
+                "url": "obsidian-alloy_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_ao.png",
+                "url": "obsidian-alloy_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 75,
+              "sourceHeight": 24,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 75,
+                "height": 24
+              },
+              "mask": {
+                "backgroundColor": "#070403",
+                "backgroundNoise": 22.293,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9261
+              },
+              "mapStats": {
+                "valueRange": 0.744,
+                "heightP90Gradient": 0.09686,
+                "roughnessBase": 0.732,
+                "roughnessVariation": 0.169,
+                "normalStrength": 0.27,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#070405",
+                "#1E120F",
+                "#3F2E29",
+                "#74635A",
+                "#E5D6B4"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#1F1A1B",
+              "#19100B",
+              "#A18B71",
+              "#40311F",
+              "#120B09"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 41.4,
+              "meanSaturation": 0.534,
+              "gradientStrength": 0.513,
+              "mottle": 0.094,
+              "streakRatio": 2.78,
+              "hueSpread": 0.424,
+              "specularFraction": 0.013
+            }
+          }
+        },
+        "profileId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.45,
+          "clearcoat": 0.75,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "visualCues": [
+          "diffuse paint colour under a separate glossy coat",
+          "chips may expose metallic substrate"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "directional surface frequency",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/05-obsidian-engine-alloy.png",
+        "bbox": {
+          "x": 548,
+          "y": 476,
+          "width": 75,
+          "height": 24
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.002
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#1F1A1B",
+          "#19100B",
+          "#A18B71",
+          "#40311F",
+          "#120B09"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 41.4,
+          "meanSaturation": 0.534,
+          "gradientStrength": 0.513,
+          "mottle": 0.094,
+          "streakRatio": 2.78,
+          "hueSpread": 0.424,
+          "specularFraction": 0.013
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "obsidian-alloy",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/05-obsidian-engine-alloy.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy",
+        "palette": [
+          "#070405",
+          "#1E120F",
+          "#3F2E29",
+          "#74635A",
+          "#E5D6B4"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_albedo.png",
+            "url": "obsidian-alloy_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_roughness.png",
+            "url": "obsidian-alloy_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_height.png",
+            "url": "obsidian-alloy_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_normal.png",
+            "url": "obsidian-alloy_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_ao.png",
+            "url": "obsidian-alloy_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 75,
+          "sourceHeight": 24,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 75,
+            "height": 24
+          },
+          "mask": {
+            "backgroundColor": "#070403",
+            "backgroundNoise": 22.293,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9261
+          },
+          "mapStats": {
+            "valueRange": 0.744,
+            "heightP90Gradient": 0.09686,
+            "roughnessBase": 0.732,
+            "roughnessVariation": 0.169,
+            "normalStrength": 0.27,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#070405",
+            "#1E120F",
+            "#3F2E29",
+            "#74635A",
+            "#E5D6B4"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/05-obsidian-engine-alloy.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_albedo.png",
+            "url": "obsidian-alloy_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_roughness.png",
+            "url": "obsidian-alloy_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_height.png",
+            "url": "obsidian-alloy_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_normal.png",
+            "url": "obsidian-alloy_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_ao.png",
+            "url": "obsidian-alloy_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 75,
+          "sourceHeight": 24,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 75,
+            "height": 24
+          },
+          "mask": {
+            "backgroundColor": "#070403",
+            "backgroundNoise": 22.293,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9261
+          },
+          "mapStats": {
+            "valueRange": 0.744,
+            "heightP90Gradient": 0.09686,
+            "roughnessBase": 0.732,
+            "roughnessVariation": 0.169,
+            "normalStrength": 0.27,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#070405",
+            "#1E120F",
+            "#3F2E29",
+            "#74635A",
+            "#E5D6B4"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_albedo.png",
+          "url": "obsidian-alloy_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_roughness.png",
+          "url": "obsidian-alloy_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_height.png",
+          "url": "obsidian-alloy_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_normal.png",
+          "url": "obsidian-alloy_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-05-obsidian-engine-alloy/obsidian-alloy_ao.png",
+          "url": "obsidian-alloy_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "earth-horizon",
+      "regionId": "earth-ocean-enamel",
+      "materialSpecId": "earth-enamel",
+      "hypothesis": {
+        "componentId": "earth-horizon",
+        "regionId": "earth-ocean-enamel",
+        "materialId": "ceramic.glazed",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "ceramic.glazed",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/06-earth-ocean-enamel.png",
+            "bbox": {
+              "x": 460,
+              "y": 644,
+              "width": 195,
+              "height": 102
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0216
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "earth-enamel",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/06-earth-ocean-enamel.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel",
+            "palette": [
+              "#0D1010",
+              "#102C3C",
+              "#2C6577",
+              "#685A42",
+              "#B4C5BB"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_albedo.png",
+                "url": "earth-enamel_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_roughness.png",
+                "url": "earth-enamel_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_height.png",
+                "url": "earth-enamel_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_normal.png",
+                "url": "earth-enamel_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_ao.png",
+                "url": "earth-enamel_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 195,
+              "sourceHeight": 102,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 195,
+                "height": 102
+              },
+              "mask": {
+                "backgroundColor": "#111C2D",
+                "backgroundNoise": 28.531,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9702
+              },
+              "mapStats": {
+                "valueRange": 0.7096,
+                "heightP90Gradient": 0.19496,
+                "roughnessBase": 0.789,
+                "roughnessVariation": 0.187,
+                "normalStrength": 0.385,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#0D1010",
+                "#102C3C",
+                "#2C6577",
+                "#685A42",
+                "#B4C5BB"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#182536",
+              "#131C24",
+              "#193C43",
+              "#3A5052",
+              "#45413A"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#182536",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  54,
+                  37,
+                  24
+                ]
+              },
+              {
+                "stop": "#131C24",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  36,
+                  28,
+                  19
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 53.1,
+              "meanSaturation": 0.622,
+              "gradientStrength": 0.318,
+              "mottle": 0.15,
+              "streakRatio": 1.37,
+              "hueSpread": 0.454,
+              "specularFraction": 0.009
+            }
+          }
+        },
+        "profileId": "ceramic.glazed",
+        "family": "ceramic",
+        "subtype": "glazed",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.26,
+          "clearcoat": 0.7,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "hard dielectric body",
+          "smooth glaze reflection",
+          "small chips reveal matte body"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/06-earth-ocean-enamel.png",
+        "bbox": {
+          "x": 460,
+          "y": 644,
+          "width": 195,
+          "height": 102
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0216
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#182536",
+          "#131C24",
+          "#193C43",
+          "#3A5052",
+          "#45413A"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#182536",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              54,
+              37,
+              24
+            ]
+          },
+          {
+            "stop": "#131C24",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              36,
+              28,
+              19
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 53.1,
+          "meanSaturation": 0.622,
+          "gradientStrength": 0.318,
+          "mottle": 0.15,
+          "streakRatio": 1.37,
+          "hueSpread": 0.454,
+          "specularFraction": 0.009
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "earth-enamel",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/06-earth-ocean-enamel.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel",
+        "palette": [
+          "#0D1010",
+          "#102C3C",
+          "#2C6577",
+          "#685A42",
+          "#B4C5BB"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_albedo.png",
+            "url": "earth-enamel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_roughness.png",
+            "url": "earth-enamel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_height.png",
+            "url": "earth-enamel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_normal.png",
+            "url": "earth-enamel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_ao.png",
+            "url": "earth-enamel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 195,
+          "sourceHeight": 102,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 195,
+            "height": 102
+          },
+          "mask": {
+            "backgroundColor": "#111C2D",
+            "backgroundNoise": 28.531,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9702
+          },
+          "mapStats": {
+            "valueRange": 0.7096,
+            "heightP90Gradient": 0.19496,
+            "roughnessBase": 0.789,
+            "roughnessVariation": 0.187,
+            "normalStrength": 0.385,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0D1010",
+            "#102C3C",
+            "#2C6577",
+            "#685A42",
+            "#B4C5BB"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/06-earth-ocean-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_albedo.png",
+            "url": "earth-enamel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_roughness.png",
+            "url": "earth-enamel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_height.png",
+            "url": "earth-enamel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_normal.png",
+            "url": "earth-enamel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_ao.png",
+            "url": "earth-enamel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 195,
+          "sourceHeight": 102,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 195,
+            "height": 102
+          },
+          "mask": {
+            "backgroundColor": "#111C2D",
+            "backgroundNoise": 28.531,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9702
+          },
+          "mapStats": {
+            "valueRange": 0.7096,
+            "heightP90Gradient": 0.19496,
+            "roughnessBase": 0.789,
+            "roughnessVariation": 0.187,
+            "normalStrength": 0.385,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0D1010",
+            "#102C3C",
+            "#2C6577",
+            "#685A42",
+            "#B4C5BB"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_albedo.png",
+          "url": "earth-enamel_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_roughness.png",
+          "url": "earth-enamel_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_height.png",
+          "url": "earth-enamel_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_normal.png",
+          "url": "earth-enamel_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-06-earth-ocean-enamel/earth-enamel_ao.png",
+          "url": "earth-enamel_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "orbit-rail",
+      "regionId": "cyan-orbit-emission",
+      "materialSpecId": "cyan-emissive",
+      "hypothesis": {
+        "componentId": "orbit-rail",
+        "regionId": "cyan-orbit-emission",
+        "materialId": "ceramic.glazed",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.86,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "ceramic.glazed",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/07-cyan-orbit-emission.png",
+            "bbox": {
+              "x": 411,
+              "y": 628,
+              "width": 226,
+              "height": 24
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0059
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.86,
+            "estimatedFidelity": 0.86,
+            "targetThreshold": 0.7,
+            "materialId": "cyan-emissive",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/07-cyan-orbit-emission.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission",
+            "palette": [
+              "#14120E",
+              "#17324C",
+              "#25629C",
+              "#685A3C",
+              "#B2B397"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_albedo.png",
+                "url": "cyan-emissive_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_roughness.png",
+                "url": "cyan-emissive_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_height.png",
+                "url": "cyan-emissive_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_normal.png",
+                "url": "cyan-emissive_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_ao.png",
+                "url": "cyan-emissive_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 226,
+              "sourceHeight": 24,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 226,
+                "height": 24
+              },
+              "mask": {
+                "backgroundColor": "#55726F",
+                "backgroundNoise": 142.232,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.8497
+              },
+              "mapStats": {
+                "valueRange": 0.6793,
+                "heightP90Gradient": 0.19692,
+                "roughnessBase": 0.811,
+                "roughnessVariation": 0.191,
+                "normalStrength": 0.387,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#14120E",
+                "#17324C",
+                "#25629C",
+                "#685A3C",
+                "#B2B397"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#2D2111",
+              "#4A402F",
+              "#294B6E",
+              "#2E4646",
+              "#706E68"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#294B6E",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  110,
+                  75,
+                  41
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 68.5,
+              "meanSaturation": 0.524,
+              "gradientStrength": 0.5,
+              "mottle": 0.178,
+              "streakRatio": 4.08,
+              "hueSpread": 0.754,
+              "specularFraction": 0.016
+            }
+          }
+        },
+        "profileId": "ceramic.glazed",
+        "family": "ceramic",
+        "subtype": "glazed",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.26,
+          "clearcoat": 0.7,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "hard dielectric body",
+          "smooth glaze reflection",
+          "small chips reveal matte body"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "directional surface frequency",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/07-cyan-orbit-emission.png",
+        "bbox": {
+          "x": 411,
+          "y": 628,
+          "width": 226,
+          "height": 24
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0059
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#2D2111",
+          "#4A402F",
+          "#294B6E",
+          "#2E4646",
+          "#706E68"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#294B6E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              110,
+              75,
+              41
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 68.5,
+          "meanSaturation": 0.524,
+          "gradientStrength": 0.5,
+          "mottle": 0.178,
+          "streakRatio": 4.08,
+          "hueSpread": 0.754,
+          "specularFraction": 0.016
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "materialId": "cyan-emissive",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/07-cyan-orbit-emission.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission",
+        "palette": [
+          "#14120E",
+          "#17324C",
+          "#25629C",
+          "#685A3C",
+          "#B2B397"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_albedo.png",
+            "url": "cyan-emissive_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_roughness.png",
+            "url": "cyan-emissive_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_height.png",
+            "url": "cyan-emissive_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_normal.png",
+            "url": "cyan-emissive_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_ao.png",
+            "url": "cyan-emissive_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 226,
+          "sourceHeight": 24,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 226,
+            "height": 24
+          },
+          "mask": {
+            "backgroundColor": "#55726F",
+            "backgroundNoise": 142.232,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8497
+          },
+          "mapStats": {
+            "valueRange": 0.6793,
+            "heightP90Gradient": 0.19692,
+            "roughnessBase": 0.811,
+            "roughnessVariation": 0.191,
+            "normalStrength": 0.387,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#14120E",
+            "#17324C",
+            "#25629C",
+            "#685A3C",
+            "#B2B397"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/07-cyan-orbit-emission.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_albedo.png",
+            "url": "cyan-emissive_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_roughness.png",
+            "url": "cyan-emissive_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_height.png",
+            "url": "cyan-emissive_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_normal.png",
+            "url": "cyan-emissive_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_ao.png",
+            "url": "cyan-emissive_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 226,
+          "sourceHeight": 24,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 226,
+            "height": 24
+          },
+          "mask": {
+            "backgroundColor": "#55726F",
+            "backgroundNoise": 142.232,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8497
+          },
+          "mapStats": {
+            "valueRange": 0.6793,
+            "heightP90Gradient": 0.19692,
+            "roughnessBase": 0.811,
+            "roughnessVariation": 0.191,
+            "normalStrength": 0.387,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#14120E",
+            "#17324C",
+            "#25629C",
+            "#685A3C",
+            "#B2B397"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_albedo.png",
+          "url": "cyan-emissive_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_roughness.png",
+          "url": "cyan-emissive_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_height.png",
+          "url": "cyan-emissive_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_normal.png",
+          "url": "cyan-emissive_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-07-cyan-orbit-emission/cyan-emissive_ao.png",
+          "url": "cyan-emissive_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "launch-window-cells",
+      "regionId": "amber-launch-emission",
+      "materialSpecId": "amber-emissive",
+      "hypothesis": {
+        "componentId": "launch-window-cells",
+        "regionId": "amber-launch-emission",
+        "materialId": "ceramic.glazed",
+        "family": null,
+        "subtype": null,
+        "finish": null,
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "ceramic.glazed",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/08-amber-launch-emission.png",
+            "bbox": {
+              "x": 370,
+              "y": 787,
+              "width": 302,
+              "height": 35
+            },
+            "sourceWidth": 900,
+            "sourceHeight": 1024,
+            "loaderWarnings": [],
+            "coverage": 0.0115
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "amber-emissive",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/08-amber-launch-emission.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission",
+            "palette": [
+              "#100C0A",
+              "#1B2028",
+              "#4C3219",
+              "#EAC569",
+              "#92662F"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_albedo.png",
+                "url": "amber-emissive_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_roughness.png",
+                "url": "amber-emissive_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_height.png",
+                "url": "amber-emissive_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_normal.png",
+                "url": "amber-emissive_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_ao.png",
+                "url": "amber-emissive_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 302,
+              "sourceHeight": 35,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 302,
+                "height": 35
+              },
+              "mask": {
+                "backgroundColor": "#171810",
+                "backgroundNoise": 32.863,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9083
+              },
+              "mapStats": {
+                "valueRange": 0.7823,
+                "heightP90Gradient": 0.09031,
+                "roughnessBase": 0.738,
+                "roughnessVariation": 0.161,
+                "normalStrength": 0.262,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#100C0A",
+                "#1B2028",
+                "#4C3219",
+                "#EAC569",
+                "#92662F"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#5B3D19",
+              "#71582A",
+              "#3E2E1C",
+              "#2B221C",
+              "#25221F"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 54.0,
+              "meanSaturation": 0.532,
+              "gradientStrength": 0.339,
+              "mottle": 0.089,
+              "streakRatio": 1.71,
+              "hueSpread": 0.566,
+              "specularFraction": 0.01
+            }
+          }
+        },
+        "profileId": "ceramic.glazed",
+        "family": "ceramic",
+        "subtype": "glazed",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.26,
+          "clearcoat": 0.7,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "hard dielectric body",
+          "smooth glaze reflection",
+          "small chips reveal matte body"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/08-amber-launch-emission.png",
+        "bbox": {
+          "x": 370,
+          "y": 787,
+          "width": 302,
+          "height": 35
+        },
+        "sourceWidth": 900,
+        "sourceHeight": 1024,
+        "loaderWarnings": [],
+        "coverage": 0.0115
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#5B3D19",
+          "#71582A",
+          "#3E2E1C",
+          "#2B221C",
+          "#25221F"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 54.0,
+          "meanSaturation": 0.532,
+          "gradientStrength": 0.339,
+          "mottle": 0.089,
+          "streakRatio": 1.71,
+          "hueSpread": 0.566,
+          "specularFraction": 0.01
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "amber-emissive",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/08-amber-launch-emission.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission",
+        "palette": [
+          "#100C0A",
+          "#1B2028",
+          "#4C3219",
+          "#EAC569",
+          "#92662F"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_albedo.png",
+            "url": "amber-emissive_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_roughness.png",
+            "url": "amber-emissive_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_height.png",
+            "url": "amber-emissive_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_normal.png",
+            "url": "amber-emissive_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_ao.png",
+            "url": "amber-emissive_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 302,
+          "sourceHeight": 35,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 302,
+            "height": 35
+          },
+          "mask": {
+            "backgroundColor": "#171810",
+            "backgroundNoise": 32.863,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9083
+          },
+          "mapStats": {
+            "valueRange": 0.7823,
+            "heightP90Gradient": 0.09031,
+            "roughnessBase": 0.738,
+            "roughnessVariation": 0.161,
+            "normalStrength": 0.262,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100C0A",
+            "#1B2028",
+            "#4C3219",
+            "#EAC569",
+            "#92662F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/08-amber-launch-emission.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_albedo.png",
+            "url": "amber-emissive_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_roughness.png",
+            "url": "amber-emissive_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_height.png",
+            "url": "amber-emissive_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_normal.png",
+            "url": "amber-emissive_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_ao.png",
+            "url": "amber-emissive_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 302,
+          "sourceHeight": 35,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 302,
+            "height": 35
+          },
+          "mask": {
+            "backgroundColor": "#171810",
+            "backgroundNoise": 32.863,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9083
+          },
+          "mapStats": {
+            "valueRange": 0.7823,
+            "heightP90Gradient": 0.09031,
+            "roughnessBase": 0.738,
+            "roughnessVariation": 0.161,
+            "normalStrength": 0.262,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100C0A",
+            "#1B2028",
+            "#4C3219",
+            "#EAC569",
+            "#92662F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_albedo.png",
+          "url": "amber-emissive_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_roughness.png",
+          "url": "amber-emissive_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_height.png",
+          "url": "amber-emissive_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_normal.png",
+          "url": "amber-emissive_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-evidence/pbr-08-amber-launch-emission/amber-emissive_ao.png",
+          "url": "amber-emissive_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "status": "proceed",
+  "limitations": [
+    "PBR extraction is reference-derived inference, not inverse rendering.",
+    "A crop must be checked against the component visible footprint before accepting material scores."
+  ],
+  "artifact": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-personal-playbook/material-analysis.json"
+}

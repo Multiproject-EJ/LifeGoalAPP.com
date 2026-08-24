@@ -164,6 +164,12 @@ export const ISLAND_3D_TILE_IMPACT_DURATION_MS = 420;
 export const ISLAND_3D_IDLE_OVERVIEW_DELAY_MS = 3_600;
 /** Deliberately slower than authored focus changes, so it reads as a drift. */
 export const ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE = 2.8;
+/** Build stays camera-locked through work and this additional quiet period. */
+export const ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS = 7_000;
+/** The main board does not begin ambient POV variation until truly idle. */
+export const ISLAND_3D_BOARD_POV_IDLE_DELAY_MS = 40_000;
+/** Gentle POV changes recur slowly enough to remain background ambience. */
+export const ISLAND_3D_AMBIENT_POV_INTERVAL_MS = 14_000;
 
 export function shouldFadeCentralLandmarkForCamera(input: {
   cameraPosition: readonly [number, number, number];

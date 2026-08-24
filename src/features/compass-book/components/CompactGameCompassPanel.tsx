@@ -47,6 +47,7 @@ export function CompactGameCompassPanel({
         session={session}
         initialChapterId={fullBook.chapterId}
         initialActivityId={fullBook.activityId}
+        presentationContext="island_run"
         onClose={onClose}
       />
     );

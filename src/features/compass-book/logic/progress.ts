@@ -53,8 +53,26 @@ export function isActivityComplete(
 
   return requiredBlocks.every((block) => {
     const answer = byQuestion.get(block.questionId);
-    return Boolean(answer && answer.confirmed && hasValue(answer));
+    return Boolean(answer && answer.confirmed && isBlockAnswerPresent(block, answer.value));
   });
+}
+
+/**
+ * Recompute completion after a save without taking previously earned fragment
+ * completion away. This grandfathers v1 fragments when a later method adds
+ * optional evidence or changes its presentational wording.
+ */
+export function mergeCompletedActivityIds(
+  activities: readonly CompassBookActivityDefinition[],
+  previouslyCompletedIds: readonly string[],
+  answers: readonly CompassAnswerRecord[],
+): string[] {
+  const previouslyCompleted = new Set(previouslyCompletedIds);
+  return activities
+    .filter(
+      (activity) => previouslyCompleted.has(activity.id) || isActivityComplete(activity, answers),
+    )
+    .map((activity) => activity.id);
 }
 
 /** True when the activity has at least one saved answer (confirmed or not). */
@@ -87,6 +105,18 @@ export function isAnswerValuePresent(value: CompassAnswerValue | undefined): boo
   }
 }
 
+/** Validate a value against block-specific constraints such as a 3–5 choice lock. */
+export function isBlockAnswerPresent(
+  block: CompassBookActivityDefinition['blocks'][number],
+  value: CompassAnswerValue | undefined,
+): boolean {
+  if (!isAnswerValuePresent(value)) return false;
+  if (block.type !== 'multi_choice' || value?.kind !== 'multi_choice') return true;
+  const count = value.optionIds.length;
+  return count >= (block.minSelections ?? 1) &&
+    (block.maxSelections === undefined || count <= block.maxSelections);
+}
+
 /**
  * True when every required block of an activity has a usable value. Used by the
  * guided flow to gate "Save & continue" — kept here so UI and tests share logic.
@@ -97,7 +127,7 @@ export function areRequiredBlocksAnswered(
 ): boolean {
   return activity.blocks
     .filter((block) => block.required)
-    .every((block) => isAnswerValuePresent(valueByQuestionId[block.questionId]));
+    .every((block) => isBlockAnswerPresent(block, valueByQuestionId[block.questionId]));
 }
 
 function hasValue(answer: CompassAnswerRecord): boolean {
@@ -122,7 +152,7 @@ function activityStatus(
     .filter((block) => block.required)
     .every((block) => {
       const answer = byQuestion.get(block.questionId);
-      return Boolean(answer && hasValue(answer));
+      return Boolean(answer && isBlockAnswerPresent(block, answer.value));
     });
   return allRequiredHaveValue ? 'answered' : 'started';
 }

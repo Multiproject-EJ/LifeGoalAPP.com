@@ -64,6 +64,7 @@
 .compass-book__backdrop {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background: rgba(4, 7, 18, 0.78);
   backdrop-filter: blur(8px);
   animation: cbk-fade 180ms ease-out;
@@ -71,6 +72,7 @@
 
 .compass-book__sheet {
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -82,6 +84,175 @@
   box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   animation: cbk-rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.compass-book[data-entry-choreography='island_summon'] .compass-book__sheet {
+  animation: cbk-island-sheet-arrival var(--cbk-island-entrance-ms, 1750ms)
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cbk-island-sheet-arrival {
+  0%, 26% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Production living-book layer. It owns only the physical object and spatial
+   hit targets; the parchment sheet above remains the complete accessible UI. */
+.compass-book-three-shell {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(103, 70, 181, 0.25), transparent 34%),
+    linear-gradient(180deg, rgba(7, 9, 24, 0.22), rgba(4, 5, 14, 0.6));
+}
+
+.compass-book-three-shell[data-entrance='island_summon'] {
+  background:
+    radial-gradient(ellipse at 48% 76%, rgba(245, 188, 70, 0.2), transparent 24%),
+    radial-gradient(circle at 50% 42%, rgba(54, 137, 162, 0.22), transparent 38%),
+    linear-gradient(180deg, rgba(5, 11, 31, 0.3), rgba(2, 7, 20, 0.74));
+}
+
+.compass-book-three-shell__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.compass-book-three-shell--fallback {
+  display: none;
+  pointer-events: none;
+}
+
+.compass-book-three-shell__ceremony {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 52%, rgba(255, 214, 103, 0.24), transparent 32%);
+}
+
+.compass-book-three-shell__ceremony span {
+  position: absolute;
+  bottom: 11%;
+  left: 25%;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  border: 1px solid rgba(242, 193, 78, 0.66);
+  border-radius: 999px;
+  color: #fff0b9;
+  background: rgba(18, 12, 39, 0.88);
+  box-shadow: 0 0 36px rgba(237, 183, 62, 0.42);
+  font-family: var(--cbk-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 899px) {
+  .compass-book-three-shell__ceremony span {
+    display: none;
+  }
+}
+
+.compass-book-three-shell[data-celebrating='true'] .compass-book-three-shell__ceremony {
+  animation: cbk-three-ceremony 1800ms ease-out both;
+}
+
+.compass-book[data-presentation='2d'] .compass-book-three-shell {
+  display: none;
+}
+
+.compass-book__presentation-control {
+  position: fixed;
+  z-index: 8;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  left: max(14px, env(safe-area-inset-left, 0px));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px 6px 10px;
+  border: 1px solid rgba(242, 193, 78, 0.4);
+  border-radius: 999px;
+  color: rgba(255, 241, 193, 0.82);
+  background: rgba(12, 10, 29, 0.9);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.compass-book__presentation-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.compass-book__presentation-options {
+  display: flex;
+  gap: 2px;
+}
+
+.compass-book__presentation-options button {
+  min-width: 38px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  color: rgba(255, 246, 213, 0.78);
+  background: transparent;
+  font: 800 0.72rem/1 system-ui, sans-serif;
+}
+
+.compass-book__presentation-options button:hover {
+  color: #fff8dd;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.compass-book__presentation-options button.is-selected {
+  color: #20150a;
+  background: #efc865;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.compass-book__presentation-options button:focus-visible {
+  outline: 3px solid #78e8ff;
+  outline-offset: 2px;
+}
+
+.compass-book__entrance-status {
+  position: fixed;
+  z-index: 8;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 9px 17px;
+  border: 1px solid rgba(242, 193, 78, 0.42);
+  border-radius: 999px;
+  color: #fff1bd;
+  background: rgba(10, 13, 34, 0.82);
+  box-shadow: 0 0 34px rgba(224, 168, 47, 0.2);
+  font: 700 0.75rem/1.2 var(--cbk-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: cbk-entrance-status var(--cbk-island-entrance-ms, 1750ms) ease both;
+}
+
+@keyframes cbk-entrance-status {
+  0%, 8% { opacity: 0; transform: translate(-50%, 8px); }
+  22%, 72% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -4px); }
 }
 
 /* Paper, not pixels: grain, a few foxing blotches, an aged-edge vignette, and
@@ -112,12 +283,112 @@
 
   .compass-book__sheet {
     max-height: min(92vh, 940px);
+    width: min(680px, 82vw);
     border-radius: 22px;
     /* The closed-book edge: a leather ring with a gilt tooling line. */
     box-shadow:
       0 0 0 7px #21150a,
       0 0 0 8px rgba(242, 193, 78, 0.35),
       0 34px 90px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Wide portrait/tablet: the DOM surface becomes the right reading page while
+   the unobstructed physical left page, hinge, and compass remain visible. */
+@media (min-width: 900px) {
+  .compass-book__sheet {
+    width: min(640px, 49vw);
+    margin-left: min(48vw, 620px);
+    border-radius: 4px 22px 22px 4px;
+    box-shadow:
+      -22px 0 34px rgba(65, 39, 10, 0.28),
+      0 0 0 7px #21150a,
+      0 0 0 8px rgba(242, 193, 78, 0.35),
+      0 34px 90px rgba(0, 0, 0, 0.65);
+  }
+
+  .compass-book__sheet::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 3;
+    width: 22px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(67, 42, 12, 0.38), rgba(67, 42, 12, 0.1) 45%, transparent);
+    mix-blend-mode: multiply;
+  }
+
+  .compass-book__topbar {
+    padding-block: 10px 9px;
+    background: rgba(232, 211, 163, 0.82);
+  }
+
+  .compass-book__scroll {
+    padding: 22px 24px 34px;
+  }
+
+  /* Only pages with approved physical left-page reliefs use the hybrid spread.
+     Remaining pages stay centered until their own relief loop is complete. */
+  .compass-book:not([data-page-id='reading']):not([data-page-id='living_wheel']):not([data-page-id='inner_compass']):not([data-page-id='living_horizon']):not([data-page-id='ikigai_map']):not([data-page-id='quest_forge']):not([data-page-id='personal_playbook']) .compass-book__sheet {
+    width: min(680px, 82vw);
+    margin-left: 0;
+    border-radius: 22px;
+  }
+
+  .compass-book[data-presentation='2d'] .compass-book__sheet {
+    width: min(760px, 88vw);
+    margin-left: 0;
+    border-radius: 22px;
+  }
+
+  .compass-book[data-presentation='2d'] .compass-book__sheet::after {
+    display: none;
+  }
+}
+
+@media (max-width: 719px) {
+  .compass-book-three-shell {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .compass-book-three-shell[data-open='false'] {
+    z-index: 3;
+    opacity: 1;
+  }
+
+  .compass-book__sheet {
+    border: 5px solid #171329;
+    box-shadow:
+      inset 0 0 0 1px rgba(242, 193, 78, 0.48),
+      inset 0 0 22px rgba(88, 55, 16, 0.18);
+  }
+
+  .compass-book__topbar {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+    padding-bottom: 9px;
+  }
+
+  .compass-book__presentation-control {
+    top: auto;
+    bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .compass-book[data-entry-choreography='island_summon'] .compass-book__presentation-control {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .compass-book__entrance-status {
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 32px);
+    white-space: nowrap;
+  }
+
+  .compass-book__scroll {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -134,9 +405,32 @@
   }
 }
 
+@keyframes cbk-three-ceremony {
+  0% { opacity: 0; transform: scale(0.96); }
+  18%, 68% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .compass-book__backdrop,
   .compass-book__sheet {
+    animation: none;
+  }
+
+  .compass-book[data-entry-choreography='island_summon'] .compass-book__sheet {
+    animation: none;
+  }
+
+  .compass-book-three-shell {
+    transition: none;
+  }
+
+  .compass-book-three-shell[data-celebrating='true'] .compass-book-three-shell__ceremony {
+    animation: cbk-fade 900ms ease-out both reverse;
+  }
+
+  .compass-book__entrance-status {
+    display: none;
     animation: none;
   }
 }
@@ -671,6 +965,133 @@
   gap: 8px;
 }
 
+.compass-book__choice-group,
+.compass-book__ranking {
+  display: grid;
+  gap: 10px;
+}
+
+.compass-book__choice-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.compass-book__choice-tool {
+  appearance: none;
+  border: 0;
+  padding: 3px 0;
+  background: transparent;
+  color: #385d91;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.compass-book__selection-count {
+  margin: 0;
+  color: var(--cbk-ink-muted);
+  font-size: 0.78rem;
+}
+
+.compass-book__lock-celebration {
+  margin: 2px 0 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(183, 137, 31, 0.38);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 235, 155, 0.48), rgba(255, 255, 255, 0.32));
+  color: #67490f;
+  font-family: var(--cbk-serif);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.compass-book__live-read {
+  display: grid;
+  gap: 5px;
+  margin: 14px 0 18px;
+  padding: 12px;
+  border: 1px solid rgba(67, 91, 125, 0.2);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(232, 240, 245, 0.32));
+}
+
+.compass-book__live-read > span {
+  color: #386183;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.compass-book__live-read > p {
+  margin: 0;
+  color: var(--cbk-ink-muted);
+  font-size: 0.76rem;
+}
+
+.compass-book__live-read .compass-wheel {
+  margin-top: 5px;
+}
+
+.compass-book__ranking-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compass-book__ranking-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid rgba(70, 50, 16, 0.18);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.compass-book__ranking-number {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(60, 90, 143, 0.13);
+  color: #304d78;
+  font-weight: 800;
+  font-size: 0.76rem;
+}
+
+.compass-book__ranking-label {
+  min-width: 0;
+  font-weight: 650;
+}
+
+.compass-book__ranking-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.compass-book__ranking-actions button {
+  width: 28px;
+  height: 32px;
+  border: 1px solid rgba(70, 50, 16, 0.2);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--cbk-ink-soft);
+  cursor: pointer;
+}
+
+.compass-book__ranking-actions button:disabled {
+  cursor: default;
+  opacity: 0.28;
+}
+
 .compass-book__option {
   appearance: none;
   cursor: pointer;
@@ -692,11 +1113,162 @@
   transform: scale(0.96);
 }
 
+.compass-book__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .compass-book__option--on {
   background: rgba(60, 90, 143, 0.16);
   border-color: rgba(60, 90, 143, 0.85);
   color: #26375a;
   box-shadow: 0 0 12px rgba(60, 90, 143, 0.2);
+}
+
+/* Recognition-first option cards. The image supplies a concrete situation;
+   visible copy keeps the choice usable when imagery is unavailable. */
+.compass-scenarios {
+  display: grid;
+  gap: 12px;
+}
+
+.compass-scenarios__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+  gap: 9px;
+}
+
+.compass-scenarios__card {
+  appearance: none;
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px;
+  cursor: pointer;
+  border: 1px solid rgba(70, 50, 16, 0.24);
+  border-radius: 14px;
+  color: var(--cbk-ink-soft);
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 11px rgba(45, 32, 11, 0.06);
+  text-align: left;
+  transition: transform 120ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.compass-scenarios__card:hover {
+  border-color: rgba(60, 90, 143, 0.62);
+  transform: translateY(-2px);
+}
+
+.compass-scenarios__card:active {
+  transform: scale(0.985);
+}
+
+.compass-scenarios__card:focus-visible {
+  outline: 3px solid rgba(57, 115, 175, 0.42);
+  outline-offset: 2px;
+}
+
+.compass-scenarios__card--on {
+  border-color: rgba(46, 107, 79, 0.88);
+  background: linear-gradient(145deg, rgba(223, 247, 235, 0.72), rgba(255, 249, 222, 0.58));
+  box-shadow: 0 0 0 2px rgba(46, 107, 79, 0.12), 0 9px 20px rgba(38, 98, 75, 0.13);
+}
+
+.compass-scenarios__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid rgba(70, 50, 16, 0.16);
+  border-radius: 10px;
+  background-color: rgba(54, 64, 78, 0.12);
+  background-repeat: no-repeat;
+}
+
+.compass-scenarios__visual i {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  color: #fff;
+  background: #2e6b4f;
+  box-shadow: 0 3px 10px rgba(13, 55, 42, 0.32);
+  font-style: normal;
+  font-size: 0.75rem;
+}
+
+.compass-scenarios__copy {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 9px 7px 7px;
+}
+
+.compass-scenarios__copy strong {
+  color: var(--cbk-ink);
+  font-family: var(--cbk-serif);
+  font-size: 0.83rem;
+  line-height: 1.2;
+}
+
+.compass-scenarios__copy > span {
+  color: var(--cbk-ink-muted);
+  font-size: 0.69rem;
+  line-height: 1.34;
+}
+
+.compass-scenarios__copy small {
+  justify-self: start;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #37556b;
+  background: rgba(56, 97, 131, 0.09);
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.compass-scenarios__card--escape {
+  grid-column: 1 / -1;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  padding: 8px;
+  border-style: dashed;
+  background: rgba(236, 243, 247, 0.38);
+}
+
+.compass-scenarios__card--escape .compass-scenarios__visual {
+  aspect-ratio: 1;
+  color: #315f82;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 239, 169, 0.78), rgba(69, 111, 151, 0.15));
+  font-family: var(--cbk-serif);
+  font-size: 1.55rem;
+}
+
+@media (max-width: 360px) {
+  .compass-scenarios__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-scenarios__card {
+    transition: none;
+  }
+
+  .compass-scenarios__card:hover,
+  .compass-scenarios__card:active {
+    transform: none;
+  }
 }
 
 .compass-life-wheel {
@@ -1087,6 +1659,30 @@
   color: var(--cbk-gold);
 }
 
+.compass-wheel__proof {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 9px;
+  margin: 6px 0 2px;
+  color: var(--cbk-ink-muted);
+  font-size: 0.68rem;
+}
+
+.compass-wheel__proof strong {
+  color: #286b5a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.compass-wheel__proof--dark {
+  color: rgba(213, 242, 255, 0.74);
+}
+
+.compass-wheel__proof--dark strong {
+  color: #83efcb;
+}
+
 .compass-wheel__mechanics {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1146,6 +1742,17 @@
   margin: 12px 0 0;
   font-size: 0.85rem;
   color: var(--cbk-ink-soft);
+  text-align: left;
+}
+
+.compass-wheel__counter {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid rgba(194, 119, 52, 0.56);
+  color: var(--cbk-ink-muted);
+  background: rgba(194, 119, 52, 0.07);
+  font-size: 0.78rem;
+  line-height: 1.4;
   text-align: left;
 }
 
@@ -2415,6 +3022,10 @@
   fill: var(--cbk-ink-soft);
   font-size: 7.5px;
   font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(246, 233, 197, 0.86);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
 }
 
 .compass-wheel__svg--wide {

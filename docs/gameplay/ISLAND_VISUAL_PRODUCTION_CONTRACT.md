@@ -136,6 +136,49 @@ Each landmark uses three images with a clear additive build story:
 
 Levels must read as the same structure growing. Do not swap to a different building, camera, footprint, lighting direction, or color identity between levels.
 
+### Build-modal construction time-lapse
+
+The build modal presents the funded level as fully opaque geometry and reveals
+only the additive parts of the next level. A target-level ghost of the whole
+building is not an acceptable substitute: unchanged walls, foundations and
+props must remain the current physical structure while new parts appear in a
+deterministic bottom-to-top sequence.
+
+Every actual-3D island must ship an authored construction profile for all five
+landmarks and all three transitions (L0→L1, L1→L2, and L2→L3). Each transition
+uses five semantic reveal stages—foundation, body, upper silhouette, working
+mechanism, and commissioning detail—and one compact, landmark-local façade rig.
+An island is not production-complete while any landmark falls back to an
+un-authored whole-model fade.
+
+The façade rig must match the island's materials and story. The live modal must not generate a second
+rectangular scaffold cage around the real landmark envelope. Façade
+scaffolding, dust, materials, tool motion and relocation are visible only while
+auto-build is held or during the short presentation tail after a part purchase.
+They disappear when the construction burst ends and after a level is complete.
+
+An open but inactive build modal is a resting scene: the three miniature
+robots slow-hover without relocating, use no active construction effects, and
+cycle among at least five face states at roughly fifteen-second intervals. One
+robot may occasionally perform a short camera-forward spin and return. Only an
+active, contact-capable tool such as a drill, hammer or saw may add vibration;
+the robot root may not receive competing per-frame transform writers.
+
+Robot bodies use conservative presentation occupancy volumes. They must remain
+outside a height-aware landmark shell and outside one another during station
+holds and relocation interpolation; only hands, tools and carried workpieces
+may enter the authored contact zone.
+
+Construction input locks the current POV for the active burst and a seven-second
+recent-work window. After that, an idle modal may make a small orbit around the
+same landmark. The main board may begin ambient POV variation only after forty
+seconds without interaction. Reduced-motion mode disables these ambient changes.
+
+All construction choreography is presentation-only. It may read canonical
+build state and modal input state, but it may not write gameplay progress.
+Reduced-motion mode removes relocation, vibration, camera-forward beats and
+non-essential effects while preserving the current/next-level read.
+
 Every manifest may define a separate `levelZeroPlacement` for its persistent
 terrain plot and `levelScales` for L1/L2/L3. The renderer bottom-anchors building
 growth to the building placement box. Island-specific ladders are permitted,
@@ -256,6 +299,10 @@ An asset moves from draft → selected → approved only after all applicable ga
 8. **Delivery:** pack classification, dependency list, compressed/installed
    bytes and any approved exception are recorded; no avoidable duplicate binary
    is introduced.
+9. **Construction authoring:** every actual-3D landmark passes the 15-transition
+   island audit: all five reveal stages exist, funded L1/L2 geometry is retained,
+   temporary rigs appear only during active work, and funded models contain no
+   construction dressing.
 
 ### 360-degree authored-geometry gate
 

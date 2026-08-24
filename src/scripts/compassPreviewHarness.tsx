@@ -4,10 +4,12 @@
  * the app and excluded from the production build inputs.
  */
 import { useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import { CompassBookScreen } from '../features/compass-book/components/CompassBookScreen';
 import { DEMO_ISLAND_NUMBER } from '../features/compass-book/content/demoBook';
 import type { CompassBookChapterId } from '../features/compass-book/types';
+import { parseCompassBookPresentationMode } from '../features/compass-book/logic/presentation';
+import { CompassBookDeviceProfiler } from '../features/compass-book/dev/CompassBookDeviceProfiler';
 import { QuickAddSheet } from '../components/QuickAddSheet';
 import { GoalPillarMeter } from '../features/goals/GoalPillarMeter';
 import { MyQuestHub } from '../features/goals/MyQuestHub';
@@ -25,6 +27,7 @@ function Harness() {
   const activity = params.get('activity') ?? undefined;
   // `?chapter=personal_playbook` opens a specific one-page chapter graphic.
   const chapter = (params.get('chapter') ?? undefined) as CompassBookChapterId | undefined;
+  const entranceDuration = Number(params.get('entrance_ms'));
   const islandOverride = Number(params.get('island'));
   const previewIsland = Number.isFinite(islandOverride) && islandOverride > 0
     ? islandOverride
@@ -64,6 +67,17 @@ function Harness() {
           session={null}
           initialChapterId={chapter ?? (activity ? 'living_wheel' : undefined)}
           initialActivityId={activity}
+          presentationContext={params.get('context') === 'island_run' ? 'island_run' : 'pwa'}
+          initialPresentationMode={
+            params.has('presentation')
+              ? parseCompassBookPresentationMode(params.get('presentation'))
+              : undefined
+          }
+          islandEntranceDurationMs={
+            Number.isFinite(entranceDuration) && entranceDuration > 0
+              ? entranceDuration
+              : undefined
+          }
           // `?page=quest_ledger` opens straight onto the Quest Ledger page.
           initialPageId={params.get('page') === 'quest_ledger' ? 'quest_ledger' : undefined}
           questLedger={{
@@ -124,8 +138,18 @@ function Harness() {
           <GoalPillarMeter pillars={pillars} size="full" />
         </div>
       ) : null}
+      {params.get('profile') === '1' ? <CompassBookDeviceProfiler /> : null}
     </div>
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Harness />);
+declare global {
+  interface Window {
+    __compassPreviewRoot?: Root;
+  }
+}
+
+const previewRoot = window.__compassPreviewRoot
+  ?? createRoot(document.getElementById('root')!);
+window.__compassPreviewRoot = previewRoot;
+previewRoot.render(<Harness />);

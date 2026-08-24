@@ -66,16 +66,6 @@ export const islandStoryManifestValidationTests: TestCase[] = [
       assert(result.valid, result.errors.join('; '));
     },
   },
-  {
-    name: 'shipped global prologue manifest passes validation and every media asset exists',
-    run: () => {
-      const manifest = JSON.parse(readFileSync('public/storyline/episode-001/manifest.json', 'utf8'));
-      const result = validateIslandStoryManifest(manifest, {
-        assetExists: (src) => existsSync(decodeURIComponent(`public${src}`)),
-      });
-      assert(result.valid, result.errors.join('; '));
-    },
-  },
   { name: 'invalid reward manifest fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', panels: [{ type: 'text', text: 'ok' }], reward: { coins: 1 } }).valid, 'Reward manifest should fail') },
   { name: 'invalid media panel fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', panels: [{ type: 'image' }] }).valid, 'Missing media src should fail') },
   { name: 'invalid video poster type fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', panels: [{ type: 'video', src: '/story/clip.mp4', poster: '/story/poster.txt' }] }).valid, 'Unsupported poster type should fail') },

@@ -1,0 +1,331 @@
+{
+  "targetName": "Compass Book Chapter IV Ikigai Map Relief",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "page-bound five-force constellation instrument relief",
+      "primaryDomain": "object",
+      "formLanguage": ["hard-surface", "mechanical", "sculptural", "radial"],
+      "structureKind": ["layered shell", "assembled object", "repeated modules", "shallow relief"],
+      "motionPotential": ["presentation-only", "whole-object transform", "independent emissive anchors", "detachable visual modules"],
+      "materialFamilies": ["antique metal", "leather-like chart field", "enamel", "gemstone-like crystal"],
+      "notes": "The target is the left-page relief only. Personal text and state remain in the canonical DOM layer."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 2
+      },
+      "estimatedCounts": {
+        "macroComponents": 4,
+        "mesoComponents": 15,
+        "microFeatureGroups": 10,
+        "materialLayers": 7,
+        "repetitionSystems": 5
+      },
+      "reasoning": [
+        "Five semantic perimeter modules, a separate Trial mechanism, candidate routes, and Mirage satellite require named hierarchy rather than one decorative plate.",
+        "Radial rivets, chart stars, rail collars, and repeated nodes require instancing and bounded distributions.",
+        "Seven visibly distinct metal/enamel/crystal responses and independent animation anchors justify the complex tier."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Reverse faces and hidden socket depth are inferred as closed shallow solids because the target is page-bound.",
+      "Pictogram micro-detail may be simplified into faceted emblems while preserving count, palette, and semantic separation.",
+      "Exact candidate-path personal selection is runtime presentation state and must not be baked into canonical player data."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {"id":"chart-engraved-orbits","kind":"linework","description":"Recessed gilt orbit and constellation arcs","region":{"x":0.0,"y":0.0,"width":1.0,"height":1.0,"units":"normalized"},"scale":"micro repeated arcs","affects":"geometry and cavity response","mapsTo":{"type":"component.localFeatures","ref":"chart-field.constellation-grooves"},"evidenceRef":"fixed-front","confidence":0.94},
+        {"id":"curiosity-comet-insert","kind":"ridge","description":"Violet raised comet jewel and bright core","region":{"x":0.33,"y":0.02,"width":0.34,"height":0.3,"units":"normalized"},"scale":"meso insert","affects":"geometry and emission","mapsTo":{"type":"component.localFeatures","ref":"curiosity-node.comet-facets"},"evidenceRef":"fixed-front","confidence":0.98},
+        {"id":"mirage-broken-tether","kind":"ridge","description":"External dark satellite with segmented broken tether","region":{"x":0.66,"y":0.0,"width":0.34,"height":0.34,"units":"normalized"},"scale":"micro repeated beads","affects":"semantic separation","mapsTo":{"type":"component.localFeatures","ref":"mirage-node.broken-tether"},"evidenceRef":"fixed-front","confidence":0.97},
+        {"id":"capability-faceted-star","kind":"ridge","description":"Teal eight-point faceted star/tool insert","region":{"x":0.0,"y":0.3,"width":0.34,"height":0.34,"units":"normalized"},"scale":"meso insert","affects":"geometry and enamel","mapsTo":{"type":"component.localFeatures","ref":"capability-node.star-facets"},"evidenceRef":"fixed-front","confidence":0.98},
+        {"id":"trial-concentric-stack","kind":"bevel","description":"Concentric Trial rings, prongs and luminous crystal","region":{"x":0.33,"y":0.33,"width":0.34,"height":0.34,"units":"normalized"},"scale":"meso hub","affects":"depth and animation hierarchy","mapsTo":{"type":"component.localFeatures","ref":"trial-hub.ring-stack"},"evidenceRef":"fixed-front","confidence":0.99},
+        {"id":"contribution-beacon-hands","kind":"ridge","description":"Rose-gold cupped relief and beacon star","region":{"x":0.66,"y":0.3,"width":0.34,"height":0.34,"units":"normalized"},"scale":"meso insert","affects":"geometry and satin metal","mapsTo":{"type":"component.localFeatures","ref":"contribution-node.beacon-relief"},"evidenceRef":"fixed-front","confidence":0.96},
+        {"id":"viability-bridge-relief","kind":"ridge","description":"Amber bridge arch, pylons and wheel inset","region":{"x":0.0,"y":0.66,"width":0.34,"height":0.34,"units":"normalized"},"scale":"meso insert","affects":"geometry and metallic hierarchy","mapsTo":{"type":"component.localFeatures","ref":"viability-node.bridge-relief"},"evidenceRef":"fixed-front","confidence":0.98},
+        {"id":"frame-radial-fasteners","kind":"fastener","description":"Instanced rivets around bezels, sockets and frame","region":{"x":0.1,"y":0.1,"width":0.8,"height":0.8,"units":"normalized"},"scale":"micro hemispheres","affects":"instanced geometry","mapsTo":{"type":"component.localFeatures","ref":"contact-frame.radial-rivets"},"evidenceRef":"fixed-front","confidence":0.93},
+        {"id":"willingness-flame-facets","kind":"ridge","description":"Nested solid flame lobes and lower jewel","region":{"x":0.66,"y":0.66,"width":0.34,"height":0.34,"units":"normalized"},"scale":"meso insert","affects":"geometry and emission","mapsTo":{"type":"component.localFeatures","ref":"willingness-node.flame-facets"},"evidenceRef":"fixed-front","confidence":0.98},
+        {"id":"rail-socket-collars","kind":"seam","description":"Overlapping collars at all outer rail and spoke endpoints","region":{"x":0.18,"y":0.2,"width":0.64,"height":0.62,"units":"normalized"},"scale":"20 repeated endpoints","affects":"attachment geometry and AO","mapsTo":{"type":"component.localFeatures","ref":"rail-system.socket-collars"},"evidenceRef":"fixed-front","confidence":0.95}
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The opened production book presents a physically attached Chapter IV relief with exactly five countable perimeter forces, one separate central Trial, three candidate paths, and one isolated Mirage marker.",
+      "The five-force pentagon, inward spokes, node palettes, central ring stack, and off-axis thickness remain readable at the normal book camera in high and low tiers.",
+      "Every semantic system is named and presentation-only; no answer, label, experiment text, warning copy, focus, progress, or persistence moves into Three.js."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 4,
+      "mesoComponents": 15,
+      "microFeatureGroups": 10,
+      "materialLayers": 7,
+      "repetitionSystems": 5,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "five-force-graph",
+        "name": "Exactly five perimeter forces and complete graph",
+        "required": true,
+        "qualityCriteria": [
+          "Five and only five countable perimeter medallions occupy pentagon vertices.",
+          "Five outer rails and five inward spokes remain solid, attached, and visually continuous."
+        ],
+        "evidenceRefs": ["full-object", "fixed-front", "orbit-pair"],
+        "failureModes": ["reads as a four-circle Venn", "central Trial reads as a sixth perimeter force", "rail or spoke floats or breaks"]
+      },
+      {
+        "id": "trial-path-mirage",
+        "name": "Separate Trial, candidate routes, and Mirage",
+        "required": true,
+        "qualityCriteria": [
+          "The central Trial has its own concentric ring and crystal hierarchy.",
+          "Three subordinate candidate routes approach the centre and the Mirage remains outside the valid graph with only a broken tether."
+        ],
+        "evidenceRefs": ["full-object", "fixed-front"],
+        "failureModes": ["Mirage mistaken for a sixth force", "candidate paths dominate the five-force graph", "Trial fused into chart field"]
+      },
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Compass Book Chapter IV Ikigai Map Relief page-bound hard-surface relief instanced radial fasteners five-point constellation medallion rings emissive crystal real-time browser performance shadow draw calls",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 6.08588319546,
+        "snippets": [
+          "... và các bản đồ dữ liệu toán học (phải giữ tuyến tính/không hiệu chỉnh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, metalness, and ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.topology-intent",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Geometry And Topology",
+        "key_path": null,
+        "score": 5.143858634031,
+        "snippets": [
+          "Topology intent classifies a surface as hard-surface blockout, subdivision-ready, low-poly prop, organic deformed mesh, or alpha-card cluster."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Geometry And Topology",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-hand-painted-vs-pbr-texture",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[12]",
+        "score": 5.080796749726,
+        "snippets": [
+          "... stay fixed in place even as the object rotates or lighting changes; visible brushstrokes; single diffuse-only map; PBR: specular highlights and shadow shapes move logically with view/light angle; micro-detail (pores, scratches) ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[12]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}

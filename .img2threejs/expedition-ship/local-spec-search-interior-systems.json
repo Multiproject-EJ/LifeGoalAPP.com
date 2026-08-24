@@ -1,0 +1,30 @@
+{
+  "collection": "core_3d",
+  "queries": [
+    "continuous curved interior wall bench tool storage robotic gantry",
+    "water transparent volume textile upholstery vegetation interior PBR",
+    "procedural threejs batching instancing triangle budget curved architecture"
+  ],
+  "adoptedEvidence": [
+    {
+      "recordId": "core.shader-mapping-extrudegeometry-custom-bladesilhouette-profiles",
+      "use": "continuous curved bench, coping and terrain profiles should use authored/extruded profiles instead of unrelated boxes"
+    },
+    {
+      "recordId": "core.pbr-hand-painted-vs-pbr-texture",
+      "use": "keep dynamic lighting separate from material color and avoid baking the reference highlights into albedo"
+    },
+    {
+      "recordId": "core.shader-mapping-meshphysicalmaterial-core-pbr-fields",
+      "use": "use independent physical-material scalars for metal, textile, water and glass systems"
+    },
+    {
+      "recordId": "core.description-controlled-vocabulary-aat-facets",
+      "use": "describe and review materials as anodized metal, brushed metal, textile, stone/composite and transparent water/glass"
+    }
+  ],
+  "sourceRefs": [
+    "docs/raw/img2threejs-skill-dataset.json",
+    "grimoire/glossary/3d_vocabulary.md"
+  ]
+}
