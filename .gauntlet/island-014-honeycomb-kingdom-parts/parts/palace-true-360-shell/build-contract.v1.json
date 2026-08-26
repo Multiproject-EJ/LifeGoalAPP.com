@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-user-approved-true-360-blockout",
+  "partId": "palace-true-360-shell",
+  "constructionFamily": "threejs-closed-cross-plan-honey-cathedral-shell",
+  "representationRoute": "source-led procedural solid geometry with curated side and rear inference",
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+    },
+    "multiviewInferenceAid": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-multiview-turnaround-v001.png",
+      "sha256": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3",
+      "role": "continuity and hidden-view inference only; cannot revise source-facing identity"
+    },
+    "generationRecord": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/palace-multiview-generation-record.v1.json",
+    "curatorAudit": "2026-08-25 read-only multiview audit in task record",
+    "retiredProjectionReview": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.projection.v1.json"
+  },
+  "workerAllowlist": {
+    "runtime": [
+      "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"
+    ],
+    "evidenceRenderer": [
+      "scripts/render-island014-palace-true360-orbit.mjs"
+    ],
+    "evidence": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-true-360-shell-v001-r01"
+    ],
+    "validation": [
+      ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/build-validation.v1.json"
+    ],
+    "forbidden": [
+      "other four landmarks",
+      "terrain or board",
+      "mission state or gameplay",
+      "construction robots or commissioning FX",
+      "source images",
+      "retired evidence or reviews"
+    ]
+  },
+  "requiredConstruction": [
+    "Remove the retired Blender facade and projection relief from the live palace assembly; retain their files only as historical evidence.",
+    "Build one closed broad cathedral base with real side and rear walls and footprint depth 0.72-0.82 of front width.",
+    "Build a two-stage central keep, closed drum, faceted hero dome, compact crown, and four volumetric quadrant satellite towers with solid collars and roofs.",
+    "Build four squat occupied shoulder bays embedded into the base: front-left, front-right, rear-left, rear-right. Each must have closed backplanes, reveal depth, and a low faceted hemidome.",
+    "Build a thick front entrance buttress with side returns. Royal doorway is first: outer width 1.05-1.12 at accepted facade width 3.38, purple insert near 0.47 wide with width-to-height 0.60-0.70, visible center seam, two handles, and readable bee crest.",
+    "Build the dark honeycomb rose as geometry near 0.82 wide and subordinate it to the doorway. Door outer width to rose must stay near 1.15:1.",
+    "Build four countable dominant front facade bays around 0.70-0.78 wide and subordinate upper bays around 0.45-0.54 wide. Large occupied masses must dominate tiny ornament.",
+    "Wrap eaves, buttresses, honeycomb bands, windows, and structural ribs around corners onto side walls. No detail strip may terminate at a front camera boundary.",
+    "Build a quieter subordinate rear service apse/entrance and stepped occupied mass so rear views remain authored without mirroring the royal front.",
+    "Use delicious glossy honey drips selectively on eaves and channels, while keeping the palace base as readable masonry rather than a melted honey mound.",
+    "Real geometry must carry silhouette, dome contours, tower spacing, openings, tier setbacks, and all paper-edge risk at every 45-degree orbit. No runtime image projection may define the silhouette."
+  ],
+  "normalizedTargets": {
+    "frontWidth": 1.0,
+    "footprintDepth": [0.72, 0.82],
+    "totalHeight": [1.10, 1.18],
+    "lowerOccupiedBaseHeight": [0.26, 0.31],
+    "centralKeepDiameter": [0.32, 0.36],
+    "heroDomeDiameter": [0.28, 0.32],
+    "heroDomeRise": [0.23, 0.27],
+    "primarySatelliteDiameter": [0.21, 0.24],
+    "primarySatelliteTotalHeight": [0.55, 0.64],
+    "shoulderBayDiameter": [0.20, 0.23],
+    "shoulderBayMaxHeightToWidth": 0.95,
+    "maximumMinorTowerCount": 2
+  },
+  "strictRejects": [
+    "billboard, facade plane, paper edge, projected silhouette, or cyan fringe",
+    "open shell, hollow facade, missing rear wall, or exposed interior",
+    "door not first, four front occupied bays not countable, or rose larger/more dominant than the door",
+    "circular melted honey mound, onion-dome mosque drift, giant rear cathedral, or excess repeated needle turrets",
+    "footprint depth outside target without written rationale",
+    "source identity, attachment, cross-view coherence, or phone readability below 0.85 in any required view",
+    "changes outside the allowlist",
+    "more than one bounded correction for this family"
+  ],
+  "budgets": {
+    "maximumAddedTriangles": 55000,
+    "maximumAddedRuntimeDrawCalls": 40,
+    "maximumNewRuntimeTextures": 0,
+    "targetMergedOrInstancedRepeatedGeometry": true
+  },
+  "capture": {
+    "firstGate": [
+      "orbit-000-materials-on",
+      "orbit-045-materials-on",
+      "orbit-090-materials-on",
+      "orbit-135-materials-on",
+      "orbit-180-materials-on",
+      "orbit-225-materials-on",
+      "orbit-270-materials-on",
+      "orbit-315-materials-on",
+      "orbit-000-materials-off",
+      "orbit-045-materials-off",
+      "orbit-315-materials-off",
+      "front-close-materials-on",
+      "phone-overview"
+    ],
+    "reviewCategories": [
+      "source-identity",
+      "silhouette-volume",
+      "door-first-hierarchy",
+      "four-bay-readability",
+      "attachment",
+      "cross-view-coherence",
+      "side-rear-authorship",
+      "honey-material-read",
+      "phone-readability"
+    ],
+    "gate": "Every required category at least 0.85. Any card, open shell, detached detail, or unauthored rear is an immediate hard veto. One bounded correction maximum."
+  }
+}

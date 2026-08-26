@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "island": {
+    "runtimeNumber": 14,
+    "slug": "honeycomb-kingdom",
+    "title": "Honeycomb Kingdom"
+  },
+  "updated": "2026-08-26",
+  "authorityOrder": [
+    "exact-source",
+    "exact-derived-crop",
+    "secondary-inferred"
+  ],
+  "assets": [
+    {
+      "id": "island-014-source",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-source",
+      "purpose": "Immutable whole-island visual goal",
+      "status": "active"
+    },
+    {
+      "id": "queens-nursery-visible-source-crop-v001",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/derived-crops/queens-nursery-visible-source-crop-v001.png",
+      "sha256": "755cf96d09da779b898a41c83846420da06158b1164ecb437dfb2a62812aa321",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-014-source",
+      "landmark": "queens-nursery",
+      "purpose": "Visible royal brood-egg silhouette and material identity",
+      "status": "active"
+    },
+    {
+      "id": "palace-visible-source-crop-v001",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-014-source",
+      "landmark": "royal-honeycomb-palace",
+      "purpose": "Visible palace silhouette and architectural identity",
+      "status": "active"
+    },
+    {
+      "id": "pollinator-yard-visible-source-crop-v001",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/derived-crops/pollinator-yard-visible-source-crop-v001.png",
+      "sha256": "ceec6cfcb37461e4bf9e2e6d12d293e5aca8fc6f69a92c64120f6b674029728c",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-014-source",
+      "landmark": "pollinator-yard",
+      "purpose": "Visible occupied-cell and bee-relief identity",
+      "status": "active"
+    },
+    {
+      "id": "nectar-trials-visible-source-crop-v001",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/derived-crops/nectar-trials-visible-source-crop-v001.png",
+      "sha256": "6d2242abe0d154de417f51f85f28bd85402b49c00c32060ecf8bb623292d1484",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-014-source",
+      "landmark": "nectar-trials",
+      "purpose": "Visible arena and crossed-mallet identity",
+      "status": "active"
+    },
+    {
+      "id": "hive-archives-visible-source-crop-v001",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/derived-crops/hive-archives-visible-source-crop-v001.png",
+      "sha256": "74d49b426fee0815403487aed71363a44bc5a2922f0296f8ab8b437e1f5970e1",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-014-source",
+      "landmark": "hive-archives",
+      "purpose": "Visible honeycomb-and-open-book archive identity",
+      "status": "active"
+    },
+    {
+      "id": "queens-nursery-turnaround-v1",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/queens-nursery-turnaround-v1.png",
+      "provenancePath": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/queens-nursery-turnaround-v1.md",
+      "sha256": "6f5431589f652ae118376e1b342d2ca8460cfcf9219f0fe673733520ae1dacc3",
+      "authority": "secondary-inferred",
+      "derivedFrom": "island-014-source",
+      "landmark": "queens-nursery",
+      "purpose": "Side and rear construction aid",
+      "status": "active-with-limits"
+    },
+    {
+      "id": "pollinator-yard-turnaround-v1",
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.png",
+      "provenancePath": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.md",
+      "sha256": "fdd88e257d046be700a4a6e47aaacaaabcf8fa791a2619d165957eb7690c7063",
+      "authority": "secondary-inferred",
+      "derivedFrom": "pollinator-yard-visible-source-crop-v001",
+      "landmark": "pollinator-yard",
+      "purpose": "Side, rear and high three-quarter construction aid",
+      "status": "active-with-limits"
+    }
+  ],
+  "productionPointers": {
+    "gauntlet": "docs/gauntlets/2026-08-24-island-014-honeycomb-kingdom.md",
+    "sourceLock": "work/island-visual-library/island-014-honeycomb-kingdom/SOURCE_LOCK.md",
+    "stateRoot": ".img2threejs/island-014-honeycomb-kingdom/",
+    "gauntletPartsRoot": ".gauntlet/island-014-honeycomb-kingdom-parts/",
+    "evidenceRoot": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/",
+    "currentEvidence": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/honeyfall-royal-parterre-v004-r10/",
+    "runtimeFactory": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+    "runtimeAssetRoot": "public/assets/islands/island-014/"
+  },
+  "rules": {
+    "referencePacketIsRuntimePayload": false,
+    "temporaryOnlyReferencesAllowed": false,
+    "generatedReferencesMayOverrideVisibleSource": false,
+    "runtimeNumberOverridesEmbeddedConceptNumber": true
+  }
+}

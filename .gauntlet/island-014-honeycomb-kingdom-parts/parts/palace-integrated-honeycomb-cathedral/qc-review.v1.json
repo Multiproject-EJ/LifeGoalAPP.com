@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-first-visual-gate"
+  },
+  "subject": "Island 014 integrated extruded honeycomb exoskeleton cathedral first gate",
+  "constructionFamily": "threejs-integrated-extruded-honeycomb-exoskeleton-cathedral",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-integrated-honeycomb-cathedral/build-contract.v1.json",
+      "sha256": "31a6f2a63b4da8fac834498b420a34745e72726225eb54e46aa094053e9b203f"
+    },
+    "captureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-integrated-honeycomb-cathedral-v001-r01/capture-manifest.v1.json",
+      "sha256": "564042149ad5dcb631df2a328ed57c9912dffcd3a5cb95056fbf91e906975f15"
+    },
+    "buildValidation": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-integrated-honeycomb-cathedral/build-validation.v1.json",
+      "sha256": "0670e9f71e8d27e437d01da68217eca83c23fd38aa4259c1708a6d1ea2d907da"
+    },
+    "runtime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "a317063ea3b9a7ec3506861e02959a7e85832b3c134b9d42bb3c03ee12073d7c"
+    }
+  },
+  "evidenceIntegrity": {
+    "valid": true,
+    "independentVerification": "Quality Lord re-hashed all 13 SVG and all 13 PNG files plus runtime before opening any pixels.",
+    "verifiedEvidenceFiles": 26,
+    "evidenceMismatches": 0,
+    "runtimeMatch": true
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "criticalFirstPassFloor": 0.50,
+    "worstViewCategoryGoverns": true,
+    "oneBoundedCorrectionMaximum": true,
+    "correctionsUsed": 0,
+    "correctionsRemainingIfEligible": 1,
+    "correctionRequiresPlausibleRouteToEveryCategoryAt085": true,
+    "allowedActions": [
+      "APPROVE",
+      "ONE-BOUNDED-CORRECTION",
+      "RETIRE-FAMILY",
+      "STOP"
+    ]
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "sourceIdentity": 0.42,
+      "silhouetteVolume": 0.60,
+      "doorFirstHierarchy": 0.68,
+      "fourFrontBays": 0.52,
+      "physicalAttachmentNoCards": 0.70,
+      "crossViewContinuity": 0.65,
+      "rearAuthorship": null,
+      "honeycombExoskeletonCivicRead": 0.45,
+      "glossyViscousHoneyRead": 0.28,
+      "phoneReadability": 0.45,
+      "note": "The purple doorway leads, the rose is embedded, and the shell is closed. The source's ornate gold-bronze inhabited cathedral is reduced to pale faceted slabs, conical roofs, isolated hex windows, and a generic keep silhouette; four dominant front bays are not unambiguously countable."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "sourceIdentity": 0.38,
+      "silhouetteVolume": 0.58,
+      "doorFirstHierarchy": 0.60,
+      "fourFrontBays": 0.48,
+      "physicalAttachmentNoCards": 0.62,
+      "crossViewContinuity": 0.60,
+      "rearAuthorship": 0.52,
+      "honeycombExoskeletonCivicRead": 0.38,
+      "glossyViscousHoneyRead": 0.25,
+      "phoneReadability": 0.40,
+      "note": "The facade has real returns and does not collapse, but side walls are largely blank, the perimeter beam reads weakly integrated, hex openings are isolated ornaments, and hanging honey forms read as lamps rather than eave-fed viscous drips."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.52,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.35,
+      "physicalAttachmentNoCards": 0.58,
+      "crossViewContinuity": 0.52,
+      "rearAuthorship": 0.50,
+      "honeycombExoskeletonCivicRead": 0.28,
+      "glossyViscousHoneyRead": 0.22,
+      "phoneReadability": 0.32,
+      "note": "The side is volumetric and closed, but it is a sparse ochre wall with detached-looking collars, conical tower caps, and a large rectangular perimeter rail; no honeycomb civic exoskeleton wraps the corner."
+    },
+    {
+      "view": "orbit-135-materials-on",
+      "sourceIdentity": 0.28,
+      "silhouetteVolume": 0.50,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.35,
+      "physicalAttachmentNoCards": 0.52,
+      "crossViewContinuity": 0.50,
+      "rearAuthorship": 0.52,
+      "honeycombExoskeletonCivicRead": 0.25,
+      "glossyViscousHoneyRead": 0.22,
+      "phoneReadability": 0.30,
+      "note": "Rear-side mass is coherent but generic and under-authored. Structural hex ribs, dark occupied cells, amber glazing, and source-like stepped inhabited bays are absent."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.52,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": null,
+      "physicalAttachmentNoCards": 0.60,
+      "crossViewContinuity": 0.55,
+      "rearAuthorship": 0.55,
+      "honeycombExoskeletonCivicRead": 0.25,
+      "glossyViscousHoneyRead": 0.22,
+      "phoneReadability": 0.30,
+      "note": "The rear is closed and intentionally quieter, with a real apse, but it is dominated by unornamented slabs and simple cone roofs rather than authored honey channels, wrapped ribs, occupied cells, or delicious honey response."
+    },
+    {
+      "view": "orbit-225-materials-on",
+      "sourceIdentity": 0.28,
+      "silhouetteVolume": 0.50,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.35,
+      "physicalAttachmentNoCards": 0.52,
+      "crossViewContinuity": 0.50,
+      "rearAuthorship": 0.52,
+      "honeycombExoskeletonCivicRead": 0.25,
+      "glossyViscousHoneyRead": 0.22,
+      "phoneReadability": 0.30,
+      "note": "The opposite rear-side view confirms real depth but the same generic fort/cathedral massing, sparse surface program, isolated collars, and absent honey exoskeleton."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.52,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.35,
+      "physicalAttachmentNoCards": 0.58,
+      "crossViewContinuity": 0.52,
+      "rearAuthorship": 0.50,
+      "honeycombExoskeletonCivicRead": 0.28,
+      "glossyViscousHoneyRead": 0.22,
+      "phoneReadability": 0.32,
+      "note": "The right side is closed and coherent but remains a feature-poor slab elevation with generic roofs and no wrapped inhabited honey-cell structure."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "sourceIdentity": 0.38,
+      "silhouetteVolume": 0.58,
+      "doorFirstHierarchy": 0.60,
+      "fourFrontBays": 0.48,
+      "physicalAttachmentNoCards": 0.62,
+      "crossViewContinuity": 0.60,
+      "rearAuthorship": 0.52,
+      "honeycombExoskeletonCivicRead": 0.38,
+      "glossyViscousHoneyRead": 0.25,
+      "phoneReadability": 0.40,
+      "note": "The opposite front oblique remains physically coherent and avoids the prior shard defect, but the building still reads as a pale low-poly keep with isolated hex windows and lamp-like honey ornaments."
+    },
+    {
+      "view": "orbit-000-materials-off",
+      "sourceIdentity": 0.40,
+      "silhouetteVolume": 0.62,
+      "doorFirstHierarchy": 0.62,
+      "fourFrontBays": 0.52,
+      "physicalAttachmentNoCards": 0.72,
+      "crossViewContinuity": 0.65,
+      "rearAuthorship": null,
+      "honeycombExoskeletonCivicRead": 0.48,
+      "glossyViscousHoneyRead": null,
+      "phoneReadability": 0.42,
+      "note": "Clay confirms closed extruded gable, embedded rose cells, and attached towers. It also confirms that the honeycomb language is a small set of collars rather than a continuous structural exoskeleton and that the four dominant front bay masses are weak."
+    },
+    {
+      "view": "orbit-045-materials-off",
+      "sourceIdentity": 0.35,
+      "silhouetteVolume": 0.58,
+      "doorFirstHierarchy": 0.55,
+      "fourFrontBays": 0.45,
+      "physicalAttachmentNoCards": 0.65,
+      "crossViewContinuity": 0.60,
+      "rearAuthorship": 0.50,
+      "honeycombExoskeletonCivicRead": 0.38,
+      "glossyViscousHoneyRead": null,
+      "phoneReadability": 0.38,
+      "note": "Clay proves the family is not a card and that the entrance returns into the body, but side program, bay hierarchy, and perimeter integration remain too simple."
+    },
+    {
+      "view": "orbit-315-materials-off",
+      "sourceIdentity": 0.35,
+      "silhouetteVolume": 0.58,
+      "doorFirstHierarchy": 0.55,
+      "fourFrontBays": 0.45,
+      "physicalAttachmentNoCards": 0.65,
+      "crossViewContinuity": 0.60,
+      "rearAuthorship": 0.50,
+      "honeycombExoskeletonCivicRead": 0.38,
+      "glossyViscousHoneyRead": null,
+      "phoneReadability": 0.38,
+      "note": "The opposite clay oblique confirms coherent solid geometry but not source-like civic richness, attached exoskeleton coverage, or four strongly legible bay bodies."
+    },
+    {
+      "view": "front-close-materials-on",
+      "sourceIdentity": 0.45,
+      "silhouetteVolume": 0.55,
+      "doorFirstHierarchy": 0.70,
+      "fourFrontBays": 0.48,
+      "physicalAttachmentNoCards": 0.70,
+      "crossViewContinuity": 0.65,
+      "rearAuthorship": null,
+      "honeycombExoskeletonCivicRead": 0.50,
+      "glossyViscousHoneyRead": 0.30,
+      "phoneReadability": 0.52,
+      "note": "Door, bee crest, seam, and embedded rose cluster are readable, but the rose cells look like isolated holes in a broad blank gable; gold-bronze ribs, dark amber glazing, ornate honeycomb enclosure, and viscous honey are missing."
+    },
+    {
+      "view": "phone-overview",
+      "sourceIdentity": 0.35,
+      "silhouetteVolume": 0.55,
+      "doorFirstHierarchy": 0.62,
+      "fourFrontBays": 0.42,
+      "physicalAttachmentNoCards": 0.62,
+      "crossViewContinuity": 0.55,
+      "rearAuthorship": null,
+      "honeycombExoskeletonCivicRead": 0.35,
+      "glossyViscousHoneyRead": 0.22,
+      "phoneReadability": 0.45,
+      "note": "The purple entrance and triangular cathedral front survive, but the source's inhabited honeycomb bays, glazing, filigree, bee details, and delicious honey finish collapse into a small pale orange low-poly keep."
+    }
+  ],
+  "categorySummary": {
+    "sourceIdentity": 0.28,
+    "silhouetteVolume": 0.50,
+    "doorFirstHierarchy": 0.55,
+    "fourFrontBays": 0.35,
+    "physicalAttachmentNoCards": 0.52,
+    "crossViewContinuity": 0.50,
+    "rearAuthorship": 0.50,
+    "honeycombExoskeletonCivicRead": 0.25,
+    "glossyViscousHoneyRead": 0.22,
+    "phoneReadability": 0.30
+  },
+  "worstRequiredScore": {
+    "value": 0.22,
+    "views": [
+      "orbit-090-materials-on",
+      "orbit-135-materials-on",
+      "orbit-180-materials-on",
+      "orbit-225-materials-on",
+      "orbit-270-materials-on",
+      "phone-overview"
+    ],
+    "dimension": "glossyViscousHoneyRead"
+  },
+  "hardVetoEvaluation": {
+    "diskShardCardOrProjection": {
+      "present": false,
+      "finding": "The facade, embedded rose, and entrance remain closed volumetric geometry at 000, 045, and 315; runtime projection count is zero."
+    },
+    "openShell": {
+      "present": false,
+      "finding": "All visible elevations are closed and no environment background shows through; validation reports zero open planes."
+    },
+    "onionDomedFort": {
+      "present": false,
+      "finding": "The previous smooth onion domes are removed and replaced by low faceted cone roofs."
+    },
+    "genericFortDrift": {
+      "present": true,
+      "finding": "Despite the roof change, the sparse slab walls, conical tower caps, minimal window collars, and pale monochrome finish still read as a generic low-poly keep/fort rather than the exact inhabited honey cathedral."
+    },
+    "unattachedDetail": {
+      "present": false,
+      "finding": "No required hero part is visibly free-floating, although the perimeter rail and lamp-like drips have weak integration scores."
+    },
+    "unauthoredRear": {
+      "present": false,
+      "finding": "The rear is closed and deliberately quieter with a real apse, but rear authorship reaches only 0.55."
+    }
+  },
+  "largestMismatch": "The exact source is a dense inhabited honey cathedral built from continuous gold-bronze honeycomb ribs, dark occupied cells, amber glazing, rich purple royal doors, and glossy viscous drips. This family is a coherent closed low-poly cathedral shell, but its broad blank ochre slabs, conical roofs, isolated hex collars, lamp-like drips, and weak four-bay hierarchy make it a generic keep rather than Honeycomb Kingdom.",
+  "correctionEligibility": {
+    "worstAtLeast050": false,
+    "singleBoundedChangeCanPlausiblyReachEveryCategoryAt085": false,
+    "reason": "The 0.22 worst score is below the first-pass correction floor. The failures are also independent and systemic: source mass/detail language, four-bay hierarchy, exoskeleton coverage, material/glazing response, honey construction, rear/side authorship, and phone read would all require reconstruction rather than one bounded correction."
+  },
+  "gateEvaluation": {
+    "everyRequiredCategoryAtLeast085": false,
+    "criticalFirstPassFloorMet": false,
+    "hardVetoPresent": true,
+    "eligibleForBoundedCorrection": false,
+    "finding": "The family is physically coherent and removes the predecessor's cards, disks, shards, onion domes, and projection. It nevertheless scores 0.22 worst, triggers the contract's generic-fort forbidden-archetype reject, and cannot plausibly reach all categories at 0.85 through one bounded correction."
+  },
+  "action": "RETIRE-FAMILY"
+}

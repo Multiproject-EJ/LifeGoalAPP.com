@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26T01:24:34.698Z",
+  "status": "candidate-awaiting-source-return-review",
+  "source": {
+    "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+  },
+  "runtime": {
+    "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+    "sha256": "ec8966f2d4786d3777f53f4425f860381461067f9618cd3a62f5efae6c004274"
+  },
+  "missionStage": 4,
+  "evidenceMethod": "CPU triangle projection of actual Three.js meshes and InstancedMesh transforms; materials approximated without WebGL",
+  "renderLimit": "Does not reproduce physical refraction, environment reflections, post-processing, live route tiles, or GPU transparency ordering. Screen-space evidence uses semantic polygon budgets so all five named landmarks and the Great Honeyfall remain represented.",
+  "views": [
+    {
+      "id": "orbit-000-materials-on",
+      "degrees": 0,
+      "mode": "materials-on",
+      "file": "orbit-000-materials-on.svg",
+      "sha256": "5e79e2e58e3a927764f597340085177777980bb70ad6dde1c27e7aaa6d05ea14",
+      "rasterFile": "orbit-000-materials-on.png",
+      "rasterSha256": "ff7daeb09fe2d2e92b933ef52fc1a3d937321dd8c6c3f095c59cda601e9e521b"
+    },
+    {
+      "id": "orbit-045-materials-on",
+      "degrees": 45,
+      "mode": "materials-on",
+      "file": "orbit-045-materials-on.svg",
+      "sha256": "2d7901c57ed80a22398d5db29a10c150c64b46f2362180889a6a9a2ed5165f18",
+      "rasterFile": "orbit-045-materials-on.png",
+      "rasterSha256": "c8fef0952a60ab9bc7a50206274e422fb5d7ae4078b4d9805d4aff8b1521e80f"
+    },
+    {
+      "id": "orbit-090-materials-on",
+      "degrees": 90,
+      "mode": "materials-on",
+      "file": "orbit-090-materials-on.svg",
+      "sha256": "33393850ce26a685f91564e5812ec80561dcdeda2f9db1a1e9f181b538223ce7",
+      "rasterFile": "orbit-090-materials-on.png",
+      "rasterSha256": "ee6e3dd92977119349a783c0a4dd040e30ecb2e2f5039021b61bcb9394f859a0"
+    },
+    {
+      "id": "orbit-180-materials-on",
+      "degrees": 180,
+      "mode": "materials-on",
+      "file": "orbit-180-materials-on.svg",
+      "sha256": "5026b95a85e4dede21f0dfc33a1128144f6a7dac59654c3f86d02273fbe266d9",
+      "rasterFile": "orbit-180-materials-on.png",
+      "rasterSha256": "8321863d60345844629fad03f255e4d2e7e17071833b8869bf836dff9a335c38"
+    },
+    {
+      "id": "orbit-270-materials-on",
+      "degrees": 270,
+      "mode": "materials-on",
+      "file": "orbit-270-materials-on.svg",
+      "sha256": "86472cae9aa11fa13da6678276cc8b46e62e993bd018c8a0509629591871abc0",
+      "rasterFile": "orbit-270-materials-on.png",
+      "rasterSha256": "b8b076957d2644a1a786a1cbf5028dd03402478bec2c4e93c0c24aaa3034948b"
+    },
+    {
+      "id": "orbit-315-materials-on",
+      "degrees": 315,
+      "mode": "materials-on",
+      "file": "orbit-315-materials-on.svg",
+      "sha256": "258ff65ed1951e95727a7c6224491fcef87bad04d94ea6c5ad6e67127fda7d42",
+      "rasterFile": "orbit-315-materials-on.png",
+      "rasterSha256": "c260de47f6ee61161fe8e9772fe607214f9aab347ba72576d730793d06524171"
+    },
+    {
+      "id": "orbit-180-materials-off",
+      "degrees": 180,
+      "mode": "materials-off",
+      "file": "orbit-180-materials-off.svg",
+      "sha256": "5d1a515bb9f3b6b9f484586247d6e4070bd10c842500ca540dc7f41ecf891f84",
+      "rasterFile": "orbit-180-materials-off.png",
+      "rasterSha256": "042cda7103d718d2bcaf90174ba84de7eb2377430c77c6c3a161ce6328d47a9d"
+    },
+    {
+      "id": "great-honeyfall-stage-4-close",
+      "degrees": 0,
+      "mode": "mission-close",
+      "file": "great-honeyfall-stage-4-close.svg",
+      "sha256": "16b6b15600a64c4ca763e10c4360e63507321e51e11abdc42e4908e35fe79a43",
+      "rasterFile": "great-honeyfall-stage-4-close.png",
+      "rasterSha256": "9a3c0fb05c80f346128a3d5febcdf73a53a6a8a5b16ff7cbc5656c11ca9d8965"
+    },
+    {
+      "id": "phone-overview",
+      "degrees": 0,
+      "mode": "phone-overview",
+      "file": "phone-overview.svg",
+      "sha256": "d22909d35a1744da290918c2dbec6e316d63307553a7ad7b20c0f3a83480b1c6",
+      "rasterFile": "phone-overview.png",
+      "rasterSha256": "f45e2162f585ec0acd23a2a6fb8b56fc4e5b5234c837010d46767c808795d956"
+    }
+  ]
+}

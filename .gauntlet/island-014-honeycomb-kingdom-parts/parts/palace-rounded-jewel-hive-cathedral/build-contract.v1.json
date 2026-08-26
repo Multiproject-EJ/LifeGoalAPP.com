@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-rounded-jewel-hive-cathedral-blockout",
+  "partId": "palace-rounded-jewel-hive-cathedral",
+  "constructionFamily": "threejs-rounded-layered-jewel-hive-cathedral",
+  "representationRoute": "rounded overlapping civic volumes wrapped by thick gold honeycomb tracery, amber glazing, inset purple royal doors, and continuous viscous honey assemblies",
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+    },
+    "sideRearInferenceAid": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-multiview-turnaround-v001.png",
+      "sha256": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3",
+      "authorityLimit": "hidden-side continuity only; exact source front remains controlling"
+    },
+    "retiredImmediatePredecessor": {
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-integrated-honeycomb-cathedral/qc-review.v1.json",
+      "sha256": "51db7b5c09467b8c09fb0b6f8615fcccee1655c8662080a5859d743b1a1ebf4c",
+      "mustNotRepeat": [
+        "generic low-poly keep silhouette",
+        "broad blank ochre slabs",
+        "isolated hex collars instead of continuous tracery",
+        "unclear four-bay front hierarchy",
+        "lamp-like detached drips",
+        "flat non-delicious honey",
+        "feature-poor side and rear elevations"
+      ]
+    }
+  },
+  "subassemblyOrder": [
+    "A rounded inhabited macro hive with broad cathedral shoulders and a tall but elegant central lantern",
+    "B deep royal honey-arch portal with broad purple double doors, bee crest, steps, and gold reveal",
+    "C four separately countable rounded front hive-bay bodies with occupied dark cells and amber windows",
+    "D continuous thick gold honeycomb tracery wrapping front corners, sides, lanterns, and rear apse",
+    "E scalloped faceted cupolas with external cage ribs and amber cores, never simple cones or smooth onion bulbs",
+    "F source-dense glazing, filigree, wax bevels, crown details, and phone-scale value contrast",
+    "G attached glossy honey shelves, curtains, strands, bulges, and teardrops with visible thickness",
+    "H quiet but authored rear apse and service honey cells"
+  ],
+  "requiredConstruction": [
+    "Replace the live integrated low-poly keep family; do not merely decorate its blank slabs.",
+    "Use rounded or bevelled overlapping masses with curved shoulders and nested inhabited pods. No primary wall may present as a broad undecorated planar slab in any orbit view.",
+    "The source-facing silhouette must read as a fantastical honey civic palace: one tall central lantern, four strongly grouped front bays, stepped shoulder towers, and a broad grounded entrance hierarchy.",
+    "Build the portal first as a deep closed honey-arch tunnel. Purple double doors, seam, handles, bee crest, and warm reveal must survive phone scale and remain the highest-contrast front feature.",
+    "Build four dominant front bays as visibly separate rounded closed bodies. Each needs a structural gold hex frame, dark occupied recess, amber glazing, roof cage, and actual side return. They must be countable at 000, 045, 315, and phone views.",
+    "Wrap a connected exoskeleton of thick hex tubes, diagonal braces, eaves, vertical honey channels, and buttress ribs continuously around corners. At least 65 percent of the visible front wall area and 40 percent of each side must carry honeycomb structure or inhabited cells.",
+    "Use scalloped faceted cupolas with amber cores and external rib cages. Avoid simple cones, smooth repeated bulbs, mosque silhouettes, and equal-status perimeter domes.",
+    "Use wax-cream inset masonry, deep bronze occupied cavities, bright gold tracery, translucent amber glazing, rich purple enamel, and selective near-white specular highlights. Geometry and value grouping must communicate these materials even if physical transmission is unavailable.",
+    "Build honey as attached viscous assemblies: broad source shelf or fillet, thick sagging curtain or tapering strand, convex highlight strip, and weighted teardrop. Honey must visibly connect to an eave or channel and may not resemble a lamp or post.",
+    "Author both sides and rear with quiet honey cells, wrapped tracery, an apse entrance/service recess, and honey channels. The rear may be subordinate but not blank.",
+    "Real closed geometry must carry identity; runtime image projections, facade cards, disks, planes, and paper edges remain forbidden."
+  ],
+  "sourceRatiosAtFacadeWidth3_38": {
+    "footprintDepth": [2.43, 2.77],
+    "totalHeight": [3.72, 3.99],
+    "outerDoorWidth": [1.05, 1.12],
+    "purpleInsertWidth": [0.45, 0.50],
+    "embeddedRoseWidth": [0.76, 0.84],
+    "dominantFrontBayWidth": [0.70, 0.78],
+    "frontExoskeletonCoverageMinimum": 0.65,
+    "sideExoskeletonCoverageMinimum": 0.40
+  },
+  "materials": {
+    "goldTracery": "bright warm gold with dark bronze occlusion and sharp pale highlights",
+    "waxMasonry": "warm cream wax with rounded bevels and gentle subsurface-like value lift",
+    "amberGlass": "deep orange-gold glazing with bright inner core and dark rim",
+    "occupiedCells": "near-black warm brown, never empty background holes",
+    "royalDoors": "deep purple enamel with gold seams and bee crest",
+    "honey": "deep amber-orange, clearcoat-like highlight, bright rim, darker thick core"
+  },
+  "workerAllowlist": {
+    "runtime": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "renderer": ["scripts/render-island014-palace-rounded-jewel-hive-orbit.mjs"],
+    "evidence": ["work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-rounded-jewel-hive-cathedral-v001-r01"],
+    "validation": [".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-rounded-jewel-hive-cathedral/build-validation.v1.json"],
+    "forbidden": ["other landmarks", "terrain", "mission/gameplay", "robots/commissioning FX", "source pixels", "retired evidence/reviews"]
+  },
+  "budgets": {
+    "maximumTriangles": 120000,
+    "maximumRuntimeDrawCalls": 64,
+    "maximumRuntimeImageProjections": 0,
+    "mergeOrInstanceRepeatedCells": true
+  },
+  "capture": {
+    "required": [
+      "orbit-000-materials-on", "orbit-045-materials-on", "orbit-090-materials-on", "orbit-135-materials-on",
+      "orbit-180-materials-on", "orbit-225-materials-on", "orbit-270-materials-on", "orbit-315-materials-on",
+      "orbit-000-materials-off", "orbit-045-materials-off", "orbit-315-materials-off",
+      "front-close-materials-on", "front-close-honey-material-proof", "phone-overview"
+    ],
+    "integrity": "new immutable directory; rasterize final evidence first, write manifest last, independently re-hash runtime and all evidence before review",
+    "gate": "Every required category at least 0.85. One blockout plus one bounded correction only. Any generic keep, card, disk, shard, open shell, simple-cone tower family, detached drip, or onion-fort read is a hard veto."
+  }
+}

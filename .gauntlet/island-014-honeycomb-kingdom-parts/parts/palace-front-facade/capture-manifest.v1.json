@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "status": "review-pending",
+  "partId": "palace-front-facade",
+  "constructionFamily": "procedural-threejs-layered-royal-honey-cathedral-facade",
+  "sourceAuthority": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png", "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"},
+  "buildContract": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.v1.json", "sha256": "416ba49313ff83aaf4d88f2bdda659a0ad8ada9d406f1c156ccab8bae3c275d9"},
+  "implementation": {"path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts", "factory": "createRoyalPalace facade-owned ISLAND_14_PALACE_FACADE_* nodes", "renderer": "scripts/render-island014-palace-clay-orbit.mjs", "representation": "actual procedural Three.js facade meshes CPU-projected with frozen attachment hosts and materials stripped"},
+  "macroException": {"type": "user-accepted-drift", "scope": "royal-palace-macro-shell-only", "evidence": ".gauntlet/island-014-honeycomb-kingdom-parts/user-decisions.v1.jsonl", "note": "Facade identity, depth and phone-readability remain independently gated."},
+  "captures": [
+    {"view": "front-000", "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v001-r01/island-014-palace-facade-000-v001.jpg", "sha256": "0cca0c3cc5a983d2c590d7ec06dd166255b67bdc1c5b01612089779c5d15ac7e"},
+    {"view": "front-right-045", "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v001-r01/island-014-palace-facade-045-v001.jpg", "sha256": "17bf76c298cf40cec071315b7f97f62f90642c9aba71475128801626efb9f774"},
+    {"view": "front-left-315", "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v001-r01/island-014-palace-facade-315-v001.jpg", "sha256": "0668bcb9c08a6487f386eef740f9e4fc7daffae489d42bb319722df1d260544d"},
+    {"view": "facade-close", "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v001-r01/island-014-palace-facade-close-v001.jpg", "sha256": "fa59873af32de7f4e14086c015b79d0f9eb3fcd603bd3c2833f5fdc65b7903d3"}
+  ],
+  "runtimeConstraint": "Materials-off actual-mesh evidence proves geometry and attachment. Final color hierarchy and phone overview remain part of the later live-runtime beauty gate."
+}

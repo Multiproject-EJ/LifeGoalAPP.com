@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "auditor": "independent-read-only-r27-building-route-quality-lord",
+  "repository": {
+    "worktree": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom",
+    "branch": "codex/island-014-honeycomb-kingdom",
+    "head": "5bb96d95df4906b5d3096b86ac375286c7e34b4a",
+    "authorizedMutation": ".gauntlet/island-014-quality-audit-2026-08-26/r27-building-route-qc.v1.json only"
+  },
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "packet": {
+      "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27",
+      "manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27/capture-manifest.v1.json",
+      "manifestSha256": "34994c00e144a9896a1dbc2aed0d48a712eb12c43f4a2f251c9d82d2931ca471",
+      "integrity": "PASS: source, runtime, all six dependencies, every SVG, and every raster independently matched the manifest."
+    },
+    "runtimeHashes": {
+      "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts": "88dd1b8631ead7db355abba82e9df210ef266c00529669b3c4b5f1b37a43a3cd",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "6cac0ad5d2b0bb311d69bd1a132ec97030b67d53268764d56792f17e2f770a25",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "f28a7029dc6787d0ea7def8e8e38537c51f4a464bf2ac714873e57175300ebf4",
+      "src/features/gamification/level-worlds/services/islandBoardLayout.ts": "7fb9579efec8959f1ca1cecf5ff63e3dbf1f9d550161e6c8bc80440f94886f26",
+      "src/features/gamification/level-worlds/dev/Island14RoyalCathedralV7.ts": "9ee40c8990e0337ec4a3b80439214b512f28c53887415dddc56d4e209befefef",
+      "src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts": "9c5e1b6b8f38207cd912bc4fb5aac5b6b16aeb6208c9a653bf8a0ab0faba1703",
+      "src/features/gamification/level-worlds/dev/Island14HoneyWorldPresentationV2.ts": "7061b22591be79cbf0e31560c5a82cd2b94989abae7c127239ebd5499f4759f7"
+    },
+    "evidenceRasterHashes": {
+      "orbit-000": "f9b95800a0494a13d982aacb64d6131b913c43b2d5f2e63caba5fdab7f61df37",
+      "orbit-045": "84c261e34580a2955439edb59e53838ca4f42a99cd1f458d6ecbae39c3515bf0",
+      "orbit-090": "6513fb3f0e62323b7466dd7d0c8c6238ce1515c3c1482fb659277709809bd464",
+      "orbit-180": "364be0ccf218bb415a965efa374e3327e0b18479316f49610bfd6eb8019e0030",
+      "orbit-270": "cbda89004c7005206caaa923dfa923679bc425a5f1e6fff410243303479731d9",
+      "orbit-315": "4a82116b967be4adef60ef213adb14b112f718e29139e3b1611ca52170d175e5",
+      "orbit-180-clay": "660907bf0292d264f5872d7d1268ddf3265b32ea2301368edcddc12328708ab1",
+      "phone": "e32a9bea7882e9eea3bcfbb7873b9a730f229adb38bdb2012a33aaf0fca2ece1",
+      "canonical-36-tile-route": "b9d26403ca9f38f9ce68c4391f25d74097173474b98cd808e10365ed23384ab9"
+    },
+    "evidenceLimit": "CPU projection is authoritative for geometry, occlusion, tile transforms, seams, framing, and screen-space readability, but not GPU refraction, post-processing, transparency ordering, or a real live HUD overlay."
+  },
+  "scoring": {
+    "scale": "0-10",
+    "approvalThreshold": 8.5,
+    "worstViewGoverns": true,
+    "views": [
+      "orbit-000",
+      "orbit-045",
+      "orbit-090",
+      "orbit-180",
+      "orbit-270",
+      "orbit-315",
+      "phone"
+    ]
+  },
+  "landmarks": [
+    {
+      "id": "royal-palace",
+      "scores": {
+        "orbit-000": 6.8,
+        "orbit-045": 6.4,
+        "orbit-090": 5.8,
+        "orbit-180": 5.8,
+        "orbit-270": 5.5,
+        "orbit-315": 6.3,
+        "phone": 6.1
+      },
+      "worstView": {
+        "view": "orbit-270",
+        "score": 5.5
+      },
+      "defect": "Both profiles and the rear remain broad and sparse below the strong dark honeycomb lantern; the exact source's dense clustered jewel-hive silhouette and inhabited facade depth are not reproduced.",
+      "occlusion": "Always visible and dominant; not the governing defect.",
+      "identityVerdict": "Clear royal cathedral, below exact-source palace parity."
+    },
+    {
+      "id": "queen-nursery",
+      "scores": {
+        "orbit-000": 7.0,
+        "orbit-045": 2.5,
+        "orbit-090": 7.0,
+        "orbit-180": 7.4,
+        "orbit-270": 7.5,
+        "orbit-315": 6.6,
+        "phone": 5.3
+      },
+      "worstView": {
+        "view": "orbit-045",
+        "score": 2.5
+      },
+      "defect": "At 045 only the upper egg/crown portion clears the palace; door, brood pod, foundation, and enough complete mass for reliable nursery identity remain hidden.",
+      "occlusion": "Strong palace occlusion at 045 persists.",
+      "identityVerdict": "Broad egg nursery is strong whenever exposed; one required POV still fails."
+    },
+    {
+      "id": "pollinator-yard",
+      "scores": {
+        "orbit-000": 5.2,
+        "orbit-045": 5.5,
+        "orbit-090": 5.4,
+        "orbit-180": 4.5,
+        "orbit-270": 3.5,
+        "orbit-315": 4.6,
+        "phone": 3.4
+      },
+      "worstView": {
+        "view": "phone",
+        "score": 3.4
+      },
+      "defect": "The raised orange rotor is now present at every angle, including 270, but it reads as a narrow orange tower/machine; bee center, transverse honeycomb halo, broad court, and planter program do not survive phone scale.",
+      "occlusion": "Complete 270 disappearance remains fixed; partial palace/terrain occlusion persists at 180 and 270.",
+      "identityVerdict": "Visibility pass, source-role/phone failure."
+    },
+    {
+      "id": "hive-archives",
+      "scores": {
+        "orbit-000": 8.0,
+        "orbit-045": 7.5,
+        "orbit-090": 7.0,
+        "orbit-180": 7.2,
+        "orbit-270": 8.1,
+        "orbit-315": 8.2,
+        "phone": 5.4
+      },
+      "worstView": {
+        "view": "phone",
+        "score": 5.4
+      },
+      "defect": "Open-book silhouette and purple pages remain unique, but shelf/door/honeycomb program is too small on phone.",
+      "occlusion": "No required desktop disappearance; phone is fully framed.",
+      "identityVerdict": "Best satellite family; intended-scale detail remains below threshold."
+    },
+    {
+      "id": "nectar-trials",
+      "scores": {
+        "orbit-000": 6.8,
+        "orbit-045": 6.8,
+        "orbit-090": 6.5,
+        "orbit-180": 6.5,
+        "orbit-270": 6.3,
+        "orbit-315": 6.2,
+        "phone": 4.4
+      },
+      "worstView": {
+        "view": "phone",
+        "score": 4.4
+      },
+      "defect": "Raised hammer solids are visible above the purple canopy from all desktop views, but merge into a pale block pile rather than the source panel's crisp crossed-mallet icon; individual tools collapse on phone.",
+      "occlusion": "No longer canopy-hidden or phone-clipped; self-overlap remains.",
+      "identityVerdict": "Arena visible, crossed-hammer role only partially readable."
+    }
+  ],
+  "canonicalRoute": {
+    "declaredTileCount": 36,
+    "proof": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27/canonical-36-tile-route.png",
+      "sha256": "b9d26403ca9f38f9ce68c4391f25d74097173474b98cd808e10365ed23384ab9"
+    },
+    "isolatedProofAssessment": {
+      "countIntegrity": "PASS",
+      "continuousRing": true,
+      "missingOrDuplicateCellVisible": false,
+      "seamsReadable": true,
+      "countable": true,
+      "score": 8.8,
+      "finding": "The isolated proof shows one continuous closed ring of 36 individually separated trapezoidal cells with alternating value groups and no visible gap, overlap, or duplicate."
+    },
+    "worldContextAssessment": {
+      "simultaneouslyCountable": false,
+      "score": 4.5,
+      "finding": "Dark outlines expose route fragments around the court, but Palace, satellites, pylons, vegetation, and perspective hide or compress many cells. A player cannot visually count all 36 from any supplied world overview."
+    },
+    "phoneAssessment": {
+      "insideViewport": true,
+      "hudSafeGeometry": "conditional-pass",
+      "countable": false,
+      "score": 4.2,
+      "finding": "The full island and route band fit inside the portrait frame with useful top/bottom margin, so the route is not clipped by the demonstrated safe frame. Individual cells are too small and occluded for counting. No actual HUD overlay is present, so collision with production HUD controls is not directly proven."
+    },
+    "verdict": {
+      "canonical36Proven": true,
+      "playerOverviewCountable": false,
+      "hudSafe": "conditional",
+      "summary": "Canonical topology/count is proven by the isolated immutable route packet. Gameplay-overview countability is not achieved; HUD safety is compositionally plausible but requires a live HUD-overlay capture for final proof."
+    }
+  },
+  "overallVerdict": {
+    "allFiveLandmarksPresentEveryPov": true,
+    "allFiveLandmarksRoleReadableEveryPov": false,
+    "allLandmarkScoresAtLeast8_5": false,
+    "canonical36TileRouteProven": true,
+    "routeCountableInWorld": false,
+    "hudSafe": "conditional-pass",
+    "finding": "r27 preserves r23's repaired phone framing and Pollinator visibility while adding a valid isolated 36-tile route proof. The building gate still fails on Nursery 045 occlusion, Pollinator phone identity, Trials crossed-hammer clarity, Archives phone detail, and Palace profile/source parity."
+  }
+}

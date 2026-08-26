@@ -1,0 +1,42 @@
+[
+  {
+    "id": "royal-egg-silhouette",
+    "tier": "critical",
+    "score": 0.80,
+    "minimumScore": 0.80,
+    "passed": true,
+    "critique": "The canonical compact pointed egg and low cradle read immediately and remain stable at the axial viewpoints; the separate lattice-scale mismatch is reserved for the structural pass."
+  },
+  {
+    "id": "continuous-occupied-amber-egg-shell",
+    "tier": "critical",
+    "score": 0.80,
+    "minimumScore": 0.75,
+    "passed": true,
+    "critique": "The former open-lantern defect is cleared in both 090 and 270 degree evidence."
+  },
+  {
+    "id": "compact-pointed-egg-silhouette",
+    "tier": "critical",
+    "score": 0.78,
+    "minimumScore": 0.75,
+    "passed": true,
+    "critique": "The ovoid remains stable and volumetric around the orbit."
+  },
+  {
+    "id": "raised-pale-gold-honeycomb-lattice",
+    "tier": "secondary",
+    "score": 0.68,
+    "minimumScore": 0.65,
+    "passed": true,
+    "critique": "Readable and continuous, but the largest ribs still sit too far from the shell and should be reduced 15-20 percent in the later detail pass."
+  },
+  {
+    "id": "low-wax-cradle-and-small-finial",
+    "tier": "secondary",
+    "score": 0.73,
+    "minimumScore": 0.65,
+    "passed": true,
+    "critique": "The simplified support vocabulary no longer competes with the egg identity."
+  }
+]

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-second-and-final-construction-family-blockout",
+  "partId": "palace-front-facade",
+  "constructionFamily": "procedural-threejs-unified-volumetric-cathedral-gable-facade",
+  "supersedesRetiredFamily": {
+    "constructionFamily": "procedural-threejs-layered-royal-honey-cathedral-facade",
+    "terminalReview": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v2.json",
+    "sha256": "b435b4e21c034a7913220fea1b27dfa06ef68cb21b56fb18145b8360a3c5c4d3",
+    "retirementReason": "Applied rose/bay housings and projecting bands lost four-bay readability in both oblique views."
+  },
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "userDecision": ".gauntlet/island-014-honeycomb-kingdom-parts/user-decisions.v1.jsonl",
+    "macroException": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v12.json"
+  },
+  "familyDifference": [
+    "Replace independent applied rose, bay frames, rails, and ribs with one shallow but genuinely volumetric cathedral front skin seated inside the accepted palace silhouette.",
+    "Openings belong to the unified skin: dark recessed sockets sit behind thick masonry reveals, while their outer frames stay nearly coplanar with the skin face.",
+    "Use broad occupied-floor gable and pylon masses rather than projecting connector bars."
+  ],
+  "workerAllowlist": {
+    "implementation": ["createRoyalPalace facade-owned nodes in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "evidence": ["scripts/render-island014-palace-clay-orbit.mjs facade isolation only", "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v002-*"],
+    "forbidden": ["macro dimensions or transforms", "court and stairs", "keep/domes/bay bodies", "palace ornament system", "other landmarks", "terrain", "mission", "gameplay"]
+  },
+  "frozenDependencies": [
+    "all accepted palace macro nodes and transforms",
+    "palace court and stair axis",
+    "all non-facade systems"
+  ],
+  "requiredFeatures": [
+    "One unified front cathedral skin, not a collection of attached frames. It must have real thickness, a centered gable, two flanking occupied pylons/wings, and stay within the accepted macro silhouette.",
+    "One large pointed purple royal double door centered at the stair termination. Door width remains at least 1.05 world units and the dark reveal plus masonry arch remains legible in oblique views.",
+    "One rose opening embedded in the central gable: purple/dark socket behind the skin, thick surrounding reveal at or behind the skin face, six radial divisions, and no forward panel stand-off.",
+    "Four large occupied honeycomb openings are part of the same skin: two dominant lower cells and two subordinate upper cells. All four must remain individually countable at 0, 45, and 315 degrees.",
+    "Replace long bars with broad shallow floor ledges or stepped masonry joints that terminate inside the skin and never cross the door or float beyond the pylon faces.",
+    "Two purple banners remain beside the door with clear stair and door margins; they may anchor into the pylons but never become the pylon structure.",
+    "No z-fighting, exposed rear faces, floating reveal pieces, or gaps between the front skin and the accepted host mass."
+  ],
+  "phoneRead": [
+    "Door is first focal point.",
+    "Rose is second focal point.",
+    "Four occupied bays remain countable in both source-adjacent obliques.",
+    "The whole front reads as one inhabited vertical cathedral axis."
+  ],
+  "strictRejects": [
+    "reusing the retired applied-frame/rail construction",
+    "rose or bays projecting as standalone boxes",
+    "fewer than four countable bays at 45 or 315 degrees",
+    "long floating connector rails",
+    "facade skin changing accepted palace width or height silhouette",
+    "door narrower than stair arrival",
+    "banner obstruction",
+    "more than one correction in this final family"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 315],
+    "additional": ["phone-overview", "facade-closeup", "materials-off"],
+    "reviewCategories": ["source-identity", "unified-volumetric-integration", "cathedral-hierarchy", "four-bay-oblique-readability", "phone-readability"],
+    "gate": "Every required category at least 0.85. This is the second and final facade construction family; one correction maximum after blockout review."
+  }
+}

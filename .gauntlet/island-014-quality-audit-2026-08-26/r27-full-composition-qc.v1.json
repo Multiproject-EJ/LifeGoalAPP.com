@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-r27-full-composition-re-audit"
+  },
+  "authority": {
+    "source": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "inspectedFirst": true,
+      "role": "exact-pixel-authority"
+    },
+    "comparisonBaseline": {
+      "packet": "cathedral-honey-world-v009-r23",
+      "overallScore": 3.7,
+      "honeyfallScore": 3.8
+    },
+    "userBaselineScore": 4.0
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27",
+    "manifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27/capture-manifest.v1.json",
+      "sha256": "34994c00e144a9896a1dbc2aed0d48a712eb12c43f4a2f251c9d82d2931ca471"
+    },
+    "integrity": {
+      "valid": true,
+      "verifiedEntries": 28,
+      "verifiedEvidenceFiles": 20,
+      "mismatches": 0,
+      "sourceMatches": true,
+      "runtimeMatches": true,
+      "dependencyHashesMatch": true
+    },
+    "runtime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "88dd1b8631ead7db355abba82e9df210ef266c00529669b3c4b5f1b37a43a3cd"
+    },
+    "criticalDependencies": [
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx",
+        "sha256": "6cac0ad5d2b0bb311d69bd1a132ec97030b67d53268764d56792f17e2f770a25"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14RoyalCathedralV7.ts",
+        "sha256": "9ee40c8990e0337ec4a3b80439214b512f28c53887415dddc56d4e209befefef"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts",
+        "sha256": "9c5e1b6b8f38207cd912bc4fb5aac5b6b16aeb6208c9a653bf8a0ab0faba1703"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14HoneyWorldPresentationV2.ts",
+        "sha256": "7061b22591be79cbf0e31560c5a82cd2b94989abae7c127239ebd5499f4759f7"
+      }
+    ]
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "score": 4.9,
+      "deltaVsR23": 0.1,
+      "finding": "The central palace remains dominant and all five functional masses are present around it. Newly outlined route segments improve board identity, but the front remains a large empty radial apron and the five landmarks do not all achieve equally strong phone-scale identity."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "score": 4.7,
+      "deltaVsR23": 0.1,
+      "finding": "White-and-gold route blocks are now visible behind and beside the palace, improving circulation read. The near circular landmark still blocks substantial world area, while the Honeyfall remains a bulky orange object rather than integrated liquid scenery."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "score": 4.5,
+      "deltaVsR23": 0.2,
+      "finding": "The route is visibly segmented on both sides of the palace and the cathedral profile remains coherent. Large bare paving, repeated obelisks, and a weak rear-right landmark hierarchy still expose a sparse procedural layout."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "score": 4.4,
+      "deltaVsR23": 0.2,
+      "finding": "Rear route segments are substantially more legible and the palace remains authored from behind. The rear court is still mostly empty, and the source's dense dwellings, lamp paths, flowers, bridges, and honey channels are absent."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "score": 4.5,
+      "deltaVsR23": 0.2,
+      "finding": "Route blocks now support the island-board read from the opposite side. The Archives and hatchery silhouettes remain distinct, while the remaining landmarks and route purpose weaken under overlaps and low meso-detail."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "score": 4.6,
+      "deltaVsR23": 0.1,
+      "finding": "The oblique retains the accepted palace hierarchy and adds readable route segments. A foreground landmark continues to dominate the lower frame and the Honeyfall reads as a rigid hanging object at the far right."
+    },
+    {
+      "view": "orbit-180-materials-off",
+      "score": 4.2,
+      "deltaVsR23": 0.1,
+      "finding": "Clay confirms the palace, satellites, route blocks, and rear terrain are volumetric. It also confirms the shallow radial table, empty court, repeated posts, and coarse landmark forms remain geometry rather than material artifacts."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "score": 2.4,
+      "deltaVsR23": -1.4,
+      "finding": "This is a clear regression. The r23 rounded offset curtains are replaced by a broad rigid rectangular slab with a straight beam-like top, dark holes, parallel vertical rods, a thin side profile, and a circular base. It reads as a wall/card construction, not sagging, glistening, delicious honey."
+    },
+    {
+      "view": "canonical-36-tile-route",
+      "score": 6.4,
+      "deltaVsR23": 3.6,
+      "finding": "The dedicated proof shows a continuous, closed, individually countable 36-tile ring with alternating cream and amber blocks. It proves route existence and topology, but not pawn state, landmark connections, or clearance under the actual HUD/controller in the assembled phone view."
+    },
+    {
+      "view": "phone-overview",
+      "score": 3.8,
+      "deltaVsR23": 0.1,
+      "finding": "The wider safe framing remains intact and more route blocks are visible around the palace. The kingdom is still underscaled within large blue and lower void areas, the route cannot be followed as a complete loop at phone scale, and no actual HUD/controller overlay is shown."
+    }
+  ],
+  "categoryScores": {
+    "fullComposition": {
+      "score": 4.3,
+      "deltaVsR23": 0.1,
+      "evidence": "Visible route segments add structure to the radial world, but the shallow platform, large empty court, low terrain layering, and sparse occupation remain far from the portrait-filling source."
+    },
+    "phoneFullView": {
+      "score": 3.8,
+      "deltaVsR23": 0.1,
+      "evidence": "The island remains safely framed and route segments now appear, but the kingdom is small relative to the phone window and the complete route, five landmark functions, honey richness, and HUD fit collapse."
+    },
+    "fiveLandmarkHierarchy": {
+      "score": 4.8,
+      "evidence": "The palace is the clear hero and four satellite masses occupy distinct radial sites. Hatchery, Archives, and circular Trials silhouettes are strongest; the remaining functions rely on generic low-detail masses or are obscured, so all five are not equally legible at phone scale."
+    },
+    "routeProofReadability": {
+      "score": 6.4,
+      "deltaVsR23": 3.6,
+      "evidence": "R27 supplies a hash-valid dedicated proof of a closed countable 36-tile ring and exposes segments in every full orbit. Integration with landmarks, pawn state, and actual HUD/controller clearance remains unproven."
+    },
+    "honeyMaterialRead": {
+      "score": 2.6,
+      "deltaVsR23": -1.2,
+      "evidence": "The CPU renderer cannot prove final gloss or refraction, but the mission's rectangular wall silhouette, straight top bar, parallel rod-like falls, dark voids, thin side profile, and circular base are confirmed macro geometry and regress from r23."
+    },
+    "atmosphere": {
+      "score": 2.4,
+      "deltaVsR23": 0.0,
+      "evidence": "The environment remains a uniform blue field with repeated cookie-like floating islands and projection fragments instead of cloud volume, haze, bees, sun shafts, or deep inhabited sky."
+    }
+  },
+  "greatHoneyfallComparison": {
+    "r23Score": 3.8,
+    "r27Score": 2.4,
+    "delta": -1.4,
+    "verdict": "regressed",
+    "resolvedFromR23": [
+      "The multiple oversized bulbous caps are less dominant from the dedicated angle."
+    ],
+    "newOrReturnedDefects": [
+      "A rigid rectangular sheet/wall silhouette now governs the close view.",
+      "The top reads as a straight structural beam rather than a rounded viscous lip.",
+      "Parallel vertical falls read as rods or columns rather than varied liquid strands.",
+      "The side profile is thin and card-like.",
+      "A circular base reintroduces fountain/plinth language.",
+      "Dark openings read as holes or torn wall areas rather than translucent depth.",
+      "The dedicated proof does not show convincing cliff contact, pooled landing, splash, meniscus, or lateral flow."
+    ],
+    "rendererLimitationFinding": "Missing PBR, transparency sorting, and reflections can explain flat color and some dark overlap, but cannot explain the rectangular slab, straight top, thin side profile, parallel rods, and circular base. The regression is geometric."
+  },
+  "rendererLimitSeparation": {
+    "cpuRendererLimitations": [
+      "Physical refraction, environment reflections, post-processing, GPU transparency sorting, and final honey gloss are not reproduced.",
+      "The phone packet omits the live HUD/controller and may suppress fine route markings under semantic polygon budgets.",
+      "White triangular background fragments are treated as projection or alpha artifacts, not authored geometry."
+    ],
+    "confirmedGeometryOrCompositionDefects": [
+      "The r27 Honeyfall is a rigid wall/card with straight columns and a round base.",
+      "The assembled phone view remains underscaled and does not show the complete route loop.",
+      "The island is still a shallow regular platform with large empty courts and weak tiering.",
+      "All five landmark functions are not equally legible at phone scale.",
+      "Flowers, obelisks, distant islands, and inhabited meso-detail remain coarse and repetitive."
+    ]
+  },
+  "hardVetoes": [
+    {
+      "id": "great-honeyfall-wall-card-regression",
+      "present": true,
+      "evidence": "The dedicated close shows a broad rectangular slab, straight top rail, thin side profile, parallel vertical columns, dark holes, and circular base. This violates the required attached viscous honey-sheet identity."
+    },
+    {
+      "id": "assembled-route-and-hud-play-space-not-proven",
+      "present": true,
+      "evidence": "The isolated 36-tile topology is now proven, but the full/phone packet still does not show the complete loop, pawn state, five landmark connections, or actual HUD/controller clearance together."
+    }
+  ],
+  "resolvedSinceR23": [
+    {
+      "id": "canonical-route-existence-and-countability",
+      "resolved": true,
+      "evidence": "The new dedicated route proof clearly shows a closed ring of 36 individually countable tiles, and segments appear in assembled orbits."
+    }
+  ],
+  "topFiveFixes": [
+    {
+      "rank": 1,
+      "fix": "Retire the r27 Honeyfall repair geometry and return to the r23 offset-cliff placement as the base for one new liquid construction.",
+      "measurableTarget": "No rectangular slab, straight top beam, thin card edge, parallel rod field, dark open holes, or circular plinth in front and 45-degree close views; use one thick curved attached lip, unequal sagging sheets, rounded branching drips, and a grounded meniscus/splash zone."
+    },
+    {
+      "rank": 2,
+      "fix": "Prove the canonical route in the assembled phone gameplay view.",
+      "measurableTarget": "Show all 36 tiles as one traceable loop with pawn, five landmark connection points, actual top HUD, bottom controller, and no scenery occlusion or hit-area conflict."
+    },
+    {
+      "rank": 3,
+      "fix": "Increase phone-scale kingdom fill without reintroducing clipping.",
+      "measurableTarget": "Raise and enlarge the inhabited island so the palace and route dominate the safe window while all lower cliffs remain inside HUD/controller-safe bounds and unused blue/void is materially reduced."
+    },
+    {
+      "rank": 4,
+      "fix": "Give all five landmarks one unmistakable functional hero silhouette and occupied approach.",
+      "measurableTarget": "At 390x844, each landmark remains separately identifiable by one enlarged mechanism or icon-bearing volume, distinct entrance, and route connection without foreground overlap hiding another landmark."
+    },
+    {
+      "rank": 5,
+      "fix": "Replace the sparse radial-table read with inhabited terrain and atmospheric depth.",
+      "measurableTarget": "Add three irregular occupied cliff tiers, stairs/bridges/lantern paths, denser flower beds and hive dwellings, plus clouds, haze, bees, and varied distant hive islands while keeping the route clear."
+    }
+  ],
+  "overallScore": {
+    "value": 2.4,
+    "deltaVsR23": -1.3,
+    "governingView": "great-honeyfall-stage-4-close",
+    "userBaselineMet": false,
+    "productionApproval": false,
+    "finding": "R27 makes the largest route-proof improvement so far, but the Great Honeyfall repair introduces a veto-level geometric regression severe enough to govern the packet below r23."
+  },
+  "actionRationale": "Keep the cathedral, satellite, phone-framing, and dedicated route-proof work. Retire only the latest r27 Great Honeyfall repair family; its geometry is demonstrably worse than r23 and should not advance to material polish.",
+  "action": "retire-latest-honeyfall-repair-family"
+}

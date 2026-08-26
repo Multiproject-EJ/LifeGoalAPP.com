@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "subject": "Island 014 — Honeycomb Kingdom true-360 procedural Three.js environment",
+  "status": "palace-representation-ceiling-awaiting-user-choice",
+  "representation": "true-geometry-local-routes-exhausted",
+  "goalAuthority": {
+    "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "dimensions": [1023, 1537],
+    "authority": "immutable-user-selected-goal"
+  },
+  "renderProfile": {
+    "runtime": "actual Island Run Three.js route",
+    "desktopReview": [1440, 900],
+    "phoneProof": [390, 844],
+    "materialsOffProof": true,
+    "overlaysOff": true,
+    "quality": "high"
+  },
+  "cameras": [
+    {"id": "orbit-000-front", "yawDegrees": 0, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-045-front-right", "yawDegrees": 45, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-090-right", "yawDegrees": 90, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-135-rear-right", "yawDegrees": 135, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-180-rear", "yawDegrees": 180, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-225-rear-left", "yawDegrees": 225, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-270-left", "yawDegrees": 270, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-315-front-left", "yawDegrees": 315, "pitchDegrees": 24, "required": true},
+    {"id": "orbit-high-front", "yawDegrees": 0, "pitchDegrees": 42, "required": true},
+    {"id": "phone-overview", "yawDegrees": 0, "pitchDegrees": 28, "required": true}
+  ],
+  "gates": {
+    "perViewMinimum": 0.85,
+    "categories": ["silhouette-volume", "source-identity", "attachment", "cross-view-coherence", "assembly", "phone-readability"],
+    "oneBlockoutAndOneCorrectionPerFamily": true,
+    "minimumWorstDimensionGain": 0.10,
+    "qualityLordIndependent": true
+  },
+  "approvedExceptions": [
+    {
+      "scope": "royal-palace-macro-shell",
+      "type": "user-accepted-drift",
+      "date": "2026-08-25",
+      "authority": "User replied 'ok, continue' after the exact drift and score were presented.",
+      "acceptedScore": 0.60,
+      "evidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v12.json",
+      "effect": "Allows dependent palace facade and later island production to proceed; it does not lower gates for any other part or final whole-island review."
+    },
+    {
+      "scope": "palace-front-facade-representation-route",
+      "type": "user-approved-manual-dcc-switch-after-family-ceiling",
+      "date": "2026-08-25",
+      "authority": "User explicitly granted Blender access after both procedural facade families retired.",
+      "tool": "Blender 5.2.0 LTS macOS arm64",
+      "installerSha256": "ed4d8390166dec5ea0a2813a03db6221f206ce016442be7f59f41d760972568a",
+      "effect": "Authorizes a genuinely different Blender mesh construction route for the palace facade. It does not waive the facade 0.85 gate or authorize Blender changes to other parts without later routing."
+    },
+    {
+      "scope": "palace-front-facade-representation-route",
+      "type": "user-approved-texture-assisted-sculpted-switch-after-blender-family-ceiling",
+      "date": "2026-08-25",
+      "authority": "User replied 'okay, continue' to the explicit recommended third-route checkpoint.",
+      "effect": "Authorizes one genuinely different source-derived texture-assisted sculpted-relief family. It does not supersede the exact source, waive the 0.85 gate, or permit an unreviewed facade billboard."
+    },
+    {
+      "scope": "palace-true-360-shell-route",
+      "type": "user-approved-multiview-volumetric-reconstruction",
+      "date": "2026-08-25",
+      "authority": "User directed one-landmark-at-a-time reconstruction, 360 evidence, generated side/back goal studies when needed, and then said 'okay, continue'.",
+      "effect": "Authorizes a true closed procedural Three.js palace shell derived from the exact source and curated multiview continuity aid. Generated views may infer hidden construction only and may not revise the source-facing identity."
+    },
+    {
+      "scope": "palace-integrated-honeycomb-cathedral-route",
+      "type": "user-approved-persistent-production-family-switch",
+      "date": "2026-08-25",
+      "authority": "User instructed continued landmark-by-landmark work to 10/10 and requested final notification only when complete.",
+      "effect": "Authorizes a genuinely different integrated extruded honeycomb-cathedral family after the prior closed-shell family retired. It does not lower the 0.85 gate or authorize flat facade disks."
+    },
+    {
+      "scope": "palace-rounded-jewel-hive-cathedral-route",
+      "type": "user-approved-persistent-production-family-switch",
+      "date": "2026-08-25",
+      "authority": "User said 'okay, continue' after authorizing uninterrupted landmark-by-landmark work to 10/10.",
+      "effect": "Authorizes a genuinely different rounded, layered, source-faithful jewel-hive cathedral family after the low-poly integrated family retired. It preserves the exact-source authority and 0.85 gate."
+    },
+    {
+      "scope": "palace-blender-modular-jewel-palace-glb-route",
+      "type": "user-approved-headless-blender-full-landmark-route",
+      "date": "2026-08-25",
+      "authority": "User explicitly granted Blender access and then instructed continued work while keeping the Mac usable.",
+      "effect": "Authorizes a headless Blender modular full-palace GLB family after procedural Three.js families hit a repeated visual ceiling. Blender must remain headless; exact source and 0.85 gate remain binding."
+    },
+    {
+      "scope": "palace-source-calibrated-spline-cage-voxel-sculpt-route",
+      "type": "user-approved-existing-headless-blender-route-refinement",
+      "date": "2026-08-25",
+      "authority": "User authorized Blender/headless work and directed uninterrupted progress to 10/10.",
+      "effect": "Authorizes a genuinely different source-calibrated visual-hull and voxel-sculpt family after primitive assembly failed. It preserves the exact-source authority, generated-view inference limit, and 0.85 gate."
+    }
+  ],
+  "retiredFamilies": [
+    {
+      "scope": "palace-front-facade",
+      "family": "blender-boolean-recessed-honey-cathedral-facade",
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v1.json",
+      "action": "RETIRE-FAMILY",
+      "reason": "Open-hole and hollow-card hard veto at both required obliques; worst score 0.05."
+    },
+    {
+      "scope": "palace-front-facade",
+      "family": "blender-solid-modular-honey-cathedral-facade",
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v3.json",
+      "action": "RETIRE-FAMILY",
+      "reason": "The sole correction improved the worst score from 0.50 to 0.62, but the rose-first hierarchy and phone-scale doorway readability remained below the 0.85 gate."
+    },
+    {
+      "scope": "palace-front-facade",
+      "family": "threejs-chroma-projected-sculpted-honey-cathedral-relief",
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.projection.v1.json",
+      "action": "RETIRE-FAMILY",
+      "reason": "Worst score 0.08. Materials-off exposed a full-height rectangular sheet; materials-on showed hard paper edges, a detached projection, cyan fringe, and no countable attached 3D bays."
+    },
+    {
+      "scope": "palace-true-360-shell",
+      "family": "threejs-closed-cross-plan-honey-cathedral-shell",
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/qc-review.v2.json",
+      "action": "RETIRE-FAMILY",
+      "reason": "Immutable r02 passed 26/26 integrity, but worst score was 0.18. The facade collapsed into planar shards at 315 degrees, the rose disk protruded at side/rear angles, front details detached, and the whole silhouette drifted into an onion-dome fort archetype."
+    },
+    {
+      "scope": "palace-integrated-honeycomb-cathedral",
+      "family": "threejs-integrated-extruded-honeycomb-exoskeleton-cathedral",
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-integrated-honeycomb-cathedral/qc-review.v1.json",
+      "action": "RETIRE-FAMILY",
+      "reason": "Immutable r01 passed 26/26 integrity and was closed/card-free, but worst score was 0.22. It remained a generic low-poly keep with broad blank ochre slabs, isolated hex collars, unclear front bays, lamp-like drips, weak side/rear civic authorship, and no delicious glossy honey read."
+    },
+    {
+      "scope": "palace-rounded-jewel-hive-cathedral",
+      "family": "threejs-rounded-layered-jewel-hive-cathedral",
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-rounded-jewel-hive-cathedral/qc-review.v1.json",
+      "action": "RETIRE-FAMILY",
+      "reason": "Immutable r01 passed integrity with zero mismatches, but worst score was 0.18. The family triggered generic beehive-mound and cardboard-honey vetoes and failed source identity, continuous civic tracery, four-bay clarity, and phone identity."
+    },
+    {
+      "scope": "palace-blender-modular-jewel-glb",
+      "family": "blender-modular-honey-jewel-palace-runtime-glb",
+      "review": null,
+      "action": "RETIRE-BEFORE-FREEZE",
+      "reason": "The corrected headless Blender draft remained a pale toy-castle/tiered-cylinder composition with unclear front bays, blank rear mass, and awning-like honey. Its one bounded correction was used; no immutable evidence or runtime integration was created."
+    },
+    {
+      "scope": "palace-spline-cage-voxel-sculpt",
+      "family": "blender-source-calibrated-spline-cage-voxel-sculpt",
+      "review": null,
+      "action": "RETIRE-AT-EARLY-CLAY-GATE",
+      "reason": "Unfrozen P0-P7 draft was watertight at 61,460 triangles and passed dimensional ratios, but front landmark RMS was 6.552% versus the 3% maximum. Hard vetoes were blank central drum, cylindrical toy-castle silhouette, open/card-like bay mouths, weak portal hierarchy, and blank side/rear massing."
+    }
+  ],
+  "roles": {
+    "root": "manifests, user checkpoints, assembly, runtime integration",
+    "isolationCurator": "exact crops and secondary-inferred hidden-view studies only",
+    "partWorker": "one allowlisted part group and declared sockets",
+    "qualityLord": "independent read-only visual veto"
+  },
+  "budgets": {
+    "geometryWriters": 1,
+    "firstSlice": "royal-palace-macro-shell",
+    "productionOrder": ["royal-palace", "queen-hatchery", "pollinator-yard", "hive-archives", "nectar-trials", "scenery", "honey", "mission-and-construction-revalidation"]
+  }
+}

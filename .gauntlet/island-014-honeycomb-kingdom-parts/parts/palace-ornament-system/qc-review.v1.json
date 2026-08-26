@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewerRole": "independent-quality-lord",
+  "scope": "palace-ornament-system-only",
+  "readOnlyReview": true,
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-ornament-system/build-contract.v1.json",
+      "sha256": "19dfdb4b8c067372c0e9e676341361dfea6b95f92819ed875f67ffe274105d4c"
+    }
+  },
+  "evidenceIntegrity": {
+    "status": "verified",
+    "isolatedEvidenceDirectory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-ornament-v001-r06/raster",
+    "isolatedViewsInspected": [
+      "palace-ornament-000-materials-on.svg.png",
+      "palace-ornament-045-materials-on.svg.png",
+      "palace-ornament-135-materials-on.svg.png",
+      "palace-ornament-180-materials-on.svg.png",
+      "palace-ornament-225-materials-on.svg.png",
+      "palace-ornament-315-materials-on.svg.png",
+      "palace-ornament-180-materials-off.svg.png",
+      "palace-ornament-facade-close-materials-on.svg.png",
+      "palace-ornament-rear-close-materials-on.svg.png"
+    ],
+    "fullWorldEvidenceDirectory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r49",
+    "fullWorldManifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r49/capture-manifest.v1.json",
+    "fullWorldHashesMatchManifest": true,
+    "fullWorldViewsInspected": [
+      "orbit-000-materials-on.png",
+      "orbit-045-materials-on.png",
+      "orbit-090-materials-on.png",
+      "orbit-180-materials-on.png",
+      "orbit-270-materials-on.png",
+      "orbit-315-materials-on.png",
+      "orbit-180-materials-off.png",
+      "phone-overview.png"
+    ]
+  },
+  "gate": {
+    "thresholdPerCategory": 0.85,
+    "worstCategoryGoverns": true,
+    "scores": {
+      "source-identity": {
+        "score": 0.46,
+        "evidence": "The source is a densely occupied honeycomb cathedral with continuous gold tracery, dark sockets and amber glazing. The candidate is dominated by broad blank wall planes, sparse shield-like hex units and large awning/pinecone appendages, so its ornament language does not reproduce the canonical palace identity."
+      },
+      "surface-depth": {
+        "score": 0.62,
+        "evidence": "Some cells have thick frames and dark recesses, and the clay view confirms volumetric construction. However many elements read as appended panels or hovering lamps rather than closely seated architectural layers; the large lower walls remain materially and geometrically flat."
+      },
+      "honeycomb-scale-hierarchy": {
+        "score": 0.36,
+        "evidence": "The required three-scale system is not visibly established. Large isolated shield cells dominate, medium structural cell bands are absent, and small trim cells do not create a coherent tier/collar rhythm. This is sparse motif placement, not the source's inhabited honeycomb exoskeleton."
+      },
+      "dome-integration": {
+        "score": 0.72,
+        "evidence": "Hero and satellite domes carry longitudinal ribs and latitude collars that broadly follow their surfaces. They remain thin and schematic compared with the source's dense jeweled filigree, but no decisive detached-hoop defect is visible."
+      },
+      "side-rear-continuity": {
+        "score": 0.43,
+        "evidence": "The 045/135/225/315 and rear-close views expose large blank side and rear fields with only isolated framed hexes. The 180 view repeats a purple pointed doorway and front-like gable treatment on the rear rather than authoring an occupied rear elevation. Continuous honeycomb windows on the lower body, keep and satellites are missing."
+      },
+      "phone-readability": {
+        "score": 0.54,
+        "evidence": "The purple door, orange domes and oversized crest/awnings survive at phone scale, but the honeycomb structure does not. Door-first/rose-second hierarchy is weak because no integrated rose-window focal point is legible and the sparse ornament collapses into generic orange-gold shapes."
+      }
+    },
+    "worstCategory": {
+      "name": "honeycomb-scale-hierarchy",
+      "score": 0.36
+    },
+    "allCategoriesAtOrAboveThreshold": false,
+    "overallScoreOutOf10": 5.2,
+    "result": "FAIL"
+  },
+  "strictRejectsAndVetoes": [
+    {
+      "rule": "front-only treatment with blank side or rear architecture",
+      "status": "TRIGGERED",
+      "evidence": "Oblique and rear evidence shows extensive unoccupied wall fields; isolated cells do not create the required continuous side/rear civic tracery."
+    },
+    {
+      "rule": "rose window, royal door, stairs, or banners obscured",
+      "status": "FUNCTIONAL_FAILURE",
+      "evidence": "The door remains visible, but a dominant crest is placed directly on it and the canonical rose-window second focal point is not legible in facade-close or phone evidence."
+    },
+    {
+      "rule": "dome ribs reading as detached hoops",
+      "status": "NOT_TRIGGERED",
+      "evidence": "Available isolated views show the principal ribs and collars tracking the dome surfaces."
+    },
+    {
+      "rule": "flat hex decals or paper-thin cards",
+      "status": "NOT_DECISIVE",
+      "evidence": "Clay evidence confirms meaningful depth on several cells, though many larger panels still read as appended ornament rather than integrated structure."
+    }
+  ],
+  "terminalDecision": {
+    "action": "RETIRE-FAMILY",
+    "reason": "This one-correction family is far below the 0.85 gate in every category and triggers the side/rear strict reject. The dominant problem is the construction language itself—sparse appended motifs instead of continuous occupied honeycomb architecture—so another bounded adjustment cannot plausibly close the gap without becoming a new family."
+  },
+  "nextHighestImpactLandmark": {
+    "id": "pollinator-yard",
+    "recommendation": "ISOLATED-RECONSTRUCTION-NEXT",
+    "reason": "After retiring this ornament family, Pollinator Yard is the weakest remaining landmark/source match and its large canonical bee-and-flower identity has the highest next whole-island readability gain."
+  }
+}

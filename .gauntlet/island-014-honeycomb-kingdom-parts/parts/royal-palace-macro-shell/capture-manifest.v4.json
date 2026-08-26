@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "status": "quality-lord-review-pending",
+  "partId": "royal-palace-macro-shell",
+  "constructionFamily": "procedural-threejs-interlocked-nave-transept-cathedral",
+  "buildContract": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v3.json", "sha256": "9be22fea868ba600f5f1e7283d2fc8282e4d7b80ec25d417335d41ca4d7a87f6"},
+  "sourceAuthority": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png", "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"},
+  "implementation": {
+    "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+    "factory": "buildIsland14HoneycombLandmark boss, level 3, high quality",
+    "renderer": "scripts/render-island014-palace-clay-orbit.mjs",
+    "representation": "actual procedural Three.js mesh CPU-projected to isolated material-stripped macro-shell evidence",
+    "isolation": "court/stairs, plinth, nave, transept, apse, two keep stages, hero/crown domes, and four BASE+DRUM+DOME satellite shoulders"
+  },
+  "camera": {"target": [0, 2.1, 0], "radius": 11, "y": 6.8, "fovDegrees": 38, "viewport": [900, 900]},
+  "runtimeConstraint": "The in-app browser WebGL renderer could not initialize during this capture session. These actual-mesh clay projections are valid for macro-shell geometry review only and do not replace the final live-runtime beauty gate.",
+  "captures": [
+    {"degrees": 0, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-000-v005.jpg", "sha256": "1481e9059f944b539257afcbcda8b9e7add5c9e5b9eb59331c0d231eef797d86"},
+    {"degrees": 45, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-045-v005.jpg", "sha256": "d6bf39ad9a946f120a183a2dd095be8be3545bb46f80ef269eaa4c2ef76a8808"},
+    {"degrees": 90, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-090-v005.jpg", "sha256": "27422518145b41c1c982bee4a91820a32d332b647be155b39acff8871a15ab2d"},
+    {"degrees": 135, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-135-v005.jpg", "sha256": "84a9e52e65c49191f4ca945f06c6c3f9f216d0bef306e0bfab4803300b3b4ef4"},
+    {"degrees": 180, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-180-v005.jpg", "sha256": "ec29fb5807bf734c1c76935bf1802f61aaa08ca169bce3f206eecf9d060e0d7a"},
+    {"degrees": 225, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-225-v005.jpg", "sha256": "afbcf30998eab7d03a4a1f56e30e812f7febc4395caf2db7c5abfaab085099d0"},
+    {"degrees": 270, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-270-v005.jpg", "sha256": "955516be7752db90a99516a03aefb3433aae0d4313b0a4fb97025ae6a032be8d"},
+    {"degrees": 315, "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-macro-v003-clay-r01/island-014-palace-clay-315-v005.jpg", "sha256": "2734ba557a7f900f0cbc456ff3371e342af03f9dbf73e0594f83327cac0595a6"}
+  ]
+}

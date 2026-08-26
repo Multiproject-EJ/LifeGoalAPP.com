@@ -1,0 +1,10 @@
+[
+  {
+    "id": "honeycomb-shell-system",
+    "tier": "critical",
+    "score": 0.87,
+    "minimumScore": 0.80,
+    "passed": true,
+    "critique": "All five staggered rings now sit on the actual lathed ovoid radius. The ribs remain thin, shallow and attached while the continuous amber shell visibly occupies the full egg, including the upper third."
+  }
+]

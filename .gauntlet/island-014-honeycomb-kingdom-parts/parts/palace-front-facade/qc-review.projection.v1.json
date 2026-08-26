@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-first-visual-gate"
+  },
+  "subject": "Island 014 threejs chroma-projected sculpted honey cathedral relief first gate",
+  "constructionFamily": "threejs-chroma-projected-sculpted-honey-cathedral-relief",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "projectionContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.projection.v1.json",
+      "sha256": "ccfd3bf17a1c3832444f521de210a97bebd0c2c020a61abcf793f7280359bbf3"
+    },
+    "generationRecord": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/projection-generation-record.v1.json",
+      "sha256": "f959e7d490e00e6ba65d6e7b96936658a0660195690a36f11ee56b6616b71aaa"
+    },
+    "captureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/capture-manifest.v1.json",
+      "sha256": "5a9d6da55849f9da9c60e1b8b37c67ebec7b1726dcccdf35b74d5daad607d1b6"
+    },
+    "screenshotManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/screenshot-manifest.v2.json",
+      "sha256": "ebfb07e53056944f1a0bdb382d9bf90ec635f8c3517c9e042294b4933de33643"
+    },
+    "derivedFrontAid": {
+      "path": "src/features/gamification/level-worlds/dev/assets/island14PalaceFacadeProjectionV1.png",
+      "sha256": "52a6179e2f68e9d7baab280c01eab085d7a66d9bcaa346c9d924436f07d65dd8",
+      "authority": "derived-implementation-aid-only"
+    },
+    "derivedMultiviewAid": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-multiview-turnaround-v001.png",
+      "sha256": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3",
+      "authority": "secondary-inferred-aid-only"
+    },
+    "evidenceIntegrity": "All seven required r02 materials-on/off PNG hashes match screenshot-manifest.v2.json. The manifest explicitly excludes failed WebGL loading-screen attempts, and no excluded image was scored."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "criticalFirstPassFloor": 0.50,
+    "worstViewCategoryGoverns": true,
+    "hardVetoRetiresFirstPass": true,
+    "oneBoundedCorrectionMaximum": true,
+    "correctionsUsed": 0,
+    "correctionsRemainingIfEligible": 1,
+    "allowedActions": [
+      "APPROVE",
+      "ONE-BOUNDED-CORRECTION",
+      "RETIRE-FAMILY",
+      "STOP"
+    ]
+  },
+  "evidence": [
+    {
+      "view": "front-000-materials-on",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-000-materials-on-v002.png",
+      "sha256": "0f5921038dd26434f77ae2121d383beaf09d49aec554967a0fca3f216c7841fa"
+    },
+    {
+      "view": "front-000-materials-off",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-000-materials-off-v002.png",
+      "sha256": "1ea50911d4ef2f7db0526b09c7960cde847417c6d1a85f5d0fe5e04e19b3e3e9"
+    },
+    {
+      "view": "oblique-045-materials-on",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-045-materials-on-v002.png",
+      "sha256": "3610b2f399c89962cfcd1f5bd45634d8d29ae09b8720c06618439ebf50db6b4b"
+    },
+    {
+      "view": "oblique-045-materials-off",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-045-materials-off-v002.png",
+      "sha256": "c6b283b4db478cbe5b7119f3d4f0da1bab20fd62190e9cd643229ea31dfb2284"
+    },
+    {
+      "view": "oblique-315-materials-on",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-315-materials-on-v002.png",
+      "sha256": "e3ac653667421eedffa7483580817a7acd78bbbfec2ea31ca7e2cd7a5700b39f"
+    },
+    {
+      "view": "oblique-315-materials-off",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-315-materials-off-v002.png",
+      "sha256": "79b774de5c65c4b1fb1c336f27881e881d7a0f19a4235c7166500b10d0c694eb"
+    },
+    {
+      "view": "facade-closeup-materials-on",
+      "file": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-projection-v001-r02/island-014-palace-projection-close-materials-on-v002.png",
+      "sha256": "b5127f365ca52527dddfe1240bdcde00e77aa7258723019efa1a9c50acf4d089"
+    }
+  ],
+  "perViewScores": [
+    {
+      "view": "front-000-materials-on",
+      "sourceIdentity": 0.78,
+      "silhouetteVolume": 0.48,
+      "reliefDepth": 0.36,
+      "doorFirstHierarchy": 0.90,
+      "fourBayObliqueReadability": null,
+      "attachment": 0.42,
+      "crossViewCoherence": 0.18,
+      "phoneReadability": 0.88,
+      "chromaAlphaEdgeCleanliness": 0.35,
+      "note": "The generated front is rich and door-led, but it redesigns the exact source into a taller, denser multi-dome cathedral. Host geometry remains visible behind the cutout, and a cyan/teal fringe traces the projected silhouette."
+    },
+    {
+      "view": "front-000-materials-off",
+      "sourceIdentity": 0.18,
+      "silhouetteVolume": 0.12,
+      "reliefDepth": 0.16,
+      "doorFirstHierarchy": 0.18,
+      "fourBayObliqueReadability": null,
+      "attachment": 0.25,
+      "crossViewCoherence": 0.12,
+      "phoneReadability": 0.12,
+      "chromaAlphaEdgeCleanliness": null,
+      "note": "The actual naked relief is a full-height rectangular triangulated sheet. No palace silhouette, doorway hierarchy, bay bodies, or meaningful sculpted depth exists in the geometry."
+    },
+    {
+      "view": "oblique-045-materials-on",
+      "sourceIdentity": 0.58,
+      "silhouetteVolume": 0.18,
+      "reliefDepth": 0.20,
+      "doorFirstHierarchy": 0.82,
+      "fourBayObliqueReadability": 0.62,
+      "attachment": 0.15,
+      "crossViewCoherence": 0.14,
+      "phoneReadability": 0.76,
+      "chromaAlphaEdgeCleanliness": 0.20,
+      "note": "The palace artwork shears as one near-planar image. A long vertical paper edge and unsupported lower edge float ahead of the sealed host, while a cyan fringe outlines domes and finials. Apparent honeycomb bays are texture cells rather than four attached three-dimensional bay bodies."
+    },
+    {
+      "view": "oblique-045-materials-off",
+      "sourceIdentity": 0.10,
+      "silhouetteVolume": 0.08,
+      "reliefDepth": 0.12,
+      "doorFirstHierarchy": 0.08,
+      "fourBayObliqueReadability": 0.08,
+      "attachment": 0.12,
+      "crossViewCoherence": 0.08,
+      "phoneReadability": 0.08,
+      "chromaAlphaEdgeCleanliness": null,
+      "note": "The oblique wireframe exposes a single broad rectangular mesh wall with negligible local depth, a hard paper edge, and a large gap/overhang relative to the host."
+    },
+    {
+      "view": "oblique-315-materials-on",
+      "sourceIdentity": 0.58,
+      "silhouetteVolume": 0.18,
+      "reliefDepth": 0.20,
+      "doorFirstHierarchy": 0.82,
+      "fourBayObliqueReadability": 0.62,
+      "attachment": 0.15,
+      "crossViewCoherence": 0.14,
+      "phoneReadability": 0.76,
+      "chromaAlphaEdgeCleanliness": 0.20,
+      "note": "The opposite oblique repeats the same flat-card, detached-edge, and cyan-fringe defects. The textured front does not hand off to or integrate with the solid host."
+    },
+    {
+      "view": "oblique-315-materials-off",
+      "sourceIdentity": 0.10,
+      "silhouetteVolume": 0.08,
+      "reliefDepth": 0.12,
+      "doorFirstHierarchy": 0.08,
+      "fourBayObliqueReadability": 0.08,
+      "attachment": 0.12,
+      "crossViewCoherence": 0.08,
+      "phoneReadability": 0.08,
+      "chromaAlphaEdgeCleanliness": null,
+      "note": "The opposite naked view independently confirms the same rectangular sheet, negligible relief, hard paper edge, and floating relationship to the host."
+    },
+    {
+      "view": "facade-closeup-materials-on",
+      "sourceIdentity": 0.82,
+      "silhouetteVolume": 0.55,
+      "reliefDepth": 0.52,
+      "doorFirstHierarchy": 0.94,
+      "fourBayObliqueReadability": null,
+      "attachment": 0.45,
+      "crossViewCoherence": 0.30,
+      "phoneReadability": 0.94,
+      "chromaAlphaEdgeCleanliness": 0.85,
+      "note": "The projected texture has excellent close-range royal-door and honey ornament readability, but this is baked image detail; the materials-off and oblique evidence prove it is not carried by coherent attached relief geometry."
+    }
+  ],
+  "categorySummary": {
+    "sourceIdentity": 0.10,
+    "silhouetteVolume": 0.08,
+    "reliefDepth": 0.12,
+    "doorFirstHierarchy": 0.08,
+    "fourBayObliqueReadability": 0.08,
+    "attachment": 0.12,
+    "crossViewCoherence": 0.08,
+    "phoneReadability": 0.08,
+    "chromaAlphaEdgeCleanliness": 0.20
+  },
+  "worstRequiredScore": {
+    "value": 0.08,
+    "views": [
+      "oblique-045-materials-off",
+      "oblique-315-materials-off"
+    ],
+    "dimensions": [
+      "silhouetteVolume",
+      "doorFirstHierarchy",
+      "fourBayObliqueReadability",
+      "crossViewCoherence",
+      "phoneReadability"
+    ]
+  },
+  "hardVetoEvaluation": {
+    "billboardCardOrPaperEdge": {
+      "present": true,
+      "exactEvidence": [
+        "oblique-045-materials-on: full projected palace shears as one plane with a hard left/right edge",
+        "oblique-315-materials-on: same hard edge and planar artwork from the opposite side",
+        "oblique-045-materials-off and oblique-315-materials-off: full rectangular triangulated sheet is directly visible"
+      ]
+    },
+    "cyanBackgroundOrFringe": {
+      "present": true,
+      "exactEvidence": "A bright cyan/teal one-to-several-pixel fringe traces external domes, finials, lower drips, and side contours in front, 45, and 315 materials-on captures."
+    },
+    "detachedOrFloatingProjection": {
+      "present": true,
+      "exactEvidence": "Both materials-on obliques show unsupported lower and vertical cutout edges floating ahead of the sealed host; both materials-off obliques expose the same gap and overhang."
+    },
+    "invalidEvidence": {
+      "present": false,
+      "exactEvidence": "Every scored PNG matches screenshot-manifest.v2.json. The unavailable WebGL loading-screen attempts are explicitly excluded and absent from the scored set."
+    },
+    "projectionDominatesRearOrBackwards": {
+      "present": null,
+      "exactEvidence": "No rear capture was supplied at this first gate; the family already fails on required front and oblique evidence."
+    },
+    "doorNotFirstRoseNotSecond": {
+      "present": false,
+      "exactEvidence": "Within the materials-on artwork, the large purple bee doorway is first and the smaller rose/window region is secondary in front and both obliques."
+    },
+    "fewerThanFourAttachedCountableBays": {
+      "present": true,
+      "exactEvidence": "The materials-on obliques show many baked honey cells, but the intended four attached bay bodies are not independently countable; materials-off reveals no bay relief at all, only the rectangular grid."
+    }
+  },
+  "largestMismatch": "The exact source is a compact inhabited three-dimensional honey cathedral with deep attached bays and layered civic mass. This family is a high-quality generated front image placed on a full rectangular triangulated sheet; it shears like a billboard, floats ahead of the accepted host, and carries cyan fringe around its cutout edges.",
+  "gateEvaluation": {
+    "everyRequiredCategoryAtLeast085": false,
+    "criticalFirstPassFloorMet": false,
+    "hardVetoPresent": true,
+    "eligibleForBoundedCorrection": false,
+    "finding": "Although the textured front has strong phone-scale decoration and a correct door-first hierarchy, the actual geometry fails the naked gate at 0.08 and triggers billboard/paper-edge, cyan-fringe, detached-projection, and missing-attached-bay hard vetoes. Under the Gauntlet, a first-pass hard veto or critical score below 0.50 retires the construction family immediately; the unused correction allowance cannot be spent on this family."
+  },
+  "action": "RETIRE-FAMILY"
+}

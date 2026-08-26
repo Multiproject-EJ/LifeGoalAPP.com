@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-user-approved-manual-dcc-blockout",
+  "partId": "palace-front-facade",
+  "representationRoute": "blender-authored-multipart-mesh-exported-to-threejs-buffer-geometry",
+  "constructionFamily": "blender-boolean-recessed-honey-cathedral-facade",
+  "routeAuthority": {
+    "decisionLog": ".gauntlet/island-014-honeycomb-kingdom-parts/user-decisions.v1.jsonl",
+    "userDecision": "okay lets give you access to blender then, and you can try",
+    "trigger": "Both procedural facade families were retired; the user approved a different manual-DCC representation route.",
+    "tool": "Blender 5.2.0 LTS macOS arm64",
+    "installerSha256": "ed4d8390166dec5ea0a2813a03db6221f206ce016442be7f59f41d760972568a"
+  },
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "acceptedMacro": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v12.json",
+    "retiredProceduralReviews": [
+      ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v2.json",
+      ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v3.json"
+    ]
+  },
+  "workerAllowlist": {
+    "source": ["scripts/blender/build-island014-palace-facade.py"],
+    "dccArtifacts": ["work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v001.blend", "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v001.glb"],
+    "runtimeExport": ["src/features/gamification/level-worlds/dev/assets/island14PalaceFacadeBlenderV1.json"],
+    "integration": ["palace facade-owned assembly inside createRoyalPalace in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "forbidden": ["accepted palace macro dimensions or transforms", "court and stairs", "palace ornament system", "other landmarks", "terrain", "board", "mission", "robots", "gameplay"]
+  },
+  "frozenDependencies": [
+    "all accepted palace macro nodes and transforms",
+    "palace court and stair axis",
+    "all non-facade runtime systems"
+  ],
+  "coordinateContract": {
+    "threejs": {"up":"+Y", "front":"+Z", "right":"+X", "units":"world units"},
+    "blender": {"up":"+Z", "front":"-Y", "right":"+X", "units":"metres treated as world units"},
+    "exportMap": "three(x,y,z)=blender(x,z,-y)",
+    "origin": "palace-root local coordinates; facade base remains seated at palace y≈0.46"
+  },
+  "requiredFeatures": [
+    "One continuous closed cathedral facade shell, sculpted as a deep solid with beveled silhouette and seated by overlap into the accepted entrance host. It must not read as a flat card or giant planar pair of wings.",
+    "One genuinely recessed pointed royal doorway cut into the shell with dark reveal walls, a purple double-door insert behind the face, and a thick but shallow masonry arch integrated into the opening.",
+    "One genuinely recessed rose opening cut into the upper gable, with purple/dark backplane and six radial gold divisions behind or flush with the face; no disk or panel may stand proud.",
+    "Four genuinely recessed honeycomb window openings cut into the same shell: two dominant lower and two subordinate upper. All four remain countable at 0, 45 and 315 degrees.",
+    "Two compact volumetric side buttresses/pylons and stepped gable shoulders break the silhouette while staying inside the accepted 3.38-unit palace width and not hiding the door or four window openings.",
+    "Two purple banners anchor into side buttress sockets and clear both the door and stair arrival.",
+    "Mesh remains multipart and named for material ownership, click/explode structure, later ornament, and construction-stage classification; no fused inert lump."
+  ],
+  "strictRejects": [
+    "flat facade card or giant planar wings",
+    "rose or bay frames as standalone forward boxes",
+    "fewer than four countable bays at either 45 or 315 degrees",
+    "door hidden by a central slab or narrower than 1.05 world units",
+    "facade outside accepted macro width/height silhouette",
+    "open/non-manifold hero shell, reversed normals, degenerate triangles, or unattached parts",
+    "more than one bounded correction for this Blender family"
+  ],
+  "meshBudgets": {
+    "targetTriangles": 12000,
+    "hardMaximumTriangles": 20000,
+    "maximumRuntimeMeshParts": 24,
+    "minimumNamedParts": 8
+  },
+  "capture": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "additional": ["facade-closeup", "phone-overview", "wireframe", "normals", "materials-on", "materials-off"],
+    "reviewCategories": ["source-identity", "silhouette-volume", "recess-depth", "cathedral-hierarchy", "four-bay-oblique-readability", "attachment", "cross-view-coherence", "phone-readability"],
+    "gate": "Every required category at least 0.85; one bounded correction maximum. The accepted macro drift does not waive facade quality."
+  }
+}

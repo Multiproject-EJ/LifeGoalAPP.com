@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace buttressed hemidome naked macro shell final corrected family",
+  "constructionFamily": "procedural-threejs-buttressed-hemidome-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v5.json",
+      "sha256": "d694fc0a12c71e685668a413dcd9e4b8d64e8bd39cf1792bcbd528869bca128c"
+    },
+    "priorQualityReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v7.json",
+      "sha256": "aa7f298be50281394e5668dd6b6f9df43ae524b45423f915d5c684013533ea2d"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v8.json",
+      "sha256": "d2c7753f2e491b361063f7140e35791ef00a0155ff91d52a410a517f479617a0"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "mandatoryRetireBelow": 0.75,
+    "minimumCorrectionGain": 0.10,
+    "maximumCriticalRegression": 0.05,
+    "remainingCorrectionBudget": 0,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.64,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.60,
+      "sideRearCoherence": 0.76,
+      "note": "The correction visibly broadens the occupied body and raises the shoulders, but the palace still has a narrow pyramidal core. The source's broad, inhabited lower cathedral and integrated tower shoulders are not recovered; the four dome supports still read as tapering pylons around a dominant keep."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.64,
+      "depthIntegration": 0.78,
+      "sourceLikeness": 0.61,
+      "sideRearCoherence": 0.78,
+      "note": "The broader correction improves overlap, but the detached pylon rhythm remains obvious and the intervening roof masses are too thin and angular to form the source's dense interlocked cathedral."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.66,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The hidden side is closed and stable, but it confirms a cluster of narrow dome-capped supports rather than a continuous palace volume with substantial shoulder towers."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.65,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "Rear-oblique volume does not collapse, yet the large planar wedges between the keep and satellites expose the unresolved pylon-based construction language."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.64,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "Rear symmetry is coherent, but the oversized plain apse block and four narrow supports do not resolve into a convincing cathedral hierarchy."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.65,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The opposite rear-oblique view repeats the stable but visibly segmented pylon-and-wedge construction."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.66,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The hidden opposite side is volumetrically closed, but central height and isolated shoulder drums remain overdominant."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.64,
+      "depthIntegration": 0.78,
+      "sourceLikeness": 0.61,
+      "sideRearCoherence": 0.78,
+      "note": "Front-adjacent evidence confirms modest breadth gain without recovering the source's broad lower-body silhouette or integrated domed shoulder architecture."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.60,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "hypothesisEvaluation": {
+    "priorWorstRequiredScore": 0.50,
+    "correctedWorstRequiredScore": 0.60,
+    "absoluteGain": 0.10,
+    "minimumGainMet": true,
+    "retirementFloorMet": false,
+    "allApprovalScoresMet": false,
+    "maximumObservedCriticalRegression": 0.00,
+    "criticalRegressionWithinLimit": true,
+    "vetoReturned": true,
+    "finding": "The permitted proportion changes produced a real but limited +0.10 gain. They did not reach the falsifiable 0.75 corrected floor, and the shoulder bodies continue to read as dome-capped pylons rather than integrated cathedral towers."
+  },
+  "vetoes": [
+    {
+      "type": "ball-on-pylon",
+      "views": [0, 45, 90, 135, 180, 225, 270, 315],
+      "finding": "All four shoulder towers remain visually dominated by long tapering support shafts with hemispherical caps. Their junctions with the lower cathedral are too narrow and planar to read as the source's integrated inhabited tower masses."
+    }
+  ],
+  "largestMismatch": "The canonical palace derives its identity from a broad, dense lower cathedral with four substantial domed shoulders interlocked around the central keep. The corrected family remains a narrow central monument surrounded by four dome-capped tapering pylons and thin wedge infill, so its primary silhouette and mass hierarchy are still materially off-source.",
+  "terminalReason": "The corrected worst required score is 0.60, below the mandatory 0.75 retirement floor and far below the 0.85 approval gate. A ball-on-pylon veto also remains, and the family has no correction budget left.",
+  "action": "retire-family"
+}

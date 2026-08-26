@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace faceted radial hive basilica final corrected naked macro shell",
+  "constructionFamily": "procedural-threejs-faceted-radial-hive-basilica",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "hiddenVolumeHypothesis": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/generated-hypotheses/palace-lower-cathedral-body-turnaround-v002.png",
+      "authority": "secondary-side-rear-volume-only"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v8.json",
+      "sha256": "87179c17cd42419145de37532977df74fc7d0662b0d03729079c1dcfd1d06126"
+    },
+    "priorCaptureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v11.json",
+      "sha256": "cb246de47230d24cf2540fa2e91ad3e95a3789d455a76d0884670c7e3f431870"
+    },
+    "priorQualityReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v11.json",
+      "sha256": "1b6e50282b287d0d452ec1ac6d44df48c3e1515672940914da320d3f2b4279e6"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v12.json",
+      "sha256": "0faee0bf72d92c20e8cfb98ab950c27d88d9ccc39315ab54e13c1e1b82d120a7"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "minimumCorrectionGain": 0.10,
+    "correctedRetirementFloor": 0.75,
+    "maximumCriticalRegression": 0.05,
+    "remainingCorrectionBudget": 0,
+    "hiddenViews": "secondary volume-coherence evidence only; source likeness is not scored where the exact source provides no hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.64,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.60,
+      "sideRearCoherence": 0.77,
+      "note": "The entrance is wider and the bay bodies are squat, but the dominant silhouette remains a concentric faceted hive mound. The blank entrance prism does not reproduce the source's occupied cathedral facade or interlocked domed shoulders."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.62,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.60,
+      "sideRearCoherence": 0.78,
+      "note": "The corrected front bay is more buried and no longer a tall drum, but the entrance reads as another tall plain buttress and the radial core still controls the source-authoritative three-quarter view."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.63,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.81,
+      "note": "The side remains closed and deep. Corrected bay proportions improve integration, but the total form is still a generic tapered mound with small attached bays."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "Rear-oblique volume is stable, although the corrected rear bay is so buried that it contributes little architectural hierarchy and the core remains monolithic."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The rear is coherent and the platform ring is reduced, but it is a smooth faceted beehive back rather than the secondary turnaround's dense inhabited basilica volume."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The opposite rear-oblique view repeats the stable deep core and insufficient architectural breakup."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.63,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.81,
+      "note": "The opposite side confirms corrected bay seating and credible volume, but not cathedral-specific hierarchy."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.62,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.60,
+      "sideRearCoherence": 0.78,
+      "note": "The second source-adjacent view confirms the same generic radial mound and blank-prism entrance mismatch."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.60,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "hypothesisEvaluation": {
+    "priorWorstRequiredScore": 0.54,
+    "correctedWorstRequiredScore": 0.60,
+    "actualAbsoluteGain": 0.06,
+    "requiredAbsoluteGain": 0.10,
+    "minimumGainMet": false,
+    "correctedRetirementFloorMet": false,
+    "allApprovalScoresMet": false,
+    "maximumObservedCriticalRegression": 0.02,
+    "criticalRegressionWithinLimit": true,
+    "bayHeightWidthRejectCleared": true,
+    "freestandingBayRejectCleared": true,
+    "entranceWidthRejectCleared": true,
+    "keepPlatformRingRejectCleared": true,
+    "genericRadialSymmetryRejectCleared": false,
+    "finding": "The correction satisfies the literal proportion and overlap tests but produces only +0.06 worst-score gain. Generic radial beehive symmetry still controls the front, so the single falsifiable hypothesis fails."
+  },
+  "vetoes": [
+    {
+      "type": "generic-radial-beehive-front",
+      "views": [0, 45, 315],
+      "finding": "Concentric tapered tiers remain the primary front read. The broadened entrance is a blank faceted prism rather than an inhabited cathedral axis, and the low bays do not create the source's interlocked shoulder architecture."
+    }
+  ],
+  "largestMismatch": "The canonical palace uses a dominant occupied entrance facade and substantial domed shoulders to turn its tapered hive mass into a cathedral. The corrected family still presents a generic radial hive pyramid with a blank central prism and small buried domes, so the defining front architecture remains absent.",
+  "terminalReason": "The corrected worst required score is 0.60, below the 0.75 retirement floor and 0.85 approval gate; actual gain is only +0.06, below the required +0.10; and the generic-radial-front hard reject remains. No correction budget remains.",
+  "action": "retire-family"
+}

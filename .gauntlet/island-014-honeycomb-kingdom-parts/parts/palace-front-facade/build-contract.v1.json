@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized",
+  "partId": "palace-front-facade",
+  "constructionFamily": "procedural-threejs-layered-royal-honey-cathedral-facade",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "userDecision": ".gauntlet/island-014-honeycomb-kingdom-parts/user-decisions.v1.jsonl",
+    "macroException": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v12.json"
+  },
+  "workerAllowlist": {
+    "implementation": ["createRoyalPalace facade-owned nodes in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "evidence": ["scripts/render-island014-palace-clay-orbit.mjs facade isolation only", "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v001-*"],
+    "forbidden": ["macro dimensions or transforms", "court and stairs", "keep/domes/bay bodies", "other landmarks", "terrain", "mission", "gameplay"]
+  },
+  "frozenDependencies": [
+    "ISLAND_14_PALACE_LOWER_CIVIC_TIER",
+    "ISLAND_14_PALACE_MIDDLE_BASILICA_TIER",
+    "ISLAND_14_PALACE_ENTRANCE_BUTTRESS",
+    "ISLAND_14_PALACE_KEEP_LOWER",
+    "ISLAND_14_PALACE_KEEP_UPPER",
+    "all shoulder bay bodies and macro domes",
+    "palace court and stair axis"
+  ],
+  "requiredFeatures": [
+    "One large deeply recessed purple royal double door centered at the stair termination, with a pointed/arched top and a visible gold bee sigil.",
+    "A thick multi-layer gold arch surround whose outer width is at least 1.05 world units and whose dark recess produces readable depth at phone scale.",
+    "One large purple-backed honeycomb rose window above the door, with at least one outer frame and six radial cell/petal divisions.",
+    "Two dominant lower honeycomb window bays flanking the entrance and two subordinate upper bays; each needs a dark inset, thick gold frame and warm amber inner glow.",
+    "Vertical facade ribs and occupied-floor bands connecting the doorway, rose window and side bays so the entrance reads as an inhabited cathedral axis rather than a blank prism.",
+    "Two purple royal banners placed symmetrically beside—not over—the door; their lower edges must clear the stair and door opening.",
+    "All facade parts must sit on or embed into the accepted macro surfaces with no floating gaps or z-fighting."
+  ],
+  "phoneRead": [
+    "Purple door is the first focal point.",
+    "Rose window is the second focal point.",
+    "At least four large honeycomb bays remain individually legible.",
+    "Gold-versus-dark inset contrast survives the overview camera."
+  ],
+  "strictRejects": [
+    "flat decals or paper-thin cards",
+    "tiny uniform hex wallpaper",
+    "door narrower than the stair arrival",
+    "rose window floating in front of the keep",
+    "banners blocking the door",
+    "facade details placed on rear or side by radial repetition",
+    "any change to accepted macro silhouette"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 315],
+    "additional": ["phone-overview", "facade-closeup", "materials-off"],
+    "reviewCategories": ["source-identity", "depth-attachment", "cathedral-hierarchy", "phone-readability"],
+    "gate": "All required categories at least 0.85 unless explicitly covered by the palace-macro-only user-accepted drift."
+  }
+}

@@ -1,0 +1,342 @@
+{
+  "targetName": "Honeycomb Kingdom Island World",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "floating architectural game world",
+      "primaryDomain": "object",
+      "formLanguage": ["architectural", "hard-surface", "organic terrain", "botanical", "transparent-like"],
+      "structureKind": ["compound object", "deep parent-child hierarchy", "repeated modules", "layered shell", "articulated effect emitters"],
+      "motionPotential": ["static world mass", "whole-object ambient transforms", "effect emitters", "flowing honey", "flying fauna"],
+      "materialFamilies": ["gold-bronze metal", "wax-like stone", "amber glass", "viscous honey", "rough rock", "foliage", "flower petals"],
+      "notes": "A source-faithful stylized world reconstruction with five action-ready landmark families; baked UI and approximate route geometry are excluded."
+    },
+    "complexity": {
+      "tier": "ultra-complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 3,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 10,
+        "mesoComponents": 35,
+        "microFeatureGroups": 24,
+        "materialLayers": 7,
+        "repetitionSystems": 6
+      },
+      "reasoning": [
+        "The source combines a floating terrain system, dominant palace, four landmark families, distant colony, dense modular ornament, liquid/transparent materials and multiple independent ambience systems.",
+        "Action readiness requires separate named landmark roots, L1-L3 additive stages, focus sockets, occupancy envelopes, effect emitters and independently animated fauna/flow systems."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "ultra-complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Satellite building bodies are partly hidden by UI cards; infer them from the visible egg, cell, archive and court motifs and mark rear details medium/low confidence.",
+      "The source does not reveal rear palace service access or island underside topology; extend visible buttress, balcony, fracture and honey-channel logic without claiming exact recovery.",
+      "The concept camera and approximate route cannot be copied; the canonical Island Run camera and 36-tile board override them."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 16,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": []
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/docs/visual-references/island-014-honeycomb-kingdom/014-source.png"
+  },
+  "qualityContract": {
+    "qualityBar": "ultra-complex",
+    "definitionOfDone": [
+      "At 390x844 the world reads immediately as the supplied bright Honeycomb Kingdom: fractured honey-rock island, blue cloud depth, honey falls, airborne bees and one dominant many-towered royal hive palace.",
+      "The five canonical landmarks have distinct footprint-stable silhouettes, named action-ready roots and explicit additive L1-L3 construction stories using the shared three-robot theatre.",
+      "Gold-bronze, wax-cream, amber/honey, dark rock, foliage and flower materials remain distinct under the shared camera without flattening into yellow plastic or excessive bloom.",
+      "Front, left, right and rear surveys preserve coherent façades and the real 36-tile route remains fully readable at phone scale."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 5,
+      "mesoComponents": 16,
+      "microFeatureGroups": 8,
+      "materialLayers": 4,
+      "repetitionSystems": 2,
+      "reviewViewpoints": 5
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      },
+      {
+        "id": "honeycomb-civilization-identity",
+        "name": "Honeycomb civilization identity",
+        "required": true,
+        "qualityCriteria": [
+          "Hex-cell architecture, honey channels, bees, flower terraces and distant hive islets form one working civilization rather than disconnected gold props.",
+          "Blue sky and cream cloud depth remain a strong cool counterfield behind the warm city."
+        ],
+        "evidenceRefs": ["source-full", "macro-island", "distant-colony"],
+        "failureModes": ["generic yellow fantasy castle", "gold city loses bees, honey or flower ecology", "background collapses to flat blue"]
+      },
+      {
+        "id": "royal-palace-dominance",
+        "name": "Royal hive palace dominance",
+        "required": true,
+        "qualityCriteria": [
+          "The broad stair, central portal, amber dome, stacked drum, side towers and royal bee/purple accents produce the source's dominant central silhouette.",
+          "Satellite landmarks remain subordinate and do not repeat the palace tower stack."
+        ],
+        "evidenceRefs": ["source-center-palace", "front", "left", "right", "rear"],
+        "failureModes": ["palace reads as one generic dome", "satellites repeat palace silhouette", "central mass is too small at phone scale"]
+      },
+      {
+        "id": "construction-and-commissioning",
+        "name": "Construction and commissioning readiness",
+        "required": true,
+        "qualityCriteria": [
+          "Every landmark exposes retained/additive parts for five semantic reveal stages and compact honey-language façade staging.",
+          "The three robots remain outside occupancy envelopes and newly commissioned parts use the shared bounded pop, flash and sparkle finish."
+        ],
+        "evidenceRefs": ["construction-working", "construction-reveal", "construction-reduced-motion"],
+        "failureModes": ["whole-model fade", "missing robot role", "funded geometry scales", "unsafe strobing or looping particles"]
+      },
+      {
+        "id": "phone-and-performance-readiness",
+        "name": "Phone composition and runtime budget",
+        "required": true,
+        "qualityCriteria": [
+          "The whole route and all five landmarks fit between the live HUD and controller at 390x844.",
+          "Repeated cells, flowers, bees and distant islets use batching, instancing or quality-scaled counts."
+        ],
+        "evidenceRefs": ["390x844-overview", "map-stripped", "performance-profile"],
+        "failureModes": ["route or landmark hidden by scenery", "micro-detail dominates draw calls", "quality tiers change labels but not cost"]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Honeycomb Kingdom Island World floating honeycomb city architectural hierarchy mobile game world amber honey translucent material bee civilization hexagonal architecture procedural Three.js island landmark LOD instancing particles",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.description-controlled-vocabulary-aat-facets",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[5]",
+        "score": 6.640249309822,
+        "snippets": [
+          "Standardized terminology (Getty Art & Architecture Thesaurus facets for materials, activities, physical attributes) replacing vague or inconsistent free-text terms. Thuật ngữ chuẩn hóa (các facet của Getty Art & Architecture Thesaurus cho vật ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[5]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-customshadermaterial-csm-weathering-hooks",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[1]",
+        "score": 5.293476401953,
+        "snippets": [
+          "Extension library exposing csm_* output variables to inject procedural noise/masks into an otherwise-standard lit material, used for dynamic tarnish/patina effects. Thư viện mở rộng cung cấp các biến đầu ra csm_* để chèn nhiễu/mặt nạ thủ tục vào ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.component-hierarchy",
+        "file_path": "grimoire/intake/image_analysis.md",
+        "heading": "Layer 3 — Macro → meso → micro decomposition",
+        "key_path": null,
+        "score": 4.195809258387,
+        "snippets": [
+          "Decompose an object into macro independent major parts, meso sub-assemblies, and micro feature groups in a parent-child hierarchy."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 3 — Macro → meso → micro decomposition",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/intake/image_analysis.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      }
+    ]
+  }
+}

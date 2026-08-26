@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "status": "awaiting-independent-quality-lord-review",
+  "partId": "palace-front-facade",
+  "constructionFamily": "blender-boolean-recessed-honey-cathedral-facade",
+  "representation": "blender-authored-multipart-mesh-exported-to-threejs-buffer-geometry",
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.blender.v1.json",
+      "sha256": "7519e69e1f9fbe4e278ce4861b6b802a90ede5f65e2fe602ffdd3ffdb7f30c68"
+    }
+  },
+  "toolchain": {
+    "blenderVersion": "5.2.0 LTS",
+    "platform": "macOS arm64",
+    "installerSha256": "ed4d8390166dec5ea0a2813a03db6221f206ce016442be7f59f41d760972568a",
+    "builder": {
+      "path": "scripts/blender/build-island014-palace-facade.py",
+      "sha256": "06f1bde8ca5eab0536a83a102be6bd8f8f45e48a5eef73412ddc5b47512956bf"
+    },
+    "evidenceRenderer": {
+      "path": "scripts/render-island014-palace-clay-orbit.mjs",
+      "sha256": "f153c8601a463e3479df5df66b77b3e3b690d7c057f384b4b88da8b7416709da"
+    }
+  },
+  "artifacts": {
+    "blend": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v001.blend",
+      "sha256": "197c39283a8a8a992de0c1e0da9f401d501d3698c773c75bfded57fabf88fa01"
+    },
+    "glb": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v001.glb",
+      "sha256": "e48e9ecd444a2278b47825a5d10fb2eb6d770aec8d8ed517804ee3837c9f8202"
+    },
+    "runtimeJson": {
+      "path": "src/features/gamification/level-worlds/dev/assets/island14PalaceFacadeBlenderV1.json",
+      "sha256": "a2908e90e48f81f1e2f1d6ec338659897580be8d87aa157823f7311579a0c4a4"
+    },
+    "runtimeIntegration": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "23b7e269d8217a3330dc2c013c7d00b4655c5b82f5169050f2f1cf910ed91d6d"
+    }
+  },
+  "meshAudit": {
+    "runtimeMeshParts": 17,
+    "triangles": 2729,
+    "budgetMaximumMeshParts": 24,
+    "budgetMaximumTriangles": 20000,
+    "coordinateMap": "three(x,y,z)=blender(x,z,-y)",
+    "namedMultipartPreserved": true
+  },
+  "capture": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v001-r01",
+    "materials": "off-clay",
+    "views": [
+      {
+        "view": "front-000",
+        "svg": {"path": "island-014-palace-facade-000-v004.svg", "sha256": "d4df50af9a71ccb6e79104fb45cb021f33d55b606a38335d962caa9e01bc5bb9"},
+        "jpg": {"path": "island-014-palace-facade-000-v004.jpg", "sha256": "f01feba1e91adc3d187f0c5bee54f0321c26e722aff35f1a2319bf7ea15a2d35"}
+      },
+      {
+        "view": "oblique-045",
+        "svg": {"path": "island-014-palace-facade-045-v004.svg", "sha256": "182e0528294704065005c5cd6f3af1d4cef57acdf642b63413c5cdee54d77692"},
+        "jpg": {"path": "island-014-palace-facade-045-v004.jpg", "sha256": "267f182d8bf1f34c21d3f060f3c6da330e32cdb46a22306f8509126bf068bda9"}
+      },
+      {
+        "view": "oblique-315",
+        "svg": {"path": "island-014-palace-facade-315-v004.svg", "sha256": "12f4b8cb7937eae700ebc50bc73964f31c40a579ebf57750e11377ad111b5c76"},
+        "jpg": {"path": "island-014-palace-facade-315-v004.jpg", "sha256": "664c73c7596ad2bb8efacf4c58d8764591c06d29a4cc3d2932f3f22bb6fa44d6"}
+      },
+      {
+        "view": "facade-closeup",
+        "svg": {"path": "island-014-palace-facade-close-v004.svg", "sha256": "8a9f2a631ae8bbd5086e343e6b9de665d72dda0e2f933dbfd91ef709b8fb6137"},
+        "jpg": {"path": "island-014-palace-facade-close-v004.jpg", "sha256": "67594c784c00963c559361ef90473f9b3a6d373c7d280d84375ee68a946bf5d8"}
+      }
+    ],
+    "knownCoverageGap": "The full contract also requires the remaining orbit, wireframe, normals, materials-on and phone-overview evidence; those are intentionally deferred until the blockout survives the first independent geometry gate."
+  },
+  "correctionBudget": {
+    "maximum": 1,
+    "used": 0
+  },
+  "reviewGate": {
+    "minimumEveryCategory": 0.85,
+    "criticalFirstPassFloor": 0.5,
+    "hardVetoes": [
+      "open-hole or hollow-card read",
+      "fewer than four countable bays at 45 or 315 degrees",
+      "door hidden by a central slab",
+      "unattached or non-manifold hero shell"
+    ],
+    "allowedActions": [
+      "APPROVE",
+      "ONE-BOUNDED-CORRECTION",
+      "RETIRE-FAMILY",
+      "STOP"
+    ]
+  }
+}

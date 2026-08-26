@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace layered royal honey cathedral front facade final corrected family",
+  "constructionFamily": "procedural-threejs-layered-royal-honey-cathedral-facade",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.v1.json",
+      "sha256": "416ba49313ff83aaf4d88f2bdda659a0ad8ada9d406f1c156ccab8bae3c275d9"
+    },
+    "priorQualityReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v1.json",
+      "sha256": "2614660f7e0e301ea56dec3544975c86edae9e9fcf6f4b19742601fd96a2331a",
+      "priorWorst": 0.68
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/capture-manifest.v2.json",
+      "sha256": "2f2b3975a99786c1350a3dbcbaf8d72b9e96b697c795a3b74478235285494085"
+    },
+    "evidenceIntegrity": "All eight corrected SVG/JPEG hashes match capture-manifest.v2.json."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "minimumWorstScoreGain": 0.10,
+    "worstViewCategoryGoverns": true,
+    "macroDriftExceptionApplies": false,
+    "remainingCorrectionBudget": 0,
+    "evidenceScope": "actual-mesh materials-off geometry and attachment; color hierarchy remains for the later live-runtime beauty gate"
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-front",
+      "sourceIdentity": 0.76,
+      "depthAttachment": 0.80,
+      "cathedralHierarchy": 0.79,
+      "phoneReadability": 0.78,
+      "note": "Rose scale is closer to the source and the door remains clearly first. Four bays are visible in the direct front, but the long rails/ribs and pediment-like bay frames still fail to form the source's compact inhabited vertical facade."
+    },
+    {
+      "view": "orbit-045-front-right",
+      "sourceIdentity": 0.72,
+      "depthAttachment": 0.72,
+      "cathedralHierarchy": 0.70,
+      "phoneReadability": 0.66,
+      "note": "The smaller rose remains visibly stood off as a panel, and long bands/ribs project away from the host. Only the near lower bay is strongly readable; the other three bays collapse or occlude, failing the four-bay phone read."
+    },
+    {
+      "view": "orbit-315-front-left",
+      "sourceIdentity": 0.72,
+      "depthAttachment": 0.72,
+      "cathedralHierarchy": 0.70,
+      "phoneReadability": 0.66,
+      "note": "The mirrored oblique confirms persistent rose-panel stand-off, rail-like connectors, and loss of four-bay legibility."
+    },
+    {
+      "view": "facade-closeup",
+      "sourceIdentity": 0.77,
+      "depthAttachment": 0.83,
+      "cathedralHierarchy": 0.78,
+      "phoneReadability": 0.80,
+      "note": "Door, layered arch, seam, handles, and bee sigil remain strong and clean. The close view confirms that the door zone itself is clear, but the upper facade still lacks integrated occupied-floor continuity."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.66,
+    "view": "orbit-045-front-right",
+    "dimension": "phoneReadability"
+  },
+  "gainEvaluation": {
+    "priorWorstRequiredScore": 0.68,
+    "correctedWorstRequiredScore": 0.66,
+    "exactWorstScoreGain": -0.02,
+    "requiredGain": 0.10,
+    "minimumGainMet": false,
+    "allRequiredCategoriesAtLeast085": false,
+    "largestCriticalRegression": {
+      "dimension": "phoneReadability",
+      "view": "orbit-045-front-right",
+      "prior": 0.76,
+      "corrected": 0.66,
+      "delta": -0.10
+    }
+  },
+  "terminalChecks": {
+    "doorFirstFocalPoint": {
+      "pass": true,
+      "finding": "The pointed double door and multi-layer arch remain the first focal point and wider than the stair arrival."
+    },
+    "roseSecondFocalPoint": {
+      "pass": true,
+      "finding": "The reduced six-cell rose is second in the direct front."
+    },
+    "roseIntegration": {
+      "pass": false,
+      "finding": "At 45 and 315 degrees the rose still reads as a forward-mounted framed panel rather than a window embedded into the keep."
+    },
+    "fourLargeBays": {
+      "pass": false,
+      "finding": "All four can be counted frontally, but fewer than four remain individually legible in either source-adjacent oblique view."
+    },
+    "bandDoorClearance": {
+      "pass": true,
+      "finding": "The corrected bands no longer cross the door opening."
+    },
+    "bannerClearance": {
+      "pass": true,
+      "finding": "Both banners remain outside the door and stair-clearance zones."
+    },
+    "floating": {
+      "pass": false,
+      "finding": "The rose has a persistent visible stand-off/floating-panel read in both oblique views; rail-like connectors also project materially away from the host surfaces."
+    },
+    "zFighting": {
+      "pass": true,
+      "finding": "No z-fighting is visible in the corrected JPG/SVG evidence."
+    }
+  },
+  "defects": [
+    {
+      "severity": "terminal",
+      "type": "phone-readability-regression",
+      "finding": "Corrected oblique views do not preserve four individually legible bays, reducing phone-readability from 0.76 to 0.66."
+    },
+    {
+      "severity": "terminal",
+      "type": "forward-mounted-rose-panel",
+      "finding": "The rose remains visibly proud of the keep instead of reading as a recessed architectural window."
+    },
+    {
+      "severity": "major",
+      "type": "rail-like-facade-connectors",
+      "finding": "Bands/ribs are long projecting bars rather than integrated occupied-floor bands, weakening cathedral hierarchy and source identity."
+    }
+  ],
+  "largestMismatch": "The source facade keeps a dense vertical stack of doorway, occupied honeycomb bays, and an embedded rose readable as one cathedral axis. The corrected family preserves the strong door but still separates the rose and bay housings from the host, and its oblique phone read loses the four-bay identity.",
+  "terminalReason": "The corrected worst required score is 0.66, not 0.85; exact gain versus 0.68 is -0.02, not +0.10; four-bay phone readability regresses by 0.10; and the rose-integration/floating hard reject remains. No second correction is permitted.",
+  "action": "RETIRE-FAMILY"
+}

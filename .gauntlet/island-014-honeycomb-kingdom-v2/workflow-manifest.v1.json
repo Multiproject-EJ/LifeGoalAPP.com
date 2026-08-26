@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-014-honeycomb-kingdom-v2",
+  "subjectType": "environment",
+  "status": "awaiting-user-inventory-approval",
+  "goal": {
+    "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "authority": "immutable-supplied-goal-pixels",
+    "runtimeIslandNumber": 14,
+    "embeddedImageNumber": 24
+  },
+  "renderProfile": {
+    "primaryViewportCss": [390, 844],
+    "canonicalView": "phone-gameplay-three-quarter",
+    "requiredViews": ["front", "front-left", "front-right", "rear", "top-oblique"],
+    "diagnosticViews": ["clay", "semantic-id", "wireframe"]
+  },
+  "qualityGate": {
+    "requiredPerViewScore": 0.85,
+    "categories": ["silhouette-volume", "identity", "attachment", "cross-view-coherence", "assembly", "phone-readability"],
+    "hardVetoes": ["flat-card-landmarks", "blank-rear-facades", "missing-honeyfalls", "missing-visible-honeycomb", "plastic-opaque-honey", "route-obstruction", "camera-dependent-geometry"]
+  },
+  "authority": {
+    "allowed": ["procedural-threejs-world", "presentation-animation", "signature-mission-canonical-services", "tests", "evidence", "documentation"],
+    "requiresSeparateApproval": ["merge", "publish", "deploy", "paid-or-neural-service", "manual-dcc-route", "destructive-cleanup"]
+  },
+  "budgets": {
+    "mobileHighMaxDrawCalls": 175,
+    "mobileHighMaxTriangles": 180000,
+    "mobileHighMinAverageFps": 50,
+    "mobileHighP95FrameMs": 29
+  },
+  "roles": {
+    "root": "manifest-owner-assembler-and-final-review",
+    "qualityLord": "independent-read-only-veto-reviewer"
+  },
+  "representativeFirstSlice": "macro-terrain-plus-royal-palace-plus-liquid-honey-system",
+  "notes": [
+    "Preserve canonical 36-tile gameplay and all five footprint-stable landmarks.",
+    "The previous 0.64 implementation evidence remains immutable and is the v2 baseline, not an accepted finish.",
+    "The signature mission is chosen from ten candidates only after source and performance fit are compared."
+  ]
+}

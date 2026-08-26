@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewerRole": "independent-quality-lord",
+  "scope": "hive-archives-blockout-only",
+  "readOnlyReview": true,
+  "authority": {
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/hive-archives/isolation/derived-crops/hive-archives-visible-source-crop-v001.png",
+      "sha256": "74d49b426fee0815403487aed71363a44bc5a2922f0296f8ab8b437e1f5970e1",
+      "role": "primary-visible-authority"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/hive-archives/build-contract.v1.json",
+      "sha256": "56e7e2ea95d90c9fd01a6f80877e5bd0d35a1a4bb1ad9a12cb6226507698d465"
+    }
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r52",
+    "manifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r52/capture-manifest.v1.json",
+      "sha256": "b79726024695bb7ef86cdea9239d55de6344877899856d8badbf0a8e9b6918e7"
+    },
+    "viewsInspected": [
+      "orbit-000-materials-on.png",
+      "orbit-045-materials-on.png",
+      "orbit-090-materials-on.png",
+      "orbit-180-materials-on.png",
+      "orbit-270-materials-on.png",
+      "orbit-315-materials-on.png",
+      "orbit-180-materials-off.png",
+      "phone-overview.png"
+    ],
+    "captureCoverageWarning": "The r52 packet omits contract-requested 135-degree and 225-degree views plus dedicated book-close and rear-close captures. The supplied front, side, rear, clay and phone views are sufficient to determine that the book hierarchy collapses and the phone identity is absent."
+  },
+  "blockoutGate": {
+    "thresholdPerCategory": 0.75,
+    "noStrictRejectRequired": true,
+    "scores": {
+      "source-identity": {
+        "score": 0.46,
+        "evidence": "The authoritative icon is an immediately readable open book paired with a seven-cell wisdom cluster. The candidate reads as a generic closed gold hall with a dark upper drum, a faceted roof-cap and a honeycomb fixture on one side; the icon's two-part hierarchy is not reproduced."
+      },
+      "book-readability": {
+        "score": 0.3,
+        "evidence": "In 000, 270 and the clearest 315 front view, the supposed book is a low pale-gold faceted cap bounded by a rope-like circular rim. Two cream page blocks, dark central spine, page-line fan and seated reading dais are not distinguishable. It functions visually as a canopy."
+      },
+      "seven-cell-wisdom-cluster": {
+        "score": 0.59,
+        "evidence": "A seven-cell cluster with dark sockets is countable in 090 and 180, but it is relegated to a side/rear face rather than rising directly above or behind the book as the second focal point. It disappears from the principal front and phone reads."
+      },
+      "architectural-unity": {
+        "score": 0.7,
+        "evidence": "The lower hall is broad, closed and entered from the front, with side volumes that make it usable architecture. The upper book-cap and lateral honeycomb cluster do not fuse into one scholarly silhouette and instead read as separate roof and wall ornaments."
+      },
+      "surface-depth": {
+        "score": 0.68,
+        "evidence": "The hall, drum, sockets, frames and entry have real volume. The key book geometry lacks sufficient separation and page-block depth to read as an open object, and the upper rim compresses it into a shallow cap."
+      },
+      "side-rear-continuity": {
+        "score": 0.64,
+        "evidence": "The closed building mass and several socket details continue around the orbit, so there is no open shell. However the rear identity depends on a large honeycomb cluster while the front depends on a roof-cap; shelf-window bands and a coherent subordinate rear book/hex mark are not established."
+      },
+      "phone-readability": {
+        "score": 0.18,
+        "evidence": "The Archives is clipped against the left edge of phone-overview. Neither an open book nor a seven-cell cluster is identifiable, so the source's wisdom/library identity is absent at intended scale."
+      }
+    },
+    "worstCategory": {
+      "name": "phone-readability",
+      "score": 0.18
+    },
+    "allCategoriesAtOrAboveThreshold": false,
+    "overallScoreOutOf10": 5.1,
+    "result": "FAIL"
+  },
+  "strictRejects": [
+    {
+      "rule": "purple roof or ordinary gabled-roof reading",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The upper cap is gold rather than purple and the hall is not a conventional gabled-roof building."
+    },
+    {
+      "rule": "book flattened into a canopy",
+      "status": "TRIGGERED",
+      "evidence": "The pale faceted top is shallow, enclosed by a circular rim and reads as the upper drum's roof/canopy instead of two open page blocks."
+    },
+    {
+      "rule": "honeycomb cluster floating without support",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The cluster appears seated against the upper hall/drum rather than floating freely."
+    },
+    {
+      "rule": "single generic hex halo instead of seven-cell wisdom cluster",
+      "status": "NOT_TRIGGERED",
+      "evidence": "Seven framed cells are visible in the side/rear evidence, although their placement fails the focal hierarchy."
+    },
+    {
+      "rule": "front-only treatment or blank rear",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The rear is closed and carries the cluster and secondary socket detail, though continuity remains below gate."
+    },
+    {
+      "rule": "book or cluster obscuring the entry",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The purple front entry remains unobstructed."
+    }
+  ],
+  "gauntletAction": {
+    "action": "retire-family",
+    "correctionEligible": false,
+    "reason": "The first blockout triggers the explicit flattened-book canopy reject, while source identity, book readability and phone readability fall below the 0.50 critical floor. Gauntlet economics therefore prohibit using the family's bounded correction."
+  },
+  "dominantDefect": "The primary book is constructed and staged as a shallow faceted roof-cap, while the seven-cell wisdom cluster is displaced to a side/rear wall; the required book-first, cluster-second library identity never forms in front or phone views.",
+  "boundedCorrection": null,
+  "finalPassPerformed": false
+}

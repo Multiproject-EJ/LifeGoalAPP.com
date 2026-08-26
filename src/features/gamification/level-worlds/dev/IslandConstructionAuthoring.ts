@@ -39,6 +39,7 @@ const WORLD_LANDMARK_LABELS: Readonly<Record<number, Readonly<Record<Island5Land
   8: { boss: 'Blossom Crown Citadel', hatchery: 'Tulip Glasshouse Hatchery', habit: 'Sunflower Rhythm Pavilion', wisdom: 'Orchid Crystal Archive', event: 'Leafroof Garden Hall' },
   9: { boss: 'Heartshaft Crucible', hatchery: 'Blastglass Incubator', habit: 'The Great Fuse', wisdom: 'Memory Press', event: 'Seismic Switchyard' },
   10: { boss: 'Rootheart Arena', hatchery: 'Acorn Cradle Hatchery', habit: 'Canopy Rhythm Lodge', wisdom: 'Spiralwood Library', event: 'Firefly Pulley Workshop' },
+  14: { boss: 'Royal Honeycomb Palace', hatchery: "Queen's Nursery Hatchery", habit: 'Pollinator Yard', wisdom: 'Hive Archives', event: 'Nectar Trials Pavilion' },
 };
 
 const LANDMARK_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
@@ -55,6 +56,47 @@ const LANDMARK_RIGS: Readonly<Record<Island5LandmarkId, ConstructionRigKind>> = 
   event: 'alignment-rail',
   wisdom: 'archive-lift',
   boss: 'commissioning-crane',
+};
+
+const HONEYCOMB_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
+  hatchery: ['amber nursery plinth and brood bed', 'royal egg shell and honeycomb supports', 'brood wings and crown ring', 'incubation cells and nursery mechanisms', 'queen-bee crest, flowers, and hatch lights'],
+  habit: ['hexagonal practice court and nectar paths', 'pollinator planters and bee totem', 'golden pergola and shelter ring', 'discipline stations and shared-work apparatus', 'honey lanterns, flowers, and completion halo'],
+  event: ['nectar trial plinth and ceremonial floor', 'trial columns and participant ring', 'purple canopy and golden crown rail', 'nectar core and crossed trial hammers', 'royal banners and bee victory crest'],
+  wisdom: ['archive plinth and reading threshold', 'hexagonal reading hall and cell walls', 'upper archive tower and hive dome', 'open book, reading pods, and knowledge cells', 'wisdom crown, purple glazing, and archivist bee'],
+  boss: ['royal honey court and processional stairs', 'lower palace keep and honeycomb walls', 'turrets, domes, and upper royal silhouette', 'palace windows, banners, and hive mechanisms', 'queen-bee crown, victory lamps, and royal halo'],
+};
+
+const HONEYCOMB_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
+  hatchery: {
+    styleId: 'honeycomb-queens-nursery-cradle-hoist', stationOffset: 0, stationStep: 1, relocationSeconds: 1.48,
+    phaseStationOffsets: { foundation: 0, frame: 1, assemble: 3, finish: 2 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  habit: {
+    styleId: 'honeycomb-pollinator-yard-facade', stationOffset: 2, stationStep: -1, relocationSeconds: 1.42,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'circular-saw', 'project-manager': 'clamp', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'wrench', 'project-manager': 'cable-reel', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'timber-stack', 'bolt-crate'], frame: ['timber-stack', 'beam-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  event: {
+    styleId: 'honeycomb-nectar-trials-alignment-rail', stationOffset: 5, stationStep: 1, relocationSeconds: 1.36,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 3, finish: 1 },
+    phaseTools: { foundation: { 'heavy-worker': 'drill', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'wrench', 'project-manager': 'cable-reel', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'pipe-bundle', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  wisdom: {
+    styleId: 'honeycomb-hive-archives-book-lift', stationOffset: 3, stationStep: -1, relocationSeconds: 1.62,
+    phaseStationOffsets: { foundation: 0, frame: 1, assemble: 2, finish: 0 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  boss: {
+    styleId: 'honeycomb-royal-palace-commissioning', stationOffset: 4, stationStep: 1, relocationSeconds: 1.5,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'clamp', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'measuring-laser', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
 };
 
 const FROSTMOON_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
@@ -599,6 +641,7 @@ function resolveConstructionChoreography(
   if (worldSourceNumber === 8) return EVERBLOSSOM_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 9) return HEARTSHAFT_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 10) return ROOTHEART_CHOREOGRAPHY[landmarkId];
+  if (worldSourceNumber === 14) return HONEYCOMB_CHOREOGRAPHY[landmarkId];
   return {
     styleId: `world-${worldSourceNumber}-${landmarkId}-${rigKind}`,
     stationOffset: (['boss', 'hatchery', 'habit', 'wisdom', 'event'] as Island5LandmarkId[]).indexOf(landmarkId),
@@ -628,6 +671,8 @@ export const ISLAND_LANDMARK_CONSTRUCTION_PROFILES: readonly IslandLandmarkConst
                     ? HEARTSHAFT_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 10
                       ? ROOTHEART_STAGE_STORIES[landmarkId]
+                    : Number(worldSourceNumber) === 14
+                      ? HONEYCOMB_STAGE_STORIES[landmarkId]
                       : LANDMARK_STAGE_STORIES[landmarkId],
       choreography: resolveConstructionChoreography(
         Number(worldSourceNumber),

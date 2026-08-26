@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "canonical-front-three-quarter",
+    "sourcePath": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "width": 1023,
+    "height": 1537,
+    "foregroundCoverage": 0.944,
+    "largestComponentFraction": 1.0,
+    "pHash": 17220261823064081058,
+    "duplicateOfHash": null
+  }
+}

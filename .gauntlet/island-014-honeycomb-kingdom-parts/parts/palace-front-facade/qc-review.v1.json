@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace layered royal honey cathedral front facade",
+  "constructionFamily": "procedural-threejs-layered-royal-honey-cathedral-facade",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.v1.json",
+      "sha256": "416ba49313ff83aaf4d88f2bdda659a0ad8ada9d406f1c156ccab8bae3c275d9"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/capture-manifest.v1.json",
+      "sha256": "1377cd3f7929eb5864bb150d9d1be4faa60eeed9b34e9d1bfdc85351155b0bdf"
+    }
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "worstViewCategoryGoverns": true,
+    "macroDriftExceptionApplies": false,
+    "minimumCorrectionGain": 0.10,
+    "evidenceScope": "actual-mesh materials-off geometry and attachment; final color hierarchy remains for the later live-runtime beauty gate"
+  },
+  "perViewScores": [
+    {
+      "view": "front-000",
+      "sourceIdentity": 0.72,
+      "depthAttachment": 0.78,
+      "cathedralHierarchy": 0.76,
+      "phoneReadability": 0.80,
+      "note": "The large pointed double-door and thick arch are unmistakably first, the rose is second, and four bays are individually visible. The rose is oversized and panel-like, the bay housings read as detached little pediments, and the floor bands/ribs do not yet bind the elements into the source's inhabited vertical cathedral axis."
+    },
+    {
+      "view": "front-right-045",
+      "sourceIdentity": 0.68,
+      "depthAttachment": 0.74,
+      "cathedralHierarchy": 0.72,
+      "phoneReadability": 0.76,
+      "note": "Real layer thickness is proven, with no obvious z-fight. The rose/frame assembly projects too far as a separate panel and the right-side bays sit proud as discrete housings rather than embedded honeycomb architecture."
+    },
+    {
+      "view": "front-left-315",
+      "sourceIdentity": 0.68,
+      "depthAttachment": 0.74,
+      "cathedralHierarchy": 0.72,
+      "phoneReadability": 0.76,
+      "note": "The mirrored oblique view confirms the same forward-mounted rose, detached bay-house read, and weak connection from lower door to upper facade."
+    },
+    {
+      "view": "facade-close",
+      "sourceIdentity": 0.74,
+      "depthAttachment": 0.82,
+      "cathedralHierarchy": 0.75,
+      "phoneReadability": 0.82,
+      "note": "The multi-layer arch, pointed door, seam, handles, and bee sigil have strong readable geometry. The close crop also shows that the oversized arch/door consumes most of the lower facade while the connecting bands intersect the door zone instead of cleanly stepping around it."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.68,
+    "view": "front-right-045",
+    "dimension": "sourceIdentity"
+  },
+  "featureAssessment": {
+    "doorFirstFocalPoint": {
+      "status": "pass",
+      "finding": "The broad pointed door and layered arch dominate the facade and exceed the stair-arrival width."
+    },
+    "roseSecondFocalPoint": {
+      "status": "partial",
+      "finding": "The six-cell rose is clearly second, but its oversized forward panel competes too aggressively and appears insufficiently embedded."
+    },
+    "fourLargeBays": {
+      "status": "partial",
+      "finding": "Two lower and two upper bays are present and legible, but their deep pediment housings read as attachments rather than occupied facade bays."
+    },
+    "connectingBandsAndRibs": {
+      "status": "fail",
+      "finding": "Existing horizontal bands and diagonal ribs do not create a continuous entrance-to-rose axis; the lower band visually cuts through the door zone in materials-off evidence."
+    },
+    "bannerClearance": {
+      "status": "pass-with-low-margin",
+      "finding": "The two existing banner cloths sit just outside the door width and above the opening, but the clearance is small and must not regress."
+    },
+    "floatOrZFight": {
+      "status": "partial",
+      "finding": "No z-fighting is visible, but oblique views make the rose and bay frames read as overly proud panels rather than deeply attached architecture."
+    }
+  },
+  "largestMismatch": "The exact source facade is a tightly integrated vertical cathedral: a strong royal doorway rises through occupied honeycomb bays into a rose window embedded in the keep. This blockout has the correct feature inventory and focal order, but the rose and four bays read as separate forward-mounted housings and the bands/ribs fail to unify them into one architectural axis.",
+  "boundedCorrection": {
+    "falsifiableHypothesis": "If the existing rose and four bay assemblies are reduced slightly and embedded closer to their frozen hosts, while the existing floor bands and axis ribs are shortened/repositioned to frame rather than cross the door and to connect the bay levels into the rose, the same feature set will read as one source-like inhabited cathedral facade while preserving the door-first and rose-second phone hierarchy.",
+    "expectedGain": {
+      "currentWorst": 0.68,
+      "targetWorst": 0.85,
+      "expectedAbsoluteGain": 0.17,
+      "approvalRequiresEveryCategory": 0.85
+    },
+    "allowedVariablesAndFeatures": [
+      "scale, X/Y/Z position, tilt, backing depth, and frame thickness of the existing ISLAND_14_PALACE_FACADE_ROSE_WINDOW assembly only",
+      "scale, X/Y/Z position, dark-inset depth, and frame thickness of the four existing ISLAND_14_PALACE_FACADE_*_BAY_* assemblies only",
+      "length, thickness, X/Y/Z position, and tilt of the existing ISLAND_14_PALACE_FACADE_FLOOR_BAND_* and ISLAND_14_PALACE_FACADE_AXIS_RIB_* meshes only",
+      "recess depth and arch-layer thickness of the existing door recess, royal double door, outer arch, and inner arch without reducing door width",
+      "X/Y/Z position of the two existing facade banner groups only, solely to preserve clear side placement"
+    ],
+    "frozenDuringCorrection": [
+      "facade feature count and feature types",
+      "door width, stair axis, bee sigil, handles, and door seam",
+      "accepted palace macro dimensions, transforms, court, stairs, keep, domes, and bay bodies",
+      "materials, honey, mission, robots, terrain, camera, and gameplay"
+    ],
+    "hardRejectThreshold": "Retire the family if the corrected worst required score is below 0.85, if worst-score gain is below +0.10, if the door is not the first focal point, if the rose is not second or remains visibly forward-floating, if fewer than four bays remain individually legible, if any band crosses the door opening, if either banner enters the door or stair-clearance zone, or if any float/z-fight appears."
+  },
+  "action": "one-bounded-correction"
+}

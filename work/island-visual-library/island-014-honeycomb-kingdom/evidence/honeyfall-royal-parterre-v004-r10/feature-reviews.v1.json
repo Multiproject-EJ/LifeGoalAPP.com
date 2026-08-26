@@ -1,0 +1,32 @@
+[
+  {
+    "id": "foreground-flower-scale-and-breathing-room",
+    "score": 0.84,
+    "passed": true,
+    "notes": "Foreground bouquets now stay between 0.86 and 1.19 scale instead of reaching 1.82, restoring clear space around the palace, satellites and route corridor."
+  },
+  {
+    "id": "garden-richness-without-occlusion",
+    "score": 0.80,
+    "passed": true,
+    "notes": "The planted terraces remain colourful and inhabited after the size reduction; foliage and repeated beds retain the royal-garden read without becoming the main silhouette."
+  },
+  {
+    "id": "honeycomb-parterre-detail",
+    "score": 0.80,
+    "passed": true,
+    "notes": "Each phone-facing bed retains seven raised cells and now adds one dark hex medallion plus three small nectar beads, strengthening the honeycomb and edible-honey identity at a subordinate scale."
+  },
+  {
+    "id": "palace-and-landmark-hierarchy",
+    "score": 0.79,
+    "passed": true,
+    "notes": "The tall palace and the four satellite landmark families regain visual priority from the front and 45-degree evidence views."
+  },
+  {
+    "id": "gooey-translucent-honey",
+    "score": 0.69,
+    "passed": false,
+    "notes": "Layered honey geometry remains present, but CPU projection still cannot validate live transmission, refraction, clearcoat highlights or environment glints."
+  }
+]

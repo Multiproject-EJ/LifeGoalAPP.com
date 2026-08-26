@@ -90,6 +90,7 @@ import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragme
 import {
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
+  collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
@@ -247,6 +248,8 @@ export interface IslandRunRollActionResult {
   frostwellSpinGranted?: boolean;
   /** Canonical number of dynamite sticks collected on this Island 013 landing. */
   cactusCanyonDynamiteCollected?: number;
+  /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
+  greatHoneyfallNectarCollected?: number;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
   rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
   /**
@@ -487,8 +490,18 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: missionStartedLedger, dynamiteCollected: 0 };
+  const greatHoneyfallLanding = ordinaryTileGameplayActive
+    ? collectGreatHoneyfallNectarForLanding({
+        ledger: cactusCanyonLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        tileCount: boardProfile.tileCount,
+        nowMs,
+      })
+    : { ledger: cactusCanyonLanding.ledger, nectarCollected: 0 };
   const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
-    ledger: cactusCanyonLanding.ledger,
+    ledger: greatHoneyfallLanding.ledger,
     islandNumber: state.currentIslandNumber,
     cycleIndex: state.cycleIndex,
     nowMs,
@@ -568,6 +581,7 @@ async function performRollAction(options: {
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
+    greatHoneyfallNectarCollected: greatHoneyfallLanding.nectarCollected,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
     sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25T15:13:08.995Z",
+  "constructionFamily": "threejs-closed-cross-plan-honey-cathedral-shell",
+  "sourceHashes": {
+    "exactSource": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "exactCrop": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+    "multiviewAid": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3"
+  },
+  "artifactHashes": {
+    "runtime": "d673d9660b8e476a67d6c13818fc99a125cf22e89542a1059d092feb5cd43430",
+    "buildContract": "68ad6e6eabd37ac94b6dd2013913d849e2c8c7895033bec0973916fdbf735343"
+  },
+  "shell": {
+    "constructionFamily": "threejs-closed-cross-plan-honey-cathedral-shell",
+    "facadeWidth": 3.38,
+    "footprintDepth": 2.58,
+    "footprintDepthRatio": 0.7633136094674556,
+    "totalHeight": 3.97,
+    "totalHeightRatio": 1.1745562130177516,
+    "outerDoorWidth": 1.1,
+    "purpleDoorWidth": 0.47,
+    "purpleDoorWidthHeightRatio": 0.6,
+    "roseDarkDiameter": 0.78,
+    "roseOuterDiameter": 0.84,
+    "doorRoseRatio": 1.3095238095238098,
+    "frontDominantBayCount": 4,
+    "quadrantSatelliteCount": 4,
+    "runtimeProjectionCount": 0,
+    "authoredElevations": [
+      "front",
+      "left",
+      "right",
+      "rear"
+    ]
+  },
+  "metrics": {
+    "meshCount": 25,
+    "triangleCount": 20192,
+    "openSurfaceCount": 0,
+    "retiredNames": []
+  },
+  "checks": {
+    "sourceHashMatches": true,
+    "cropHashMatches": true,
+    "multiviewHashMatches": true,
+    "runtimeProjectionCountZero": true,
+    "retiredLiveMeshCountZero": true,
+    "openPlaneCountZero": true,
+    "footprintDepthRatioInContract": true,
+    "totalHeightRatioInContract": true,
+    "royalDoorWidthInContract": true,
+    "purpleDoorRatioInContract": true,
+    "fourFrontBays": true,
+    "fourQuadrantSatellites": true,
+    "allElevationsAuthored": true,
+    "runtimeDrawCallsAtMost40": true,
+    "trianglesAtMost55000": true,
+    "allFirstGateEvidencePresent": true
+  },
+  "passed": true,
+  "note": "Deterministic structural validation authorizes independent visual review only; it is not likeness approval."
+}

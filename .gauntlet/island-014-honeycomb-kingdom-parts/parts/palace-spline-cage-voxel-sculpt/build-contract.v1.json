@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-p0-p7-clay-blockout",
+  "partId": "palace-spline-cage-voxel-sculpt",
+  "constructionFamily": "blender-source-calibrated-spline-cage-voxel-sculpt",
+  "representationRoute": "source-landmark-calibrated noncircular spline visual hull, unified watertight voxel remesh, carved architectural recesses, shell-conforming buried tracery, metaball honey, optimized semantic runtime GLB",
+  "authority": {
+    "exactSource": {"path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png", "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"},
+    "exactCrop": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png", "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"},
+    "turnaroundV2": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-source-faithful-turnaround-v002.png", "sha256": "b8bb417929884d95729c041e46f33161d442292955ffd5069d4e9f60c5c134c5", "authorityLimit": "hidden depth and rear continuity only; reject mound drift and preserve exact-source front"},
+    "routeAudit": {"task": "palace_route_architect", "finding": "primitive assembly repeatedly replaced source architecture; fit the source silhouette/landmarks first, then sculpt a unified shell"},
+    "retiredImmediatePredecessor": {"contract": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-blender-modular-jewel-glb/build-contract.v1.json", "action": "RETIRE-BEFORE-FREEZE", "mustNotRepeat": ["toy castle", "tiered cylindrical tower", "occluded front bays", "blank drum/rear", "awning honey", "primitive-first massing"]}
+  },
+  "sourceCalibration": {
+    "normalizedLandmarks": ["outer silhouette", "stair bounds", "portal bounds", "rose center/bounds", "four front bay centers/bounds", "shoulder breakpoints", "central keep bounds", "hero dome bounds", "finial apex"],
+    "maximumFrontLandmarkRmsPercentOfFacadeWidth": 3,
+    "ratios": {"footprintDepthOverWidth": [0.72, 0.82], "heightOverWidth": [1.10, 1.18], "centralKeepWidthOverWidth": [0.32, 0.36], "heroDomeDiameterOverWidth": [0.28, 0.32], "frontBayWidthOverWidth": [0.21, 0.24]},
+    "camera": "fit and lock the Blender review camera before geometry detail; source calibration metrics must be written to validation"
+  },
+  "semanticSubassemblies": [
+    {"id": "P0", "name": "watertight nave-transept-rear-apse shell", "stage": 1},
+    {"id": "P1", "name": "royal court and stair", "stage": 1},
+    {"id": "P2", "name": "deep portal, purple double doors and bee crest", "stage": 2},
+    {"id": "P3", "name": "four front bays as one coupled review unit", "stage": 2},
+    {"id": "P4", "name": "central keep and recessed honeycomb rose", "stage": 3},
+    {"id": "P5", "name": "upper lantern, shallow hero dome and crown", "stage": 3},
+    {"id": "P6", "name": "subordinate shoulder and satellite architecture", "stage": 4},
+    {"id": "P7", "name": "authored side bays and quiet rear apse", "stage": 4},
+    {"id": "P8", "name": "continuous ribs, eaves and buttresses", "stage": 5},
+    {"id": "P9", "name": "dark occupied cells and amber glazing", "stage": 5},
+    {"id": "P10", "name": "attached viscous honey system", "stage": 5},
+    {"id": "P11", "name": "finials and secondary ornament", "stage": 5}
+  ],
+  "requiredConstruction": [
+    "Trace exact-crop normalized landmarks first and fit the review camera. Geometry is not allowed to redefine those landmarks.",
+    "Form P0 from 10-12 hand-controlled noncircular spline cross-sections and loft/skin them into a broad stepped civic visual hull. Voxel-remesh into one watertight shell. Major massing may not use sphere, cylinder, cone, egg, gourd, onion, or box primitives.",
+    "Use turnaround v2 solely to constrain depth, side returns and rear apse. Reject its repeated-dome or mound tendencies where they conflict with the exact source.",
+    "Carve P2-P4 recesses into or deeply intersect them with the shell: portal tunnel, four bay cavities with side returns, and recessed rose. No facade backing plane, floating disk, or shallow badge.",
+    "The purple portal must be first contrast anchor, rose second. All four inhabited front bays must be instantly countable at 000, 045, 315, clay and phone views.",
+    "Create shallow segmented roofs from spline lofts, not dome primitives. Preserve one hero crown hierarchy and varied subordinate architecture.",
+    "Map bevelled P8 tracery curves onto the shell and bury 30-40 percent into the surface before join/merge. Ribs must wrap corners and rasterize at least 2-3 pixels thick at 390x844.",
+    "Use seven PBR families: wax stone, royal gold, dark bronze, occupied recess, amber glazing, purple enamel, and transmitted/clear-coated honey. Source pixels may never be baked or exported.",
+    "Create P10 from metaball/SDF volumes intersecting ledges: convex meniscus shelf, sagging curtain, fused ropes, beads and weighted drops. No cardboard sheet, awning, pipe, lamp or post silhouette.",
+    "Preserve semantic GLB nodes and constructionStage extras for the three-robot build and pop/flash commissioning sequence."
+  ],
+  "earlyBlockoutGate": {
+    "scope": "P0-P7 clay only; no tracery, honey, glazing or ornament",
+    "views": ["orbit-000-clay", "orbit-045-clay", "orbit-090-clay", "orbit-180-clay", "orbit-315-clay", "phone-clay"],
+    "required": {"silhouetteVolume": 0.85, "attachment": 0.85, "crossViewCoherence": 0.85, "frontLandmarkRmsPercentMax": 3, "portalFirst": true, "roseSecond": true, "fourBaysCountableAt000045315": true, "sidesRearArchitectural": true},
+    "hardVeto": ["card", "disk", "open shell", "toy castle", "generic mound", "blank drum", "onion fort", "major cylindrical archetype", "primitive-first silhouette"],
+    "instruction": "Do not build P8-P11 or runtime integration unless an independent read-only early reviewer approves this gate. One bounded spline/camera correction is eligible only if every critical score is at least 0.50 and one measurable hypothesis explains the miss."
+  },
+  "finalGate": {
+    "requiredViews": ["orbit-000-materials-on", "orbit-045-materials-on", "orbit-090-materials-on", "orbit-135-materials-on", "orbit-180-materials-on", "orbit-225-materials-on", "orbit-270-materials-on", "orbit-315-materials-on", "orbit-000-clay", "orbit-045-clay", "orbit-315-clay", "wireframe-card-proof", "front-close-materials-on", "front-close-honey-material-proof", "phone-overview", "actual-runtime-phone"],
+    "minimumEveryCategory": 0.85,
+    "categories": ["source identity", "silhouette volume", "door-first hierarchy", "four-bay readability", "physical attachment", "cross-view coherence", "side/rear authorship", "continuous honeycomb civic tracery", "PBR material read", "glossy viscous attached honey", "phone identity", "runtime parity"]
+  },
+  "budgets": {"maximumTriangles": 120000, "maximumRuntimeDrawCalls": 24, "maximumGlbBytes": 12582912, "maximumRuntimeSourcePixelTextures": 0},
+  "tooling": {"blender": "/Applications/Blender.app/Contents/MacOS/Blender", "mode": "headless CLI only", "runtimeLoader": "standard Three.js GLTFLoader using existing repo patterns"},
+  "workerAllowlist": {
+    "builder": ["scripts/blender/build_island014_spline_cage_voxel_palace.py"],
+    "sourceBlend": ["work/island-visual-library/island-014-honeycomb-kingdom/source/palace-spline-cage-voxel-v001.blend"],
+    "runtimeAsset": ["src/features/gamification/level-worlds/dev/assets/island014/honeycomb-royal-palace-spline-v001.glb"],
+    "runtime": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "earlyEvidence": ["work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-spline-cage-voxel-v001-early-r01"],
+    "finalEvidence": ["work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-spline-cage-voxel-v001-final-r01"],
+    "validation": [".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-spline-cage-voxel-sculpt/build-validation.early.v1.json", ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-spline-cage-voxel-sculpt/build-validation.final.v1.json"],
+    "forbidden": ["other landmarks", "terrain", "mission/gameplay", "robots/FX implementation", "source modifications", "retired evidence/reviews"]
+  },
+  "integrity": "Every immutable packet is written renders-first/manifest-last, then independently hashes source, crop, turnaround, builder, blend, GLB, runtime when applicable, and every evidence image. Builder never self-approves."
+}

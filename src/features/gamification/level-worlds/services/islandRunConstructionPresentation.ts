@@ -23,6 +23,8 @@ export type IslandRunConstructionPresentation = {
   phase: IslandRunConstructionPhase;
   progress: number;
   sequence: number;
+  sourceLevel: number | null;
+  commissioning: boolean;
   cloudCover: number;
   targetStopId: string | null;
   targetLevel: number | null;
@@ -54,10 +56,13 @@ export function deriveIslandRunConstructionPresentation(options: {
 }): IslandRunConstructionPresentation {
   const landmark = options.viewModel.activeLandmark;
   const progress = Math.min(1, Math.max(0, landmark?.progressRatio ?? (options.levelReview ? 1 : 0)));
-  const sequence = Math.max(0, Math.floor(landmark?.sequencePosition ?? 0));
-  const targetStopId = landmark?.stopId ?? null;
-  const targetLevel = landmark?.targetLevel ?? options.levelReview?.level ?? null;
   const isReview = Boolean(options.levelReview);
+  const sequence = Math.max(0, Math.floor(
+    options.levelReview?.presentationSequence ?? landmark?.sequencePosition ?? 0,
+  ));
+  const targetStopId = options.levelReview?.stopId ?? landmark?.stopId ?? null;
+  const targetLevel = options.levelReview?.level ?? landmark?.targetLevel ?? null;
+  const sourceLevel = options.levelReview?.previousLevel ?? null;
   const isActive = options.isOpen && Boolean(landmark || isReview);
 
   if (!isActive) {
@@ -68,6 +73,8 @@ export function deriveIslandRunConstructionPresentation(options: {
       phase: 'arrive',
       progress,
       sequence,
+      sourceLevel,
+      commissioning: false,
       cloudCover: 0,
       targetStopId,
       targetLevel,
@@ -83,6 +90,8 @@ export function deriveIslandRunConstructionPresentation(options: {
       phase: 'reveal',
       progress: 1,
       sequence,
+      sourceLevel,
+      commissioning: true,
       cloudCover: 0.06,
       targetStopId,
       targetLevel,
@@ -111,6 +120,8 @@ export function deriveIslandRunConstructionPresentation(options: {
     phase: phaseConfig.phase,
     progress,
     sequence,
+    sourceLevel,
+    commissioning: false,
     cloudCover: phaseConfig.cloudCover,
     targetStopId,
     targetLevel,

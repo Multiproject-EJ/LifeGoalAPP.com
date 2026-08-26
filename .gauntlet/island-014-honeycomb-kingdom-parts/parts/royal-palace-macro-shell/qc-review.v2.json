@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace replacement naked macro shell",
+  "constructionFamily": "procedural-threejs-nested-closed-volume-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v2.json",
+      "sha256": "429b08468ece060bd13458be98a4132e43af7e6f4945011590ded17f89b3ee5e"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v2.json",
+      "sha256": "6b460e6f2d0a05405c7a4fb34779ba5e1e3526d004254a40200899724decf595"
+    },
+    "retiredReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v1.json",
+      "sha256": "0e00e9387592b9d9b67897f0faf8e08b723b2da9a63556404a0f71d5b23f8dfa"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "minimumReplacementGain": 0.1,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.57,
+      "depthIntegration": 0.66,
+      "sourceLikeness": 0.50,
+      "sideRearCoherence": 0.72,
+      "note": "Closed tiering is credible and the front no longer collapses, but the equal-weight ziggurat setbacks suppress the source's tall central cathedral, raised satellite towers, and vertically continuous shoulder hierarchy."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.52,
+      "sideRearCoherence": 0.72,
+      "note": "The replacement preserves real depth and seated volumes. Its broad horizontal tiers still dominate over the source's narrow, upward-driving keep and interlocked tower shoulders."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.66,
+      "depthIntegration": 0.75,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.76,
+      "note": "Hidden side is structurally coherent with closed setbacks and embedded towers; central keep and satellites remain vertically compressed."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.66,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The retired family's least-flattering transition is repaired: no planar collapse, open root slot, or floating crown is visible. The mass is coherent but reads as a stepped monument rather than a cathedral."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.68,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "Rear volume is closed, symmetric, and seated. Uniform tier proportions and low satellites keep the upper hierarchy generic."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.66,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Opposite transition confirms the replacement family's genuine depth and eliminates the previous camera-dependent slab failure. Vertical cathedral identity remains underdeveloped."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.66,
+      "depthIntegration": 0.75,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.76,
+      "note": "Opposite side remains coherent, with the same compressed keep and low tower shoulder problem."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.62,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.52,
+      "sideRearCoherence": 0.72,
+      "note": "Front-adjacent recovery is stable but too horizontally stepped; the source's satellite towers should climb beside and visually lock into the central keep."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.50,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "deltaAgainstRetiredFamily": {
+    "priorWorstScore": 0.32,
+    "currentWorstScore": 0.50,
+    "globalWorstScoreGain": 0.18,
+    "prior135DepthIntegration": 0.32,
+    "current135DepthIntegration": 0.78,
+    "sameDimensionGain": 0.46,
+    "minimumGainSatisfied": true,
+    "maximumObservedCriticalRegression": 0.05,
+    "regressionLimitSatisfied": true,
+    "summary": "The replacement clearly fixes planar collapse and exceeds the required +0.10 worst-score gain, but remains below the 0.85 approval gate because its mass distribution reads as a ziggurat rather than the source's vertically integrated cathedral."
+  },
+  "vetoes": [],
+  "largestMismatch": "Four similarly weighted horizontal tiers dominate the silhouette, while the source concentrates height in a narrow central keep and uses four taller satellite towers to create interlocking vertical shoulders. The current family is genuinely three-dimensional but its hierarchy is too pyramidal and generic.",
+  "boundedCorrection": {
+    "falsifiableHypothesis": "Redistributing existing closed-volume height from the broad equal-weight lower tiers into a taller, narrower central keep and visibly raised embedded satellite towers will change the exact front read from a ziggurat to the source's vertically integrated cathedral while preserving the replacement family's repaired side/rear coherence.",
+    "expectedGain": {
+      "currentWorst": 0.50,
+      "targetWorst": 0.75,
+      "expectedAbsoluteGain": 0.25,
+      "approvalStillRequires": 0.85
+    },
+    "allowedVariablesAndFeatures": [
+      "X and Z dimensions, Y heights, and setback amounts of the four existing closed lower tiers",
+      "X, Z, and Y dimensions and seating height of the existing closed central keep",
+      "X/Z embed positions and Y heights of exactly four existing satellite tower masses",
+      "Y seating and scale of the existing hero dome, upper lantern, and crown dome within build-contract source targets"
+    ],
+    "frozenDuringCorrection": [
+      "part count and closed-volume construction rule",
+      "court and stairs",
+      "facade and ornament systems",
+      "materials, honey, mission, robots, terrain, camera, and gameplay"
+    ],
+    "hardRejectThreshold": "Retire the family if the corrected worst required score is below 0.75, if worst-score gain is below +0.10, if any critical dimension regresses by more than 0.05, or if any camera-dependent/open-slot/floating-volume veto returns. Approval remains impossible unless every required score reaches 0.85."
+  },
+  "action": "one-bounded-correction"
+}
