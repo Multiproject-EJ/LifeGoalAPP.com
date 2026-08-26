@@ -23,6 +23,7 @@ import {
   ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
   ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
   ISLAND_3D_TOKEN_HOP_ARC_HEIGHT,
+  ISLAND_3D_TILE_HEIGHT,
   ISLAND_3D_TILE_IMPACT_DURATION_MS,
   ISLAND_CAMERA_TOUR_STEPS,
   ISLAND_5_CAMERA_PRESETS,
@@ -149,6 +150,7 @@ import {
   createIsland22FishermansVillageLivingAmbience,
   createIsland22FishermansVillageMaterials,
   isIsland22RouteCorridorClear,
+  ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
 } from '../../dev/Island22FishermansVillageThreeWorld';
 import {
   buildIsland14HoneycombLandmark,
@@ -210,6 +212,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(Boolean(runtime.root.getObjectByName('ISLAND_22_STEPPED_STONE_RETAINING_RING')), 'the village needs stepped stone retaining terraces outside the protected route');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_22_INTERLOCKING_COBBLE_BOARDWALK')), 'the outer village needs a connected cobble boardwalk band');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_22_FISHING_BOAT_1')), 'the shoreline needs a fishing-boat flotilla');
+      assert(
+        0.34 + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET - ISLAND_3D_TILE_HEIGHT / 2 > 0.66,
+        'the complete Island 016 board prism must sit above the central pond surface instead of being submerged beneath it',
+      );
 
       const footprints: Record<string, number> = { boss: 2.55, hatchery: 1.9, habit: 1.9, wisdom: 1.9, event: 1.9 };
       const landmarkRoots = ISLAND_5_LANDMARKS.map((landmark) => {
@@ -1642,6 +1648,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
         pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom;'),
         'Islands 007, 012, 013, 014 and runtime 016 should use the proven per-material instanced route path',
       );
+      assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
+      assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
       assert(pilotSource.includes('compactCollectibles: isAbyssalPearlKingdom || isSunkenSands'), 'Island 012 rewards should collapse their static submeshes while retaining per-tile transforms');
       assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');

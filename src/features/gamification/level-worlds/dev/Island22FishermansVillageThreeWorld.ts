@@ -27,6 +27,13 @@ export const ISLAND_22_FISHERMANS_VILLAGE_LANDMARK_LABELS = {
   event: 'Round Lantern Tavern',
 } as const;
 
+// The pond surface sits at y=0.66. The shared board centres default to y=0.34,
+// which submerged the real Spark36 blocks beneath the pond/terrace and made
+// Fisherman's Village appear to have no playable board. Keep one authored
+// presentation offset so tiles, rewards and the token rise together without
+// changing any canonical x/z anchor or gameplay index.
+export const ISLAND_22_BOARD_PRESENTATION_Y_OFFSET = 0.44;
+
 export const ISLAND_22_ROUTE_CLEARANCE_INNER_RADIUS = ISLAND_3D_ROUTE_RADIUS
   - ISLAND_3D_TILE_RADIAL_DEPTH / 2 - 0.28;
 export const ISLAND_22_ROUTE_CLEARANCE_OUTER_RADIUS = ISLAND_3D_ROUTE_RADIUS
@@ -491,7 +498,50 @@ function createAuthoredHarborHouse(
     materials.brass,
   );
   roof.position.y = bodyHeight + 0.08;
+  const roofWidth = width * 1.12;
+  const roofMaterial = roofVariant === 'warm' ? materials.roofWarm : materials.roof;
+  [-1, 1].forEach((side) => {
+    for (let course = 0; course < 4; course += 1) {
+      const strip = box(
+        roofWidth * 0.2,
+        0.035 + (course % 2) * 0.008,
+        depth * 1.18,
+        course === 3 ? materials.roofWarm : roofMaterial,
+      );
+      strip.position.set(
+        side * roofWidth * (0.1 + course * 0.13),
+        roofWidth * (0.34 - course * 0.075) + 0.018,
+        0,
+      );
+      strip.rotation.z = side * 0.58;
+      roof.add(strip);
+    }
+  });
   root.add(roof);
+
+  // Layer real fascia over the gable silhouette. The former flat roof panels
+  // had no readable edge hierarchy at phone scale and looked unfinished.
+  [-1, 1].forEach((zSide) => {
+    const z = zSide * depth * 0.59;
+    const peakY = bodyHeight + roofWidth * 0.36 + 0.08;
+    const eaveY = bodyHeight + 0.13;
+    root.add(
+      createBeamBetween(
+        new THREE.Vector3(-roofWidth * 0.54, eaveY, z),
+        new THREE.Vector3(0, peakY, z),
+        0.045,
+        materials.timberDark,
+        6,
+      ),
+      createBeamBetween(
+        new THREE.Vector3(0, peakY, z),
+        new THREE.Vector3(roofWidth * 0.54, eaveY, z),
+        0.045,
+        materials.timberDark,
+        6,
+      ),
+    );
+  });
 
   const beamThickness = 0.1;
   [-0.42, 0.42].forEach((side) => {
@@ -505,16 +555,44 @@ function createAuthoredHarborHouse(
     root.add(beam);
     [-0.28, 0.28].forEach((xFactor) => {
       const window = box(0.34, 0.38, 0.065, materials.window);
-      window.position.set(xFactor * width, 0.58 + floor * 0.76, depth / 2 + 0.04);
+      const windowX = xFactor * width;
+      const windowY = 0.58 + floor * 0.76;
+      const windowZ = depth / 2 + 0.04;
+      window.position.set(windowX, windowY, windowZ);
       root.add(window);
+      const mullion = box(0.035, 0.42, 0.028, materials.timberDark);
+      mullion.position.set(windowX, windowY, windowZ + 0.05);
+      const transom = box(0.38, 0.035, 0.028, materials.timberDark);
+      transom.position.set(windowX, windowY, windowZ + 0.052);
+      root.add(mullion, transom);
     });
   }
-  const door = box(0.42, 0.72, 0.08, materials.timberDark);
-  door.position.set(0, 0.38, depth / 2 + 0.05);
+  const door = createArchedPanel(0.48, 0.84, 0.095, materials.timberDark, materials.brass);
+  door.position.set(0, 0.02, depth / 2 + 0.065);
   root.add(door);
+  const handle = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 5), materials.brass);
+  handle.position.set(0.13, 0.4, depth / 2 + 0.13);
+  root.add(handle);
   const chimney = box(0.2, 0.82, 0.2, materials.stone);
   chimney.position.set(width * 0.28, bodyHeight + width * 0.44, -depth * 0.15);
-  root.add(chimney);
+  const chimneyCollar = box(0.29, 0.09, 0.29, materials.brass);
+  chimneyCollar.position.set(chimney.position.x, chimney.position.y + 0.32, chimney.position.z);
+  const chimneyCap = createRoof(0.34, 0.34, 0.16, materials.roofWarm);
+  chimneyCap.position.set(chimney.position.x, chimney.position.y + 0.46, chimney.position.z);
+  root.add(chimney, chimneyCollar, chimneyCap);
+
+  const signBracket = box(0.46, 0.045, 0.045, materials.timberDark);
+  signBracket.position.set(-width * 0.28, bodyHeight * 0.77, depth / 2 + 0.23);
+  const signPost = box(0.04, 0.3, 0.04, materials.timberDark);
+  signPost.position.set(-width * 0.47, bodyHeight * 0.64, depth / 2 + 0.23);
+  const fishSign = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 5), materials.brass);
+  fishSign.name = `${name}_HANGING_FISH_SIGN`;
+  fishSign.scale.set(1.45, 0.62, 0.24);
+  fishSign.position.set(-width * 0.47, bodyHeight * 0.48, depth / 2 + 0.23);
+  const fishTail = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.18, 3), materials.brass);
+  fishTail.rotation.z = -Math.PI / 2;
+  fishTail.position.set(fishSign.position.x - 0.2, fishSign.position.y, fishSign.position.z);
+  root.add(signBracket, signPost, fishSign, fishTail);
   setShadow(root);
   return root;
 }
@@ -1135,7 +1213,39 @@ function createBoat(materials: Island22FishermansVillageMaterials, quality: Isla
   const rim = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.055, 5, qualitySegments(quality)), materials.timber);
   rim.rotation.x = Math.PI / 2;
   rim.scale.z = 1.45;
-  root.add(hull, rim);
+  const keelFloor = box(0.48, 0.06, 1.08, materials.timber);
+  keelFloor.position.y = 0.04;
+  root.add(hull, rim, keelFloor);
+  [-0.34, 0, 0.34].forEach((z, index) => {
+    const seat = box(0.82, 0.07, 0.16, index === 1 ? materials.timberDark : materials.timber);
+    seat.position.set(0, 0.2, z);
+    root.add(seat);
+  });
+  const bowPost = cylinder(0.035, 0.045, 0.62, materials.brass, 6);
+  bowPost.position.set(0, 0.3, -0.78);
+  const sternPost = bowPost.clone();
+  sternPost.position.z = 0.78;
+  root.add(bowPost, sternPost);
+  const portOar = createBeamBetween(
+    new THREE.Vector3(-0.1, 0.26, -0.1),
+    new THREE.Vector3(-0.92, 0.12, 0.42),
+    0.025,
+    materials.rope,
+    6,
+  );
+  const starboardOar = createBeamBetween(
+    new THREE.Vector3(0.1, 0.26, 0.06),
+    new THREE.Vector3(0.92, 0.12, -0.46),
+    0.025,
+    materials.rope,
+    6,
+  );
+  const portBlade = box(0.16, 0.035, 0.34, materials.timber);
+  portBlade.position.set(-0.96, 0.1, 0.46);
+  portBlade.rotation.y = 0.4;
+  const starboardBlade = portBlade.clone();
+  starboardBlade.position.set(0.96, 0.1, -0.5);
+  root.add(portOar, starboardOar, portBlade, starboardBlade);
   return root;
 }
 
@@ -1459,6 +1569,43 @@ export function createIsland22FishermansVillageLivingAmbience(
   cliffBlocks.receiveShadow = true;
   root.add(cliffBlocks);
 
+  // A second, smaller rock family breaks the old smooth cylinder silhouette.
+  // Keep it instanced: this reads as hand-stacked coastal strata at phone scale
+  // while adding one draw call instead of dozens of individual meshes.
+  const accentRockCount = qualityProfile.id === 'low' ? 24 : 42;
+  const accentRocks = new THREE.InstancedMesh(
+    new THREE.DodecahedronGeometry(0.46, 0),
+    materials.stone,
+    accentRockCount,
+  );
+  accentRocks.name = 'ISLAND_22_SHORELINE_ACCENT_ROCKS';
+  for (let index = 0; index < accentRockCount; index += 1) {
+    const angle = index / accentRockCount * Math.PI * 2 + 0.04;
+    const radius = 8.08 + (index % 4) * 0.27;
+    matrix.compose(
+      position.set(
+        Math.cos(angle) * radius,
+        0.06 + (index % 3) * 0.2,
+        Math.sin(angle) * radius * 1.08,
+      ),
+      quaternion.setFromEuler(new THREE.Euler(
+        (index % 3 - 1) * 0.16,
+        -angle + (index % 5) * 0.18,
+        (index % 4 - 1.5) * 0.1,
+      )),
+      scale.set(
+        0.72 + (index % 5) * 0.12,
+        0.54 + (index % 4) * 0.12,
+        0.62 + (index % 3) * 0.14,
+      ),
+    );
+    accentRocks.setMatrixAt(index, matrix);
+  }
+  accentRocks.instanceMatrix.needsUpdate = true;
+  accentRocks.castShadow = true;
+  accentRocks.receiveShadow = true;
+  root.add(accentRocks);
+
   const marketDock = createDock('ISLAND_22_FISH_MARKET_OFFLOAD_DOCK', -8.15, -5.55, -0.78, 5.2, materials);
   const marketApron = box(2.6, 0.2, 2.35, materials.timber);
   marketApron.name = 'ISLAND_22_FISH_MARKET_LOADING_APRON';
@@ -1566,21 +1713,67 @@ export function createIsland22FishermansVillageLivingAmbience(
     pondSkiffs.push(skiff);
   });
 
-  const treeCount = Math.max(8, Math.round(20 * qualityScale(qualityProfile.id)));
-  const trees = new THREE.InstancedMesh(new THREE.ConeGeometry(0.42, 1.65, 7), materials.foliage, treeCount);
-  trees.name = 'ISLAND_22_HARDY_CONIFER_CLUSTERS';
+  const treeCount = Math.max(10, Math.round(28 * qualityScale(qualityProfile.id)));
+  const treeLayerCount = treeCount * 3;
+  const treeCrowns = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(0.46, 0.82, 7),
+    materials.foliage,
+    treeLayerCount,
+  );
+  treeCrowns.name = 'ISLAND_22_LAYERED_CONIFER_CROWNS';
+  const treeTrunks = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.07, 0.1, 0.72, 6),
+    materials.timberDark,
+    treeCount,
+  );
+  treeTrunks.name = 'ISLAND_22_HARDY_CONIFER_TRUNKS';
   for (let index = 0; index < treeCount; index += 1) {
     const angle = index / treeCount * Math.PI * 2 + 0.26;
-    const radius = index % 2 ? 7.25 : 6.55;
+    const radius = index % 3 === 0 ? 7.42 : index % 2 ? 6.74 : 7.05;
+    const treeScale = 0.72 + (index % 5) * 0.08;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius * 1.05;
     matrix.compose(
-      position.set(Math.cos(angle) * radius, 1.05, Math.sin(angle) * radius * 1.05),
+      position.set(x, 1.12, z),
       quaternion.setFromEuler(new THREE.Euler(0, angle, 0)),
-      scale.setScalar(0.78 + (index % 4) * 0.08),
+      scale.setScalar(treeScale),
     );
-    trees.setMatrixAt(index, matrix);
+    treeTrunks.setMatrixAt(index, matrix);
+    for (let layer = 0; layer < 3; layer += 1) {
+      const layerScale = treeScale * (1 - layer * 0.19);
+      matrix.compose(
+        position.set(x, 1.34 + layer * 0.46 * treeScale, z),
+        quaternion.setFromEuler(new THREE.Euler(0, angle + layer * 0.22, 0)),
+        scale.set(layerScale * (1.08 - layer * 0.09), layerScale, layerScale),
+      );
+      treeCrowns.setMatrixAt(index * 3 + layer, matrix);
+    }
   }
-  trees.instanceMatrix.needsUpdate = true;
-  root.add(trees);
+  treeCrowns.instanceMatrix.needsUpdate = true;
+  treeTrunks.instanceMatrix.needsUpdate = true;
+  treeCrowns.castShadow = true;
+  treeTrunks.castShadow = true;
+  root.add(treeTrunks, treeCrowns);
+
+  const reedCount = qualityProfile.id === 'low' ? 24 : 48;
+  const shorelineReeds = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(0.075, 0.52, 5),
+    materials.foliage,
+    reedCount,
+  );
+  shorelineReeds.name = 'ISLAND_22_SHORELINE_REED_AND_GRASS_CLUSTERS';
+  for (let index = 0; index < reedCount; index += 1) {
+    const angle = index / reedCount * Math.PI * 2 + (index % 3) * 0.05;
+    const radius = 6.0 + (index % 4) * 0.52;
+    matrix.compose(
+      position.set(Math.cos(angle) * radius, 0.87, Math.sin(angle) * radius * 1.04),
+      quaternion.setFromEuler(new THREE.Euler(0, angle * 1.7, (index % 3 - 1) * 0.16)),
+      scale.set(0.7 + (index % 4) * 0.16, 0.76 + (index % 5) * 0.11, 0.7 + (index % 4) * 0.16),
+    );
+    shorelineReeds.setMatrixAt(index, matrix);
+  }
+  shorelineReeds.instanceMatrix.needsUpdate = true;
+  root.add(shorelineReeds);
 
   const foam = new THREE.Mesh(new THREE.TorusGeometry(8.9, 0.11, 6, 72), materials.foam);
   foam.name = 'ISLAND_22_SHORE_FOAM_RING';

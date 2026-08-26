@@ -193,6 +193,7 @@ import {
   createIsland22FishermansVillageBackdrop,
   createIsland22FishermansVillageLivingAmbience,
   createIsland22FishermansVillageMaterials,
+  ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
   ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME,
 } from './Island22FishermansVillageThreeWorld';
 import {
@@ -330,7 +331,7 @@ function createRadialTileGeometry(tileCount: number): THREE.BufferGeometry {
   return facetedGeometry;
 }
 
-function createTileBorderMeshGeometry(tileGeometry: THREE.BufferGeometry): THREE.BufferGeometry {
+function createTileBorderMeshGeometry(tileGeometry: THREE.BufferGeometry, borderRadius = 0.012): THREE.BufferGeometry {
   const edges = new THREE.EdgesGeometry(tileGeometry, 28);
   const positions = edges.getAttribute('position');
   const segments: THREE.BufferGeometry[] = [];
@@ -350,7 +351,7 @@ function createTileBorderMeshGeometry(tileGeometry: THREE.BufferGeometry): THREE
     direction.copy(end).sub(start).normalize();
     quaternion.setFromUnitVectors(up, direction);
     matrix.compose(midpoint, quaternion, new THREE.Vector3(1, 1, 1));
-    const segment = new THREE.CylinderGeometry(0.012, 0.012, length, 4, 1, false);
+    const segment = new THREE.CylinderGeometry(borderRadius, borderRadius, length, 5, 1, false);
     segment.applyMatrix4(matrix);
     segments.push(segment);
   }
@@ -4411,7 +4412,17 @@ export default function Island5ThreePilot({
         )
       : [];
 
-    const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
+    const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
+    const tileTransforms = isFishermansVillage
+      ? sharedTileTransforms.map((transform) => ({
+          ...transform,
+          position: [
+            transform.position[0],
+            transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
+            transform.position[2],
+          ] as const,
+        }))
+      : sharedTileTransforms;
     const tileGeometry = createRadialTileGeometry(tileTransforms.length);
     const tileMaterials = isFirstLightKingdom
       ? [
@@ -4481,9 +4492,33 @@ export default function Island5ThreePilot({
           ]
       : isFishermansVillage
         ? [
-            new THREE.MeshStandardMaterial({ color: 0xf0d79b, roughness: 0.62, metalness: 0.02 }),
-            new THREE.MeshStandardMaterial({ color: 0x78b8ae, roughness: 0.48, metalness: 0.05 }),
-            new THREE.MeshStandardMaterial({ color: 0xd7a642, roughness: 0.31, metalness: 0.58, emissive: 0x4a2b05, emissiveIntensity: 0.12 }),
+            new THREE.MeshPhysicalMaterial({
+              color: 0xffe7ad,
+              roughness: 0.42,
+              metalness: 0.02,
+              clearcoat: 0.46,
+              clearcoatRoughness: 0.32,
+              emissive: 0x6a3908,
+              emissiveIntensity: 0.1,
+            }),
+            new THREE.MeshPhysicalMaterial({
+              color: 0x7edbd0,
+              roughness: 0.32,
+              metalness: 0.04,
+              clearcoat: 0.58,
+              clearcoatRoughness: 0.24,
+              emissive: 0x0d5d59,
+              emissiveIntensity: 0.16,
+            }),
+            new THREE.MeshPhysicalMaterial({
+              color: 0xf4c653,
+              roughness: 0.25,
+              metalness: 0.5,
+              clearcoat: 0.62,
+              clearcoatRoughness: 0.2,
+              emissive: 0x7d4507,
+              emissiveIntensity: 0.22,
+            }),
           ]
       : isHoneycombKingdom
         ? [
@@ -4496,7 +4531,7 @@ export default function Island5ThreePilot({
           new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
           new THREE.MeshStandardMaterial({ color: 0xf2c861, roughness: 0.42, metalness: 0.18 }),
         ];
-    if (isCactusCanyon) {
+    if (isCactusCanyon || isFishermansVillage) {
       // The canyon tiles sit very close to the sandy mesa cap. A stable depth
       // bias prevents their coplanar fragments from alternating while the
       // camera or tile-impact animation moves, without changing board logic.
@@ -4527,6 +4562,27 @@ export default function Island5ThreePilot({
       ? [
           new THREE.MeshBasicMaterial({ color: 0x6c3208, transparent: true, opacity: 0.82 }),
           new THREE.MeshBasicMaterial({ color: 0xffdd62, transparent: true, opacity: 0.96 }),
+        ]
+      : [];
+    const fishermansTileEdgeGeometry = isFishermansVillage
+      ? createTileBorderMeshGeometry(tileGeometry, 0.026)
+      : null;
+    const fishermansTileEdgeMaterials = isFishermansVillage
+      ? [
+          new THREE.MeshStandardMaterial({
+            color: 0xc77a28,
+            roughness: 0.3,
+            metalness: 0.72,
+            emissive: 0x643006,
+            emissiveIntensity: 0.2,
+          }),
+          new THREE.MeshStandardMaterial({
+            color: 0xffdc72,
+            roughness: 0.22,
+            metalness: 0.78,
+            emissive: 0x9a5709,
+            emissiveIntensity: 0.34,
+          }),
         ]
       : [];
     type TileMeshEntry = {
@@ -4592,6 +4648,17 @@ export default function Island5ThreePilot({
           return mesh;
         })
       : [];
+    const fishermansTileEdgeMeshes = isFishermansVillage
+      ? instancedTileCounts.map((count, materialIndex) => {
+          const edgeMaterial = fishermansTileEdgeMaterials[materialIndex === 2 ? 1 : 0];
+          const mesh = new THREE.InstancedMesh(fishermansTileEdgeGeometry!, edgeMaterial, count);
+          mesh.name = `ISLAND_22_TILE_BRASS_RIM_BATCH_${materialIndex + 1}`;
+          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          mesh.renderOrder = 4;
+          scene.add(mesh);
+          return mesh;
+        })
+      : [];
     const instancedTileInstanceCursor = [0, 0, 0];
     const tileMatrixScratch = new THREE.Matrix4();
     const tileQuaternionScratch = new THREE.Quaternion();
@@ -4633,7 +4700,9 @@ export default function Island5ThreePilot({
         );
         batch.setMatrixAt(instanceId, tileMatrixScratch);
         batch.instanceMatrix.needsUpdate = true;
-        const edgeBatch = abyssalTileEdgeMeshes[materialIndex] ?? honeycombTileEdgeMeshes[materialIndex];
+        const edgeBatch = abyssalTileEdgeMeshes[materialIndex]
+          ?? honeycombTileEdgeMeshes[materialIndex]
+          ?? fishermansTileEdgeMeshes[materialIndex];
         if (edgeBatch) {
           edgeBatch.setMatrixAt(instanceId, tileMatrixScratch);
           edgeBatch.instanceMatrix.needsUpdate = true;
@@ -5420,7 +5489,9 @@ export default function Island5ThreePilot({
       new THREE.MeshStandardMaterial({ color: routeGlowColor, emissive: routeGlowEmissive, emissiveIntensity: 0.62, roughness: 0.38 }),
     );
     routeGlow.rotation.x = Math.PI / 2;
-    routeGlow.position.y = 0.25;
+    routeGlow.position.y = isFishermansVillage
+      ? 0.34 + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET + 0.12
+      : 0.25;
     scene.add(routeGlow);
 
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
@@ -7392,6 +7463,8 @@ export default function Island5ThreePilot({
       abyssalTileEdgeMaterials.forEach((material) => material.dispose());
       honeycombTileEdgeGeometry?.dispose();
       honeycombTileEdgeMaterials.forEach((material) => material.dispose());
+      fishermansTileEdgeGeometry?.dispose();
+      fishermansTileEdgeMaterials.forEach((material) => material.dispose());
       // This canvas is reused when quality or landmark geometry changes.
       // Forced context loss made the immediately following WebKit renderer
       // attach to a deliberately lost context, which exposed the old 2D board.
