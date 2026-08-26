@@ -29,14 +29,16 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(12)?.role, 'ordinary', 'Island 012 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.worldSourceNumber, 13, 'Island 013 owns the Cactus Canyon world');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.role, 'ordinary', 'Island 013 keeps the ordinary-island role');
+      assertEqual(resolveIslandRun3DWorldRoute(14)?.worldSourceNumber, 14, 'Island 014 owns the Honeycomb Kingdom world');
+      assertEqual(resolveIslandRun3DWorldRoute(14)?.role, 'ordinary', 'Island 014 keeps the ordinary-island role');
     },
   },
   {
     name: 'uses each completed visual world once during the reassignment',
     run: () => {
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 12, 'twelve authored world packs are currently routed');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 12, 'runtime islands are unique');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 12, 'visual source packs are unique');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 13, 'thirteen authored world packs are currently routed');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 13, 'runtime islands are unique');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 13, 'visual source packs are unique');
     },
   },
 ];
