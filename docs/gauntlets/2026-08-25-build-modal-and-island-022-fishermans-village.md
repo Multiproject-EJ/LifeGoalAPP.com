@@ -1,8 +1,8 @@
-# Build modal pacing and Island 022 Fisherman's Village
+# Build modal pacing and Island 016 Fisherman's Village (source pack 022)
 
-Date: 2026-08-25  
-Status: active bounded implementation; Slice 01 route-safe foundation built, visual gate stopped below threshold 2026-08-25  
-Owner: Eivind  
+Date: 2026-08-25
+Status: production-verified and promoted to runtime Island 016 on 2026-08-26
+Owner: Eivind
 Branch: `codex/build-modal-fisherman-022-20260825`
 
 ## Mission and observable outcome
@@ -14,10 +14,9 @@ Deliver two coordinated HabitGame slices:
    robots can visibly work, a completed level owns the screen long enough to
    jump/shine/settle, and no new paid build control becomes usable until the
    preceding level celebration and landmark camera handoff finish.
-2. Reserve the first genuinely empty source slot, Island 022, for a cozy
-   fisherman's village built around a central pond and prepare its immutable
-   reference/decomposition package up to the mandatory 3D production approval
-   gate.
+2. Build a cozy fisherman's village around a central pond from immutable visual
+   source pack 022, then promote that completed visual world to player-facing
+   runtime Island 016 without overwriting either runtime or source identity.
 
 Success is visible on a portrait phone, not inferred from source code.
 
