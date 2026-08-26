@@ -248,7 +248,6 @@ interface Island5ThreePilotProps {
   /** Read-only build-modal choreography. It cannot mutate gameplay state. */
   constructionPresentation?: IslandRunConstructionPresentation | null;
   arenaBattlePresentation?: IslandRunArenaBattlePresentation | null;
-  onRendererUnavailable?: () => void;
 }
 
 interface TokenMotionRequest {
@@ -3320,7 +3319,6 @@ export default function Island5ThreePilot({
   interactionPaused = false,
   constructionPresentation = null,
   arenaBattlePresentation = null,
-  onRendererUnavailable,
 }: Island5ThreePilotProps) {
   const resolvedWorldSourceNumber = worldSourceNumber
     ?? resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber
@@ -3394,6 +3392,7 @@ export default function Island5ThreePilot({
   const [trainRidePhase, setTrainRidePhase] = useState<Island13TrainRidePhase>('idle');
   const [trainRideSecondsRemaining, setTrainRideSecondsRemaining] = useState(15);
   const [error, setError] = useState<string | null>(null);
+  const [rendererRetryVersion, setRendererRetryVersion] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
   landmarkBuildLevelsRef.current = landmarkBuildLevels;
@@ -3444,7 +3443,6 @@ export default function Island5ThreePilot({
     value: IslandRunArenaBattlePresentation | null;
     cueStartedAtMs: number;
   }>({ value: arenaBattlePresentation, cueStartedAtMs: 0 });
-  const onRendererUnavailableRef = useRef(onRendererUnavailable);
   const deviceSignals = useMemo(() => readDeviceSignals(), []);
   const productionQualitySelection = qualitySelection === 'auto' && runtimeQualityCap
     ? runtimeQualityCap
@@ -3456,6 +3454,14 @@ export default function Island5ThreePilot({
   );
 
   useEffect(() => {
+    // Construction briefly raises draw calls and triangle count. Treating that
+    // authored burst as a sustained device-quality failure used to rebuild the
+    // entire renderer mid-build on iOS, exposing the retired 2D fallback.
+    // Keep the active scene stable and reconsider quality once the crew rests.
+    if (constructionPresentationRef.current?.active) {
+      sustainedQualityMissesRef.current = 0;
+      return;
+    }
     if (qualityOverride || qualitySelection !== 'auto' || profilerStatus === 'running' || metrics.fps <= 0) {
       sustainedQualityMissesRef.current = 0;
       return;
@@ -3519,10 +3525,6 @@ export default function Island5ThreePilot({
         : performance.now(),
     };
   }, [arenaBattlePresentation]);
-
-  useEffect(() => {
-    onRendererUnavailableRef.current = onRendererUnavailable;
-  }, [onRendererUnavailable]);
 
   useEffect(() => {
     onHopSequenceCompleteRef.current = onHopSequenceComplete;
@@ -3645,10 +3647,19 @@ export default function Island5ThreePilot({
       });
     } catch (caught) {
       console.error(`[island-${islandNumber}-3d-pilot] WebGL initialization failed:`, caught);
-      setError('This device could not start the 3D renderer. The 2D camera kit is still available.');
-      onRendererUnavailableRef.current?.();
+      setError('The 3D world paused while its renderer restarted. Tap to retry.');
       return undefined;
     }
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      setError('The 3D world paused to recover graphics memory. Tap to retry.');
+    };
+    const handleContextRestored = () => {
+      setRendererRetryVersion((current) => current + 1);
+    };
+    canvas.addEventListener('webglcontextlost', handleContextLost);
+    canvas.addEventListener('webglcontextrestored', handleContextRestored);
 
     const scene = new THREE.Scene();
     const backgroundColor = isFirstLightKingdom
@@ -6991,6 +7002,8 @@ export default function Island5ThreePilot({
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', handlePointerDown);
       canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
       controls.removeEventListener('start', cancelTransition);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       cameraPoseSnapshotRef.current = {
@@ -7028,15 +7041,11 @@ export default function Island5ThreePilot({
       abyssalTileEdgeMaterials.forEach((material) => material.dispose());
       honeycombTileEdgeGeometry?.dispose();
       honeycombTileEdgeMaterials.forEach((material) => material.dispose());
-      // Fast-building can advance several authored levels in a few seconds.
-      // WebKit may otherwise retain each retired WebGL context until a later
-      // GC pass, accumulating GPU resources until the native WebView reloads.
+      // This canvas is reused when quality or landmark geometry changes.
+      // Forced context loss made the immediately following WebKit renderer
+      // attach to a deliberately lost context, which exposed the old 2D board.
+      // Dispose GPU resources while preserving the reusable canvas context.
       renderer.dispose();
-      // React StrictMode immediately remounts effects in development. Forcing
-      // the shared canvas context to be lost here makes that second mount query
-      // a dead WebGL context and leaves the 3D preview on its loading screen.
-      // Production teardown still releases the GPU context aggressively.
-      if (!import.meta.env.DEV) renderer.forceContextLoss();
       applyPresetRef.current = () => undefined;
       applyControlledCameraFocusRef.current = () => undefined;
       startTourRef.current = () => undefined;
@@ -7047,7 +7056,7 @@ export default function Island5ThreePilot({
       if (activeTrainRide) setTrainRidePhase('idle');
       setCameraAuthoringModeRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }
@@ -7302,7 +7311,12 @@ export default function Island5ThreePilot({
         </>
       ) : null}
 
-      {error ? <div className="island-5-three-pilot__error" role="alert">{error}</div> : null}
+      {error ? (
+        <div className="island-5-three-pilot__error" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={() => setRendererRetryVersion((current) => current + 1)}>Retry 3D</button>
+        </div>
+      ) : null}
     </section>
   );
 }

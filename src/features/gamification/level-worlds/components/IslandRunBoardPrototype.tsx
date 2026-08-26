@@ -46,7 +46,12 @@ import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
 import { IslandMissionBriefingModal } from './IslandMissionBriefingModal';
 import { IslandBoardSymbolLegendModal } from './IslandBoardSymbolLegendModal';
 import { ConfettiBurst } from './ConfettiBurst';
-import { UsctCollectionAnimation, type UsctCollectionAmount } from './UsctCollectionAnimation';
+import {
+  IslandMoneyCelebration,
+  IslandMoneyCollectionAnimation,
+  IslandMoneyNote,
+  type IslandMoneyCollectionAmount,
+} from './IslandMoney';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import { IslandTechCollectionModal, type TechCollectionModalResult } from './IslandTechCollectionModal';
 import {
@@ -1825,9 +1830,6 @@ export function IslandRunBoardPrototype({
     boardRotateZDeg,
   } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
-  const [isIsland5ThreeEnabled, setIsIsland5ThreeEnabled] = useState(
-    () => !isIslandVisualPreview || isIsland5ThreePreviewRequested,
-  );
   const [devIsland5ThreeQuality, setDevIsland5ThreeQuality] = useState<Island3DQualitySelection>(readDevIsland5ThreeQuality);
   const [devIslandJumpDigits, setDevIslandJumpDigits] = useState<DevIslandJumpDigits>([0, 0, 1]);
   const [isDevIslandJumpPending, setIsDevIslandJumpPending] = useState(false);
@@ -2134,10 +2136,10 @@ export function IslandRunBoardPrototype({
     isTravellingRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
-  const essenceWalletRef = useRef<HTMLDivElement | null>(null);
-  const [boardEssenceCollectionFlight, setBoardEssenceCollectionFlight] = useState<{
+  const moneyWalletRef = useRef<HTMLDivElement | null>(null);
+  const [boardMoneyCollectionFlight, setBoardMoneyCollectionFlight] = useState<{
     presentationId: number;
-    amount: UsctCollectionAmount;
+    amount: IslandMoneyCollectionAmount;
     originPoint: { x: number; y: number };
   } | null>(null);
   const [ticketTileCelebration, setTicketTileCelebration] = useState<{
@@ -2295,7 +2297,11 @@ export function IslandRunBoardPrototype({
   const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
   const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
-  const shouldRenderIsland5Three = canUseIsland5Three && isIsland5ThreeEnabled;
+  // Authored 3D islands are the production runtime. The legacy 2D board remains
+  // available only to the explicit visual-production preview surface; it must
+  // never replace a live 3D island after a renderer restart or build beat.
+  const shouldRenderIsland5Three = canUseIsland5Three
+    && (!isIslandVisualPreview || isIsland5ThreePreviewRequested);
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
@@ -13036,13 +13042,13 @@ export function IslandRunBoardPrototype({
       pendingHopSequence === null &&
       !isRewardBarClaiming,
   );
-  const presentBoardEssenceCollection = useCallback((
+  const presentBoardMoneyCollection = useCallback((
     tileIndex: number,
     origin?: { viewportX: number; viewportY: number },
   ) => {
     if (!origin) return;
     const tileType = landmarkDoorTileMap[tileIndex]?.tileType;
-    const amount: UsctCollectionAmount | null = tileType === 'chest'
+    const amount: IslandMoneyCollectionAmount | null = tileType === 'chest'
       ? 'large'
       : tileType === 'currency'
         ? 'medium'
@@ -13050,7 +13056,7 @@ export function IslandRunBoardPrototype({
           ? 'small'
           : null;
     if (!amount) return;
-    setBoardEssenceCollectionFlight({
+    setBoardMoneyCollectionFlight({
       presentationId: Date.now(),
       amount,
       originPoint: { x: origin.viewportX, y: origin.viewportY },
@@ -13686,12 +13692,11 @@ export function IslandRunBoardPrototype({
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
-            <div ref={essenceWalletRef} className="island-run-board__topbar-wallet" aria-label="Essence wallet">
-              <img
-                className="island-run-board__topbar-currency-icon"
-                src="/assets/spin-wheel/daily-momentum/prizes/prize-essence-orb-transparent.png"
-                alt=""
-                aria-hidden="true"
+            <div ref={moneyWalletRef} className="island-run-board__topbar-wallet" aria-label="Money wallet">
+              <IslandMoneyNote
+                islandNumber={islandNumber}
+                tone={2}
+                className="island-run-board__topbar-money-note"
               />
               <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
@@ -13867,23 +13872,7 @@ export function IslandRunBoardPrototype({
               >
                 ◈ Board symbol guide
               </button>
-              {isDevModeEnabled && island3DWorldNumber !== null ? (
-                <button
-                  type="button"
-                  className="island-run-board__topbar-menu-item"
-                  role="menuitemcheckbox"
-                  aria-checked={isIsland5ThreeEnabled}
-                  onClick={() => {
-                    setIsIsland5ThreeEnabled((current) => !current);
-                    setShowTopbarMenu(false);
-                  }}
-                >
-                  <span>{isIsland5ThreeEnabled ? '✓' : '○'}</span>
-                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : `Use 3D Island ${islandArtPreviewNumber}`}</span>
-                  <span aria-hidden="true">🏝️</span>
-                </button>
-              ) : null}
-              {isDevModeEnabled && island3DWorldNumber !== null && isIsland5ThreeEnabled ? (
+              {isDevModeEnabled && shouldRenderIsland5Three ? (
                 <label className="island-run-board__dev-three-quality">
                   <span>3D quality</span>
                   <select
@@ -14215,7 +14204,7 @@ export function IslandRunBoardPrototype({
           </button>
         )}
 
-        <BoardStage
+        {!shouldRenderIsland5Three ? <BoardStage
           anchors={activeTileAnchors}
           theme={activeTheme}
           islandArtManifest={islandArtManifest}
@@ -14290,7 +14279,7 @@ export function IslandRunBoardPrototype({
           onTokenLand={(tileIndex, origin) => {
             playIslandRunSound('stop_land');
             triggerIslandRunHaptic('stop_land');
-            presentBoardEssenceCollection(tileIndex, origin);
+            presentBoardMoneyCollection(tileIndex, origin);
           }}
           isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
@@ -14299,7 +14288,7 @@ export function IslandRunBoardPrototype({
             diceRollCompleteResolverRef.current?.();
             diceRollCompleteResolverRef.current = null;
           }}
-        />
+        /> : null}
         {shouldRenderIsland5Three ? (
           <div className="island-run-board__three-preview">
             <Suspense
@@ -14342,7 +14331,7 @@ export function IslandRunBoardPrototype({
                 onTokenLand={(tileIndex, origin) => {
                   playIslandRunSound('stop_land');
                   triggerIslandRunHaptic('stop_land');
-                  presentBoardEssenceCollection(tileIndex, origin);
+                  presentBoardMoneyCollection(tileIndex, origin);
                 }}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   if (showBuildPanel) return;
@@ -14414,7 +14403,6 @@ export function IslandRunBoardPrototype({
                   if (showBuildPanel) return;
                   openCaretakerFlow('caretaker_board_tap');
                 }}
-                onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}
               />
             </Suspense>
             {isIslandVisualPreview ? (
@@ -14593,18 +14581,18 @@ export function IslandRunBoardPrototype({
         />
       ) : null}
 
-      {boardEssenceCollectionFlight && typeof document !== 'undefined'
+      {boardMoneyCollectionFlight && typeof document !== 'undefined'
         ? createPortal(
-            <UsctCollectionAnimation
-              key={boardEssenceCollectionFlight.presentationId}
-              amount={boardEssenceCollectionFlight.amount}
-              originPoint={boardEssenceCollectionFlight.originPoint}
-              targetRef={essenceWalletRef}
-              tokenArtSrc="/assets/spin-wheel/daily-momentum/prizes/prize-essence-orb-transparent.png"
-              className="island-run-board__essence-collection-flight"
+            <IslandMoneyCollectionAnimation
+              key={boardMoneyCollectionFlight.presentationId}
+              islandNumber={islandNumber}
+              amount={boardMoneyCollectionFlight.amount}
+              originPoint={boardMoneyCollectionFlight.originPoint}
+              targetRef={moneyWalletRef}
+              className="island-run-board__money-collection-flight"
               onComplete={() => {
-                setBoardEssenceCollectionFlight((current) => (
-                  current?.presentationId === boardEssenceCollectionFlight.presentationId ? null : current
+                setBoardMoneyCollectionFlight((current) => (
+                  current?.presentationId === boardMoneyCollectionFlight.presentationId ? null : current
                 ));
               }}
             />,
@@ -16495,6 +16483,10 @@ export function IslandRunBoardPrototype({
               key={`${islandClearStats.islandNumber}-${islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}`}
               variant={islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}
             />
+            <IslandMoneyCelebration
+              islandNumber={islandClearStats.islandNumber}
+              variant={islandClearStats.isCycleCapstone ? 'biggest' : 'big'}
+            />
             <div className="island-clear-celebration__sparkles" aria-hidden="true">
               <span className="island-clear-celebration__sparkle island-clear-celebration__sparkle--one">✦</span>
               <span className="island-clear-celebration__sparkle island-clear-celebration__sparkle--two">✧</span>
@@ -16530,7 +16522,13 @@ export function IslandRunBoardPrototype({
                       <span className="island-clear-celebration__reward-value">+{islandClearStats.diceEarned}</span>
                     </span>
                     <span className="island-clear-celebration__reward-item">
-                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">💰</span>
+                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">
+                        <IslandMoneyNote
+                          islandNumber={islandClearStats.islandNumber}
+                          tone={2}
+                          className="island-clear-celebration__money-note"
+                        />
+                      </span>
                       <span className="island-clear-celebration__reward-value">+{islandClearStats.essenceEarned}</span>
                     </span>
                     <span className="island-clear-celebration__reward-item">

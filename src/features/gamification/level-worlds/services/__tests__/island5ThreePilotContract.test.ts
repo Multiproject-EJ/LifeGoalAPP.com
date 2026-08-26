@@ -1742,7 +1742,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('onHopSequenceCompleteRef.current?.()'), 'the visible 3D renderer must signal its own true completion');
       assert(boardSource.includes('isRolling={isRolling}'), 'live shell must pass its existing presentation guard into the 3D renderer');
       assert(boardSource.includes('landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}'), 'special landing strength must derive from the canonical tile map');
-      assert(boardSource.includes('pendingHopSequence={shouldRenderIsland5Three ? null : pendingHopSequence}'), 'the hidden 2D board must not run a competing hop clock while 3D is visible');
+      assert(boardSource.includes('{!shouldRenderIsland5Three ? <BoardStage'), 'the retired 2D board must not mount a competing hop clock while authored 3D is visible');
       assert(boardSource.includes('onHopSequenceComplete={handleHopSequencePresentationComplete}'), 'the visible 3D renderer must release the canonical presentation barrier');
     },
   },
@@ -2032,7 +2032,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
         'internal profiler bundles must not register the production service worker',
       );
       assert(pilotSource.includes('new THREE.WebGLRenderer'), 'pilot should use an actual GPU renderer');
-      assert(pilotSource.includes('renderer.forceContextLoss()'), 'fast level changes must release retired WebGL contexts before WebKit accumulates them');
+      assert(pilotSource.includes('renderer.dispose()'), 'scene restarts must dispose retired renderer resources');
+      assert(!pilotSource.includes('renderer.forceContextLoss()'), 'scene restarts must not deliberately lose the reusable iOS canvas context');
+      assert(pilotSource.includes("canvas.addEventListener('webglcontextlost', handleContextLost)"), 'the 3D runtime must surface recoverable WebGL context loss');
+      assert(pilotSource.includes('setRendererRetryVersion((current) => current + 1)'), 'the 3D runtime must offer an in-place renderer retry');
       assert(pilotSource.includes('new OrbitControls'), 'pilot should provide touch and pointer orbit controls');
       assert(pilotSource.includes('material.polygonOffsetUnits = -4'), 'Cactus Canyon tiles need a deterministic depth bias so camera motion cannot reveal z-fighting');
       assert(pilotSource.includes('tappedAt - lastTrainTapAt <= 430'), 'Cactus Canyon must support a deliberate mouse double-click and mobile double-tap on the moving train');
@@ -2059,7 +2062,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
       assert(routingSource.includes('runtimeIslandNumber: 14, worldSourceNumber: 14'), 'Island 014 must route its dedicated Honeycomb Kingdom world pack');
       assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
-      assert(boardSource.includes('() => !isIslandVisualPreview || isIsland5ThreePreviewRequested'), 'normal Island 5 gameplay should default to 3D while QA previews remain explicit');
+      assert(
+        boardSource.includes('const shouldRenderIsland5Three = canUseIsland5Three')
+          && boardSource.includes('&& (!isIslandVisualPreview || isIsland5ThreePreviewRequested);'),
+        'authored live islands should default to 3D while legacy visual previews remain explicit',
+      );
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
       assert(pilotSource.includes('qualityOverride?: Island3DQualitySelection'), 'embedded renderer should accept a presentation-only dev quality override');
       assert(pilotSource.includes('qualityOverride ?? productionQualitySelection'), 'dev override should take precedence without changing production auto selection');
@@ -2103,8 +2110,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}'), 'production landmarks must read their individual canonical build levels');
       assert(boardSource.includes("handleLandmarkOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId)"), '3D landmark taps must reuse the shared landmark-opening dispatcher');
       assert(boardSource.includes('handleStopOpenRequest(stopId);'), 'the shared landmark dispatcher must delegate ordinary stops to the canonical stop-opening path');
-      assert(boardSource.includes('onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}'), 'WebGL failure must reveal the mounted 2D fallback');
-      assert(boardSource.indexOf('<BoardStage') < boardSource.indexOf('shouldRenderIsland5Three ?'), 'canonical BoardStage must remain mounted beneath the production visual layer');
+      assert(!boardSource.includes('onRendererUnavailable'), 'an authored live island must never downgrade to the retired 2D board after a renderer restart');
+      assert(!boardSource.includes('Use 2D fallback'), 'the live developer menu must not reintroduce a player-facing 2D runtime toggle');
+      assert(boardSource.includes('{!shouldRenderIsland5Three ? <BoardStage'), 'the legacy board may mount only when no authored 3D production world is active');
       assert(pilotSource.includes('landmarkBuildLevels?.[landmark.id] ?? buildLevel'), 'renderer must resolve each landmark level without inventing gameplay state');
       assert(pilotSource.includes('onLandmarkClickRef.current?.(landmarkId)'), 'renderer interactions must delegate landmark actions back to the live shell');
       assert(pilotSource.includes('ISLAND_CAMERA_TOUR_STEPS'), 'pilot should expose the reusable semantic island tour');

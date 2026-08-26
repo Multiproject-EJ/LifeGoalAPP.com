@@ -24,6 +24,7 @@ import { encounterServiceTests } from './encounterService.test';
 import { islandBoardTopologyTests } from './islandBoardTopology.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
 import { islandRunIslandMetadataTests } from './islandRunIslandMetadata.test';
+import { islandMoneyThemesTests } from './islandMoneyThemes.test';
 import { islandRunPreIslandLuckyRollGateTests } from './islandRunPreIslandLuckyRollGate.test';
 import { islandArtManifestTests } from './islandArtManifest.test';
 import { islandRunContractV2EnergyTests } from './islandRunContractV2Energy.test';
@@ -238,6 +239,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandBoardTopology', tests: islandBoardTopologyTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
   { label: 'islandRunIslandMetadata', tests: islandRunIslandMetadataTests },
+  { label: 'islandMoneyThemes', tests: islandMoneyThemesTests },
   { label: 'islandRunPreIslandLuckyRollGate', tests: islandRunPreIslandLuckyRollGateTests },
   { label: 'islandArtManifest', tests: islandArtManifestTests },
   { label: 'islandConversationValidation', tests: islandConversationValidationTests },
