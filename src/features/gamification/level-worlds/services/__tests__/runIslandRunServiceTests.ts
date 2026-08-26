@@ -153,6 +153,8 @@ import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollecti
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.test';
 import { islandRunSignatureMissionTests } from './islandRunSignatureMissions.test';
+import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
+import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
 import { islandRunConcordHubEntryTests } from './islandRunConcordHubEntry.test';
 import { islandRunConcordRollProtectionTests } from './islandRunConcordRollProtection.test';
 import { islandCommunicationAccessTests } from './islandCommunicationAccess.test';
@@ -364,6 +366,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
   { label: 'islandRunTechnologyUnlocks', tests: islandRunTechnologyUnlockTests },
   { label: 'islandRunSignatureMissions', tests: islandRunSignatureMissionTests },
+  { label: 'islandRunMissionTracker', tests: islandRunMissionTrackerTests },
+  { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
   { label: 'islandRunConcordHubEntry', tests: islandRunConcordHubEntryTests },
   { label: 'islandRunConcordRollProtection', tests: islandRunConcordRollProtectionTests },
   { label: 'islandCommunicationAccess', tests: islandCommunicationAccessTests },

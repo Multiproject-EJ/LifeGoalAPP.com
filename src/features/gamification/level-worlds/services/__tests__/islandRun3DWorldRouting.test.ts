@@ -24,7 +24,8 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(9)?.role, 'ordinary', 'Island 009 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(10)?.worldSourceNumber, 10, 'Island 010 owns the Rootheart Canopy City world');
       assertEqual(resolveIslandRun3DWorldRoute(10)?.role, 'arena', 'runtime Island 010 owns the arena role');
-      assertEqual(resolveIslandRun3DWorldRoute(11), null, 'unauthored islands retain the established fallback path');
+      assertEqual(resolveIslandRun3DWorldRoute(11)?.worldSourceNumber, 11, 'Island 011 preserves the pre-crater First Light world');
+      assertEqual(resolveIslandRun3DWorldRoute(11)?.role, 'ordinary', 'runtime Island 011 remains an ordinary island');
       assertEqual(resolveIslandRun3DWorldRoute(12)?.worldSourceNumber, 12, 'Island 012 owns the Sunken Sands world');
       assertEqual(resolveIslandRun3DWorldRoute(12)?.role, 'ordinary', 'Island 012 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.worldSourceNumber, 13, 'Island 013 owns the Cactus Canyon world');
@@ -32,11 +33,11 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
     },
   },
   {
-    name: 'uses each completed visual world once during the reassignment',
+    name: 'keeps every runtime island on an explicit authored source identity',
     run: () => {
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 12, 'twelve authored world packs are currently routed');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 12, 'runtime islands are unique');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 12, 'visual source packs are unique');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 13, 'thirteen authored world routes are currently registered');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 13, 'runtime islands are unique');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 13, 'visual source identities are unique');
     },
   },
 ];

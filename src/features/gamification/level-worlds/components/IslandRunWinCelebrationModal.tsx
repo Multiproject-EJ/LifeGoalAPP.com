@@ -10,6 +10,7 @@ type IslandRunWinCelebrationModalProps = {
   open: boolean;
   title?: string;
   subtitle?: string;
+  actionLabel?: string;
   rewards: WinRewardItem[];
   onCollect: () => void;
 };
@@ -18,6 +19,7 @@ export default function IslandRunWinCelebrationModal({
   open,
   title = 'Congratulations!',
   subtitle = 'You won',
+  actionLabel = 'Collect',
   rewards,
   onCollect,
 }: IslandRunWinCelebrationModalProps) {
@@ -43,7 +45,7 @@ export default function IslandRunWinCelebrationModal({
           onClick={onCollect}
           autoFocus
         >
-          Collect
+          {actionLabel}
         </button>
       </div>
     </div>

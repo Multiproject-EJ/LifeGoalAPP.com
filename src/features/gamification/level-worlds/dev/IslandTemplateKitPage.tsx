@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
-import { SUNKEN_SANDS_TREASURE_ROLL_TARGET } from '../services/islandRunSignatureMissions';
+import {
+  CELESTIAL_REDOCKING_ROLL_TARGET,
+  FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+  FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
+  SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+} from '../services/islandRunSignatureMissions';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
 import type { IslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
@@ -18,7 +23,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');
@@ -29,6 +34,15 @@ function readInitialPreviewState() {
   const treasureRolls = Number.isFinite(treasureRollsParam)
     ? Math.max(0, Math.min(SUNKEN_SANDS_TREASURE_ROLL_TARGET, Math.floor(treasureRollsParam)))
     : SUNKEN_SANDS_TREASURE_ROLL_TARGET;
+  const redockingRollsParam = Number(params.get('redockingRolls'));
+  const redockingRolls = Number.isFinite(redockingRollsParam)
+    ? Math.max(0, Math.min(CELESTIAL_REDOCKING_ROLL_TARGET, Math.floor(redockingRollsParam)))
+    : CELESTIAL_REDOCKING_ROLL_TARGET;
+  const assemblyChargesParam = Number(params.get('assemblyCharges'));
+  const assemblyCharges = Number.isFinite(assemblyChargesParam)
+    ? Math.max(0, Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, Math.floor(assemblyChargesParam)))
+    : FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET;
+  const assemblyReplay = params.get('assemblyReplay') === '1';
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
       ? requestedMode
@@ -37,6 +51,9 @@ function readInitialPreviewState() {
     islandNumber,
     worldSourceNumber,
     treasureRolls,
+    redockingRolls,
+    assemblyCharges: assemblyReplay ? 0 : assemblyCharges,
+    assemblyReplay,
     overlays: params.get('guides') !== '0',
     construction: params.get('construction') === '1',
     constructionWorking: params.get('working') !== '0',
@@ -151,6 +168,9 @@ export default function IslandTemplateKitPage() {
   const [mode, setMode] = useState<ViewMode>(initialState.mode);
   const [buildLevel, setBuildLevel] = useState<BuildLevel>(initialState.buildLevel);
   const [overlays, setOverlays] = useState(initialState.overlays);
+  const [assemblyCharges, setAssemblyCharges] = useState(initialState.assemblyCharges);
+  const [assemblyConstructionSequence, setAssemblyConstructionSequence] = useState(0);
+  const [assemblyReplayActive, setAssemblyReplayActive] = useState(initialState.assemblyReplay);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
   const constructionPresentation = useMemo<IslandRunConstructionPresentation | null>(() => {
@@ -185,6 +205,19 @@ export default function IslandTemplateKitPage() {
     return () => document.body.classList.remove('island-3d-evidence-capture');
   }, [evidenceCapture]);
 
+  useEffect(() => {
+    if (!assemblyReplayActive) return undefined;
+    if (assemblyCharges >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET) {
+      setAssemblyReplayActive(false);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      setAssemblyCharges((current) => Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, current + 1));
+      setAssemblyConstructionSequence((current) => current + 1);
+    }, assemblyCharges === 0 ? 500 : 2_680);
+    return () => window.clearTimeout(timer);
+  }, [assemblyCharges, assemblyReplayActive]);
+
   return (
     <main className="island-kit-page">
       <header className="island-kit-header">
@@ -217,6 +250,44 @@ export default function IslandTemplateKitPage() {
             <input type="checkbox" checked={overlays} onChange={(event) => setOverlays(event.target.checked)} />
             Production guides
           </label>
+          {mode === '3d' && initialState.islandNumber === 1 ? (
+            <div className="island-kit-control-group" data-testid="assembly-crater-preview-controls">
+              <span>Assembly crater</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAssemblyReplayActive(false);
+                  setAssemblyCharges(0);
+                  setAssemblyConstructionSequence(0);
+                }}
+              >Reset</button>
+              <button
+                type="button"
+                disabled={assemblyReplayActive || assemblyCharges >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}
+                onClick={() => {
+                  setAssemblyCharges((current) => Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, current + 1));
+                  setAssemblyConstructionSequence((current) => current + 1);
+                }}
+              >Blast next</button>
+              <button
+                type="button"
+                aria-pressed={assemblyReplayActive}
+                onClick={() => {
+                  if (assemblyReplayActive) {
+                    setAssemblyReplayActive(false);
+                    return;
+                  }
+                  setAssemblyCharges(0);
+                  setAssemblyConstructionSequence(0);
+                  setAssemblyReplayActive(true);
+                }}
+              >{assemblyReplayActive ? 'Stop full replay' : 'Play full 20'}</button>
+              <output aria-live="polite">
+                {assemblyReplayActive ? 'Explosions ' : assemblyCharges >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 'Assembly sequence ' : ''}
+                {assemblyCharges}/{FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}
+              </output>
+            </div>
+          ) : null}
           <dl className="island-kit-specs">
             <div><dt>Scene</dt><dd>1400 × 1600</dd></div>
             <div><dt>Board anchor</dt><dd>700, 800</dd></div>
@@ -252,6 +323,18 @@ export default function IslandTemplateKitPage() {
                 revealProgress: initialState.treasureRolls / SUNKEN_SANDS_TREASURE_ROLL_TARGET,
                 ready: initialState.treasureRolls >= SUNKEN_SANDS_TREASURE_ROLL_TARGET,
                 claimed: false,
+              }}
+              celestialRedockingPresentation={{
+                completedRolls: initialState.redockingRolls,
+                targetRolls: CELESTIAL_REDOCKING_ROLL_TARGET,
+                dockedPlatformCount: Math.floor(initialState.redockingRolls / 5),
+              }}
+              firstLightAssemblyCraterPresentation={{
+                chargesDetonated: assemblyCharges,
+                targetCharges: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+                completed: assemblyCharges >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+                claimedDynamiteTileIndices: FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.slice(0, assemblyCharges),
+                constructionSequence: assemblyConstructionSequence,
               }}
             />
           ) : (

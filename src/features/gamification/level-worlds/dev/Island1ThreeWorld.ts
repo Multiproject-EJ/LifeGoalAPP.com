@@ -2655,7 +2655,7 @@ export function createIsland1LivingAmbience(
   scene: THREE.Scene,
   profile: Island3DQualityProfile,
   materials: Island1WorldMaterials,
-  ocean: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshPhysicalMaterial>,
+  ocean: THREE.Mesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>,
   cliffMaterial: THREE.Material,
 ): Island1AmbienceRuntime {
   const root = new THREE.Group();

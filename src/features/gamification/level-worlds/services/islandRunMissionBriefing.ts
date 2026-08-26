@@ -22,6 +22,7 @@ export interface IslandMissionBriefingPresentation {
   islandNumber: number;
   islandName: string;
   organization: string;
+  progressKind: IslandMissionProgressKind;
   headline: string;
   missionStatement: string;
   primaryObjective: string;
@@ -30,6 +31,17 @@ export interface IslandMissionBriefingPresentation {
   caretakerSignal: string;
   commandTeam: readonly IslandMissionBriefingOfficer[];
 }
+
+export type IslandMissionProgressKind =
+  | 'first_light_assembly'
+  | 'celestial_redocking'
+  | 'frostwell_iceworks'
+  | 'arena_guardian'
+  | 'rootheart_powerworks'
+  | 'sunken_sands_treasure'
+  | 'cactus_canyon_spiral'
+  | 'planned_signature'
+  | 'standard_landmarks';
 
 const COMMAND_TEAM: readonly IslandMissionBriefingOfficer[] = Object.freeze([
   {
@@ -67,27 +79,30 @@ const COMMAND_TEAM: readonly IslandMissionBriefingOfficer[] = Object.freeze([
 
 type MissionCopy = Pick<
   IslandMissionBriefingPresentation,
-  'headline' | 'missionStatement' | 'primaryObjective' | 'supportingObjective' | 'fieldProtocol' | 'caretakerSignal'
+  'progressKind' | 'headline' | 'missionStatement' | 'primaryObjective' | 'supportingObjective' | 'fieldProtocol' | 'caretakerSignal'
 >;
 
 const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   1: {
-    headline: 'Restore a shared language',
-    missionStatement: 'The island is speaking through damaged signals. Rebuild The Concord, listen before acting, and help the community separate warning from fear.',
-    primaryObjective: 'Recover and restore all nine Concord fragments.',
-    supportingObjective: 'Reopen the five communal landmarks without silencing their keepers.',
-    fieldProtocol: 'Observe first. Translate meaning, not merely words.',
-    caretakerSignal: 'We have waited a long time to be understood without being corrected.',
+    progressKind: 'first_light_assembly',
+    headline: 'First Light Assembly',
+    missionStatement: 'First Light has no chamber where the whole island can be heard. Recover twenty finite dynamite charges, excavate one shared civic hall beneath the circular route, and restore the four outer landmarks so the community can convene.',
+    primaryObjective: 'Collect and detonate all twenty Assembly Crater charges.',
+    supportingObjective: 'Raise Hatchery, Habit, Event Arena and Wisdom to Level 3. The Assembly replaces a separate Boss landmark on Island 001.',
+    fieldProtocol: 'One controlled blast at a time. Protect the route above while every charge widens and deepens the same excavation.',
+    caretakerSignal: 'Give us a place where disagreement can become understanding instead of distance.',
   },
   2: {
-    headline: 'Question the Last Word',
-    missionStatement: 'Pebble Bay has turned a useful warning into an unquestionable command. Restore public gathering places and help the Tidefolk test what the sacred board predicts.',
-    primaryObjective: 'Restore the bay landmarks and investigate the second sun.',
-    supportingObjective: 'Give the caretaker room to ask one forbidden question.',
-    fieldProtocol: 'Treat prophecy as evidence to examine, never an order to obey.',
-    caretakerSignal: 'A warning can save us. A warning no one may question can own us.',
+    progressKind: 'celestial_redocking',
+    headline: 'The Great Re-Docking',
+    missionStatement: 'Celestial Sky Kingdom is drifting apart. Winch its four tethered landmark platforms back to the central kingdom and lock every docking collar safely into place.',
+    primaryObjective: 'Dock all four celestial platforms.',
+    supportingObjective: 'Restore the five island landmarks.',
+    fieldProtocol: 'One platform locks after each five completed rolls; the canonical route never moves.',
+    caretakerSignal: 'Bring our districts close enough to share one sky again.',
   },
   3: {
+    progressKind: 'frostwell_iceworks',
     headline: 'Open the Frostwell',
     missionStatement: 'Frostwild survives above an immense frozen ocean. Help its builders drill through the ice, install the fishery and reservoir, and make hidden abundance flow again.',
     primaryObjective: 'Earn drill spins and reach the 500-metre water layer.',
@@ -96,23 +111,44 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'The water is not gone. It is waiting beneath everything we fear to break.',
   },
   4: {
-    headline: 'Repair without erasing',
-    missionStatement: 'Driftwood Isle has preserved every remnant and postponed every tomorrow. Restore its working halls while helping the Menders carry memory forward instead of sealing it away.',
-    primaryObjective: 'Rebuild the public repair network.',
-    supportingObjective: 'Turn one protected remnant into a useful shared place.',
-    fieldProtocol: 'Nothing repaired here should require forgetting who came before.',
-    caretakerSignal: 'We know how to mend every object except the future.',
+    progressKind: 'planned_signature',
+    headline: 'Raise the Broken Causeway',
+    missionStatement: 'Crown Citadel has lost the bridges joining its four outer districts to the central court. Recover the masonry and raise three causeway spans from the water.',
+    primaryObjective: 'Raise all three causeway spans.',
+    supportingObjective: 'Restore the five citadel landmarks.',
+    fieldProtocol: 'Reconnect the districts without moving or obstructing the canonical route.',
+    caretakerSignal: 'A citadel cannot govern people it can no longer reach.',
   },
   5: {
-    headline: 'Return every voice',
-    missionStatement: 'Crown of Tides is forcing many voices into one safe chorus. Restore the landmarks, enter the Arena with diplomatic intent, and help the guardian hear difference without hearing danger.',
-    primaryObjective: 'Restore the four outer landmarks and complete the Arena audience.',
-    supportingObjective: 'Separate the guardian\'s true signal from the borrowed voice beneath it.',
-    fieldProtocol: 'Victory is recognition, not domination.',
-    caretakerSignal: 'We still sing beautifully. We have forgotten how to sing alone.',
+    progressKind: 'arena_guardian',
+    headline: 'Defeat the Arena Guardian',
+    missionStatement: 'Sunshore Arena is held by its guardian. Restore the island landmarks, enter the civic arena and win the final audience.',
+    primaryObjective: 'Defeat the Arena guardian.',
+    supportingObjective: 'Restore all five island landmarks.',
+    fieldProtocol: 'The guardian remains the final canonical landmark objective.',
+    caretakerSignal: 'Restore the shore, then meet our guardian in the arena.',
+  },
+  6: {
+    progressKind: 'planned_signature',
+    headline: 'Rephase the Moon Mirrors',
+    missionStatement: 'Moonveil Nexus has lost the beam chain that stabilizes its central moon core. Rotate five great mirrors back into alignment and restore the lunar circuit.',
+    primaryObjective: 'Align all five moon mirrors.',
+    supportingObjective: 'Restore the five Nexus landmarks.',
+    fieldProtocol: 'Each mirror must hold alignment before the next beam is formed.',
+    caretakerSignal: 'Let the mirrors speak to one another again.',
+  },
+  7: {
+    progressKind: 'planned_signature',
+    headline: 'Restore the Breathline',
+    missionStatement: 'Abyssal Pearl Kingdom is losing pressure across its living domes. Reconnect the Breathline through four districts and return oxygen to the pearl heart.',
+    primaryObjective: 'Restore pressure to all four districts.',
+    supportingObjective: 'Restore the five underwater landmarks.',
+    fieldProtocol: 'Repressurize one district at a time and protect the returning fauna.',
+    caretakerSignal: 'Give every district room to breathe again.',
   },
   8: {
-    headline: 'Wake the Everblossom',
+    progressKind: 'planned_signature',
+    headline: 'The Great Pollination',
     missionStatement: 'The botanical kingdom has beauty in abundance but its living systems have stopped exchanging energy. Restore each landmark family and reconnect springs, roots, glasshouses and pollinators.',
     primaryObjective: 'Restore the five Everblossom landmark families.',
     supportingObjective: 'Keep the 36-tile pilgrimage route open beneath the growing canopy.',
@@ -120,7 +156,8 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'A garden can be perfectly arranged and still forget how to grow.',
   },
   9: {
-    headline: 'Stabilize the deep forge',
+    progressKind: 'planned_signature',
+    headline: 'Restart the Ignition Chain',
     missionStatement: 'The lava kingdom draws power from a crater far below the route. Restore its suspended steel works and stabilize the machinery without sealing the volcano or cooling its living heart.',
     primaryObjective: 'Reconnect the crater-spanning forge systems.',
     supportingObjective: 'Keep every landmark anchored while the deep engine cycles.',
@@ -128,14 +165,34 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'The mountain is not angry. It is carrying more power than our old structures can share.',
   },
   10: {
-    headline: 'Bring back the Heartlight',
+    progressKind: 'rootheart_powerworks',
+    headline: 'Restore the Rootheart Powerworks',
     missionStatement: 'Rootheart\'s builders still have craft, water and community, but their great engine is silent. Recover its scattered mechanisms and restore the causal chain from falling water to a city full of warm light.',
     primaryObjective: 'Collect all eight Powerworks components around the route.',
     supportingObjective: 'Fund the waterworks frame, Heartwheel dynamo and Heartlight network.',
     fieldProtocol: 'Keep the Arena clear. Every gear, cable and lantern must tell one physical story.',
     caretakerSignal: 'We remember the sound of every workshop lighting up together.',
   },
+  11: {
+    progressKind: 'standard_landmarks',
+    headline: 'Reopen the First Light Route',
+    missionStatement: 'The preserved First Light settlement now serves a later expedition route. Restore its landmarks and reopen the complete civic circuit without repeating the one-time Concord recovery.',
+    primaryObjective: 'Complete the five landmark objectives.',
+    supportingObjective: 'Raise all five landmarks to Level 3.',
+    fieldProtocol: 'Preserve the original First Light world while runtime Island 011 keeps its own progression identity.',
+    caretakerSignal: 'The first route can guide a new expedition without becoming the same journey twice.',
+  },
+  12: {
+    progressKind: 'sunken_sands_treasure',
+    headline: 'Find the Sunscarab',
+    missionStatement: 'Sunken Sands hides its first royal treasure beneath the route. Search the ruins through twenty completed rolls, reveal the chamber and claim the Sunscarab Token.',
+    primaryObjective: 'Search the ruins for twenty completed rolls.',
+    supportingObjective: 'Claim the Sunscarab and restore the five landmarks.',
+    fieldProtocol: 'Every accepted canonical roll advances the search once.',
+    caretakerSignal: 'The first treasure is not lost. It is waiting to be read correctly.',
+  },
   13: {
+    progressKind: 'cactus_canyon_spiral',
     headline: 'Carve the Canyon Spiral',
     missionStatement: 'Cactus Canyon stands on a monumental stone pillar, but its summit railway has no safe route to the settlements below. Collect frontier dynamite and cut a passenger gallery downward through the mountain itself.',
     primaryObjective: 'Collect dynamite caches placed around the summit route.',
@@ -146,10 +203,19 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
-  // Island 010's production world has moved beyond the legacy journey label
-  // "Lagoon Haven". Keep the briefing aligned with the world the player sees
-  // without changing global island naming in this bounded mission slice.
+  1: 'First Light Kingdom',
+  2: 'Celestial Sky Kingdom',
+  3: 'Frostmoon Haven',
+  4: 'Crown Citadel',
+  5: 'Sunshore Arena',
+  6: 'Moonveil Nexus',
+  7: 'Abyssal Pearl Kingdom',
+  8: 'The Everblossom Kingdom',
+  9: 'The Heartshaft Crucible',
   10: 'Rootheart Canopy City',
+  11: 'First Light Kingdom',
+  12: 'Sunken Sands',
+  13: 'Cactus Canyon',
 });
 
 function padIsland(islandNumber: number): string {
@@ -202,6 +268,7 @@ export function getIslandMissionBriefingPresentation(islandNumber: number): Isla
   const islandName = AUTHORED_MISSION_NAMES[safeIslandNumber] ?? getIslandDisplayName(safeIslandNumber);
   const authored = AUTHORED_MISSIONS[safeIslandNumber];
   const fallback: MissionCopy = {
+    progressKind: 'standard_landmarks',
     headline: `Establish trust on ${islandName}`,
     missionStatement: `The Concord confirms a community under strain on ${islandName}. Restore its shared landmarks, learn what its warning protects, and leave the local civilization more capable than when the expedition arrived.`,
     primaryObjective: 'Restore the island\'s five landmark stages.',

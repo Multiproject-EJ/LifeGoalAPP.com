@@ -1,23 +1,33 @@
 import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
+  CELESTIAL_REDOCKING_PLATFORM_COUNT,
+  CELESTIAL_REDOCKING_ROLL_TARGET,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_DRILL_TILE_INDICES,
+  FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+  FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_DICE,
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  advanceCelestialRedockingForRoll,
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
+  collectFirstLightAssemblyDynamiteForLanding,
   collectRootheartPowerComponentForLanding,
   getCactusCanyonAvailableDynamite,
   getCactusCanyonDynamiteQuantityForTile,
+  getCelestialRedockingDockedPlatformCount,
+  getFirstLightAssemblyAvailableDynamite,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   grantFrostwellDrillSpinForLanding,
   mergeIslandRunSignatureMissionProgress,
   resolveFrostwellIceworksProgress,
+  resolveFirstLightAssemblyCraterProgress,
   resolveCactusCanyonSpiralProgress,
+  resolveCelestialRedockingProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
@@ -25,6 +35,7 @@ import {
 } from '../islandRunSignatureMissions';
 import {
   claimSunkenSandsFirstTreasure,
+  detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   blastCactusCanyonSpiralSection,
@@ -41,6 +52,8 @@ import {
   refreshIslandRunStateFromLocal,
 } from '../islandRunStateStore';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity } from '../islandBoardTileMap';
+import { getIslandMissionBriefingPresentation } from '../islandRunMissionBriefing';
+import { getIslandRunBossReward } from '../islandRunBossReward';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'signature-mission-test-user';
@@ -188,7 +201,221 @@ async function seedCactusCanyon(options: {
   refreshIslandRunStateFromLocal(session);
 }
 
+async function seedFirstLightAssembly(options: {
+  claimedTileIndices?: number[];
+  chargesDetonated?: number;
+  completedAtMs?: number | null;
+} = {}): Promise<void> {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+  const session = makeSession();
+  const base = readIslandRunGameStateRecord(session);
+  const key = getIslandRunSignatureMissionKey(0, 1);
+  const claimedDynamiteTileIndices = options.claimedTileIndices ?? [];
+  await writeIslandRunGameStateRecord({
+    session,
+    client: null,
+    record: {
+      ...base,
+      currentIslandNumber: 1,
+      cycleIndex: 0,
+      signatureMissionProgressByIsland: {
+        [key]: {
+          missionId: 'first-light-assembly-crater',
+          version: 1,
+          claimedDynamiteTileIndices,
+          chargesDetonated: options.chargesDetonated ?? 0,
+          lastDetonatedSector: null,
+          startedAtMs: claimedDynamiteTileIndices.length ? 1 : null,
+          completedAtMs: options.completedAtMs ?? null,
+          updatedAtMs: 1,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(session);
+}
+
 export const islandRunSignatureMissionTests: TestCase[] = [
+  {
+    name: 'Celestial Great Re-Docking advances once per roll and locks platforms at 5, 10, 15, and 20',
+    run: () => {
+      let ledger = {};
+      const dockedPlatformIndices: number[] = [];
+      for (let roll = 1; roll <= CELESTIAL_REDOCKING_ROLL_TARGET; roll += 1) {
+        const result = advanceCelestialRedockingForRoll({
+          ledger,
+          islandNumber: 2,
+          cycleIndex: 0,
+          nowMs: roll * 100,
+        });
+        ledger = result.ledger;
+        if (result.dockedPlatformIndex !== null) dockedPlatformIndices.push(result.dockedPlatformIndex);
+        assertEqual(result.rollsCompleted, roll, `accepted roll ${roll} advances exactly once`);
+      }
+      const progress = resolveCelestialRedockingProgress({ ledger, islandNumber: 2, cycleIndex: 0 });
+      assertEqual(dockedPlatformIndices.join(','), '0,1,2,3', 'four platform locks occur at the four five-roll thresholds');
+      assertEqual(getCelestialRedockingDockedPlatformCount(progress), CELESTIAL_REDOCKING_PLATFORM_COUNT, 'all four platforms are docked');
+      assert(progress.completedAtMs !== null, 'the twentieth roll persists completion time');
+      const capped = advanceCelestialRedockingForRoll({ ledger, islandNumber: 2, cycleIndex: 0, nowMs: 9_999 });
+      assertEqual(capped.rollsCompleted, CELESTIAL_REDOCKING_ROLL_TARGET, 'later rolls remain capped');
+      assertEqual(capped.dockedPlatformIndex, null, 'a completed mission cannot replay a docking edge');
+      assertEqual(
+        advanceCelestialRedockingForRoll({ ledger: {}, islandNumber: 3, cycleIndex: 0, nowMs: 1 }).rollsCompleted,
+        0,
+        'other islands never advance the mission',
+      );
+      assertEqual(
+        resolveCelestialRedockingProgress({ ledger, islandNumber: 2, cycleIndex: 1 }).rollsCompleted,
+        0,
+        'a new cycle begins independently',
+      );
+    },
+  },
+  {
+    name: 'Celestial Great Re-Docking sanitizes and merges progress monotonically',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 2);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'celestial-great-redocking', rolls_completed: 7, updated_at_ms: 70 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'celestial-great-redocking', rolls_completed: 25, completed_at_ms: 200, updated_at_ms: 200 },
+      });
+      const progress = resolveCelestialRedockingProgress({
+        ledger: mergeIslandRunSignatureMissionProgress(remote, local),
+        islandNumber: 2,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.rollsCompleted, CELESTIAL_REDOCKING_ROLL_TARGET, 'invalid overfill clamps to the target');
+      assertEqual(progress.completedAtMs, 200, 'completion survives cross-device merge');
+    },
+  },
+  {
+    name: 'First Light places exactly twenty finite Assembly Crater charges on non-door board tiles',
+    run: () => {
+      const map = applyLandmarkDoorTiles(
+        generateTileMap(1, getIslandRarity(1), 'first-light', 2),
+        { expandedActiveStopId: 'hatchery' },
+      );
+      const caches = map.filter((entry) => entry.signatureMissionKind === 'first_light_dynamite');
+      assertEqual(caches.length, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'twenty distinct dynamite caches are authored');
+      assertEqual(new Set(caches.map((entry) => entry.index)).size, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'every cache has a unique tile');
+      assert(caches.every((entry) => entry.tileType !== 'landmark_door'), 'no cache replaces a canonical landmark door');
+
+      const firstTile = FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES[0];
+      const first = collectFirstLightAssemblyDynamiteForLanding({
+        ledger: {}, islandNumber: 1, cycleIndex: 0, tileIndex: firstTile, nowMs: 10,
+      });
+      const duplicate = collectFirstLightAssemblyDynamiteForLanding({
+        ledger: first.ledger, islandNumber: 1, cycleIndex: 0, tileIndex: firstTile, nowMs: 11,
+      });
+      const progress = resolveFirstLightAssemblyCraterProgress({ ledger: duplicate.ledger, islandNumber: 1, cycleIndex: 0 });
+      assertEqual(first.dynamiteCollected, 1, 'first landing collects the finite cache');
+      assertEqual(duplicate.dynamiteCollected, 0, 'the same cache cannot be collected twice');
+      assertEqual(getFirstLightAssemblyAvailableDynamite(progress), 1, 'one collected charge remains available');
+    },
+  },
+  {
+    name: 'First Light detonation consumes one collected charge and completes the twentieth sector exactly once',
+    run: async () => {
+      await seedFirstLightAssembly({
+        claimedTileIndices: [...FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES],
+        chargesDetonated: 19,
+      });
+      const result = await detonateFirstLightAssemblyCharge({ session: makeSession(), client: null });
+      assertEqual(result.status, 'ok', 'twentieth detonation succeeds');
+      if (result.status !== 'ok') return;
+      const after = readIslandRunGameStateRecord(makeSession());
+      const progress = resolveFirstLightAssemblyCraterProgress({
+        ledger: after.signatureMissionProgressByIsland, islandNumber: 1, cycleIndex: 0,
+      });
+      assertEqual(result.sectorAfter, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'progress caps at twenty sectors');
+      assertEqual(progress.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'twentieth sector persists');
+      assert(progress.completedAtMs !== null, 'completion timestamp persists');
+      const finaleReward = getIslandRunBossReward(1);
+      assertEqual(after.bossTrialResolvedIslandNumber, 1, 'Assembly finale fulfils the hidden fifth-stop compatibility marker');
+      assertEqual(after.stopStatesByIndex[4]?.objectiveComplete, true, 'hidden boss objective slot is fulfilled by the Assembly mission');
+      assertEqual(after.stopBuildStateByIndex[4]?.buildLevel, 3, 'hidden boss build slot does not require player funding');
+      assertEqual(after.dicePool, 30 + finaleReward.dice, 'Assembly finale grants the standard island-finale dice once');
+      assertEqual(after.essence, finaleReward.essence, 'Assembly finale grants the standard island-finale essence once');
+      assertEqual((await detonateFirstLightAssemblyCharge({ session: makeSession(), client: null })).status, 'already_complete', 'completion is idempotent');
+      const afterDuplicate = readIslandRunGameStateRecord(makeSession());
+      assertEqual(afterDuplicate.dicePool, after.dicePool, 'repeat detonation cannot duplicate the finale reward');
+    },
+  },
+  {
+    name: 'Island 001 briefing states the Assembly mission and excludes a separate Boss landmark',
+    run: () => {
+      const briefing = getIslandMissionBriefingPresentation(1);
+      assert(briefing.headline.includes('Assembly'), 'headline names the Assembly mission');
+      assert(briefing.primaryObjective.includes('twenty'), 'primary objective states the twenty-charge target');
+      assert(briefing.supportingObjective.includes('Level 3'), 'supporting objective states the landmark build target');
+      assert(briefing.supportingObjective.includes('replaces a separate Boss landmark'), 'briefing explains that no Boss landmark is counted');
+    },
+  },
+  {
+    name: 'Island 001 exposes a lower-right phone briefing with live mission progress and automatic clear routing',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx', 'utf8');
+      const trackerSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRunMissionTracker.ts', 'utf8');
+      const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      assert(boardSource.includes('island-run-prototype__mission-phone-floating'), 'board renders the mission phone affordance');
+      assert(boardSource.includes("showIslandClearCelebrationFromAnywhere('island_001_assembly_and_landmarks_complete')"), 'completed mission and landmarks auto-open island clear');
+      assert(boardSource.includes('resolveIslandMissionTrackerPresentation'), 'board delegates phone progress to the canonical read model');
+      assert(!boardSource.includes('standardMissionCompletionPercent'), 'board no longer owns generic phone progress arithmetic');
+      assert(trackerSource.includes("objective('Use Dynamite'"), 'phone read model reports the short dynamite objective');
+      assert(trackerSource.includes("objective('Build Landmarks'"), 'phone read model reports the short landmark objective');
+      assert(modalSource.includes('island-mission-tracker__command-plate'), 'phone tracker uses the compact military command header');
+      assert(modalSource.includes('island-mission-tracker__command-frame'), 'military header carries a symmetrical inset metal frame and four fasteners');
+      assert(modalSource.includes('island-mission-tracker__command-insignia'), 'military header carries the shield-and-chevron insignia');
+      assert(modalSource.includes('island-mission-tracker__checklist'), 'phone tracker renders objectives as checklist rows');
+      assert(modalSource.includes('island-mission-tracker__objective-marker'), 'each short objective carries a visual progress marker');
+      assert(modalSource.includes('aria-label="Mission progress"'), 'phone tracker exposes accessible overall progress');
+      assert(boardSource.includes('/tech/ExpeditionPhone_v19_folded.webp'), 'the board affordance uses the folded phone hardware');
+      assert(modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker unfolds through the authored phone-opening sequence');
+      assert(modalSource.includes('data-phase={phase}'), 'the tracker exposes unfold, powered-on, and fold-back presentation phases');
+      assert(!modalSource.includes('Command council'), 'compact tracker removes the command-council information wall');
+      assert(!modalSource.includes('presentation.missionStatement'), 'compact tracker removes the long mission paragraph');
+      assert(!modalSource.includes('presentation.caretakerSignal'), 'compact tracker removes the caretaker quote');
+      assert(cssSource.includes('.island-run-prototype__mission-phone-floating'), 'phone affordance has its own lower-right presentation contract');
+      assert(cssSource.includes('.island-mission-tracker__phone'), 'tracker preserves the 3D board behind a physical phone presentation');
+      assert(cssSource.includes(".island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen"), 'the mission display powers on only after the phone fully unfolds');
+      assert(cssSource.includes('@keyframes island-mission-tracker-screen-boot'), 'the powered display has an authored black-screen ignition sequence');
+    },
+  },
+  {
+    name: 'First Light sanitizer and merge preserve unique pickups and monotonic excavation',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 1);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: {
+          mission_id: 'first-light-assembly-crater',
+          claimed_dynamite_tile_indices: [0, 1, 2, 2, 99],
+          charges_detonated: 2,
+          updated_at_ms: 10,
+        },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: {
+          mission_id: 'first-light-assembly-crater',
+          claimed_dynamite_tile_indices: [0, 1, 2, 3, 7],
+          charges_detonated: 4,
+          updated_at_ms: 20,
+        },
+      });
+      const progress = resolveFirstLightAssemblyCraterProgress({
+        ledger: mergeIslandRunSignatureMissionProgress(remote, local), islandNumber: 1, cycleIndex: 0,
+      });
+      assertEqual(progress.claimedDynamiteTileIndices.length, 5, 'valid unique cache claims are unioned');
+      assertEqual(progress.chargesDetonated, 4, 'furthest valid excavation wins');
+    },
+  },
   {
     name: 'Cactus Canyon distributes mostly single dynamite caches with rare triple bundles after mission start',
     run: () => {

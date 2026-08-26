@@ -8,6 +8,7 @@ export interface IslandRunTileRewardThreeRuntime {
   root: THREE.Group;
   animate: (elapsed: number, tokenIndex: number) => void;
   setCactusCanyonMissionStarted: (started: boolean) => void;
+  setFirstLightClaimedDynamiteTiles: (tileIndices: readonly number[]) => void;
 }
 
 function compactRewardToVertexColorMesh(root: THREE.Group, material: THREE.MeshStandardMaterial, name: string) {
@@ -59,6 +60,7 @@ export type IslandRunTileRewardObjectKind =
   | 'caretaker_card'
   | 'build_rush_hammer'
   | 'traffic_beacon'
+  | 'first_light_dynamite'
   | 'frostwell_drill'
   | 'rootheart_power_component'
   | 'cactus_canyon_dynamite'
@@ -67,6 +69,7 @@ export type IslandRunTileRewardObjectKind =
 export function resolveIslandRunTileRewardObjectKind(
   entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind'>,
 ): IslandRunTileRewardObjectKind | null {
+  if (entry.signatureMissionKind === 'first_light_dynamite') return 'first_light_dynamite';
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.signatureMissionKind === 'rootheart_power_component') return 'rootheart_power_component';
   if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
@@ -439,6 +442,11 @@ function createCactusCanyonDynamiteCache(
 
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
+  if (kind === 'first_light_dynamite') {
+    const cache = createCactusCanyonDynamiteCache(materials, quality, 1);
+    cache.name = 'ISLAND_RUN_TILE_OBJECT_FIRST_LIGHT_ASSEMBLY_DYNAMITE';
+    return cache;
+  }
   if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
   if (kind === 'rootheart_power_component') return createRootheartPowerComponent(materials, quality);
   if (kind === 'cactus_canyon_dynamite') {
@@ -501,7 +509,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
       compactStaticGeometry(visual, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
     }
     const baseY = transform.position[1] + (tileEntry.tileType === 'hazard' ? 0.26 : 0.46);
-    const baseScale = tileEntry.signatureMissionKind === 'frostwell_drill'
+    const baseScale = tileEntry.signatureMissionKind === 'first_light_dynamite'
+      ? 1.08
+      : tileEntry.signatureMissionKind === 'frostwell_drill'
       ? 1.08
       : tileEntry.signatureMissionKind === 'rootheart_power_component'
         ? 1.04
@@ -548,8 +558,13 @@ export function createIslandRunTileRewardThreeObjects(options: {
   });
 
   let cactusCanyonMissionStarted = true;
+  let firstLightClaimedDynamiteTiles = new Set<number>();
   const update = (elapsed: number, tokenIndex: number) => {
     entries.forEach((entry) => {
+      if (entry.signatureMissionKind === 'first_light_dynamite') {
+        entry.root.visible = !firstLightClaimedDynamiteTiles.has(entry.tileIndex);
+        if (!entry.root.visible) return;
+      }
       if (entry.signatureMissionKind === 'cactus_canyon_dynamite') {
         entry.root.visible = cactusCanyonMissionStarted;
         if (!cactusCanyonMissionStarted) return;
@@ -569,5 +584,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
     root,
     animate: update,
     setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
+    setFirstLightClaimedDynamiteTiles: (tileIndices) => {
+      firstLightClaimedDynamiteTiles = new Set(tileIndices);
+    },
   };
 }

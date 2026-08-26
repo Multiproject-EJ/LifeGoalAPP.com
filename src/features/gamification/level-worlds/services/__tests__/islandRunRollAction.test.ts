@@ -15,12 +15,16 @@ import {
 } from '../islandRunStateStore';
 import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import {
+  CELESTIAL_REDOCKING_ROLL_TARGET,
   FROSTWELL_DRILL_TILE_INDICES,
+  FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   getIslandRunSignatureMissionKey,
   resolveFrostwellIceworksProgress,
+  resolveFirstLightAssemblyCraterProgress,
   resolveCactusCanyonSpiralProgress,
+  resolveCelestialRedockingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from '../islandRunSignatureMissions';
@@ -78,6 +82,81 @@ async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Pro
 }
 
 export const islandRunRollActionTests: TestCase[] = [
+  {
+    name: 'Island 001 landing collects one finite Assembly Crater charge in the canonical roll commit',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 34,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+      });
+      assertEqual(FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES[0], 0, 'fixture lands on the first authored cache');
+      const first = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(first.newTokenIndex, 0, 'two steps wrap onto the first dynamite tile');
+      assertEqual(first.firstLightAssemblyDynamiteCollected, 1, 'landing surfaces one collected charge');
+      const firstProgress = resolveFirstLightAssemblyCraterProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 1,
+        cycleIndex: 0,
+      });
+      assertEqual(firstProgress.claimedDynamiteTileIndices.length, 1, 'pickup persists atomically with movement');
+
+      seedState({ tokenIndex: 34, dicePool: 30 });
+      const duplicate = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(duplicate.firstLightAssemblyDynamiteCollected, 0, 'revisiting the emptied cache cannot pay twice');
+    },
+  },
+  {
+    name: 'Island 002 roll action persists the twentieth re-docking turn and emits the fourth lock once',
+    run: async () => {
+      resetEnvironment();
+      const key = getIslandRunSignatureMissionKey(0, 2);
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 0,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        signatureMissionProgressByIsland: {
+          [key]: {
+            missionId: 'celestial-great-redocking',
+            version: 1,
+            rollsCompleted: 19,
+            completedAtMs: null,
+            updatedAtMs: 1,
+          },
+        },
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.status, 'ok', 'roll succeeds');
+      assertEqual(result.celestialRedockingRollsCompleted, CELESTIAL_REDOCKING_ROLL_TARGET, 'twentieth turn is returned');
+      assertEqual(result.celestialRedockingDockedPlatformIndex, 3, 'fourth platform lock edge is returned');
+      assertEqual(result.celestialRedockingBecameComplete, true, 'twentieth turn completes the mission');
+      const progress = resolveCelestialRedockingProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 2,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.rollsCompleted, CELESTIAL_REDOCKING_ROLL_TARGET, 'mission persists inside the canonical roll commit');
+
+      seedState({ tokenIndex: 2, dicePool: 30 });
+      const repeat = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(repeat.celestialRedockingDockedPlatformIndex, null, 'later rolls cannot replay a docking lock');
+      assertEqual(repeat.celestialRedockingBecameComplete, false, 'completion edge is idempotent');
+    },
+  },
   {
     name: 'Island 012 successful rolls advance the hinged treasure chamber exactly once',
     run: async () => {

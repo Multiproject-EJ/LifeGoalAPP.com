@@ -929,6 +929,55 @@
   outline-offset: 2px;
 }
 
+/* Expedition Phone mission uplink — stacked above the Compass in the same
+   lower-right thumb rail. The badge carries live mission completion. */
+.island-run-prototype__mission-phone-floating {
+  position: absolute;
+  right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 152px);
+  z-index: 18;
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 2px solid rgba(101, 225, 232, 0.9);
+  border-radius: 999px;
+  background: radial-gradient(circle at 45% 30%, rgba(234, 255, 255, 0.98), rgba(119, 222, 226, 0.9) 58%, rgba(19, 91, 112, 0.95));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.84), 0 8px 18px rgba(0, 0, 0, 0.3), 0 0 15px rgba(60, 223, 230, 0.22);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.island-run-prototype__mission-phone-floating img {
+  width: 28px;
+  height: 38px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(2, 20, 30, 0.45));
+}
+.island-run-prototype__mission-phone-floating > span {
+  position: absolute;
+  right: -7px;
+  top: -7px;
+  min-width: 24px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 2px solid #fff5c6;
+  border-radius: 999px;
+  color: #fff8d9;
+  background: #a32d29;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  font: 950 0.54rem/1 ui-sans-serif, system-ui, sans-serif;
+}
+.island-run-prototype__mission-phone-floating--complete > span { background: #21724f; }
+.island-run-prototype__mission-phone-floating:focus-visible {
+  outline: 2px solid rgba(255, 230, 147, 0.98);
+  outline-offset: 2px;
+}
+
 .island-run-prototype__footer {
   position: absolute;
   left: 0;
@@ -6133,6 +6182,666 @@
   }
 }
 
+/* ── Compact Expedition Phone mission tracker ─────────────────────── */
+.island-mission-tracker {
+  position: fixed;
+  inset: 0;
+  z-index: 12400;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding:
+    max(16px, env(safe-area-inset-top, 0px))
+    max(14px, env(safe-area-inset-right, 0px))
+    max(16px, env(safe-area-inset-bottom, 0px))
+    max(14px, env(safe-area-inset-left, 0px));
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(54, 225, 235, 0.1), transparent 36%),
+    rgba(0, 8, 15, 0.48);
+  backdrop-filter: blur(2.5px) saturate(0.92);
+  -webkit-backdrop-filter: blur(2.5px) saturate(0.92);
+  animation: island-stop-modal-backdrop-in 220ms ease-out both;
+}
+
+.island-mission-tracker__phone {
+  --mission-phone-launch-x: calc(50vw - max(16px, calc(env(safe-area-inset-right, 0px) + 16px)) - 23px);
+  --mission-phone-launch-y: calc(50dvh - clamp(12.75rem, 54vw, 22rem) - env(safe-area-inset-bottom, 0px) - 175px);
+  position: relative;
+  width: min(368px, 88vw, calc((100dvh - 34px) * 0.6949));
+  aspect-ratio: 656 / 944;
+  color: #f5fbfb;
+  transform-origin: 100% 100%;
+  filter:
+    drop-shadow(0 36px 44px rgba(0, 0, 0, 0.68))
+    drop-shadow(0 0 34px rgba(35, 213, 231, 0.2))
+    drop-shadow(-7px 5px 8px rgba(211, 145, 50, 0.08));
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone {
+  animation: island-mission-tracker-deploy 460ms cubic-bezier(0.18, 0.82, 0.22, 1) both;
+}
+
+.island-mission-tracker[data-phase='folding'] {
+  animation: island-mission-tracker-backdrop-out 320ms ease-in both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone {
+  animation: island-mission-tracker-retract 320ms cubic-bezier(0.58, 0, 0.82, 0.18) both;
+}
+
+.island-mission-tracker__phone-opening,
+.island-mission-tracker__phone-hardware {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.island-mission-tracker__phone-opening {
+  opacity: 0;
+  object-fit: contain;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone-opening {
+  opacity: 1;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone-hardware {
+  opacity: 0;
+}
+
+.island-mission-tracker__phone-screen {
+  position: absolute;
+  z-index: 2;
+  top: 6.4%;
+  right: 7.6%;
+  bottom: 8.1%;
+  left: 7.6%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: clamp(34px, 5.3dvh, 47px) clamp(15px, 4.4vw, 24px) clamp(19px, 3.2dvh, 27px);
+  overflow: hidden;
+  border-radius: 8% / 5.5%;
+  background: #000;
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.36);
+  isolation: isolate;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen,
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone-screen {
+  opacity: 1;
+}
+
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen {
+  pointer-events: auto;
+  animation: island-mission-tracker-screen-boot 520ms ease-out both;
+}
+
+.island-mission-tracker__phone-screen > * {
+  opacity: 0;
+}
+
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen > * {
+  animation: island-mission-tracker-visuals-online 420ms 210ms ease-out both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone-screen > * {
+  opacity: 1;
+}
+
+.island-mission-tracker__phone-screen::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -24%;
+  right: -10%;
+  left: -10%;
+  height: 17%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(59, 224, 234, 0.065), transparent);
+  opacity: 0;
+}
+
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen::before {
+  animation: island-mission-tracker-scan 7s 520ms linear infinite;
+}
+
+.island-mission-tracker__phone-screen::after {
+  content: '';
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  pointer-events: none;
+  background: #a9fbff;
+  box-shadow: 0 0 8px #5cecf4, 0 0 24px rgba(64, 230, 240, 0.72);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen::after {
+  animation: island-mission-tracker-ignition-line 430ms ease-out both;
+}
+
+.island-mission-tracker__close {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  z-index: 5;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0 0 2px;
+  border: 1px solid rgba(229, 192, 112, 0.5);
+  border-radius: 50%;
+  color: #e8eee9;
+  background:
+    radial-gradient(circle at 50% 48%, transparent 56%, rgba(221, 171, 76, 0.18) 57% 61%, transparent 62%),
+    linear-gradient(180deg, rgba(75, 82, 84, 0.96), rgba(19, 26, 30, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -2px 5px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.4);
+  font-size: 1.15rem;
+  font-weight: 850;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.island-mission-tracker__close:hover,
+.island-mission-tracker__close:focus-visible {
+  outline: none;
+  color: #fff;
+  border-color: #f0c56e;
+  box-shadow: 0 0 0 3px rgba(50, 222, 232, 0.22), 0 5px 14px rgba(0, 0, 0, 0.42);
+}
+
+.island-mission-tracker__close:disabled {
+  pointer-events: none;
+}
+
+.island-mission-tracker__command-plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 122px;
+  padding: 47px 24px 18px;
+  border: 1px solid rgba(177, 186, 185, 0.88);
+  background:
+    linear-gradient(90deg, transparent 14%, #6d4a1d 14% 17%, #e0aa4c 17% 83%, #6d4a1d 83% 86%, transparent 86%) bottom 8px center / 100% 2px no-repeat,
+    linear-gradient(90deg, transparent 19%, #6d4a1d 19% 22%, #d89f43 22% 78%, #6d4a1d 78% 81%, transparent 81%) top 8px center / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(90deg,
+      #202629 0%,
+      #626a6a 7%,
+      #343b3d 15%,
+      #4d5556 27%,
+      #22282a 42%,
+      #121719 49%,
+      #121719 51%,
+      #22282a 58%,
+      #4d5556 73%,
+      #343b3d 85%,
+      #626a6a 93%,
+      #202629 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.36),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.68),
+    inset 8px 0 12px rgba(255, 255, 255, 0.05),
+    inset -8px 0 12px rgba(255, 255, 255, 0.05),
+    inset 0 0 0 4px rgba(7, 12, 14, 0.32),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.38),
+    0 11px 20px rgba(0, 0, 0, 0.46),
+    0 0 20px rgba(210, 153, 59, 0.07);
+  clip-path: polygon(8% 0, 92% 0, 100% 16%, 100% 84%, 92% 100%, 8% 100%, 0 84%, 0 16%);
+}
+
+.island-mission-tracker__command-plate::before,
+.island-mission-tracker__command-plate::after {
+  content: '';
+  position: absolute;
+  top: 21%;
+  bottom: 21%;
+  width: 10px;
+  border: 1px solid rgba(177, 186, 185, 0.52);
+  background:
+    linear-gradient(90deg, #151a1c, #737b7a 45%, #272d2f 55%, #111618),
+    #333a3c;
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.22),
+    inset -1px 0 0 rgba(0, 0, 0, 0.7),
+    0 0 0 2px rgba(7, 11, 13, 0.32);
+}
+
+.island-mission-tracker__command-plate::before {
+  left: 6px;
+  clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 88%);
+}
+
+.island-mission-tracker__command-plate::after {
+  right: 6px;
+  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
+  transform: scaleX(-1);
+}
+
+.island-mission-tracker__command-frame {
+  position: absolute;
+  z-index: 1;
+  inset: 7px 12px;
+  pointer-events: none;
+  border: 1px solid rgba(202, 211, 210, 0.35);
+  background:
+    linear-gradient(90deg, rgba(236, 246, 244, 0.2), transparent 15% 85%, rgba(236, 246, 244, 0.2)) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.56),
+    0 0 0 1px rgba(221, 168, 73, 0.18);
+  clip-path: polygon(6% 0, 94% 0, 100% 12%, 100% 88%, 94% 100%, 6% 100%, 0 88%, 0 12%);
+}
+
+.island-mission-tracker__command-frame::before,
+.island-mission-tracker__command-frame::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 22%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 170, 76, 0.68));
+}
+
+.island-mission-tracker__command-frame::before { left: 6%; }
+
+.island-mission-tracker__command-frame::after {
+  right: 6%;
+  background: linear-gradient(90deg, rgba(224, 170, 76, 0.68), transparent);
+}
+
+.island-mission-tracker__command-frame > i {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #9ba2a1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 30%, #f4f7f5 0 12%, #969d9c 14% 31%, #3e4546 34% 57%, #111619 60%),
+    #3d4445;
+  box-shadow:
+    0 0 0 2px rgba(9, 13, 15, 0.72),
+    0 0 0 3px rgba(211, 160, 69, 0.24),
+    0 2px 3px rgba(0, 0, 0, 0.52);
+}
+
+.island-mission-tracker__command-frame > i:nth-child(1) { top: 7px; left: 8px; }
+.island-mission-tracker__command-frame > i:nth-child(2) { top: 7px; right: 8px; }
+.island-mission-tracker__command-frame > i:nth-child(3) { bottom: 7px; left: 8px; }
+.island-mission-tracker__command-frame > i:nth-child(4) { right: 8px; bottom: 7px; }
+
+.island-mission-tracker__command-insignia {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 98px;
+  height: 39px;
+  display: grid;
+  grid-template-columns: 1fr 27px 1fr;
+  align-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+  z-index: 2;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+}
+
+.island-mission-tracker__command-insignia > i {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8a642d 36%, #e2ad50);
+  box-shadow: 0 4px 0 rgba(210, 154, 61, 0.38);
+  transform: skewX(-25deg);
+}
+
+.island-mission-tracker__command-insignia > i:last-child {
+  background: linear-gradient(90deg, #e2ad50, #8a642d 64%, transparent);
+  transform: skewX(25deg);
+}
+
+.island-mission-tracker__command-insignia svg {
+  width: 27px;
+  height: 30px;
+  overflow: visible;
+}
+
+.island-mission-tracker__insignia-shield {
+  fill: #202729;
+  stroke: #e4b15a;
+  stroke-width: 2.4;
+}
+
+.island-mission-tracker__insignia-chevron {
+  fill: #dda647;
+}
+
+.island-mission-tracker__command-plate h2 {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  margin: 0;
+  color: #e9ece7;
+  background: linear-gradient(180deg, #ffffff 0%, #c5ccca 37%, #737b7b 51%, #f1f4f1 66%, #a8afad 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(1.34rem, 6.9vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  line-height: 0.96;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.58),
+    0 3px 0 #070a0b,
+    0 5px 5px rgba(0, 0, 0, 0.46),
+    0 0 16px rgba(232, 236, 230, 0.12);
+  text-wrap: balance;
+}
+
+.island-mission-tracker__checklist {
+  flex: 1 1 auto;
+  display: grid;
+  align-content: center;
+  gap: 9px;
+  min-height: 0;
+  margin: 0;
+  padding: 13px 2px 8px;
+  list-style: none;
+}
+
+.island-mission-tracker__checklist li {
+  position: relative;
+  min-width: 0;
+  min-height: 65px;
+  display: grid;
+  grid-template-columns: 43px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid rgba(92, 187, 196, 0.2);
+  border-left-color: rgba(215, 160, 64, 0.64);
+  border-radius: 5px;
+  color: #f3f8f6;
+  background:
+    linear-gradient(90deg, rgba(212, 154, 57, 0.07), transparent 19%),
+    linear-gradient(180deg, rgba(12, 31, 43, 0.78), rgba(4, 18, 30, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -7px 12px rgba(0, 0, 0, 0.18),
+    0 5px 12px rgba(0, 0, 0, 0.18);
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+}
+
+.island-mission-tracker__checklist li::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #c9943b;
+  box-shadow: 0 0 6px rgba(224, 169, 73, 0.5);
+}
+
+.island-mission-tracker__objective-marker {
+  --mission-objective-progress: 0deg;
+  width: 39px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #8ad9df;
+  background: conic-gradient(#dca64b var(--mission-objective-progress), rgba(90, 181, 190, 0.28) 0);
+  box-shadow: 0 0 0 1px rgba(115, 205, 211, 0.22), 0 0 13px rgba(48, 202, 215, 0.09);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.island-mission-tracker__objective-marker > span {
+  width: 31px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(97, 201, 209, 0.22);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 45% 36%, rgba(60, 136, 147, 0.22), transparent 45%),
+    #051723;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+.island-mission-tracker__objective-marker svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  filter: drop-shadow(0 0 4px rgba(81, 216, 226, 0.23));
+}
+
+.island-mission-tracker__objective-marker .island-mission-tracker__objective-glyph--demolition {
+  fill: #dc7950;
+  filter: drop-shadow(0 0 4px rgba(220, 121, 80, 0.3));
+}
+
+.island-mission-tracker__objective-marker .island-mission-tracker__glyph-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+
+.island-mission-tracker__objective-marker .island-mission-tracker__glyph-spark {
+  fill: #e0aa4c;
+}
+
+.island-mission-tracker__objective-marker .island-mission-tracker__glyph-band {
+  fill: #071c26;
+}
+
+.island-mission-tracker__objective-marker .island-mission-tracker__glyph-cutout {
+  fill: none;
+  stroke: #061822;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+}
+
+.island-mission-tracker__objective-copy {
+  min-width: 0;
+}
+
+.island-mission-tracker__objective-copy > strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #f2f7f5;
+  font-size: clamp(0.84rem, 3.8vw, 1rem);
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-mission-tracker__objective-count {
+  color: #d8e8e7;
+  font-size: clamp(0.75rem, 3.3vw, 0.9rem);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-mission-tracker__checklist-item--complete .island-mission-tracker__objective-marker {
+  color: #092118;
+  background: #78d992;
+  box-shadow: 0 0 14px rgba(102, 216, 140, 0.24);
+}
+
+.island-mission-tracker__checklist-item--complete .island-mission-tracker__objective-marker > span {
+  border-color: rgba(210, 255, 217, 0.5);
+  background: linear-gradient(180deg, #c0f4c8, #69c985);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.island-mission-tracker__checklist-item--complete .island-mission-tracker__objective-copy > strong,
+.island-mission-tracker__checklist-item--complete .island-mission-tracker__objective-count {
+  color: #aee5bc !important;
+}
+
+.island-mission-tracker__overall {
+  display: grid;
+  gap: 9px;
+  padding: 11px 4px 3px;
+  border-top: 1px solid rgba(211, 159, 67, 0.23);
+}
+
+.island-mission-tracker__overall > span:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.island-mission-tracker__overall small {
+  color: #79e6ec;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.island-mission-tracker__overall strong {
+  color: #f0c76f;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-mission-tracker__overall-track {
+  position: relative;
+  height: 10px;
+  display: block;
+  overflow: hidden;
+  border: 1px solid rgba(201, 153, 68, 0.64);
+  border-radius: 3px;
+  background: rgba(1, 12, 20, 0.92);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.76), 0 0 10px rgba(40, 211, 223, 0.1);
+}
+
+.island-mission-tracker__overall-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(3, 13, 20, 0.78) calc(10% - 1px) 10%);
+}
+
+.island-mission-tracker__overall-track > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #24cbd5, #68edf0 72%, #f0c25d);
+  box-shadow: 0 0 13px rgba(72, 225, 232, 0.48);
+  transition: width 420ms ease;
+}
+
+@keyframes island-mission-tracker-scan {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: 0.7; }
+  100% { transform: translateY(760%); opacity: 0; }
+}
+
+@keyframes island-mission-tracker-deploy {
+  0% {
+    transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.12) rotate(-7deg);
+    opacity: 0.35;
+  }
+  58% { opacity: 1; }
+  78% { transform: translate3d(0, 0, 0) scale(1.025) rotate(0deg); }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes island-mission-tracker-retract {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  100% {
+    transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.12) rotate(-7deg);
+    opacity: 0;
+  }
+}
+
+@keyframes island-mission-tracker-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes island-mission-tracker-screen-boot {
+  0%, 18% {
+    color: transparent;
+    background: #000;
+    box-shadow: inset 0 0 30px #000;
+  }
+  42% {
+    background: #001015;
+    box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.88), inset 0 0 12px rgba(89, 240, 246, 0.08);
+  }
+  100% {
+    color: #f5fbfb;
+    background:
+      linear-gradient(90deg, transparent 49.7%, rgba(73, 225, 235, 0.055) 50%, transparent 50.3%),
+      linear-gradient(0deg, transparent 49.7%, rgba(73, 225, 235, 0.032) 50%, transparent 50.3%),
+      repeating-linear-gradient(0deg, transparent 0 22px, rgba(65, 168, 181, 0.025) 22px 23px),
+      repeating-linear-gradient(90deg, transparent 0 22px, rgba(65, 168, 181, 0.02) 22px 23px),
+      radial-gradient(circle at 50% 26%, rgba(31, 153, 168, 0.17), transparent 47%),
+      linear-gradient(180deg, #061923, #020a15);
+    box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.36), inset 0 0 9px rgba(74, 227, 236, 0.08);
+  }
+}
+
+@keyframes island-mission-tracker-ignition-line {
+  0%, 12% { width: 0; opacity: 0; }
+  28% { width: 76%; opacity: 1; }
+  58% { width: 100%; height: 2px; opacity: 0.92; }
+  100% { width: 100%; height: 100%; opacity: 0; }
+}
+
+@keyframes island-mission-tracker-visuals-online {
+  from { opacity: 0; transform: translateY(7px); filter: brightness(1.8); }
+  to { opacity: 1; transform: translateY(0); filter: brightness(1); }
+}
+
+@media (max-height: 560px) {
+  .island-mission-tracker__phone-screen { padding-top: 27px; padding-bottom: 15px; }
+  .island-mission-tracker__command-plate { min-height: 94px; padding: 39px 21px 13px; }
+  .island-mission-tracker__checklist { padding-block: 5px 3px; }
+  .island-mission-tracker__checklist li { min-height: 50px; }
+  .island-mission-tracker__overall { gap: 5px; padding-top: 5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-mission-tracker,
+  .island-mission-tracker__phone,
+  .island-mission-tracker__phone-screen::before,
+  .island-mission-tracker__overall-track > i { animation: none; transition: none; }
+  .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-hardware,
+  .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen,
+  .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen > * { opacity: 1; }
+  .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen::after { display: none; }
+}
+
 /* ── Cycle-scoped first-lap diplomatic mission briefing ──────────────── */
 .island-mission-briefing {
   position: fixed;
@@ -6196,7 +6905,11 @@
     0 0 0 6px rgba(4, 31, 42, 0.78),
     0 0 54px rgba(44, 219, 235, 0.18),
     inset 0 0 60px rgba(44, 219, 235, 0.07);
-  animation: island-stop-modal-enter 420ms cubic-bezier(0.2, 1, 0.3, 1) both;
+  /* Do not retain the keyframe transform after entry. A retained identity
+     transform keeps this large portal panel on a separate compositor layer,
+     which can disappear in Safari/Chromium captures (and on some mobile GPU
+     paths) even though the dialog remains interactive. */
+  animation: island-stop-modal-enter 420ms cubic-bezier(0.2, 1, 0.3, 1);
 }
 
 .island-mission-briefing__panel::before {
@@ -6426,6 +7139,47 @@
 .island-mission-briefing__objectives article:nth-child(3) { border-left-color: #8bcf73; }
 .island-mission-briefing__objectives small { color: #8adbd8; font-size: 0.55rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
 .island-mission-briefing__objectives strong { color: #edf8f5; font-size: clamp(0.66rem, 1.6vw, 0.76rem); line-height: 1.25; }
+
+.island-mission-briefing__progress {
+  display: grid;
+  gap: 7px;
+  padding: 10px 11px;
+  border: 1px solid rgba(113, 231, 224, 0.2);
+  border-radius: 16px;
+  background: rgba(3, 24, 33, 0.68);
+}
+.island-mission-briefing__progress > p {
+  margin: 0;
+  color: #f1d382;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.island-mission-briefing__progress article { display: grid; gap: 5px; }
+.island-mission-briefing__progress article > span:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.island-mission-briefing__progress strong { color: #eaf9f7; font-size: 0.67rem; }
+.island-mission-briefing__progress small { color: #8ce8df; font-size: 0.58rem; font-weight: 850; }
+.island-mission-briefing__progress-track {
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 222, 217, 0.25);
+  border-radius: 999px;
+  background: rgba(1, 13, 20, 0.88);
+}
+.island-mission-briefing__progress-track > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3fd5d0, #ffe092);
+  box-shadow: 0 0 9px rgba(90, 229, 217, 0.48);
+  transition: width 420ms ease;
+}
 
 .island-mission-briefing__command { grid-area: command; position: relative; z-index: 2; display: grid; gap: 7px; }
 .island-mission-briefing__officers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
@@ -23171,6 +23925,57 @@
 @keyframes cactus-canyon-charge-rattle { 0%, 100% { transform: translate(0); } 50% { transform: translate(1px, -1px) rotate(.5deg); } }
 @keyframes cactus-canyon-fuse-spark { from { transform: scale(.7); opacity: 1; } to { transform: translate(5px, -6px) scale(1.5); opacity: 0; } }
 
+.island-run-board__signature-mission-pill--assembly-crater {
+  border-color: rgba(255, 216, 128, .82);
+  background: linear-gradient(135deg, rgba(31, 58, 96, .94), rgba(100, 62, 28, .94));
+}
+
+.first-light-assembly-modal {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(80, 154, 214, .2), transparent 34%),
+    linear-gradient(160deg, #162c50, #2e251d 72%);
+}
+
+.first-light-assembly-modal .frostwell-mission-modal__eyebrow { color: #ffd77e; }
+.first-light-assembly-modal .frostwell-mission-modal__lede { color: #e6edf8; }
+
+.first-light-assembly-modal__sector-ring {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  margin: 10px auto 14px;
+  border: 8px solid rgba(216, 231, 242, .2);
+  border-radius: 50%;
+  background: radial-gradient(circle, #d9b65d 0 11%, #264b77 12% 25%, #111b2a 26% 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 223, 147, .35), 0 12px 30px rgba(5, 10, 20, .42);
+}
+
+.first-light-assembly-modal__sector-ring > i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 17px;
+  margin: -8px 0 0 -2px;
+  border-radius: 3px;
+  background: #453124;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08);
+  transform-origin: 2px 8px;
+}
+
+.first-light-assembly-modal__sector-ring > i.is-open {
+  background: #76c8ef;
+  box-shadow: 0 0 8px rgba(118, 200, 239, .9);
+}
+
+.first-light-assembly-modal__sector-ring > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+}
+
 @keyframes cactus-canyon-rail-build {
   from { filter: brightness(1) drop-shadow(0 1px 1px rgba(20, 8, 4, .6)); }
   to { filter: brightness(1.8) drop-shadow(0 0 8px rgba(255, 191, 70, .95)); }
@@ -24166,6 +24971,7 @@
 .island-run-prototype--build-exclusive .island-run-prototype__best-next-action-chip,
 .island-run-prototype--build-exclusive .island-run-board__dice-roll-overlay,
 .island-run-prototype--build-exclusive .island-run-prototype__camera-reset-floating,
+.island-run-prototype--build-exclusive .island-run-prototype__mission-phone-floating,
 .island-run-prototype--build-exclusive .island-run-prototype__compass-floating,
 .island-run-prototype--build-exclusive .island-run-prototype__footer,
 .island-run-prototype--build-exclusive .island-run-landmark-coachmark,
@@ -24386,6 +25192,7 @@
 .island-run-prototype--arena-battle .island-run-prototype__best-next-action-chip,
 .island-run-prototype--arena-battle .island-run-landmark-coachmark,
 .island-run-prototype--arena-battle .island-run-prototype__camera-reset-floating,
+.island-run-prototype--arena-battle .island-run-prototype__mission-phone-floating,
 .island-run-prototype--arena-battle .island-run-prototype__compass-floating,
 .island-run-prototype--arena-battle .island-run-prototype__footer,
 .island-run-prototype--arena-battle .island-run-board__three-preview-badge,

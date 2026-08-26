@@ -88,8 +88,10 @@ import {
 } from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 import {
+  advanceCelestialRedockingForRoll,
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
+  collectFirstLightAssemblyDynamiteForLanding,
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
@@ -245,6 +247,8 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
+  /** One finite Island 001 Assembly Crater stick collected by this landing. */
+  firstLightAssemblyDynamiteCollected?: number;
   /** Canonical number of dynamite sticks collected on this Island 013 landing. */
   cactusCanyonDynamiteCollected?: number;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
@@ -259,6 +263,12 @@ export interface IslandRunRollActionResult {
   sunkenSandsTreasureRollsCompleted?: number;
   /** True only for the twentieth roll that makes the first treasure claimable. */
   sunkenSandsTreasureBecameReady?: boolean;
+  /** Canonical Island 002 roll count after this accepted roll. */
+  celestialRedockingRollsCompleted?: number;
+  /** Zero-based platform index locked on this exact 5/10/15/20-roll milestone. */
+  celestialRedockingDockedPlatformIndex?: number | null;
+  /** True only for the twentieth accepted roll that locks the fourth platform. */
+  celestialRedockingBecameComplete?: boolean;
   /**
    * Cycle-scoped first-lap briefing beat crossed by this roll. Presentation
    * opens only after the authoritative hop animation and any higher-priority
@@ -432,15 +442,24 @@ async function performRollAction(options: {
         islandNumber: state.currentIslandNumber,
       })
     : null;
-  const frostwellLanding = ordinaryTileGameplayActive
-    ? grantFrostwellDrillSpinForLanding({
+  const firstLightAssemblyLanding = ordinaryTileGameplayActive
+    ? collectFirstLightAssemblyDynamiteForLanding({
         ledger: state.signatureMissionProgressByIsland,
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,
         tileIndex: newTokenIndex,
         nowMs,
       })
-    : { ledger: state.signatureMissionProgressByIsland, granted: false };
+    : { ledger: state.signatureMissionProgressByIsland, dynamiteCollected: 0 };
+  const frostwellLanding = ordinaryTileGameplayActive
+    ? grantFrostwellDrillSpinForLanding({
+        ledger: firstLightAssemblyLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        nowMs,
+      })
+    : { ledger: firstLightAssemblyLanding.ledger, granted: false };
   const rootheartLanding = ordinaryTileGameplayActive
     ? collectRootheartPowerComponentForLanding({
         ledger: frostwellLanding.ledger,
@@ -487,8 +506,14 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: missionStartedLedger, dynamiteCollected: 0 };
-  const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
+  const celestialRedockingRoll = advanceCelestialRedockingForRoll({
     ledger: cactusCanyonLanding.ledger,
+    islandNumber: state.currentIslandNumber,
+    cycleIndex: state.cycleIndex,
+    nowMs,
+  });
+  const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
+    ledger: celestialRedockingRoll.ledger,
     islandNumber: state.currentIslandNumber,
     cycleIndex: state.cycleIndex,
     nowMs,
@@ -567,11 +592,15 @@ async function performRollAction(options: {
     ordinaryTileGameplayActive,
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
+    firstLightAssemblyDynamiteCollected: firstLightAssemblyLanding.dynamiteCollected,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
     sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,
     sunkenSandsTreasureBecameReady: sunkenSandsTreasureRoll.becameReady,
+    celestialRedockingRollsCompleted: celestialRedockingRoll.rollsCompleted,
+    celestialRedockingDockedPlatformIndex: celestialRedockingRoll.dockedPlatformIndex,
+    celestialRedockingBecameComplete: celestialRedockingRoll.becameComplete,
     missionBriefingTrigger,
     livingTicketPickup: livingTicketLanding.pickup,
   };

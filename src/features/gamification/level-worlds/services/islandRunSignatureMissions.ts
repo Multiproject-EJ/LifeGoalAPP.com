@@ -7,6 +7,11 @@ export const FROSTWELL_BASE_TECH_COST = 1_000;
 export const FROSTWELL_DRILL_TILE_INDICES = Object.freeze([8, 17, 27] as const);
 export const FROSTWELL_SPIN_METERS = Object.freeze([15, 20, 25, 30, 40, 50, 60, 75] as const);
 
+export const CELESTIAL_REDOCKING_ISLAND_NUMBER = 2;
+export const CELESTIAL_REDOCKING_ROLL_TARGET = 20;
+export const CELESTIAL_REDOCKING_PLATFORM_COUNT = 4;
+export const CELESTIAL_REDOCKING_ROLLS_PER_PLATFORM = 5;
+
 export const ROOTHEART_ISLAND_NUMBER = 10;
 export const ROOTHEART_POWERWORKS_MAX_STAGE = 3;
 export const ROOTHEART_POWERWORKS_BASE_STAGE_COSTS = Object.freeze([600, 900, 1_500] as const);
@@ -31,6 +36,18 @@ export const SUNKEN_SANDS_FIRST_TREASURE_NAME = 'Sunscarab Token';
 export const SUNKEN_SANDS_FIRST_TREASURE_DICE = 25;
 export const SUNKEN_SANDS_FIRST_TREASURE_BASE_ESSENCE = 120;
 
+export const FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER = 1;
+export const FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET = 20;
+/**
+ * Twenty distinct cache positions for the 36-tile production ring. They avoid
+ * the four canonical landmark-door indices (5, 14, 23, 32) and the Traffic
+ * Light at 19. Each cache is a finite, collect-once mission pickup.
+ */
+export const FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES = Object.freeze([
+  0, 1, 2, 3, 7, 8, 9, 10, 11, 12,
+  16, 17, 18, 20, 21, 25, 26, 27, 28, 29,
+] as const);
+
 export const CACTUS_CANYON_ISLAND_NUMBER = 13;
 export const CACTUS_CANYON_SPIRAL_MAX_SEGMENTS = 16;
 /**
@@ -51,6 +68,14 @@ export interface FrostwellIceworksProgress {
   spinsUsed: number;
   lastSpinMeters: number | null;
   builtAtMs: number | null;
+  updatedAtMs: number;
+}
+
+export interface CelestialRedockingProgress {
+  missionId: 'celestial-great-redocking';
+  version: 1;
+  rollsCompleted: number;
+  completedAtMs: number | null;
   updatedAtMs: number;
 }
 
@@ -86,10 +111,23 @@ export interface CactusCanyonSpiralProgress {
   updatedAtMs: number;
 }
 
+export interface FirstLightAssemblyCraterProgress {
+  missionId: 'first-light-assembly-crater';
+  version: 1;
+  claimedDynamiteTileIndices: number[];
+  chargesDetonated: number;
+  lastDetonatedSector: number | null;
+  startedAtMs: number | null;
+  completedAtMs: number | null;
+  updatedAtMs: number;
+}
+
 export type IslandRunSignatureMissionProgress =
+  | CelestialRedockingProgress
   | FrostwellIceworksProgress
   | RootheartPowerworksProgress
   | SunkenSandsTreasureProgress
+  | FirstLightAssemblyCraterProgress
   | CactusCanyonSpiralProgress;
 export type IslandRunSignatureMissionProgressByIsland = Record<string, IslandRunSignatureMissionProgress>;
 
@@ -124,6 +162,62 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'celestial-great-redocking' || record.mission_id === 'celestial-great-redocking') {
+      const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
+      const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
+      const rollsCompleted = Math.max(0, Math.min(
+        CELESTIAL_REDOCKING_ROLL_TARGET,
+        finiteInteger(record.rollsCompleted ?? record.rolls_completed),
+      ));
+      result[key] = {
+        missionId: 'celestial-great-redocking',
+        version: 1,
+        rollsCompleted,
+        completedAtMs: typeof completedAtRaw === 'number' && Number.isFinite(completedAtRaw)
+          ? Math.max(0, completedAtRaw)
+          : rollsCompleted >= CELESTIAL_REDOCKING_ROLL_TARGET ? 0 : null,
+        updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+          ? Math.max(0, updatedAtRaw)
+          : 0,
+      };
+      return;
+    }
+    if (record.missionId === 'first-light-assembly-crater' || record.mission_id === 'first-light-assembly-crater') {
+      const claimedRaw = record.claimedDynamiteTileIndices ?? record.claimed_dynamite_tile_indices;
+      const claimedDynamiteTileIndices = Array.isArray(claimedRaw)
+        ? FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.filter((tileIndex) => (
+            claimedRaw.some((candidate) => finiteInteger(candidate, -1) === tileIndex)
+          ))
+        : [];
+      const chargesDetonated = Math.max(0, Math.min(
+        claimedDynamiteTileIndices.length,
+        FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+        finiteInteger(record.chargesDetonated ?? record.charges_detonated),
+      ));
+      const startedAtRaw = record.startedAtMs ?? record.started_at_ms;
+      const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
+      const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
+      const lastSectorRaw = record.lastDetonatedSector ?? record.last_detonated_sector;
+      result[key] = {
+        missionId: 'first-light-assembly-crater',
+        version: 1,
+        claimedDynamiteTileIndices,
+        chargesDetonated,
+        lastDetonatedSector: typeof lastSectorRaw === 'number' && Number.isFinite(lastSectorRaw)
+          ? Math.max(0, Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET - 1, Math.floor(lastSectorRaw)))
+          : null,
+        startedAtMs: typeof startedAtRaw === 'number' && Number.isFinite(startedAtRaw)
+          ? Math.max(0, startedAtRaw)
+          : claimedDynamiteTileIndices.length > 0 ? 0 : null,
+        completedAtMs: typeof completedAtRaw === 'number' && Number.isFinite(completedAtRaw)
+          ? Math.max(0, completedAtRaw)
+          : chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 0 : null,
+        updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+          ? Math.max(0, updatedAtRaw)
+          : 0,
+      };
+      return;
+    }
     if (record.missionId === 'cactus-canyon-spiral-rail' || record.mission_id === 'cactus-canyon-spiral-rail') {
       const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
       const startedAtRaw = record.startedAtMs ?? record.started_at_ms;
@@ -256,6 +350,34 @@ export function resolveFrostwellIceworksProgress(options: {
   };
 }
 
+export function resolveCelestialRedockingProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): CelestialRedockingProgress {
+  const key = getIslandRunSignatureMissionKey(
+    options.cycleIndex,
+    options.islandNumber ?? CELESTIAL_REDOCKING_ISLAND_NUMBER,
+  );
+  const current = options.ledger[key];
+  return current?.missionId === 'celestial-great-redocking' ? current : {
+    missionId: 'celestial-great-redocking',
+    version: 1,
+    rollsCompleted: 0,
+    completedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
+export function getCelestialRedockingDockedPlatformCount(
+  progress: Pick<CelestialRedockingProgress, 'rollsCompleted'>,
+): number {
+  return Math.max(0, Math.min(
+    CELESTIAL_REDOCKING_PLATFORM_COUNT,
+    Math.floor(progress.rollsCompleted / CELESTIAL_REDOCKING_ROLLS_PER_PLATFORM),
+  ));
+}
+
 export function resolveRootheartPowerworksProgress(options: {
   ledger: IslandRunSignatureMissionProgressByIsland;
   cycleIndex: number;
@@ -309,6 +431,79 @@ export function resolveCactusCanyonSpiralProgress(options: {
     startedAtMs: null,
     completedAtMs: null,
     updatedAtMs: 0,
+  };
+}
+
+export function resolveFirstLightAssemblyCraterProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): FirstLightAssemblyCraterProgress {
+  const key = getIslandRunSignatureMissionKey(
+    options.cycleIndex,
+    options.islandNumber ?? FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
+  );
+  const current = options.ledger[key];
+  return current?.missionId === 'first-light-assembly-crater' ? current : {
+    missionId: 'first-light-assembly-crater',
+    version: 1,
+    claimedDynamiteTileIndices: [],
+    chargesDetonated: 0,
+    lastDetonatedSector: null,
+    startedAtMs: null,
+    completedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
+export function isFirstLightAssemblyDynamiteTile(islandNumber: number, tileIndex: number): boolean {
+  return islandNumber === FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
+    && FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.includes(
+      tileIndex as typeof FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES[number],
+    );
+}
+
+export function getFirstLightAssemblyAvailableDynamite(progress: FirstLightAssemblyCraterProgress): number {
+  return Math.max(0, progress.claimedDynamiteTileIndices.length - progress.chargesDetonated);
+}
+
+export function getFirstLightAssemblyBuildProgress(progress: FirstLightAssemblyCraterProgress): number {
+  return Math.max(0, Math.min(1, progress.chargesDetonated / FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET));
+}
+
+export function collectFirstLightAssemblyDynamiteForLanding(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  tileIndex: number;
+  nowMs: number;
+}): { ledger: IslandRunSignatureMissionProgressByIsland; dynamiteCollected: number } {
+  if (!isFirstLightAssemblyDynamiteTile(options.islandNumber, options.tileIndex)) {
+    return { ledger: options.ledger, dynamiteCollected: 0 };
+  }
+  const current = resolveFirstLightAssemblyCraterProgress(options);
+  if (
+    current.completedAtMs !== null
+    || current.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+    || current.claimedDynamiteTileIndices.includes(options.tileIndex)
+  ) {
+    return { ledger: options.ledger, dynamiteCollected: 0 };
+  }
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  const claimedDynamiteTileIndices = FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.filter((tileIndex) => (
+    current.claimedDynamiteTileIndices.includes(tileIndex) || tileIndex === options.tileIndex
+  ));
+  return {
+    dynamiteCollected: 1,
+    ledger: {
+      ...options.ledger,
+      [key]: {
+        ...current,
+        claimedDynamiteTileIndices,
+        startedAtMs: current.startedAtMs ?? options.nowMs,
+        updatedAtMs: options.nowMs,
+      },
+    },
   };
 }
 
@@ -400,6 +595,60 @@ export function getSunkenSandsTreasureRevealProgress(progress: SunkenSandsTreasu
 export function getSunkenSandsTreasureEssenceReward(cycleIndex: number): number {
   const effectiveIsland = getEffectiveIslandNumber(SUNKEN_SANDS_ISLAND_NUMBER, cycleIndex);
   return Math.round(SUNKEN_SANDS_FIRST_TREASURE_BASE_ESSENCE * getIslandEssenceMultiplier(effectiveIsland));
+}
+
+export function advanceCelestialRedockingForRoll(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  nowMs: number;
+}): {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  rollsCompleted: number;
+  dockedPlatformCount: number;
+  dockedPlatformIndex: number | null;
+  becameComplete: boolean;
+} {
+  if (options.islandNumber !== CELESTIAL_REDOCKING_ISLAND_NUMBER) {
+    return {
+      ledger: options.ledger,
+      rollsCompleted: 0,
+      dockedPlatformCount: 0,
+      dockedPlatformIndex: null,
+      becameComplete: false,
+    };
+  }
+  const current = resolveCelestialRedockingProgress(options);
+  const previousDockedPlatformCount = getCelestialRedockingDockedPlatformCount(current);
+  if (current.rollsCompleted >= CELESTIAL_REDOCKING_ROLL_TARGET) {
+    return {
+      ledger: options.ledger,
+      rollsCompleted: current.rollsCompleted,
+      dockedPlatformCount: previousDockedPlatformCount,
+      dockedPlatformIndex: null,
+      becameComplete: false,
+    };
+  }
+  const rollsCompleted = Math.min(CELESTIAL_REDOCKING_ROLL_TARGET, current.rollsCompleted + 1);
+  const nextProgress: CelestialRedockingProgress = {
+    ...current,
+    rollsCompleted,
+    completedAtMs: rollsCompleted >= CELESTIAL_REDOCKING_ROLL_TARGET
+      ? options.nowMs
+      : current.completedAtMs,
+    updatedAtMs: options.nowMs,
+  };
+  const dockedPlatformCount = getCelestialRedockingDockedPlatformCount(nextProgress);
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  return {
+    ledger: { ...options.ledger, [key]: nextProgress },
+    rollsCompleted,
+    dockedPlatformCount,
+    dockedPlatformIndex: dockedPlatformCount > previousDockedPlatformCount
+      ? dockedPlatformCount - 1
+      : null,
+    becameComplete: rollsCompleted >= CELESTIAL_REDOCKING_ROLL_TARGET,
+  };
 }
 
 export function advanceSunkenSandsTreasureForRoll(options: {
@@ -547,6 +796,54 @@ export function mergeIslandRunSignatureMissionProgress(
     const b = local[key];
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'celestial-great-redocking' || b.missionId === 'celestial-great-redocking') {
+      if (a.missionId !== 'celestial-great-redocking') { merged[key] = b; return; }
+      if (b.missionId !== 'celestial-great-redocking') { merged[key] = a; return; }
+      const completedAtMs = a.completedAtMs === null
+        ? b.completedAtMs
+        : b.completedAtMs === null
+          ? a.completedAtMs
+          : Math.min(a.completedAtMs, b.completedAtMs);
+      merged[key] = {
+        missionId: 'celestial-great-redocking',
+        version: 1,
+        rollsCompleted: Math.max(a.rollsCompleted, b.rollsCompleted),
+        completedAtMs,
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
+    if (a.missionId === 'first-light-assembly-crater' || b.missionId === 'first-light-assembly-crater') {
+      if (a.missionId !== 'first-light-assembly-crater') { merged[key] = b; return; }
+      if (b.missionId !== 'first-light-assembly-crater') { merged[key] = a; return; }
+      const claimedDynamiteTileIndices = FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.filter((tileIndex) => (
+        a.claimedDynamiteTileIndices.includes(tileIndex) || b.claimedDynamiteTileIndices.includes(tileIndex)
+      ));
+      const chargesDetonated = Math.min(
+        claimedDynamiteTileIndices.length,
+        FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+        Math.max(a.chargesDetonated, b.chargesDetonated),
+      );
+      const completedAtMs = a.completedAtMs === null
+        ? b.completedAtMs
+        : b.completedAtMs === null
+          ? a.completedAtMs
+          : Math.min(a.completedAtMs, b.completedAtMs);
+      const latest = a.updatedAtMs >= b.updatedAtMs ? a : b;
+      merged[key] = {
+        missionId: 'first-light-assembly-crater',
+        version: 1,
+        claimedDynamiteTileIndices,
+        chargesDetonated,
+        lastDetonatedSector: latest.lastDetonatedSector,
+        startedAtMs: a.startedAtMs === null
+          ? b.startedAtMs
+          : b.startedAtMs === null ? a.startedAtMs : Math.min(a.startedAtMs, b.startedAtMs),
+        completedAtMs,
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
     if (a.missionId === 'sunken-sands-first-treasure' || b.missionId === 'sunken-sands-first-treasure') {
       if (a.missionId !== 'sunken-sands-first-treasure') { merged[key] = b; return; }
       if (b.missionId !== 'sunken-sands-first-treasure') { merged[key] = a; return; }

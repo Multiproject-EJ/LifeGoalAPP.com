@@ -15,7 +15,12 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
 import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
-import { getCactusCanyonDynamiteQuantityForTile, isFrostwellDrillTile, isRootheartPowerComponentTile } from './islandRunSignatureMissions';
+import {
+  getCactusCanyonDynamiteQuantityForTile,
+  isFirstLightAssemblyDynamiteTile,
+  isFrostwellDrillTile,
+  isRootheartPowerComponentTile,
+} from './islandRunSignatureMissions';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
@@ -31,7 +36,7 @@ export type IslandTileMapEntry = {
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
   /** Presentation marker for a canonical island-specific mission landing. */
-  signatureMissionKind?: 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite';
+  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite';
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
 };
@@ -306,6 +311,9 @@ export function generateTileMap(
   }
 
   return tiles.map((entry) => {
+    if (isFirstLightAssemblyDynamiteTile(islandNumber, entry.index)) {
+      return { ...entry, signatureMissionKind: 'first_light_dynamite', signatureMissionAmount: 1 };
+    }
     if (isFrostwellDrillTile(islandNumber, entry.index)) {
       return { ...entry, signatureMissionKind: 'frostwell_drill' };
     }

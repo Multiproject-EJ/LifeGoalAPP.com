@@ -469,12 +469,16 @@ import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
+  detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   spinFrostwellDrillWheel,
 } from '../services/islandRunSignatureMissionAction';
 import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
+  CELESTIAL_REDOCKING_PLATFORM_COUNT,
+  CELESTIAL_REDOCKING_ROLL_TARGET,
+  FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_SPIN_METERS,
   ROOTHEART_POWER_COMPONENTS,
@@ -482,20 +486,25 @@ import {
   SUNKEN_SANDS_FIRST_TREASURE_NAME,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCactusCanyonAvailableDynamite,
+  getCelestialRedockingDockedPlatformCount,
+  getFirstLightAssemblyAvailableDynamite,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
   getSunkenSandsTreasureRevealProgress,
   isRootheartPowerworksCollectionComplete,
   resolveCactusCanyonSpiralProgress,
+  resolveCelestialRedockingProgress,
+  resolveFirstLightAssemblyCraterProgress,
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from '../services/islandRunSignatureMissions';
 import {
-  getIslandMissionBriefingPresentation,
   type IslandMissionBriefingTrigger,
 } from '../services/islandRunMissionBriefing';
+import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
+import { resetCurrentIslandMissionForDev } from '../services/islandRunMissionResetAction';
 import { resolveIslandRunLivingTicketStatus } from '../services/islandRunLivingTicket';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
@@ -1829,6 +1838,7 @@ export function IslandRunBoardPrototype({
   const [devIsland5ThreeQuality, setDevIsland5ThreeQuality] = useState<Island3DQualitySelection>(readDevIsland5ThreeQuality);
   const [devIslandJumpDigits, setDevIslandJumpDigits] = useState<DevIslandJumpDigits>([0, 0, 1]);
   const [isDevIslandJumpPending, setIsDevIslandJumpPending] = useState(false);
+  const [isDevMissionResetPending, setIsDevMissionResetPending] = useState(false);
   const [isDiscoveryFogDisabled, setIsDiscoveryFogDisabled] = useState(readDevDiscoveryFogDisabled);
   // Visual-preview mode is the production clearance surface: all requested
   // L0-L3 assets must be inspectable without discovery fog concealing overlap.
@@ -1883,6 +1893,7 @@ export function IslandRunBoardPrototype({
   const [showBoardSymbolLegend, setShowBoardSymbolLegend] = useState(showBoardLegendPreview);
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
+  const [showMissionPhoneBriefing, setShowMissionPhoneBriefing] = useState(false);
   useEffect(() => {
     if (!showMissionBriefingPreview) return;
     setActiveMissionBriefing({
@@ -1925,6 +1936,10 @@ export function IslandRunBoardPrototype({
   const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
   const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
   const [frostwellConstructionSequence, setFrostwellConstructionSequence] = useState(0);
+  const [showFirstLightAssemblyCrater, setShowFirstLightAssemblyCrater] = useState(false);
+  const [isDetonatingFirstLightAssembly, setIsDetonatingFirstLightAssembly] = useState(false);
+  const [firstLightAssemblyConstructionSequence, setFirstLightAssemblyConstructionSequence] = useState(0);
+  const [firstLightAssemblyPendingSector, setFirstLightAssemblyPendingSector] = useState<number | null>(null);
   const [showCactusCanyonSpiral, setShowCactusCanyonSpiral] = useState(false);
   const [isBlastingCactusCanyonSpiral, setIsBlastingCactusCanyonSpiral] = useState(false);
   const [cactusCanyonLastBlastSegments, setCactusCanyonLastBlastSegments] = useState<number | null>(null);
@@ -2639,6 +2654,13 @@ export function IslandRunBoardPrototype({
     // unobstructed 3D look at the rig. The board magnifier remains the explicit
     // route back to overview.
   }, []);
+  const openFirstLightAssemblyCrater = useCallback(() => {
+    setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+    setShowFirstLightAssemblyCrater(true);
+  }, []);
+  const closeFirstLightAssemblyCrater = useCallback(() => {
+    setShowFirstLightAssemblyCrater(false);
+  }, []);
   const openCactusCanyonSpiral = useCallback(() => {
     setBuildCameraFocusRequest({ preset: 'canyon-spiral', transition: 'quick' });
     setShowCactusCanyonSpiral(true);
@@ -2971,8 +2993,10 @@ export function IslandRunBoardPrototype({
     showCreatureChannelModal ||
     showConcordHubModal ||
     showBoardSymbolLegend ||
+    showMissionPhoneBriefing ||
     Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
+    showFirstLightAssemblyCrater ||
     showCactusCanyonSpiral ||
     showRootheartPowerworks ||
     Boolean(dormantDoorMiniGame) ||
@@ -3049,6 +3073,14 @@ export function IslandRunBoardPrototype({
     cycleIndex: runtimeState.cycleIndex,
     islandNumber: 3,
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const celestialRedockingProgress = useMemo(() => resolveCelestialRedockingProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 2,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const celestialRedockingDockedPlatforms = getCelestialRedockingDockedPlatformCount(
+    celestialRedockingProgress,
+  );
   const frostwellTechCost = getFrostwellIceworksTechCost(runtimeState.cycleIndex);
   const frostwellBuilt = frostwellProgress.builtAtMs !== null;
   const frostwellPreviewActive = isIslandVisualPreview && islandVisualIslandNumber === 3;
@@ -3061,6 +3093,26 @@ export function IslandRunBoardPrototype({
   const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
     ? 1
     : getFrostwellAvailableSpins(frostwellProgress);
+  const firstLightAssemblyProgress = useMemo(() => resolveFirstLightAssemblyCraterProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 1,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const firstLightAssemblyAvailableDynamite = getFirstLightAssemblyAvailableDynamite(firstLightAssemblyProgress);
+  const firstLightAssemblyCompleted = firstLightAssemblyProgress.completedAtMs !== null;
+  const firstLightOuterLandmarksAtMax = runtimeState.stopBuildStateByIndex
+    .slice(0, 4)
+    .filter((buildState) => Boolean(buildState && buildState.buildLevel >= MAX_BUILD_LEVEL))
+    .length;
+  const currentMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
+    islandNumber,
+    state: runtimeState,
+  }), [islandNumber, runtimeState]);
+  const displayedMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
+    islandNumber: activeMissionBriefing?.islandNumber ?? islandNumber,
+    state: runtimeState,
+  }), [activeMissionBriefing?.islandNumber, islandNumber, runtimeState]);
+  const missionPhoneCompletionPercent = currentMissionTracker.overallProgressPercent;
   const cactusCanyonSpiralProgress = useMemo(() => resolveCactusCanyonSpiralProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -6504,23 +6556,27 @@ export function IslandRunBoardPrototype({
     : null;
   const isIslandOneConcordActive = islandNumber !== 1 || getIslandTechnologyAccess(runtimeState, 'the-concord').active;
   const legacyIsCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
+  const isIslandOneFinaleSatisfied = islandNumber !== 1
+    || isIslandOneConcordActive
+    || firstLightAssemblyCompleted;
   const isCurrentIslandFullyCleared = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFullyClearedV2({
         stopStatesByIndex: runtimeState.stopStatesByIndex,
         stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
       })
-    : legacyIsCurrentIslandFullyCleared) && isIslandOneConcordActive;
+    : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
   const isCurrentIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFinishedForDepartureV2({
         stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
         bossDefeated: runtimeState.bossTrialResolvedIslandNumber === islandNumber,
       })
-    : legacyIsCurrentIslandFullyCleared) && isIslandOneConcordActive;
+    : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
   const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
+      if (islandNumber === 1 && stopIndex === 4) return 0;
       const buildState = runtimeState.stopBuildStateByIndex[stopIndex];
       if (!buildState || isStopBuildFullyComplete(buildState)) return 0;
 
@@ -6534,7 +6590,7 @@ export function IslandRunBoardPrototype({
       }
       return remainingToFull;
     });
-  }, [effectiveIslandNumber, islandStopPlan, runtimeState.stopBuildStateByIndex]);
+  }, [effectiveIslandNumber, islandNumber, islandStopPlan, runtimeState.stopBuildStateByIndex]);
   const { nextCheapestIndex: buildPanelNextCheapestIndex } = useMemo(() => (
     resolveNextCheapestIndex({ remainingCosts: buildPanelRemainingToFullByIndex })
   ), [buildPanelRemainingToFullByIndex]);
@@ -6543,13 +6599,24 @@ export function IslandRunBoardPrototype({
   // Derives the focused single-landmark view from PR 1 sequential helpers.
   // All gameplay reads happen here; BuildModalV2 remains presentational.
   const activeBuildDiscountRate = buildDiscountExpiresAtMs && buildDiscountExpiresAtMs > Date.now() ? BUILD_DISCOUNT_RATE : 0;
+  const buildModalStopBuildStateByIndex = useMemo(() => (
+    islandNumber === 1
+      ? __storeState.stopBuildStateByIndex.map((entry, stopIndex) => stopIndex === 4 && entry
+          ? {
+              ...entry,
+              buildLevel: MAX_BUILD_LEVEL,
+              spentEssence: Math.max(entry.spentEssence, entry.requiredEssence),
+            }
+          : entry)
+      : __storeState.stopBuildStateByIndex
+  ), [__storeState.stopBuildStateByIndex, islandNumber]);
   const buildModalV2ViewModel = useMemo(() => deriveBuildModalV2ViewModel({
-    stopBuildStateByIndex: __storeState.stopBuildStateByIndex,
+    stopBuildStateByIndex: buildModalStopBuildStateByIndex,
     islandStopPlan,
     essenceAvailable: __storeState.essence,
     islandArtManifest,
     discountRate: activeBuildDiscountRate,
-  }), [__storeState.essence, __storeState.stopBuildStateByIndex, activeBuildDiscountRate, islandArtManifest, islandStopPlan]);
+  }), [__storeState.essence, activeBuildDiscountRate, buildModalStopBuildStateByIndex, islandArtManifest, islandStopPlan]);
 
   const buildModalLevelReview = useMemo<BuildModalV2LevelReview | null>(() => (
     buildLevelCompletion
@@ -6619,8 +6686,18 @@ export function IslandRunBoardPrototype({
   );
 
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
-    if (islandNumber === 1 && !getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active && source !== 'dev_clear_island') {
-      setLandingText('Build The Concord from all 9 Island 1 fragments before finishing Island 1.');
+    const latestAssembly = resolveFirstLightAssemblyCraterProgress({
+      ledger: runtimeStateRef.current.signatureMissionProgressByIsland,
+      cycleIndex: runtimeStateRef.current.cycleIndex,
+      islandNumber: 1,
+    });
+    if (
+      islandNumber === 1
+      && !getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active
+      && latestAssembly.completedAtMs === null
+      && source !== 'dev_clear_island'
+    ) {
+      setLandingText('Complete the twenty-charge Assembly Crater mission before finishing Island 1.');
       return;
     }
     if (showIslandClearCelebration && islandClearStats?.islandNumber === islandNumber) return;
@@ -6880,6 +6957,10 @@ export function IslandRunBoardPrototype({
   const journeyDiscCenterActive = journeyDiscCenterLandmark.owner === 'journey_disc_arena'
     || (isIslandVisualPreview && journeyDiscArenaCenterPreview);
   const handleLandmarkOpenRequest = useCallback((stopId: string) => {
+    if (stopId === 'boss' && islandNumber === 1) {
+      openFirstLightAssemblyCrater();
+      return;
+    }
     if (stopId !== 'boss' || !journeyDiscCenterActive) {
       handleStopOpenRequest(stopId);
       return;
@@ -6902,7 +6983,7 @@ export function IslandRunBoardPrototype({
     setCameraMode('stop_focus');
     playIslandRunSound('minigame_open');
     triggerIslandRunHaptic('stop_land');
-  }, [handleStopOpenRequest, isRolling, journeyDiscCenterActive]);
+  }, [handleStopOpenRequest, islandNumber, isRolling, journeyDiscCenterActive, openFirstLightAssemblyCrater]);
   useEffect(() => {
     if (!showJourneyDiscConcourseInvitation || journeyDiscCenterActive) return;
     setShowJourneyDiscConcourseInvitation(false);
@@ -7718,6 +7799,11 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
+        } else if ((rollResult.firstLightAssemblyDynamiteCollected ?? 0) > 0) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setLandingText('🧨 Assembly charge secured! Open the crater mission to excavate the next civic sector.');
+          openFirstLightAssemblyCrater();
         } else if ((rollResult.cactusCanyonDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -10476,6 +10562,27 @@ export function IslandRunBoardPrototype({
     }
   };
 
+  const handleDevResetCurrentIslandMission = async () => {
+    if (!isDevModeEnabled || isDevMissionResetPending) return;
+    setIsDevMissionResetPending(true);
+    try {
+      const result = await resetCurrentIslandMissionForDev({ session, client });
+      setRuntimeState(result.record);
+      runtimeStateRef.current = result.record;
+      setActiveMissionBriefing(null);
+      setPendingMissionBriefing(null);
+      setShowMissionPhoneBriefing(false);
+      setShowIslandClearCelebration(false);
+      setLandingText(`🧪 DEV mission reset: Island ${String(result.islandNumber).padStart(3, '0')} is ready to replay.`);
+      setShowTopbarMenu(false);
+    } catch (error) {
+      console.error('[island-run] Dev mission reset failed:', error);
+      setLandingText('Could not reset this island mission. Please try again.');
+    } finally {
+      setIsDevMissionResetPending(false);
+    }
+  };
+
   /**
    * Island-clear celebration CTA handler. Gates island travel behind the
    * player tapping "Travel to next island" (or the cycle-capstone "Begin
@@ -10865,7 +10972,15 @@ export function IslandRunBoardPrototype({
           stopStatesByIndex: nextStopStatesByIndex,
           stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
           hatcheryEggResolved: islandEggSlotUsed,
-        }) && (islandNumber !== 1 || getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active);
+        }) && (
+          islandNumber !== 1
+          || getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active
+          || resolveFirstLightAssemblyCraterProgress({
+            ledger: runtimeStateRef.current.signatureMissionProgressByIsland,
+            cycleIndex: runtimeStateRef.current.cycleIndex,
+            islandNumber: 1,
+          }).completedAtMs !== null
+        );
 
         if (!nowFullyCleared) {
           setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
@@ -12518,6 +12633,7 @@ export function IslandRunBoardPrototype({
       showOutOfDicePurchasePrompt ||
       showPerfectCompanionOnboardingHint ||
       showRewardDetailsModal ||
+      showWinCelebrationModal ||
       showSanctuaryPanel ||
       showShopPanel ||
       showStickerAlbumDialog ||
@@ -12526,8 +12642,10 @@ export function IslandRunBoardPrototype({
       showCreatureChannelModal ||
       showConcordHubModal ||
       showBoardSymbolLegend ||
+      showMissionPhoneBriefing ||
       Boolean(activeMissionBriefing) ||
       showFrostwellMission ||
+      showFirstLightAssemblyCrater ||
       showCactusCanyonSpiral ||
       showRootheartPowerworks ||
       showJourneyDiscConcourseInvitation ||
@@ -12553,9 +12671,35 @@ export function IslandRunBoardPrototype({
     setPendingMissionBriefing(null);
   }, [doesModalOwnAttention, pendingMissionBriefing]);
   useEffect(() => {
+    if (
+      islandNumber !== 1
+      || !firstLightAssemblyCompleted
+      || firstLightOuterLandmarksAtMax < 4
+      || !isCurrentIslandFullyCleared
+      || doesModalOwnAttention
+      || islandClearCelebrationShownForVisitRef.current === islandClearVisitKey
+    ) return undefined;
+    const timer = window.setTimeout(() => {
+      showIslandClearCelebrationFromAnywhere('island_001_assembly_and_landmarks_complete');
+    }, 520);
+    return () => window.clearTimeout(timer);
+  }, [
+    doesModalOwnAttention,
+    firstLightAssemblyCompleted,
+    firstLightOuterLandmarksAtMax,
+    isCurrentIslandFullyCleared,
+    islandClearVisitKey,
+    islandNumber,
+    showIslandClearCelebrationFromAnywhere,
+  ]);
+  useEffect(() => {
     if (!showFrostwellMission || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showFrostwellMission]);
+  useEffect(() => {
+    if (!showFirstLightAssemblyCrater || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showFirstLightAssemblyCrater]);
   useEffect(() => {
     if (!showCactusCanyonSpiral || typeof document === 'undefined') return undefined;
     return lockPageScroll();
@@ -12595,6 +12739,52 @@ export function IslandRunBoardPrototype({
       setIsSpinningFrostwell(false);
     }
   }, [client, isSpinningFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+
+  const handleDetonateFirstLightAssembly = useCallback(async () => {
+    if (isDetonatingFirstLightAssembly) return;
+    setIsDetonatingFirstLightAssembly(true);
+    try {
+      const result = await detonateFirstLightAssemblyCharge({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_dynamite') {
+          setLandingText('Land on an uncollected dynamite tile before deepening the Assembly Crater again.');
+        }
+        return;
+      }
+      // Gameplay is already committed. The remaining delay is the visual fuse,
+      // debris and camera beat, so interruption cannot lose or repeat a sector.
+      setShowFirstLightAssemblyCrater(false);
+      setFirstLightAssemblyPendingSector(result.sectorAfter);
+      setFirstLightAssemblyConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      playIslandRunSound('boss_trial_resolve');
+      triggerIslandRunHaptic('boss_trial_resolve');
+      const prefersReducedMotion = typeof window !== 'undefined'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReducedMotion) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 2_650));
+      }
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('detonate_first_light_assembly_charge', fresh);
+      setFirstLightAssemblyPendingSector(null);
+      const completed = result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET;
+      setLandingText(completed
+        ? '🏛️ The twentieth blast is complete — the First Light General Assembly is open!'
+        : `🧨 Assembly charge ${result.sectorAfter}/${FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET} widened and deepened the shared crater.`);
+      if (completed) {
+        playIslandRunSound('reward_bar_claim_burst');
+        triggerIslandRunHaptic('reward_claim');
+        openWinCelebrationModal([
+          { icon: '🏛️', label: 'General Assembly', value: 'OPEN' },
+          { icon: '🧨', label: 'Controlled blasts', value: '20 / 20' },
+        ], 'Mission complete — First Light can convene');
+      }
+    } finally {
+      setIsDetonatingFirstLightAssembly(false);
+    }
+  }, [client, isDetonatingFirstLightAssembly, openWinCelebrationModal, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
 
   const handleBlastCactusCanyonSpiral = useCallback(async () => {
     if (isBlastingCactusCanyonSpiral) return;
@@ -12710,6 +12900,7 @@ export function IslandRunBoardPrototype({
       showHatcheryHelp ||
       showHatcheryL1Celebration ||
       showHatcheryCompassModal ||
+      showMissionPhoneBriefing ||
       showMarketPanel ||
       showOnboardingBooster ||
       showOutOfDicePurchasePrompt ||
@@ -13866,12 +14057,22 @@ export function IslandRunBoardPrototype({
                     type="button"
                     className="island-run-board__dev-island-jump-submit"
                     onClick={() => void handleDevJumpToIsland()}
-                    disabled={!isDevIslandJumpTargetValid || isDevIslandJumpPending}
+                    disabled={!isDevIslandJumpTargetValid || isDevIslandJumpPending || isDevMissionResetPending}
                   >
                     {isDevIslandJumpPending ? 'Jumping…' : `Load Island ${devIslandJumpLabel}`}
                   </button>
+                  <button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit island-run-board__dev-island-jump-submit--reset"
+                    onClick={() => void handleDevResetCurrentIslandMission()}
+                    disabled={isDevMissionResetPending || isDevIslandJumpPending}
+                  >
+                    {isDevMissionResetPending ? 'Clearing mission…' : 'Clear current island mission'}
+                  </button>
                   <small className="island-run-board__dev-island-jump-hint">
-                    {isDevIslandJumpTargetValid ? 'Fresh visit · valid range 001–120' : 'Choose an island from 001 to 120'}
+                    {isDevIslandJumpTargetValid
+                      ? 'Fresh visit · clear mission resets objectives/builds without touching wallet or collections'
+                      : 'Choose an island from 001 to 120'}
                   </small>
                 </section>
               ) : null}
@@ -14287,6 +14488,15 @@ export function IslandRunBoardPrototype({
                     : frostwellConstructionSequence,
                   constructionPreviewLoop: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing',
                 }}
+                celestialRedockingPresentation={{
+                  completedRolls: isIslandVisualPreview && islandArtPreviewNumber === 2
+                    ? CELESTIAL_REDOCKING_ROLL_TARGET
+                    : celestialRedockingProgress.rollsCompleted,
+                  targetRolls: CELESTIAL_REDOCKING_ROLL_TARGET,
+                  dockedPlatformCount: isIslandVisualPreview && islandArtPreviewNumber === 2
+                    ? CELESTIAL_REDOCKING_PLATFORM_COUNT
+                    : celestialRedockingDockedPlatforms,
+                }}
                 rootheartPowerworksPresentation={{
                   buildStage: isIslandVisualPreview && islandArtPreviewNumber === 10
                     ? 3
@@ -14317,7 +14527,20 @@ export function IslandRunBoardPrototype({
                     : cactusCanyonSpiralCompleted,
                   constructionSequence: cactusCanyonConstructionSequence,
                 }}
-                onSignatureMissionClick={islandArtPreviewNumber === 12
+                firstLightAssemblyCraterPresentation={{
+                  chargesDetonated: isIslandVisualPreview && islandArtPreviewNumber === 1
+                    ? FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+                    : firstLightAssemblyPendingSector ?? firstLightAssemblyProgress.chargesDetonated,
+                  targetCharges: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+                  completed: isIslandVisualPreview && islandArtPreviewNumber === 1
+                    ? true
+                    : firstLightAssemblyCompleted,
+                  claimedDynamiteTileIndices: firstLightAssemblyProgress.claimedDynamiteTileIndices,
+                  constructionSequence: firstLightAssemblyConstructionSequence,
+                }}
+                onSignatureMissionClick={islandArtPreviewNumber === 1
+                  ? isIslandVisualPreview ? undefined : openFirstLightAssemblyCrater
+                  : islandArtPreviewNumber === 12
                   ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
                   : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10 && islandArtPreviewNumber !== 13
                     ? undefined
@@ -14524,6 +14747,17 @@ export function IslandRunBoardPrototype({
         onClick={resetCameraFromTopbarMenu}
       >
         🔎
+      </button>
+
+      <button
+        type="button"
+        className={`island-run-prototype__mission-phone-floating${currentMissionTracker.complete ? ' island-run-prototype__mission-phone-floating--complete' : ''}`}
+        aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+        title="Mission tracker"
+        onClick={() => setShowMissionPhoneBriefing(true)}
+      >
+        <img src="/tech/ExpeditionPhone_v19_folded.webp" alt="" aria-hidden="true" />
+        <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
       </button>
 
       <button
@@ -16447,7 +16681,9 @@ export function IslandRunBoardPrototype({
                   </div>
                 )}
                 <p className="island-clear-celebration__stops">
-                  ✅ {islandClearStats.stopsCleared} stops cleared · Island {islandClearStats.islandNumber} complete
+                  {islandClearStats.islandNumber === 1
+                    ? '✅ Assembly mission complete · 4 outer landmarks restored · Island 1 complete'
+                    : `✅ ${islandClearStats.stopsCleared} stops cleared · Island ${islandClearStats.islandNumber} complete`}
                 </p>
                 <div className="island-clear-celebration__actions">
                   <button
@@ -18000,6 +18236,7 @@ export function IslandRunBoardPrototype({
         open={showWinCelebrationModal}
         title="Congratulations!"
         subtitle={winCelebrationSubtitle}
+        actionLabel={winCelebrationSubtitle.startsWith('Mission complete') ? 'Continue' : 'Collect'}
         rewards={winCelebrationRewards}
         onCollect={() => {
           setShowWinCelebrationModal(false);
@@ -18008,13 +18245,18 @@ export function IslandRunBoardPrototype({
       />
 
       <IslandMissionBriefingModal
-        isOpen={Boolean(activeMissionBriefing)}
-        presentation={activeMissionBriefing
-          ? getIslandMissionBriefingPresentation(activeMissionBriefing.islandNumber)
+        isOpen={Boolean(activeMissionBriefing) || showMissionPhoneBriefing}
+        presentation={Boolean(activeMissionBriefing) || showMissionPhoneBriefing
+          ? displayedMissionTracker.briefing
           : null}
-        caretakerName={caretakerInhabitant?.displayName ?? 'Island Caretaker'}
-        caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc}
+        progress={displayedMissionTracker.objectives}
+        overallProgressPercent={displayedMissionTracker.overallProgressPercent}
+        acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onAcknowledge={() => {
+          if (showMissionPhoneBriefing) {
+            setShowMissionPhoneBriefing(false);
+            return;
+          }
           setActiveMissionBriefing(null);
           setLandingText('Field order accepted. The Concord will keep the caretaker channel open.');
           playIslandRunSound('stop_land');
@@ -18625,6 +18867,92 @@ export function IslandRunBoardPrototype({
                       : `Build for ${frostwellTechCost.toLocaleString()} Essence`}
                 </button>
               ) : null}
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
+
+      {showFirstLightAssemblyCrater && typeof document !== 'undefined' ? createPortal((
+        <div
+          className="island-stop-modal__backdrop cactus-canyon-spiral-modal__backdrop"
+          role="presentation"
+          onClick={closeFirstLightAssemblyCrater}
+        >
+          <section
+            className="island-stop-modal frostwell-mission-modal first-light-assembly-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="first-light-assembly-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="island-stop-modal__close"
+              aria-label="Close Assembly Crater mission"
+              onClick={closeFirstLightAssemblyCrater}
+            >
+              ×
+            </button>
+            <span className="frostwell-mission-modal__eyebrow">ISLAND 001 · CIVIC EXCAVATION</span>
+            <h2 id="first-light-assembly-title">Assembly Crater</h2>
+            <p className="frostwell-mission-modal__lede">
+              Recover twenty finite dynamite charges from the route. Every controlled blast widens and deepens the same shared excavation beneath the circular board.
+            </p>
+            <div
+              className="first-light-assembly-modal__sector-ring"
+              aria-label={`${firstLightAssemblyProgress.chargesDetonated} of ${FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET} Assembly Crater charges detonated`}
+            >
+              {Array.from({ length: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET }, (_, index) => (
+                <i
+                  key={`assembly-sector-${index}`}
+                  className={index < firstLightAssemblyProgress.chargesDetonated ? 'is-open' : ''}
+                  style={{ transform: `rotate(${index * (360 / FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET)}deg) translateY(-43px)` }}
+                />
+              ))}
+              <span aria-hidden="true">{firstLightAssemblyCompleted ? '🏛️' : '🎙️'}</span>
+            </div>
+            <div className="cactus-canyon-spiral-modal__readout">
+              <span>
+                <strong>{firstLightAssemblyProgress.chargesDetonated}/{FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}</strong>
+                <small>CHARGES USED</small>
+              </span>
+              <span>
+                <strong>🧨 {firstLightAssemblyAvailableDynamite}</strong>
+                <small>CHARGES READY</small>
+              </span>
+            </div>
+            <div className="cactus-canyon-spiral-modal__blast-panel">
+              <div className={`cactus-canyon-spiral-modal__charge${isDetonatingFirstLightAssembly ? ' is-burning' : ''}`} aria-hidden="true">
+                <i /><i /><i />
+                <span className="cactus-canyon-spiral-modal__fuse" />
+                <b>🧨 {firstLightAssemblyAvailableDynamite}</b>
+              </div>
+              <button
+                type="button"
+                className="cactus-canyon-spiral-modal__blast-button"
+                disabled={isDetonatingFirstLightAssembly || firstLightAssemblyAvailableDynamite < 1 || firstLightAssemblyCompleted}
+                onClick={() => void handleDetonateFirstLightAssembly()}
+              >
+                {isDetonatingFirstLightAssembly
+                  ? 'FUSE BURNING…'
+                  : firstLightAssemblyCompleted
+                    ? 'ASSEMBLY OPEN'
+                    : firstLightAssemblyAvailableDynamite > 0
+                      ? 'DETONATE NEXT CHARGE'
+                      : 'LAND ON DYNAMITE'}
+                <small>One stick widens and deepens the common crater</small>
+              </button>
+            </div>
+            <div className={`frostwell-mission-modal__status${firstLightAssemblyCompleted ? ' frostwell-mission-modal__status--online' : ''}`}>
+              <strong>{firstLightAssemblyCompleted ? '🏛️ General Assembly open' : 'Excavation in progress'}</strong>
+              <p>{firstLightAssemblyCompleted
+                ? 'Concentric delegate seating now surrounds the central speaker podium. The centre has no boss building.'
+                : 'The shared chamber grows downward and outward toward the inner edge of the circular board while every real tile remains untouched.'}</p>
+            </div>
+            <div className="island-stop-modal__actions">
+              <button type="button" className="island-stop-modal__btn" onClick={closeFirstLightAssemblyCrater}>
+                {firstLightAssemblyCompleted ? 'View the chamber' : 'Keep exploring'}
+              </button>
             </div>
           </section>
         </div>

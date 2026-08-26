@@ -1,6 +1,8 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
+import { MAX_BUILD_LEVEL } from './islandRunContractV2EssenceBuild';
+import { getIslandRunBossReward } from './islandRunBossReward';
 import {
   ISLAND_RUN_ECONOMY_SOURCES,
   recordIslandRunDiceInflow,
@@ -8,6 +10,8 @@ import {
 import {
   CACTUS_CANYON_ISLAND_NUMBER,
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
+  FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+  FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
@@ -17,6 +21,7 @@ import {
   SUNKEN_SANDS_ISLAND_NUMBER,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCactusCanyonAvailableDynamite,
+  getFirstLightAssemblyAvailableDynamite,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
@@ -24,11 +29,144 @@ import {
   getSunkenSandsTreasureEssenceReward,
   isRootheartPowerworksCollectionComplete,
   resolveCactusCanyonSpiralProgress,
+  resolveFirstLightAssemblyCraterProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
+
+export type DetonateFirstLightAssemblyChargeResult =
+  | {
+      status: 'ok';
+      sectorBefore: number;
+      sectorAfter: number;
+      dynamiteRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_dynamite' | 'already_complete' };
+
+export function detonateFirstLightAssemblyCharge(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<DetonateFirstLightAssemblyChargeResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFirstLightAssemblyCraterProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (progress.completedAtMs !== null || progress.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET) {
+      return { status: 'already_complete' };
+    }
+    if (getFirstLightAssemblyAvailableDynamite(progress) <= 0) return { status: 'no_dynamite' };
+
+    const sectorBefore = progress.chargesDetonated;
+    const sectorAfter = Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, sectorBefore + 1);
+    const nowMs = Date.now();
+    const completedAtMs = sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    const nextProgress = {
+      ...progress,
+      chargesDetonated: sectorAfter,
+      lastDetonatedSector: sectorBefore,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    const completesMission = completedAtMs !== null;
+    const finaleReward = completesMission && state.bossTrialResolvedIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
+      ? getIslandRunBossReward(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)
+      : null;
+    // Island 001 has no separate Boss landmark. Completing the Assembly mission
+    // fulfils the canonical fifth-stop compatibility slot so every downstream
+    // island-clear/travel reader still sees one authoritative progression
+    // record. Only the four real outer landmarks must be funded by the player.
+    const stopStatesByIndex = completesMission
+      ? state.stopStatesByIndex.map((entry, index) => index === 4
+        ? {
+            ...entry,
+            objectiveComplete: true,
+            buildComplete: true,
+            accessUnlocked: true,
+            postponedAtMs: null,
+            completedAtMs: entry.completedAtMs ?? nowMs,
+          }
+        : entry)
+      : state.stopStatesByIndex;
+    const stopBuildStateByIndex = completesMission
+      ? state.stopBuildStateByIndex.map((entry, index) => index === 4 && entry
+        ? {
+            ...entry,
+            buildLevel: MAX_BUILD_LEVEL,
+            spentEssence: Math.max(entry.spentEssence, entry.requiredEssence),
+          }
+        : entry)
+      : state.stopBuildStateByIndex;
+    const completedStopsByIsland = completesMission
+      ? {
+          ...state.completedStopsByIsland,
+          [String(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)]: Array.from(new Set([
+            ...(state.completedStopsByIsland[String(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)] ?? []),
+            'boss',
+          ])),
+        }
+      : state.completedStopsByIsland;
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        bossTrialResolvedIslandNumber: completesMission
+          ? FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
+          : state.bossTrialResolvedIslandNumber,
+        bossState: completesMission
+          ? {
+              ...state.bossState,
+              unlocked: true,
+              objectiveComplete: true,
+              buildComplete: true,
+            }
+          : state.bossState,
+        stopStatesByIndex,
+        stopBuildStateByIndex,
+        completedStopsByIsland,
+        dicePool: state.dicePool + (finaleReward?.dice ?? 0),
+        essence: state.essence + (finaleReward?.essence ?? 0),
+        essenceLifetimeEarned: state.essenceLifetimeEarned + (finaleReward?.essence ?? 0),
+        spinTokens: state.spinTokens + (finaleReward?.spinTokens ?? 0),
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: 'detonate_first_light_assembly_charge',
+    });
+    if (finaleReward && finaleReward.dice > 0) {
+      recordIslandRunDiceInflow({
+        source: ISLAND_RUN_ECONOMY_SOURCES.signatureMissionFinaleDice,
+        amount: finaleReward.dice,
+        sessionId: options.session.user.id,
+        atMs: nowMs,
+        metadata: {
+          islandNumber: FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
+          missionId: nextProgress.missionId,
+        },
+      });
+    }
+    return {
+      status: 'ok',
+      sectorBefore,
+      sectorAfter,
+      dynamiteRemaining: getFirstLightAssemblyAvailableDynamite(nextProgress),
+      completedAtMs,
+    };
+  });
+}
 
 export type BlastCactusCanyonSpiralSectionResult =
   | {

@@ -234,6 +234,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '⛏';
   } else if (signatureMissionKind === 'rootheart_power_component') {
     iconContent = '⚙';
+  } else if (signatureMissionKind === 'first_light_dynamite') {
+    iconContent = '🧨';
   } else if (signatureMissionKind === 'cactus_canyon_dynamite') {
     iconContent = signatureMissionAmount >= 3 ? '🧨³' : '🧨';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
@@ -276,6 +278,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         signatureMissionKind === 'frostwell_drill' ? 'island-tile--frostwell-drill' : '',
         signatureMissionKind === 'rootheart_power_component' ? 'island-tile--rootheart-power-component' : '',
+        signatureMissionKind === 'first_light_dynamite' ? 'island-tile--first-light-dynamite' : '',
         signatureMissionKind === 'cactus_canyon_dynamite' ? 'island-tile--cactus-canyon-dynamite' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
@@ -290,6 +293,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
           ? `Tile ${index + 1}. Frostwell drill spin`
           : signatureMissionKind === 'rootheart_power_component'
             ? `Tile ${index + 1}. Rootheart Powerworks component`
+            : signatureMissionKind === 'first_light_dynamite'
+              ? `Tile ${index + 1}. Assembly Crater dynamite, one finite stick`
             : signatureMissionKind === 'cactus_canyon_dynamite'
               ? `Tile ${index + 1}. Cactus Canyon dynamite cache, ${signatureMissionAmount} stick${signatureMissionAmount === 1 ? '' : 's'}`
             : isDormant

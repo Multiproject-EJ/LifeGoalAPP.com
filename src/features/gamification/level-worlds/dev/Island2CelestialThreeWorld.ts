@@ -47,7 +47,21 @@ export interface Island2CelestialAmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
   updateView?: (cameraPosition: THREE.Vector3) => void;
+  registerRedockingLandmark?: (landmarkId: Island5LandmarkDefinition['id'], root: THREE.Object3D) => void;
+  updateRedocking?: (presentation: Island2CelestialRedockingPresentation, immediate?: boolean) => void;
 }
+
+export interface Island2CelestialRedockingPresentation {
+  completedRolls: number;
+  targetRolls: number;
+  dockedPlatformCount: number;
+}
+
+const CELESTIAL_REDOCKING_PLATFORM_IDS = Object.freeze([
+  'hatchery', 'habit', 'wisdom', 'event',
+] as const satisfies readonly Island5LandmarkDefinition['id'][]);
+const CELESTIAL_REDOCKING_ROLLS_PER_PLATFORM = 5;
+const CELESTIAL_REDOCKING_START_OFFSET = 2.75;
 
 const segmentsFor = (quality: Island3DQuality) => quality === 'high' ? 24 : quality === 'medium' ? 16 : 10;
 const detailFor = (quality: Island3DQuality) => quality === 'high' ? 1 : quality === 'medium' ? 0.64 : 0.36;
@@ -1050,10 +1064,90 @@ export function createIsland2CelestialLivingAmbience(
     { radius: 2.46, depth: 3.78 },
     { radius: 2.27, depth: 3.18 },
   ];
+  const satelliteShelves: THREE.Group[] = [];
   satellites.forEach(([x, z], index) => {
     const satellite = satelliteProfiles[index];
-    addFloatingShelf(root, x, z, satellite.radius, satellite.depth, materials, quality, index + 1.2);
+    const shelf = addFloatingShelf(root, x, z, satellite.radius, satellite.depth, materials, quality, index + 1.2);
+    shelf.name = `ISLAND_2_REDOCKING_PLATFORM_${index + 1}`;
+    shelf.userData.redockingBaseX = x;
+    shelf.userData.redockingBaseZ = z;
+    satelliteShelves.push(shelf);
   });
+
+  const redockingLandmarks = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
+  const targetPlatformOffsets = new Array(CELESTIAL_REDOCKING_PLATFORM_IDS.length)
+    .fill(CELESTIAL_REDOCKING_START_OFFSET);
+  const currentPlatformOffsets = [...targetPlatformOffsets];
+  const collarMaterials: THREE.MeshStandardMaterial[] = [];
+  const dockingCollars = satellites.map(([x, z], index) => {
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xe9c35e,
+      emissive: 0x7ccfff,
+      emissiveIntensity: 0.18,
+      roughness: 0.3,
+      metalness: 0.72,
+      transparent: true,
+      opacity: 0.28,
+    });
+    const collar = new THREE.Mesh(new THREE.TorusGeometry(1.46, 0.07, 6, 32), material);
+    collar.name = `ISLAND_2_DOCKING_COLLAR_${index + 1}`;
+    collar.position.set(x, 0.46, z);
+    collar.rotation.x = Math.PI / 2;
+    root.add(collar);
+    collarMaterials.push(material);
+    return collar;
+  });
+  const tetherRuntimes = satellites.map((_, index) => {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9 * 3), 3));
+    const material = new THREE.LineBasicMaterial({
+      color: index % 2 === 0 ? 0x6fd9ff : 0xe9c35e,
+      transparent: true,
+      opacity: 0.68,
+    });
+    const line = new THREE.Line(geometry, material);
+    line.name = `ISLAND_2_REDOCKING_TETHER_${index + 1}`;
+    line.frustumCulled = false;
+    root.add(line);
+    return { geometry, material, line };
+  });
+  let redockingDockedPlatformCount = 0;
+  let redockingPulseIndex = -1;
+  let redockingPulse = 0;
+
+  const applyRedockingPlatformPose = (index: number) => {
+    const [baseX, baseZ] = satellites[index];
+    const length = Math.hypot(baseX, baseZ) || 1;
+    const directionX = baseX / length;
+    const directionZ = baseZ / length;
+    const offset = currentPlatformOffsets[index];
+    const x = baseX + directionX * offset;
+    const z = baseZ + directionZ * offset;
+    satelliteShelves[index].position.set(x, 0, z);
+    const landmarkId = CELESTIAL_REDOCKING_PLATFORM_IDS[index];
+    const landmark = redockingLandmarks.get(landmarkId);
+    if (landmark) {
+      const landmarkBaseX = Number(landmark.userData.redockingBaseX ?? landmark.position.x);
+      const landmarkBaseZ = Number(landmark.userData.redockingBaseZ ?? landmark.position.z);
+      landmark.position.set(landmarkBaseX + directionX * offset, landmark.position.y, landmarkBaseZ + directionZ * offset);
+    }
+    const tetherAttribute = tetherRuntimes[index].geometry.getAttribute('position') as THREE.BufferAttribute;
+    const innerX = directionX * 4.82;
+    const innerZ = directionZ * 4.82;
+    const outerX = x - directionX * 1.56;
+    const outerZ = z - directionZ * 1.56;
+    for (let pointIndex = 0; pointIndex < 9; pointIndex += 1) {
+      const progress = pointIndex / 8;
+      const sag = Math.sin(progress * Math.PI) * (0.34 + offset * 0.1);
+      tetherAttribute.setXYZ(
+        pointIndex,
+        THREE.MathUtils.lerp(innerX, outerX, progress),
+        THREE.MathUtils.lerp(0.42, 0.34, progress) - sag,
+        THREE.MathUtils.lerp(innerZ, outerZ, progress),
+      );
+    }
+    tetherAttribute.needsUpdate = true;
+  };
 
   const springCascade = addLivingSpringCascade(root, materials, quality);
 
@@ -1209,7 +1303,66 @@ export function createIsland2CelestialLivingAmbience(
   scene.add(root);
   return {
     root,
+    registerRedockingLandmark: (landmarkId, landmarkRoot) => {
+      const platformIndex = CELESTIAL_REDOCKING_PLATFORM_IDS.indexOf(
+        landmarkId as typeof CELESTIAL_REDOCKING_PLATFORM_IDS[number],
+      );
+      if (platformIndex < 0) return;
+      landmarkRoot.userData.redockingBaseX = landmarkRoot.position.x;
+      landmarkRoot.userData.redockingBaseZ = landmarkRoot.position.z;
+      redockingLandmarks.set(landmarkId, landmarkRoot);
+      applyRedockingPlatformPose(platformIndex);
+    },
+    updateRedocking: (presentation, immediate = false) => {
+      const completedRolls = THREE.MathUtils.clamp(
+        Math.floor(presentation.completedRolls),
+        0,
+        Math.max(1, Math.floor(presentation.targetRolls)),
+      );
+      CELESTIAL_REDOCKING_PLATFORM_IDS.forEach((_, index) => {
+        const platformProgress = THREE.MathUtils.clamp(
+          (completedRolls - index * CELESTIAL_REDOCKING_ROLLS_PER_PLATFORM)
+            / CELESTIAL_REDOCKING_ROLLS_PER_PLATFORM,
+          0,
+          1,
+        );
+        targetPlatformOffsets[index] = CELESTIAL_REDOCKING_START_OFFSET * (1 - platformProgress);
+        if (immediate) currentPlatformOffsets[index] = targetPlatformOffsets[index];
+      });
+      const dockedPlatformCount = THREE.MathUtils.clamp(
+        Math.floor(presentation.dockedPlatformCount),
+        0,
+        CELESTIAL_REDOCKING_PLATFORM_IDS.length,
+      );
+      if (!immediate && dockedPlatformCount > redockingDockedPlatformCount) {
+        redockingPulseIndex = dockedPlatformCount - 1;
+        redockingPulse = 1;
+      }
+      redockingDockedPlatformCount = dockedPlatformCount;
+      if (immediate) {
+        CELESTIAL_REDOCKING_PLATFORM_IDS.forEach((_, index) => applyRedockingPlatformPose(index));
+      }
+    },
     animate: (elapsed) => {
+      CELESTIAL_REDOCKING_PLATFORM_IDS.forEach((_, index) => {
+        currentPlatformOffsets[index] = THREE.MathUtils.lerp(
+          currentPlatformOffsets[index],
+          targetPlatformOffsets[index],
+          0.065,
+        );
+        if (Math.abs(currentPlatformOffsets[index] - targetPlatformOffsets[index]) < 0.003) {
+          currentPlatformOffsets[index] = targetPlatformOffsets[index];
+        }
+        applyRedockingPlatformPose(index);
+        const isDocked = index < redockingDockedPlatformCount;
+        const pulse = index === redockingPulseIndex ? redockingPulse : 0;
+        collarMaterials[index].opacity = (isDocked ? 0.82 : 0.25) + pulse * 0.18;
+        collarMaterials[index].emissiveIntensity = (isDocked ? 0.72 : 0.16) + pulse * 2.2;
+        dockingCollars[index].scale.setScalar(1 + pulse * 0.12);
+        tetherRuntimes[index].material.opacity = isDocked ? 0.88 : 0.52;
+      });
+      redockingPulse = Math.max(0, redockingPulse - 0.018);
+      if (redockingPulse <= 0) redockingPulseIndex = -1;
       clouds.forEach((cloud, index) => {
         const driftAngle = cloud.userData.startAngle + elapsed * cloud.userData.driftSpeed;
         const laneRadius = cloud.userData.orbitRadius + Math.sin(elapsed * 0.025 + index) * (cloud.userData.isDistant ? 1.8 : 0.24);
