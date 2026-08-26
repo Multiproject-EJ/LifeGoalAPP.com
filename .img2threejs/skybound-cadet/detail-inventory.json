@@ -1,0 +1,76 @@
+{
+  "sourceImage": ".img2threejs/skybound-cadet/cadet-toy-glider-isolated-v1.png",
+  "zonesDir": ".img2threejs/skybound-cadet/detail-inventory",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 6,
+    "details": [
+      {
+        "id": "wing-leading-trim",
+        "kind": "raised ridge",
+        "description": "Warm-gold rounded leading-edge band wraps both broad white wings.",
+        "region": { "x": 0.03, "y": 0.20, "width": 0.88, "height": 0.55, "units": "normalized" },
+        "scale": "0.025 of span",
+        "affects": "silhouette, material break, chase-camera identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "left-leading-trim" },
+        "evidenceRef": "detail-inventory/zone-r1c0.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "navy-belly-band",
+        "kind": "painted line",
+        "description": "Deep navy lower fuselage band runs from the rounded nose beneath the tail.",
+        "region": { "x": 0.18, "y": 0.38, "width": 0.66, "height": 0.32, "units": "normalized" },
+        "scale": "0.35 of fuselage height",
+        "affects": "albedo zoning",
+        "mapsTo": { "type": "material.localOverrides", "ref": "navy-belly-band" },
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "cyan-canopy-gloss",
+        "kind": "gloss",
+        "description": "Compact saturated-cyan transparent canopy with bright white highlight and gold rim.",
+        "region": { "x": 0.30, "y": 0.24, "width": 0.28, "height": 0.28, "units": "normalized" },
+        "scale": "0.28 of fuselage length",
+        "affects": "material response, silhouette",
+        "mapsTo": { "type": "material.localOverrides", "ref": "canopy-highlight" },
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "sling-hook",
+        "kind": "socket",
+        "description": "Gold nose ring terminates in a large downward-curved launch hook.",
+        "region": { "x": 0.08, "y": 0.47, "width": 0.18, "height": 0.30, "units": "normalized" },
+        "scale": "0.20 of fuselage length",
+        "affects": "silhouette, launch attachment, destruction seam",
+        "mapsTo": { "type": "component.localFeatures", "ref": "launch-hook" },
+        "evidenceRef": "detail-inventory/zone-r1c0.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "wing-panel-line",
+        "kind": "panel-line",
+        "description": "Thin navy inset line follows the rounded planform inside each wing edge.",
+        "region": { "x": 0.03, "y": 0.20, "width": 0.88, "height": 0.55, "units": "normalized" },
+        "scale": "0.006 of span",
+        "affects": "meso linework",
+        "mapsTo": { "type": "component.localFeatures", "ref": "left-panel-line" },
+        "evidenceRef": "detail-inventory/zone-r1c2.png",
+        "confidence": 0.88
+      },
+      {
+        "id": "tail-gold-rim",
+        "kind": "bevel highlight",
+        "description": "Warm-gold rim and navy base visually separate the white vertical fin and tailplanes.",
+        "region": { "x": 0.66, "y": 0.12, "width": 0.28, "height": 0.42, "units": "normalized" },
+        "scale": "0.02 of fin height",
+        "affects": "tail silhouette, material break",
+        "mapsTo": { "type": "component.localFeatures", "ref": "gold-fin-rim" },
+        "evidenceRef": "detail-inventory/zone-r0c2.png",
+        "confidence": 0.91
+      }
+    ]
+  }
+}

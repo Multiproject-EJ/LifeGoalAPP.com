@@ -23,6 +23,7 @@ import { islandWorkshopManifest } from '../../games/island-workshop';
 import { momentumMatrixManifest } from '../../games/momentum-matrix';
 import { journeyDiscArenaManifest } from '../../games/journey-disc-arena';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
+import { skyboundExpeditionManifest } from '../../games/skybound-expedition';
 import { spaceExcavatorManifest } from '../../games/space-excavator';
 import { visionQuestManifest } from '../../games/vision-quest';
 import type { IslandRunMinigameProps, MinigameManifest } from './islandRunMinigameTypes';
@@ -34,6 +35,7 @@ export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze
   bossRhythmManifest,
   shooterBlitzManifest,
   spaceExcavatorManifest,
+  skyboundExpeditionManifest,
   visionQuestManifest,
   companionFeastManifest,
   islandWorkshopManifest,

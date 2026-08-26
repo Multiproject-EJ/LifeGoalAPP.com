@@ -1,0 +1,462 @@
+import {
+  getSkyboundCourseObjects,
+  getSkyboundLevel,
+  type SkyboundFlightState,
+  type SkyboundLevelId,
+} from '../../level-worlds/services/skyboundExpeditionFlight';
+import type { SkyboundAircraftId } from '../../level-worlds/services/skyboundPilotAcademy';
+import cadetChaseSpriteUrl from './assets/cadet-chase-sprite-v1.png';
+import type { SkyboundAimView } from './skyboundExpeditionRenderer';
+
+type SoftwarePhase = 'aiming' | 'flying' | 'result';
+
+export interface SkyboundSoftwareRendererInput {
+  canvas: HTMLCanvasElement;
+  levelId: SkyboundLevelId;
+  goalDistance: number;
+  aircraftId: SkyboundAircraftId;
+  getFlight: () => SkyboundFlightState | null;
+  getPhase: () => SoftwarePhase;
+  getAim: () => SkyboundAimView;
+  isBoosting: () => boolean;
+  isStabilizing: () => boolean;
+}
+
+interface ProjectedPoint { x:number; y:number; scale:number; depth:number; }
+interface FloatingIsland { id:number; x:number; y:number; z:number; radius:number; tower:boolean; }
+
+function seeded(index:number,salt:number) {
+  const value=Math.sin((index+1)*12.9898+salt*78.233)*43758.5453;
+  return value-Math.floor(value);
+}
+
+function clamp(value:number,minimum:number,maximum:number) {
+  return Math.max(minimum,Math.min(maximum,value));
+}
+
+function createFloatingIslands(goalDistance:number):FloatingIsland[] {
+  const islands:FloatingIsland[]=[{id:0,x:0,y:1,z:0,radius:24,tower:false}];
+  const count=Math.ceil(goalDistance/58)+8;
+  for(let index=1;index<count;index+=1) {
+    const side=index%2===0?-1:1;
+    islands.push({
+      id:index,
+      x:side*(22+seeded(index,4)*26),
+      y:10+seeded(index,7)*48,
+      z:index*58+seeded(index,2)*25,
+      radius:9+seeded(index,9)*10,
+      tower:index%7===0,
+    });
+  }
+  islands.push({id:count+1,x:0,y:18,z:goalDistance,radius:31,tower:true});
+  return islands;
+}
+
+function roundedRect(context:CanvasRenderingContext2D,x:number,y:number,width:number,height:number,radius:number) {
+  const r=Math.min(radius,width/2,height/2);
+  context.beginPath();
+  context.moveTo(x+r,y);
+  context.arcTo(x+width,y,x+width,y+height,r);
+  context.arcTo(x+width,y+height,x,y+height,r);
+  context.arcTo(x,y+height,x,y,r);
+  context.arcTo(x,y,x+width,y,r);
+  context.closePath();
+}
+
+function drawDiamond(context:CanvasRenderingContext2D,x:number,y:number,size:number,time:number) {
+  context.save();
+  context.translate(x,y);
+  context.scale(.72+Math.abs(Math.sin(time*.002))*0.28,1);
+  context.shadowBlur=size*.7;
+  context.shadowColor='#ffd846';
+  const gradient=context.createLinearGradient(-size,-size,size,size);
+  gradient.addColorStop(0,'#fff9b0');
+  gradient.addColorStop(.28,'#ffd846');
+  gradient.addColorStop(.72,'#e78b12');
+  gradient.addColorStop(1,'#fff0a0');
+  context.fillStyle=gradient;
+  context.beginPath();
+  context.moveTo(0,-size);
+  context.lineTo(size*.68,0);
+  context.lineTo(0,size);
+  context.lineTo(-size*.68,0);
+  context.closePath();
+  context.fill();
+  context.strokeStyle='rgba(255,255,255,.78)';
+  context.lineWidth=Math.max(1,size*.07);
+  context.beginPath();
+  context.moveTo(0,-size);
+  context.lineTo(0,size);
+  context.moveTo(-size*.68,0);
+  context.lineTo(size*.68,0);
+  context.stroke();
+  context.restore();
+}
+
+function drawRing(context:CanvasRenderingContext2D,p:ProjectedPoint,radius:number,time:number) {
+  const size=Math.max(7,radius*p.scale*.31);
+  const pulse=1+Math.sin(time*.004+p.depth)*.045;
+  context.save();
+  context.translate(p.x,p.y);
+  context.scale(1,pulse);
+  context.shadowBlur=Math.min(28,size*.45);
+  context.shadowColor='#4cf2ff';
+  context.strokeStyle='rgba(105,246,255,.96)';
+  context.lineWidth=clamp(p.scale*.28,2,9);
+  context.beginPath();
+  context.ellipse(0,0,size,size*.94,0,0,Math.PI*2);
+  context.stroke();
+  context.shadowBlur=0;
+  context.strokeStyle='rgba(255,255,255,.78)';
+  context.lineWidth=clamp(p.scale*.07,1,2.5);
+  context.beginPath();
+  context.ellipse(0,0,size*.86,size*.8,0,0,Math.PI*2);
+  context.stroke();
+  for(let index=0;index<8;index+=1) {
+    const angle=(index/8)*Math.PI*2+time*.00025;
+    context.fillStyle=index%2===0?'#fff4a6':'#5ceeff';
+    context.fillRect(Math.cos(angle)*size*.98-1.5,Math.sin(angle)*size*.93-1.5,3,3);
+  }
+  context.restore();
+}
+
+function drawHazard(context:CanvasRenderingContext2D,p:ProjectedPoint,radius:number,time:number) {
+  const size=Math.max(8,radius*p.scale*.26);
+  context.save();
+  context.translate(p.x,p.y);
+  context.rotate(Math.sin(time*.001+p.depth)*.09);
+  const rock=context.createRadialGradient(-size*.3,-size*.4,size*.1,0,0,size);
+  rock.addColorStop(0,'#f5efe3');
+  rock.addColorStop(.45,'#a99a8c');
+  rock.addColorStop(1,'#574d4d');
+  context.fillStyle=rock;
+  context.shadowColor='rgba(19,20,34,.45)';
+  context.shadowBlur=size*.45;
+  context.beginPath();
+  for(let index=0;index<10;index+=1) {
+    const angle=(index/10)*Math.PI*2;
+    const variation=.82+seeded(index,Math.round(p.depth))*.22;
+    const x=Math.cos(angle)*size*variation;
+    const y=Math.sin(angle)*size*variation;
+    if(index===0)context.moveTo(x,y);else context.lineTo(x,y);
+  }
+  context.closePath();
+  context.fill();
+  context.shadowBlur=0;
+  if(size>17) {
+    context.fillStyle='#f8f4e8';
+    context.beginPath();
+    context.moveTo(0,-size*.55);
+    context.lineTo(size*.48,size*.35);
+    context.lineTo(-size*.48,size*.35);
+    context.closePath();
+    context.fill();
+    context.strokeStyle='#c6372e';
+    context.lineWidth=Math.max(2,size*.1);
+    context.stroke();
+    context.fillStyle='#c6372e';
+    context.font=`900 ${Math.max(9,size*.52)}px system-ui`;
+    context.textAlign='center';
+    context.fillText('!',0,size*.25);
+  }
+  context.restore();
+}
+
+function drawTower(context:CanvasRenderingContext2D,p:ProjectedPoint,radius:number,accent:string) {
+  const scale=clamp(p.scale*.82,.2,4.2);
+  const towerHeight=34*scale;
+  context.save();
+  context.translate(p.x,p.y-radius*p.scale*.1);
+  context.fillStyle='#f5f0df';
+  context.strokeStyle='#d3aa3c';
+  context.lineWidth=Math.max(1,scale*1.2);
+  context.beginPath();
+  context.moveTo(-7*scale,0);
+  context.lineTo(-5*scale,-towerHeight);
+  context.lineTo(5*scale,-towerHeight);
+  context.lineTo(7*scale,0);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.fillStyle='#143d6b';
+  for(let floor=0;floor<4;floor+=1)context.fillRect(-3.6*scale,-towerHeight+7*scale+floor*7*scale,7.2*scale,2.2*scale);
+  context.fillStyle=accent;
+  context.beginPath();
+  context.moveTo(-8*scale,-towerHeight);
+  context.lineTo(0,-towerHeight-9*scale);
+  context.lineTo(8*scale,-towerHeight);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function drawFloatingIsland(
+  context:CanvasRenderingContext2D,
+  p:ProjectedPoint,
+  island:FloatingIsland,
+  accent:string,
+) {
+  const radius=clamp(island.radius*p.scale*.48,3,180);
+  if(radius<3||p.y<-220||p.y>900)return;
+  context.save();
+  context.translate(p.x,p.y);
+  const cliff=context.createLinearGradient(0,0,0,radius*2.3);
+  cliff.addColorStop(0,'#7b6a55');
+  cliff.addColorStop(.42,'#584b43');
+  cliff.addColorStop(1,'rgba(39,38,49,.15)');
+  context.fillStyle=cliff;
+  context.beginPath();
+  context.moveTo(-radius*.92,0);
+  context.quadraticCurveTo(-radius*.5,radius*1.25,0,radius*2.3);
+  context.quadraticCurveTo(radius*.55,radius*1.18,radius*.92,0);
+  context.closePath();
+  context.fill();
+  context.strokeStyle='rgba(41,37,39,.28)';
+  context.lineWidth=Math.max(1,radius*.035);
+  for(let vein=-2;vein<=2;vein+=1) {
+    context.beginPath();
+    context.moveTo(vein*radius*.28,radius*.16);
+    context.lineTo(vein*radius*.14,radius*(1.45+Math.abs(vein)*.12));
+    context.stroke();
+  }
+  const grass=context.createLinearGradient(0,-radius*.22,0,radius*.2);
+  grass.addColorStop(0,'#b5ef72');
+  grass.addColorStop(.45,'#60ae4b');
+  grass.addColorStop(1,'#367545');
+  context.fillStyle=grass;
+  context.beginPath();
+  context.ellipse(0,0,radius,radius*.28,0,0,Math.PI*2);
+  context.fill();
+  context.strokeStyle='rgba(226,255,179,.8)';
+  context.lineWidth=Math.max(1,radius*.025);
+  context.beginPath();
+  context.ellipse(0,-radius*.04,radius*.88,radius*.21,0,Math.PI,Math.PI*2);
+  context.stroke();
+  if(island.tower&&radius>10)drawTower(context,{...p,x:0,y:0},radius,accent);
+  context.restore();
+}
+
+function drawCloud(
+  context:CanvasRenderingContext2D,
+  p:ProjectedPoint,
+  radius:number,
+  opacity:number,
+) {
+  const size=clamp(radius*p.scale*.55,5,130);
+  context.save();
+  context.globalAlpha=opacity;
+  context.fillStyle='#f5fbff';
+  context.shadowColor='rgba(255,255,255,.35)';
+  context.shadowBlur=size*.35;
+  for(let index=0;index<5;index+=1) {
+    context.beginPath();
+    context.ellipse(p.x+(index-2)*size*.42,p.y-Math.abs(index-2)*size*.08,size*(.6+index*.04),size*.32,0,0,Math.PI*2);
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawVectorAircraft(
+  context:CanvasRenderingContext2D,
+  aircraftId:SkyboundAircraftId,
+  boosting:boolean,
+  time:number,
+  detached:readonly string[],
+) {
+  const colors:Record<SkyboundAircraftId,[string,string,string]>={
+    toy_glider:['#f7efeb','#0b2949','#f2bd45'],
+    prop_trainer:['#edf3e8','#235b88','#efb83e'],
+    jet_trainer:['#e2eff5','#153e69','#50e5ef'],
+    storm_interceptor:['#34466d','#151d37','#9c7ae8'],
+    goldwing_fighter:['#fff9df','#162947','#f3ce4e'],
+  };
+  const [primary,secondary,accent]=colors[aircraftId];
+  if(boosting) {
+    const flame=context.createLinearGradient(0,30,0,100);
+    flame.addColorStop(0,'#fff');flame.addColorStop(.3,'#64f5ff');flame.addColorStop(1,'rgba(47,170,255,0)');
+    context.fillStyle=flame;
+    context.beginPath();context.moveTo(-8,35);context.lineTo(0,104+Math.sin(time*.03)*12);context.lineTo(8,35);context.fill();
+  }
+  if(!detached.includes('left-wing')) { context.fillStyle=primary;context.beginPath();context.moveTo(-4,-10);context.lineTo(-82,20);context.lineTo(-58,38);context.lineTo(-3,18);context.closePath();context.fill(); }
+  if(!detached.includes('right-wing')) { context.fillStyle=primary;context.beginPath();context.moveTo(4,-10);context.lineTo(82,20);context.lineTo(58,38);context.lineTo(3,18);context.closePath();context.fill(); }
+  context.fillStyle=secondary;context.beginPath();context.moveTo(0,-48);context.quadraticCurveTo(20,-14,11,53);context.lineTo(0,65);context.lineTo(-11,53);context.quadraticCurveTo(-20,-14,0,-48);context.fill();
+  context.fillStyle=accent;context.beginPath();context.ellipse(0,-30,9,15,0,0,Math.PI*2);context.fill();
+  context.strokeStyle=accent;context.lineWidth=3;context.beginPath();context.moveTo(-58,28);context.lineTo(-12,10);context.moveTo(58,28);context.lineTo(12,10);context.stroke();
+}
+
+export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInput) {
+  const {canvas}=input;
+  const context=canvas.getContext('2d');
+  if(!context)return()=>undefined;
+  const level=getSkyboundLevel(input.levelId);
+  const course=getSkyboundCourseObjects(input.levelId,input.goalDistance);
+  const islands=createFloatingIslands(input.goalDistance);
+  const cadetSprite=new Image();
+  cadetSprite.decoding='async';
+  cadetSprite.src=cadetChaseSpriteUrl;
+  let width=1;
+  let height=1;
+  let frame=0;
+  let lastImpactSerial=0;
+  let previousSalvage=0;
+  let previousRings=0;
+  let feedbackText='';
+  let feedbackColor='#ffffff';
+  let feedbackAge=0;
+  let shake=0;
+  let previousTime=performance.now();
+  let elapsed=0;
+  const resize=()=>{
+    const rect=canvas.getBoundingClientRect();
+    const ratio=Math.min(window.devicePixelRatio||1,1.6);
+    width=Math.max(1,rect.width);height=Math.max(1,rect.height);
+    canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);
+    context.setTransform(ratio,0,0,ratio,0,0);
+  };
+  const observer=new ResizeObserver(resize);
+  observer.observe(canvas);
+  resize();
+
+  const animate=(time:number)=>{
+    const dt=Math.min(.05,Math.max(0,(time-previousTime)/1000));
+    previousTime=time;elapsed+=dt;
+    const flight=input.getFlight();
+    const phase=input.getPhase();
+    const aim=input.getAim();
+    const distance=flight?.x??0;
+    const altitude=flight?.y??7;
+    const lateral=flight?.lateralX??0;
+    const speed=flight?Math.hypot(flight.vx,flight.vy):0;
+    if(flight&&flight.impactSerial!==lastImpactSerial){
+      shake=1;lastImpactSerial=flight.impactSerial;feedbackText='IMPACT!';feedbackColor='#ff8a6e';feedbackAge=1;
+    } else if(flight&&flight.ringsCleared>previousRings) {
+      feedbackText='WIND GATE  +2 STREAK';feedbackColor='#8ff8ff';feedbackAge=1;
+    } else if(flight&&flight.salvageCollected>previousSalvage) {
+      feedbackText='ACADEMY CREST  +1';feedbackColor='#ffe47d';feedbackAge=.82;
+    }
+    if(flight){previousSalvage=flight.salvageCollected;previousRings=flight.ringsCleared;}
+    else {previousSalvage=0;previousRings=0;}
+    feedbackAge=Math.max(0,feedbackAge-dt);
+    const pitch=flight?.pitchRad??aim.angleDeg*Math.PI/180;
+    const horizon=height*(.43+clamp(pitch,-.7,.8)*.12);
+    const focal=Math.min(width,height)*(input.isBoosting()?1.32:1.08);
+    const project=(worldX:number,worldY:number,worldZ:number):ProjectedPoint=>{
+      const depth=Math.max(4,worldZ-distance+16);
+      const scale=focal/depth;
+      return {x:width/2+(worldX-lateral)*scale,y:horizon-(worldY-altitude)*scale,scale,depth};
+    };
+
+    const sky=context.createLinearGradient(0,0,0,height);
+    if(input.levelId==='storm'){sky.addColorStop(0,'#101b3c');sky.addColorStop(.55,'#51668e');sky.addColorStop(1,'#b3c5d6');}
+    else if(input.levelId==='stratosphere'){sky.addColorStop(0,'#04122d');sky.addColorStop(.56,'#3c7dc5');sky.addColorStop(1,'#e0f5ff');}
+    else {sky.addColorStop(0,level.skyTop);sky.addColorStop(.58,'#63bced');sky.addColorStop(1,'#e6f8ff');}
+    context.fillStyle=sky;context.fillRect(0,0,width,height);
+
+    const sunX=width*.78-distance*.035;
+    const sunY=height*.17;
+    const sun=context.createRadialGradient(sunX,sunY,0,sunX,sunY,height*.18);
+    sun.addColorStop(0,'rgba(255,249,194,.9)');sun.addColorStop(.2,'rgba(255,226,129,.35)');sun.addColorStop(1,'rgba(255,226,129,0)');
+    context.fillStyle=sun;context.fillRect(0,0,width,height*.55);
+
+    for(let index=0;index<18;index+=1) {
+      const cloudZ=20+index*47;
+      const p=project((seeded(index,3)-.5)*90,4+seeded(index,8)*78,cloudZ);
+      if(p.depth>4&&p.depth<560)drawCloud(context,p,10+seeded(index,5)*14,.32+seeded(index,1)*.34);
+    }
+
+    const farIslands=islands.filter((island)=>island.z>distance-12&&island.z<distance+650).sort((a,b)=>b.z-a.z);
+    for(const island of farIslands)drawFloatingIsland(context,project(island.x,island.y,island.z),island,level.accent);
+
+    if(input.levelId==='storm') {
+      context.strokeStyle='rgba(179,214,255,.34)';context.lineWidth=1.5;
+      for(let index=0;index<3;index+=1){const x=(seeded(Math.floor(time/700),index)*width);context.beginPath();context.moveTo(x,0);context.lineTo(x-12,height*.18);context.lineTo(x+5,height*.3);context.stroke();}
+    }
+
+    const resolved=new Set(flight?.resolvedObjectIds??[]);
+    const visible=course.filter((object)=>!resolved.has(object.id)&&object.x>distance-8&&object.x<distance+540).sort((a,b)=>b.x-a.x);
+    for(const object of visible) {
+      const p=project(object.lateralX??0,object.y,object.x);
+      if(p.y<-160||p.y>height+170)continue;
+      if(object.kind==='wind_ring')drawRing(context,p,object.radius,time);
+      else if(object.kind==='salvage')drawDiamond(context,p.x,p.y,Math.max(4,object.radius*p.scale*.22),time+object.x);
+      else drawHazard(context,p,object.radius,time);
+    }
+
+    const finalGate=project(0,58,input.goalDistance);
+    if(finalGate.depth<620) {
+      drawRing(context,finalGate,24,time);
+      if(finalGate.depth<300) {
+        context.fillStyle='rgba(7,32,60,.8)';
+        roundedRect(context,finalGate.x-42,finalGate.y-62,84,20,8);context.fill();
+        context.fillStyle='#fff3a0';context.font='900 9px system-ui';context.textAlign='center';context.fillText('EXAM GATE',finalGate.x,finalGate.y-48);
+      }
+    }
+
+    if(phase==='aiming') {
+      const launchY=height*.75;
+      const wood=context.createLinearGradient(0,launchY-120,0,launchY+80);wood.addColorStop(0,'#a8672c');wood.addColorStop(.45,'#6c381e');wood.addColorStop(1,'#2e1d21');
+      context.strokeStyle=wood;context.lineWidth=clamp(width*.035,13,25);context.lineCap='round';
+      context.beginPath();context.moveTo(width*.34,launchY+80);context.lineTo(width*.4,launchY-78);context.moveTo(width*.66,launchY+80);context.lineTo(width*.6,launchY-78);context.stroke();
+      context.strokeStyle='#4deaff';context.lineWidth=5;context.shadowBlur=12;context.shadowColor='#4deaff';context.beginPath();context.moveTo(width*.4,launchY-78);context.quadraticCurveTo(width*.5,launchY-30+aim.power*55,width*.6,launchY-78);context.stroke();context.shadowBlur=0;
+    }
+
+    if(input.isBoosting()) {
+      context.strokeStyle='rgba(210,250,255,.55)';context.lineWidth=1.5;
+      for(let index=0;index<22;index+=1) {
+        const x=(seeded(index,7)*width+time*(.15+seeded(index,4)*.3))%(width+100)-50;
+        const y=horizon+seeded(index,9)*(height-horizon);
+        context.beginPath();context.moveTo(x,y);context.lineTo(x+(x-width/2)*.18,y+18);context.stroke();
+      }
+    }
+
+    const planeX=width/2+(flight?.bankRad??0)*34;
+    const planeY=height*(phase==='aiming'?.7:.73)-pitch*13;
+    const planeScale=clamp(width/720,.68,1.22)*(input.isBoosting()?1.04:1);
+    context.save();
+    const shakeX=(seeded(Math.floor(time),2)-.5)*shake*18;
+    const shakeY=(seeded(Math.floor(time),5)-.5)*shake*12;
+    context.translate(planeX+shakeX,planeY+shakeY);
+    context.rotate((flight?.bankRad??0)*.62);
+    context.scale(planeScale,planeScale*(1-pitch*.08));
+    if(input.isStabilizing()) {
+      context.strokeStyle='rgba(120,255,239,.78)';context.lineWidth=3;context.shadowBlur=18;context.shadowColor='#74ffef';
+      context.beginPath();context.ellipse(0,5,112,57,time*.001,0,Math.PI*2);context.stroke();context.shadowBlur=0;
+    }
+    if(input.aircraftId==='toy_glider'&&cadetSprite.complete&&cadetSprite.naturalWidth>0&&(flight?.detachedPartIds.length??0)===0) {
+      context.shadowColor='rgba(1,16,34,.42)';context.shadowBlur=20;context.drawImage(cadetSprite,-126,-91,252,168);context.shadowBlur=0;
+      if(input.isBoosting()) {
+        const flame=context.createLinearGradient(0,52,0,125);flame.addColorStop(0,'#fff');flame.addColorStop(.3,'#64f5ff');flame.addColorStop(1,'rgba(47,170,255,0)');context.fillStyle=flame;context.beginPath();context.moveTo(-8,49);context.lineTo(0,127+Math.sin(time*.03)*10);context.lineTo(8,49);context.fill();
+      }
+    } else {
+      drawVectorAircraft(context,input.aircraftId,input.isBoosting(),time,flight?.detachedPartIds??[]);
+    }
+    context.restore();
+
+    for(let index=0;index<(flight?.detachedPartIds.length??0);index+=1) {
+      const age=(elapsed*1.4+index*.75)%4.5;
+      context.save();context.translate(planeX+(index%2?-1:1)*age*31,planeY+age*age*12);context.rotate(age*2.6);
+      context.fillStyle=index%2?'#f7efeb':'#0b2949';context.fillRect(-13,-4,26,8);context.restore();
+    }
+
+    if(feedbackAge>0) {
+      const rise=(1-feedbackAge)*24;
+      context.save();
+      context.globalAlpha=clamp(feedbackAge*1.8,0,1);
+      context.font=`950 ${clamp(width*.017,11,17)}px system-ui`;
+      context.textAlign='center';
+      context.fillStyle=feedbackColor;
+      context.shadowColor='rgba(4,20,38,.7)';
+      context.shadowBlur=7;
+      context.fillText(feedbackText,width/2,planeY-95-rise);
+      context.restore();
+    }
+
+    if(flight?.status==='crashed') {
+      context.fillStyle=`rgba(255,103,54,${clamp(1-(elapsed%2),0,.7)})`;context.beginPath();context.arc(planeX,planeY,28+(elapsed%1)*45,0,Math.PI*2);context.fill();
+    }
+    shake*=Math.pow(.025,dt);
+    frame=requestAnimationFrame(animate);
+  };
+  frame=requestAnimationFrame(animate);
+  return()=>{cancelAnimationFrame(frame);observer.disconnect();cadetSprite.src='';};
+}

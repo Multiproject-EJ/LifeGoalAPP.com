@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.86,
+  "estimatedFidelity": 0.86,
+  "targetThreshold": 0.7,
+  "materialId": "base",
+  "sourceImage": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/cadet-toy-glider-isolated-v1.png",
+  "outDir": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/pbr/base",
+  "palette": [
+    "#F6EFEC",
+    "#0A2344",
+    "#B8B7BC",
+    "#A6660B",
+    "#F3BA4C"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/pbr/base/base_albedo.png",
+      "url": "base_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/pbr/base/base_roughness.png",
+      "url": "base_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/pbr/base/base_height.png",
+      "url": "base_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/pbr/base/base_normal.png",
+      "url": "base_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Codex/2026-08-25/okay-i-found-the-next-even/habitgame/.img2threejs/skybound-cadet/pbr/base/base_ao.png",
+      "url": "base_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 1536,
+    "sourceHeight": 1024,
+    "mapSize": 512,
+    "cropBBoxPixels": {
+      "x": 33,
+      "y": 133,
+      "width": 1494,
+      "height": 698
+    },
+    "mask": {
+      "backgroundColor": "#FFFFFF",
+      "backgroundNoise": 0.0,
+      "transparentPixelFraction": 0.7441,
+      "foregroundCoverage": 0.2616
+    },
+    "mapStats": {
+      "valueRange": 0.9385,
+      "heightP90Gradient": 0.10037,
+      "roughnessBase": 0.684,
+      "roughnessVariation": 0.169,
+      "normalStrength": 0.274,
+      "blurRadius": 10
+    },
+    "palette": [
+      "#F6EFEC",
+      "#0A2344",
+      "#B8B7BC",
+      "#A6660B",
+      "#F3BA4C"
+    ]
+  },
+  "warnings": [
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

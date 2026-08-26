@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "workflowId": "skybound-pilot-academy-fleet",
+  "status": "production-approved",
+  "goalImages": [
+    {"path": "docs/visual-references/skybound-expedition/skybound-pilot-academy-evolution-goal-v2.png", "sha256": "c4bbf4f6f7c72561a3608be0685438d5e339a605b222968f95c094d1ebb22d7f"},
+    {"path": "docs/visual-references/skybound-expedition/skybound-pilot-academy-flight-goal-v2.png", "sha256": "8c831a96a1c348490fb442e025c697446b6c60a9f8725f4436d3b949a06caccb"}
+  ],
+  "scope": "Five action-ready stylized aircraft, launch rigs, themed courses, damage states, and final Academy reward presentation.",
+  "qualityGates": ["readable-silhouette", "named-breakable-parts", "stable-chase-camera", "distinct-rank-identity", "mobile-playable"]
+}

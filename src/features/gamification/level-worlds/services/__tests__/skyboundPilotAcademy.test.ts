@@ -1,0 +1,132 @@
+import {
+  SKYBOUND_AIRCRAFT_RANKS,
+  SKYBOUND_CADET_LESSONS,
+  SKYBOUND_LESSONS,
+  createSkyboundAcademyProgress,
+  evaluateSkyboundLesson,
+  isSkyboundCadetLessonUnlocked,
+  isSkyboundRankUnlocked,
+  isSkyboundLessonUnlocked,
+  settleSkyboundAcademyLesson,
+  spendSkyboundSortieTicket,
+} from '../skyboundPilotAcademy';
+import { SKYBOUND_STARTER_UPGRADES, createSkyboundFlight } from '../skyboundExpeditionFlight';
+
+type TestCase = { name: string; run: () => void };
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+
+function flightResult(options: {
+  distance: number;
+  salvage: number;
+  rings: number;
+  hazards: number;
+}) {
+  return {
+    ...createSkyboundFlight({
+      power: 1,
+      angleDeg: 35,
+      upgrades: SKYBOUND_STARTER_UPGRADES,
+      levelId: 'meadow',
+    }),
+    status: 'landed' as const,
+    x: options.distance,
+    salvageCollected: options.salvage,
+    ringsCleared: options.rings,
+    hazardHits: options.hazards,
+  };
+}
+
+export const skyboundPilotAcademyTests: TestCase[] = [
+  {
+    name: 'defines five aircraft ranks from toy glider to Goldwing Fighter',
+    run: () => {
+      assert(SKYBOUND_AIRCRAFT_RANKS.length === 5, 'academy should contain exactly five aircraft ranks');
+      assert(SKYBOUND_AIRCRAFT_RANKS[0].aircraftId === 'toy_glider', 'Cadet must start in a toy glider');
+      assert(SKYBOUND_AIRCRAFT_RANKS[4].aircraftId === 'goldwing_fighter', 'Ace must finish in the Goldwing Fighter');
+    },
+  },
+  {
+    name: 'authors exactly four sequential flights for every one of the five ranks',
+    run: () => {
+      assert(SKYBOUND_LESSONS.length === 20, 'the full Academy event should contain 20 flights');
+      for (const rank of SKYBOUND_AIRCRAFT_RANKS) {
+        const lessons = SKYBOUND_LESSONS.filter((lesson) => lesson.rankId === rank.id);
+        assert(lessons.length === 4, `${rank.id} should contain three drills and one checkride`);
+        assert(lessons[3].exam, `${rank.id} fourth flight should be its exam`);
+      }
+    },
+  },
+  {
+    name: 'spends exactly one ticket only through the sortie spend service',
+    run: () => {
+      const initial = createSkyboundAcademyProgress(2);
+      const first = spendSkyboundSortieTicket(initial);
+      assert(first.ok, 'a player with tickets should launch');
+      assert(initial.tickets === 2 && initial.sorties === 0, 'ticket spend must not mutate prior progress');
+      assert(first.progress.tickets === 1 && first.progress.sorties === 1, 'one launch should spend exactly one ticket');
+      const second = spendSkyboundSortieTicket(first.progress);
+      const blocked = spendSkyboundSortieTicket(second.progress);
+      assert(!blocked.ok && blocked.progress === second.progress, 'ticketless launch should fail without changing progress');
+    },
+  },
+  {
+    name: 'unlocks Cadet lessons sequentially',
+    run: () => {
+      const initial = createSkyboundAcademyProgress();
+      assert(isSkyboundCadetLessonUnlocked(initial, 'cadet_launch'), 'Launch Drill should be open immediately');
+      assert(!isSkyboundCadetLessonUnlocked(initial, 'cadet_gates'), 'Precision Gates should initially be locked');
+      const evaluation = evaluateSkyboundLesson('cadet_launch', flightResult({ distance: 170, salvage: 3, rings: 0, hazards: 1 }));
+      const settled = settleSkyboundAcademyLesson(initial, evaluation);
+      assert(isSkyboundCadetLessonUnlocked(settled, 'cadet_gates'), 'passing Launch Drill should unlock Precision Gates');
+    },
+  },
+  {
+    name: 'passes with two standards and awards Ace for all three',
+    run: () => {
+      const standard = evaluateSkyboundLesson('cadet_gates', flightResult({ distance: 225, salvage: 1, rings: 1, hazards: 0 }));
+      const ace = evaluateSkyboundLesson('cadet_gates', flightResult({ distance: 270, salvage: 6, rings: 2, hazards: 0 }));
+      assert(standard.standardsMet === 2 && standard.passed && !standard.ace, 'two standards should be a normal pass');
+      assert(ace.standardsMet === 3 && ace.passed && ace.ace, 'three standards should be an Ace pass');
+      assert(ace.academyXpEarned > standard.academyXpEarned, 'Ace should award more academy XP');
+    },
+  },
+  {
+    name: 'requires the lesson core skill instead of allowing passive distance and safety passes',
+    run: () => {
+      const passive = evaluateSkyboundLesson('cadet_gates', flightResult({ distance: 270, salvage: 6, rings: 0, hazards: 0 }));
+      assert(passive.standardsMet === 2, 'passive flight should still report its two completed standards');
+      assert(!passive.passed, 'missing the precision gate objective must require retraining');
+    },
+  },
+  {
+    name: 'promotes the Cadet to Trainee only after passing the mini exam',
+    run: () => {
+      let progress = createSkyboundAcademyProgress();
+      for (const lesson of SKYBOUND_CADET_LESSONS) {
+        const evaluation = evaluateSkyboundLesson(lesson.id, flightResult({ distance: 400, salvage: 8, rings: 3, hazards: 0 }));
+        progress = settleSkyboundAcademyLesson(progress, evaluation);
+        if (!lesson.exam) assert(!isSkyboundRankUnlocked(progress, 'trainee'), 'ordinary drills must not grant promotion');
+      }
+      assert(isSkyboundRankUnlocked(progress, 'trainee'), 'passing the Cadet exam should unlock Trainee');
+      assert(progress.aceLessonIds.length === 4, 'perfect Cadet chapter should retain every Ace result');
+    },
+  },
+  {
+    name: 'completes all five rank exams and awards the final Gold Wings certificate',
+    run: () => {
+      let progress = createSkyboundAcademyProgress();
+      for (const lesson of SKYBOUND_LESSONS) {
+        assert(isSkyboundLessonUnlocked(progress, lesson.id), `${lesson.id} should unlock in sequence during a perfect career`);
+        const evaluation = evaluateSkyboundLesson(lesson.id, flightResult({ distance: 2_000, salvage: 30, rings: 20, hazards: 0 }));
+        progress = settleSkyboundAcademyLesson(progress, evaluation);
+      }
+      assert(progress.completedLessonIds.length === 20, 'all 20 flights should remain recorded');
+      assert(progress.medalRankIds.length === 5, 'each rank exam should award one medal');
+      assert(progress.promotedRankIds.length === 5, 'all five aircraft ranks should be unlocked');
+      assert(progress.certificateAwarded, 'the final wings exam should award the certificate');
+    },
+  },
+];

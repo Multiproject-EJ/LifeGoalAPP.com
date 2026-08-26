@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "representativeAsset": "src/features/gamification/games/skybound-expedition/cadetToyGliderModel.ts",
+  "representativeAssetSha256": "a39634313f339ba628158bd8c9dc0d838ab235925fb527d0991b3b06e2ca4c03",
+  "stageAsset": "src/features/gamification/games/skybound-expedition/SkyboundExpeditionThreeStage.tsx",
+  "stageAssetSha256": "18fb506e7a8a99805a28b65256a809fc5c24763ef629815cdbfab5b8060650e4",
+  "acceptedStrengths": ["full 3D chase-camera travel", "readable toy glider", "named detachable parts", "collision debris"],
+  "requiredImprovements": ["all five aircraft", "rank-specific launch rigs", "five world moods", "complete event progression"]
+}

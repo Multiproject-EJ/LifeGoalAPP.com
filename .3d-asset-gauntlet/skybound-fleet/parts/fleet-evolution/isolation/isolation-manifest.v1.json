@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "partId": "fleet-evolution",
+  "status": "secondary-inferred-hangar-art",
+  "authority": "generated-hypothesis",
+  "sourceGoals": [
+    {
+      "path": "docs/visual-references/skybound-expedition/skybound-pilot-academy-flight-goal-v2.png",
+      "sha256": "8c831a96a1c348490fb442e025c697446b6c60a9f8725f4436d3b949a06caccb"
+    },
+    {
+      "path": "docs/visual-references/skybound-expedition/skybound-pilot-academy-evolution-goal-v2.png",
+      "sha256": "c4bbf4f6f7c72561a3608be0685438d5e339a605b222968f95c094d1ebb22d7f"
+    }
+  ],
+  "output": {
+    "path": "src/features/gamification/games/skybound-expedition/assets/fleet-evolution-strip-v1.png",
+    "sha256": "bebeb9891633bcffb7ee53d6ea634c888d78c2ecbef6b185a2d5e555d927afd4",
+    "dimensions": [1086, 362],
+    "alpha": true,
+    "view": "five-aircraft-rear-three-quarter-evolution-lineup"
+  },
+  "visibleConfidence": "medium",
+  "hiddenConfidence": "low",
+  "prompt": "Exactly five distinct aircraft in a transparent premium 3D mobile-game lineup: toy glider, prop trainer, cyan jet trainer, violet storm interceptor, and white/navy/gold final fighter.",
+  "exclusions": [
+    "not geometry authority",
+    "not used for flight collision",
+    "not a substitute for procedural Three.js aircraft",
+    "not evidence that action-ready model gates have passed"
+  ]
+}

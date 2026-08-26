@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "assemblyRoot": "skybound-fleet",
+  "entries": [
+    {"id":"cadet-core","aircraft":"toy_glider","part":"fuselage/canopy/nose","dependsOn":[],"sockets":["boost-socket"],"views":["front","side","rear"],"status":"baseline"},
+    {"id":"cadet-wings","aircraft":"toy_glider","part":"left/right wing","dependsOn":["cadet-core"],"sockets":["wing-roots"],"views":["top","front"],"status":"baseline"},
+    {"id":"cadet-tail","aircraft":"toy_glider","part":"tailplanes/fin","dependsOn":["cadet-core"],"sockets":["tail-root"],"views":["side","rear"],"status":"baseline"},
+    {"id":"cadet-launch","aircraft":"toy_glider","part":"sling hook/booster","dependsOn":["cadet-core"],"sockets":["launch-hook"],"views":["side","rear"],"status":"baseline"},
+    {"id":"trainee-core","aircraft":"prop_trainer","part":"fuselage/canopy/nose","dependsOn":[],"sockets":["prop-socket"],"views":["front","side","rear"],"status":"queued"},
+    {"id":"trainee-wings","aircraft":"prop_trainer","part":"straight wings/gear","dependsOn":["trainee-core"],"sockets":["wing-roots"],"views":["top","front"],"status":"queued"},
+    {"id":"trainee-tail","aircraft":"prop_trainer","part":"tailplanes/fin","dependsOn":["trainee-core"],"sockets":["tail-root"],"views":["side","rear"],"status":"queued"},
+    {"id":"trainee-drive","aircraft":"prop_trainer","part":"propeller/exhaust","dependsOn":["trainee-core"],"sockets":["prop-socket"],"views":["front","side"],"status":"queued"},
+    {"id":"aviator-core","aircraft":"jet_trainer","part":"fuselage/canopy/intakes","dependsOn":[],"sockets":["boost-socket"],"views":["front","side","rear"],"status":"queued"},
+    {"id":"aviator-wings","aircraft":"jet_trainer","part":"swept wings","dependsOn":["aviator-core"],"sockets":["wing-roots"],"views":["top","front"],"status":"queued"},
+    {"id":"aviator-tail","aircraft":"jet_trainer","part":"tailplanes/fin","dependsOn":["aviator-core"],"sockets":["tail-root"],"views":["side","rear"],"status":"queued"},
+    {"id":"aviator-drive","aircraft":"jet_trainer","part":"jet nozzle/trainer lights","dependsOn":["aviator-core"],"sockets":["boost-socket"],"views":["rear","side"],"status":"queued"},
+    {"id":"elite-core","aircraft":"storm_interceptor","part":"fuselage/canopy/intakes","dependsOn":[],"sockets":["boost-socket"],"views":["front","side","rear"],"status":"queued"},
+    {"id":"elite-wings","aircraft":"storm_interceptor","part":"delta wings","dependsOn":["elite-core"],"sockets":["wing-roots"],"views":["top","front"],"status":"queued"},
+    {"id":"elite-tail","aircraft":"storm_interceptor","part":"twin fins/control surfaces","dependsOn":["elite-core"],"sockets":["tail-root"],"views":["side","rear"],"status":"queued"},
+    {"id":"elite-drive","aircraft":"storm_interceptor","part":"twin storm drives/coils","dependsOn":["elite-core"],"sockets":["boost-socket"],"views":["rear","side"],"status":"queued"},
+    {"id":"ace-core","aircraft":"goldwing_fighter","part":"gold fuselage/canopy/nose","dependsOn":[],"sockets":["boost-socket"],"views":["front","side","rear"],"status":"queued"},
+    {"id":"ace-wings","aircraft":"goldwing_fighter","part":"gold swept wings","dependsOn":["ace-core"],"sockets":["wing-roots"],"views":["top","front"],"status":"queued"},
+    {"id":"ace-tail","aircraft":"goldwing_fighter","part":"twin fins/control surfaces","dependsOn":["ace-core"],"sockets":["tail-root"],"views":["side","rear"],"status":"queued"},
+    {"id":"ace-drive","aircraft":"goldwing_fighter","part":"afterburner/gold trim","dependsOn":["ace-core"],"sockets":["boost-socket"],"views":["rear","side"],"status":"queued"}
+  ]
+}
