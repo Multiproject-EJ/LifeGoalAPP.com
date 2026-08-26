@@ -75,7 +75,9 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
         levelReview: {
           title: 'Hatchery',
           stopId: 'hatchery',
+          previousLevel: 0,
           level: 1,
+          presentationSequence: 1,
           isFullyBuilt: false,
           isAdvanceReady: false,
           isAdvanceQueued: false,
