@@ -29,6 +29,7 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(12)?.role, 'ordinary', 'Island 012 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.worldSourceNumber, 13, 'Island 013 owns the Cactus Canyon world');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.role, 'ordinary', 'Island 013 keeps the ordinary-island role');
+      assertEqual(resolveIslandRun3DWorldRoute(22), null, 'Island 022 remains development-only until its visual Gauntlet passes');
     },
   },
   {

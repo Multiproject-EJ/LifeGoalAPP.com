@@ -119,6 +119,14 @@ from text embedded in the concept, and never overwrite a source or accepted
 
 - Inspect branch, worktrees and dirty files.
 - Preserve unrelated user work.
+- Resolve the runtime number against both inventories before reserving it: the
+  external source/workflow inbox and every relevant current, branch, worktree,
+  world-factory and authored-routing implementation. A missing `NNN-source`
+  file alone does not make a slot empty.
+- If either inventory already owns the candidate number, do not overwrite or
+  remap that island. Continue forward to the first number whose source/workflow
+  slot and 3D/runtime implementation slot are both empty, then update every
+  new brief, path and manifest to that resolved number before production.
 - Work on a dedicated `codex/island-NNN-<slug>` branch/worktree based on the
   latest integrated Island Run source.
 - Confirm whether prior island work is committed/merged before depending on it.

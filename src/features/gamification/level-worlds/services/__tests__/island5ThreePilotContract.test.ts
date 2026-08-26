@@ -129,6 +129,12 @@ import {
   ISLAND_13_TRAIN_CLEARANCE_HEIGHT,
   ISLAND_13_TRAIN_CLEARANCE_HALF_WIDTH,
 } from '../../dev/Island13CactusCanyonThreeWorld';
+import {
+  buildIsland22FishermansVillageLandmark,
+  createIsland22FishermansVillageLivingAmbience,
+  createIsland22FishermansVillageMaterials,
+  isIsland22RouteCorridorClear,
+} from '../../dev/Island22FishermansVillageThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
@@ -138,6 +144,50 @@ import {
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'authors the approved Island 022 fisherman village macro composition without taking a production route',
+    run: () => {
+      const materials = createIsland22FishermansVillageMaterials();
+      const scene = new THREE.Scene();
+      const ocean = new THREE.Mesh(
+        new THREE.PlaneGeometry(68, 68, 1, 1),
+        new THREE.MeshBasicMaterial({ color: 0x176f97 }),
+      );
+      const runtime = createIsland22FishermansVillageLivingAmbience(
+        scene,
+        ISLAND_3D_QUALITY_PROFILES.medium,
+        materials,
+        ocean,
+      );
+
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_CENTRAL_POND_SURFACE')), 'Island 022 needs the approved circular central fishing pond');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_POND_FISHING_PLATFORMS')), 'fishermen need platforms around the pond');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_FISH_MARKET_OFFLOAD_DOCK')), 'the upper-left fish-market offload dock must survive into 3D');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_FISH_MARKET_AWNING')), 'the fish-market dock must keep its sheltered loading identity');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_FISH_MARKET_HALL')), 'the upper-left offload corner needs an authored two-storey market hall');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_FISH_MARKET_OFFLOAD_CRANE')), 'the fish market needs a readable loading crane');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_AUTHORED_HARBOR_VILLAGE')), 'the outer village must use the bounded authored-cluster construction family');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_STEPPED_STONE_RETAINING_RING')), 'the village needs stepped stone retaining terraces outside the protected route');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_INTERLOCKING_COBBLE_BOARDWALK')), 'the outer village needs a connected cobble boardwalk band');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_22_FISHING_BOAT_1')), 'the shoreline needs a fishing-boat flotilla');
+
+      const footprints: Record<string, number> = { boss: 2.55, hatchery: 1.9, habit: 1.9, wisdom: 1.9, event: 1.9 };
+      const landmarkRoots = ISLAND_5_LANDMARKS.map((landmark) => {
+        const root = buildIsland22FishermansVillageLandmark(landmark, 3, 'medium', materials);
+        assert(
+          isIsland22RouteCorridorClear(root.position.x, root.position.z, footprints[landmark.id]),
+          `${landmark.id} must not overlap the perfect circular 36-tile board corridor`,
+        );
+        return root;
+      });
+      const boss = landmarkRoots.find((root) => root.userData.landmarkId === 'boss');
+      assert(Boolean(boss && boss.position.x > 6 && boss.position.z < -6), 'the top Guild Hall landmark must be shifted to the approved upper-right position');
+      assertEqual(new Set(landmarkRoots.map((root) => root.name)).size, 5, 'all five landmark roots must remain individually addressable');
+
+      runtime.animate(1.25);
+      assertEqual(runtime.root.userData.sourceSha256, 'a631297b2d2c11fcb3939de8ccc5bcdd69c52ab3bd12d40597859fbb6019ae65', 'the 3D slice must remain locked to approved source v004');
+    },
+  },
   {
     name: 'requires authored five-stage landmark construction across Islands 002 through 010',
     run: () => {
@@ -1280,7 +1330,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
-      assert(pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon;'), 'Islands 012 and 013 should use the proven per-material instanced route path');
+      assert(
+        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage;'),
+        'Islands 007, 012, 013 and development-only 022 should use the proven per-material instanced route path',
+      );
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
       assert(pilotSource.includes('compactCollectibles: isAbyssalPearlKingdom || isSunkenSands'), 'Island 012 rewards should collapse their static submeshes while retaining per-tile transforms');
       assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
@@ -1864,6 +1917,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(theatreSource.includes('THREE.MathUtils.clamp(crewScale / 0.58, 0.18, 1.25)'), 'miniature crew occupancy must contract with the rendered workers while retaining a conservative floor');
       assert(pilotSource.includes('0.19 * (constructionPreviewSize.y / previewHorizontalSize)'), 'crew scale must respond to low-wide versus tall landmark silhouettes while remaining readable on a physical phone');
       assert(pilotSource.includes("canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3)"), 'live QA must expose the resolved building-aware miniature scale');
+      assert(pilotSource.includes('completionCelebration: next?.completionCelebration ?? false'), 'the live renderer must forward the fully-built victory state to the robot theatre');
+      assert(theatreSource.includes("isCompletionCelebration") && theatreSource.includes("? 'celebrate'"), 'all three robots must use their authored celebration motion in the fully-built state');
+      assert(pilotSource.includes('const proudJump = revealSeconds < 0.7') && pilotSource.includes('const landingJiggle ='), 'the newly completed authored level should perform a proud jump and damped landing jiggle');
       assert(theatreSource.includes('keepMiniatureCrewInPhoneForecourt(targetPosition, role)'), 'the physical-phone crew must stay in distinct camera-facing work lanes instead of disappearing beyond the modal crop');
       assert(!theatreSource.includes('const workPulse ='), 'working robot roots must remain stabilized; vibration belongs to explicit contact tools only');
       assert(theatreSource.includes('const contactVibration = TOOL_CONTACT_VIBRATION[toolId]'), 'drill, saw and impact vibration must remain localized to the active tool');
@@ -1902,7 +1958,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13].includes(islandParam)'), 'the workbench should expose all twelve authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 22].includes(islandParam)'), 'the workbench should expose all routed worlds plus development-only Island 022 for repeatable landmark QA');
+      assert(pageSource.includes('islandNumber === 22') && pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench may preview Island 022 without adding it to production routing');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(

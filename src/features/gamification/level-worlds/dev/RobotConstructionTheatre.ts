@@ -73,6 +73,8 @@ export const CONSTRUCTION_COMPONENT_IDS = [
 export interface ConstructionPresentation {
   active: boolean;
   working?: boolean;
+  /** Park all three robots in a camera-facing, animated victory lineup. */
+  completionCelebration?: boolean;
   phase?: ConstructionPhase;
   progress: number;
   sequence?: number;
@@ -682,6 +684,7 @@ export function createRobotConstructionTheatre(options: {
   let presentation: RobotConstructionTheatre['presentation'] = {
     active: false,
     working: false,
+    completionCelebration: false,
     phase: 'arrive',
     progress: 0,
     sequence: 0,
@@ -813,6 +816,7 @@ export function createRobotConstructionTheatre(options: {
     root.visible = presentation.active;
     const config = resolveWorkingConfig();
     const isWorking = Boolean(presentation.active && presentation.working);
+    const isCompletionCelebration = Boolean(presentation.active && presentation.completionCelebration);
     CONSTRUCTION_TOOLS.forEach(({ id }) => { tools[id].visible = isWorking && config.tools.includes(id); });
     CONSTRUCTION_MATERIALS.forEach(({ id }) => { materialStacks[id].visible = isWorking && config.materials.includes(id); });
     heavyBeam.visible = isWorking && ['foundation', 'frame', 'assemble'].includes(presentation.phase);
@@ -828,9 +832,19 @@ export function createRobotConstructionTheatre(options: {
     deliveryOrbit.visible = isWorking && presentation.phase === 'survey';
     if (presentation.active) {
       (Object.keys(config.motions) as RobotRole[]).forEach((role) => {
-        family.setMemberMotion(role, isWorking ? config.motions[role] : role === 'project-manager' ? 'listen' : 'idle');
+        family.setMemberMotion(
+          role,
+          isCompletionCelebration
+            ? 'celebrate'
+            : isWorking
+              ? config.motions[role]
+              : role === 'project-manager'
+                ? 'listen'
+                : 'idle',
+        );
       });
-      family.setEmotion(presentation.phase === 'reveal' ? 'delighted' : isWorking ? 'focused' : 'friendly');
+      family.setEmotion(isCompletionCelebration || presentation.phase === 'reveal' ? 'delighted' : isWorking ? 'focused' : 'friendly');
+      if (isCompletionCelebration && family.brainState !== 'energized') family.setBrainState('energized');
     }
   };
 
@@ -871,6 +885,7 @@ export function createRobotConstructionTheatre(options: {
       presentation = {
         active: next.active,
         working: Boolean(next.working),
+        completionCelebration: Boolean(next.completionCelebration),
         phase: next.phase ?? derivePhase(next.progress),
         progress: THREE.MathUtils.clamp(next.progress, 0, 1),
         sequence: next.sequence ?? 0,
@@ -882,6 +897,7 @@ export function createRobotConstructionTheatre(options: {
       if (
         previous.active !== presentation.active
         || previous.working !== presentation.working
+        || previous.completionCelebration !== presentation.completionCelebration
         || previous.phase !== presentation.phase
         || previous.choreography?.styleId !== presentation.choreography?.styleId
       ) {
@@ -907,6 +923,7 @@ export function createRobotConstructionTheatre(options: {
       const response = 1 - Math.exp(-Math.max(deltaSeconds, 1 / 120) * (reducedMotion ? 5 : 8));
       const phaseIndex = CONSTRUCTION_PHASES.indexOf(presentation.phase);
       const isWorking = Boolean(presentation.working);
+      const isCompletionCelebration = Boolean(presentation.completionCelebration);
       const relocationSeconds = THREE.MathUtils.clamp(
         presentation.choreography?.relocationSeconds ?? RELOCATION_SLOT_SECONDS,
         1.3,
@@ -1069,6 +1086,29 @@ export function createRobotConstructionTheatre(options: {
               const beatBrainState = beatProgress < 0.52 ? 'curious' : 'energized';
               if (family.brainState !== beatBrainState) family.setBrainState(beatBrainState);
             }
+          }
+          if (isCompletionCelebration) {
+            const celebrationPhase = elapsedSeconds * 1.75 + roleIndex * 0.48;
+            const jumpCycle = celebrationPhase % 1.7;
+            const jumpEnvelope = reducedMotion || jumpCycle > 0.5
+              ? 0
+              : Math.sin((jumpCycle / 0.5) * Math.PI);
+            const lane = role === 'heavy-worker' ? -0.72 : role === 'mini-artist' ? 0.72 : 0;
+            targetPosition.set(
+              lane * targetEnvelope.radius,
+              targetEnvelope.height * (role === 'project-manager' ? 0.11 : 0.08)
+                + jumpEnvelope * targetEnvelope.height * 0.12,
+              targetEnvelope.radius * 1.18,
+            );
+            roleContacts[role].set(0, targetEnvelope.height * 0.42, 0);
+            targetRotationY = reducedMotion ? 0 : Math.sin(celebrationPhase * 2.1) * 0.16;
+            presenceScale = ROLE_WORK_RIG[role].presenceScale * crewScale * (1 + jumpEnvelope * 0.1);
+            hasPersonalityBeat = false;
+            family.setMemberEmotion(
+              role,
+              jumpCycle < 0.23 ? 'delighted' : jumpCycle < 0.7 ? 'friendly' : 'curious',
+            );
+            if (role === 'project-manager' && family.brainState !== 'energized') family.setBrainState('energized');
           }
           targetOccupancyCorrections += enforceConstructionOccupancy(
             targetPosition,

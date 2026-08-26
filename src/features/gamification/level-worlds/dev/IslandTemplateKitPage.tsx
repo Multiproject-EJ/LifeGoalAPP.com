@@ -18,8 +18,13 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13].includes(islandParam) ? islandParam : 5;
-  const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 22].includes(islandParam) ? islandParam : 5;
+  // Island 022 is intentionally available only in this explicit development
+  // preview until its Gauntlet render gate passes. Do not add a production
+  // routing-manifest entry merely to preview unfinished authored geometry.
+  const worldSourceNumber = islandNumber === 22
+    ? 22
+    : resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');
   const constructionLandmark = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'].includes(requestedLandmark ?? '')
@@ -159,6 +164,7 @@ export default function IslandTemplateKitPage() {
       active: true,
       working: initialState.constructionWorking,
       cameraLocked: initialState.constructionWorking,
+      completionCelebration: false,
       phase: initialState.constructionProgress < 0.2
         ? 'foundation'
         : initialState.constructionProgress < 0.45

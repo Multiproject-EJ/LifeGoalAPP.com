@@ -7,6 +7,8 @@ export interface BuildModalV2Props {
   onClose: () => void;
   viewModel: BuildModalV2ViewModel;
   isBuildHoldActive: boolean;
+  isBuildInteractionLocked: boolean;
+  buildInteractionLockLabel: string;
   buildHoldFeedbackLabel: string;
   isBuildModalHatcheryGuidanceActive: boolean;
   discountRate?: number;
@@ -20,6 +22,7 @@ export interface BuildModalV2Props {
 
 export interface BuildModalV2LevelReview {
   title: string;
+  stopId: string;
   level: number;
   isFullyBuilt: boolean;
   isAdvanceReady: boolean;
@@ -30,10 +33,14 @@ export interface BuildModalV2LevelReview {
 function BuildModalV2CompleteState({ viewModel }: { viewModel: BuildModalV2ViewModel }) {
   return (
     <div className="bm2-complete-state" role="status">
-      <div className="bm2-complete-state__icon" aria-hidden="true">🏝️</div>
+      <img
+        className="bm2-complete-state__crest"
+        src="/assets/island-run/build-modal/completed-crest-v001.png"
+        alt="Completed!"
+      />
       <div className="bm2-complete-state__copy">
         <h3>All landmarks restored</h3>
-        <p>15 of 15 construction levels complete</p>
+        <p>15 of 15 construction levels complete · the crew is celebrating</p>
       </div>
       <div className="bm2-level-rail" aria-label="All landmark levels completed">
         {viewModel.levelRail.map((item) => (
@@ -66,8 +73,8 @@ function BuildModalV2LevelReviewState({
   const actionLabel = review.isAdvanceQueued
     ? 'Next build queued'
     : review.hasNextBuild
-      ? review.isAdvanceReady ? 'Continue building' : 'Queue next build'
-      : review.isAdvanceReady ? 'Finish review' : 'Queue finish';
+      ? review.isAdvanceReady ? 'Continue building' : 'Celebration playing'
+      : review.isAdvanceReady ? 'Finish review' : 'Celebration playing';
 
   return (
     <div className="bm2-level-review" role="group" aria-label={`${review.title} level ${review.level} review`}>
@@ -93,11 +100,13 @@ function BuildModalV2LevelReviewState({
         type="button"
         className={`bm2-level-review__advance${review.isAdvanceQueued ? ' bm2-level-review__advance--queued' : ''}${review.isAdvanceReady ? ' bm2-level-review__advance--ready' : ''}`}
         aria-label={actionLabel}
+        disabled={!review.isAdvanceReady}
+        aria-disabled={!review.isAdvanceReady}
         onClick={onAdvance}
       >
         <span aria-hidden="true">{review.isAdvanceQueued ? '✓' : '🔨'}</span>
         <strong>{actionLabel}</strong>
-        <small>{review.isAdvanceReady ? 'Continue now' : 'Available in half a second'}</small>
+        <small>{review.isAdvanceReady ? 'Continue now' : 'Robots and reveal still moving'}</small>
       </button>
       <span className="bm2-level-review__timer" aria-hidden="true" />
     </div>
@@ -110,6 +119,7 @@ function BuildModalV2PartButton({
   targetLevel,
   activeStopIndex,
   disabledByTutorial,
+  disabledByAnimation,
   isBuildHoldActive,
   onBuildPartChoice,
 }: {
@@ -118,11 +128,12 @@ function BuildModalV2PartButton({
   targetLevel: number;
   activeStopIndex: number;
   disabledByTutorial: boolean;
+  disabledByAnimation: boolean;
   isBuildHoldActive: boolean;
   onBuildPartChoice: (stopIndex: number, partNumber: BuildModalV2PartViewModel['partNumber']) => void;
 }) {
   const isComplete = part.status === 'complete';
-  const isDisabled = isComplete || !part.canAfford || disabledByTutorial || isBuildHoldActive;
+  const isDisabled = isComplete || !part.canAfford || disabledByTutorial || disabledByAnimation || isBuildHoldActive;
   const metaLabel = part.status === 'complete'
     ? 'Done'
     : `${part.essenceCost} Money`;
@@ -214,6 +225,8 @@ export function BuildModalV2({
   onClose,
   viewModel,
   isBuildHoldActive,
+  isBuildInteractionLocked,
+  buildInteractionLockLabel,
   buildHoldFeedbackLabel,
   isBuildModalHatcheryGuidanceActive,
   discountRate = 0,
@@ -231,7 +244,7 @@ export function BuildModalV2({
   const progressPercent = active ? Math.round(Math.max(0, Math.min(1, active.progressRatio)) * 100) : 100;
   const discountPercent = Math.round(Math.max(0, discountRate) * 100);
   const discountMinutesLeft = discountExpiresAtMs && discountRate > 0 ? Math.max(1, Math.ceil((discountExpiresAtMs - Date.now()) / 60000)) : 0;
-  const hasActiveDiscount = discountPercent > 0 && discountMinutesLeft > 0;
+  const hasActiveDiscount = !isComplete && discountPercent > 0 && discountMinutesLeft > 0;
 
   if (!isOpen) return null;
 
@@ -240,7 +253,7 @@ export function BuildModalV2({
     : '15 of 15 complete';
 
   return (
-    <div className="island-run-overlay-root bm2-build-mode" role="presentation">
+    <div className={`island-run-overlay-root bm2-build-mode${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}`} role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
         <header className="bm2-header">
           <span className="bm2-header__crest" aria-hidden="true">⚒</span>
@@ -261,6 +274,9 @@ export function BuildModalV2({
             <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Money.</p>
           )}
           {isBuildHoldActive && <p className="bm2-hold-feedback">{buildHoldFeedbackLabel}</p>}
+          {isBuildInteractionLocked && !levelReview && !isComplete && (
+            <p className="bm2-animation-lock" role="status">{buildInteractionLockLabel}</p>
+          )}
           {hasActiveDiscount && (
             <div className="bm2-discount-spotlight" aria-label={`Build Rush discount active: ${discountPercent}% off for about ${discountMinutesLeft} minutes`}>
               <span className="bm2-discount-spotlight__bulb" aria-hidden="true">🔨</span>
@@ -314,7 +330,7 @@ export function BuildModalV2({
                 activeStopIndex={active.stopIndex}
                 nextTapEssenceCost={active.nextTapEssenceCost}
                 isActive={isBuildHoldActive}
-                isDisabled={!canBuildActive || isBuildModalHatcheryGuidanceActive && active.activePart !== 1}
+                isDisabled={isBuildInteractionLocked || !canBuildActive || isBuildModalHatcheryGuidanceActive && active.activePart !== 1}
                 onStartBuildHold={onStartBuildHold}
                 onStopBuildHold={onStopBuildHold}
               />
@@ -327,6 +343,7 @@ export function BuildModalV2({
                     targetLevel={active.targetLevel}
                     activeStopIndex={active.stopIndex}
                     disabledByTutorial={isBuildModalHatcheryGuidanceActive && part.partNumber !== active.activePart}
+                    disabledByAnimation={isBuildInteractionLocked}
                     isBuildHoldActive={isBuildHoldActive}
                     onBuildPartChoice={onBuildPartChoice}
                   />

@@ -334,11 +334,14 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Hold-to-build should apply one awaited canonical step per steady beat and stop at each level review.',
       );
       assert(
-        source.includes('const BUILD_HOLD_REPEAT_DELAY_MS = 520;') &&
+        source.includes('const BUILD_HOLD_REPEAT_DELAY_MS = 1_250;') &&
+          source.includes('const BUILD_TAP_STEP_ANIMATION_DELAY_MS = 1_150;') &&
+          source.includes('for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1)') &&
+          source.includes('await wait(BUILD_TAP_STEP_ANIMATION_DELAY_MS);') &&
           source.includes("setBuildHoldFeedbackLabel('⚒️ Building steadily…');") &&
           !source.includes('resolveBuildHoldBatchSteps') &&
           !source.includes('resolveBuildHoldRepeatDelayMs'),
-        'Hold-to-build should stay deliberately slow enough for construction transitions to remain readable.',
+        'Tap and hold building should stay deliberately paced at one canonical step per readable construction beat.',
       );
       // aria-disabled lives in BuildModalV2 (v2 tray cards) — verify it is
       // present in either the board source or the v2 modal component.
@@ -355,7 +358,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford;') ||
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') ||
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;') ||
-            buildModalV2Source.includes('const isDisabled = isComplete || !part.canAfford || disabledByTutorial || isBuildHoldActive;')
+            buildModalV2Source.includes('const isDisabled = isComplete || !part.canAfford || disabledByTutorial || disabledByAnimation || isBuildHoldActive;')
           ) &&
           buildModalV2Source.includes('Hold to auto-build'),
         'Build choices and hold control should expose true affordability/interaction disabled states.',
@@ -367,8 +370,9 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
           source.includes('const processBuildTapQueue = useCallback(async (): Promise<void> => {') &&
           source.includes('const isBuildTapQueueProcessingRef = useRef(false);') &&
           source.includes('const maxSteps = resolveQueuedBuildPartSteps(nextTap.stopIndex, nextTap.targetPartNumber);') &&
-          source.includes('await handleSpendEssenceOnBuild(nextTap.stopIndex, maxSteps);'),
-        'Independent part choices should reprice from the latest canonical snapshot and serialize through the canonical batch action.',
+          source.includes('for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1)') &&
+          source.includes('await handleSpendEssenceOnBuild(nextTap.stopIndex, 1);'),
+        'Independent part choices should reprice from the latest canonical snapshot and serialize one canonical spend per animation beat.',
       );
     },
   },
