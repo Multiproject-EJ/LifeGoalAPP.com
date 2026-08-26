@@ -60,12 +60,12 @@ function withCapturedConsoleInfo<T>(fn: () => T): { result: T; calls: unknown[][
 
 export const minigameConsolidationPhase3Tests: TestCase[] = [
   {
-    name: 'EVENT_IDS lists the four canonical events in rotation order',
+    name: 'EVENT_IDS lists the five canonical events in rotation order',
     run: () => {
       assertDeepEqual(
         [...EVENT_IDS],
-        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast'],
-        'EVENT_IDS must match rotation 1→2→3→4 from plan §2.1',
+        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast', 'skybound_expedition'],
+        'EVENT_IDS must match the canonical five-event rotation',
       );
     },
   },
@@ -158,13 +158,13 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
     },
   },
   {
-    name: 'rotation cycles back to feeding_frenzy after companion_feast',
+    name: 'rotation cycles through Skybound Academy before returning to feeding_frenzy',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       let state = makeBaseState();
       let nowMs = 1_000;
       const seen: Array<string | null> = [];
-      for (let i = 0; i < 5; i += 1) {
+      for (let i = 0; i < 6; i += 1) {
         const result = advanceEventIfExpired(state, nowMs);
         seen.push(result.nextEventId);
         state = result.state;
@@ -172,8 +172,8 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
       }
       assertDeepEqual(
         seen,
-        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast', 'feeding_frenzy'],
-        'rotation cycles 1→2→3→4→1',
+        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast', 'skybound_expedition', 'feeding_frenzy'],
+        'rotation cycles through all five events before wrapping',
       );
     },
   },
@@ -248,10 +248,10 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
     name: 'getEventRotationTemplates exposes all canonical event templates for UI renderers',
     run: () => {
       const templates = getEventRotationTemplates();
-      assertEqual(templates.length, 4, 'all four canonical events should be exposed');
+      assertEqual(templates.length, 5, 'all five canonical events should be exposed');
       assertDeepEqual(
         templates.map((template) => template.eventId),
-        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast'],
+        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast', 'skybound_expedition'],
         'rotation template order must remain canonical',
       );
       assert(templates.every((template) => template.displayName.length > 0), 'every template should include a non-empty display label');

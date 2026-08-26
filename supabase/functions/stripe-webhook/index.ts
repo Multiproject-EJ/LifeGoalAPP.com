@@ -61,7 +61,7 @@ type MinigameTicketSkuId =
   | 'space_excavator_tickets_10'
   | 'companion_feast_tickets_10';
 
-type TimedEventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
+type TimedEventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | 'skybound_expedition';
 
 type ThemeId =
   | 'sproutling-grove'
@@ -212,7 +212,8 @@ function isTimedEventId(value: string | null | undefined): value is TimedEventId
   return value === 'feeding_frenzy'
     || value === 'lucky_spin'
     || value === 'space_excavator'
-    || value === 'companion_feast';
+    || value === 'companion_feast'
+    || value === 'skybound_expedition';
 }
 
 function isMinigameTicketSkuId(value: string | null | undefined): value is MinigameTicketSkuId {

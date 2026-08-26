@@ -1,6 +1,6 @@
 # Skybound Expedition — Flight Prototype Gauntlet
 
-Status: **Pilot Academy vertical slice active**, approved by Eivind on 2026-08-25.
+Status: **Production event integration active**, direction approved by Eivind on 2026-08-25 and integration authorized on 2026-08-26.
 
 ## Mission
 
@@ -200,3 +200,81 @@ Current limitation: only the Cadet toy glider and Cadet syllabus are playable. T
 - Strict ObjectSculptSpec validation passed.
 - Runtime part coverage passed: 15 specified visible components, 0 errors, 0 warnings (plus the expected transform-only root note).
 - Local review route: `http://127.0.0.1:5176/dev/skybound-expedition`.
+
+## Production integration slice — 2026-08-26
+
+This section supersedes the earlier prototype-only authority boundaries. The
+development route remains available for isolated flight-feel work, while the
+same game now also launches as `skybound_expedition`, the fifth canonical timed
+event. All five aircraft ranks and all 20 exercises/checkrides are playable.
+
+### Canonical player loop
+
+1. Earn a ticket from the shared Island Run event economy.
+2. Open Skybound Academy without spending anything.
+3. Select an unlocked lesson and make a valid launch, spending exactly one
+   ticket from the active event runtime id.
+4. Fly the authored 3D course, collide, recover or crash, and settle once.
+5. Bank scored salvage, improve Launch System / Flight Controls / Boost Drive,
+   and retry or advance.
+6. Pass three drills and a checkride in each rank to evolve from Toy Glider to
+   Goldwing Fighter. The first checkride pass awards its declared shared-ticket
+   refill; the final checkride awards Gold Wings and the certificate.
+
+### Authority and persistence
+
+- React owns presentation only. Launch, settlement, shared-ticket mutation,
+  reward-bar credit, and upgrade spend route through
+  `islandRunSkyboundAcademyActions.ts`.
+- Academy state is keyed by the active event runtime id under
+  `skyboundAcademyProgressByEvent` in `IslandRunGameStateRecord` and persists to
+  `island_run_runtime_state.skybound_academy_progress_by_event`.
+- A bounded settled-attempt ledger makes flight settlement idempotent across
+  duplicate callbacks and hydration/conflict merges.
+- Valid launch costs one shared event ticket. Opening, aiming, an invalid short
+  pull, changing lessons, and upgrading cost no ticket.
+- A normal pass contributes four points to the one canonical event reward bar;
+  an Ace contributes eight. Failed flights still bank their scored salvage but
+  do not advance the reward bar.
+- The optional purchase route reuses the generic ten-ticket Checkout Session
+  SKU with `skybound_expedition` metadata; it adds no separate Stripe product or
+  payment authority in this slice.
+
+### Production acceptance gates
+
+- Rotation templates, event engine, modal grid, banner, Arena catalog, debug
+  override, launcher descriptor, and ticket routing all recognize Skybound.
+- Service tests prove exact ticket spend, ticketless no-op, event-wallet
+  isolation, Ace reward credit, duplicate settlement protection, first-exam
+  refill, rank promotion, and persistent upgrade spend.
+- Full Island Run service suite, architecture guard, production build, database
+  migration validation, and phone-width browser playtest must pass before the
+  integration checkpoint is handed off.
+- No Supabase migration, Edge Function, Stripe price, or production deployment
+  is applied by this local integration slice.
+
+### Rollback
+
+Remove the fifth rotation template and Skybound route, delete the event action
+service and event-scoped state field, and reverse the additive JSONB migration.
+The isolated `/dev/skybound-expedition` prototype remains usable because its
+local save path is intentionally separate from canonical event mode.
+
+### 2026-08-26 integration evidence
+
+- Full Island Run service suite passed: 1,873 tests, 0 failures.
+- New coverage includes shared-ticket wallet isolation, ticketless no-op,
+  simultaneous-launch serialization, Ace reward-bar credit, idempotent flight
+  settlement, exam ticket refill, rank promotion, upgrade persistence, and
+  generic Checkout SKU routing.
+- Island Run architecture guard passed with 0 violations and the same 3
+  allowlisted legacy warnings.
+- Production Vite build passed with the repository's existing chunk-size and
+  mixed-import warnings only.
+- `git diff --check` passed.
+- The additive migration was generated with Supabase CLI 2.116.0. Local
+  execution remains pending because no Supabase Postgres stack is running on
+  port 54322; no remote database or Edge Function change was applied.
+- The local play server returns HTTP 200 at
+  `http://127.0.0.1:5199/dev/skybound-expedition`. Final human phone playfeel
+  review of this integration checkpoint remains the next visual gate.

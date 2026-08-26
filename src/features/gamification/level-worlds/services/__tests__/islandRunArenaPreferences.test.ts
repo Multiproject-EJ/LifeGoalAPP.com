@@ -55,7 +55,7 @@ export const islandRunArenaPreferencesTests: TestCase[] = [
     name: 'ranking produces full, middle-fast, and flash pacing',
     run: () => {
       const rows = getArenaPreferenceRows(DEFAULT_ARENA_MINIGAME_PREFERENCES);
-      assert(rows.map((row) => row.pace).join(',') === 'full,full,fast,fast,fast,fast,fast,fast,flash,flash', 'unexpected pace tiers');
+      assert(rows.map((row) => row.pace).join(',') === 'full,full,fast,fast,fast,fast,fast,fast,fast,flash,flash', 'unexpected pace tiers');
       assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'twin_sigils') === 'flash', 'last game should flash');
     },
   },

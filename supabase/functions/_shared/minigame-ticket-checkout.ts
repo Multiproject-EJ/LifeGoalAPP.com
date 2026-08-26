@@ -9,13 +9,14 @@ export const ALLOWED_MINIGAME_TICKET_SKU_IDS = [
 ] as const;
 
 export type MinigameTicketSkuId = (typeof ALLOWED_MINIGAME_TICKET_SKU_IDS)[number];
-export type MinigameTicketEventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
+export type MinigameTicketEventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | 'skybound_expedition';
 
 const SKU_BY_EVENT: Record<MinigameTicketEventId, MinigameTicketSkuId> = {
   feeding_frenzy: 'feeding_frenzy_tickets_10',
   lucky_spin: 'lucky_spin_tickets_10',
   space_excavator: 'space_excavator_tickets_10',
   companion_feast: 'companion_feast_tickets_10',
+  skybound_expedition: 'minigame_tickets_10',
 };
 
 export function isValidMinigameTicketSkuId(value: unknown): value is MinigameTicketSkuId {
@@ -27,7 +28,8 @@ export function isValidMinigameTicketEventId(value: unknown): value is MinigameT
   return value === 'feeding_frenzy'
     || value === 'lucky_spin'
     || value === 'space_excavator'
-    || value === 'companion_feast';
+    || value === 'companion_feast'
+    || value === 'skybound_expedition';
 }
 
 export function resolveMinigameTicketPriceEnvName(skuId: MinigameTicketSkuId): string {

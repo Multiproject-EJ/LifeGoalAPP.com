@@ -822,10 +822,10 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
-    name: 'v2 on: feeding_frenzy event rotates in after companion_feast (sequence wraps)',
+    name: 'v2 on: Skybound Academy rotates in after companion_feast',
     run: () => {
       const nowMs = 10_000;
-      // companion_feast is index 3; next wraps to feeding_frenzy (index 0)
+      // Skybound Academy follows Companion Feast in the five-event rotation.
       const rotated = ensureIslandRunContractV2ActiveTimedEvent({
         nowMs,
         state: {
@@ -843,7 +843,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       });
 
       assert(rotated.state.activeTimedEvent, 'Expected rotated event to exist');
-      assertEqual(rotated.state.activeTimedEvent?.eventType, 'feeding_frenzy', 'Expected feeding_frenzy event after companion_feast (wrap)');
+      assertEqual(rotated.state.activeTimedEvent?.eventType, 'skybound_expedition', 'Expected Skybound Academy after Companion Feast');
     },
   },
   // ── Smart multiplier tier tests ──────────────────────────────────────────

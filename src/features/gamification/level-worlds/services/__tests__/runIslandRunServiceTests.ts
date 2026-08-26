@@ -14,6 +14,8 @@ import { islandWorkshopGameTests } from './islandWorkshopGame.test';
 import { momentumMatrixGameTests } from './momentumMatrixGame.test';
 import { skyboundExpeditionFlightTests } from './skyboundExpeditionFlight.test';
 import { skyboundPilotAcademyTests } from './skyboundPilotAcademy.test';
+import { islandRunSkyboundAcademyActionsTests } from './islandRunSkyboundAcademyActions.test';
+import { minigameTicketStoreTests } from './minigameTicketStore.test';
 import { skyboundAircraftModelsTests } from './skyboundAircraftModels.test';
 import { momentumMatrixStateActionsTests } from './momentumMatrixStateActions.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
@@ -234,6 +236,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'momentumMatrixGame', tests: momentumMatrixGameTests },
   { label: 'skyboundExpeditionFlight', tests: skyboundExpeditionFlightTests },
   { label: 'skyboundPilotAcademy', tests: skyboundPilotAcademyTests },
+  { label: 'islandRunSkyboundAcademyActions', tests: islandRunSkyboundAcademyActionsTests },
+  { label: 'minigameTicketStore', tests: minigameTicketStoreTests },
   { label: 'skyboundAircraftModels', tests: skyboundAircraftModelsTests },
   { label: 'momentumMatrixStateActions', tests: momentumMatrixStateActionsTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },

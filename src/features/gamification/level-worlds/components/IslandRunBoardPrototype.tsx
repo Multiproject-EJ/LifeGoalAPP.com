@@ -443,10 +443,19 @@ import {
   resolveTimedEventLaunchTicketDelta,
   resolveEventMinigameCompletionId,
   resolveSpaceExcavatorEventMinigame,
+  resolveSkyboundExpeditionEventMinigame,
   type MinigameLaunchSource,
   shouldResolveEventArenaStopOnMinigameComplete,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../services/islandRunMinigameLauncherService';
+import {
+  initSkyboundAcademyProgressForEvent,
+  settleSkyboundSortie,
+  startSkyboundSortie,
+  upgradeSkyboundFleetPart,
+} from '../services/islandRunSkyboundAcademyActions';
+import type { SkyboundFlightState, SkyboundUpgradeKind } from '../services/skyboundExpeditionFlight';
+import type { SkyboundLessonId } from '../services/skyboundPilotAcademy';
 import {
   canOpenIslandRunOverlayWhileRollingState,
   resolveIslandRunPlaceholderDescriptor,
@@ -654,7 +663,7 @@ const ROLL_MIN = 1;
 const ROLL_MAX = 6;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
-const CANONICAL_EVENT_IDS: readonly EventId[] = ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast'];
+const CANONICAL_EVENT_IDS: readonly EventId[] = ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast', 'skybound_expedition'];
 const isCanonicalEventId = (value: string): value is EventId => (
   (CANONICAL_EVENT_IDS as readonly string[]).includes(value)
 );
@@ -6847,14 +6856,12 @@ export function IslandRunBoardPrototype({
     return `${devTimedEventOverrideType}:dev:${nonce}`;
   }, [devTimedEventOverrideType]);
   const effectiveActiveTimedEvent = useMemo(() => {
-    // The four rotating event games (Island Workshop, Lucky Spin, Space
-    // Excavator, Companion Feast) are preview-only: surface them to admins and
-    // to an explicitly unlocked local QA session. Production non-admins never
-    // see the event banner, ticket chip, quick launch, or minigame launcher.
-    // The underlying reward-bar/event rotation remains untouched.
+    // The legacy four event surfaces remain preview-gated. Skybound Academy is
+    // the first production event promoted through the full canonical cycle.
     const journeyDiscChapterExhibitionCanExposeEvent = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
       && isJourneyDiscArenaIsland(islandNumber);
-    if (!journeyDiscChapterExhibitionCanExposeEvent && !shouldExposeArenaTimedEvent({
+    const productionSkyboundEventIsActive = activeTimedEvent?.eventType === 'skybound_expedition';
+    if (!productionSkyboundEventIsActive && !journeyDiscChapterExhibitionCanExposeEvent && !shouldExposeArenaTimedEvent({
       isAdmin,
       isDevModeEnabled,
       isLocalDevelopment: import.meta.env.DEV,
@@ -9766,7 +9773,7 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleLaunchTimedEventMinigame = () => {
+  const handleLaunchTimedEventMinigame = async () => {
     if (!effectiveActiveTimedEvent) return;
     if (journeyDiscReplacesTimedEventSurface) {
       setIsTimedEventLaunchQueued(false);
@@ -9811,6 +9818,8 @@ export function IslandRunBoardPrototype({
           return resolveSpaceExcavatorEventMinigame(baseContext);
         case 'companion_feast':
           return resolveCompanionFeastEventMinigame(baseContext);
+        case 'skybound_expedition':
+          return resolveSkyboundExpeditionEventMinigame(baseContext);
         default:
           return null;
       }
@@ -9841,6 +9850,15 @@ export function IslandRunBoardPrototype({
         return;
       }
     }
+    const skyboundInitialRecord = effectiveActiveTimedEvent.eventType === 'skybound_expedition'
+      ? await initSkyboundAcademyProgressForEvent({
+          session,
+          client,
+          eventId: effectiveActiveTimedEvent.eventId,
+          triggerSource: 'skybound_event_open',
+        })
+      : null;
+    if (skyboundInitialRecord) setRuntimeState(skyboundInitialRecord);
     const eventSpecificLaunchConfig =
       effectiveActiveTimedEvent.eventType === 'space_excavator'
         ? {
@@ -9913,6 +9931,30 @@ export function IslandRunBoardPrototype({
               const finale = applyFortuneEngineFinaleResult({ session, client, eventId: effectiveActiveTimedEvent.eventId, success, triggerSource: 'fortune_engine_finale' });
               if (finale.ok) setRuntimeState(finale.record);
               return { ok: finale.ok, progress: finale.progress, rewardLabel: finale.rewardLabel, failureReason: finale.failureReason };
+            },
+          }
+        : effectiveActiveTimedEvent.eventType === 'skybound_expedition'
+        ? {
+            ...descriptor.config,
+            activeEventId: effectiveActiveTimedEvent.eventId,
+            eventExpiresAtMs: effectiveActiveTimedEvent.expiresAtMs,
+            arenaTimerManagedByGame: true,
+            initialProgress: skyboundInitialRecord?.skyboundAcademyProgressByEvent?.[effectiveActiveTimedEvent.eventId] ?? null,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
+            requestSortieStart: async (attemptId: string, lessonId: SkyboundLessonId) => {
+              const result = await startSkyboundSortie({ session, client, eventId: effectiveActiveTimedEvent.eventId, attemptId, lessonId, triggerSource: 'skybound_sortie_start' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, ticketsRemaining: result.ticketsRemaining, progress: result.progress, failureReason: result.failureReason };
+            },
+            requestSortieSettlement: async (attemptId: string, flight: SkyboundFlightState) => {
+              const result = await settleSkyboundSortie({ session, client, eventId: effectiveActiveTimedEvent.eventId, attemptId, flight, triggerSource: 'skybound_sortie_settle' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, alreadySettled: result.alreadySettled, ticketsRemaining: result.ticketsRemaining, ticketsAwarded: result.ticketsAwarded, rewardBarProgressAdded: result.rewardBarProgressAdded, progress: result.progress, evaluation: result.evaluation, salvageAwarded: result.salvageAwarded, failureReason: result.failureReason };
+            },
+            requestUpgrade: async (kind: SkyboundUpgradeKind) => {
+              const result = await upgradeSkyboundFleetPart({ session, client, eventId: effectiveActiveTimedEvent.eventId, kind, triggerSource: 'skybound_upgrade' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, cost: result.cost, progress: result.progress, failureReason: result.failureReason };
             },
           }
         : effectiveActiveTimedEvent.eventType === 'feeding_frenzy'
@@ -10156,7 +10198,7 @@ export function IslandRunBoardPrototype({
       return;
     }
     if (effectiveActiveTimedEvent?.eventType === gameId) {
-      handleLaunchTimedEventMinigame();
+      void handleLaunchTimedEventMinigame();
       return;
     }
     setLandingText('That diplomatic game returns in a future Arena rotation.');
@@ -10177,7 +10219,7 @@ export function IslandRunBoardPrototype({
       isAnimatingRoll: isAnimatingRollRef.current,
       isRollSyncPending: isRollSyncPendingRef.current,
     })) {
-      handleLaunchTimedEventMinigame();
+      void handleLaunchTimedEventMinigame();
     }
   }, [activeLaunchedMinigameId, handleLaunchTimedEventMinigame, isRolling, isTimedEventLaunchQueued, journeyDiscReplacesTimedEventSurface]);
   const handleLaunchEventSurface = () => {
@@ -10185,7 +10227,7 @@ export function IslandRunBoardPrototype({
       handleLaunchArenaGame('journey_disc_arena');
       return;
     }
-    handleLaunchTimedEventMinigame();
+    void handleLaunchTimedEventMinigame();
   };
   const handleSetDevTimedEventOverride = useCallback((eventType: EventId | null) => {
     if (!isDevModeEnabled || typeof window === 'undefined') return;
@@ -18012,6 +18054,7 @@ export function IslandRunBoardPrototype({
           <IslandRunMinigameLauncher
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
+            ticketBudget={activeLaunchedMinigameSource === 'timed_event' ? activeEventTickets : undefined}
             controllerInput={activeLaunchedMinigameId === 'shooter_blitz' ? shooterControllerInput : undefined}
             launchConfig={activeLaunchedMinigameConfig}
             onComplete={(result) => {

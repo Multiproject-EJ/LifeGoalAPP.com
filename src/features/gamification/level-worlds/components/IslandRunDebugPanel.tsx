@@ -24,6 +24,7 @@ import {
 } from '../services/islandRunEconomyTelemetry';
 import { getIslandRunAudioDiagnostics } from '../services/islandRunAudio';
 import { isDemoSession } from '../../../../services/demoSession';
+import type { EventId } from '../services/islandRunEventEngine';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,9 +35,9 @@ interface DebugPanelProps {
   localState: IslandRunDebugLocalState;
   isDevModeEnabled: boolean;
   onEnableDevMode: () => void;
-  devTimedEventOverrideType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null;
+  devTimedEventOverrideType: EventId | null;
   devTimedEventOverrideEventId: string | null;
-  onSetDevTimedEventOverride: (eventType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null) => void;
+  onSetDevTimedEventOverride: (eventType: EventId | null) => void;
   onGrantDevTimedEventTickets: (amount: number) => void;
   onGrantDevEssence?: (amount: number) => void;
   showLuckyRollDevLauncher?: boolean;
@@ -666,6 +667,7 @@ export function IslandRunDebugPanel({
                   <option value="lucky_spin">lucky_spin</option>
                   <option value="space_excavator">space_excavator</option>
                   <option value="companion_feast">companion_feast</option>
+                  <option value="skybound_expedition">skybound_expedition</option>
                 </select>
                 <div style={{ fontSize: '0.76rem', opacity: 0.88 }}>
                   {devTimedEventOverrideType
