@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace unified volumetric cathedral gable facade blockout",
+  "constructionFamily": "procedural-threejs-unified-volumetric-cathedral-gable-facade",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.v2.json",
+      "sha256": "423c2bc9f6f1b8fa90cfac8aa1923af86cc5e434bf04d5c388491d207f67fa0b"
+    },
+    "retiredFamilyReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v2.json",
+      "sha256": "b435b4e21c034a7913220fea1b27dfa06ef68cb21b56fb18145b8360a3c5c4d3"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/capture-manifest.v3.json",
+      "sha256": "ac06d23a42d8ac8cab7a7a51529c2ed6f8903b593441962032bc7dae2a171790"
+    },
+    "evidenceIntegrity": "All v003 000/045/315/close SVG and JPEG evidence listed by capture-manifest.v3.json was reviewed; the JPEGs are browser rasterizations of the immutable actual-mesh SVG captures."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "worstViewCategoryGoverns": true,
+    "macroDriftExceptionApplies": false,
+    "oneCorrectionMaximum": true,
+    "correctionsUsed": 0
+  },
+  "familyDifferenceAssessment": {
+    "genuinelyDifferent": true,
+    "finding": "The retired applied frame/rail grammar is replaced by a closed central gable and two closed occupied wing/pylon volumes. The new family nevertheless introduces a different representation-level failure: an oversized flat-wing skin with standalone projected openings."
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-front",
+      "sourceIdentity": 0.44,
+      "unifiedVolumetricIntegration": 0.52,
+      "cathedralHierarchy": 0.46,
+      "fourBayObliqueReadability": 0.74,
+      "phoneReadability": 0.55,
+      "note": "All four bays can be counted frontally, and door/rose order is obvious. The two enormous planar wings dominate the facade, the pointed door arch/recess is hidden behind a blank central slab, and the rose remains a separate thick disk rather than an embedded opening."
+    },
+    {
+      "view": "orbit-045-front-right",
+      "sourceIdentity": 0.38,
+      "unifiedVolumetricIntegration": 0.45,
+      "cathedralHierarchy": 0.40,
+      "fourBayObliqueReadability": 0.46,
+      "phoneReadability": 0.44,
+      "note": "The near wing reads as a giant flat card with standalone projected bay boxes. The rose stands far proud of the gable, the door loses its arch/recess hierarchy, and the far/upper bays are not reliably countable."
+    },
+    {
+      "view": "orbit-315-front-left",
+      "sourceIdentity": 0.38,
+      "unifiedVolumetricIntegration": 0.45,
+      "cathedralHierarchy": 0.40,
+      "fourBayObliqueReadability": 0.44,
+      "phoneReadability": 0.42,
+      "note": "The opposite source-adjacent view confirms the same oversized wing card, forward rose disk, blank door slab, and loss of four-bay countability."
+    },
+    {
+      "view": "facade-closeup",
+      "sourceIdentity": 0.45,
+      "unifiedVolumetricIntegration": 0.50,
+      "cathedralHierarchy": 0.38,
+      "fourBayObliqueReadability": null,
+      "phoneReadability": 0.43,
+      "note": "The close view shows the central door surface as an uninterrupted faceted slab; the required dark recess, multi-layer masonry arch, royal bee focal detail, and occupied vertical connection are not readable."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.38,
+    "view": "orbit-045-front-right",
+    "dimension": "sourceIdentity"
+  },
+  "categorySummary": {
+    "sourceIdentity": 0.38,
+    "unifiedVolumetricIntegration": 0.45,
+    "cathedralHierarchy": 0.38,
+    "fourBayObliqueReadability": 0.44,
+    "phoneReadability": 0.42
+  },
+  "terminalChecks": {
+    "doorFirstFocalPoint": {
+      "pass": true,
+      "finding": "Door scale makes it first, but it is a blank slab rather than the required recessed royal doorway."
+    },
+    "roseSecondFocalPoint": {
+      "pass": true,
+      "finding": "Rose scale makes it second."
+    },
+    "roseEmbeddedNotProud": {
+      "pass": false,
+      "finding": "Both obliques show a thick rose disk and reveal assembly standing visibly forward of the gable."
+    },
+    "fourBaysCountableAt045": {
+      "pass": false,
+      "finding": "Only the near bays are immediately legible; far/upper openings collapse behind the central and wing masses."
+    },
+    "fourBaysCountableAt315": {
+      "pass": false,
+      "finding": "The mirrored view likewise loses reliable four-bay countability."
+    },
+    "unifiedSkinWithinAcceptedSilhouette": {
+      "pass": false,
+      "finding": "The large planar wings extend and dominate beyond the accepted palace front read, materially changing apparent width and hierarchy."
+    },
+    "standaloneBayBoxesAbsent": {
+      "pass": false,
+      "finding": "Oblique views show thick independent reveal boxes projecting from the wing faces."
+    },
+    "longFloatingRailsAbsent": {
+      "pass": true,
+      "finding": "The retired long-rail construction is absent."
+    },
+    "bannerObstructionAbsent": {
+      "pass": true,
+      "finding": "No banner blocks the door or stairs in the supplied evidence."
+    },
+    "zFightingOrOpenGapAbsent": {
+      "pass": true,
+      "finding": "No z-fighting or open-backed gap is visibly proven by the supplied materials-off captures."
+    }
+  },
+  "defects": [
+    {
+      "severity": "terminal",
+      "type": "oversized-flat-wing-skin",
+      "finding": "The supposedly occupied pylons are broad planar cards that dominate and alter the accepted palace silhouette."
+    },
+    {
+      "severity": "terminal",
+      "type": "rose-stands-proud",
+      "finding": "The rose remains a standalone thick disk, directly violating the new family's defining embed hypothesis."
+    },
+    {
+      "severity": "terminal",
+      "type": "four-bay-oblique-failure",
+      "finding": "All four occupied bays are not individually countable in either 45-degree or 315-degree evidence."
+    },
+    {
+      "severity": "terminal",
+      "type": "blank-door-slab",
+      "finding": "The giant central panel hides the required recessed door/arch hierarchy and erases source-specific royal detail."
+    }
+  ],
+  "largestMismatch": "The source facade is a compact, deeply occupied vertical cathedral axis nested inside the palace. This blockout instead places a blank central door slab, a proud rose disk, and four applied boxes across two giant planar wings, producing a broad civic mask rather than integrated honey-cathedral architecture.",
+  "correctionDisposition": {
+    "oneBoundedCorrectionIssued": false,
+    "reason": "The defects are not one bounded parameter hypothesis: fixing them requires replacing wing proportions/topology, rebuilding the door/arch volume, embedding the rose, and re-laying all four openings. That is a new representation family, not one measurable correction."
+  },
+  "terminalReason": "Every required category is below 0.85; worst score is 0.38. Strict rejects for a proud rose, standalone bay boxes, fewer than four countable bays at both obliques, and accepted-silhouette change are present. The family is not viable for one bounded correction.",
+  "action": "RETIRE-FAMILY"
+}

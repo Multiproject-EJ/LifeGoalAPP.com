@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "status": "active-blockout",
+  "partId": "pollinator-yard",
+  "constructionFamily": "threejs-continuous-extruded-seven-cell-civic-hive-v4",
+  "supersedesRetiredFamily": "threejs-fused-seven-cell-pollinator-work-hall-v3",
+  "representationChange": "Replace the petal-like freestanding rosette and blank host slab with seven closed extruded hex-room volumes joined by structural collars, authored on both front and rear elevations.",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": "docs/visual-references/island-014-honeycomb-kingdom/derived-crops/pollinator-yard-visible-source-crop-v001.png",
+    "secondaryTurnaround": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.png",
+    "secondaryTurnaroundMetadata": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.md",
+    "retiredReview": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/pollinator-yard/blockout-review.v1.json"
+  },
+  "userAuthority": {
+    "decision": "Continue with a genuinely different bounded landmark family after the broad reconstruction track and prior Pollinator family reached their correction ceilings.",
+    "source": "User said 'keep building' on 2026-08-26 after requesting the honest island, mission, visual and animation rating.",
+    "scope": "pollinator-yard-new-representation-family-only"
+  },
+  "workerAllowlist": {
+    "implementation": [
+      "createIsland14PollinatorYardV2 only in src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts",
+      "the habit-only completed presentation scale in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"
+    ],
+    "evidence": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r53"
+    ],
+    "forbidden": [
+      "queen hatchery",
+      "hive archives",
+      "nectar trials",
+      "royal palace",
+      "terrain",
+      "route",
+      "mission",
+      "gameplay"
+    ]
+  },
+  "blockoutFeatures": [
+    "One dominant central occupied hex chamber plus exactly six connected outer occupied rooms.",
+    "A low broad civic silhouette with no flower, rotor, pergola or host slab reading.",
+    "Closed volumetric front-to-rear rooms with matching rear frames and connected structural collars.",
+    "One embedded front bee relief and one subordinate rear service entrance.",
+    "Phone-readable seven-cell count with the central chamber at least 1.25 times each outer cell.",
+    "Strictly additive L1, L2 and L3 cell-pair growth while retaining prior funded geometry."
+  ],
+  "strictRejects": [
+    "flower or giant petal silhouette",
+    "ferris wheel or pollen rotor",
+    "flat badge facade",
+    "blank rear slab",
+    "detached bee mascot",
+    "ambiguous seven-cell count",
+    "more than one bounded correction"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "additional": ["phone-overview", "front-close", "rear-close", "materials-off"],
+    "blockoutGate": "Every critical category at least 0.75 with no strict reject; the worst view governs.",
+    "finalGate": "Every required category at least 0.85 with no strict reject."
+  },
+  "budget": {
+    "newConstructionFamiliesRemainingAtGateStart": 1,
+    "boundedCorrections": 1
+  }
+}

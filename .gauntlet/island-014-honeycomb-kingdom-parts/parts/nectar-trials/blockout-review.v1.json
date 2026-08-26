@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewerRole": "independent-quality-lord",
+  "scope": "nectar-trials-blockout-only",
+  "readOnlyReview": true,
+  "authority": {
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/nectar-trials/isolation/derived-crops/nectar-trials-visible-source-crop-v001.png",
+      "sha256": "6d2242abe0d154de417f51f85f28bd85402b49c00c32060ecf8bb623292d1484",
+      "role": "primary-visible-authority"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/nectar-trials/build-contract.v1.json",
+      "sha256": "8c0a4105add32b890393b1fcb421c9ea0679cbf7965dddb02d0411a08bd9b0bc"
+    }
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r51",
+    "manifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r51/capture-manifest.v1.json",
+      "sha256": "4dc3c2550a470a9fd4572f019b09279d193bea18c084c116de0216b84d3836ad"
+    },
+    "viewsInspected": [
+      "orbit-000-materials-on.png",
+      "orbit-045-materials-on.png",
+      "orbit-090-materials-on.png",
+      "orbit-180-materials-on.png",
+      "orbit-270-materials-on.png",
+      "orbit-315-materials-on.png",
+      "orbit-180-materials-off.png",
+      "phone-overview.png"
+    ],
+    "captureCoverageWarning": "The r51 packet omits the contract-requested 135-degree and 225-degree views plus dedicated arena-close and rear-close captures. The supplied orbit, clay and phone views still expose the decisive honey-dipper and phone failures."
+  },
+  "blockoutGate": {
+    "thresholdPerCategory": 0.75,
+    "noStrictRejectRequired": true,
+    "scores": {
+      "source-identity": {
+        "score": 0.48,
+        "evidence": "The authoritative icon is two unmistakable crossed golden honey dippers. The arena is visible, but its crossed objects read as black construction bars with an orange central block; the source's defining nectar-trial emblem is not preserved."
+      },
+      "arena-silhouette": {
+        "score": 0.79,
+        "evidence": "The circular/radial platform, front stairs, open contest floor and low crown establish a plausible arena silhouette without a heavy roof hiding the floor. This is the blockout's strongest dimension."
+      },
+      "honey-dipper-readability": {
+        "score": 0.32,
+        "evidence": "In the clearest 045-degree evidence the crossed forms have thick dark shafts and a block-like orange joint/head. Slender handles, two distinct ribbed cylindrical honey heads, grooved texture and restrained hanging drops are not visibly readable; they look like hammers or crossed beams."
+      },
+      "surface-depth": {
+        "score": 0.7,
+        "evidence": "The platform, columns, crown and stairs have real volumetric depth and the central floor is open. The emblem itself lacks the modeled head/handle depth needed to read as the source object, and the nectar core is not clearly resolved."
+      },
+      "arcade-continuity": {
+        "score": 0.76,
+        "evidence": "Columns and the low circular crown form a coherent open arcade through the available orbit, with plausible roof support and no obvious disappearing bay. Some views still read as a generic rotunda because the arena emblem is weak."
+      },
+      "side-rear-continuity": {
+        "score": 0.61,
+        "evidence": "The 090/180/270/315 views preserve the open arcade and supported ring, but no clear secondary crossed-honey-dipper silhouette survives around the side or rear. The architecture continues; the Nectar Trials identity does not."
+      },
+      "phone-readability": {
+        "score": 0.24,
+        "evidence": "In phone-overview the arena is clipped against the right edge and only part of its crown is visible. Neither the crossed emblem nor honey-dipper heads can be identified, so the landmark does not communicate its source identity at intended scale."
+      }
+    },
+    "worstCategory": {
+      "name": "phone-readability",
+      "score": 0.24
+    },
+    "allCategoriesAtOrAboveThreshold": false,
+    "overallScoreOutOf10": 5.6,
+    "result": "FAIL"
+  },
+  "strictRejects": [
+    {
+      "rule": "block hammers, axes, or generic construction tools",
+      "status": "TRIGGERED",
+      "evidence": "The crossed dark bars with orange block-like ends/joint read as hammers or structural beams rather than two grooved honey dippers."
+    },
+    {
+      "rule": "purple circus gazebo",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The crown is predominantly honey-gold and purple remains limited to subordinate banners."
+    },
+    {
+      "rule": "open cage without arena identity",
+      "status": "NEAR-TRIGGER",
+      "evidence": "The platform and stairs provide arena cues, but the failed dipper emblem leaves several oblique views reading as a generic open rotunda."
+    },
+    {
+      "rule": "oversized roof ring hiding the contest floor",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The open contest floor remains visible in 000/045/090."
+    },
+    {
+      "rule": "floating crossed-icon badge",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The crossed elements appear physically attached to the dais/crown system rather than floating independently."
+    },
+    {
+      "rule": "front-only emblem",
+      "status": "TRIGGERED",
+      "evidence": "No readable secondary crossed-dipper silhouette survives the 180 and 270 views."
+    },
+    {
+      "rule": "blank or structurally implausible rear",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The arcade and crown continue coherently around the rear even though landmark identity does not."
+    }
+  ],
+  "gauntletAction": {
+    "action": "retire-family",
+    "correctionEligible": false,
+    "reason": "The first blockout triggers the explicit block-hammer and front-only-emblem rejects, while honey-dipper readability and phone readability fall below the 0.50 critical floor. Gauntlet economics therefore prohibit spending the bounded correction on this construction family."
+  },
+  "dominantDefect": "The defining crossed honey dippers are represented as thick dark construction bars with block-like orange centers, so the otherwise coherent arena shell loses the source's identity in desktop, side/rear and phone views.",
+  "boundedCorrection": null,
+  "finalPassPerformed": false
+}

@@ -1,0 +1,186 @@
+{
+  "sourceImage": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+  "zonesDir": ".img2threejs/island-014-honeycomb-kingdom/detail-inventory",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 16,
+    "details": [
+      {
+        "id": "distant-hive-cell-crowns",
+        "kind": "repeated architectural relief",
+        "description": "Distant floating towers retain perforated hex-cell crowns and amber dome caps.",
+        "region": "r0c0",
+        "scale": "background meso",
+        "affects": "colony depth",
+        "mapsTo": { "type": "component.localFeatures", "ref": "distant-hive-islets.cell-crowns" },
+        "evidenceRef": "detail-inventory/zone-r0c0.png",
+        "confidence": 0.82
+      },
+      {
+        "id": "layered-bee-flight",
+        "kind": "animated repetition system",
+        "description": "Hero bees and smaller mid/far silhouettes cross several sky-depth layers.",
+        "region": "r0c0",
+        "scale": "macro depth system",
+        "affects": "living civilization",
+        "mapsTo": { "type": "component.localFeatures", "ref": "bee-traffic.depth-layers" },
+        "evidenceRef": "detail-inventory/zone-r0c0.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "palace-amber-dome-panels",
+        "kind": "faceted dome system",
+        "description": "The royal dome alternates amber glazing with raised bronze ribs and a crown finial.",
+        "region": "r0c1",
+        "scale": "hero meso",
+        "affects": "palace silhouette",
+        "mapsTo": { "type": "component.localFeatures", "ref": "royal-palace.hero-dome" },
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "palace-cell-lattice",
+        "kind": "repeated facade aperture",
+        "description": "Stacked drums use deep hexagonal apertures with dark cavities and bright rim frames.",
+        "region": "r0c1",
+        "scale": "meso/micro",
+        "affects": "hive architecture",
+        "mapsTo": { "type": "component.localFeatures", "ref": "royal-palace.cell-lattice" },
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "palace-side-tower-hierarchy",
+        "kind": "tower repetition hierarchy",
+        "description": "Four subordinate domed towers step down around the main drum.",
+        "region": "r0c1",
+        "scale": "macro/meso",
+        "affects": "central mass balance",
+        "mapsTo": { "type": "component.localFeatures", "ref": "royal-palace.side-tower-system" },
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
+        "confidence": 0.9
+      },
+      {
+        "id": "distant-honey-falls",
+        "kind": "liquid effect emitter",
+        "description": "Background islets carry short honey ribbons with bright pooled edge highlights.",
+        "region": "r0c2",
+        "scale": "background meso",
+        "affects": "material continuity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "distant-hive-islets.honey-falls" },
+        "evidenceRef": "detail-inventory/zone-r0c2.png",
+        "confidence": 0.8
+      },
+      {
+        "id": "pollinator-cell-bee-emblem",
+        "kind": "identity relief",
+        "description": "A bee sits within a six-cell flower/honeycomb emblem.",
+        "region": "r0c2",
+        "scale": "micro identity",
+        "affects": "Pollinator Yard identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "pollinator-yard.bee-cell-emblem" },
+        "evidenceRef": "detail-inventory/zone-r0c2.png",
+        "confidence": 0.88
+      },
+      {
+        "id": "flower-terrace-clusters",
+        "kind": "botanical repetition system",
+        "description": "White, pink, purple and orange flowers overlap in irregular clusters around ledges.",
+        "region": "r1c0",
+        "scale": "meso/micro",
+        "affects": "pollination ecology",
+        "mapsTo": { "type": "component.localFeatures", "ref": "flower-terraces.cluster-system" },
+        "evidenceRef": "detail-inventory/zone-r1c0.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "hex-paved-garden-ledges",
+        "kind": "terrain relief",
+        "description": "Golden ledges use irregular hex paving with dark grout and raised bright rims.",
+        "region": "r1c0",
+        "scale": "meso",
+        "affects": "terrain integration",
+        "mapsTo": { "type": "component.localFeatures", "ref": "honey-rock-terrain.hex-paving" },
+        "evidenceRef": "detail-inventory/zone-r1c0.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "honey-edge-drips",
+        "kind": "viscous edge detail",
+        "description": "Honey sheets fold over ledges into uneven strands with bulbous tips.",
+        "region": "r1c0",
+        "scale": "meso/micro",
+        "affects": "honey material identity",
+        "mapsTo": { "type": "material.localOverrides", "ref": "honey-flow.edge-drip-profile" },
+        "evidenceRef": "detail-inventory/zone-r1c0.png",
+        "confidence": 0.95
+      },
+      {
+        "id": "royal-stair-procession",
+        "kind": "architectural access system",
+        "description": "A broad stair rises through balustrades to the central arched royal portal.",
+        "region": "r1c1",
+        "scale": "hero meso",
+        "affects": "palace grounding",
+        "mapsTo": { "type": "component.localFeatures", "ref": "royal-palace.processional-stair" },
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "purple-royal-door-banners",
+        "kind": "enamel identity panel",
+        "description": "Deep purple portal banners carry a centered gold bee sigil.",
+        "region": "r1c1",
+        "scale": "micro identity",
+        "affects": "royal palette hierarchy",
+        "mapsTo": { "type": "material.localOverrides", "ref": "royal-enamel.bee-sigil-panels" },
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "flower-inlaid-court-tiles",
+        "kind": "paving inlay repetition",
+        "description": "The civic court alternates light panels with colored flower and bee inlays.",
+        "region": "r1c1",
+        "scale": "meso/micro",
+        "affects": "court identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "civic-court.flower-inlays" },
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
+        "confidence": 0.92
+      },
+      {
+        "id": "archive-tiered-cell-tower",
+        "kind": "landmark facade hierarchy",
+        "description": "The archive combines a hex-cell base, arched body, purple cap and rear service tower.",
+        "region": "r1c2",
+        "scale": "landmark macro/meso",
+        "affects": "Archive silhouette",
+        "mapsTo": { "type": "component.localFeatures", "ref": "hive-archives.tiered-cell-tower" },
+        "evidenceRef": "detail-inventory/zone-r1c2.png",
+        "confidence": 0.86
+      },
+      {
+        "id": "dark-rock-fracture-bands",
+        "kind": "terrain material override",
+        "description": "Honey-rock breaks reveal rough dark-brown stone bands between ledges.",
+        "region": "r2c0",
+        "scale": "macro/meso",
+        "affects": "cliff value separation",
+        "mapsTo": { "type": "material.localOverrides", "ref": "honey-rock.dark-fracture-bands" },
+        "evidenceRef": "detail-inventory/zone-r2c0.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "honey-stalactite-drop-tips",
+        "kind": "underside silhouette system",
+        "description": "Long amber strands and tapered underside points terminate in rounded drop bulbs.",
+        "region": "r2c2",
+        "scale": "macro/meso",
+        "affects": "floating-island silhouette",
+        "mapsTo": { "type": "component.localFeatures", "ref": "honey-rock-terrain.underside-stalactites" },
+        "evidenceRef": "detail-inventory/zone-r2c2.png",
+        "confidence": 0.94
+      }
+    ]
+  }
+}

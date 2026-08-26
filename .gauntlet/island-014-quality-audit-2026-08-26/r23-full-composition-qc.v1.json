@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-r23-final-confirmation-gate"
+  },
+  "authority": {
+    "source": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "inspectedFirst": true,
+      "role": "exact-pixel-authority"
+    },
+    "comparisonBaseline": {
+      "path": ".gauntlet/island-014-quality-audit-2026-08-26/r19-full-composition-qc.v1.json",
+      "overallScore": 3.4
+    },
+    "userBaselineScore": 4.0
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r23",
+    "manifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r23/capture-manifest.v1.json",
+      "sha256": "5e5bac0ee0467cb9a86961eb4f9bd6429a892e81f903c7abc0fc47d391c2915c"
+    },
+    "integrity": {
+      "valid": true,
+      "verifiedEntries": 26,
+      "verifiedEvidenceFiles": 18,
+      "mismatches": 0,
+      "sourceMatches": true,
+      "runtimeMatches": true,
+      "dependencyHashesMatch": true
+    },
+    "runtime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "c3700e43ce7497f5ef953420af3957ee6c1bfbfa5e8ebbee0b5d050b314d525f"
+    },
+    "criticalDependencies": [
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx",
+        "sha256": "6cac0ad5d2b0bb311d69bd1a132ec97030b67d53268764d56792f17e2f770a25"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14RoyalCathedralV7.ts",
+        "sha256": "9ee40c8990e0337ec4a3b80439214b512f28c53887415dddc56d4e209befefef"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts",
+        "sha256": "9c5e1b6b8f38207cd912bc4fb5aac5b6b16aeb6208c9a653bf8a0ab0faba1703"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14HoneyWorldPresentationV2.ts",
+        "sha256": "7061b22591be79cbf0e31560c5a82cd2b94989abae7c127239ebd5499f4759f7"
+      }
+    ]
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "score": 4.8,
+      "deltaVsR19": 0.2,
+      "finding": "The palace reads slightly taller and more dominant, and moving the Honeyfall to the front-right cliff clears the processional axis. The broad empty radial apron, sparse route read, shallow terrain, and coarse foreground honey sheet remain far below the source's dense kingdom."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "score": 4.6,
+      "deltaVsR19": 0.1,
+      "finding": "The cathedral hierarchy remains coherent and the offset Honeyfall is visibly attached to the cliff system. Its bulbous cap and thick vertical sheet occupy a large foreground area without yet reading as delicious liquid."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "score": 4.3,
+      "deltaVsR19": 0.1,
+      "finding": "The taller central silhouette helps the profile, while the side gable and dark occupied lantern remain real strengths. Empty paving, repeated posts, weak gardens, and an untraceable route still govern the side view."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "score": 4.2,
+      "deltaVsR19": 0.1,
+      "finding": "Rear authorship remains intact and the higher lantern improves vertical hierarchy. The rear court is still almost entirely empty, and neither route nor inhabited meso-density approaches the source."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "score": 4.3,
+      "deltaVsR19": 0.1,
+      "finding": "The opposite profile confirms stable cathedral geometry and modestly stronger dominance. World occupation, landmark detailing, and route readability are materially unchanged."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "score": 4.5,
+      "deltaVsR19": 0.1,
+      "finding": "The taller palace survives the oblique and the displaced Honeyfall no longer blocks the central court. A foreground landmark still competes heavily, while the new honey sheet reads as stacked orange lobes over straight curtains."
+    },
+    {
+      "view": "orbit-180-materials-off",
+      "score": 4.1,
+      "deltaVsR19": 0.1,
+      "finding": "Clay confirms the height adjustment and existing 360-degree cathedral authorship are real geometry. It also reconfirms that the shallow radial platform, huge empty court, repetitive posts, and low meso-density are not material-renderer artifacts."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "score": 3.8,
+      "deltaVsR19": 0.4,
+      "finding": "The hard circular fountain disk and separate round pools are gone, a genuine macro improvement. The replacement remains three thick near-vertical faceted curtains under oversized bulbous caps, with no visible cliff contact, meniscus, splash, pooled landing, or unequal strand rhythm in the dedicated close proof."
+    },
+    {
+      "view": "phone-overview",
+      "score": 3.7,
+      "deltaVsR19": 0.1,
+      "finding": "The widened shot now contains the long cliff columns and more side context inside the gold frame, resolving the worst r19 clipping. The tradeoff is a smaller kingdom with more unused blue and lower-frame void, so source-like phone WOW barely improves; route and HUD/controller clearance remain unproven."
+    }
+  ],
+  "categoryScores": {
+    "fullComposition": {
+      "score": 4.2,
+      "deltaVsR19": 0.1,
+      "evidence": "Clearing the central axis and fitting more of the island improve compositional legibility, but the kingdom still reads as a sparse radial platform rather than a portrait-filling multi-tier cliff-city."
+    },
+    "palaceIdentityDensity": {
+      "score": 5.3,
+      "deltaVsR19": 0.2,
+      "evidence": "The modest height increase strengthens the already improved gabled cathedral, dark lantern, purple portal, and four subordinate domes. Blank wall fields, low inhabited detail, and the dominant simple lantern cylinder still limit source likeness."
+    },
+    "phonePov": {
+      "score": 3.7,
+      "deltaVsR19": 0.1,
+      "evidence": "Wider framing resolves major lower/side clipping but makes the entire kingdom smaller. Safe containment improves; visual impact, HUD fit, and route legibility do not improve enough to meet the user's 4/10 baseline."
+    },
+    "routeProofReadability": {
+      "score": 2.8,
+      "deltaVsR19": 0.0,
+      "evidence": "The manifest again verifies exact canonical 36-tile transforms and geometry, but no orbit or phone view presents a complete countable raised route, pawn state, or actual HUD/controller clearance."
+    },
+    "honeyFlowersMaterialSeparation": {
+      "score": 3.8,
+      "deltaVsR19": 0.5,
+      "evidence": "Replacing the disk fountain with an offset cliff sheet is a visible compositional and silhouette gain. The sheet remains an opaque orange mass of bulbous caps and straight curtains in CPU evidence; flowers and terrain/material value separation are essentially unchanged."
+    },
+    "atmosphere": {
+      "score": 2.4,
+      "deltaVsR19": 0.0,
+      "evidence": "The background remains a uniform blue field with repetitive cookie-like hive islands and projection fragments rather than the source's cloud masses, bee swarms, haze, sun shafts, and deep inhabited sky."
+    }
+  },
+  "claimedChangeAssessment": {
+    "widenedPhoneFraming": {
+      "confirmed": true,
+      "netResult": "small-positive-with-tradeoff",
+      "evidence": "More cliff columns and side context fit inside the phone frame and r19's severe lower clipping is resolved. The island is also visibly smaller, leaving more blue/void and reducing WOW."
+    },
+    "tallerPalace": {
+      "confirmed": true,
+      "netResult": "modest-positive",
+      "evidence": "All materials-on views and rear clay show a slightly stronger central vertical silhouette without breaking the accepted gabled side/rear mass."
+    },
+    "offsetCliffHoneySheetReplacingDiskFountain": {
+      "confirmed": true,
+      "netResult": "meaningful-macro-positive-not-production-liquid",
+      "evidence": "The round fountain disk and detached satellite pools from r19 are absent. The new sheet attaches at the front-right cliff in world views, but the close proof still shows bulbous caps over straight faceted curtains and omits a grounded landing/splash."
+    }
+  },
+  "rendererLimitSeparation": {
+    "cpuRendererLimitations": [
+      {
+        "limitation": "No physical refraction, environment reflections, post-processing, or GPU transparency ordering.",
+        "judgmentImpact": "Flat color and missing glossy/translucent response cannot by themselves prove the runtime honey or glazing materials fail."
+      },
+      {
+        "limitation": "No live HUD/controller overlay and semantic polygon budgeting at phone scale.",
+        "judgmentImpact": "Fine tile markings and overlay clearance remain unproven; the submitted views still govern route readability."
+      },
+      {
+        "limitation": "White triangular atmospheric fragments appear in CPU projections.",
+        "judgmentImpact": "They remain classified as projection/alpha artifacts and are not scored as authored geometry."
+      }
+    ],
+    "confirmedGeometryOrCompositionDefects": [
+      "Wider phone framing reduces clipping but leaves the kingdom underscaled relative to the source-return target.",
+      "The complete 36-tile route cannot be traced or counted in any required view.",
+      "The island remains a shallow regular radial platform with large empty courts.",
+      "The new Honeyfall macro lacks a liquid landing, varied strand rhythm, and convincing sagging sheet profile independent of PBR.",
+      "Flowers, obelisks, distant islands, and satellite meso-detail remain coarse and repetitive.",
+      "The cathedral's taller hierarchy and stable 360-degree gabled geometry are confirmed improvements."
+    ]
+  },
+  "hardVetoes": [
+    {
+      "id": "required-route-not-readable-or-play-space-proven",
+      "present": true,
+      "evidence": "Exact route geometry is declared and hash-valid, but the nine-view packet still does not show a complete countable 36-tile chain, pawn, or HUD/controller-safe clearance."
+    },
+    {
+      "id": "mission-honey-not-yet-liquid-wow",
+      "present": true,
+      "evidence": "The disk veto is resolved, but the dedicated close remains governed by three straight faceted curtains under oversized rounded caps, with no visible grounded splash/pool or flowing sheet rhythm."
+    }
+  ],
+  "resolvedSinceR19": [
+    {
+      "id": "phone-major-side-and-bottom-clipping",
+      "resolved": true,
+      "evidence": "The widened r23 phone view contains the long lower cliff columns and substantially more side context within the gold frame."
+    },
+    {
+      "id": "mission-disk-and-pool-fountain-silhouette",
+      "resolved": true,
+      "evidence": "The r19 hard circular cap/platform and separated round pools are replaced by an offset multi-sheet cliff cascade."
+    }
+  ],
+  "changesVersusR19": {
+    "overallDelta": 0.3,
+    "positive": [
+      "Major phone-frame clipping is resolved, though at reduced island scale.",
+      "Palace vertical dominance increases modestly without a side/rear regression.",
+      "Honeyfall moves off the processional axis to a cliff edge and loses the disk-fountain silhouette.",
+      "The central front court reads more clearly because the mission object no longer occupies it."
+    ],
+    "unchangedOrRegressed": [
+      "Route readability and HUD/controller proof do not improve.",
+      "The wider phone framing weakens scale and source-like portrait WOW.",
+      "Atmosphere, terrain depth, flowers, landmark meso-detail, and inhabited density are visibly unchanged.",
+      "The new Honeyfall improves macro placement but remains a chunky capped curtain rather than delicious liquid."
+    ]
+  },
+  "overallScore": {
+    "value": 3.7,
+    "deltaVsR19": 0.3,
+    "governingView": "phone-overview",
+    "userBaselineMet": false,
+    "productionApproval": false,
+    "finding": "R23 is a real incremental improvement and resolves two r19 macro defects, but the widened phone shot only barely improves the governing view and the assembled island remains below the user's 4/10 baseline."
+  },
+  "actionRationale": "Keep the cathedral and new offset Honeyfall direction; neither should be retired. Do not approve the assembled island. The next work must address route proof/readability, phone-scale kingdom fill, Honeyfall landing/splash geometry, terrain tiers, and inhabited density rather than another palace rebuild.",
+  "action": "keep-family"
+}

@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-r19-full-composition-re-audit"
+  },
+  "authority": {
+    "source": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "inspectedFirst": true,
+      "role": "exact-pixel-authority"
+    },
+    "userBaselineScore": 4.0
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v008-r19",
+    "manifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v008-r19/capture-manifest.v1.json",
+      "sha256": "1699e492f994815f042d772af3bc176eeb82278da1a1e88e053f079180124b87"
+    },
+    "integrity": {
+      "valid": true,
+      "verifiedEntries": 26,
+      "verifiedEvidenceFiles": 18,
+      "mismatches": 0,
+      "sourceMatches": true,
+      "runtimeMatches": true,
+      "dependencyHashesMatch": true
+    },
+    "runtime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "0375460bd9b23d946a921a6634db4122f0b19ed6db72d5000553e0ce37dae3ad"
+    },
+    "criticalDependencies": [
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14RoyalCathedralV7.ts",
+        "sha256": "9ee40c8990e0337ec4a3b80439214b512f28c53887415dddc56d4e209befefef"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts",
+        "sha256": "9c5e1b6b8f38207cd912bc4fb5aac5b6b16aeb6208c9a653bf8a0ab0faba1703"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14HoneyWorldPresentationV2.ts",
+        "sha256": "7061b22591be79cbf0e31560c5a82cd2b94989abae7c127239ebd5499f4759f7"
+      }
+    ]
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "score": 4.6,
+      "finding": "The palace now has a stronger front hierarchy: broad stair axis, deep purple door, gabled mass, four orange subordinate domes, dark occupied lantern panels, and attached gold ribs. The foreground is still a large empty radial apron and the island lacks the source's tiered inhabited density."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "score": 4.5,
+      "finding": "The new side chapel volume and lantern tracery make the palace convincingly three-dimensional. Satellite landmarks remain isolated on broad pale wedges, while repeated obelisks and empty paving dominate the middle scale."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "score": 4.2,
+      "finding": "This formerly generic profile now shows a real gable, integrated domes, occupied dark lantern, and layered front-to-rear mass. It still reads as a sparse civic platform, not the source's lush cliff-city, and the canonical tile chain is not countable."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "score": 4.1,
+      "finding": "Rear authorship is visibly improved by the apse gable, buttresses, rear portal, occupied cells, and continuous central hierarchy. The huge bare rear court, simplified landmark roofs, and shallow terrain still dominate the composition."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "score": 4.2,
+      "finding": "The opposite profile confirms the new chapel and lantern are coherent solid geometry. Palace side identity is improved, but blank paving, repeated posts, sparse gardens, and the absence of a readable route keep it below the user's baseline quality."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "score": 4.4,
+      "finding": "The oblique view preserves the stronger entrance and side silhouette. A foreground satellite still blocks a large portion of the world, and neither palace wall occupation nor island density approaches the source."
+    },
+    {
+      "view": "orbit-180-materials-off",
+      "score": 4.0,
+      "finding": "Clay confirms that the gabled rear, radial lantern structure, subordinate domes, satellites, and terrain are real volumetric geometry. It also confirms the remaining sparse plaza, regular table-like island, coarse landmark masses, and limited meso-detail are geometry defects rather than missing PBR."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "score": 3.4,
+      "finding": "The mission remains a broad grounded cascade, but its dominant silhouette is a hard top disk over thick faceted vertical columns and separate round pools. Even allowing for missing refraction and transparency, the geometry does not read as a delicious sagging sheet, splash, or flowing honey event."
+    },
+    {
+      "view": "phone-overview",
+      "score": 3.6,
+      "finding": "The source-return framing is materially better than r15: the palace and island are larger and higher in frame. Roughly the upper quarter remains empty blue, outer terrain and long honey columns still clip beyond the safe frame, the 36-tile route collapses, and no HUD/controller overlay proves final play-space clearance."
+    }
+  ],
+  "categoryScores": {
+    "fullComposition": {
+      "score": 4.1,
+      "deltaVsR15": 0.4,
+      "evidence": "The enlarged phone framing and stronger palace improve hierarchy, but the world is still a shallow radial table with empty sectors instead of a portrait-filling, multi-tier, inhabited honey kingdom."
+    },
+    "palaceIdentityDensity": {
+      "score": 5.1,
+      "deltaVsR15": 0.8,
+      "evidence": "This is the clearest r19 gain. Front, profiles, rear, and clay show new gabled side/rear volumes, a stronger door and stair axis, connected ribs, deep occupied cells, and a dark glazed lantern. The lantern remains visually top-heavy and wall occupation is still far below the source's ornate royal honeycomb cathedral."
+    },
+    "phonePov": {
+      "score": 3.6,
+      "deltaVsR15": 0.7,
+      "evidence": "The island now fills much more of the 390x844 frame, but the composition still wastes substantial sky, clips major lower geometry, and has no demonstrated HUD/controller-safe route."
+    },
+    "routeProofReadability": {
+      "score": 2.8,
+      "deltaVsR15": 0.6,
+      "evidence": "The r19 manifest states that exact canonical 36-tile geometry and transforms are represented, which is an integrity improvement over r15's omission. Nevertheless, no required view lets the reviewer follow or count a complete raised tile chain, see a pawn, or verify clearance against the actual HUD and controller."
+    },
+    "honeyFlowersMaterialSeparation": {
+      "score": 3.3,
+      "deltaVsR15": 0.1,
+      "evidence": "Purple roofs and green beds provide some contrast, but architecture, cliffs, paving, rocks, and honey remain compressed into pale yellow-orange values. Flower beds remain coarse green disks with tiny spikes, and the honeyfall's hard column-and-disk silhouette is confirmed geometry."
+    },
+    "atmosphere": {
+      "score": 2.4,
+      "deltaVsR15": 0.4,
+      "evidence": "More distant hive islands are visible, but they repeat as small flat cookie-like disks against a uniform blue field. Clouds, haze layers, bee swarms, sun shafts, and warm/cool aerial depth from the source are still not evidenced."
+    }
+  },
+  "rendererLimitSeparation": {
+    "cpuRendererLimitations": [
+      {
+        "limitation": "No environment reflections, physical refraction, post-processing, or GPU transparency ordering.",
+        "judgmentImpact": "Do not treat flat facets, missing glass sparkle, opaque-looking honey, or imperfect alpha overlap alone as confirmed runtime material defects. Final PBR quality remains unproven, not disproven."
+      },
+      {
+        "limitation": "No live HUD/controller overlay and semantic polygon budgeting at screen scale.",
+        "judgmentImpact": "The packet cannot prove final overlay clearance or fine tile markings. It can still prove that the route is not readable in the submitted required views."
+      },
+      {
+        "limitation": "White triangular atmospheric fragments appear in the CPU projection.",
+        "judgmentImpact": "These fragments are treated as renderer/alpha artifacts and are not used as a geometry veto."
+      }
+    ],
+    "confirmedGeometryOrCompositionDefects": [
+      "The phone camera still leaves excessive empty sky and clips substantial lower/side geometry.",
+      "The island remains a broad regular radial platform with large empty courts rather than deep irregular inhabited terraces.",
+      "The route cannot be traced or counted in any of the nine submitted views despite being declared present.",
+      "The Great Honeyfall uses a hard disk, thick faceted columns, and separate round pools instead of a sagging liquid sheet and splash silhouette.",
+      "Flower clusters, obelisks, satellite details, and distant islands remain coarse and repetitive at meso scale.",
+      "The palace's new side/rear gables and occupied lantern are real improvements confirmed by clay and opposite orbits."
+    ]
+  },
+  "hardVetoes": [
+    {
+      "id": "required-route-not-readable-or-play-space-proven",
+      "present": true,
+      "evidence": "The manifest now declares canonical route geometry present, but none of the six materials-on orbits or phone view shows a complete countable 36-tile chain, pawn state, or HUD/controller clearance."
+    },
+    {
+      "id": "phone-safe-composition-not-proven",
+      "present": true,
+      "evidence": "phone-overview enlarges the island versus r15 but still leaves roughly the upper quarter as unused sky while large lower honey/cliff forms and side content are cut by the gold safe frame."
+    },
+    {
+      "id": "mission-wow-liquid-silhouette-failure",
+      "present": true,
+      "evidence": "The dedicated mission close view is governed by a hard round cap and near-vertical faceted columns. Missing refraction may worsen the read, but it does not account for this non-liquid macro silhouette."
+    }
+  ],
+  "changesVersusR15": {
+    "overallDelta": 0.5,
+    "confirmedImprovements": [
+      "Palace profile and rear authorship improve substantially: real intersecting side gables, rear apse mass, buttresses, and multiple roof layers survive all opposite views.",
+      "The central lantern changes from a mostly blank pale drum to a dark occupied glazed tower with a connected gold rib network, collars, and stronger civic contrast.",
+      "The front entrance and stair hierarchy are larger and more legible, with a stronger pointed portal and purple focal door.",
+      "The phone view scales and raises the kingdom, reducing the excessive sky and tiny-island failure from r15.",
+      "The evidence packet now declares exact route transforms and includes more distant hive-island depth."
+    ],
+    "unchangedOrInsufficient": [
+      "Great Honeyfall geometry and mission WOW remain effectively unchanged at 3.4/10.",
+      "The complete route remains unreadable and overlay clearance remains unproven.",
+      "Island terrain is still shallow, regular, and sparsely occupied compared with the source.",
+      "Flowers, atmosphere, landmark meso-detail, and material separation show little visible improvement in this CPU packet."
+    ]
+  },
+  "overallScore": {
+    "value": 3.4,
+    "deltaVsR15": 0.5,
+    "governingView": "great-honeyfall-stage-4-close",
+    "userBaselineMet": false,
+    "productionApproval": false,
+    "finding": "R19 is a genuine and measurable structural improvement, especially in the cathedral and phone scale, but it remains below the user's 4/10 authority baseline and far below the source's dense, lush, legible kingdom."
+  },
+  "actionRationale": "Keep the new cathedral family because the v8 correction produced visible cross-view gains and removed the generic side/rear profile defect. Do not approve the assembled island. Remaining work should move to world composition, canonical route readability/HUD proof, mission honey geometry, terrain depth, and inhabited meso-density rather than restarting the cathedral.",
+  "action": "keep-family"
+}

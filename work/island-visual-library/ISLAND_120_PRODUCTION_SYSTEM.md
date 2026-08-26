@@ -167,9 +167,13 @@ silently replace the original composition target.
     site-wide scaffold cage appears or flickers.
 15. Trace robot occupancy throughout a work burst: pair-overlap and landmark-
     penetration counters remain zero, including while a robot relocates.
-16. Confirm the build POV is unchanged during work and for seven seconds after
+16. Complete a level and confirm only its additive geometry performs the shared
+    pop/overshoot/settle beat with one non-strobing flash and a small sparkle
+    burst. In reduced motion, confirm geometry stays fixed and only the subdued
+    glow remains.
+17. Confirm the build POV is unchanged during work and for seven seconds after
     the latest input; then confirm only a gentle same-landmark orbit is allowed.
-17. Close Build and confirm board POV variation does not begin before forty
+18. Close Build and confirm board POV variation does not begin before forty
     seconds of inactivity and cancels immediately on interaction.
 
 Approval fails if any landmark is hidden by fog during the only clearance

@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace faceted radial hive basilica naked macro shell",
+  "constructionFamily": "procedural-threejs-faceted-radial-hive-basilica",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "hiddenVolumeHypothesis": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/generated-hypotheses/palace-lower-cathedral-body-turnaround-v002.png",
+      "authority": "secondary-side-rear-volume-only"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v8.json",
+      "sha256": "87179c17cd42419145de37532977df74fc7d0662b0d03729079c1dcfd1d06126"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v11.json",
+      "sha256": "cb246de47230d24cf2540fa2e91ad3e95a3789d455a76d0884670c7e3f431870"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "minimumCorrectionGain": 0.10,
+    "correctedRetirementFloor": 0.75,
+    "hiddenViews": "secondary volume-coherence evidence only; source likeness is not scored where the exact source provides no hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.60,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.54,
+      "sideRearCoherence": 0.75,
+      "note": "The broad civic and middle tiers occupy the footprint, but their nearly radial taper reads as a generic beehive mound. Tall exposed front bay bodies and a narrow entrance buttress repeat tower/pylon forms instead of the source's low embedded shoulders and dominant cathedral entrance."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.58,
+      "depthIntegration": 0.74,
+      "sourceLikeness": 0.55,
+      "sideRearCoherence": 0.77,
+      "note": "The front-three-quarter view confirms real body depth, but the front dome bay is still a freestanding-looking tall drum and the keep emerges above a visible platform ring."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.62,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The side has credible closed depth and avoids a flat card. The satellite body remains too exposed and vertical relative to its dome and the occupied core."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.63,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.81,
+      "note": "Rear-oblique evidence validates the deep radial core, but the rear bay still reads as a separate small tower rather than a buried architectural bay."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The rear is closed and substantial, though overly smooth radial hierarchy and two exposed bay bodies create a generic hive rather than dense basilica architecture."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.63,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.81,
+      "note": "The opposite rear-oblique view repeats the sound deep core and under-embedded rear bay problem."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.62,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The opposite side confirms credible volume but an exposed satellite drum and visible keep platform transition."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.58,
+      "depthIntegration": 0.74,
+      "sourceLikeness": 0.55,
+      "sideRearCoherence": 0.77,
+      "note": "Front-adjacent evidence again shows a pylon-like front bay, narrow entrance axis, and generic radial tiering instead of the source's compact cathedral facade."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.54,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "macroReadAssessment": {
+    "broadOccupiedCivicTier": {
+      "score": 0.78,
+      "finding": "Present as a deep closed footprint-filling mass, but too radially generic."
+    },
+    "taperedCathedralHierarchy": {
+      "score": 0.61,
+      "finding": "Taper is present; front-led cathedral hierarchy is not."
+    },
+    "lowEmbeddedBayBodies": {
+      "score": 0.43,
+      "finding": "Front and rear bay bodies are tall, exposed, and visually separate."
+    },
+    "entranceAxis": {
+      "score": 0.48,
+      "finding": "Centered but too narrow and pylon-like to dominate the lower facade."
+    },
+    "deepSideRearVolume": {
+      "score": 0.80,
+      "finding": "This is the family's credible representation-level strength."
+    },
+    "genericBeehiveRisk": "realized",
+    "freestandingTowerRisk": "realized",
+    "visiblePlatformRisk": "realized"
+  },
+  "largestMismatch": "The exact source is front-led: a large inhabited entrance facade and low integrated domed shoulders turn a tapered hive mass into a cathedral. This blockout is dominated by concentric radial tiers, tall exposed bay bodies, and a keep above a visible ring, so it reads as a generic beehive compound with attached towers.",
+  "boundedCorrection": {
+    "falsifiableHypothesis": "If the four existing bay bodies are made squat and buried into the occupied tiers, the existing entrance buttress is broadened and deepened into the lower half, and the existing middle tier is raised around a lowered keep base to erase the platform ring, the same deep radial topology will shift from generic beehive with towers to the source's front-led compact cathedral without sacrificing side/rear volume.",
+    "expectedGain": {
+      "currentWorst": 0.54,
+      "targetWorst": 0.75,
+      "expectedAbsoluteGain": 0.21,
+      "approvalStillRequires": 0.85
+    },
+    "allowedVariablesAndFeatures": [
+      "X/Z width, Y height, embed position, and overlap of the four existing bay bodies only, with each corrected height-to-width ratio at most 0.95",
+      "Y seating and radius of the four existing bay hemidomes only, with collars no more than 0.10 above body tops",
+      "X/Z width, depth, Y height, and embed position of the single existing central entrance buttress only",
+      "top radius, Y height, and Y position of the existing middle basilica tier only",
+      "Y position and lower-stage height of the existing central keep only, preserving at least 45 percent visible-height and 75 percent footprint overlap"
+    ],
+    "frozenDuringCorrection": [
+      "part count, radial-solid topology, lower civic tier envelope, plinth, court, and stairs",
+      "hero hemidome and compact crown topology",
+      "facade and ornament systems",
+      "materials, honey, mission, robots, terrain, camera, and gameplay"
+    ],
+    "hardRejectThreshold": "Retire the family if the corrected worst required score is below 0.75, if worst-score gain is below +0.10, if any critical dimension regresses by more than 0.05, if any bay body remains taller than 0.95 of its width or visibly freestanding, if the entrance remains narrower than a front bay, if a keep platform ring remains visible, or if generic radial beehive symmetry still controls the front. Approval remains impossible unless every required score reaches 0.85."
+  },
+  "action": "one-bounded-correction"
+}

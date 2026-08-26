@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace buttressed hemidome naked macro shell",
+  "constructionFamily": "procedural-threejs-buttressed-hemidome-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v5.json",
+      "sha256": "a0d73a1a248411084574d7db25bfa97b2d1d6502e5a1a25abee866ad7b6dacfb"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v7.json",
+      "sha256": "797ea31744617dfe366dbf1d27ae0abd0fad1bc222fec327155bef852ec1a75b"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "mandatoryRetireBelow": 0.50,
+    "minimumCorrectionGain": 0.10,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.56,
+      "depthIntegration": 0.74,
+      "sourceLikeness": 0.50,
+      "sideRearCoherence": 0.74,
+      "note": "Hemidomes now read as seated roof caps rather than full balls, removing the prior hard veto. The palace remains too narrow and pyramidal: its lower cathedral and shoulders do not create the source's broad inhabited base, while the upper lantern is disproportionately tall."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.57,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.51,
+      "sideRearCoherence": 0.76,
+      "note": "Oblique transition is closed and coherent. Satellite shoulders are still thin and low relative to the central keep, so the silhouette reads as a tapered monument rather than a dense cathedral."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.60,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Hidden side remains volumetrically sound; central height dominates while lower cross-body depth and tower shoulder mass are insufficient."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.59,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "No collapse or open slot appears, but the family is still a narrow taper with subordinate satellites rather than the source's broad interlocked palace."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.58,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Rear volume is coherent and symmetric; lower cathedral and apse remain too small against the central keep."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.59,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Opposite transition confirms stable closed volume and the same underweight lower-body hierarchy."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.60,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Opposite side remains coherent; the tall narrow central axis and small tower shoulders dominate."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.57,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.51,
+      "sideRearCoherence": 0.76,
+      "note": "Front-adjacent view confirms corrected dome seating but insufficient cathedral breadth and satellite shoulder height."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.50,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "vetoes": [],
+  "largestMismatch": "The source places a tall central keep inside a broad, dense cathedral base whose four shoulder towers rise strongly into the silhouette. This blockout solves dome seating but concentrates too much height in a narrow central taper, leaves the lower cathedral and satellites underweight, and extends the crown lantern too far above the hero dome.",
+  "boundedCorrection": {
+    "falsifiableHypothesis": "Widening and lowering the existing lower cathedral/transept frusta, raising and thickening the four existing satellite shoulders, and shortening the existing upper lantern will shift the silhouette from a narrow monument to the source's broad interlocked cathedral while preserving the proven hemidome seating and hidden-view coherence.",
+    "expectedGain": {
+      "currentWorst": 0.50,
+      "targetWorst": 0.75,
+      "expectedAbsoluteGain": 0.25,
+      "approvalStillRequires": 0.85
+    },
+    "allowedVariablesAndFeatures": [
+      "top and bottom X/Z radii, Y heights, and overlap of the existing lower cathedral, transept, and apse frusta",
+      "X/Z embed positions, top and bottom radii, and Y heights of the four existing satellite BASE and DRUM frusta",
+      "radius and Y seating of the four existing satellite hemidomes within source-scale targets",
+      "top and bottom radii and Y heights of the two existing central keep stages",
+      "Y height of the existing upper lantern and seating of the existing hero and crown hemidomes"
+    ],
+    "frozenDuringCorrection": [
+      "part count and closed hemidome/base-disk construction",
+      "court and stairs",
+      "facade and ornament systems",
+      "materials, honey, mission, robots, terrain, camera, and gameplay"
+    ],
+    "hardRejectThreshold": "Retire the family if the corrected worst required score is below 0.75, if worst-score gain is below +0.10, if any critical dimension regresses by more than 0.05, or if a full-sphere/ball-on-pylon/separate-pillar/open-slot/camera-dependent veto appears. Approval remains impossible unless every required score reaches 0.85."
+  },
+  "action": "one-bounded-correction"
+}

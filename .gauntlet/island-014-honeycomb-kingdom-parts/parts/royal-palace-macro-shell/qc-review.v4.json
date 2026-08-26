@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace interlocked nave-transept naked macro shell",
+  "constructionFamily": "procedural-threejs-interlocked-nave-transept-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v3.json",
+      "sha256": "9be22fea868ba600f5f1e7283d2fc8282e4d7b80ec25d417335d41ca4d7a87f6"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v4.json",
+      "sha256": "581aedde847bf29ac37ae42ad1e2e49c1fc17f2f89431286817ec23b9116acdf"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "mandatoryRetireBelow": 0.50,
+    "minimumCorrectionGain": 0.10,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.68,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.62,
+      "sideRearCoherence": 0.76,
+      "note": "The nave/transept family produces a recognizably vertical cathedral with a hero dome and four shoulder domes. The broad plain central front block and separated tower bases still prevent the source's tightly interlocked tapered silhouette."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.70,
+      "depthIntegration": 0.77,
+      "sourceLikeness": 0.63,
+      "sideRearCoherence": 0.78,
+      "note": "Closed intersecting volumes survive the oblique transition. Satellites remain visually pillar-like because their bases sit too far outside the nave/transept envelope and their spherical domes dominate their drums."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.73,
+      "depthIntegration": 0.80,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.82,
+      "note": "Hidden side is coherent and load paths remain seated. The keep, nave, and satellites are still readable as adjacent blocks rather than one tightly overlapped cathedral shoulder system."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.72,
+      "depthIntegration": 0.81,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.82,
+      "note": "Least-flattering transition shows genuine closed depth without slab collapse or root slots. The mass is broad and stable but retains isolated corner towers and a rectangular central core."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.71,
+      "depthIntegration": 0.80,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.81,
+      "note": "Rear construction is symmetric and coherent; the apse and cross body read, but tower-to-transept overlap remains weak."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.72,
+      "depthIntegration": 0.81,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.82,
+      "note": "Opposite transition confirms the same real-volume strengths and detached satellite-shoulder weakness."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.73,
+      "depthIntegration": 0.80,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.82,
+      "note": "Opposite side remains coherent with no camera-dependent collapse; rectangular stage boundaries are too explicit for the source's continuous taper."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.70,
+      "depthIntegration": 0.77,
+      "sourceLikeness": 0.63,
+      "sideRearCoherence": 0.78,
+      "note": "Front-adjacent view retains the new cathedral hierarchy but confirms that separated tower bases and the broad central front face dilute source likeness."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.62,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "qualitativeDefectElimination": {
+    "retiredCameraDependentSlabCollapse": true,
+    "retiredEqualTierZiggurat": true,
+    "retiredPlainSingleShaft": true,
+    "remaining": "The new family has a valid cross-shaped cathedral volume, but its four shoulder towers still read as separate corner pillars and the central front mass is too broad and rectangular."
+  },
+  "vetoes": [],
+  "largestMismatch": "The source merges faceted lower body, satellite tower shoulders, and central keep into one continuously tapering silhouette. The blockout has the correct component hierarchy, but the tower BASE/DRUM stages sit too far outside the transept and the keep/nave faces remain broad rectangles, creating a five-block arrangement instead of an interlocked cathedral.",
+  "boundedCorrection": {
+    "falsifiableHypothesis": "Moving the four existing BASE/DRUM tower stages inward to overlap the nave/transept envelope while tapering the existing keep and cross-body stage widths will convert the current five-block silhouette into the source's interlocked cathedral shoulders without reducing the proven side/rear coherence.",
+    "expectedGain": {
+      "currentWorst": 0.62,
+      "targetWorst": 0.78,
+      "expectedAbsoluteGain": 0.16,
+      "approvalStillRequires": 0.85
+    },
+    "allowedVariablesAndFeatures": [
+      "X/Z embed positions and X/Z dimensions of the four existing satellite BASE and DRUM stages",
+      "Y heights and overlap ranges of the four existing satellite BASE and DRUM stages",
+      "radius and Y seating of the four existing satellite domes within the build-contract ranges",
+      "X/Z widths, depths, chamfer amounts, and Y heights of the existing nave, transept, apse, lower keep, and upper keep",
+      "Y seating of the existing hero dome, upper lantern, and crown dome"
+    ],
+    "frozenDuringCorrection": [
+      "part count and interpenetrating closed-volume construction rule",
+      "court and stairs",
+      "facade and ornament systems",
+      "materials, honey, mission, robots, terrain, camera, and gameplay"
+    ],
+    "hardRejectThreshold": "Retire the family if the corrected worst required score is below 0.75, if worst-score gain is below +0.10, if any critical dimension regresses by more than 0.05, or if any camera-dependent/open-slot/floating-volume veto appears. Approval remains impossible unless every required score reaches 0.85."
+  },
+  "action": "one-bounded-correction"
+}

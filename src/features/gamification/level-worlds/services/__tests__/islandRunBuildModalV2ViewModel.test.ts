@@ -4,6 +4,7 @@ import {
   resolveBuildModalV2LandmarkArt,
 } from '../islandRunBuildModalV2ViewModel';
 import { normalizeIslandArtManifest, type IslandArtManifest } from '../islandArtManifest';
+import { deriveIslandRunConstructionPresentation } from '../islandRunConstructionPresentation';
 import type { IslandRunContractV2BuildState } from '../islandRunContractV2EssenceBuild';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
@@ -64,6 +65,40 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
+    name: 'construction presentation holds the completed landmark and exposes the final crew celebration',
+    run: () => {
+      const reviewView = vm([build(1), build(0), build(0), build(0), build(0)]);
+      const review = deriveIslandRunConstructionPresentation({
+        isOpen: true,
+        isBuildHoldActive: false,
+        viewModel: reviewView,
+        levelReview: {
+          title: 'Hatchery',
+          stopId: 'hatchery',
+          previousLevel: 0,
+          level: 1,
+          presentationSequence: 1,
+          isFullyBuilt: false,
+          isAdvanceReady: false,
+          isAdvanceQueued: false,
+          hasNextBuild: true,
+        },
+      });
+      assertEqual(review.targetStopId, 'hatchery', 'Review should remain on the landmark that just completed');
+      assertEqual(review.targetLevel, 1, 'Review should show the completed level instead of the next target level');
+      assertEqual(review.phase, 'reveal', 'Review should preserve the authored reveal phase');
+
+      const complete = deriveIslandRunConstructionPresentation({
+        isOpen: true,
+        isBuildHoldActive: false,
+        viewModel: vm([build(3), build(3), build(3), build(3), build(3)]),
+      });
+      assertEqual(complete.active, true, 'The construction theatre should stay active after all 15 levels complete');
+      assertEqual(complete.completionCelebration, true, 'The final state should explicitly request the three-robot celebration');
+      assertEqual(complete.targetStopId, 'boss', 'The final celebration should use the last landmark stage as its camera anchor');
+    },
+  },
+  {
     name: 'parts expose five independently priced cumulative build choices',
     run: () => {
       const view = vm([build(0, 20, 100), build(0), build(0), build(0), build(0)], 100);
@@ -117,7 +152,7 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
-    name: 'live-board Build owns input and completed levels honor queued half-to-one-and-a-half-second review timing',
+    name: 'live-board Build owns input and completed levels preserve their full choreography window',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -126,10 +161,11 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
 
       assert(modalSource.includes('role="dialog"') && modalSource.includes('aria-modal="true"'), 'Build should expose its exclusive live-board session as an accessible modal dialog');
-      assert(!modalSource.includes('<img') && !modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
-      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 500'), 'completed levels should remain visible for at least half a second');
-      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 1_500'), 'completed levels should auto-advance after a one-and-a-half-second review');
-      assert(boardSource.includes('isAdvanceQueued: true') && boardSource.includes('Date.now() < current.minAdvanceAtMs'), 'an early review tap should queue rather than skip the minimum dwell');
+      assert(!modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
+      assert(modalSource.includes('completed-crest-v001.png'), 'the final state should use the generated in-world Completed crest');
+      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 3_200'), 'completed levels should protect at least 3.2 seconds for the robot and reveal choreography');
+      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 4_600'), 'completed levels should auto-advance only after the full 4.6-second review');
+      assert(modalSource.includes('disabled={!review.isAdvanceReady}') && modalSource.includes('Robots and reveal still moving'), 'review controls should remain disabled while an older celebration is playing');
       assert(!boardSource.includes("completionPresentation && nextRuntimeState.firstSessionTutorialState !== 'hatchery_l1_built'"), 'the first tutorial landmark must receive the same completed-level review as every later build');
       assert(boardSource.includes('buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId'), 'the camera should keep the just-completed landmark focused throughout review');
       assert(boardSource.includes('if (!activeBuildCameraStopId) return;'), 'a fully built island should preserve its final close-up while Build remains open');
@@ -141,9 +177,10 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(cssSource.includes("top: max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))"), 'Build header must occupy the top safe-area slot instead of sitting below the game header');
       assert(cssSource.includes('background: linear-gradient(180deg, #ef5757 0%, #ad1717 100%)'), 'Build and board close controls should use a high-contrast red surface');
       assert(cssSource.includes('.bm2-build-mode .bm2-header__close') && cssSource.includes('.island-run-board__topbar-exit'), 'both close controls must share the red and white visibility treatment');
-      assert(cssSource.includes('.bm2-level-review__advance--queued') && cssSource.includes('#327cb5'), 'an early queued advance should have explicit blue feedback');
+      assert(cssSource.includes('.bm2-level-review__advance:disabled') && cssSource.includes('cursor: wait'), 'the protected choreography window should have explicit disabled feedback');
       assert(modalSource.includes('bm2-dock__topline') && modalSource.includes('bm2-dock__funding'), 'the active build summary should keep level, identity, and funding information in compact rows');
-      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 1.5s linear both'), 'auto-dismiss celebration should visualize the full one-and-a-half-second dwell');
+      assert(cssSource.includes('.bm2-level-complete__scene-fx') && cssSource.includes('bm2-level-scene-shine'), 'level completion should add a board-wide shine and sparkle pass');
+      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 4.6s linear both'), 'auto-dismiss celebration should visualize the full choreography window');
     },
   },
 ];

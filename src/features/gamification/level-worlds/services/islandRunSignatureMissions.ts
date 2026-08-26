@@ -60,6 +60,13 @@ export const CACTUS_CANYON_DYNAMITE_CACHE_FRACTIONS = Object.freeze([
 ] as const);
 export const CACTUS_CANYON_DYNAMITE_CACHE_AMOUNTS = Object.freeze([1, 1, 3, 1, 1, 3, 1, 1] as const);
 
+export const HONEYCOMB_KINGDOM_ISLAND_NUMBER = 14;
+export const GREAT_HONEYFALL_MAX_STAGE = 4;
+/** Four royal-nectar landings, offset from the four landmark-door clusters. */
+export const GREAT_HONEYFALL_NECTAR_TILE_FRACTIONS = Object.freeze([
+  2 / 36, 11 / 36, 20 / 36, 29 / 36,
+] as const);
+
 export interface FrostwellIceworksProgress {
   missionId: 'frostwell-iceworks';
   version: 2;
@@ -122,13 +129,25 @@ export interface FirstLightAssemblyCraterProgress {
   updatedAtMs: number;
 }
 
+export interface GreatHoneyfallProgress {
+  missionId: 'great-honeyfall-coronation';
+  version: 1;
+  nectarChargesEarned: number;
+  nectarChargesSpent: number;
+  activatedReservoirs: 0 | 1 | 2 | 3 | 4;
+  lastActivatedReservoir: number | null;
+  completedAtMs: number | null;
+  updatedAtMs: number;
+}
+
 export type IslandRunSignatureMissionProgress =
   | CelestialRedockingProgress
   | FrostwellIceworksProgress
   | RootheartPowerworksProgress
   | SunkenSandsTreasureProgress
   | FirstLightAssemblyCraterProgress
-  | CactusCanyonSpiralProgress;
+  | CactusCanyonSpiralProgress
+  | GreatHoneyfallProgress;
 export type IslandRunSignatureMissionProgressByIsland = Record<string, IslandRunSignatureMissionProgress>;
 
 export function getIslandRunSignatureMissionKey(cycleIndex: number, islandNumber: number): string {
@@ -212,6 +231,29 @@ export function sanitizeIslandRunSignatureMissionProgress(
         completedAtMs: typeof completedAtRaw === 'number' && Number.isFinite(completedAtRaw)
           ? Math.max(0, completedAtRaw)
           : chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 0 : null,
+        updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+          ? Math.max(0, updatedAtRaw)
+          : 0,
+      };
+      return;
+    }
+    if (record.missionId === 'great-honeyfall-coronation' || record.mission_id === 'great-honeyfall-coronation') {
+      const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
+      const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
+      const activatedReservoirs = Math.max(0, Math.min(
+        GREAT_HONEYFALL_MAX_STAGE,
+        finiteInteger(record.activatedReservoirs ?? record.activated_reservoirs),
+      )) as GreatHoneyfallProgress['activatedReservoirs'];
+      result[key] = {
+        missionId: 'great-honeyfall-coronation',
+        version: 1,
+        nectarChargesEarned: Math.max(0, finiteInteger(record.nectarChargesEarned ?? record.nectar_charges_earned)),
+        nectarChargesSpent: Math.max(0, finiteInteger(record.nectarChargesSpent ?? record.nectar_charges_spent)),
+        activatedReservoirs,
+        lastActivatedReservoir: activatedReservoirs > 0 ? activatedReservoirs : null,
+        completedAtMs: typeof completedAtRaw === 'number' && Number.isFinite(completedAtRaw)
+          ? Math.max(0, completedAtRaw)
+          : activatedReservoirs >= GREAT_HONEYFALL_MAX_STAGE ? 0 : null,
         updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
           ? Math.max(0, updatedAtRaw)
           : 0,
@@ -456,6 +498,25 @@ export function resolveFirstLightAssemblyCraterProgress(options: {
   };
 }
 
+export function resolveGreatHoneyfallProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): GreatHoneyfallProgress {
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber ?? HONEYCOMB_KINGDOM_ISLAND_NUMBER);
+  const current = options.ledger[key];
+  return current?.missionId === 'great-honeyfall-coronation' ? current : {
+    missionId: 'great-honeyfall-coronation',
+    version: 1,
+    nectarChargesEarned: 0,
+    nectarChargesSpent: 0,
+    activatedReservoirs: 0,
+    lastActivatedReservoir: null,
+    completedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
 export function isFirstLightAssemblyDynamiteTile(islandNumber: number, tileIndex: number): boolean {
   return islandNumber === FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
     && FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.includes(
@@ -501,6 +562,58 @@ export function collectFirstLightAssemblyDynamiteForLanding(options: {
         ...current,
         claimedDynamiteTileIndices,
         startedAtMs: current.startedAtMs ?? options.nowMs,
+        updatedAtMs: options.nowMs,
+      },
+    },
+  };
+}
+
+export function getGreatHoneyfallAvailableNectar(progress: GreatHoneyfallProgress): number {
+  return Math.max(0, progress.nectarChargesEarned - progress.nectarChargesSpent);
+}
+
+export function getGreatHoneyfallNectarQuantityForTile(
+  islandNumber: number,
+  tileIndex: number,
+  tileCount: number,
+): number {
+  if (islandNumber !== HONEYCOMB_KINGDOM_ISLAND_NUMBER) return 0;
+  const safeTileCount = Math.max(1, Math.floor(tileCount));
+  return GREAT_HONEYFALL_NECTAR_TILE_FRACTIONS.some((fraction) => (
+    Math.min(safeTileCount - 1, Math.max(0, Math.floor(fraction * safeTileCount))) === tileIndex
+  )) ? 1 : 0;
+}
+
+export function collectGreatHoneyfallNectarForLanding(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  tileIndex: number;
+  tileCount: number;
+  nowMs: number;
+}): { ledger: IslandRunSignatureMissionProgressByIsland; nectarCollected: number } {
+  const amount = getGreatHoneyfallNectarQuantityForTile(
+    options.islandNumber,
+    options.tileIndex,
+    options.tileCount,
+  );
+  if (amount <= 0) return { ledger: options.ledger, nectarCollected: 0 };
+  const current = resolveGreatHoneyfallProgress(options);
+  if (
+    current.completedAtMs !== null
+    || current.activatedReservoirs >= GREAT_HONEYFALL_MAX_STAGE
+    || current.nectarChargesEarned >= GREAT_HONEYFALL_MAX_STAGE
+  ) {
+    return { ledger: options.ledger, nectarCollected: 0 };
+  }
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  return {
+    nectarCollected: amount,
+    ledger: {
+      ...options.ledger,
+      [key]: {
+        ...current,
+        nectarChargesEarned: Math.min(GREAT_HONEYFALL_MAX_STAGE, current.nectarChargesEarned + amount),
         updatedAtMs: options.nowMs,
       },
     },
@@ -839,6 +952,25 @@ export function mergeIslandRunSignatureMissionProgress(
         startedAtMs: a.startedAtMs === null
           ? b.startedAtMs
           : b.startedAtMs === null ? a.startedAtMs : Math.min(a.startedAtMs, b.startedAtMs),
+        completedAtMs,
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
+    if (a.missionId === 'great-honeyfall-coronation' || b.missionId === 'great-honeyfall-coronation') {
+      if (a.missionId !== 'great-honeyfall-coronation') { merged[key] = b; return; }
+      if (b.missionId !== 'great-honeyfall-coronation') { merged[key] = a; return; }
+      const completedAtMs = a.completedAtMs === null
+        ? b.completedAtMs
+        : b.completedAtMs === null ? a.completedAtMs : Math.min(a.completedAtMs, b.completedAtMs);
+      const activatedReservoirs = Math.max(a.activatedReservoirs, b.activatedReservoirs) as GreatHoneyfallProgress['activatedReservoirs'];
+      merged[key] = {
+        missionId: 'great-honeyfall-coronation',
+        version: 1,
+        nectarChargesEarned: Math.max(a.nectarChargesEarned, b.nectarChargesEarned),
+        nectarChargesSpent: Math.max(a.nectarChargesSpent, b.nectarChargesSpent),
+        activatedReservoirs,
+        lastActivatedReservoir: activatedReservoirs > 0 ? activatedReservoirs : null,
         completedAtMs,
         updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
       };

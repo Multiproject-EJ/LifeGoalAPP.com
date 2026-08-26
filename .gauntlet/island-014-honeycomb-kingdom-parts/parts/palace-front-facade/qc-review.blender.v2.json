@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 second Blender solid modular honey cathedral facade first geometry gate",
+  "constructionFamily": "blender-solid-modular-honey-cathedral-facade",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.blender.v2.json",
+      "sha256": "1d20f538db923d67c5cad9f006d2e3f3dc5bb8bdf4c114afde4c172817ff5a9d"
+    },
+    "captureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r01/capture-manifest.v1.json",
+      "sha256": "f9c9834b8bdb5229500b9f9f99db2ae894dd8c7435caf7afa62e262bc71b9c87"
+    },
+    "evidenceIntegrity": "All four v005 SVG/JPEG hash pairs match the immutable capture manifest; the JPEGs are browser rasterizations of the actual-mesh SVG captures."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "criticalFirstPassFloor": 0.50,
+    "worstViewCategoryGoverns": true,
+    "openHoleOrHollowCardIsHardVeto": true,
+    "oneCorrectionMaximum": true,
+    "correctionsUsed": 0
+  },
+  "meshBudgetAssessment": {
+    "runtimeMeshParts": 22,
+    "triangles": 2600,
+    "budgetMaximumMeshParts": 24,
+    "budgetMaximumTriangles": 22000,
+    "budgetPass": true,
+    "finding": "The multipart and triangle budgets pass."
+  },
+  "perViewScores": [
+    {
+      "view": "front-000",
+      "sourceIdentity": 0.60,
+      "silhouetteVolume": 0.73,
+      "recessDepth": 0.66,
+      "cathedralHierarchy": 0.52,
+      "fourBayObliqueReadability": 0.90,
+      "attachment": 0.80,
+      "crossViewCoherence": 0.78,
+      "phoneReadability": 0.54,
+      "note": "The facade is solid, centered, attached, and all four bays are clear. The rose is larger and more visually dominant than the doorway, while the door backplane is nearly blank: seam, handles, bee sigil, and occupied dark recess do not read in clay."
+    },
+    {
+      "view": "oblique-045",
+      "sourceIdentity": 0.57,
+      "silhouetteVolume": 0.74,
+      "recessDepth": 0.70,
+      "cathedralHierarchy": 0.50,
+      "fourBayObliqueReadability": 0.82,
+      "attachment": 0.82,
+      "crossViewCoherence": 0.80,
+      "phoneReadability": 0.52,
+      "note": "Closed reveal volumes and host attachment survive the oblique, with all four bays countable. The rose ring projects as a large barrel-like crown and the visually blank doorway remains subordinate."
+    },
+    {
+      "view": "oblique-315",
+      "sourceIdentity": 0.57,
+      "silhouetteVolume": 0.74,
+      "recessDepth": 0.70,
+      "cathedralHierarchy": 0.50,
+      "fourBayObliqueReadability": 0.82,
+      "attachment": 0.82,
+      "crossViewCoherence": 0.80,
+      "phoneReadability": 0.52,
+      "note": "The opposite oblique confirms solid topology, attachment, and four-bay count, together with the same oversized forward rose and under-occupied door."
+    },
+    {
+      "view": "facade-closeup",
+      "sourceIdentity": 0.58,
+      "silhouetteVolume": 0.70,
+      "recessDepth": 0.68,
+      "cathedralHierarchy": 0.50,
+      "fourBayObliqueReadability": null,
+      "attachment": 0.80,
+      "crossViewCoherence": 0.78,
+      "phoneReadability": 0.50,
+      "note": "The close view proves a substantial pointed arch and closed door plane, but the door is visually blank and fails to express the royal entrance details required to lead the hierarchy."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.50,
+    "view": "oblique-045",
+    "dimension": "cathedralHierarchy"
+  },
+  "categorySummary": {
+    "sourceIdentity": 0.57,
+    "silhouetteVolume": 0.70,
+    "recessDepth": 0.66,
+    "cathedralHierarchy": 0.50,
+    "fourBayObliqueReadability": 0.82,
+    "attachment": 0.80,
+    "crossViewCoherence": 0.78,
+    "phoneReadability": 0.50
+  },
+  "criticalFloorEvaluation": {
+    "floor": 0.50,
+    "worstScore": 0.50,
+    "floorMet": true,
+    "finding": "The blockout clears the immediate-retirement floor exactly, not comfortably."
+  },
+  "hardVetoEvaluation": {
+    "openHoleOrHollowCard": {
+      "present": false,
+      "finding": "No background is visible through the door, rose, or bays; closed backplanes and reveal volumes survive both obliques."
+    },
+    "booleanOrRetiredTopologyReuse": {
+      "present": false,
+      "finding": "The evidence and contract describe a genuinely different closed modular construction."
+    },
+    "blankCentralSlabHidingDoor": {
+      "present": false,
+      "finding": "The door opening and arch remain visible, although the occupied door details are insufficiently readable."
+    },
+    "fewerThanFourCountableBays": {
+      "present": false,
+      "finding": "Two lower and two upper bays remain countable at both 45 and 315 degrees."
+    },
+    "forwardMountedRoseWithoutOccupiedRecess": {
+      "present": false,
+      "finding": "The rose has a closed occupied core and backplane; its excessive forward projection is a hierarchy defect rather than the no-recess hard veto."
+    },
+    "acceptedSilhouetteViolation": {
+      "present": false,
+      "finding": "The compact buttresses and gable remain within the accepted front envelope in supplied evidence."
+    },
+    "unattachedOrOpenHeroGeometry": {
+      "present": false,
+      "finding": "No unattached, open-backed, or hollow hero assembly is visible in the first-gate captures."
+    }
+  },
+  "largestMismatch": "The source's royal doorway is the first focal point, with a smaller embedded rose above it. This blockout reverses that hierarchy: a large forward rose barrel dominates while the broad door reads as an almost blank plane without phone-readable seam, handles, bee sigil, or occupied recess depth.",
+  "boundedCorrection": {
+    "falsifiableHypothesis": "Rebalancing only the existing central-axis recesses—shrinking and seating the existing rose while deepening and articulating the existing closed doorway—will make the door the first focal point and the rose second without disturbing the already credible closed shell, four bay positions, attachment, or cross-view coherence.",
+    "measurableTargets": [
+      "Rose outer visible diameter is 0.70 to 0.78 times the royal door opening width in front view.",
+      "Rose frontmost masonry face sits no more than 0.06 world units ahead of the local gable face; occupied core/backplane sits at least 0.12 world units behind that face.",
+      "Royal door backplane sits 0.14 to 0.20 world units behind the front arch face while remaining fully closed.",
+      "Door center seam spans at least 70 percent of visible door height and is at least 0.04 world units wide.",
+      "Bee sigil has at least a 0.18-world-unit visible bounding diameter; each handle has at least a 0.06-world-unit visible diameter.",
+      "Door is first and rose second in front, 45, 315, close, and subsequent phone-overview evidence."
+    ],
+    "allowedVariablesAndFeatures": [
+      "uniform scale and local depth position of the existing rose ring, radial divisions, core, and backplane as one assembly",
+      "local depth position of the existing closed royal door backplane and existing reveal tunnel walls",
+      "scale, thickness, and local face offset of the existing door seam, two handles, and bee sigil only"
+    ],
+    "frozenDuringCorrection": [
+      "accepted palace macro dimensions and transforms",
+      "facade rear wall, gable silhouette, side buttresses, banners, stairs, and attachment transforms",
+      "all four bay positions, sizes, closed backplanes, reveal tunnels, and topology",
+      "part count except geometry subdivisions needed to preserve the existing named central-axis parts",
+      "all other palace, ornament, terrain, mission, robot, camera, and gameplay systems"
+    ],
+    "expectedGain": {
+      "currentWorst": 0.50,
+      "targetWorst": 0.85,
+      "expectedAbsoluteGain": 0.35,
+      "approvalRequiresEveryCategory": 0.85
+    },
+    "hardRejectThreshold": "Retire the family if the corrected worst required score is below 0.85, if worst-score gain is below +0.10, if any open-hole/hollow-card read appears, if fewer than four bays remain countable at 45 or 315 degrees, if the rose remains first or projects more than 0.06 ahead of the gable, if door seam/handles/sigil remain unreadable in any required view, if any central part becomes unattached or open, or if attachment/cross-view coherence regresses by more than 0.05."
+  },
+  "action": "ONE-BOUNDED-CORRECTION"
+}

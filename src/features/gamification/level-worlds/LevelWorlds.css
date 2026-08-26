@@ -23998,6 +23998,30 @@
   filter: drop-shadow(0 2px 2px #241306);
 }
 
+.island-tile--great-honeyfall-nectar .island-tile__face {
+  border-color: #ffe58a;
+  background:
+    radial-gradient(circle at 42% 34%, #fff8cb 0 8%, #ffcc3f 18%, #e57c08 48%, #5b2204 82%);
+  box-shadow:
+    inset 0 0 12px rgba(255, 248, 196, .8),
+    0 0 11px rgba(255, 173, 29, .85),
+    0 0 20px rgba(255, 211, 78, .34);
+}
+.island-tile--great-honeyfall-nectar .island-tile__value {
+  color: #fff9d5;
+  filter: drop-shadow(0 2px 2px #5c2102);
+}
+
+.island-run-board__signature-mission-pill--great-honeyfall {
+  border-color: rgba(255, 218, 94, .88);
+  background:
+    linear-gradient(145deg, rgba(84, 37, 4, .97), rgba(207, 111, 4, .96));
+  box-shadow:
+    0 8px 24px rgba(57, 22, 2, .4),
+    inset 0 0 20px rgba(255, 238, 153, .18),
+    0 0 14px rgba(255, 175, 28, .2);
+}
+
 .island-run-board__signature-mission-pill--rootheart {
   border-color: rgba(226, 174, 78, .72);
   background: linear-gradient(145deg, rgba(41, 75, 55, .94), rgba(70, 42, 24, .96));
@@ -24430,6 +24454,17 @@
   color: var(--island-game-text-primary);
 }
 
+.bm2-build-mode--complete::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0, 0, 0, 0.2) 0 18%, rgba(0, 0, 0, 0.58) 72%),
+    rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  animation: bm2-complete-vignette-arrive 620ms ease-out both;
+}
+
 .bm2-build-mode .bm2-shell {
   position: absolute;
   inset: 0;
@@ -24571,7 +24606,8 @@
 }
 
 .bm2-build-mode .bm2-tutorial-guidance,
-.bm2-build-mode .bm2-hold-feedback {
+.bm2-build-mode .bm2-hold-feedback,
+.bm2-build-mode .bm2-animation-lock {
   width: fit-content;
   max-width: 100%;
   margin: 0;
@@ -24584,6 +24620,12 @@
   font-size: 0.68rem;
   font-weight: 800;
   text-align: center;
+}
+
+.bm2-build-mode .bm2-animation-lock {
+  border-color: rgba(123, 226, 255, 0.62);
+  background: rgba(7, 36, 54, 0.9);
+  color: #d9f9ff;
 }
 
 .bm2-build-mode .bm2-discount-spotlight {
@@ -24789,22 +24831,29 @@
 .bm2-dock .bm2-part__meta { font-size: 0.58rem; }
 
 .bm2-dock--complete {
-  width: min(31rem, calc(100vw - 1rem));
+  width: min(34rem, calc(100vw - 1rem));
+  border-color: rgba(255, 227, 151, 0.86);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 217, 105, 0.24), transparent 54%),
+    linear-gradient(165deg, rgba(26, 61, 76, 0.96), rgba(5, 18, 29, 0.95));
 }
 
 .bm2-dock .bm2-complete-state {
-  min-height: 0;
+  min-height: 8.4rem;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 8.5rem;
-  justify-items: stretch;
+  grid-template-columns: minmax(8rem, 0.9fr) minmax(0, 1.1fr);
+  justify-items: center;
   align-items: center;
   gap: 0.72rem;
-  padding: 0.72rem;
-  text-align: left;
+  padding: 0.8rem 1rem;
+  text-align: center;
 }
 
-.bm2-dock .bm2-complete-state__icon {
-  font-size: 2rem;
+.bm2-dock .bm2-complete-state__crest {
+  width: min(12rem, 100%);
+  height: auto;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.38));
+  animation: bm2-complete-crest-proud 2.8s cubic-bezier(0.2, 1.05, 0.35, 1) both;
 }
 
 .bm2-dock .bm2-complete-state__copy h3,
@@ -24825,7 +24874,8 @@
 }
 
 .bm2-dock .bm2-complete-state .bm2-level-rail {
-  width: auto;
+  grid-column: 1 / -1;
+  width: min(14rem, 100%);
 }
 
 .bm2-dock--level-review {
@@ -24944,6 +24994,13 @@
   color: #f1fff9;
 }
 
+.bm2-level-review__advance:disabled {
+  border-color: rgba(159, 205, 220, 0.32);
+  background: linear-gradient(180deg, rgba(45, 76, 91, 0.9), rgba(25, 45, 58, 0.94));
+  color: rgba(225, 245, 249, 0.72);
+  cursor: wait;
+}
+
 .bm2-level-review__timer {
   position: absolute;
   right: 0;
@@ -24952,7 +25009,7 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 1.5s linear both;
+  animation: bm2-level-toast-timer 4.6s linear both;
 }
 
 /* Build mode owns the viewport. Any already-mounted secondary surface remains
@@ -24988,6 +25045,18 @@
 @keyframes bm2-live-dock-arrive {
   from { opacity: 0; transform: translate(-50%, 20px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes bm2-complete-vignette-arrive {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bm2-complete-crest-proud {
+  0% { opacity: 0; transform: translateY(12px) scale(0.78); }
+  24% { opacity: 1; transform: translateY(-8px) scale(1.08); }
+  38% { transform: translateY(2px) scale(0.98); }
+  52%, 100% { transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 480px) {
@@ -25029,7 +25098,9 @@
   .bm2-dock .bm2-part__title { font-size: 0.58rem; }
   .bm2-dock .bm2-part__meta { font-size: 0.51rem; }
   .bm2-dock .bm2-complete-state {
-    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 7.6rem;
+    grid-template-columns: minmax(7rem, 0.85fr) minmax(0, 1.15fr);
+    padding: 0.66rem 0.7rem;
   }
   .bm2-dock .bm2-complete-state .bm2-level-rail {
     grid-column: 1 / -1;
@@ -25067,6 +25138,54 @@
   pointer-events: none;
 }
 
+.bm2-level-complete__scene-fx {
+  position: absolute;
+  inset: 5.5rem 0 7rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bm2-level-complete__shine {
+  position: absolute;
+  top: 6%;
+  bottom: 4%;
+  left: -38%;
+  width: 24%;
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 220, 0.62), transparent);
+  filter: blur(5px);
+  transform: skewX(-18deg);
+  animation: bm2-level-scene-shine 2.7s ease-in-out 0.18s both;
+}
+
+.bm2-level-complete__sparkle {
+  --sparkle-x: 50%;
+  --sparkle-y: 50%;
+  --sparkle-delay: 0s;
+  position: absolute;
+  top: var(--sparkle-y);
+  left: var(--sparkle-x);
+  width: 0.62rem;
+  height: 0.62rem;
+  opacity: 0;
+  background: #fff7bd;
+  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
+  filter: drop-shadow(0 0 7px rgba(255, 226, 122, 0.88));
+  animation: bm2-level-sparkle 1.35s ease-in-out var(--sparkle-delay) 2 both;
+}
+
+.bm2-level-complete__sparkle--1 { --sparkle-x: 14%; --sparkle-y: 28%; --sparkle-delay: 0.08s; }
+.bm2-level-complete__sparkle--2 { --sparkle-x: 24%; --sparkle-y: 62%; --sparkle-delay: 0.38s; }
+.bm2-level-complete__sparkle--3 { --sparkle-x: 34%; --sparkle-y: 18%; --sparkle-delay: 0.66s; }
+.bm2-level-complete__sparkle--4 { --sparkle-x: 43%; --sparkle-y: 72%; --sparkle-delay: 0.24s; }
+.bm2-level-complete__sparkle--5 { --sparkle-x: 55%; --sparkle-y: 24%; --sparkle-delay: 0.5s; }
+.bm2-level-complete__sparkle--6 { --sparkle-x: 66%; --sparkle-y: 67%; --sparkle-delay: 0.12s; }
+.bm2-level-complete__sparkle--7 { --sparkle-x: 76%; --sparkle-y: 18%; --sparkle-delay: 0.82s; }
+.bm2-level-complete__sparkle--8 { --sparkle-x: 86%; --sparkle-y: 48%; --sparkle-delay: 0.3s; }
+.bm2-level-complete__sparkle--9 { --sparkle-x: 18%; --sparkle-y: 82%; --sparkle-delay: 0.72s; }
+.bm2-level-complete__sparkle--10 { --sparkle-x: 47%; --sparkle-y: 42%; --sparkle-delay: 0.94s; }
+.bm2-level-complete__sparkle--11 { --sparkle-x: 71%; --sparkle-y: 84%; --sparkle-delay: 0.58s; }
+.bm2-level-complete__sparkle--12 { --sparkle-x: 91%; --sparkle-y: 28%; --sparkle-delay: 1.04s; }
+
 .bm2-level-complete .bm2-level-complete__card {
   position: absolute;
   top: max(14.45rem, calc(env(safe-area-inset-top, 0px) + 12.95rem));
@@ -25091,7 +25210,7 @@
   color: #fffaf0;
   text-align: left;
   transform: translateX(-50%);
-  animation: bm2-level-toast-arrive 3s cubic-bezier(0.2, 1.1, 0.35, 1) both;
+  animation: bm2-level-toast-arrive 4.6s cubic-bezier(0.2, 1.1, 0.35, 1) both;
 }
 
 .bm2-level-complete .bm2-level-complete__glow {
@@ -25143,7 +25262,20 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 1.5s linear both;
+  animation: bm2-level-toast-timer 4.6s linear both;
+}
+
+@keyframes bm2-level-scene-shine {
+  0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+  18% { opacity: 0.9; }
+  78% { opacity: 0.55; }
+  100% { opacity: 0; transform: translateX(720%) skewX(-18deg); }
+}
+
+@keyframes bm2-level-sparkle {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.25) rotate(0deg); }
+  42% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(42deg); }
+  70% { opacity: 0.52; transform: translate(-50%, -50%) scale(0.72) rotate(76deg); }
 }
 
 @keyframes bm2-level-toast-arrive {
@@ -25168,6 +25300,8 @@
   .bm2-level-complete .bm2-level-complete__card,
   .bm2-level-complete .bm2-level-complete__glow,
   .bm2-level-complete .bm2-level-complete__icon,
+  .bm2-level-complete__scene-fx,
+  .bm2-complete-state__crest,
   .bm2-level-complete__timer {
     animation: none;
   }

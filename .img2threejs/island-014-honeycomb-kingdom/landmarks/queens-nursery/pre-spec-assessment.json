@@ -1,0 +1,298 @@
+{
+  "targetName": "Queen's Nursery royal honeycomb egg landmark",
+  "sourceImage": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "royal honeycomb egg nursery landmark",
+      "primaryDomain": "object",
+      "formLanguage": ["architectural", "ovoid", "honeycomb", "royal", "edible-wax"],
+      "structureKind": ["layered shell", "repeated surface modules", "socketed attachments", "compound landmark"],
+      "motionPotential": ["static architecture", "construction pop", "honey glints", "subtle drip motion"],
+      "materialFamilies": ["golden wax", "dark brood comb", "glossy honey", "cream waxstone", "royal purple accent"],
+      "notes": "Focused reconstruction of the Queen's Nursery. The explicit egg emblem is front-identity authority; hidden architecture is conservative inference."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 2,
+        "occlusionRisk": 3,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 4,
+        "mesoComponents": 12,
+        "microFeatureGroups": 8,
+        "materialLayers": 5,
+        "repetitionSystems": 4
+      },
+      "reasoning": [
+        "A simple egg silhouette is easy, but the landmark identity depends on a dense, surface-conforming honeycomb rib system that survives phone downsampling.",
+        "The architectural cradle, entrance, crown, side brood pods, honey drips, and construction sockets require an explicit hierarchy.",
+        "The Royal Palace creates high canonical-camera occlusion risk, so visibility is part of the build contract rather than a later placement tweak.",
+        "Five distinct material responses must separate wax, dry brood recesses, exposed honey, waxstone, and the restrained royal accent."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Complex depth is required because a recognizable egg macro-form alone would still look generic; the shell repetition, real architectural base, honey response, and action-ready construction hierarchy are identity-critical."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Exact side and rear architecture are absent from the source; infer restrained continuations at confidence 0.55.",
+      "The source does not identify an exact in-world Nursery footprint; establish the largest collision-safe scale that stays visible beside the Royal Palace.",
+      "Exact cell count is unreadable; use fewer oversized cells optimized for phone recognition.",
+      "Projection is unsuitable as the primary route because the egg reference is embedded in a UI card and cannot supply clean rear geometry."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 12,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": []
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "At canonical phone scale the landmark reads first as the same tall royal honeycomb egg shown in the Hatchery card, not as a generic gold tower.",
+      "Raised wax ribs, dark brood cells, glossy honey, a grounded royal chamber base, and the crowned top remain distinct in the source-facing view.",
+      "Front, side, rear, and top-oblique views prove a closed true-3D shell with connected attachments and no facade cheats.",
+      "L1, L2, and L3 remain additive construction stages and preserve three robot work arcs plus the commissioning pop and sparkle behavior.",
+      "The landmark remains visible, clickable, route-safe, and uncropped in the canonical phone composition."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 4,
+      "mesoComponents": 12,
+      "microFeatureGroups": 8,
+      "materialLayers": 5,
+      "repetitionSystems": 4,
+      "reviewViewpoints": 7
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Queen's Nursery royal honeycomb egg landmark honeycomb wax egg",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.description-drill-down-macro-to-micro-decomposition",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[4]",
+        "score": 3.481029529261,
+        "snippets": [
+          "... whole object first ('a bowie-style knife'), then its components ('blade, bolster, handle scales'), then each component's basic solid shape Dấu hiệu nhận diện: Một mô tả tốt gọi tên toàn bộ đối tượng trước ('dao kiểu bowie'), sau đó các bộ ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[4]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-uvcoordinate-system-conversion-attachment-hierarchy",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[14]",
+        "score": 3.215198600387,
+        "snippets": [
+          "... một offset+xoay cục bộ tương đối với node cha Three.js target: THREE.Object3D parent-child hierarchy with each sub-part's local .position/.quaternion set to the source engine's named attachment-socket transform; flip texture.flipY / negate ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[14]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-subsurface-scattering-sss",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[5]",
+        "score": 2.888753984226,
+        "snippets": [
+          "Light transport property for opaque dielectrics where light penetrates and scatters internally before exiting (skin, wax, marble, some polymers). Đặc tính truyền ánh sáng của vật liệu điện môi mờ đục, ánh sáng xuyên vào và tán xạ bên trong trước ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[5]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}

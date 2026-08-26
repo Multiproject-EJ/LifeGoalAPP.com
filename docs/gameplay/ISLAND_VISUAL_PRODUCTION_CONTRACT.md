@@ -157,6 +157,16 @@ scaffolding, dust, materials, tool motion and relocation are visible only while
 auto-build is held or during the short presentation tail after a part purchase.
 They disappear when the construction burst ends and after a level is complete.
 
+Every completed landmark level ends with one shared commissioning beat. Only
+the newly revealed additive geometry compresses slightly, overshoots its final
+scale and settles while one warm light flash and a small sparkle burst radiate
+from the landmark envelope. The funded structure, hit targets, board, token and
+camera never move. The beat is brief, deterministic, non-strobing and pooled;
+reduced-motion mode removes scale overshoot and moving particles, retaining
+only a restrained single glow pulse. An island may theme the sparkle color and
+contact points, but may not omit this satisfying finish or reimplement it as a
+gameplay write.
+
 An open but inactive build modal is a resting scene: the three miniature
 robots slow-hover without relocating, use no active construction effects, and
 cycle among at least five face states at roughly fifteen-second intervals. One
@@ -228,6 +238,48 @@ source under the dated Source Fidelity Workloop; a generated refinement image
 does not supersede it. Ordinary completion requires overall fidelity ≥0.80,
 each required dimension ≥0.75 and no unresolved critical identity mismatch.
 Only Eivind may approve a recorded `user-accepted-drift` exception.
+
+### Repository reference packet
+
+Every island under active production must also have a durable, versioned
+reference packet at:
+
+`docs/visual-references/island-NNN-<slug>/`
+
+This packet is the canonical cross-chat working set, not deployed game art. It
+must be sufficient for a fresh agent to find the goal and resume without old
+chat history. The minimum shape is:
+
+```text
+README.md
+manifest.v1.json
+NNN-source.<ext>
+derived-crops/
+secondary-inferred/
+```
+
+- `README.md` is the human/agent start-here page: authority order, limitations,
+  landmark map, and exact resume sequence.
+- `manifest.v1.json` records every retained reference's repository-relative
+  path, SHA-256, authority, origin/derivation, landmark purpose and status,
+  plus pointers to the Gauntlet, img2threejs state, evidence and runtime root.
+- `derived-crops/` contains non-generative crops from the immutable source.
+- `secondary-inferred/` contains generated side, rear, turnaround or detail
+  aids. Every generated image has a neighboring Markdown/JSON provenance
+  sidecar recording its prompt, source, intended use and limitations.
+
+Authority is explicit: `exact-source` > `exact-derived-crop` >
+`secondary-inferred`. A generated image may resolve hidden construction but
+must not overwrite a visible source fact. Rejected experiments remain in the
+Gauntlet/evidence history; they are not promoted into the active reference
+packet unless their retained role is clearly marked.
+
+No production dependency may exist only in a chat attachment, clipboard path,
+`/tmp`, `/var/folders`, or generator cache. Copy it into the packet and update
+the manifest before the image informs implementation or review. Do not bulk
+duplicate render evidence into this folder: retain evidence in
+`work/island-visual-library/island-NNN-<slug>/evidence/` and point to the
+current accepted set from the manifest.
 
 ### PWA runtime assets
 

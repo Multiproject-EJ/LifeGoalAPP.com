@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-integrated-cathedral-blockout",
+  "partId": "palace-integrated-honeycomb-cathedral",
+  "constructionFamily": "threejs-integrated-extruded-honeycomb-exoskeleton-cathedral",
+  "representationRoute": "closed extruded cathedral architecture with structural honey-cell volumes and no facade cards or disks",
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+    },
+    "sideRearInferenceAid": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-multiview-turnaround-v001.png",
+      "sha256": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3",
+      "authorityLimit": "continuity aid only; generated onion-dome, melted mound, repeated turret, and oversized rear-program drifts are forbidden"
+    },
+    "retiredImmediatePredecessor": {
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/qc-review.v2.json",
+      "sha256": "f6f076b9d553194fb27ea9ec572befcc8c18f0e69fff923484a6ded5e8483467",
+      "mustNotRepeat": [
+        "planar diagonal facade shards",
+        "protruding circular rose disk",
+        "detached front details",
+        "smooth repeated onion domes",
+        "fort or mosque archetype",
+        "weak phone identity"
+      ]
+    }
+  },
+  "workerAllowlist": {
+    "runtime": [
+      "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"
+    ],
+    "evidenceRenderer": [
+      "scripts/render-island014-palace-integrated-cathedral-orbit.mjs"
+    ],
+    "evidence": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-integrated-honeycomb-cathedral-v001-r01"
+    ],
+    "validation": [
+      ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-integrated-honeycomb-cathedral/build-validation.v1.json"
+    ],
+    "forbidden": [
+      "other landmarks",
+      "terrain or board",
+      "mission and gameplay",
+      "robots or commissioning FX",
+      "source images",
+      "retired evidence and reviews"
+    ]
+  },
+  "requiredConstruction": [
+    "Replace the live retired cross-plan palace family; do not layer this family over its facade disks or smooth hemisphere roofs.",
+    "Build a closed broad front-led cathedral body with stepped transept shoulders, real side walls, and a quieter stepped rear apse. Preserve footprint depth 0.72-0.82 of front width and total height 1.10-1.18 of front width.",
+    "Build the royal entrance as a closed extruded pointed-arch or honey-arch reveal tunnel at least 0.18 deep. The structural jamb/gable must return into the side walls. Seat broad purple double doors behind the reveal with seam, two handles, and a readable bee crest. No dark capsule, circular disk, or single thin backplane may define the portal.",
+    "Build the rose as an embedded cluster of recessed hexagonal tubes/cells inside the upper gable, not a circular plate or frame. It must be smaller and less contrast-heavy than the door and may never protrude beyond side silhouette.",
+    "Build four dominant front occupied bays as closed extruded honey-cell pods with real depth, side returns, dark recessed cells, low faceted roofs, and clear separation at 0, 45 and 315 degrees.",
+    "Build the hero crown from a closed polygonal drum plus a low faceted honeycomb-cage roof. Use structural hex ribs and an embedded amber core; do not use a tall smooth hemisphere or onion bulb.",
+    "Build four quadrant satellite towers as polygonal inhabited lanterns with visible honey-cell openings and low faceted cage roofs. Front pair frame the entrance; rear pair are shorter and simpler. Avoid equal-status perimeter domes.",
+    "Wrap ribs, eaves, window cells, buttresses and honey channels continuously around corners. All facade ornaments need thickness and attachment sockets; no surface may collapse into a shard at any 45-degree orbit.",
+    "Use wax-cream masonry, gold-bronze exoskeleton, dark occupied recesses, purple enamel and amber glass to recreate the exact source hierarchy. Honeycomb pattern must be visible in geometry and material response at phone scale.",
+    "Use selective viscous honey curtains and teardrops seated under eaves. Each drip requires an upper fillet/puddle, tapering stream and terminal drop; no lamp-post silhouette.",
+    "Real geometry must carry the silhouette and identity. Runtime image projection count must remain zero."
+  ],
+  "sourceRatiosAtFacadeWidth3_38": {
+    "outerDoorWidth": [1.05, 1.12],
+    "purpleInsertWidth": [0.45, 0.50],
+    "purpleInsertWidthHeightRatio": [0.60, 0.70],
+    "embeddedRoseWidth": [0.76, 0.84],
+    "doorToRoseRatio": [1.15, 1.35],
+    "dominantFrontBayWidth": [0.70, 0.78],
+    "subordinateUpperBayWidth": [0.45, 0.54],
+    "footprintDepth": [2.43, 2.77],
+    "totalHeight": [3.72, 3.99]
+  },
+  "strictRejects": [
+    "any facade card, thin disk, paper edge, planar diagonal shard, or protruding rose plate",
+    "smooth repeated onion domes, mosque silhouette, generic fort, or circular melted mound",
+    "door not first, rose not subordinate, or fewer than four countable front occupied bays",
+    "unattached jamb, gable, rib, window, honey drip, or side banner",
+    "open shell or unauthored rear",
+    "phone identity below 0.85",
+    "source identity, cross-view coherence, attachment, silhouette-volume, honey read, or hierarchy below 0.85 in any required view",
+    "changes outside the allowlist",
+    "more than one bounded correction for this family"
+  ],
+  "budgets": {
+    "maximumTriangles": 70000,
+    "maximumRuntimeDrawCalls": 48,
+    "maximumNewRuntimeTextures": 0,
+    "mergeOrInstanceRepeatedCells": true
+  },
+  "capture": {
+    "firstGate": [
+      "orbit-000-materials-on",
+      "orbit-045-materials-on",
+      "orbit-090-materials-on",
+      "orbit-135-materials-on",
+      "orbit-180-materials-on",
+      "orbit-225-materials-on",
+      "orbit-270-materials-on",
+      "orbit-315-materials-on",
+      "orbit-000-materials-off",
+      "orbit-045-materials-off",
+      "orbit-315-materials-off",
+      "front-close-materials-on",
+      "phone-overview"
+    ],
+    "integrity": "Write a new immutable directory. Rasterize final SVG bytes first, write capture manifest last, then independently verify runtime plus all 26 evidence hashes before review.",
+    "reviewCategories": [
+      "source-identity",
+      "silhouette-volume",
+      "door-first-hierarchy",
+      "four-bay-readability",
+      "attachment",
+      "cross-view-coherence",
+      "side-rear-authorship",
+      "honeycomb-exoskeleton-read",
+      "honey-material-read",
+      "phone-readability"
+    ],
+    "gate": "Every required category at least 0.85. One blockout plus one bounded correction. Any disk/shard/card/open-shell/onion-fort read is a hard veto."
+  }
+}

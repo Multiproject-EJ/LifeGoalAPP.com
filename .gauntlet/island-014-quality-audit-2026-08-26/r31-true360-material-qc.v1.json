@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "auditType": "read-only-r31-true360-honeyfall-gate",
+  "createdAt": "2026-08-26T05:00:00+01:00",
+  "auditor": {
+    "role": "independent-read-only-quality-lord",
+    "selfApproval": false,
+    "mutationScope": "Only this audit JSON was written; source and evidence were not edited."
+  },
+  "authority": {
+    "sourcePath": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sourceSha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "evidenceDirectory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r31",
+    "manifestSha256": "ce4b40cc6a22ad8f10ec8a41acf9b0eb6815482dc1c278002fcac409a5b15523",
+    "runtimeSha256": "614baa83792e677a3eb8b6b9b8a9ddb22cca00c07cdac4278b3defe2815f0596",
+    "integrity": {
+      "status": "PASS",
+      "filesChecked": 28,
+      "mismatches": 0,
+      "viewPairsVerified": 10
+    }
+  },
+  "comparison": {
+    "r23": {
+      "score": 4.6,
+      "gain": "cleared disk-fountain with a closed cliff sheet",
+      "defect": "isolated close floated without terrain/pool context"
+    },
+    "r27": {
+      "score": 4.9,
+      "gain": "best continuity proof: cliff wall, dark rock, broad sheet/ropes and receiving pool",
+      "defect": "mission still disappeared at 090/180 and was ambiguous at 270"
+    },
+    "r31": {
+      "score": 4.7,
+      "gain": "longer, clearer rope-cascade silhouette with multiple closed strands",
+      "regression": "removes r27 cliff-wall context and reduces the receiving pool to a tiny terminal shape, reintroducing the floating-close read"
+    }
+  },
+  "scores": {
+    "true360World": 6.3,
+    "ropeCascadeSilhouette": 5.7,
+    "terrainBinding": 3.8,
+    "continuityReservoirFallPool": 4.4,
+    "orbitVisibility": 4.0,
+    "gooeyRead": 5.0,
+    "glisteningGeometryProof": 3.2,
+    "materialResponseProof": 2.7,
+    "overall": 4.7
+  },
+  "orbitFindings": [
+    {
+      "view": "000",
+      "score": 5.0,
+      "finding": "Visible as an orange front-right cascade/trunk but remains secondary to palace and Pollinator Yard."
+    },
+    {
+      "view": "045",
+      "score": 5.3,
+      "finding": "Best attached world read; real thickness and cliff descent survive."
+    },
+    {
+      "view": "090",
+      "score": 3.0,
+      "finding": "Mission is largely occluded and cannot be parsed as a cascade system."
+    },
+    {
+      "view": "180",
+      "score": 2.5,
+      "finding": "Great Honeyfall identity disappears."
+    },
+    {
+      "view": "270",
+      "score": 3.8,
+      "finding": "Orange ropes persist but read ambiguously behind the Pollinator Yard."
+    },
+    {
+      "view": "315",
+      "score": 5.0,
+      "finding": "Opposite front oblique restores the cascade, but not a kingdom-scale hero read."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "score": 4.5,
+      "finding": "Multiple long closed ropes create a clearer cascade silhouette than r23. They hang in a blue void with no cliff wall or credible source reservoir and terminate in a tiny pool, so r27 remains the stronger continuity proof."
+    }
+  ],
+  "materialCaveat": {
+    "finding": "CPU evidence proves solid ropes and a small number of highlight strips only. It cannot approve transmission, attenuation, refraction, clearcoat reflections, GPU transparency order or bloom.",
+    "geometryVsRenderer": "The absent terrain context and 090/180 disappearance are geometry/evidence faults, not material-renderer limitations."
+  },
+  "vetoStatus": {
+    "cleared": [
+      "disk-fountain silhouette",
+      "planar card or camera billboard"
+    ],
+    "active": [
+      {
+        "id": "floating-isolated-close",
+        "evidence": "R31 close omits the r27 cliff wall and substantial receiving basin."
+      },
+      {
+        "id": "great-honeyfall-orbit-disappearance",
+        "evidence": "Required mission read fails at 090 and 180 and remains ambiguous at 270."
+      },
+      {
+        "id": "final-material-proof-missing",
+        "evidence": "Immutable CPU captures cannot prove the requested delicious translucent glisten."
+      }
+    ]
+  },
+  "requiredFixes": [
+    "Combine r31's varied long ropes with r27's explicit cliff slab, dark rock contact and broad receiving pool.",
+    "Keep a dominant fused sheet among the ropes so the silhouette does not become spaghetti or hanging tentacles.",
+    "Add terrain-fed side/rear spill reads for 090, 180 and 270 without camera-facing duplication.",
+    "Provide fixed-view live WebGL material proof for refraction, clearcoat, attenuation and transparency ordering."
+  ],
+  "decision": {
+    "action": "STOP_R31_NOT_APPROVED",
+    "preferredBaseline": "r27",
+    "retainFromR31": "rope-length variation only",
+    "reason": "R31 improves strand silhouette but regresses terrain binding and does not improve orbit visibility or material proof."
+  }
+}

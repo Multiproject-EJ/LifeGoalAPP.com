@@ -23,7 +23,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');
@@ -43,6 +43,10 @@ function readInitialPreviewState() {
     ? Math.max(0, Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, Math.floor(assemblyChargesParam)))
     : FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET;
   const assemblyReplay = params.get('assemblyReplay') === '1';
+  const honeyfallMissionStageParam = Number(params.get('honeyfallMissionStage'));
+  const honeyfallMissionStage = Number.isFinite(honeyfallMissionStageParam)
+    ? Math.max(0, Math.min(4, Math.floor(honeyfallMissionStageParam)))
+    : 0;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
       ? requestedMode
@@ -54,12 +58,15 @@ function readInitialPreviewState() {
     redockingRolls,
     assemblyCharges: assemblyReplay ? 0 : assemblyCharges,
     assemblyReplay,
+    honeyfallMissionStage,
+    honeyfallReplay: params.get('honeyfallReplay') === '1',
     overlays: params.get('guides') !== '0',
     construction: params.get('construction') === '1',
     constructionWorking: params.get('working') !== '0',
     constructionProgress: Number.isFinite(constructionProgress) ? constructionProgress : 0.58,
     constructionLandmark,
     constructionReducedMotion: params.get('reduced') === '1',
+    constructionCommissioning: params.get('commissioning') === '1',
   };
 }
 
@@ -179,6 +186,7 @@ export default function IslandTemplateKitPage() {
       active: true,
       working: initialState.constructionWorking,
       cameraLocked: initialState.constructionWorking,
+      completionCelebration: false,
       phase: initialState.constructionProgress < 0.2
         ? 'foundation'
         : initialState.constructionProgress < 0.45
@@ -188,6 +196,8 @@ export default function IslandTemplateKitPage() {
             : 'finish',
       progress: initialState.constructionProgress,
       sequence: 1,
+      sourceLevel: initialState.buildLevel,
+      commissioning: initialState.constructionCommissioning,
       cloudCover: initialState.constructionWorking ? 0.46 : 0,
       targetStopId: initialState.constructionLandmark,
       targetLevel: Math.min(3, initialState.buildLevel + 1),
@@ -336,6 +346,10 @@ export default function IslandTemplateKitPage() {
                 claimedDynamiteTileIndices: FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.slice(0, assemblyCharges),
                 constructionSequence: assemblyConstructionSequence,
               }}
+              greatHoneyfallPresentation={initialState.islandNumber === 14 ? {
+                activatedReservoirs: initialState.honeyfallMissionStage as 0 | 1 | 2 | 3 | 4,
+                constructionSequence: initialState.honeyfallReplay ? 1 : 0,
+              } : undefined}
             />
           ) : (
             <>

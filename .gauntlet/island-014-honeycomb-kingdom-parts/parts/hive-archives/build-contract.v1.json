@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "status": "retired-after-blockout-gate",
+  "partId": "hive-archives",
+  "constructionFamily": "threejs-open-book-honeycomb-archive-hall-v3",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/hive-archives/isolation/derived-crops/hive-archives-visible-source-crop-v001.png",
+    "inventory": ".gauntlet/island-014-honeycomb-kingdom-parts/part-inventory.v1.json"
+  },
+  "workerAllowlist": {
+    "implementation": [
+      "createIsland14HiveArchivesV2 only in src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts"
+    ],
+    "evidence": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/hive-archives-v003-*",
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-*"
+    ],
+    "forbidden": [
+      "royal palace",
+      "queen hatchery",
+      "pollinator yard",
+      "nectar trials",
+      "terrain",
+      "route",
+      "mission",
+      "gameplay"
+    ]
+  },
+  "requiredFeatures": [
+    "An open gold-edged book is the first focal point and remains immediately readable at phone scale.",
+    "A seven-cell honeycomb wisdom cluster rises directly above or behind the book as the second focal point.",
+    "The book has two distinct cream page blocks, a dark central spine, visible gold page lines, and a physically seated reading dais.",
+    "The honeycomb cluster has thick gold frames, dark occupied sockets, one warm central cell, and a real structural support into the archive tower.",
+    "A broad closed reading hall, clear front entry, mirrored side reading pods, and solid rear closure make the icon into usable architecture.",
+    "Side and rear elevations continue shelf windows, bands, and a subordinate rear book/hex mark without exposing a blank slab.",
+    "The upper silhouette remains scholarly and distinct from the Palace keep, Nursery egg, and Pollinator/Trials radial structures.",
+    "Honey details are selective and do not turn the book into a purple roof or generic awning."
+  ],
+  "strictRejects": [
+    "purple roof or ordinary gabled-roof reading",
+    "book flattened into a canopy",
+    "honeycomb cluster floating without support",
+    "single generic hex halo instead of seven-cell wisdom cluster",
+    "bee mascot replacing the book identity",
+    "front-only treatment or blank rear",
+    "book or cluster obscuring the entry",
+    "more than one bounded correction in this construction family"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "additional": ["phone-overview", "book-close", "rear-close", "materials-off"],
+    "reviewCategories": ["source-identity", "book-readability", "seven-cell-wisdom-cluster", "architectural-unity", "surface-depth", "side-rear-continuity", "phone-readability"],
+    "blockoutGate": "All structural categories at least 0.75 with no strict reject.",
+    "finalGate": "All required categories at least 0.85 with no strict reject."
+  },
+  "budget": {
+    "constructionFamilies": 1,
+    "boundedCorrections": 1
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "tool": "OpenAI image generation via Codex imagegen skill",
+  "output": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-source-faithful-turnaround-v002.png",
+    "sha256": "b8bb417929884d95729c041e46f33161d442292955ffd5069d4e9f60c5c134c5",
+    "layout": ["front", "front-right-45", "right-side-90", "rear-180"]
+  },
+  "inputs": [
+    {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "immutable source-facing authority"
+    },
+    {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-multiview-turnaround-v001.png",
+      "sha256": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3",
+      "authority": "prior hidden-side inference aid only"
+    }
+  ],
+  "authorityLimit": "Generated pixels are a modeling and hidden-view continuity aid only. They may not override the exact source crop, lower the 0.85 visual gate, or authorize cards, projections, or billboard silhouettes."
+}

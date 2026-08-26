@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "auditType": "read-only-true360-material-world-qc",
+  "createdAt": "2026-08-26T02:39:28+01:00",
+  "authority": {
+    "worktree": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom",
+    "branch": "codex/island-014-honeycomb-kingdom",
+    "head": "5bb96d95df4906b5d3096b86ac375286c7e34b4a",
+    "dirtyWorktreeExpected": true,
+    "sourcePath": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sourceSha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "runtimePath": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+    "runtimeSha256": "ec8966f2d4786d3777f53f4425f860381461067f9618cd3a62f5efae6c004274",
+    "evidenceRoot": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/honeyfall-royal-parterre-v004-r10",
+    "evidenceHashesVerifiedAgainstManifest": true
+  },
+  "method": {
+    "referenceAuthority": "Exact supplied source pixels govern visual identity. Runtime source and r10 captures are implementation evidence only.",
+    "inspectionOrder": [
+      "exact source",
+      "mission close",
+      "180 clay",
+      "000",
+      "045",
+      "090",
+      "180",
+      "270",
+      "315",
+      "phone overview",
+      "runtime geometry and material declarations"
+    ],
+    "scoreScale": "0-10, where 10 is source-faithful production quality and 8.5 is the minimum gauntlet pass threshold",
+    "scoreMeaning": "Each cell scores what that evidence view actually proves for the category. Occluded, isolated, or omitted systems receive a low proof score rather than an assumed pass.",
+    "evidenceLimitation": "The r10 packet uses CPU triangle projection with approximated material color. It does not reproduce WebGL transmission, refraction, environment reflections, post-processing, live route tiles, or GPU transparency ordering. Material scores therefore grade both visible response and proof sufficiency; they are not a verdict that the declared PhysicalMaterials can never look better live."
+  },
+  "categories": [
+    "terrainSilhouette",
+    "sideRearAuthoredDetail",
+    "floatingDepth",
+    "bridgesSatellites",
+    "honeyfallViscosityAttachmentPooling",
+    "hexPatternVisibility",
+    "gardenProportion",
+    "greatHoneyfallIntegration",
+    "materialResponseEvidence",
+    "backgroundAtmosphereCameraFraming"
+  ],
+  "viewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "overall": 4.31,
+      "scores": {
+        "terrainSilhouette": 4.3,
+        "sideRearAuthoredDetail": 4.5,
+        "floatingDepth": 5.6,
+        "bridgesSatellites": 4.2,
+        "honeyfallViscosityAttachmentPooling": 3.8,
+        "hexPatternVisibility": 5.8,
+        "gardenProportion": 6.5,
+        "greatHoneyfallIntegration": 3.2,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 3.2
+      },
+      "notes": "Best hierarchy view, but the island is a flat radial disc with tapered underside columns; sky channels cross the palace; distant islets read as dark hanging spears; honey is peripheral and clipped."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "overall": 4.15,
+      "scores": {
+        "terrainSilhouette": 4.5,
+        "sideRearAuthoredDetail": 4.0,
+        "floatingDepth": 5.8,
+        "bridgesSatellites": 4.8,
+        "honeyfallViscosityAttachmentPooling": 3.5,
+        "hexPatternVisibility": 4.8,
+        "gardenProportion": 5.8,
+        "greatHoneyfallIntegration": 3.2,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 3.1
+      },
+      "notes": "Floating depth is readable, but large empty terrace wedges and repeated pillars dominate. The mission rig and long arcs sit over the palace rather than emerging from it."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "overall": 3.91,
+      "scores": {
+        "terrainSilhouette": 4.8,
+        "sideRearAuthoredDetail": 3.6,
+        "floatingDepth": 5.6,
+        "bridgesSatellites": 4.2,
+        "honeyfallViscosityAttachmentPooling": 3.3,
+        "hexPatternVisibility": 4.2,
+        "gardenProportion": 5.4,
+        "greatHoneyfallIntegration": 3.0,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 3.0
+      },
+      "notes": "The palace side becomes smooth bulbous lobes and a blank drum. Radial plaza sectors, repeated posts, and suspended spikes expose the procedural construction. Honey sheets lose convincing thickness away from their favored front angle."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "overall": 4.02,
+      "scores": {
+        "terrainSilhouette": 4.7,
+        "sideRearAuthoredDetail": 3.8,
+        "floatingDepth": 5.7,
+        "bridgesSatellites": 4.4,
+        "honeyfallViscosityAttachmentPooling": 3.0,
+        "hexPatternVisibility": 4.4,
+        "gardenProportion": 6.0,
+        "greatHoneyfallIntegration": 3.0,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 3.2
+      },
+      "notes": "Worst authored-world orbit: the rear palace is mostly blank rounded mass, the foreground is a wide empty radial plaza, and no convincing rear honeyfall attachment or receiving pool is demonstrated."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "overall": 3.95,
+      "scores": {
+        "terrainSilhouette": 4.6,
+        "sideRearAuthoredDetail": 4.0,
+        "floatingDepth": 5.3,
+        "bridgesSatellites": 4.4,
+        "honeyfallViscosityAttachmentPooling": 3.2,
+        "hexPatternVisibility": 4.6,
+        "gardenProportion": 5.4,
+        "greatHoneyfallIntegration": 3.0,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 3.0
+      },
+      "notes": "Side landmarks remain distinguishable, but bridges are visually weak and the palace/world repeat cylinders, domes and posts. The sky rig remains a detached second focal point."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "overall": 4.00,
+      "scores": {
+        "terrainSilhouette": 4.2,
+        "sideRearAuthoredDetail": 4.3,
+        "floatingDepth": 5.0,
+        "bridgesSatellites": 4.4,
+        "honeyfallViscosityAttachmentPooling": 3.4,
+        "hexPatternVisibility": 5.0,
+        "gardenProportion": 5.6,
+        "greatHoneyfallIntegration": 3.1,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 3.0
+      },
+      "notes": "Front identity partially returns, yet the nearest satellite and cliff pieces clip the composition. Honey/bridge depth remains visually ambiguous and distant islets read as spikes instead of a bee civilization."
+    },
+    {
+      "view": "orbit-180-materials-off",
+      "overall": 3.78,
+      "scores": {
+        "terrainSilhouette": 5.0,
+        "sideRearAuthoredDetail": 4.0,
+        "floatingDepth": 5.5,
+        "bridgesSatellites": 4.1,
+        "honeyfallViscosityAttachmentPooling": 2.8,
+        "hexPatternVisibility": 4.2,
+        "gardenProportion": 5.0,
+        "greatHoneyfallIntegration": 2.7,
+        "materialResponseEvidence": 1.5,
+        "backgroundAtmosphereCameraFraming": 3.0
+      },
+      "notes": "Clay confirms real volume, but also confirms the radial disc, repeated primitive families, sparse rear authored detail, large blank sectors, and lack of a continuous terrain-to-flow-to-pool honey system."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "overall": 2.45,
+      "scores": {
+        "terrainSilhouette": 1.0,
+        "sideRearAuthoredDetail": 1.0,
+        "floatingDepth": 4.0,
+        "bridgesSatellites": 1.5,
+        "honeyfallViscosityAttachmentPooling": 2.5,
+        "hexPatternVisibility": 5.5,
+        "gardenProportion": 2.0,
+        "greatHoneyfallIntegration": 2.5,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 2.5
+      },
+      "notes": "Worst view. It intentionally renders only the mission root, omitting palace and terrain, so it cannot prove integration, attachment or pooling. The visible spectacle is four tube arcs, hoops, beads and white polygon shards in a blue void—not a Great Honeyfall."
+    },
+    {
+      "view": "phone-overview",
+      "overall": 3.99,
+      "scores": {
+        "terrainSilhouette": 4.0,
+        "sideRearAuthoredDetail": 3.8,
+        "floatingDepth": 5.4,
+        "bridgesSatellites": 4.0,
+        "honeyfallViscosityAttachmentPooling": 3.3,
+        "hexPatternVisibility": 4.6,
+        "gardenProportion": 5.8,
+        "greatHoneyfallIntegration": 3.0,
+        "materialResponseEvidence": 2.0,
+        "backgroundAtmosphereCameraFraming": 4.0
+      },
+      "notes": "The island fits the phone frame, but the palace is much smaller than the source, satellites and spear-islets crowd the margins, the circular garden route is unclear, and the lower cliff lacks the source's dense glossy honey cascade."
+    }
+  ],
+  "categoryScores": {
+    "terrainSilhouette": {
+      "score": 4.12,
+      "finding": "A real layered underside exists, but the top reads as a regular radial disc and the lower world as repeated tapered columns. It lacks the source's organically fractured, portrait-filling honey-rock cliff silhouette."
+    },
+    "sideRearAuthoredDetail": {
+      "score": 3.67,
+      "finding": "The palace and world are not front cards, yet the 90/180/270 evidence exposes smooth lobes, blank drums, broad empty terrace wedges and repeated modules rather than authored civic side/rear architecture."
+    },
+    "floatingDepth": {
+      "score": 5.32,
+      "finding": "The strongest category: main island, satellites and distant islets occupy distinct depths. However, the extreme taper and lack of atmosphere make distant islets read as suspended spikes and the underside as clustered stalactite columns."
+    },
+    "bridgesSatellites": {
+      "score": 4.00,
+      "finding": "Four satellites exist, but landmarks are visually detached or weakly connected. The bridges are simple constant-length boxes, visually subordinate and not consistently legible as traversable architecture in orbit or phone views."
+    },
+    "honeyfallViscosityAttachmentPooling": {
+      "score": 3.20,
+      "finding": "Runtime geometry includes extruded sheets, cores, capsules, folds, bubbles and drops, but the proof reads as thin orange cards/capsule pipes. Thickness collapses in side views, ledge attachment is weak, and impact pooling at the base is not demonstrated."
+    },
+    "hexPatternVisibility": {
+      "score": 4.79,
+      "finding": "Hex rings and façade cells are visible, but many are sparse floating outlines. The source's continuous honeycomb masonry, route paving and cliff-cell language is not readable across all phone/orbit views."
+    },
+    "gardenProportion": {
+      "score": 5.28,
+      "finding": "The r10 scale reduction prevents flowers from fully swallowing the palace. Nevertheless, repeated low-poly flower clusters and empty radial sectors alternate abruptly, so the garden reads as procedural scatter rather than a dense royal parterre."
+    },
+    "greatHoneyfallIntegration": {
+      "score": 2.86,
+      "finding": "The Great Honeyfall is a detached overhead rig. Runtime explicitly offsets it toward the gameplay camera because palace depth hid it; four thin sky channels converge on a floating crown assembly, and the close proof removes the world entirely. This is a camera-dependent spectacle, not an integrated landmark-scale waterfall."
+    },
+    "materialResponseEvidence": {
+      "score": 1.94,
+      "finding": "Physical materials declare transmission, thickness, clearcoat, attenuation and emissive response, but r10 cannot render the effects. The visible packet collapses wax, rock, gold and liquid into nearby orange/yellow values and cannot prove delicious glisten, refraction, pooling depth or stable transparency order."
+    },
+    "backgroundAtmosphereCameraFraming": {
+      "score": 3.11,
+      "finding": "The evidence uses a flat blue field without the runtime backdrop/cloud response. There is no aerial perspective, cloud volume or atmospheric separation; dark islet undersides dominate as spikes. The phone camera fits the whole world but undersizes the palace and loses the source's vertical cliff/garden/palace hierarchy."
+    }
+  },
+  "overallScore": 3.83,
+  "worstView": {
+    "id": "great-honeyfall-stage-4-close",
+    "score": 2.45,
+    "reason": "It is isolated from the palace and terrain, cannot prove the named integration/attachment/pooling requirements, and visually reduces the mission to tubes, hoops, beads and shards."
+  },
+  "hardVetoes": [
+    {
+      "id": "camera-dependent-mission-offset",
+      "evidence": "Runtime positions the mission root at z=1.35 specifically because palace depth hid the helix/core from the portrait gameplay camera. Orbit views show the resulting channels and crown as detached from palace mass."
+    },
+    {
+      "id": "mission-close-omits-assembly",
+      "evidence": "The evidence renderer passes only ISLAND_14_GREAT_HONEYFALL_CORONATION to the mission-close renderer, so the close-up cannot validate palace attachment, terrain contact or receiving pools."
+    },
+    {
+      "id": "thin-surface-honey-collapse",
+      "evidence": "The primary honey sheet is an ExtrudeGeometry only 0.18 deep with a separate ShapeGeometry glint; side/rear views and CPU evidence show thickness collapse and card-like behavior."
+    }
+  ],
+  "observedDefects": [
+    "Distant floating islets repeatedly read as dark inverted spikes or spears rather than inhabited islands.",
+    "Large blank radial plaza wedges are exposed at 90, 180, 270 and clay views.",
+    "Palace side/rear mass is dominated by smooth bulbs, domes and blank drums.",
+    "Mission sky channels resemble detached pipes and cut across the palace silhouette.",
+    "No orbit proves a continuous honey ledge, thick fall, impact splash and pooled receiving basin.",
+    "Honey cards, capsules and glint planes risk camera-dependent thickness and transparency seams.",
+    "Bridges are visually generic rectangular bars and do not consistently read as connected paths.",
+    "Hex language is strongest as sparse rings/badges, not continuous masonry or path pattern.",
+    "Repeated flowers, posts, cylinders, domes and tapered terrain primitives remain obvious.",
+    "The flat evidence background removes cloud depth and turns dark undersides into competing focal elements.",
+    "The phone framing makes the central palace too small relative to satellites and empty sky compared with the source.",
+    "Material values are compressed into orange/yellow, reducing separation among wax stone, metallic gold, honey rock and liquid honey."
+  ],
+  "rankedCorrections": [
+    {
+      "rank": 1,
+      "correction": "Replace the detached Great Honeyfall sky rig with an architecturally attached palace/courtyard reservoir, a single unmistakable hero fall, and a visible receiving basin that pools and overflows into the cliff system.",
+      "expectedVisualImpact": 10.0,
+      "risk": "high",
+      "why": "Directly fixes the worst view, camera-dependence veto and the missing WOW mission identity."
+    },
+    {
+      "rank": 2,
+      "correction": "Rebuild the main terrain top and cliff as irregular interlocking honey-rock terraces with broad fractured silhouettes; remove the regular radial-disc read and repeated tapered buttress columns.",
+      "expectedVisualImpact": 9.8,
+      "risk": "high",
+      "why": "The terrain occupies most pixels in every view and currently exposes the procedural base immediately."
+    },
+    {
+      "rank": 3,
+      "correction": "Re-author all honeyfalls as genuinely volumetric, mass-conserving forms with thick ledge lips, asymmetrical sag, fused ropes/sheets, side thickness, impact bulges and pooled bases; retire planar glint cards and pipe-like capsule stacks.",
+      "expectedVisualImpact": 9.6,
+      "risk": "high",
+      "why": "Delicious viscous honey is the island's primary material promise and currently fails from most angles."
+    },
+    {
+      "rank": 4,
+      "correction": "Author palace sides and rear as civic architecture: stepped buttresses, occupied windows, subordinate towers, doors, wraparound tracery and selective honey attachment; reduce smooth blank lobes and drums.",
+      "expectedVisualImpact": 9.2,
+      "risk": "high",
+      "why": "This raises the 90/180/270 identity floor and removes the current repeated-primitive palace read."
+    },
+    {
+      "rank": 5,
+      "correction": "Redesign the four satellite islands and bridges as a coherent network with smaller authored islands, clear bridge endpoints, rails/arches, terrain sockets and scale hierarchy; replace constant-length box bridges.",
+      "expectedVisualImpact": 8.8,
+      "risk": "medium-high",
+      "why": "It improves floating-world coherence and stops landmarks from appearing detached."
+    },
+    {
+      "rank": 6,
+      "correction": "Recompose the canonical portrait camera so palace and concentric route dominate, the lower cliff fills the foreground, satellites support rather than crop the frame, and the mission remains readable without moving it toward one camera.",
+      "expectedVisualImpact": 8.6,
+      "risk": "medium",
+      "why": "Correct framing immediately restores more of the source hierarchy, but must follow structural fixes to avoid hiding defects."
+    },
+    {
+      "rank": 7,
+      "correction": "Create a live WebGL material proof with environment reflections, controlled key/rim lighting, correct transparency ordering and side-by-side wax/gold/rock/liquid swatches; then tune emissive, roughness, attenuation and depthWrite from that proof.",
+      "expectedVisualImpact": 8.2,
+      "risk": "medium",
+      "why": "The current CPU packet cannot validate the declared PhysicalMaterial response and visually compresses every gold family."
+    },
+    {
+      "rank": 8,
+      "correction": "Replace spear-like distant islets with smaller inhabited silhouettes and add cloud banks, aerial perspective, warm horizon haze and depth-scaled contrast so background elements recede.",
+      "expectedVisualImpact": 8.0,
+      "risk": "medium",
+      "why": "The background currently competes with the island in every orbit and undermines scale."
+    },
+    {
+      "rank": 9,
+      "correction": "Move honeycomb identity from floating outline badges into continuous meso-scale relief on route paving, cliff masonry, bridge rails and landmark walls, with phone-readable cell sizing.",
+      "expectedVisualImpact": 7.5,
+      "risk": "medium",
+      "why": "It turns hexagons into an architectural system rather than scattered decoration."
+    },
+    {
+      "rank": 10,
+      "correction": "Recompose gardens into authored parterre beds with varied clusters, lower repeated primitive count, planted transitions into architecture and fewer empty radial wedges while preserving landmark clearance.",
+      "expectedVisualImpact": 6.8,
+      "risk": "low-medium",
+      "why": "The r10 flower scale is improved, but authored clustering would remove procedural scatter without again overpowering the palace."
+    }
+  ],
+  "overallAction": {
+    "action": "stop",
+    "directive": "Do not claim 10/10 or approve r10. Start a new structural world-presentation correction family centered on an integrated volumetric Great Honeyfall, irregular honey-rock terrain and authored palace/satellite 360 detail; require live WebGL material evidence and assembly-inclusive mission close-ups before another quality gate.",
+    "rationale": "The overall score is 3.83/10, the worst required view is 2.45/10, and three hard vetoes remain. These are representation and integration failures, not a safe polish-only pass."
+  },
+  "writesPerformed": [
+    ".gauntlet/island-014-quality-audit-2026-08-26/true360-material-qc.v1.json"
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace bulbous buttress cluster naked macro shell",
+  "constructionFamily": "procedural-threejs-bulbous-buttress-cluster-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v6.json",
+      "sha256": "c11c6ff35f325fa414330f671889929239824200360f7f36e0363edca3fc0e41"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v9.json",
+      "sha256": "7016318f64ae7db390d72c6886e4133fa58664de65a0b55c18801b720ad8e573"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "mandatoryRetireBelow": 0.75,
+    "minimumCorrectionGain": 0.10,
+    "hiddenViews": "secondary volume-coherence evidence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.60,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.56,
+      "sideRearCoherence": 0.74,
+      "note": "The front silhouette preserves the rough five-dome count, but the four satellites remain discrete tall drums on a largely empty court. Thin planar shoulder pieces do not create the source's broad, compact, inhabited lower cathedral, and the central keep remains too isolated and pyramidal."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.59,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.57,
+      "sideRearCoherence": 0.75,
+      "note": "The oblique view exposes narrow tower roots and slab-like bridge infill. The front satellite still reads as a separate dome-capped pylon rather than a bulbous buttress fused into a cathedral body."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.75,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.77,
+      "note": "The hidden side is closed, but stacked separate tower volumes and thin intervening wedges remain legible; there is no convincing continuous inhabited body."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.76,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.78,
+      "note": "Rear-oblique volume is stable, yet the construction is still a ring of freestanding-looking drums around the keep, with angular bridge tops instead of integrated roof mass."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.60,
+      "depthIntegration": 0.76,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.78,
+      "note": "Rear symmetry is coherent, but the plain apse block and isolated satellite drums confirm a clustered-towers composition rather than one cathedral volume."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.76,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.78,
+      "note": "The opposite rear-oblique view repeats the same coherent but segmented tower-and-wedge construction."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.61,
+      "depthIntegration": 0.75,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.77,
+      "note": "The opposite hidden side remains volumetrically closed but does not eliminate the visible pylon roots or sparse lower-body hierarchy."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.59,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.57,
+      "sideRearCoherence": 0.75,
+      "note": "Front-adjacent evidence again shows a separate satellite on a narrow root, thin planar infill, and excessive open court around a palace body that is materially less compact than the source."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.56,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "contractAssessment": {
+    "broadInhabitedLowerBody": false,
+    "shoulderBridgesReadAsContinuousMass": false,
+    "satellitesReadAsBulbousButtresses": false,
+    "centralKeepEmergesFromFusedBody": false,
+    "hemidomeCapsAreClosed": true,
+    "crownIsCompact": true,
+    "finding": "Closed roofs and a compact crown are retained, but the representation-level goal is not achieved. The family repeats the retired tower-on-empty-court solution with broader dimensions rather than producing a compact cathedral body."
+  },
+  "vetoes": [
+    {
+      "type": "visible-pylon/separate-pillar-satellite",
+      "views": [0, 45, 90, 135, 180, 225, 270, 315],
+      "finding": "Each satellite remains dominated by a long tapering drum with a dome cap and a narrow visual root; the bridge geometry does not fuse these into inhabited buttress masses."
+    },
+    {
+      "type": "flat-facade-slab",
+      "views": [0, 45, 315],
+      "finding": "The lower front connection is a thin horizontal slab with angular wedges, not a volumetric facade/cathedral body."
+    }
+  ],
+  "largestMismatch": "The source's identity is a compact, broad, inhabited honey cathedral whose domed shoulders are inseparable from a dense lower body. This family remains a tall central keep plus four separate dome-capped drums connected by thin slabs and wedges, leaving too much empty court and repeating the pylon/tower-on-empty-court defect.",
+  "terminalReason": "The blockout's worst required score is 0.56, below the contract's mandatory 0.75 retirement floor, and two explicitly forbidden representation defects recur. A bounded parameter correction cannot convert this repeated tower-and-slab grammar into the required compact inhabited cathedral without changing the construction family.",
+  "action": "retire-family"
+}

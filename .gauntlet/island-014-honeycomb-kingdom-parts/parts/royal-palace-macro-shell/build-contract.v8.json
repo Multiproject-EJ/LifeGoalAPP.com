@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-new-representation-family",
+  "partId": "royal-palace-macro-shell",
+  "constructionFamily": "procedural-threejs-faceted-radial-hive-basilica",
+  "sourceAuthority": {
+    "exactVisibleCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "exactVisibleCropSha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+    "hiddenVolumeHypothesis": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/generated-hypotheses/palace-lower-cathedral-body-turnaround-v002.png"
+  },
+  "priorFamilyDisposition": {
+    "family": "procedural-threejs-monolithic-extruded-cathedral-hull",
+    "action": "retire-family",
+    "qc": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v10.json",
+    "reason": "Flat-card rectangular extrusion and ziggurat terrace grammar."
+  },
+  "hypothesis": "A deep, tapered, faceted civic hive built from heavily overlapping squat occupied tiers will reproduce the source's dense pyramid-like cathedral silhouette in front and remain volumetric from the side/rear. Low dome bays become architectural shoulders while one broad central keep rises from the occupied mass.",
+  "requiredTopology": [
+    "Use closed 8- or 12-sided tapered radial solids with deliberate front/back depth; do not use ExtrudeGeometry or a rectangular box as the dominant hull.",
+    "Create a broad lower civic tier approximately 3.25 to 3.45 wide, 2.45 to 2.75 deep, and 0.85 to 1.05 tall. It must fill the footprint behind the entrance and all four shoulder bays.",
+    "Create a deeply overlapping middle basilica tier approximately 2.55 to 2.85 wide, 2.00 to 2.30 deep, and 0.90 to 1.10 tall, beginning below the lower tier's top.",
+    "The central keep must be broad, faceted, and overlap the middle tier by at least 45 percent of keep height and at least 75 percent of footprint; it may not stand on a visible empty upper platform.",
+    "Front shoulder bay bodies must be squat occupied hexagonal buttresses with height-to-width at most 0.95, overlap at least 45 percent of their footprint into the lower/middle tiers, and support closed domes whose collars sit within 0.10 of the body tops.",
+    "Rear bays must be lower and more buried than front bays; no ring of visible towers.",
+    "Add one broad central entrance/facade buttress as a real volume deeply embedded into the lower civic tier so the front has cathedral hierarchy rather than generic radial beehive symmetry.",
+    "Preserve closed upper hemisphere roofs and compact crown; total macro height 3.60 to 3.90."
+  ],
+  "strictRejects": [
+    "Extruded card, rectangular ziggurat, terrace slab or wedding-cake silhouette.",
+    "Round smooth beehive with no front cathedral hierarchy.",
+    "Freestanding dome-capped pylon or satellite drum taller than its width.",
+    "Thin bridge-only connections, empty court gaps, or thin keep on an upper platform.",
+    "Open-backed mesh or unclosed roof."
+  ],
+  "evidence": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "mode": "actual-mesh isolated clay",
+    "gate": "All required view/category scores at least 0.85; worst view governs. One bounded correction maximum for this family."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "status": "retired-after-independent-review",
+  "retiredAt": "2026-08-25",
+  "retirementEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v6.json",
+  "retirementReason": "Worst 0.42 below correction floor; full spheres on narrow frusta triggered the forbidden lollipop cluster archetype.",
+  "family": "procedural-threejs-faceted-frustum-cluster-cathedral",
+  "replaces": "procedural-threejs-interlocked-nave-transept-cathedral",
+  "worker": "palace-macro-worker",
+  "allowlist": {"files": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"], "functions": ["createRoyalPalace"]},
+  "frozen": ["court and stairs", "all non-palace landmarks", "terrain", "board and route", "materials", "honey", "mission", "robots", "camera", "gameplay controllers", "palace facade and ornament systems"],
+  "budget": {"blockouts": 1, "boundedCorrections": 1, "visualReviews": 2},
+  "constructionRule": "All visible vertical macro masses above the low plinth must be closed 6- or 8-sided tapered frusta or closed dome volumes, never rectangular/chamfered box walls. Adjacent volumes must deeply overlap in footprint and Y range. Sink each full-sphere dome into its closed drum so only a dome cap reads above the collar.",
+  "requiredHierarchy": [
+    "one low broad plinth only",
+    "one wide elliptical faceted lower cathedral frustum",
+    "two faceted transept shoulder frusta overlapping the lower cathedral",
+    "one subordinate rear apse frustum",
+    "two overlapping faceted central keep frusta",
+    "exactly four two-stage tapered satellite tower frusta deeply fused into the body",
+    "one source-scale hero dome and four subordinate dome caps visibly buried into their drums",
+    "one small faceted lantern and buried crown cap"
+  ],
+  "sourceScaleTargets": {"palaceWidth": [3.2, 3.38], "visibleHeight": [3.65, 3.85], "heroDomeDiameter": [0.96, 1.04], "frontSatelliteDiameter": [0.62, 0.74], "rearSatelliteDiameter": [0.54, 0.66]},
+  "requiredEvidenceNames": ["PALACE_PLINTH", "PALACE_NAVE", "PALACE_TRANSEPT_LEFT", "PALACE_TRANSEPT_RIGHT", "PALACE_APSE", "PALACE_KEEP_LOWER", "PALACE_KEEP_UPPER", "PALACE_HIVE_DOME", "PALACE_TURRET_1_BASE", "PALACE_TURRET_1_DRUM", "PALACE_TURRET_1_HIVE_DOME"],
+  "thresholds": {"perView": 0.85, "worstDimensionGain": 0.1, "mandatoryRetireBelow": 0.75},
+  "reviewPriority": [0, 45, 315, 135, 225, 180, 90, 270],
+  "forbidden": ["rectangular nave wall", "box keep", "box tower drum", "full ball visibly perched on a tower", "equal stacked tiers", "plain shaft", "separate pillar satellites", "flat facade slab", "floating socket", "open root slot", "camera-facing-only shell", "micro-detail used to hide failed massing", "any gameplay or route edit"]
+}

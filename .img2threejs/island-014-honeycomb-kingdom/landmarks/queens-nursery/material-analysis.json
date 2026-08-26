@@ -1,0 +1,4030 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-analysis",
+  "referenceId": "island-014-queens-nursery-source",
+  "manifest": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-regions.json",
+  "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+  "targetThreshold": 0.7,
+  "notObservedMaterials": [
+    {
+      "id": "rear-service-surfaces",
+      "status": "inferred",
+      "reason": "Rear faces repeat the matching front material family without an exact recovery claim."
+    }
+  ],
+  "unresolvedNotObservedMaterials": [],
+  "regions": [
+    {
+      "componentId": "royal-egg-shell",
+      "regionId": "nursery-egg-base",
+      "materialSpecId": "base",
+      "hypothesis": {
+        "componentId": "royal-egg-shell",
+        "regionId": "nursery-egg-base",
+        "materialId": "plastic.glossy",
+        "family": "organic",
+        "subtype": "warm-royal-wax",
+        "finish": "polished-satin",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "plastic.glossy",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/00-nursery-egg-base.png",
+            "bbox": {
+              "x": 122,
+              "y": 360,
+              "width": 100,
+              "height": 160
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0102
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "base",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/00-nursery-egg-base.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base",
+            "palette": [
+              "#17160B",
+              "#2D2513",
+              "#71420E",
+              "#A09572",
+              "#D78B0F"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_albedo.png",
+                "url": "base_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_roughness.png",
+                "url": "base_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_height.png",
+                "url": "base_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_normal.png",
+                "url": "base_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_ao.png",
+                "url": "base_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 100,
+              "sourceHeight": 160,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 160
+              },
+              "mask": {
+                "backgroundColor": "#989375",
+                "backgroundNoise": 77.801,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9084
+              },
+              "mapStats": {
+                "valueRange": 0.5984,
+                "heightP90Gradient": 0.15991,
+                "roughnessBase": 0.735,
+                "roughnessVariation": 0.209,
+                "normalStrength": 0.344,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#17160B",
+                "#2D2513",
+                "#71420E",
+                "#A09572",
+                "#D78B0F"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#8F8F81",
+              "#42391E",
+              "#714712",
+              "#252115",
+              "#8F8361"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 74.0,
+              "meanSaturation": 0.553,
+              "gradientStrength": 0.523,
+              "mottle": 0.052,
+              "streakRatio": 0.74,
+              "hueSpread": 0.043,
+              "specularFraction": 0.003
+            }
+          }
+        },
+        "profileId": "plastic.glossy",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.28,
+          "clearcoat": 0.2,
+          "clearcoatRoughness": 0.18,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "untinted or light-coloured specular over coloured diffuse body",
+          "smooth molded surface"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/00-nursery-egg-base.png",
+        "bbox": {
+          "x": 122,
+          "y": 360,
+          "width": 100,
+          "height": 160
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0102
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#8F8F81",
+          "#42391E",
+          "#714712",
+          "#252115",
+          "#8F8361"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 74.0,
+          "meanSaturation": 0.553,
+          "gradientStrength": 0.523,
+          "mottle": 0.052,
+          "streakRatio": 0.74,
+          "hueSpread": 0.043,
+          "specularFraction": 0.003
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "base",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/00-nursery-egg-base.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base",
+        "palette": [
+          "#17160B",
+          "#2D2513",
+          "#71420E",
+          "#A09572",
+          "#D78B0F"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_albedo.png",
+            "url": "base_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_roughness.png",
+            "url": "base_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_height.png",
+            "url": "base_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_normal.png",
+            "url": "base_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_ao.png",
+            "url": "base_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/00-nursery-egg-base.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_albedo.png",
+            "url": "base_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_roughness.png",
+            "url": "base_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_height.png",
+            "url": "base_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_normal.png",
+            "url": "base_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_ao.png",
+            "url": "base_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_albedo.png",
+          "url": "base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_roughness.png",
+          "url": "base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_height.png",
+          "url": "base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_normal.png",
+          "url": "base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-00-nursery-egg-base/base_ao.png",
+          "url": "base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "foundation",
+      "regionId": "amber-honey-foundation",
+      "materialSpecId": "honey-rock",
+      "hypothesis": {
+        "componentId": "foundation",
+        "regionId": "amber-honey-foundation",
+        "materialId": "stone.natural",
+        "family": "stone",
+        "subtype": "wax-rock-with-honey-coating",
+        "finish": "rough-rock",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "stone.natural",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/01-amber-honey-foundation.png",
+            "bbox": {
+              "x": 95,
+              "y": 755,
+              "width": 265,
+              "height": 285
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.048
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "honey-rock",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/01-amber-honey-foundation.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation",
+            "palette": [
+              "#E59A13",
+              "#603A0C",
+              "#A06512",
+              "#2A1903",
+              "#EDCA92"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_albedo.png",
+                "url": "honey-rock_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_roughness.png",
+                "url": "honey-rock_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_height.png",
+                "url": "honey-rock_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_normal.png",
+                "url": "honey-rock_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_ao.png",
+                "url": "honey-rock_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 265,
+              "sourceHeight": 285,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 265,
+                "height": 285
+              },
+              "mask": {
+                "backgroundColor": "#482E03",
+                "backgroundNoise": 61.919,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9995
+              },
+              "mapStats": {
+                "valueRange": 0.7479,
+                "heightP90Gradient": 0.16651,
+                "roughnessBase": 0.818,
+                "roughnessVariation": 0.178,
+                "normalStrength": 0.351,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#E59A13",
+                "#603A0C",
+                "#A06512",
+                "#2A1903",
+                "#EDCA92"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#9E6E1E",
+              "#8A5E12",
+              "#946A28",
+              "#915E14",
+              "#5D4207"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 102.0,
+              "meanSaturation": 0.87,
+              "gradientStrength": 0.32,
+              "mottle": 0.125,
+              "streakRatio": 0.9,
+              "hueSpread": 0.024,
+              "specularFraction": 0.006
+            }
+          }
+        },
+        "profileId": "stone.natural",
+        "family": "stone",
+        "subtype": "natural",
+        "finish": "rough-or-polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.78,
+          "clearcoat": 0.0
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "displacementMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "multi-scale mineral pattern",
+          "fracture or pore relief",
+          "polished stone retains dielectric reflection"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/01-amber-honey-foundation.png",
+        "bbox": {
+          "x": 95,
+          "y": 755,
+          "width": 265,
+          "height": 285
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.048
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#9E6E1E",
+          "#8A5E12",
+          "#946A28",
+          "#915E14",
+          "#5D4207"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 102.0,
+          "meanSaturation": 0.87,
+          "gradientStrength": 0.32,
+          "mottle": 0.125,
+          "streakRatio": 0.9,
+          "hueSpread": 0.024,
+          "specularFraction": 0.006
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "honey-rock",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/01-amber-honey-foundation.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation",
+        "palette": [
+          "#E59A13",
+          "#603A0C",
+          "#A06512",
+          "#2A1903",
+          "#EDCA92"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_albedo.png",
+            "url": "honey-rock_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_roughness.png",
+            "url": "honey-rock_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_height.png",
+            "url": "honey-rock_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_normal.png",
+            "url": "honey-rock_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_ao.png",
+            "url": "honey-rock_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 265,
+          "sourceHeight": 285,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 265,
+            "height": 285
+          },
+          "mask": {
+            "backgroundColor": "#482E03",
+            "backgroundNoise": 61.919,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9995
+          },
+          "mapStats": {
+            "valueRange": 0.7479,
+            "heightP90Gradient": 0.16651,
+            "roughnessBase": 0.818,
+            "roughnessVariation": 0.178,
+            "normalStrength": 0.351,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#E59A13",
+            "#603A0C",
+            "#A06512",
+            "#2A1903",
+            "#EDCA92"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/01-amber-honey-foundation.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_albedo.png",
+            "url": "honey-rock_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_roughness.png",
+            "url": "honey-rock_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_height.png",
+            "url": "honey-rock_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_normal.png",
+            "url": "honey-rock_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_ao.png",
+            "url": "honey-rock_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 265,
+          "sourceHeight": 285,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 265,
+            "height": 285
+          },
+          "mask": {
+            "backgroundColor": "#482E03",
+            "backgroundNoise": 61.919,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9995
+          },
+          "mapStats": {
+            "valueRange": 0.7479,
+            "heightP90Gradient": 0.16651,
+            "roughnessBase": 0.818,
+            "roughnessVariation": 0.178,
+            "normalStrength": 0.351,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#E59A13",
+            "#603A0C",
+            "#A06512",
+            "#2A1903",
+            "#EDCA92"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_albedo.png",
+          "url": "honey-rock_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_roughness.png",
+          "url": "honey-rock_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_height.png",
+          "url": "honey-rock_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_normal.png",
+          "url": "honey-rock_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-01-amber-honey-foundation/honey-rock_ao.png",
+          "url": "honey-rock_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "lower-wax-cradle",
+      "regionId": "cream-waxstone",
+      "materialSpecId": "waxstone",
+      "hypothesis": {
+        "componentId": "lower-wax-cradle",
+        "regionId": "cream-waxstone",
+        "materialId": "plastic.matte",
+        "family": "organic",
+        "subtype": "cream-structural-wax",
+        "finish": "satin",
+        "aliases": [],
+        "confidence": 0.82,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "plastic.matte",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/02-cream-waxstone.png",
+            "bbox": {
+              "x": 370,
+              "y": 300,
+              "width": 285,
+              "height": 360
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0653
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "waxstone",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/02-cream-waxstone.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone",
+            "palette": [
+              "#744108",
+              "#3F2105",
+              "#AF690E",
+              "#EBAA22",
+              "#B9B799"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_albedo.png",
+                "url": "waxstone_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_roughness.png",
+                "url": "waxstone_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_height.png",
+                "url": "waxstone_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_normal.png",
+                "url": "waxstone_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_ao.png",
+                "url": "waxstone_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 285,
+              "sourceHeight": 360,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 285,
+                "height": 360
+              },
+              "mask": {
+                "backgroundColor": "#7197A2",
+                "backgroundNoise": 191.324,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9083
+              },
+              "mapStats": {
+                "valueRange": 0.6919,
+                "heightP90Gradient": 0.17923,
+                "roughnessBase": 0.855,
+                "roughnessVariation": 0.163,
+                "normalStrength": 0.366,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#744108",
+                "#3F2105",
+                "#AF690E",
+                "#EBAA22",
+                "#B9B799"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#91A3A1",
+              "#997740",
+              "#A46E15",
+              "#683C0B",
+              "#9C610A"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 111.9,
+              "meanSaturation": 0.752,
+              "gradientStrength": 0.412,
+              "mottle": 0.13,
+              "streakRatio": 0.97,
+              "hueSpread": 0.04,
+              "specularFraction": 0.005
+            }
+          }
+        },
+        "profileId": "plastic.matte",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "matte",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.68,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "coloured diffuse body",
+          "broad neutral highlight",
+          "mold seams or fine stipple"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/02-cream-waxstone.png",
+        "bbox": {
+          "x": 370,
+          "y": 300,
+          "width": 285,
+          "height": 360
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0653
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#91A3A1",
+          "#997740",
+          "#A46E15",
+          "#683C0B",
+          "#9C610A"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 111.9,
+          "meanSaturation": 0.752,
+          "gradientStrength": 0.412,
+          "mottle": 0.13,
+          "streakRatio": 0.97,
+          "hueSpread": 0.04,
+          "specularFraction": 0.005
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "waxstone",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/02-cream-waxstone.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone",
+        "palette": [
+          "#744108",
+          "#3F2105",
+          "#AF690E",
+          "#EBAA22",
+          "#B9B799"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_albedo.png",
+            "url": "waxstone_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_roughness.png",
+            "url": "waxstone_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_height.png",
+            "url": "waxstone_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_normal.png",
+            "url": "waxstone_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_ao.png",
+            "url": "waxstone_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 285,
+          "sourceHeight": 360,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 285,
+            "height": 360
+          },
+          "mask": {
+            "backgroundColor": "#7197A2",
+            "backgroundNoise": 191.324,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9083
+          },
+          "mapStats": {
+            "valueRange": 0.6919,
+            "heightP90Gradient": 0.17923,
+            "roughnessBase": 0.855,
+            "roughnessVariation": 0.163,
+            "normalStrength": 0.366,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#744108",
+            "#3F2105",
+            "#AF690E",
+            "#EBAA22",
+            "#B9B799"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/02-cream-waxstone.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_albedo.png",
+            "url": "waxstone_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_roughness.png",
+            "url": "waxstone_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_height.png",
+            "url": "waxstone_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_normal.png",
+            "url": "waxstone_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_ao.png",
+            "url": "waxstone_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 285,
+          "sourceHeight": 360,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 285,
+            "height": 360
+          },
+          "mask": {
+            "backgroundColor": "#7197A2",
+            "backgroundNoise": 191.324,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9083
+          },
+          "mapStats": {
+            "valueRange": 0.6919,
+            "heightP90Gradient": 0.17923,
+            "roughnessBase": 0.855,
+            "roughnessVariation": 0.163,
+            "normalStrength": 0.366,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#744108",
+            "#3F2105",
+            "#AF690E",
+            "#EBAA22",
+            "#B9B799"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_albedo.png",
+          "url": "waxstone_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_roughness.png",
+          "url": "waxstone_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_height.png",
+          "url": "waxstone_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_normal.png",
+          "url": "waxstone_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-02-cream-waxstone/waxstone_ao.png",
+          "url": "waxstone_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "royal-egg-shell",
+      "regionId": "golden-egg-wax",
+      "materialSpecId": "golden-wax",
+      "hypothesis": {
+        "componentId": "royal-egg-shell",
+        "regionId": "golden-egg-wax",
+        "materialId": "plastic.glossy",
+        "family": "organic",
+        "subtype": "golden-royal-wax",
+        "finish": "polished-satin",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "plastic.glossy",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/03-golden-egg-wax.png",
+            "bbox": {
+              "x": 122,
+              "y": 360,
+              "width": 100,
+              "height": 160
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0102
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "golden-wax",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/03-golden-egg-wax.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax",
+            "palette": [
+              "#17160B",
+              "#2D2513",
+              "#71420E",
+              "#A09572",
+              "#D78B0F"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_albedo.png",
+                "url": "golden-wax_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_roughness.png",
+                "url": "golden-wax_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_height.png",
+                "url": "golden-wax_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_normal.png",
+                "url": "golden-wax_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_ao.png",
+                "url": "golden-wax_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 100,
+              "sourceHeight": 160,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 160
+              },
+              "mask": {
+                "backgroundColor": "#989375",
+                "backgroundNoise": 77.801,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9084
+              },
+              "mapStats": {
+                "valueRange": 0.5984,
+                "heightP90Gradient": 0.15991,
+                "roughnessBase": 0.735,
+                "roughnessVariation": 0.209,
+                "normalStrength": 0.344,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#17160B",
+                "#2D2513",
+                "#71420E",
+                "#A09572",
+                "#D78B0F"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#8F8F81",
+              "#42391E",
+              "#714712",
+              "#252115",
+              "#8F8361"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 74.0,
+              "meanSaturation": 0.553,
+              "gradientStrength": 0.523,
+              "mottle": 0.052,
+              "streakRatio": 0.74,
+              "hueSpread": 0.043,
+              "specularFraction": 0.003
+            }
+          }
+        },
+        "profileId": "plastic.glossy",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.28,
+          "clearcoat": 0.2,
+          "clearcoatRoughness": 0.18,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "untinted or light-coloured specular over coloured diffuse body",
+          "smooth molded surface"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/03-golden-egg-wax.png",
+        "bbox": {
+          "x": 122,
+          "y": 360,
+          "width": 100,
+          "height": 160
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0102
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#8F8F81",
+          "#42391E",
+          "#714712",
+          "#252115",
+          "#8F8361"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 74.0,
+          "meanSaturation": 0.553,
+          "gradientStrength": 0.523,
+          "mottle": 0.052,
+          "streakRatio": 0.74,
+          "hueSpread": 0.043,
+          "specularFraction": 0.003
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "golden-wax",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/03-golden-egg-wax.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax",
+        "palette": [
+          "#17160B",
+          "#2D2513",
+          "#71420E",
+          "#A09572",
+          "#D78B0F"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_albedo.png",
+            "url": "golden-wax_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_roughness.png",
+            "url": "golden-wax_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_height.png",
+            "url": "golden-wax_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_normal.png",
+            "url": "golden-wax_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_ao.png",
+            "url": "golden-wax_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/03-golden-egg-wax.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_albedo.png",
+            "url": "golden-wax_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_roughness.png",
+            "url": "golden-wax_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_height.png",
+            "url": "golden-wax_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_normal.png",
+            "url": "golden-wax_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_ao.png",
+            "url": "golden-wax_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_albedo.png",
+          "url": "golden-wax_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_roughness.png",
+          "url": "golden-wax_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_height.png",
+          "url": "golden-wax_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_normal.png",
+          "url": "golden-wax_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-03-golden-egg-wax/golden-wax_ao.png",
+          "url": "golden-wax_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "egg-cell-rib-network",
+      "regionId": "pale-wax-ribs",
+      "materialSpecId": "wax-rib",
+      "hypothesis": {
+        "componentId": "egg-cell-rib-network",
+        "regionId": "pale-wax-ribs",
+        "materialId": "plastic.glossy",
+        "family": "organic",
+        "subtype": "pale-raised-comb-wax",
+        "finish": "polished-edge",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "plastic.glossy",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/04-pale-wax-ribs.png",
+            "bbox": {
+              "x": 122,
+              "y": 360,
+              "width": 100,
+              "height": 160
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0102
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "wax-rib",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/04-pale-wax-ribs.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs",
+            "palette": [
+              "#17160B",
+              "#2D2513",
+              "#71420E",
+              "#A09572",
+              "#D78B0F"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_albedo.png",
+                "url": "wax-rib_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_roughness.png",
+                "url": "wax-rib_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_height.png",
+                "url": "wax-rib_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_normal.png",
+                "url": "wax-rib_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_ao.png",
+                "url": "wax-rib_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 100,
+              "sourceHeight": 160,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 160
+              },
+              "mask": {
+                "backgroundColor": "#989375",
+                "backgroundNoise": 77.801,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9084
+              },
+              "mapStats": {
+                "valueRange": 0.5984,
+                "heightP90Gradient": 0.15991,
+                "roughnessBase": 0.735,
+                "roughnessVariation": 0.209,
+                "normalStrength": 0.344,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#17160B",
+                "#2D2513",
+                "#71420E",
+                "#A09572",
+                "#D78B0F"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#8F8F81",
+              "#42391E",
+              "#714712",
+              "#252115",
+              "#8F8361"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 74.0,
+              "meanSaturation": 0.553,
+              "gradientStrength": 0.523,
+              "mottle": 0.052,
+              "streakRatio": 0.74,
+              "hueSpread": 0.043,
+              "specularFraction": 0.003
+            }
+          }
+        },
+        "profileId": "plastic.glossy",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.28,
+          "clearcoat": 0.2,
+          "clearcoatRoughness": 0.18,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "untinted or light-coloured specular over coloured diffuse body",
+          "smooth molded surface"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/04-pale-wax-ribs.png",
+        "bbox": {
+          "x": 122,
+          "y": 360,
+          "width": 100,
+          "height": 160
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0102
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#8F8F81",
+          "#42391E",
+          "#714712",
+          "#252115",
+          "#8F8361"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 74.0,
+          "meanSaturation": 0.553,
+          "gradientStrength": 0.523,
+          "mottle": 0.052,
+          "streakRatio": 0.74,
+          "hueSpread": 0.043,
+          "specularFraction": 0.003
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "wax-rib",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/04-pale-wax-ribs.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs",
+        "palette": [
+          "#17160B",
+          "#2D2513",
+          "#71420E",
+          "#A09572",
+          "#D78B0F"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_albedo.png",
+            "url": "wax-rib_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_roughness.png",
+            "url": "wax-rib_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_height.png",
+            "url": "wax-rib_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_normal.png",
+            "url": "wax-rib_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_ao.png",
+            "url": "wax-rib_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/04-pale-wax-ribs.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_albedo.png",
+            "url": "wax-rib_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_roughness.png",
+            "url": "wax-rib_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_height.png",
+            "url": "wax-rib_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_normal.png",
+            "url": "wax-rib_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_ao.png",
+            "url": "wax-rib_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_albedo.png",
+          "url": "wax-rib_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_roughness.png",
+          "url": "wax-rib_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_height.png",
+          "url": "wax-rib_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_normal.png",
+          "url": "wax-rib_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-04-pale-wax-ribs/wax-rib_ao.png",
+          "url": "wax-rib_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "brood-cell-recess-array",
+      "regionId": "dark-brood-caramel",
+      "materialSpecId": "brood-caramel",
+      "hypothesis": {
+        "componentId": "brood-cell-recess-array",
+        "regionId": "dark-brood-caramel",
+        "materialId": "plastic.matte",
+        "family": "organic",
+        "subtype": "dark-brood-comb",
+        "finish": "matte-cavity",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "plastic.matte",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/05-dark-brood-caramel.png",
+            "bbox": {
+              "x": 122,
+              "y": 360,
+              "width": 100,
+              "height": 160
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0102
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "brood-caramel",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/05-dark-brood-caramel.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel",
+            "palette": [
+              "#17160B",
+              "#2D2513",
+              "#71420E",
+              "#A09572",
+              "#D78B0F"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_albedo.png",
+                "url": "brood-caramel_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_roughness.png",
+                "url": "brood-caramel_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_height.png",
+                "url": "brood-caramel_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_normal.png",
+                "url": "brood-caramel_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_ao.png",
+                "url": "brood-caramel_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 100,
+              "sourceHeight": 160,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 160
+              },
+              "mask": {
+                "backgroundColor": "#989375",
+                "backgroundNoise": 77.801,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9084
+              },
+              "mapStats": {
+                "valueRange": 0.5984,
+                "heightP90Gradient": 0.15991,
+                "roughnessBase": 0.735,
+                "roughnessVariation": 0.209,
+                "normalStrength": 0.344,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#17160B",
+                "#2D2513",
+                "#71420E",
+                "#A09572",
+                "#D78B0F"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#8F8F81",
+              "#42391E",
+              "#714712",
+              "#252115",
+              "#8F8361"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 74.0,
+              "meanSaturation": 0.553,
+              "gradientStrength": 0.523,
+              "mottle": 0.052,
+              "streakRatio": 0.74,
+              "hueSpread": 0.043,
+              "specularFraction": 0.003
+            }
+          }
+        },
+        "profileId": "plastic.matte",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "matte",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.68,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "coloured diffuse body",
+          "broad neutral highlight",
+          "mold seams or fine stipple"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/05-dark-brood-caramel.png",
+        "bbox": {
+          "x": 122,
+          "y": 360,
+          "width": 100,
+          "height": 160
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0102
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#8F8F81",
+          "#42391E",
+          "#714712",
+          "#252115",
+          "#8F8361"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 74.0,
+          "meanSaturation": 0.553,
+          "gradientStrength": 0.523,
+          "mottle": 0.052,
+          "streakRatio": 0.74,
+          "hueSpread": 0.043,
+          "specularFraction": 0.003
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "brood-caramel",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/05-dark-brood-caramel.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel",
+        "palette": [
+          "#17160B",
+          "#2D2513",
+          "#71420E",
+          "#A09572",
+          "#D78B0F"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_albedo.png",
+            "url": "brood-caramel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_roughness.png",
+            "url": "brood-caramel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_height.png",
+            "url": "brood-caramel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_normal.png",
+            "url": "brood-caramel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_ao.png",
+            "url": "brood-caramel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/05-dark-brood-caramel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_albedo.png",
+            "url": "brood-caramel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_roughness.png",
+            "url": "brood-caramel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_height.png",
+            "url": "brood-caramel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_normal.png",
+            "url": "brood-caramel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_ao.png",
+            "url": "brood-caramel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 100,
+          "sourceHeight": 160,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 160
+          },
+          "mask": {
+            "backgroundColor": "#989375",
+            "backgroundNoise": 77.801,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9084
+          },
+          "mapStats": {
+            "valueRange": 0.5984,
+            "heightP90Gradient": 0.15991,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.344,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#17160B",
+            "#2D2513",
+            "#71420E",
+            "#A09572",
+            "#D78B0F"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_albedo.png",
+          "url": "brood-caramel_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_roughness.png",
+          "url": "brood-caramel_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_height.png",
+          "url": "brood-caramel_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_normal.png",
+          "url": "brood-caramel_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-05-dark-brood-caramel/brood-caramel_ao.png",
+          "url": "brood-caramel_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "socketed-honey-drip-array",
+      "regionId": "flowing-honey",
+      "materialSpecId": "glossy-honey",
+      "hypothesis": {
+        "componentId": "socketed-honey-drip-array",
+        "regionId": "flowing-honey",
+        "materialId": "glass.clear",
+        "family": "liquid",
+        "subtype": "viscous-amber-honey",
+        "finish": "glossy-translucent-like",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "glass.clear",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/06-flowing-honey.png",
+            "bbox": {
+              "x": 270,
+              "y": 770,
+              "width": 245,
+              "height": 290
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0452
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "glossy-honey",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/06-flowing-honey.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey",
+            "palette": [
+              "#E89C15",
+              "#A96B13",
+              "#623C08",
+              "#251602",
+              "#F1CD81"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_albedo.png",
+                "url": "glossy-honey_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_roughness.png",
+                "url": "glossy-honey_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_height.png",
+                "url": "glossy-honey_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_normal.png",
+                "url": "glossy-honey_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_ao.png",
+                "url": "glossy-honey_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 245,
+              "sourceHeight": 290,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 245,
+                "height": 290
+              },
+              "mask": {
+                "backgroundColor": "#954E02",
+                "backgroundNoise": 139.993,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9891
+              },
+              "mapStats": {
+                "valueRange": 0.7768,
+                "heightP90Gradient": 0.16374,
+                "roughnessBase": 0.816,
+                "roughnessVariation": 0.182,
+                "normalStrength": 0.348,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#E89C15",
+                "#A96B13",
+                "#623C08",
+                "#251602",
+                "#F1CD81"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#B28437",
+              "#BA882E",
+              "#97650F",
+              "#8C6013",
+              "#4B3006"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 111.4,
+              "meanSaturation": 0.859,
+              "gradientStrength": 0.431,
+              "mottle": 0.127,
+              "streakRatio": 0.86,
+              "hueSpread": 0.009,
+              "specularFraction": 0.013
+            }
+          }
+        },
+        "profileId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.05,
+          "transmission": 1.0,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "background distortion",
+          "bright interface reflection",
+          "visible thickness or absorption"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/06-flowing-honey.png",
+        "bbox": {
+          "x": 270,
+          "y": 770,
+          "width": 245,
+          "height": 290
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0452
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#B28437",
+          "#BA882E",
+          "#97650F",
+          "#8C6013",
+          "#4B3006"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 111.4,
+          "meanSaturation": 0.859,
+          "gradientStrength": 0.431,
+          "mottle": 0.127,
+          "streakRatio": 0.86,
+          "hueSpread": 0.009,
+          "specularFraction": 0.013
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "glossy-honey",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/06-flowing-honey.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey",
+        "palette": [
+          "#E89C15",
+          "#A96B13",
+          "#623C08",
+          "#251602",
+          "#F1CD81"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_albedo.png",
+            "url": "glossy-honey_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_roughness.png",
+            "url": "glossy-honey_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_height.png",
+            "url": "glossy-honey_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_normal.png",
+            "url": "glossy-honey_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_ao.png",
+            "url": "glossy-honey_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 290,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 290
+          },
+          "mask": {
+            "backgroundColor": "#954E02",
+            "backgroundNoise": 139.993,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9891
+          },
+          "mapStats": {
+            "valueRange": 0.7768,
+            "heightP90Gradient": 0.16374,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.182,
+            "normalStrength": 0.348,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#E89C15",
+            "#A96B13",
+            "#623C08",
+            "#251602",
+            "#F1CD81"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/06-flowing-honey.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_albedo.png",
+            "url": "glossy-honey_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_roughness.png",
+            "url": "glossy-honey_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_height.png",
+            "url": "glossy-honey_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_normal.png",
+            "url": "glossy-honey_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_ao.png",
+            "url": "glossy-honey_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 290,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 290
+          },
+          "mask": {
+            "backgroundColor": "#954E02",
+            "backgroundNoise": 139.993,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9891
+          },
+          "mapStats": {
+            "valueRange": 0.7768,
+            "heightP90Gradient": 0.16374,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.182,
+            "normalStrength": 0.348,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#E89C15",
+            "#A96B13",
+            "#623C08",
+            "#251602",
+            "#F1CD81"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_albedo.png",
+          "url": "glossy-honey_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_roughness.png",
+          "url": "glossy-honey_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_height.png",
+          "url": "glossy-honey_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_normal.png",
+          "url": "glossy-honey_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-06-flowing-honey/glossy-honey_ao.png",
+          "url": "glossy-honey_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "socketed-honey-drip-array",
+      "regionId": "honey-highlight",
+      "materialSpecId": "honey-highlight",
+      "hypothesis": {
+        "componentId": "socketed-honey-drip-array",
+        "regionId": "honey-highlight",
+        "materialId": "glass.clear",
+        "family": "liquid",
+        "subtype": "honey-specular-highlight",
+        "finish": "clear-gloss",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "glass.clear",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/07-honey-highlight.png",
+            "bbox": {
+              "x": 270,
+              "y": 770,
+              "width": 245,
+              "height": 290
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0452
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "honey-highlight",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/07-honey-highlight.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight",
+            "palette": [
+              "#E89C15",
+              "#A96B13",
+              "#623C08",
+              "#251602",
+              "#F1CD81"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_albedo.png",
+                "url": "honey-highlight_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_roughness.png",
+                "url": "honey-highlight_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_height.png",
+                "url": "honey-highlight_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_normal.png",
+                "url": "honey-highlight_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_ao.png",
+                "url": "honey-highlight_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 245,
+              "sourceHeight": 290,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 245,
+                "height": 290
+              },
+              "mask": {
+                "backgroundColor": "#954E02",
+                "backgroundNoise": 139.993,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9891
+              },
+              "mapStats": {
+                "valueRange": 0.7768,
+                "heightP90Gradient": 0.16374,
+                "roughnessBase": 0.816,
+                "roughnessVariation": 0.182,
+                "normalStrength": 0.348,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#E89C15",
+                "#A96B13",
+                "#623C08",
+                "#251602",
+                "#F1CD81"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#B28437",
+              "#BA882E",
+              "#97650F",
+              "#8C6013",
+              "#4B3006"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 111.4,
+              "meanSaturation": 0.859,
+              "gradientStrength": 0.431,
+              "mottle": 0.127,
+              "streakRatio": 0.86,
+              "hueSpread": 0.009,
+              "specularFraction": 0.013
+            }
+          }
+        },
+        "profileId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.05,
+          "transmission": 1.0,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "background distortion",
+          "bright interface reflection",
+          "visible thickness or absorption"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/07-honey-highlight.png",
+        "bbox": {
+          "x": 270,
+          "y": 770,
+          "width": 245,
+          "height": 290
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0452
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#B28437",
+          "#BA882E",
+          "#97650F",
+          "#8C6013",
+          "#4B3006"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 111.4,
+          "meanSaturation": 0.859,
+          "gradientStrength": 0.431,
+          "mottle": 0.127,
+          "streakRatio": 0.86,
+          "hueSpread": 0.009,
+          "specularFraction": 0.013
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "honey-highlight",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/07-honey-highlight.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight",
+        "palette": [
+          "#E89C15",
+          "#A96B13",
+          "#623C08",
+          "#251602",
+          "#F1CD81"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_albedo.png",
+            "url": "honey-highlight_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_roughness.png",
+            "url": "honey-highlight_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_height.png",
+            "url": "honey-highlight_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_normal.png",
+            "url": "honey-highlight_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_ao.png",
+            "url": "honey-highlight_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 290,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 290
+          },
+          "mask": {
+            "backgroundColor": "#954E02",
+            "backgroundNoise": 139.993,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9891
+          },
+          "mapStats": {
+            "valueRange": 0.7768,
+            "heightP90Gradient": 0.16374,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.182,
+            "normalStrength": 0.348,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#E89C15",
+            "#A96B13",
+            "#623C08",
+            "#251602",
+            "#F1CD81"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/07-honey-highlight.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_albedo.png",
+            "url": "honey-highlight_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_roughness.png",
+            "url": "honey-highlight_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_height.png",
+            "url": "honey-highlight_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_normal.png",
+            "url": "honey-highlight_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_ao.png",
+            "url": "honey-highlight_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 290,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 290
+          },
+          "mask": {
+            "backgroundColor": "#954E02",
+            "backgroundNoise": 139.993,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9891
+          },
+          "mapStats": {
+            "valueRange": 0.7768,
+            "heightP90Gradient": 0.16374,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.182,
+            "normalStrength": 0.348,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#E89C15",
+            "#A96B13",
+            "#623C08",
+            "#251602",
+            "#F1CD81"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_albedo.png",
+          "url": "honey-highlight_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_roughness.png",
+          "url": "honey-highlight_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_height.png",
+          "url": "honey-highlight_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_normal.png",
+          "url": "honey-highlight_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-07-honey-highlight/honey-highlight_ao.png",
+          "url": "honey-highlight_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "front-entry-chamber",
+      "regionId": "royal-purple-enamel",
+      "materialSpecId": "royal-purple",
+      "hypothesis": {
+        "componentId": "front-entry-chamber",
+        "regionId": "royal-purple-enamel",
+        "materialId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "purple-enamel",
+        "finish": "satin",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "coating.painted-metal",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/08-royal-purple-enamel.png",
+            "bbox": {
+              "x": 460,
+              "y": 505,
+              "width": 105,
+              "height": 120
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.008
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "royal-purple",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/08-royal-purple-enamel.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel",
+            "palette": [
+              "#713C04",
+              "#3B1B02",
+              "#A96408",
+              "#E8AE32",
+              "#482332"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_albedo.png",
+                "url": "royal-purple_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_roughness.png",
+                "url": "royal-purple_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_height.png",
+                "url": "royal-purple_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_normal.png",
+                "url": "royal-purple_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_ao.png",
+                "url": "royal-purple_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 105,
+              "sourceHeight": 120,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 105,
+                "height": 120
+              },
+              "mask": {
+                "backgroundColor": "#8F4E02",
+                "backgroundNoise": 94.366,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 1.0
+              },
+              "mapStats": {
+                "valueRange": 0.6015,
+                "heightP90Gradient": 0.14847,
+                "roughnessBase": 0.801,
+                "roughnessVariation": 0.179,
+                "normalStrength": 0.33,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#713C04",
+                "#3B1B02",
+                "#A96408",
+                "#E8AE32",
+                "#482332"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#804C06",
+              "#985B0C",
+              "#673B13",
+              "#6E3D11",
+              "#B07F29"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 79.0,
+              "meanSaturation": 0.915,
+              "gradientStrength": 0.285,
+              "mottle": 0.104,
+              "streakRatio": 1.16,
+              "hueSpread": 0.026,
+              "specularFraction": 0.003
+            }
+          }
+        },
+        "profileId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.45,
+          "clearcoat": 0.75,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "visualCues": [
+          "diffuse paint colour under a separate glossy coat",
+          "chips may expose metallic substrate"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/08-royal-purple-enamel.png",
+        "bbox": {
+          "x": 460,
+          "y": 505,
+          "width": 105,
+          "height": 120
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.008
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#804C06",
+          "#985B0C",
+          "#673B13",
+          "#6E3D11",
+          "#B07F29"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 79.0,
+          "meanSaturation": 0.915,
+          "gradientStrength": 0.285,
+          "mottle": 0.104,
+          "streakRatio": 1.16,
+          "hueSpread": 0.026,
+          "specularFraction": 0.003
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "royal-purple",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/08-royal-purple-enamel.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel",
+        "palette": [
+          "#713C04",
+          "#3B1B02",
+          "#A96408",
+          "#E8AE32",
+          "#482332"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_albedo.png",
+            "url": "royal-purple_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_roughness.png",
+            "url": "royal-purple_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_height.png",
+            "url": "royal-purple_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_normal.png",
+            "url": "royal-purple_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_ao.png",
+            "url": "royal-purple_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 105,
+          "sourceHeight": 120,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 105,
+            "height": 120
+          },
+          "mask": {
+            "backgroundColor": "#8F4E02",
+            "backgroundNoise": 94.366,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 1.0
+          },
+          "mapStats": {
+            "valueRange": 0.6015,
+            "heightP90Gradient": 0.14847,
+            "roughnessBase": 0.801,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.33,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#713C04",
+            "#3B1B02",
+            "#A96408",
+            "#E8AE32",
+            "#482332"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/08-royal-purple-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_albedo.png",
+            "url": "royal-purple_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_roughness.png",
+            "url": "royal-purple_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_height.png",
+            "url": "royal-purple_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_normal.png",
+            "url": "royal-purple_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_ao.png",
+            "url": "royal-purple_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 105,
+          "sourceHeight": 120,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 105,
+            "height": 120
+          },
+          "mask": {
+            "backgroundColor": "#8F4E02",
+            "backgroundNoise": 94.366,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 1.0
+          },
+          "mapStats": {
+            "valueRange": 0.6015,
+            "heightP90Gradient": 0.14847,
+            "roughnessBase": 0.801,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.33,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#713C04",
+            "#3B1B02",
+            "#A96408",
+            "#E8AE32",
+            "#482332"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_albedo.png",
+          "url": "royal-purple_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_roughness.png",
+          "url": "royal-purple_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_height.png",
+          "url": "royal-purple_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_normal.png",
+          "url": "royal-purple_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-evidence/pbr-08-royal-purple-enamel/royal-purple_ao.png",
+          "url": "royal-purple_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "status": "proceed",
+  "limitations": [
+    "PBR extraction is reference-derived inference, not inverse rendering.",
+    "A crop must be checked against the component visible footprint before accepting material scores."
+  ],
+  "artifact": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom/.img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/material-analysis.json"
+}

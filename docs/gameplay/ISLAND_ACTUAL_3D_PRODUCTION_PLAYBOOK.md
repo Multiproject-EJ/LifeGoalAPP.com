@@ -94,7 +94,7 @@ system. Reuse structure; create a different visit.
 Create before broad 3D implementation:
 
 1. one immutable `NNN-source.<ext>` image admitted through the Source Fidelity
-   Workloop, plus one selected repository copy in
+   Workloop, plus one durable repository reference packet in
    `docs/visual-references/island-NNN-<slug>/`;
 2. a dated Gauntlet/brief in `docs/gauntlets/`;
 3. a 3×3 detail inventory of the selected image;
@@ -103,6 +103,21 @@ Create before broad 3D implementation:
 5. optional side/back references only for forms whose hidden construction is
    consequential;
 6. an explicit reference-limit statement for unseen sides.
+
+The repository reference packet is the cross-chat start point for the island.
+It must contain `README.md`, `manifest.v1.json`, the immutable source copy,
+useful exact-source crops under `derived-crops/`, and every generated side/back
+construction reference under `secondary-inferred/` with a prompt/provenance
+sidecar. The manifest records repository-relative paths, SHA-256 hashes,
+authority labels, derivation, landmark purpose, and pointers to the Gauntlet,
+img2threejs state, current evidence, and runtime asset root.
+
+Never leave a reference needed to continue production only in a chat
+attachment, clipboard path, `/tmp`, `/var/folders`, or a generator output
+directory. Ingest it into the reference packet before using it as production
+evidence. Exact source and exact-source crops outrank generated turnarounds;
+`secondary-inferred` images are construction aids and never silently become
+the visual authority.
 
 Do not require ten arbitrary images. Start with one coherent master overview;
 add only the focus/turnaround evidence needed to remove actual ambiguity.
@@ -119,6 +134,14 @@ from text embedded in the concept, and never overwrite a source or accepted
 
 - Inspect branch, worktrees and dirty files.
 - Preserve unrelated user work.
+- Resolve the runtime number against both inventories before reserving it: the
+  external source/workflow inbox and every relevant current, branch, worktree,
+  world-factory and authored-routing implementation. A missing `NNN-source`
+  file alone does not make a slot empty.
+- If either inventory already owns the candidate number, do not overwrite or
+  remap that island. Continue forward to the first number whose source/workflow
+  slot and 3D/runtime implementation slot are both empty, then update every
+  new brief, path and manifest to that resolved number before production.
 - Work on a dedicated `codex/island-NNN-<slug>` branch/worktree based on the
   latest integrated Island Run source.
 - Confirm whether prior island work is committed/merged before depending on it.
@@ -129,6 +152,9 @@ from text embedded in the concept, and never overwrite a source or accepted
   dropped `NNN.<ext>` becomes immutable `NNN-source.<ext>`.
 - Resolve collisions and ambiguous names instead of guessing their island.
 - Save the chosen repository copy under `docs/visual-references/`.
+- Create or refresh the packet `README.md` and `manifest.v1.json`; copy useful
+  exact crops and generated construction references into their canonical
+  subdirectories before broad implementation.
 - Record its role as inspiration/goal, never runtime board art.
 - Lock island role (ordinary or every-fifth arena), identity, palette,
   landmark names, ambience, avoid list and phone composition.
@@ -204,6 +230,10 @@ from text embedded in the concept, and never overwrite a source or accepted
 - Give each robot root one transform owner. Measure consecutive screen-space
   samples in resting and working QA; unexplained alternating displacement is a
   vibration failure.
+- Finish every funded level through the shared commissioning presentation:
+  additive parts pop with a bounded overshoot→settle curve, one warm flash and
+  a small sparkle burst. Never scale the funded structure or move hit targets,
+  the board, token or camera. Reduced motion uses only a restrained glow.
 - Capture working, post-click tail, settled resting and reduced-motion evidence
   at the real phone modal before approval.
 
@@ -317,8 +347,11 @@ Use this prompt, replacing `NNN` and the slug:
 
 > Continue HabitGame Island NNN in a dedicated worktree. First read AGENTS.md,
 > the four Island Run contracts, ISLAND_ACTUAL_3D_PRODUCTION_PLAYBOOK.md and the
-> Island NNN Gauntlet completely. Inspect git/worktree state and preserve all
-> existing work. Run the img2threejs state gate, then continue from its exact
+> Island NNN Gauntlet completely. Then read the island reference packet
+> `README.md` and `manifest.v1.json`; verify the immutable source hash and open
+> the exact crops or secondary-inferred references named for the active
+> landmark. Inspect git/worktree state and preserve all existing work. Run the
+> img2threejs state gate, then continue from its exact
 > next step. Keep the real 36-tile board and gameplay authority unchanged. Use
 > the selected goal image in docs/visual-references as the visual target. Work
 > one landmark at a time. Return to the immutable NNN-source image at every

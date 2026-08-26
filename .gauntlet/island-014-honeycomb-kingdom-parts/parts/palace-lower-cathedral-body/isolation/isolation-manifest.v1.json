@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "part": "palace-lower-cathedral-body",
+  "status": "packet-ready",
+  "authorityOrder": [
+    "immutable full source",
+    "deterministic visible-source crop",
+    "user-approved procedural/no-Blender decision",
+    "secondary-inferred generated turnaround v001"
+  ],
+  "inputs": [
+    {"path":"docs/visual-references/island-014-honeycomb-kingdom/014-source.png","sha256":"3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e","role":"exact-goal"},
+    {"path":".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png","sha256":"f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932","role":"exact-visible-crop"}
+  ],
+  "generatedStudies": [
+    {
+      "path":".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/generated-hypotheses/palace-lower-cathedral-body-turnaround-v001.png",
+      "sha256":"c884d8cdf8db5ad0096b1ac357d3bf9752310bb9ec85a5747e684a1edcadd922",
+      "authority":"secondary-inferred",
+      "status":"accepted-as-volume-hypothesis",
+      "audit":{"dimensions":[1448,1086],"alpha":false,"background":"neutral opaque studio","crossView":"coherent stepped tower hierarchy","identityDrift":"more mound-like and repetitive than exact source; use for hidden continuity only"}
+    },
+    {
+      "path":".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/generated-hypotheses/palace-lower-cathedral-body-turnaround-v002.png",
+      "sha256":"454db467491fadb9ef44c84bbe7119c82ade2d2a058d16d179f4bc663c744a60",
+      "authority":"rejected-generated-hypothesis",
+      "status":"rejected",
+      "audit":{"dimensions":[1448,1086],"alpha":false,"failure":"painted checkerboard instead of genuine transparency"}
+    }
+  ],
+  "prompt": "Use case: stylized-concept. Asset type: secondary-inferred 3D reconstruction reference packet for a procedural Three.js landmark. Isolate only the Royal Honeycomb Palace lower cathedral body visible at the center of the exact source and infer front, right, rear and left views. Include only the minimum central-keep collar and four satellite-tower sockets. Neutral clay, shared scale, broad cathedral massing. Avoid smooth stacked cylinders, flat facade cards, simple box temples, onion-domed mosque silhouettes, environment, siblings, text and UI.",
+  "coordinateContract": {"up":"+Y","front":"+Z","right":"+X","origin":"royal court centre at y=0","sharedScale":"palace court radius 2.35"},
+  "parentContext": {"parent":"palace-court-stairs","ownedCollar":"palace-body-root","childrenConsume":["central-keep","satellite-left-front","satellite-right-front","satellite-left-rear","satellite-right-rear"]},
+  "visibleRegions": {"confidence":"high","features":["broad buttressed lower mass","deep central door and stair axis","two dominant front satellite towers","stepped central keep","four-tier vertical hierarchy"]},
+  "inferredRegions": {"confidence":"low-to-medium","features":["rear tower count and spacing","rear service entrance rhythm","side buttress continuity"]},
+  "identityFeatures": ["dominant central nave", "deep purple royal doorway recess", "honeycomb bay rhythm", "stepped tower setbacks", "broad base under one large dome"],
+  "forbiddenFailureShapes": ["smooth stacked cylinder", "single round beehive", "flat facade card", "thin tower on empty court", "pyramidal pile of identical huts", "floating turret sockets"],
+  "phoneCues": ["door remains visible", "front satellite pair frames central axis", "large setbacks create readable shadow hierarchy", "ornament is excluded until macro approval"],
+  "sourceMeasurements": {
+    "uncertainty": "approximately plus-or-minus 5 percent because of perspective and occlusion",
+    "palaceWidthToVisibleHeight": [1.0, 1.14],
+    "lowerCathedralWidthToHeight": [1.0, 0.62],
+    "centralKeepWidthToPalaceWidth": 0.34,
+    "heroDomeDiameterToPalaceWidth": 0.30,
+    "frontSatelliteWidthToPalaceWidth": 0.23,
+    "palaceWidthToCourtDiameter": [0.68, 0.72],
+    "worldTargetsAtCourtRadius2_35": {"palaceWidth":[3.20,3.38],"visibleHeight":[3.65,3.85],"lowerBodyHeight":2.0,"heroDomeDiameter":[0.96,1.02],"satelliteDiameter":[0.74,0.78]}
+  },
+  "leastFlatteringViewFirst": "orbit-135-rear-right",
+  "contradictions": ["The generated turnaround exaggerates many repeated miniature bays; exact source instead prioritizes fewer larger tower masses. Exact source wins.", "Generated rear is inferred and cannot change the measured front width or doorway axis."]
+}

@@ -23,9 +23,13 @@ export type IslandRunConstructionPresentation = {
   phase: IslandRunConstructionPhase;
   progress: number;
   sequence: number;
+  sourceLevel: number | null;
+  commissioning: boolean;
   cloudCover: number;
   targetStopId: string | null;
   targetLevel: number | null;
+  /** Final 15/15 state: park the crew in a front-facing celebration lineup. */
+  completionCelebration: boolean;
   reducedMotion: boolean;
 };
 
@@ -53,12 +57,19 @@ export function deriveIslandRunConstructionPresentation(options: {
   reducedMotion?: boolean;
 }): IslandRunConstructionPresentation {
   const landmark = options.viewModel.activeLandmark;
-  const progress = Math.min(1, Math.max(0, landmark?.progressRatio ?? (options.levelReview ? 1 : 0)));
-  const sequence = Math.max(0, Math.floor(landmark?.sequencePosition ?? 0));
-  const targetStopId = landmark?.stopId ?? null;
-  const targetLevel = landmark?.targetLevel ?? options.levelReview?.level ?? null;
+  const isFullyBuilt = options.viewModel.sequentialBuildView.isFullyBuilt;
+  const progress = Math.min(1, Math.max(0, landmark?.progressRatio ?? (options.levelReview || isFullyBuilt ? 1 : 0)));
   const isReview = Boolean(options.levelReview);
-  const isActive = options.isOpen && Boolean(landmark || isReview);
+  const sequence = Math.max(0, Math.floor(
+    options.levelReview?.presentationSequence ?? landmark?.sequencePosition ?? 0,
+  ));
+  const targetStopId = options.levelReview?.stopId ?? landmark?.stopId ?? (isFullyBuilt ? 'boss' : null);
+  // A completed-level review belongs to the landmark that just finished, not
+  // the next sequential build target already exposed by the view model.
+  const targetLevel = options.levelReview?.level ?? landmark?.targetLevel ?? (isFullyBuilt ? 3 : null);
+  const sourceLevel = options.levelReview?.previousLevel ?? null;
+  const isCompletionCelebration = options.isOpen && isFullyBuilt && !isReview;
+  const isActive = options.isOpen && Boolean(landmark || isReview || isCompletionCelebration);
 
   if (!isActive) {
     return {
@@ -68,9 +79,12 @@ export function deriveIslandRunConstructionPresentation(options: {
       phase: 'arrive',
       progress,
       sequence,
+      sourceLevel,
+      commissioning: false,
       cloudCover: 0,
       targetStopId,
       targetLevel,
+      completionCelebration: false,
       reducedMotion: Boolean(options.reducedMotion),
     };
   }
@@ -83,9 +97,30 @@ export function deriveIslandRunConstructionPresentation(options: {
       phase: 'reveal',
       progress: 1,
       sequence,
+      sourceLevel,
+      commissioning: true,
       cloudCover: 0.06,
       targetStopId,
       targetLevel,
+      completionCelebration: false,
+      reducedMotion: Boolean(options.reducedMotion),
+    };
+  }
+
+  if (isCompletionCelebration) {
+    return {
+      active: true,
+      working: false,
+      cameraLocked: true,
+      phase: 'reveal',
+      progress: 1,
+      sequence: 15,
+      sourceLevel: 3,
+      commissioning: true,
+      cloudCover: 0,
+      targetStopId,
+      targetLevel: 3,
+      completionCelebration: true,
       reducedMotion: Boolean(options.reducedMotion),
     };
   }
@@ -111,9 +146,12 @@ export function deriveIslandRunConstructionPresentation(options: {
     phase: phaseConfig.phase,
     progress,
     sequence,
+    sourceLevel,
+    commissioning: false,
     cloudCover: phaseConfig.cloudCover,
     targetStopId,
     targetLevel,
+    completionCelebration: false,
     reducedMotion: Boolean(options.reducedMotion),
   };
 }

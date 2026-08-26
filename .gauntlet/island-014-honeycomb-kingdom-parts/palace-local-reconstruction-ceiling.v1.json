@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "user-representation-choice-required",
+  "subject": "Island 014 Royal Palace local true-geometry route ceiling",
+  "exactSourceSha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+  "turnaroundV2Sha256": "b8bb417929884d95729c041e46f33161d442292955ffd5069d4e9f60c5c134c5",
+  "finalLocalExperiment": {
+    "route": "official open-source TripoSR single-image reconstruction, locally patched for Apple MPS inference and CPU marching cubes",
+    "input": "front quadrant of palace-source-faithful-turnaround-v002.png",
+    "hardware": "Apple M5, 24 GB",
+    "output": {"format": "GLB", "bytes": 1004784, "triangles": 50036, "resolution": 128},
+    "runtime": {"modelInferenceSeconds": 9.516, "meshExtractionSeconds": 12.969},
+    "result": "REJECT-BEFORE-REPO-INTEGRATION",
+    "hardVetoes": [
+      "front architecture collapsed into a lumpy melted mass",
+      "major palace landmarks were not readable",
+      "side silhouettes became uncontrolled spikes",
+      "rear became a flat unauthored slab",
+      "no viable four-bay, portal, honeycomb civic, or honey read"
+    ],
+    "repoMutation": "none; test environment, weights, GLB and orbit renders remained in /private/tmp"
+  },
+  "exhaustedTrueGeometryFamilies": [
+    "procedural layered facade",
+    "unified procedural facade",
+    "Blender boolean facade",
+    "Blender solid facade",
+    "texture-projected relief",
+    "closed cross-plan shell",
+    "integrated extruded cathedral",
+    "rounded jewel hive",
+    "Blender modular jewel GLB",
+    "source-calibrated spline/voxel sculpt",
+    "local neural single-image reconstruction"
+  ],
+  "remainingChoices": [
+    {
+      "id": "view-dependent-illustrated-3d-impostor",
+      "visualPotential": "highest local source likeness using generated multi-view art",
+      "tradeoff": "not full true geometry; view-dependent textured representation and staged sprite/depth layers"
+    },
+    {
+      "id": "external-specialist-3d-service-or-human-modeler",
+      "visualPotential": "highest true-geometry ceiling",
+      "tradeoff": "requires external account/service or human production beyond current local toolchain"
+    },
+    {
+      "id": "accept-best-existing-geometry-drift",
+      "visualPotential": "approximately the previously observed 6.4/10 level",
+      "tradeoff": "does not satisfy the requested 10/10 source match"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "referenceAreaFraction": 0.9990601851851851,
+  "angles": [
+    {"path":"nursery-r40-orbit-180-crop.png","areaFraction":0.9957083333333333,"ratio":0.9966449950648063,"degenerate":false},
+    {"path":"nursery-r40-orbit-315-crop.png","areaFraction":0.9990453296703297,"ratio":0.9999851305105781,"degenerate":false}
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "limitation": "Full-frame segmentation again dominates because crops contain the world scene. This is a non-collapse check only, not likeness approval."
+}

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "status": "retired-after-blockout-gate",
+  "partId": "nectar-trials",
+  "constructionFamily": "threejs-open-arcade-crossed-honey-dipper-arena-v3",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/nectar-trials/isolation/derived-crops/nectar-trials-visible-source-crop-v001.png",
+    "inventory": ".gauntlet/island-014-honeycomb-kingdom-parts/part-inventory.v1.json"
+  },
+  "workerAllowlist": {
+    "implementation": [
+      "createIsland14NectarTrialsV2 only in src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts"
+    ],
+    "evidence": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/nectar-trials-v003-*",
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-*"
+    ],
+    "forbidden": [
+      "royal palace",
+      "queen hatchery",
+      "pollinator yard",
+      "hive archives",
+      "terrain",
+      "route",
+      "mission",
+      "gameplay"
+    ]
+  },
+  "requiredFeatures": [
+    "A clearly playable circular or hex-radial arena platform with front stairs and an unobstructed central contest floor.",
+    "A coherent 360-degree column arcade with open bays; columns support a low crown and never become cage clutter.",
+    "Two crossed honey dippers, not block hammers, form the dominant arena emblem and remain readable at phone scale.",
+    "Each dipper has a slender handle, ribbed grooved honey head, glossy honey coating, and one restrained hanging drop.",
+    "The crossed emblem is physically seated over the challenge dais or front crown support and never floats as a badge.",
+    "A compact amber nectar core supports the emblem without becoming a generic crystal centerpiece.",
+    "Purple banners are subordinate accents; the roof/crown reads honey-gold rather than as a purple circus gazebo.",
+    "Side and rear views preserve open arena bays, supported roof logic, and a visible secondary crossed-dipper silhouette."
+  ],
+  "strictRejects": [
+    "block hammers, axes, or generic construction tools",
+    "purple circus gazebo",
+    "open cage without arena identity",
+    "oversized roof ring hiding the contest floor",
+    "floating crossed-icon badge",
+    "front-only emblem",
+    "blank or structurally implausible rear",
+    "more than one bounded correction in this construction family"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "additional": ["phone-overview", "arena-close", "rear-close", "materials-off"],
+    "reviewCategories": ["source-identity", "arena-silhouette", "honey-dipper-readability", "surface-depth", "arcade-continuity", "side-rear-continuity", "phone-readability"],
+    "blockoutGate": "All structural categories at least 0.75 with no strict reject.",
+    "finalGate": "All required categories at least 0.85 with no strict reject."
+  },
+  "budget": {
+    "constructionFamilies": 1,
+    "boundedCorrections": 1
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "partId": "palace-front-facade",
+  "constructionFamily": "procedural-threejs-layered-royal-honey-cathedral-facade",
+  "iteration": "one-bounded-correction",
+  "status": "immutable-awaiting-final-independent-review",
+  "previousReview": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v1.json",
+    "sha256": "2614660f7e0e301ea56dec3544975c86edae9e9fcf6f4b19742601fd96a2331a",
+    "action": "one-bounded-correction",
+    "previousWorst": 0.68
+  },
+  "buildContract": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.v1.json",
+    "sha256": "416ba49313ff83aaf4d88f2bdda659a0ad8ada9d406f1c156ccab8bae3c275d9"
+  },
+  "evidenceRoot": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v001-r02",
+  "renderMode": "actual-mesh-materials-off-svg-plus-browser-jpeg",
+  "captures": [
+    {
+      "view": "orbit-000-front",
+      "svg": {"path": "island-014-palace-facade-000-v002.svg", "sha256": "bf2061540f716840f9accce35aa97e8390010eac4dc7c56127956d85f3178f48"},
+      "jpeg": {"path": "island-014-palace-facade-000-v002.jpg", "sha256": "133591c12514a5c6df4b8ecbb7938b8e6d1fcb1ea5adf11070510e7648280f40"}
+    },
+    {
+      "view": "orbit-045-front-right",
+      "svg": {"path": "island-014-palace-facade-045-v002.svg", "sha256": "eb02386d3990c7ece4d6fe34bd1b6127788e15e4eff29f2739a145628f17c6a9"},
+      "jpeg": {"path": "island-014-palace-facade-045-v002.jpg", "sha256": "b6b937d9b270d08c6faf1e8af511f9067564d1529c77052b4b1499b9fde0b54c"}
+    },
+    {
+      "view": "orbit-315-front-left",
+      "svg": {"path": "island-014-palace-facade-315-v002.svg", "sha256": "3e41e20b7a30949b0f6b886d0374367ae0ec89b049b54eb87ad4c4082cb2d100"},
+      "jpeg": {"path": "island-014-palace-facade-315-v002.jpg", "sha256": "d9a8f4e64c2dde956a7d5369a1aa755023a2d439a0ebb136cb22570cd6ad18fc"}
+    },
+    {
+      "view": "facade-closeup",
+      "svg": {"path": "island-014-palace-facade-close-v002.svg", "sha256": "139e804b742eaa16a5705a3ed9191ab655ae45fb87fa2ab15551b378ab098ed1"},
+      "jpeg": {"path": "island-014-palace-facade-close-v002.jpg", "sha256": "0de8a8a12bca509f761792c6f4ef35e6717c792b45364efd9613b36a936a332a"}
+    }
+  ],
+  "correctionScope": [
+    "embed and scale existing rose and four existing bays",
+    "reposition and thin existing floor bands and axis ribs",
+    "modest door-recess and arch-depth tuning",
+    "banner position only"
+  ],
+  "frozen": [
+    "facade topology and feature counts",
+    "palace macro nodes and transforms",
+    "court and stair axis",
+    "royal door dimensions and position",
+    "all non-facade systems"
+  ],
+  "finalGate": {
+    "minimumWorstCategory": 0.85,
+    "minimumGainOverPreviousWorst": 0.1,
+    "secondCorrectionPermitted": false
+  }
+}

@@ -171,6 +171,7 @@ import { islandRunHabitLandmarkActionTests } from './islandRunHabitLandmarkActio
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
 import { islandRun3DWorldRoutingTests } from './islandRun3DWorldRouting.test';
+import { island22WaterDragonMissionTests } from './island22WaterDragonMission.test';
 import { island5ThreePilotContractTests } from './island5ThreePilotContract.test';
 import { island10RootheartThreeWorldContractTests } from './island10RootheartThreeWorldContract.test';
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
@@ -198,6 +199,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunDailySpinRewardAction', tests: islandRunDailySpinRewardActionTests },
   { label: 'islandCameraLockedKit', tests: islandCameraLockedKitTests },
   { label: 'islandRun3DWorldRouting', tests: islandRun3DWorldRoutingTests },
+  { label: 'island22WaterDragonMission', tests: island22WaterDragonMissionTests },
   { label: 'island5ThreePilotContract', tests: island5ThreePilotContractTests },
   { label: 'island10RootheartThreeWorldContract', tests: island10RootheartThreeWorldContractTests },
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },

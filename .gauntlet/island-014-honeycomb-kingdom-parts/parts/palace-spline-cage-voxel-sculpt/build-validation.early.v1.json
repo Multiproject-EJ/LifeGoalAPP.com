@@ -1,0 +1,527 @@
+{
+  "schemaVersion": 1,
+  "status": "builder-produced-unreviewed-early-blockout",
+  "constructionFamily": "blender-source-calibrated-spline-cage-voxel-sculpt",
+  "scope": "P0-P7 clay only; P8-P11 absent; no runtime integration",
+  "contract": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-spline-cage-voxel-sculpt/build-contract.v1.json",
+    "sha256": "e6a3c670add9722bcd4bceea16607eb9bbc07bbc9cc65cc829c6f8cd76437515"
+  },
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+    },
+    "turnaroundV2": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-source-faithful-turnaround-v002.png",
+      "sha256": "b8bb417929884d95729c041e46f33161d442292955ffd5069d4e9f60c5c134c5",
+      "authority": "hidden-depth-and-rear-only"
+    }
+  },
+  "cameraFit": {
+    "lensMm": 58,
+    "location": [
+      0,
+      -7.8,
+      3.75
+    ],
+    "target": [
+      0,
+      0,
+      1.76
+    ],
+    "landmarks": {
+      "normalization": "visible-palace landmark bounds; x and image-top y in [0,1]",
+      "target": {
+        "finialApex": [
+          0.5,
+          0.0
+        ],
+        "heroDomeLeft": [
+          0.35,
+          0.105
+        ],
+        "heroDomeRight": [
+          0.65,
+          0.105
+        ],
+        "roseCenter": [
+          0.5,
+          0.35
+        ],
+        "portalApex": [
+          0.5,
+          0.535
+        ],
+        "portalLeft": [
+          0.345,
+          0.64
+        ],
+        "portalRight": [
+          0.655,
+          0.64
+        ],
+        "bayOuterLeft": [
+          0.115,
+          0.61
+        ],
+        "bayInnerLeft": [
+          0.31,
+          0.565
+        ],
+        "bayInnerRight": [
+          0.69,
+          0.565
+        ],
+        "bayOuterRight": [
+          0.885,
+          0.61
+        ],
+        "stairLeft": [
+          0.275,
+          0.995
+        ],
+        "stairRight": [
+          0.725,
+          0.995
+        ]
+      },
+      "achieved": {
+        "finialApex": [
+          0.5,
+          0.0
+        ],
+        "heroDomeLeft": [
+          0.32634,
+          0.09339
+        ],
+        "heroDomeRight": [
+          0.67366,
+          0.09339
+        ],
+        "roseCenter": [
+          0.5,
+          0.38182
+        ],
+        "portalApex": [
+          0.5,
+          0.53551
+        ],
+        "portalLeft": [
+          0.28814,
+          0.65926
+        ],
+        "portalRight": [
+          0.71186,
+          0.65926
+        ],
+        "bayOuterLeft": [
+          0.0,
+          0.69542
+        ],
+        "bayInnerLeft": [
+          0.21855,
+          0.67256
+        ],
+        "bayInnerRight": [
+          0.78145,
+          0.67256
+        ],
+        "bayOuterRight": [
+          1.0,
+          0.69542
+        ],
+        "stairLeft": [
+          0.17239,
+          1.0
+        ],
+        "stairRight": [
+          0.82761,
+          1.0
+        ]
+      },
+      "rmsPercentOfFacadeWidth": 6.552
+    }
+  },
+  "ratios": {
+    "footprintDepthOverWidth": 0.7589,
+    "heightOverWidth": 1.1429,
+    "centralKeepWidthOverWidth": 0.3393,
+    "heroDomeDiameterOverWidth": 0.3036,
+    "frontBayWidthOverWidth": 0.2202
+  },
+  "ratioContractPass": {
+    "footprintDepthOverWidth": true,
+    "heightOverWidth": true,
+    "centralKeepWidthOverWidth": true,
+    "heroDomeDiameterOverWidth": true,
+    "frontBayWidthOverWidth": true
+  },
+  "geometry": {
+    "meshCount": 52,
+    "triangleCount": 61460,
+    "boundaryEdges": 0,
+    "nonmanifoldEdges": 0,
+    "objects": [
+      {
+        "name": "P0_UNIFIED_12_SECTION_CIVIC_SHELL",
+        "triangles": 49268,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_COURT",
+        "triangles": 188,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_1",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_2",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_3",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_4",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_5",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_6",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_7",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P1_ROYAL_STAIR_8",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P2_DEEP_PORTAL_TUNNEL",
+        "triangles": 296,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P2_RECESSED_ROYAL_DOUBLE_DOOR",
+        "triangles": 128,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P2_PORTAL_CENTER_SEAM",
+        "triangles": 108,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_OUTER_LEFT_DEEP_FRAME",
+        "triangles": 264,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_OUTER_LEFT_OCCUPIED_RECESS",
+        "triangles": 128,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_INNER_LEFT_DEEP_FRAME",
+        "triangles": 264,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_INNER_LEFT_OCCUPIED_RECESS",
+        "triangles": 128,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_INNER_RIGHT_DEEP_FRAME",
+        "triangles": 264,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_INNER_RIGHT_OCCUPIED_RECESS",
+        "triangles": 128,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_OUTER_RIGHT_DEEP_FRAME",
+        "triangles": 264,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P3_BAY_OUTER_RIGHT_OCCUPIED_RECESS",
+        "triangles": 128,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_CENTRAL_CIVIC_KEEP",
+        "triangles": 572,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_1",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_1",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_2",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_2",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_3",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_3",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_4",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_4",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_5",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_5",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_6",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_6",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_RECESSED_ROSE_CELL_7",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P4_ROSE_DARK_BACK_7",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P5_UPPER_LANTERN",
+        "triangles": 436,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P5_SHALLOW_SEGMENTED_HERO_ROOF",
+        "triangles": 280,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P5_HERO_CROWN",
+        "triangles": 92,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P6_FRONT_LEFT_SPLINE_TOWER",
+        "triangles": 480,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P6_FRONT_RIGHT_SPLINE_TOWER",
+        "triangles": 480,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P6_REAR_LEFT_SPLINE_TOWER",
+        "triangles": 488,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P6_REAR_RIGHT_SPLINE_TOWER",
+        "triangles": 480,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_APSE_GABLED_BODY",
+        "triangles": 160,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_SERVICE_PORTAL",
+        "triangles": 296,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_SERVICE_RECESS",
+        "triangles": 128,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_OCCUPIED_CELL_1",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_DARK_CELL_1",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_OCCUPIED_CELL_2",
+        "triangles": 336,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_REAR_DARK_CELL_2",
+        "triangles": 164,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_SIDE_SERVICE_BAY_LEFT",
+        "triangles": 324,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      },
+      {
+        "name": "P7_SIDE_SERVICE_BAY_RIGHT",
+        "triangles": 324,
+        "boundaryEdges": 0,
+        "nonmanifoldEdges": 0
+      }
+    ]
+  },
+  "semanticSubassemblies": [
+    "P0",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7"
+  ],
+  "excludedSubassemblies": [
+    "P8",
+    "P9",
+    "P10",
+    "P11"
+  ],
+  "artifacts": {
+    "builder": {
+      "path": "scripts/blender/build_island014_spline_cage_voxel_palace.py",
+      "sha256": "57a5f55f8d8f35b4c261115ca9bee7746ab4ba8a175c2b7e419b9597dae14ebd"
+    },
+    "blend": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/source/palace-spline-cage-voxel-v001.blend",
+      "sha256": "36976ee05421d492939b4ac058572f2d59e206fa552e9defd17ffcbb0149a6dc"
+    },
+    "earlyGlb": {
+      "path": "src/features/gamification/level-worlds/dev/assets/island014/honeycomb-royal-palace-spline-v001.glb",
+      "sha256": "b8b0e9a82532ec9d7dc85cdc23782438d69a2dd14c67bbd315c4495d9ebb21ec",
+      "bytes": 1976324
+    },
+    "evidence": {
+      "directory": "/private/tmp/island014-spline-cage-draft-r02",
+      "files": {
+        "orbit-000-clay.png": "c32ca38ac797771f7831e30d45b92cd467d98b24cc5a3e7f1fcae4ddb0f6a0eb",
+        "orbit-045-clay.png": "ecd38997be6c3d0881a7086f4cdd1f5dea8847626bcd6764a20c106cfbda253b",
+        "orbit-090-clay.png": "3d4784a747b50f4bba1bdf42df818deb51445633c02d1666abac5383d840f703",
+        "orbit-180-clay.png": "bc4a07e8118a10589786659125d6ce8e5f5307ad85905a656caf5c7326445b91",
+        "orbit-315-clay.png": "56af85d4da1ebbd66c1c4bae3379b8e7b14723f83a803c839fa41e393abb1e9e",
+        "phone-clay.png": "dd65360b492fde7d03be3e3ea7e39d76a4fbe69b20c97f3837b5c87fb014d233"
+      }
+    }
+  },
+  "builderStatement": "Geometry and integrity metrics only; builder does not self-approve the visual gate."
+}

@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "auditType": "read-only-r27-true360-great-honeyfall-gate",
+  "createdAt": "2026-08-26T04:52:25+01:00",
+  "auditor": {
+    "role": "independent-read-only-quality-lord",
+    "selfApproval": false,
+    "mutationScope": "Only this audit JSON was written; source, runtime, evidence, manifests and prior audits were not edited."
+  },
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "inspectedFirst": true
+    },
+    "r27": {
+      "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27",
+      "manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r27/capture-manifest.v1.json",
+      "manifestSha256": "34994c00e144a9896a1dbc2aed0d48a712eb12c43f4a2f251c9d82d2931ca471",
+      "runtimeSha256": "88dd1b8631ead7db355abba82e9df210ef266c00529669b3c4b5f1b37a43a3cd",
+      "integrity": {
+        "status": "PASS",
+        "sourceRuntimeAndDependencyHashesMatched": 8,
+        "viewPairsVerified": 10,
+        "evidenceFilesVerified": 20,
+        "hashMismatches": 0
+      }
+    },
+    "comparisonPackets": {
+      "r23Manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r23/capture-manifest.v1.json",
+      "r23ManifestSha256": "5e5bac0ee0467cb9a86961eb4f9bd6429a892e81f903c7abc0fc47d391c2915c",
+      "r24Manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r24/capture-manifest.v1.json",
+      "r24ManifestSha256": "ab05ab0184ba57096ab5032a0acdc616766b04f3c80a65d60fdc54a1ddbc0906"
+    }
+  },
+  "evidenceLimits": {
+    "method": "CPU triangle projection of actual Three.js geometry with approximated material fills",
+    "canProve": [
+      "solid thickness and cross-view persistence",
+      "terrain contact and receiving-pool presence",
+      "silhouette, placement, occlusion and phone-scale readability",
+      "broad highlight geometry"
+    ],
+    "cannotProve": [
+      "physical transmission, attenuation or refraction",
+      "environment reflections and clearcoat response",
+      "GPU transparency ordering",
+      "bloom, post-processing or live HDR lighting"
+    ],
+    "separation": "White glint strips prove authored highlight geometry but not delicious PBR response. Failure at 090/180 and repeated large silhouettes are geometry or placement faults, not CPU-material limitations."
+  },
+  "comparison": [
+    {
+      "revision": "r23",
+      "score": 4.6,
+      "finding": "Cleared the disk-fountain family with one thick cliff sheet, but the isolated close floated in a blue void and did not prove its cliff lip, source reservoir or receiving pool."
+    },
+    {
+      "revision": "r24",
+      "score": 4.7,
+      "finding": "Added a rigid upper ledge/cap to the close, improving upstream contact, but the curtain still floated without a terrain wall or downstream pool."
+    },
+    {
+      "revision": "r27",
+      "score": 4.9,
+      "finding": "The close now includes a real cliff slab, dark rock recess, broad sheet/ropes, highlight streaks and a receiving pool. Terrain binding and continuity are materially improved; orbit visibility is essentially unchanged from r23."
+    }
+  ],
+  "viewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "score": 5.1,
+      "terrainBound": 5.5,
+      "gooey": 5.2,
+      "glisteningProof": 3.6,
+      "orbitLegibility": 5.0,
+      "finding": "The mission is visible as a thick orange front-right body, but palace and Pollinator Yard still compete with it and the cliff attachment is not the first read."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "score": 5.3,
+      "terrainBound": 6.2,
+      "gooey": 5.7,
+      "glisteningProof": 3.8,
+      "orbitLegibility": 5.4,
+      "finding": "Best world view: the sheet crosses the ledge and descends with actual width and depth. It still resembles a trunk/root mass more than a broad sparkling waterfall."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "score": 4.1,
+      "terrainBound": 3.4,
+      "gooey": 3.2,
+      "glisteningProof": 2.8,
+      "orbitLegibility": 2.7,
+      "finding": "The Great Honeyfall is largely occluded; only a cap/fragment remains and the terrain-to-pool chain cannot be parsed."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "score": 4.0,
+      "terrainBound": 2.8,
+      "gooey": 2.6,
+      "glisteningProof": 2.8,
+      "orbitLegibility": 2.2,
+      "finding": "The mission disappears as a named feature. Rear palace authorship remains good, but no Honeyfall system is readable."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "score": 4.4,
+      "terrainBound": 4.0,
+      "gooey": 4.1,
+      "glisteningProof": 3.1,
+      "orbitLegibility": 3.7,
+      "finding": "Several orange ropes persist behind the Pollinator Yard, proving volume but not one coherent cliff-to-pool event."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "score": 5.0,
+      "terrainBound": 5.7,
+      "gooey": 5.2,
+      "glisteningProof": 3.5,
+      "orbitLegibility": 5.0,
+      "finding": "The opposite front oblique restores the attached curtain and broad lower honey mass. The top disk and repeated ropes remain visually simple."
+    },
+    {
+      "view": "orbit-180-materials-off",
+      "score": 3.9,
+      "terrainBound": 2.7,
+      "gooey": 2.5,
+      "glisteningProof": 1.5,
+      "orbitLegibility": 2.2,
+      "finding": "Clay confirms the overall world is true 360 but cannot isolate the front-side mission from the rear."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "score": 5.8,
+      "terrainBound": 6.8,
+      "gooey": 6.3,
+      "glisteningProof": 4.8,
+      "orbitLegibility": 5.4,
+      "finding": "R27's decisive gain: a thick sheet overlaps an actual cliff slab, descends in fused ropes past dark rock and lands in a visible pool. It no longer floats. The flat plank lip, repeated rear lobes, parallel rope ends and circular pool rim still keep it below source-quality liquid sculpture."
+    },
+    {
+      "view": "phone-overview",
+      "score": 4.1,
+      "terrainBound": 4.5,
+      "gooey": 4.3,
+      "glisteningProof": 3.0,
+      "orbitLegibility": 3.8,
+      "finding": "The orange curtain survives at phone scale but remains secondary; large underside columns and sparse atmospheric bowls dominate the world read."
+    }
+  ],
+  "categoryScores": {
+    "terrainSilhouetteAndDepth": 4.9,
+    "true360Authorship": 6.3,
+    "honeyfallTerrainBinding": 5.8,
+    "honeyfallContinuity": 5.6,
+    "honeyfallGooeyRead": 5.4,
+    "honeyfallGlisteningProof": 3.7,
+    "honeyfallOrbitLegibility": 4.0,
+    "honeycombPatternVisibility": 5.4,
+    "atmosphereAndDistantWorld": 3.4,
+    "materialResponseProof": 2.8
+  },
+  "vetoStatus": {
+    "cleared": [
+      {
+        "id": "disk-fountain-silhouette",
+        "since": "r23"
+      },
+      {
+        "id": "floating-isolated-curtain",
+        "since": "r27",
+        "evidence": "The r27 close includes an overlapping cliff wall and receiving pool."
+      },
+      {
+        "id": "planar-card-or-camera-billboard",
+        "evidence": "The curtain has real side thickness and changes coherently across favorable obliques."
+      }
+    ],
+    "active": [
+      {
+        "id": "great-honeyfall-orbit-disappearance",
+        "type": "disappearing-required-form",
+        "evidence": "The mission is not readable at 090 or 180 and remains ambiguous at 270."
+      },
+      {
+        "id": "final-glistening-material-proof-missing",
+        "type": "evidence-sufficiency-veto",
+        "evidence": "CPU glint polygons cannot prove refraction, clearcoat, reflections, attenuation or stable transparent overlap."
+      }
+    ]
+  },
+  "rankedFixes": [
+    {
+      "rank": 1,
+      "fix": "Add authored side and rear terrain-fed spill faces or secondary cliff cascades so 090, 180 and 270 preserve reservoir-to-fall-to-pool identity without duplicating a front card.",
+      "impact": 9.8,
+      "risk": "high"
+    },
+    {
+      "rank": 2,
+      "fix": "Replace the rigid horizontal lip and three bulbous cap lobes with an irregular rock reservoir/meniscus that visibly feeds the broad sheet.",
+      "impact": 8.5,
+      "risk": "medium"
+    },
+    {
+      "rank": 3,
+      "fix": "Merge parallel lower ropes into asymmetrical sheets, fused drips, impact bulges and a non-circular pooled overflow; remove repeated rear sphere lobes.",
+      "impact": 8.3,
+      "risk": "medium"
+    },
+    {
+      "rank": 4,
+      "fix": "Capture a live WebGL fixed-orbit and close proof showing transmission, attenuation, environment reflections, clearcoat glints and stable transparency sorting.",
+      "impact": 8.0,
+      "risk": "low"
+    },
+    {
+      "rank": 5,
+      "fix": "Reduce repeated underside columns and replace distant bowl islets with authored hive silhouettes and real haze so the Honeyfall remains a focal event at phone scale.",
+      "impact": 7.8,
+      "risk": "medium-high"
+    }
+  ],
+  "overall": {
+    "score": 4.9,
+    "minimumPassScore": 8.5,
+    "sourceReturnAchieved": false,
+    "decision": "STOP_R27_NOT_APPROVED",
+    "familyDisposition": "retain r27 terrain-bound close and cliff-sheet family; continue only with orbit-coverage and live-material proof",
+    "summary": "R27 is the best Honeyfall revision so far and clears the floating-curtain veto. It is terrain-bound, moderately gooey and carries authored glint geometry in close proof. It is not visible as a Great Honeyfall around the full orbit, and the CPU packet cannot approve the requested delicious PBR material response."
+  }
+}

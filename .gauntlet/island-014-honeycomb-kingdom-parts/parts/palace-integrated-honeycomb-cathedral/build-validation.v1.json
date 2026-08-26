@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25T15:36:10.794Z",
+  "status": "structurally-validated-awaiting-independent-visual-review",
+  "constructionFamily": "threejs-integrated-extruded-honeycomb-exoskeleton-cathedral",
+  "sourceHashes": {
+    "exactSource": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "exactCrop": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+    "sideRearInferenceAid": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3"
+  },
+  "artifactHashes": {
+    "runtime": "a317063ea3b9a7ec3506861e02959a7e85832b3c134b9d42bb3c03ee12073d7c",
+    "buildContract": "31a6f2a63b4da8fac834498b420a34745e72726225eb54e46aa094053e9b203f",
+    "renderer": "3471d35b111c84e87b1744f80f09d88a2d375309c2c8697a9f4305e79fbfeaf3"
+  },
+  "cathedral": {
+    "constructionFamily": "threejs-integrated-extruded-honeycomb-exoskeleton-cathedral",
+    "facadeWidth": 3.38,
+    "footprintDepth": 2.58,
+    "footprintDepthRatio": 0.7633136094674556,
+    "totalHeight": 3.93,
+    "totalHeightRatio": 1.1627218934911243,
+    "outerDoorWidth": 1.1,
+    "royalRevealDepth": 0.32,
+    "purpleDoorWidth": 0.48,
+    "purpleDoorWidthHeightRatio": 0.64,
+    "embeddedRoseWidth": 0.82,
+    "doorRoseRatio": 1.3414634146341464,
+    "frontDominantBayCount": 4,
+    "quadrantSatelliteCount": 4,
+    "runtimeProjectionCount": 0,
+    "smoothDomeCount": 0,
+    "facadeCardCount": 0,
+    "honeyDripConstruction": "upper-fillet+tapering-stream+terminal-drop",
+    "authoredElevations": [
+      "front",
+      "left",
+      "right",
+      "rear"
+    ]
+  },
+  "metrics": {
+    "meshCount": 25,
+    "triangleCount": 11684,
+    "openPlaneCount": 0,
+    "forbiddenLiveNames": []
+  },
+  "checks": {
+    "sourceHashMatches": true,
+    "cropHashMatches": true,
+    "multiviewHashMatches": true,
+    "contractHashMatches": true,
+    "correctConstructionFamily": true,
+    "runtimeProjectionCountZero": true,
+    "facadeCardCountZero": true,
+    "smoothDomeCountZero": true,
+    "forbiddenLiveMeshCountZero": true,
+    "openPlaneCountZero": true,
+    "footprintDepthRatioInContract": true,
+    "totalHeightRatioInContract": true,
+    "royalDoorWidthInContract": true,
+    "royalRevealDepthAtLeast018": true,
+    "purpleDoorWidthInContract": true,
+    "purpleDoorRatioInContract": true,
+    "embeddedRoseWidthInContract": true,
+    "doorRoseRatioInContract": true,
+    "fourFrontBays": true,
+    "fourQuadrantSatellites": true,
+    "authoredHoneyDripAssembly": true,
+    "allElevationsAuthored": true,
+    "runtimeDrawCallsAtMost48": true,
+    "trianglesAtMost70000": true,
+    "allFirstGateEvidencePresent": true,
+    "allRasterEvidencePresent": true
+  },
+  "verification": {
+    "runtimeSha256": "a317063ea3b9a7ec3506861e02959a7e85832b3c134b9d42bb3c03ee12073d7c",
+    "runtimeMatches": true,
+    "captureManifestSha256": "564042149ad5dcb631df2a328ed57c9912dffcd3a5cb95056fbf91e906975f15",
+    "evidenceFileCount": 26,
+    "evidenceMismatchCount": 0,
+    "views": [
+      {
+        "id": "orbit-000-materials-on",
+        "svgSha256": "9a1d84a00063da13682ceea6814051b9a7f8deaf3515b19f3d446ee1d0ff19d5",
+        "rasterSha256": "33d2def14ddfbcece2404cda2508ccb85aa3ca3bb37914f8d34c43ee6ebc3e4a",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-045-materials-on",
+        "svgSha256": "439f087033bb1e93534f2b799554ad7433ab7a9ce83631692219b6684d95dca8",
+        "rasterSha256": "5f3c1c62e3da8426c4488d9bae92f334fb32d0fa945b03a96f1f3540c6dc2d1a",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-090-materials-on",
+        "svgSha256": "1a9b1d9bd135a83356719e9a78101b8876a3a98371d1bdbfe7439f77ef3a6967",
+        "rasterSha256": "7b18f0a431b2d423b5111f291d7580a3c844d93585bac366854a979fd967fa2a",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-135-materials-on",
+        "svgSha256": "77e0cc9464611f3703d0549542b38c7d92d2a6141afe56c4d8f4ba8cb0f644bd",
+        "rasterSha256": "2efdcbbd74f6a1e0e1e5e2070c69f35f85144388911ae61bd4b183c2a2d40e7f",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-180-materials-on",
+        "svgSha256": "85fb3aa5c74990947e240595d300cc51fb143c8f35285da2fe47337f176ed97b",
+        "rasterSha256": "0927abf55e8e617beca731c6b04898ea922a0d6f5986007a1644f9cb73194d15",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-225-materials-on",
+        "svgSha256": "dbbc7a6915ca3a4aba75413fc912065c736c68167ac1cd89baeee7dac8c595f6",
+        "rasterSha256": "412916da8893ac12eaec14a5a85104aff38e5fa93f8f8ae013efcb25fe0e55ca",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-270-materials-on",
+        "svgSha256": "d5ad9e2f74eca80d052a1aaaad7f74b4af9e6cf8fab1d69612628d53e42cb7ea",
+        "rasterSha256": "b93bb4bd7aa2ac06e5428a6e09f0e589f90da78b0da3db951de6868362fcfd15",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-315-materials-on",
+        "svgSha256": "29e15cc6e7cb3670b88d73ad4f99cac2b94048786961a30a411e7557f54c1a6c",
+        "rasterSha256": "717c698cc83e2e273514c4dc10d954e77b69699b423b9776a6afc823ac71032e",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-000-materials-off",
+        "svgSha256": "4bacd9bfe7656d6066185e1cb48e9423d238f29a81f0957f04e24b9a69dfaf16",
+        "rasterSha256": "6b3e5af1157509d35c3f05ae64228118605ed235736494fac788acc8f7734c2b",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-045-materials-off",
+        "svgSha256": "3ac0db62658b3fa8851a9bd4c8f1e0d643e5cd6a11654c80e66ea954d9538203",
+        "rasterSha256": "c05b923b26a30633dc3394e491a1c70c0143347094f9433933773a4edd9db706",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-315-materials-off",
+        "svgSha256": "3a8525100e2492a6d4f9fcdd94dbdc8832c4b2570e427f6cbab5d8c26609cbf4",
+        "rasterSha256": "fa019090050d349e6c579308d08a26b12d7d2ac51b512ac990dbe7293c377b5f",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "front-close-materials-on",
+        "svgSha256": "fa055a3d1dfd39005b3035724ab20b21324aa1361ca764324aa54f3264045f2c",
+        "rasterSha256": "fcf23d933a09c27d4e5b9787c7a67c29d264e921177f688133c0dffdf4dcfa5e",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "phone-overview",
+        "svgSha256": "da60267156deaa283a9f3dca65282172d063953e56dbbbf7176aa264582006f2",
+        "rasterSha256": "e84a27ac7824a55c820dbdb46f466d9b6f01a29b06d675af7a66ed9cf20af42d",
+        "svgMatches": true,
+        "rasterMatches": true
+      }
+    ]
+  },
+  "passed": true,
+  "note": "Deterministic structural validation and hash verification authorize independent visual review only; they are not likeness approval."
+}

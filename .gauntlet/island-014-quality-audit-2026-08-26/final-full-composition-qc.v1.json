@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-final-full-composition-gate"
+  },
+  "authority": {
+    "source": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "inspectedFirst": true,
+      "role": "exact-pixel-authority"
+    },
+    "userBaselineScore": 4.0,
+    "baselineMet": false
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15",
+    "manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/capture-manifest.v1.json",
+    "integrity": {
+      "valid": true,
+      "verifiedEvidenceFiles": 18,
+      "evidenceMismatches": 0,
+      "sourceMatches": true,
+      "runtimeMatches": true,
+      "dependencyHashesMatch": true,
+      "verifiedRuntime": {
+        "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+        "sha256": "1276c2bce5afd40190c5f72d99b1d41cfd70de5fe1b85c4e7e58c68b439e5b80"
+      },
+      "verifiedDependencies": [
+        {
+          "path": "src/features/gamification/level-worlds/dev/Island14RoyalCathedralV7.ts",
+          "sha256": "83d3619f20cf81cbc03976f864603bf3d5bcc67f36beebfa89ef7681fcb3a36a"
+        },
+        {
+          "path": "src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts",
+          "sha256": "bc4e8a4b2bf3b52cc4599f8ab7d04d6090bdb32645af1f8af0fbab8331307bd7"
+        },
+        {
+          "path": "src/features/gamification/level-worlds/dev/Island14HoneyWorldPresentationV2.ts",
+          "sha256": "18f4acfab73374cd6cdb6dd2fca8940c3ef47fe42345b630bb37beb9bad2a6d9"
+        }
+      ]
+    },
+    "renderLimit": "The CPU evidence does not reproduce physical refraction, environment reflections, post-processing, live route tiles, or GPU transparency ordering. Those omissions do not explain the failed phone framing, sparse composition, flat atmosphere, or remaining macro identity gaps; they do prevent approval of the route and final liquid/material finish."
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "score": 4.1,
+      "finding": "The rebuilt palace is central, broad, and recognizably cathedral-like, with four subordinate domes and a purple door. Large empty radial paving, simplified cliffs, flat materials, small landmark reads, and a void sky remain far from the dense source composition."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "score": 4.0,
+      "finding": "The palace and satellite landmarks now hold real volume and hierarchy, but the broad bare sectors, repeated obelisks, low-detail roofs, and monochrome terrain expose a sparse procedural blockout rather than a lavish inhabited kingdom."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "score": 3.6,
+      "finding": "The side is coherent and no longer a hive mound, but the palace becomes a narrow boxy nave with a dominant simple cylindrical lantern. The island reads as a flat table with isolated structures and no route."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "score": 3.5,
+      "finding": "Rear authorship is present: a gable, service door, cells, four domes, and satellite backs survive. The rear plaza is extremely bare, the central tower remains a simple drum, and atmosphere is almost empty."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "score": 3.6,
+      "finding": "The opposite side confirms real 360-degree construction and distinct landmarks, while also confirming the under-populated radial platform, weak cliff depth, missing route, and simplified palace side silhouette."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "score": 3.9,
+      "finding": "The front oblique preserves cathedral depth and a readable royal entrance, but the near landmark dominates the lower frame and the palace's sparse hex apertures and blank walls do not approach the source's continuous ornate honeycomb enclosure."
+    },
+    {
+      "view": "orbit-180-materials-off",
+      "score": 3.5,
+      "finding": "Clay proves the palace, landmarks, and terrain are volumetric and rear-authored. It also proves that material limitations are not hiding the main gaps: the island is a shallow radial platform with empty sectors and simplified block masses."
+    },
+    {
+      "view": "great-honeyfall-stage-4-close",
+      "score": 3.4,
+      "finding": "The retired hoops and taut cables are gone. The replacement has a thick central cascade and pool, but it still reads as an opaque orange sculptural column with large white patches rather than glossy, translucent, sagging, splashing honey."
+    },
+    {
+      "view": "phone-overview",
+      "score": 2.9,
+      "finding": "This governing view leaves excessive empty blue above a small kingdom while cliffs and honey columns extend beyond the 390x844 gold frame at the sides and bottom. Route, landmark meanings, flower richness, honey gloss, and palace filigree collapse at intended scale."
+    }
+  ],
+  "categoryScores": {
+    "fullComposition": {
+      "score": 3.7,
+      "evidence": "The rebuilt central hierarchy is materially better, but the source's portrait-filling, densely layered cliff-city is still reduced to a shallow radial platform with large bare wedges and isolated objects."
+    },
+    "palaceIdentity": {
+      "score": 4.3,
+      "evidence": "The hive-mound veto is eliminated: a broad gabled cathedral, four subordinate domes, deep purple door, rear gable, and tall lantern are now present. The dominant cylindrical lantern, small entrance, blank pale walls, sparse apertures, and limited tower layering still miss the ornate inhabited palace in the source."
+    },
+    "islandDensity": {
+      "score": 3.3,
+      "evidence": "Large front, side, and rear sectors contain little beyond flowers, rocks, or obelisks. The source fills equivalent space with route tiles, stairs, bridges, hive dwellings, lanterns, bees, paving, honey channels, and tiered gardens."
+    },
+    "phonePov": {
+      "score": 2.9,
+      "evidence": "The world remains underscaled inside the portrait window, surrounded by unused sky, while outer cliff forms and honey columns visibly cross the phone boundary."
+    },
+    "honeyFlowersMaterialSeparation": {
+      "score": 3.2,
+      "evidence": "Flowers are readable accents and the honeyfall now has volume, but terrain, architecture, honey, rocks, and roofs remain compressed into similar yellow-orange values; honey does not separate as translucent glossy liquid and flowers remain coarse clusters."
+    },
+    "atmosphereDepth": {
+      "score": 2.0,
+      "evidence": "The environment is still a flat blue field with tiny specks and intermittent white triangular fragments. The source's clouds, haze, bees, distant inhabited hive islands, sun shafts, and warm/cool aerial depth are absent."
+    }
+  },
+  "overallScore": {
+    "value": 2.9,
+    "governingView": "phone-overview",
+    "comparisonToUserBaseline": -1.1,
+    "finding": "The rebuild is a genuine structural improvement over the retired family, but the least flattering required phone view remains below the user's 4/10 baseline and therefore governs the final result."
+  },
+  "hardVetoes": [
+    {
+      "id": "phone-safe-frame-failure",
+      "present": true,
+      "evidence": "phone-overview visibly places outer cliffs and long honey columns outside the 390x844 gold frame while leaving a large unused blue field above the island."
+    },
+    {
+      "id": "required-route-not-proven",
+      "present": true,
+      "evidence": "The manifest explicitly omits live route tiles. No evidence view demonstrates the required complete 36-tile ring or its clearance between HUD and controller, and the visible plaza shows radial seams rather than the source's readable board route."
+    },
+    {
+      "id": "ambient-artifact-background",
+      "present": true,
+      "evidence": "Front and oblique renders contain white triangular fragments and a nearly empty flat blue field where the source requires authored clouds, haze, distant hive islands, and bee depth."
+    }
+  ],
+  "resolvedPriorVetoes": [
+    {
+      "id": "generic-beehive-mound-palace",
+      "resolved": true,
+      "evidence": "All orbits now show a deep gabled nave, transept volume, four integrated domed bays, and a rear elevation instead of one giant rounded mound."
+    },
+    {
+      "id": "honeyfall-hoop-and-wire-collapse",
+      "resolved": true,
+      "evidence": "The mission close-up replaces the prior giant hoops and taut cables with a thick central cascade and grounded pool. Liquid/material quality remains deficient but the prior geometric veto is gone."
+    },
+    {
+      "id": "unauthored-rear",
+      "resolved": true,
+      "evidence": "Rear materials-on and clay views retain a gable, door, cells, tower bays, roofs, and landmark backs."
+    }
+  ],
+  "rankedRemainingDefects": [
+    {
+      "rank": 1,
+      "defect": "Phone composition still fails the final viewport.",
+      "exactEvidence": "The island occupies only the middle of phone-overview, with roughly the upper third mostly empty blue; outer cliffs and long honey columns cross beyond the gold frame on both sides and below.",
+      "requiredCorrection": "Reblock the world to the actual 390x844 safe window: enlarge and raise the inhabited island body, shorten or bury the lower columns, pull outer plots inward, and validate with real HUD/controller overlays."
+    },
+    {
+      "rank": 2,
+      "defect": "The canonical route is absent from final evidence.",
+      "exactEvidence": "Every full view shows broad radial floor wedges and spokes; the capture manifest confirms live route tiles are omitted. The source's large circular chain of individually readable raised blocks has no demonstrated equivalent.",
+      "requiredCorrection": "Capture the actual 36-tile runtime ring with pawn, landmark controls, top HUD, and controller; adjust only scenery clearance around the canonical route."
+    },
+    {
+      "rank": 3,
+      "defect": "Atmosphere remains a flat void with visible fragments.",
+      "exactEvidence": "All full views use a uniform blue field with sparse green specks; orbit 000, 045, 315, and phone include white triangular fragments. No clouds, haze, bee swarm, distant hive islands, or atmospheric occlusion frame the palace.",
+      "requiredCorrection": "Replace the artifact layer with a purpose-built cloud, haze, bee, and distant inhabited hive-island depth stack composed for the phone camera."
+    },
+    {
+      "rank": 4,
+      "defect": "The palace is cathedral-shaped but still lacks royal honeycomb density.",
+      "exactEvidence": "Orbit 000 shows a broad palace with four domes, yet the central lantern is a simple orange-capped cylinder, the door is small, wall fields are pale and blank, and hex cells read as isolated dark holes instead of an ornate continuous civic exoskeleton.",
+      "requiredCorrection": "Keep the accepted broad mass; add connected gold-bronze ribs, layered occupied bays, larger stair-and-door hierarchy, amber glazing bands, dark recess depth, lanterns, balconies, and inhabited lower tower bodies."
+    },
+    {
+      "rank": 5,
+      "defect": "Island terrain is still a shallow radial table rather than a multi-tier cliff-city.",
+      "exactEvidence": "Side, rear, and clay views show one broad flat top with regular wedge sectors and limited edge occupation; the source has deep irregular tiers, undercuts, bridges, stairs, honeycomb relief, dwellings, and multiple cascading edges.",
+      "requiredCorrection": "Rebuild the terrain silhouette into three irregular occupied terraces with asymmetric undercuts, bridges, stairs, cliff cavities, and broad attached honey sheets."
+    },
+    {
+      "rank": 6,
+      "defect": "Material hierarchy remains near-monochrome.",
+      "exactEvidence": "Palace stone, paving, roofs, terrain, rocks, and honey cluster within pale yellow-orange values; only purple roofs and doors strongly separate. Dark bronze, amber glass, glossy gold edges, transparent honey, and green garden contrast are too weak.",
+      "requiredCorrection": "Establish discrete PBR value families: dark bronze cavities, cream wax stone, reflective gold ribs, emissive amber glazing, translucent low-roughness honey, deep purple royal accents, and darker planted soil."
+    },
+    {
+      "rank": 7,
+      "defect": "The island remains under-populated and visually empty.",
+      "exactEvidence": "Large front and rear sectors contain only a single obelisk or a few flowers. There are no dense small hive dwellings, lamp paths, railings, bridges, bees, market details, or edge buildings comparable to the source.",
+      "requiredCorrection": "Add an inhabited meso-detail layer concentrated along the route, stairs, palace court, landmark approaches, and cliff edges without occluding gameplay."
+    },
+    {
+      "rank": 8,
+      "defect": "The Great Honeyfall is volumetric but not delicious liquid.",
+      "exactEvidence": "The close-up shows a thick orange central column with hard faceted edges, an oversized solid top disk, broad opaque pool, and large white patches; it lacks translucent sheet edges, sag, refraction, strand variation, splash crowns, bubbles, and wet contact.",
+      "requiredCorrection": "Keep the broad cascade geometry but rebuild its cross-section and material response as layered translucent sheets, thick rounded lips, unequal drips, pooled meniscus, splash detail, and moving glints."
+    },
+    {
+      "rank": 9,
+      "defect": "Flower beds remain coarse and subordinate landscape structure is weak.",
+      "exactEvidence": "Front and orbit views show small repeated green disks with sparse pink, white, or purple spikes; they do not create the lush nested beds, petals, vines, and garden framing visible around the source route and cliff edges.",
+      "requiredCorrection": "Use varied low-cost flower clusters with broader petal silhouettes, layered leaf heights, dark soil/planter separation, vines, and controlled palace-framing density."
+    },
+    {
+      "rank": 10,
+      "defect": "Landmarks are more distinct but still do not communicate five strong functions at phone scale.",
+      "exactEvidence": "The purple ring pavilion, egg-like hatchery, purple-roofed building, and other satellites have different silhouettes in orbit views, but their identifying mechanisms, entrances, and honey-civilization detailing largely collapse in phone-overview.",
+      "requiredCorrection": "Preserve the new silhouettes while enlarging one functional hero prop per landmark, strengthening entrances and occupied windows, and testing all five simultaneously with the real phone HUD."
+    }
+  ],
+  "gateEvaluation": {
+    "integrityValid": true,
+    "structuralImprovementConfirmed": true,
+    "worstViewMeetsUserBaseline": false,
+    "hardVetoPresent": true,
+    "singleBoundedCorrectionSufficient": false,
+    "reason": "Phone composition, canonical route proof, atmosphere, terrain hierarchy, palace meso-architecture, materials, density, and liquid finish are independent systems. Fixing one does not make the least flattering required view meet the user's baseline or the production contract."
+  },
+  "action": "retire-family"
+}

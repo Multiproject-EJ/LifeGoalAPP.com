@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Blender boolean recessed honey cathedral facade first geometry gate",
+  "constructionFamily": "blender-boolean-recessed-honey-cathedral-facade",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.blender.v1.json",
+      "sha256": "7519e69e1f9fbe4e278ce4861b6b802a90ede5f65e2fe602ffdd3ffdb7f30c68"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/capture-manifest.blender.v1.json",
+      "sha256": "4aeabc7945e974e0d4a207b5c232f74a13c22b91fafa577e7db17b967e6d7e2a"
+    },
+    "evidenceIntegrity": "All four v004 SVG/JPEG hash pairs match capture-manifest.blender.v1.json; the JPEGs are browser rasterizations of the immutable actual-mesh SVG captures."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "criticalFirstPassFloor": 0.50,
+    "worstViewCategoryGoverns": true,
+    "openHoleOrHollowCardIsHardVeto": true,
+    "oneCorrectionMaximum": true,
+    "correctionsUsed": 0,
+    "coverageNote": "Remaining orbit, wireframe, normals, materials-on, and phone-overview evidence was deferred by the manifest; the present hard veto is already conclusive at the first geometry gate."
+  },
+  "meshBudgetAssessment": {
+    "runtimeMeshParts": 17,
+    "triangles": 2729,
+    "namedMultipartPreserved": true,
+    "budgetPass": true,
+    "finding": "Part and triangle budgets pass, but budget compliance does not cure the visible hollow/open assembly."
+  },
+  "perViewScores": [
+    {
+      "view": "front-000",
+      "sourceIdentity": 0.45,
+      "silhouetteVolume": 0.52,
+      "recessDepth": 0.22,
+      "cathedralHierarchy": 0.48,
+      "fourBayObliqueReadability": 0.70,
+      "attachment": 0.42,
+      "crossViewCoherence": 0.20,
+      "phoneReadability": 0.48,
+      "note": "The front can be parsed as a gable, rose, door, four bays, and side buttresses. The doorway is a blank central plane without a readable recessed arch, the rose lacks a dark backplane, and multiple surfaces only appear continuous because this view hides the open depth."
+    },
+    {
+      "view": "oblique-045",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.20,
+      "recessDepth": 0.05,
+      "cathedralHierarchy": 0.18,
+      "fourBayObliqueReadability": 0.24,
+      "attachment": 0.12,
+      "crossViewCoherence": 0.08,
+      "phoneReadability": 0.15,
+      "note": "Large background-colored voids open through the gable/door assembly, exposing an unsupported outline and card-like planes. Four bays are not reliably countable, and no credible reveal walls or seated solid shell survive the oblique."
+    },
+    {
+      "view": "oblique-315",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.20,
+      "recessDepth": 0.05,
+      "cathedralHierarchy": 0.18,
+      "fourBayObliqueReadability": 0.24,
+      "attachment": 0.12,
+      "crossViewCoherence": 0.08,
+      "phoneReadability": 0.15,
+      "note": "The opposite oblique repeats the open-hole/hollow-card failure, missing recess backs, apparent disconnected facade planes, and loss of four-bay identity."
+    },
+    {
+      "view": "facade-closeup",
+      "sourceIdentity": 0.32,
+      "silhouetteVolume": 0.30,
+      "recessDepth": 0.10,
+      "cathedralHierarchy": 0.24,
+      "fourBayObliqueReadability": null,
+      "attachment": 0.18,
+      "crossViewCoherence": 0.12,
+      "phoneReadability": 0.20,
+      "note": "The close crop confirms a blank doorway plane and shallow disconnected facets rather than a genuinely recessed royal entrance with continuous reveal walls."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.05,
+    "view": "oblique-045",
+    "dimension": "recessDepth"
+  },
+  "categorySummary": {
+    "sourceIdentity": 0.25,
+    "silhouetteVolume": 0.20,
+    "recessDepth": 0.05,
+    "cathedralHierarchy": 0.18,
+    "fourBayObliqueReadability": 0.24,
+    "attachment": 0.12,
+    "crossViewCoherence": 0.08,
+    "phoneReadability": 0.15
+  },
+  "criticalFloorEvaluation": {
+    "floor": 0.50,
+    "worstScore": 0.05,
+    "floorMet": false,
+    "finding": "Every category's governing score is below the 0.50 critical first-pass floor."
+  },
+  "hardVetoEvaluation": {
+    "openHoleOrHollowCard": {
+      "present": true,
+      "views": ["oblique-045", "oblique-315"],
+      "finding": "Large clear voids expose the background through the gable and entrance assembly; shell pieces read as outline/card surfaces without enclosed reveal volume."
+    },
+    "fewerThanFourCountableBays": {
+      "present": true,
+      "views": ["oblique-045", "oblique-315"],
+      "finding": "Four separate occupied bay openings cannot be reliably identified in either required oblique."
+    },
+    "doorHiddenByCentralSlab": {
+      "present": true,
+      "views": ["front-000", "facade-closeup"],
+      "finding": "A blank central plane replaces the required recessed pointed doorway and legible masonry arch."
+    },
+    "unattachedOrNonManifoldHeroShell": {
+      "present": "visual-unattached-read; manifold status not proven without deferred topology evidence",
+      "finding": "Obliques visibly separate shell/gable elements with open gaps; the materials-off set is sufficient for the unattached visual veto even though normals/manifold audit evidence is deferred."
+    }
+  },
+  "largestMismatch": "The source facade is a dense, solid honey cathedral with deeply seated door, rose, and bay openings. This Blender blockout is only convincing frontally; obliques reveal an open skeletal gable and hollow card assembly with no continuous recess volume or coherent attachment to the host.",
+  "correctionDisposition": {
+    "oneBoundedCorrectionIssued": false,
+    "reason": "The hard veto and 0.05 worst score require rebuilding the hero shell, door/rose backplanes, reveal walls, attachments, and bay layout. That is a topology reconstruction, not one bounded correction."
+  },
+  "terminalReason": "The open-hole/hollow-card hard veto is present, four bays fail both required obliques, the door is replaced by a central slab, and the 0.05 worst score is far below the 0.50 critical first-pass floor. The family is not eligible for a bounded correction.",
+  "action": "RETIRE-FAMILY"
+}

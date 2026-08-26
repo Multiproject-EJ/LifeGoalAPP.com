@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewerRole": "independent-quality-lord",
+  "scope": "pollinator-yard-blockout-only",
+  "readOnlyReview": true,
+  "authority": {
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/pollinator-yard/isolation/derived-crops/pollinator-yard-visible-source-crop-v001.png",
+      "sha256": "ceec6cfcb37461e4bf9e2e6d12d293e5aca8fc6f69a92c64120f6b674029728c",
+      "role": "primary-visible-authority"
+    },
+    "secondaryTurnaround": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.png",
+      "sha256": "fdd88e257d046be700a4a6e47aaacaaabcf8fa791a2619d165957eb7690c7063",
+      "role": "hidden-volume-aid-only"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/pollinator-yard/build-contract.v1.json",
+      "sha256": "aeec459c3c8fb89a5d840191aa128e8b0a76690e4c3ef85fdc4dd6ab733638b6"
+    }
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r50",
+    "manifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r50/capture-manifest.v1.json",
+      "sha256": "df9e5dbd0215f5c427b05b216b9ec87a5ecc75c0610a244d1cce12f4ffbc09c2"
+    },
+    "viewsInspected": [
+      "orbit-000-materials-on.png",
+      "orbit-045-materials-on.png",
+      "orbit-090-materials-on.png",
+      "orbit-180-materials-on.png",
+      "orbit-270-materials-on.png",
+      "orbit-315-materials-on.png",
+      "orbit-180-materials-off.png",
+      "phone-overview.png"
+    ],
+    "captureCoverageWarning": "The r50 packet omits contract-requested 135-degree and 225-degree views plus dedicated front-close and rear-close captures. The available 090/180/270 and clay views are nevertheless sufficient to establish the oversized host mass, blank rear slab and flower/rosette silhouette defects."
+  },
+  "blockoutGate": {
+    "thresholdPerStructuralCategory": 0.75,
+    "noStrictRejectRequired": true,
+    "scores": {
+      "source-identity": {
+        "score": 0.52,
+        "evidence": "The gold six-around-one motif is recognizable, but the source's compact bee-centered honeycomb civic symbol becomes a huge freestanding rosette backed by a dark block. The low broad work-yard identity is absent."
+      },
+      "silhouette": {
+        "score": 0.42,
+        "evidence": "At 000 and phone scale the projecting six-cell ring reads as an oversized flower/petal cluster; at 090 and 180 the silhouette collapses to a tall rectangular slab. It is neither low nor broad and competes with the palace rather than remaining a subordinate landmark."
+      },
+      "seven-cell-unity": {
+        "score": 0.58,
+        "evidence": "A six-plus-one arrangement can be inferred frontally, but the outer cells read as near-equal protruding lobes and the center is not a dominant chamber. The count becomes ambiguous in oblique and phone views and does not read as one fused civic building."
+      },
+      "surface-depth": {
+        "score": 0.61,
+        "evidence": "The front pods have real extrusion and recesses, so this is not a flat card. Depth is badly distributed: the decorative cell faces sit ahead of an excessively deep monolithic host slab instead of becoming occupied rooms with connected structural frames."
+      },
+      "side-rear-continuity": {
+        "score": 0.3,
+        "evidence": "The 090, 180 and 270 evidence exposes a large, nearly featureless dark side/rear slab. No subordinate service entry, connected cell-wall continuation, or authored rear civic elevation is legible."
+      },
+      "bee-readability": {
+        "score": 0.28,
+        "evidence": "The authoritative crop's bee is the primary identity cue. No embedded bee relief can be identified confidently in 000/045/315 or phone evidence; the central dark opening reads as a generic recess."
+      },
+      "phone-readability": {
+        "score": 0.46,
+        "evidence": "The landmark is conspicuous only because it is oversized. At phone scale it reads as a yellow flower/gear on a brown cuboid, while the seven-cell count, bee relief, civic entry and low-yard identity are lost."
+      }
+    },
+    "worstCategory": {
+      "name": "bee-readability",
+      "score": 0.28
+    },
+    "structuralWorstCategory": {
+      "name": "side-rear-continuity",
+      "score": 0.3
+    },
+    "allStructuralCategoriesAtOrAboveThreshold": false,
+    "overallScoreOutOf10": 4.5,
+    "result": "FAIL"
+  },
+  "strictRejects": [
+    {
+      "rule": "flower or giant petal silhouette",
+      "status": "TRIGGERED",
+      "evidence": "The six near-equal projecting golden cells form a dominant petal/rosette outline in 000 and phone views."
+    },
+    {
+      "rule": "front-only treatment or blank rear",
+      "status": "TRIGGERED",
+      "evidence": "090/180/270 reveal a large unoccupied rectangular side/rear slab without cell-wall continuation or service entry."
+    },
+    {
+      "rule": "seven equal loose cells without a dominant center chamber",
+      "status": "TRIGGERED",
+      "evidence": "The center does not dominate the outer six and the cells read as protruding lobes attached to a backing block rather than fused occupied rooms."
+    },
+    {
+      "rule": "flat honeycomb badge facade",
+      "status": "NOT_TRIGGERED",
+      "evidence": "The front cells have real extrusion; the failure is their petal-like arrangement and slab host, not paper-thin geometry."
+    },
+    {
+      "rule": "detached bee mascot",
+      "status": "NOT_EVALUABLE_AS_PRESENT",
+      "evidence": "No readable bee is visible in the supplied world or phone evidence."
+    }
+  ],
+  "gauntletAction": {
+    "action": "retire-family",
+    "reason": "The first blockout contains multiple contract strict rejects and critical scores below 0.50. Under the Gauntlet correction economics, it is not eligible to spend the family's bounded correction. This is a structural representation failure, not a material or detail shortfall."
+  },
+  "requestedFalsifiableBoundedCorrection": {
+    "eligibility": "ineligible-under-gauntlet-hard-veto-rule",
+    "counterfactualHypothesisOnly": "If the only root cause were excessive world scale and axial depth, reducing the entire landmark to 0.58-0.64 of its current world scale, compressing the backing depth to at most 0.45 of current depth, enlarging the center chamber face to at least 1.25 times each outer cell, and burying at least 40 percent of every outer-cell radius into one low continuous host could convert the flower-backed slab into a compact fused civic yard without moving the six-plus-one centers.",
+    "strictAllowlist": [
+      "overall pollinator-yard scale only",
+      "host-body depth and height only",
+      "central-chamber face radius only",
+      "outer-cell burial depth only",
+      "one closed rear service-entry recess within the host body"
+    ],
+    "falsifiableTargets": [
+      "000, 045 and 315 each show exactly six outer cells around one visibly larger central chamber",
+      "090, 180 and 270 show no rectangular blank slab occupying more than 25 percent of the landmark projected area",
+      "landmark visible height is no more than 55 percent of the palace visible height in the same world orbit",
+      "phone view reads as honeycomb civic hall rather than flower, planter or brown cuboid",
+      "embedded bee is identifiable in 000 and phone without a detached mascot"
+    ],
+    "expectedWorstStructuralScoreIfSuccessful": 0.76,
+    "hardRejectThresholds": [
+      "retire if any petal/flower silhouette remains",
+      "retire if any side or rear view is a blank slab",
+      "retire if the seven-cell count is ambiguous in any required front or oblique view",
+      "retire if the correction changes the frozen island, route or other landmarks"
+    ],
+    "note": "This hypothesis is recorded because the task requested one falsifiable correction, but the current strict rejects make it unauthorized within this family. It would need root/user approval as a new construction family rather than a Gauntlet correction."
+  },
+  "finalPassPerformed": false
+}

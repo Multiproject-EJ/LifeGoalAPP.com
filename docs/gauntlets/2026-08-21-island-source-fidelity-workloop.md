@@ -73,11 +73,17 @@ image are documented approximations.
 
 ### 0. Intake and identity lock
 
-1. Run the intake helper in dry-run mode.
-2. Resolve any ambiguous filename or collision before applying.
-3. Apply the rename and record the immutable source hash.
-4. Record runtime island number versus any embedded image label.
-5. Copy/select the reference into the repository's target-island reference
+1. Audit both the external source/workflow inventory and relevant repository,
+   branch, worktree, world-factory and authored-routing ownership. A numbered
+   slot is empty only when both sides are empty.
+2. If either side already owns the proposed number, never overwrite it;
+   continue forward to the first genuinely empty slot and adjust all new
+   candidate paths/manifests before intake.
+3. Run the intake helper in dry-run mode.
+4. Resolve any ambiguous filename or collision before applying.
+5. Apply the rename and record the immutable source hash.
+6. Record runtime island number versus any embedded image label.
+7. Copy/select the reference into the repository's target-island reference
    pack without modifying the external source.
 
 ### 1. Reference-lock sheet

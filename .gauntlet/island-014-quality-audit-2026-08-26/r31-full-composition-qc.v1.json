@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-26",
+  "reviewer": "independent-quality-lord",
+  "authority": {
+    "source": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "inspectedFirst": true
+    },
+    "comparisons": {
+      "r23Overall": 3.7,
+      "r23HoneyfallClose": 3.8,
+      "r27Overall": 2.4,
+      "r27HoneyfallClose": 2.4
+    }
+  },
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-r31",
+    "manifestSha256": "ce4b40cc6a22ad8f10ec8a41acf9b0eb6815482dc1c278002fcac409a5b15523",
+    "runtimeSha256": "614baa83792e677a3eb8b6b9b8a9ddb22cca00c07cdac4278b3defe2815f0596",
+    "integrity": {
+      "valid": true,
+      "verifiedEntries": 28,
+      "verifiedEvidenceFiles": 20,
+      "mismatches": 0
+    }
+  },
+  "categoryScores": {
+    "fullComposition": 4.3,
+    "phoneFullView": 3.8,
+    "fiveLandmarkHierarchy": 4.8,
+    "routeProofReadability": 6.4,
+    "honeyMaterialRead": 4.1,
+    "atmosphere": 2.4
+  },
+  "honeyfallGate": {
+    "score": 4.2,
+    "deltaVsR23": 0.4,
+    "deltaVsR27": 1.8,
+    "slabVetoCleared": true,
+    "capVetoCleared": true,
+    "finding": "R31 removes r27's rectangular wall, straight top beam, dark holes, thin card edge, parallel rod field, and circular plinth. The replacement has an irregular rounded lip, separated unequal ribbons, wavy side silhouettes, open negative spaces, and a small weighted terminal drop, so the improvement is confirmed geometry rather than a renderer effect.",
+    "remainingDefects": [
+      "The cascade is still narrow and mostly vertical rather than a broad sagging cliff sheet.",
+      "The dedicated close does not prove cliff attachment, pooled landing, meniscus, splash, or lateral flow.",
+      "CPU evidence cannot prove the intended gloss, translucency, refraction, or delicious material response."
+    ]
+  },
+  "perViewSummary": {
+    "fullOrbits": "Stable versus r27: accepted cathedral hierarchy and route segments remain visible, while sparse terrain and uneven landmark readability persist.",
+    "routeProof": "The dedicated closed countable 36-tile ring remains valid and unchanged.",
+    "phoneOverview": "Safe framing remains, but the kingdom is underscaled with excessive blue and lower void; the complete route and HUD/controller fit are still not demonstrated.",
+    "materialsOff": "Clay reconfirms the palace and landscape are volumetric and the shallow radial platform/empty courts are geometry defects."
+  },
+  "topRemainingVetoes": [
+    {
+      "rank": 1,
+      "id": "assembled-route-and-hud-play-space-not-proven",
+      "evidence": "The isolated 36-tile ring is proven, but no phone gameplay view shows the complete loop, pawn, all five landmark connections, top HUD, and bottom controller together."
+    },
+    {
+      "rank": 2,
+      "id": "phone-scale-source-return-below-baseline",
+      "evidence": "The island remains small inside the phone safe frame with large empty blue and lower void areas; route, flowers, landmark function, and palace filigree collapse at target scale."
+    },
+    {
+      "rank": 3,
+      "id": "authored-atmosphere-depth-absent",
+      "evidence": "Uniform blue, repeated cookie-like distant islands, and projection fragments do not provide the source's clouds, haze, bees, sun shafts, or inhabited aerial depth."
+    }
+  ],
+  "overallScore": {
+    "value": 3.8,
+    "deltaVsR23": 0.1,
+    "deltaVsR27": 1.4,
+    "governingView": "phone-overview",
+    "userBaselineMet": false,
+    "productionApproval": false
+  },
+  "actionRationale": "Keep the r31 Honeyfall family: it clears the r27 geometric veto and is modestly better than r23. Do not approve the assembled island until phone-scale composition, integrated route/HUD proof, Honeyfall landing/contact, and atmosphere are resolved.",
+  "action": "keep-family"
+}

@@ -12,6 +12,8 @@ import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
+  GREAT_HONEYFALL_MAX_STAGE,
+  HONEYCOMB_KINGDOM_ISLAND_NUMBER,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
@@ -22,6 +24,7 @@ import {
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCactusCanyonAvailableDynamite,
   getFirstLightAssemblyAvailableDynamite,
+  getGreatHoneyfallAvailableNectar,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
@@ -30,6 +33,7 @@ import {
   isRootheartPowerworksCollectionComplete,
   resolveCactusCanyonSpiralProgress,
   resolveFirstLightAssemblyCraterProgress,
+  resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
@@ -163,6 +167,71 @@ export function detonateFirstLightAssemblyCharge(options: {
       sectorBefore,
       sectorAfter,
       dynamiteRemaining: getFirstLightAssemblyAvailableDynamite(nextProgress),
+      completedAtMs,
+    };
+  });
+}
+
+export type ActivateGreatHoneyfallReservoirResult =
+  | {
+      status: 'ok';
+      activatedReservoirs: number;
+      nectarRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_nectar' | 'already_complete' };
+
+export function activateGreatHoneyfallReservoir(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ActivateGreatHoneyfallReservoirResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== HONEYCOMB_KINGDOM_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveGreatHoneyfallProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (progress.completedAtMs !== null || progress.activatedReservoirs >= GREAT_HONEYFALL_MAX_STAGE) {
+      return { status: 'already_complete' };
+    }
+    if (getGreatHoneyfallAvailableNectar(progress) <= 0) return { status: 'no_nectar' };
+
+    const nowMs = Date.now();
+    const activatedReservoirs = Math.min(
+      GREAT_HONEYFALL_MAX_STAGE,
+      progress.activatedReservoirs + 1,
+    ) as 1 | 2 | 3 | 4;
+    const completedAtMs = activatedReservoirs >= GREAT_HONEYFALL_MAX_STAGE
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    const nextProgress = {
+      ...progress,
+      nectarChargesSpent: progress.nectarChargesSpent + 1,
+      activatedReservoirs,
+      lastActivatedReservoir: activatedReservoirs,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: 'activate_great_honeyfall_reservoir',
+    });
+    return {
+      status: 'ok',
+      activatedReservoirs,
+      nectarRemaining: getGreatHoneyfallAvailableNectar(nextProgress),
       completedAtMs,
     };
   });

@@ -1,0 +1,4 @@
+ADMITTED  (reference)  pHash=17220261823064081058
+
+Command:
+python3 /Users/ejmac/.codex/skills/img2threejs/forge/stage1_intake/check_reference_admission.py docs/visual-references/island-014-honeycomb-kingdom/014-source.png

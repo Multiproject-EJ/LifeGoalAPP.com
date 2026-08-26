@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-final-family-gate"
+  },
+  "subject": "Island 014 Royal Palace interlocked nave-transept macro shell after bounded correction",
+  "constructionFamily": "procedural-threejs-interlocked-nave-transept-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v5.json",
+      "sha256": "a823119aa8410647f996f01051a68a3f335d80234e31250e6c092270d975cc68"
+    },
+    "correctionAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v4.json",
+      "sha256": "b6955ceee6bd56273e5dbece94cb42e21f59c063761fee8f81ab45dde35cfa8b"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "minimumCorrectionGain": 0.10,
+    "mandatoryRetireBelow": 0.75,
+    "correctionBudgetRemaining": 0,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.72,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.69,
+      "sideRearCoherence": 0.79,
+      "note": "Inward shoulder overlap and smaller satellite domes improve the unified front silhouette. The central front mass and tower drums remain large rectangular slabs, so the palace still reads as a blocky five-tower castle rather than the source's faceted honeycomb cathedral."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.73,
+      "depthIntegration": 0.80,
+      "sourceLikeness": 0.70,
+      "sideRearCoherence": 0.81,
+      "note": "The corrected shoulders interpenetrate more convincingly and preserve closed depth. Their drums remain straight box towers with weak transition into the central keep."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.75,
+      "depthIntegration": 0.82,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.83,
+      "note": "Hidden side is stable and coherent, but the nave, keep, and tower drums remain visibly separate rectilinear masses."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.74,
+      "depthIntegration": 0.82,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.83,
+      "note": "Least-flattering transition retains real volume and has no hard collapse; the expected continuous cathedral taper is not achieved."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.73,
+      "depthIntegration": 0.82,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.83,
+      "note": "Rear load chain remains seated and symmetric. Rectangular apse and shoulder walls dominate the macro read."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.74,
+      "depthIntegration": 0.82,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.83,
+      "note": "Opposite transition confirms coherent overlap but the same box-drum and slab-wall identity limitation."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.75,
+      "depthIntegration": 0.82,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.83,
+      "note": "Opposite side remains robust; silhouette improvement is too small to resolve the generic block construction."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.73,
+      "depthIntegration": 0.80,
+      "sourceLikeness": 0.70,
+      "sideRearCoherence": 0.81,
+      "note": "Front-adjacent view confirms closer shoulder overlap but not the source's layered faceted tower-to-keep transitions."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.69,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "hypothesisEvaluation": {
+    "hypothesis": "Moving the four existing BASE/DRUM tower stages inward to overlap the nave/transept envelope while tapering the existing keep and cross-body stage widths will convert the current five-block silhouette into the source's interlocked cathedral shoulders without reducing the proven side/rear coherence.",
+    "result": "partially-supported-but-insufficient",
+    "evidence": "The shoulders overlap more and side/rear coherence is preserved, but the front remains dominated by rectangular nave, keep, and drum faces rather than a continuous faceted cathedral taper.",
+    "priorWorstScore": 0.62,
+    "correctedWorstScore": 0.69,
+    "worstScoreGain": 0.07,
+    "minimumRequiredGain": 0.10,
+    "minimumGainSatisfied": false,
+    "mandatoryRetireThreshold": 0.75,
+    "retireThresholdSatisfied": false,
+    "approvalThreshold": 0.85,
+    "approvalSatisfied": false,
+    "maximumCriticalRegression": 0.00,
+    "regressionLimitSatisfied": true,
+    "vetoReturned": false
+  },
+  "vetoes": [],
+  "largestMismatch": "The exact source's macro silhouette is generated by layered faceted masses that continuously taper from broad lower honeycomb shoulders into the central keep. The corrected model brings its parts closer together but retains broad rectangular nave walls, a box-like keep, and box drums under spherical domes, so the construction still reads as assembled blocks rather than one honeycomb cathedral.",
+  "terminalReason": "The corrected worst score is 0.69, below the mandatory 0.75 retirement threshold and 0.85 approval gate. Its +0.07 worst-score gain also misses the required +0.10, and this construction family has no correction budget remaining.",
+  "action": "retire-family"
+}

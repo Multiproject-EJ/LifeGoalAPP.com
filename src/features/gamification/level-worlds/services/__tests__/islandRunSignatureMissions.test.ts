@@ -6,6 +6,7 @@ import {
   FROSTWELL_DRILL_TILE_INDICES,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
+  GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_DICE,
   SUNKEN_SANDS_FIRST_TREASURE_ID,
@@ -14,11 +15,14 @@ import {
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
   collectFirstLightAssemblyDynamiteForLanding,
+  collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
   getCactusCanyonAvailableDynamite,
   getCactusCanyonDynamiteQuantityForTile,
   getCelestialRedockingDockedPlatformCount,
   getFirstLightAssemblyAvailableDynamite,
+  getGreatHoneyfallAvailableNectar,
+  getGreatHoneyfallNectarQuantityForTile,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
@@ -28,12 +32,14 @@ import {
   resolveFirstLightAssemblyCraterProgress,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
+  resolveGreatHoneyfallProgress,
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
   sanitizeIslandRunSignatureMissionProgress,
 } from '../islandRunSignatureMissions';
 import {
+  activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
@@ -238,6 +244,43 @@ async function seedFirstLightAssembly(options: {
   refreshIslandRunStateFromLocal(session);
 }
 
+async function seedGreatHoneyfall(options: {
+  activatedReservoirs?: 0 | 1 | 2 | 3 | 4;
+  nectarEarned?: number;
+  nectarSpent?: number;
+  completedAtMs?: number | null;
+} = {}): Promise<void> {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+  const session = makeSession();
+  const base = readIslandRunGameStateRecord(session);
+  const key = getIslandRunSignatureMissionKey(0, 14);
+  await writeIslandRunGameStateRecord({
+    session,
+    client: null,
+    record: {
+      ...base,
+      currentIslandNumber: 14,
+      cycleIndex: 0,
+      signatureMissionProgressByIsland: {
+        [key]: {
+          missionId: 'great-honeyfall-coronation',
+          version: 1,
+          nectarChargesEarned: options.nectarEarned ?? 0,
+          nectarChargesSpent: options.nectarSpent ?? 0,
+          activatedReservoirs: options.activatedReservoirs ?? 0,
+          lastActivatedReservoir: options.activatedReservoirs ?? null,
+          completedAtMs: options.completedAtMs ?? null,
+          updatedAtMs: 1,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(session);
+}
+
 export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'Celestial Great Re-Docking advances once per roll and locks platforms at 5, 10, 15, and 20',
@@ -414,6 +457,61 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       });
       assertEqual(progress.claimedDynamiteTileIndices.length, 5, 'valid unique cache claims are unioned');
       assertEqual(progress.chargesDetonated, 4, 'furthest valid excavation wins');
+    },
+  },
+  {
+    name: 'Honeycomb Kingdom places four visible royal-nectar pickups away from landmark doors and caps collection',
+    run: () => {
+      const map = applyLandmarkDoorTiles(
+        generateTileMap(14, getIslandRarity(14), 'honeycomb-kingdom', 2),
+        { expandedActiveStopId: 'hatchery' },
+      );
+      const nectarTiles = map.filter((entry) => entry.signatureMissionKind === 'great_honeyfall_nectar');
+      assertEqual(nectarTiles.length, GREAT_HONEYFALL_MAX_STAGE, 'four royal nectar pickups are distributed around the route');
+      assert(nectarTiles.every((entry) => entry.tileType !== 'landmark_door'), 'nectar pickups remain clear of landmark doors');
+      assertEqual(getGreatHoneyfallNectarQuantityForTile(14, 11, 36), 1, 'authored nectar landing grants one charge');
+      assertEqual(getGreatHoneyfallNectarQuantityForTile(13, 11, 36), 0, 'other islands do not grant royal nectar');
+      let ledger = {};
+      for (const tileIndex of [2, 11, 20, 29, 2]) {
+        ledger = collectGreatHoneyfallNectarForLanding({
+          ledger, islandNumber: 14, cycleIndex: 0, tileIndex, tileCount: 36, nowMs: tileIndex + 10,
+        }).ledger;
+      }
+      const progress = resolveGreatHoneyfallProgress({ ledger, islandNumber: 14, cycleIndex: 0 });
+      assertEqual(progress.nectarChargesEarned, GREAT_HONEYFALL_MAX_STAGE, 'nectar collection caps at the four mission stages');
+      assertEqual(getGreatHoneyfallAvailableNectar(progress), GREAT_HONEYFALL_MAX_STAGE, 'all earned nectar is ready to spend');
+    },
+  },
+  {
+    name: 'Great Honeyfall activation spends one nectar per reservoir and completes exactly once',
+    run: async () => {
+      await seedGreatHoneyfall({ activatedReservoirs: 3, nectarEarned: 4, nectarSpent: 3 });
+      const first = await activateGreatHoneyfallReservoir({ session: makeSession(), client: null });
+      assertEqual(first.status, 'ok', 'earned nectar activates the final reservoir');
+      const state = readIslandRunGameStateRecord(makeSession());
+      const progress = resolveGreatHoneyfallProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 14, cycleIndex: 0 });
+      assertEqual(progress.activatedReservoirs, GREAT_HONEYFALL_MAX_STAGE, 'fourth reservoir persists');
+      assertEqual(progress.nectarChargesSpent, GREAT_HONEYFALL_MAX_STAGE, 'exactly one final charge is consumed');
+      assert(progress.completedAtMs !== null, 'coronation completion timestamp persists');
+      assertEqual((await activateGreatHoneyfallReservoir({ session: makeSession(), client: null })).status, 'already_complete', 'completed coronation is idempotent');
+    },
+  },
+  {
+    name: 'Great Honeyfall sanitizer and conflict merge preserve furthest coronation stage',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 14);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'great-honeyfall-coronation', activated_reservoirs: 2, nectar_charges_earned: 3, nectar_charges_spent: 2, updated_at_ms: 12 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'great-honeyfall-coronation', activated_reservoirs: 4, nectar_charges_earned: 4, nectar_charges_spent: 4, completed_at_ms: 30, updated_at_ms: 40 },
+      });
+      const progress = resolveGreatHoneyfallProgress({
+        ledger: mergeIslandRunSignatureMissionProgress(remote, local), islandNumber: 14, cycleIndex: 0,
+      });
+      assertEqual(progress.activatedReservoirs, GREAT_HONEYFALL_MAX_STAGE, 'furthest reservoir stage wins');
+      assertEqual(progress.nectarChargesEarned, GREAT_HONEYFALL_MAX_STAGE, 'maximum earned nectar survives merge');
+      assertEqual(progress.completedAtMs, 30, 'first coronation completion survives merge');
     },
   },
   {

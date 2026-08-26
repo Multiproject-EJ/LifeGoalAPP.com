@@ -467,6 +467,7 @@ import {
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
+  activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
   detonateFirstLightAssemblyCharge,
@@ -481,6 +482,7 @@ import {
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_SPIN_METERS,
+  GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_FIRST_TREASURE_NAME,
@@ -488,6 +490,7 @@ import {
   getCactusCanyonAvailableDynamite,
   getCelestialRedockingDockedPlatformCount,
   getFirstLightAssemblyAvailableDynamite,
+  getGreatHoneyfallAvailableNectar,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
@@ -496,6 +499,7 @@ import {
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveFirstLightAssemblyCraterProgress,
+  resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
@@ -723,9 +727,11 @@ const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
-const BUILD_HOLD_REPEAT_DELAY_MS = 520;
-const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 500;
-const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 1_500;
+const BUILD_TAP_STEP_ANIMATION_DELAY_MS = 1_150;
+const BUILD_HOLD_REPEAT_DELAY_MS = 1_250;
+const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 3_200;
+const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 4_600;
+const BUILD_CAMERA_HANDOFF_DURATION_MS = 1_100;
 
 type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
   reviewId: number;
@@ -1945,6 +1951,8 @@ export function IslandRunBoardPrototype({
   const [cactusCanyonLastBlastSegments, setCactusCanyonLastBlastSegments] = useState<number | null>(null);
   const [cactusCanyonConstructionSequence, setCactusCanyonConstructionSequence] = useState(0);
   const [cactusCanyonPendingBlast, setCactusCanyonPendingBlast] = useState<{ before: number; after: number } | null>(null);
+  const [isActivatingGreatHoneyfall, setIsActivatingGreatHoneyfall] = useState(false);
+  const [greatHoneyfallConstructionSequence, setGreatHoneyfallConstructionSequence] = useState(0);
   const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
   const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
@@ -2638,6 +2646,12 @@ export function IslandRunBoardPrototype({
   const [showBuildPanel, setShowBuildPanel] = useState(false);
   const [isBuildBurstActive, setIsBuildBurstActive] = useState(false);
   const [isBuildCameraCooldownActive, setIsBuildCameraCooldownActive] = useState(false);
+  const [isBuildSequenceActive, setIsBuildSequenceActive] = useState(false);
+  const isBuildSequenceActiveRef = useRef(false);
+  const [isBuildCameraHandoffActive, setIsBuildCameraHandoffActive] = useState(false);
+  const buildBurstTimeoutRef = useRef<number | null>(null);
+  const buildCameraCooldownTimeoutRef = useRef<number | null>(null);
+  const buildCameraHandoffTimeoutRef = useRef<number | null>(null);
   const [isBuildOpenQueued, setIsBuildOpenQueued] = useState(false);
   const [buildCameraFocusRequest, setBuildCameraFocusRequest] = useState<{
     preset: Island5CameraPresetId;
@@ -2796,17 +2810,25 @@ export function IslandRunBoardPrototype({
     if (reviewId !== undefined && current?.reviewId !== reviewId) return;
     buildLevelCompletionRef.current = null;
     setBuildLevelCompletion(null);
+    // A completed level has now received its full reveal. Release the prior
+    // landmark's choreography lock before exposing the next target so its
+    // camera handoff cannot be cancelled by stale burst/cooldown ownership.
+    if (buildBurstTimeoutRef.current !== null) {
+      window.clearTimeout(buildBurstTimeoutRef.current);
+      buildBurstTimeoutRef.current = null;
+    }
+    if (buildCameraCooldownTimeoutRef.current !== null) {
+      window.clearTimeout(buildCameraCooldownTimeoutRef.current);
+      buildCameraCooldownTimeoutRef.current = null;
+    }
+    setIsBuildBurstActive(false);
+    setIsBuildCameraCooldownActive(false);
   }, []);
 
   const handleAdvanceBuildLevelReview = useCallback(() => {
     const current = buildLevelCompletionRef.current;
     if (!current) return;
-    if (Date.now() < current.minAdvanceAtMs) {
-      const queued = { ...current, isAdvanceQueued: true };
-      buildLevelCompletionRef.current = queued;
-      setBuildLevelCompletion(queued);
-      return;
-    }
+    if (Date.now() < current.minAdvanceAtMs) return;
     clearBuildLevelReview(current.reviewId);
   }, [clearBuildLevelReview]);
 
@@ -2816,10 +2838,6 @@ export function IslandRunBoardPrototype({
     const markReadyTimeoutId = window.setTimeout(() => {
       const current = buildLevelCompletionRef.current;
       if (!current || current.reviewId !== reviewId) return;
-      if (current.isAdvanceQueued) {
-        clearBuildLevelReview(reviewId);
-        return;
-      }
       if (current.isAdvanceReady) return;
       const ready = { ...current, isAdvanceReady: true };
       buildLevelCompletionRef.current = ready;
@@ -3120,6 +3138,13 @@ export function IslandRunBoardPrototype({
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
   const cactusCanyonAvailableDynamite = getCactusCanyonAvailableDynamite(cactusCanyonSpiralProgress);
   const cactusCanyonSpiralCompleted = cactusCanyonSpiralProgress.completedAtMs !== null;
+  const greatHoneyfallProgress = useMemo(() => resolveGreatHoneyfallProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 14,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const greatHoneyfallAvailableNectar = getGreatHoneyfallAvailableNectar(greatHoneyfallProgress);
+  const greatHoneyfallCompleted = greatHoneyfallProgress.completedAtMs !== null;
   const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -3367,14 +3392,12 @@ export function IslandRunBoardPrototype({
   const buildTapQueueRef = useRef<Array<{ stopIndex: number; targetPartNumber: 1 | 2 | 3 | 4 | 5 }>>([]);
   const isBuildTapQueueProcessingRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
-  const buildBurstTimeoutRef = useRef<number | null>(null);
-  const buildCameraCooldownTimeoutRef = useRef<number | null>(null);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
-  const markBuildChoreographyActive = useCallback((lingerMs = 2400): void => {
+  const markBuildChoreographyActive = useCallback((lingerMs = 3_200): void => {
     setIsBuildBurstActive(true);
     setIsBuildCameraCooldownActive(true);
     if (buildBurstTimeoutRef.current !== null) window.clearTimeout(buildBurstTimeoutRef.current);
@@ -3396,10 +3419,13 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (!showBuildPanel) {
       buildTapQueueRef.current = [];
+      isBuildSequenceActiveRef.current = false;
+      setIsBuildSequenceActive(false);
       holdBuildSpendActiveRef.current = false;
       setIsBuildHoldActive(false);
       setIsBuildBurstActive(false);
       setIsBuildCameraCooldownActive(false);
+      setIsBuildCameraHandoffActive(false);
       if (buildBurstTimeoutRef.current !== null) {
         window.clearTimeout(buildBurstTimeoutRef.current);
         buildBurstTimeoutRef.current = null;
@@ -3407,6 +3433,10 @@ export function IslandRunBoardPrototype({
       if (buildCameraCooldownTimeoutRef.current !== null) {
         window.clearTimeout(buildCameraCooldownTimeoutRef.current);
         buildCameraCooldownTimeoutRef.current = null;
+      }
+      if (buildCameraHandoffTimeoutRef.current !== null) {
+        window.clearTimeout(buildCameraHandoffTimeoutRef.current);
+        buildCameraHandoffTimeoutRef.current = null;
       }
       clearBuildLevelReview();
     }
@@ -6598,7 +6628,6 @@ export function IslandRunBoardPrototype({
   // ── BuildModalV2 adapter model ───────────────────────────────────────────
   // Derives the focused single-landmark view from PR 1 sequential helpers.
   // All gameplay reads happen here; BuildModalV2 remains presentational.
-  const activeBuildDiscountRate = buildDiscountExpiresAtMs && buildDiscountExpiresAtMs > Date.now() ? BUILD_DISCOUNT_RATE : 0;
   const buildModalStopBuildStateByIndex = useMemo(() => (
     islandNumber === 1
       ? __storeState.stopBuildStateByIndex.map((entry, stopIndex) => stopIndex === 4 && entry
@@ -6610,6 +6639,14 @@ export function IslandRunBoardPrototype({
           : entry)
       : __storeState.stopBuildStateByIndex
   ), [__storeState.stopBuildStateByIndex, islandNumber]);
+  const hasRemainingIslandBuilds = buildModalStopBuildStateByIndex.some((entry) => (
+    !entry || !isStopBuildFullyComplete(entry)
+  ));
+  const activeBuildDiscountRate = hasRemainingIslandBuilds
+    && buildDiscountExpiresAtMs
+    && buildDiscountExpiresAtMs > Date.now()
+    ? BUILD_DISCOUNT_RATE
+    : 0;
   const buildModalV2ViewModel = useMemo(() => deriveBuildModalV2ViewModel({
     stopBuildStateByIndex: buildModalStopBuildStateByIndex,
     islandStopPlan,
@@ -6622,7 +6659,10 @@ export function IslandRunBoardPrototype({
     buildLevelCompletion
       ? {
           title: buildLevelCompletion.title,
+          stopId: buildLevelCompletion.stopId,
+          previousLevel: Math.max(0, buildLevelCompletion.level - 1),
           level: buildLevelCompletion.level,
+          presentationSequence: buildLevelCompletion.reviewId,
           isFullyBuilt: buildLevelCompletion.isFullyBuilt,
           isAdvanceReady: buildLevelCompletion.isAdvanceReady,
           isAdvanceQueued: buildLevelCompletion.isAdvanceQueued,
@@ -6630,6 +6670,11 @@ export function IslandRunBoardPrototype({
         }
       : null
   ), [buildLevelCompletion, buildModalV2ViewModel.activeLandmark]);
+
+  useEffect(() => {
+    if (hasRemainingIslandBuilds || buildDiscountExpiresAtMs === null) return;
+    setBuildDiscountExpiresAtMs(null);
+  }, [buildDiscountExpiresAtMs, hasRemainingIslandBuilds]);
 
   const constructionPresentation = useMemo(() => deriveIslandRunConstructionPresentation({
     isOpen: showBuildPanel,
@@ -6643,6 +6688,13 @@ export function IslandRunBoardPrototype({
   const activeBuildCameraStopId = showBuildPanel
     ? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
     : null;
+  const isBuildCameraHandoffPending = Boolean(
+    showBuildPanel
+    && !buildLevelCompletion
+    && activeBuildCameraStopId
+    && previousBuildCameraStopIdRef.current
+    && previousBuildCameraStopIdRef.current !== activeBuildCameraStopId,
+  );
   useEffect(() => {
     if (!showBuildPanel) {
       if (previousBuildCameraStopIdRef.current !== null) {
@@ -6650,13 +6702,18 @@ export function IslandRunBoardPrototype({
         setBuildCameraFocusRequest(null);
         setFocusedStopId(null);
         setCameraMode('overview_manual');
+        setIsBuildCameraHandoffActive(false);
+        if (buildCameraHandoffTimeoutRef.current !== null) {
+          window.clearTimeout(buildCameraHandoffTimeoutRef.current);
+          buildCameraHandoffTimeoutRef.current = null;
+        }
         window.requestAnimationFrame(() => boardCameraRef.current?.goOverview());
       }
       return;
     }
-    // Construction owns the current shot. If completing a part/level advances
-    // the sequential target, defer that landmark-to-landmark camera move until
-    // the build burst (including its existing recent-action linger) is quiet.
+    // Construction owns the current shot. The full level reveal clears the old
+    // burst/cooldown before a new landmark is exposed, so this guard protects
+    // only genuinely active work and never strands the camera at the prior plot.
     if (constructionPresentation.cameraLocked) return;
     // A completed final landmark has no next sequential target. While Build is
     // still open, preserve the last close-up instead of zooming to overview.
@@ -6668,6 +6725,16 @@ export function IslandRunBoardPrototype({
     if (previousStopId === activeBuildCameraStopId) return;
 
     previousBuildCameraStopIdRef.current = activeBuildCameraStopId;
+    if (previousStopId !== null) {
+      setIsBuildCameraHandoffActive(true);
+      if (buildCameraHandoffTimeoutRef.current !== null) {
+        window.clearTimeout(buildCameraHandoffTimeoutRef.current);
+      }
+      buildCameraHandoffTimeoutRef.current = window.setTimeout(() => {
+        buildCameraHandoffTimeoutRef.current = null;
+        setIsBuildCameraHandoffActive(false);
+      }, BUILD_CAMERA_HANDOFF_DURATION_MS);
+    }
     setBuildCameraFocusRequest({
       preset,
       transition: previousStopId === null ? 'standard' : 'quick',
@@ -7828,11 +7895,19 @@ export function IslandRunBoardPrototype({
         } else if (landedTile?.tileType === 'build_discount') {
           setShowEncounterModal(false);
           setEncounterResolved(false);
-          const durationMs = BUILD_DISCOUNT_MIN_DURATION_MS + Math.floor(Math.random() * (BUILD_DISCOUNT_MAX_DURATION_MS - BUILD_DISCOUNT_MIN_DURATION_MS + 1));
-          const durationMinutes = Math.max(2, Math.round(durationMs / 60000));
-          setBuildDiscountExpiresAtMs(Date.now() + durationMs);
-          setLandingText(`🔨 Build Rush! 25% off building for ${durationMinutes} minutes.`);
-          setShowBuildPanel(true);
+          const hasUnfinishedBuild = runtimeStateRef.current.stopBuildStateByIndex.some((entry) => (
+            !entry || !isStopBuildFullyComplete(entry)
+          ));
+          if (!hasUnfinishedBuild) {
+            setBuildDiscountExpiresAtMs(null);
+            setLandingText('🏝️ Every landmark is already Level 3 — the Build Rush crew celebrates instead!');
+          } else {
+            const durationMs = BUILD_DISCOUNT_MIN_DURATION_MS + Math.floor(Math.random() * (BUILD_DISCOUNT_MAX_DURATION_MS - BUILD_DISCOUNT_MIN_DURATION_MS + 1));
+            const durationMinutes = Math.max(2, Math.round(durationMs / 60000));
+            setBuildDiscountExpiresAtMs(Date.now() + durationMs);
+            setLandingText(`🔨 Build Rush! 25% off building for ${durationMinutes} minutes.`);
+            setShowBuildPanel(true);
+          }
         } else if (landedTile?.tileType === 'free_ticket') {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -10813,6 +10888,8 @@ export function IslandRunBoardPrototype({
   // the requested milestone, then reprices it against the latest canonical
   // snapshot before spending so rapid taps cannot overspend stale prices.
   const processBuildTapQueue = useCallback(async (): Promise<void> => {
+    isBuildSequenceActiveRef.current = true;
+    setIsBuildSequenceActive(true);
     try {
       while (buildTapQueueRef.current.length > 0) {
         if (buildLevelCompletionRef.current) {
@@ -10822,19 +10899,31 @@ export function IslandRunBoardPrototype({
         const nextTap = buildTapQueueRef.current.shift();
         if (!nextTap) continue;
         const maxSteps = resolveQueuedBuildPartSteps(nextTap.stopIndex, nextTap.targetPartNumber);
-        if (maxSteps > 0) await handleSpendEssenceOnBuild(nextTap.stopIndex, maxSteps);
+        // A cumulative milestone is still one player choice, but each canonical
+        // spend lands as its own visible construction beat. This prevents a
+        // Part 5 tap from jumping through every robot phase in one frame.
+        for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1) {
+          if (buildLevelCompletionRef.current) break;
+          markBuildChoreographyActive();
+          const spendApplied = await handleSpendEssenceOnBuild(nextTap.stopIndex, 1);
+          if (!spendApplied || buildLevelCompletionRef.current) break;
+          await wait(BUILD_TAP_STEP_ANIMATION_DELAY_MS);
+        }
       }
     } finally {
       isBuildTapQueueProcessingRef.current = false;
+      isBuildSequenceActiveRef.current = false;
+      setIsBuildSequenceActive(false);
     }
-  }, [handleSpendEssenceOnBuild, resolveQueuedBuildPartSteps]);
+  }, [handleSpendEssenceOnBuild, markBuildChoreographyActive, resolveQueuedBuildPartSteps]);
 
   const handleBuildPartChoice = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): void => {
-    if (buildLevelCompletionRef.current) {
-      handleAdvanceBuildLevelReview();
-      return;
-    }
-    markBuildChoreographyActive();
+    if (
+      buildLevelCompletionRef.current
+      || isBuildSequenceActiveRef.current
+      || isBuildCameraHandoffActive
+      || isBuildCameraHandoffPending
+    ) return;
     buildTapQueueRef.current.push({
       stopIndex,
       targetPartNumber,
@@ -10843,7 +10932,7 @@ export function IslandRunBoardPrototype({
       isBuildTapQueueProcessingRef.current = true;
       void processBuildTapQueue();
     }
-  }, [handleAdvanceBuildLevelReview, markBuildChoreographyActive, processBuildTapQueue]);
+  }, [isBuildCameraHandoffActive, isBuildCameraHandoffPending, processBuildTapQueue]);
 
   const stopBuildHold = useCallback((): void => {
     holdBuildSpendActiveRef.current = false;
@@ -10852,7 +10941,13 @@ export function IslandRunBoardPrototype({
   }, [markBuildChoreographyActive]);
 
   const startBuildHold = useCallback((stopIndex: number): void => {
-    if (holdBuildSpendActiveRef.current || buildLevelCompletionRef.current) return;
+    if (
+      holdBuildSpendActiveRef.current
+      || buildLevelCompletionRef.current
+      || isBuildSequenceActiveRef.current
+      || isBuildCameraHandoffActive
+      || isBuildCameraHandoffPending
+    ) return;
     holdBuildSpendActiveRef.current = true;
     setIsBuildHoldActive(true);
     markBuildChoreographyActive(4000);
@@ -10871,7 +10966,7 @@ export function IslandRunBoardPrototype({
         await wait(BUILD_HOLD_REPEAT_DELAY_MS);
       }
     })();
-  }, [handleSpendEssenceOnBuild, markBuildChoreographyActive, stopBuildHold]);
+  }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive, stopBuildHold]);
 
   const handleCompleteActiveStop = (successMessage?: string) => {
     if (!activeStopId) return;
@@ -12819,6 +12914,52 @@ export function IslandRunBoardPrototype({
     }
   }, [client, isBlastingCactusCanyonSpiral, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
 
+  const handleActivateGreatHoneyfall = useCallback(async () => {
+    if (isActivatingGreatHoneyfall) return;
+    if (greatHoneyfallCompleted) {
+      // Replay is presentation-only; canonical completion remains unchanged.
+      setGreatHoneyfallConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setLandingText('🍯 The Great Honeyfall Coronation rises again!');
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('reward_claim');
+      return;
+    }
+    setIsActivatingGreatHoneyfall(true);
+    try {
+      const result = await activateGreatHoneyfallReservoir({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_nectar') {
+          setLandingText('Land on a glowing royal-nectar tile before opening the next Honeyfall reservoir.');
+        }
+        return;
+      }
+      // The canonical action is committed before this coronation presentation.
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('activate_great_honeyfall_reservoir', fresh);
+      setGreatHoneyfallConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      const completed = result.activatedReservoirs >= GREAT_HONEYFALL_MAX_STAGE;
+      setLandingText(completed
+        ? '👑 The Great Honeyfall Coronation is complete — every golden cascade is flowing!'
+        : `🍯 Royal reservoir ${result.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} is flowing.`);
+      playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
+    } finally {
+      setIsActivatingGreatHoneyfall(false);
+    }
+  }, [
+    client,
+    greatHoneyfallCompleted,
+    isActivatingGreatHoneyfall,
+    playIslandRunSound,
+    session,
+    setRuntimeStateWithTrace,
+    triggerIslandRunHaptic,
+  ]);
+
   const handleFundFrostwell = useCallback(async () => {
     if (isFundingFrostwell) return;
     setIsFundingFrostwell(true);
@@ -14538,10 +14679,18 @@ export function IslandRunBoardPrototype({
                   claimedDynamiteTileIndices: firstLightAssemblyProgress.claimedDynamiteTileIndices,
                   constructionSequence: firstLightAssemblyConstructionSequence,
                 }}
+                greatHoneyfallPresentation={{
+                  activatedReservoirs: isIslandVisualPreview && islandArtPreviewNumber === 14
+                    ? GREAT_HONEYFALL_MAX_STAGE
+                    : greatHoneyfallProgress.activatedReservoirs,
+                  constructionSequence: greatHoneyfallConstructionSequence,
+                }}
                 onSignatureMissionClick={islandArtPreviewNumber === 1
                   ? isIslandVisualPreview ? undefined : openFirstLightAssemblyCrater
                   : islandArtPreviewNumber === 12
                   ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
+                  : islandArtPreviewNumber === 14
+                    ? isIslandVisualPreview ? undefined : handleActivateGreatHoneyfall
                   : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10 && islandArtPreviewNumber !== 13
                     ? undefined
                     : islandArtPreviewNumber === 13
@@ -14612,6 +14761,27 @@ export function IslandRunBoardPrototype({
                   {cactusCanyonSpiralCompleted
                     ? 'Mountain railway online'
                     : `${cactusCanyonSpiralProgress.segmentsExcavated}/${CACTUS_CANYON_SPIRAL_MAX_SEGMENTS} sections · 🧨 ${cactusCanyonAvailableDynamite}`}
+                </span>
+              </button>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 14 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--great-honeyfall"
+                onClick={() => void handleActivateGreatHoneyfall()}
+                disabled={isActivatingGreatHoneyfall}
+                aria-label={greatHoneyfallCompleted
+                  ? 'Replay the Great Honeyfall Coronation'
+                  : 'Open the next royal nectar reservoir'}
+              >
+                <span aria-hidden="true">{greatHoneyfallCompleted ? '👑' : '🍯'}</span>
+                <span>
+                  <strong>Great Honeyfall</strong>
+                  {greatHoneyfallCompleted
+                    ? 'Coronation complete · Replay'
+                    : greatHoneyfallAvailableNectar > 0
+                      ? `${greatHoneyfallProgress.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} reservoirs · Open next`
+                      : `${greatHoneyfallProgress.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} reservoirs · Find nectar`}
                 </span>
               </button>
             ) : null}
@@ -16820,6 +16990,10 @@ export function IslandRunBoardPrototype({
           onClose={() => setShowBuildPanel(false)}
           viewModel={buildModalV2ViewModel}
           isBuildHoldActive={isBuildHoldActive}
+          isBuildInteractionLocked={isBuildSequenceActive || isBuildCameraHandoffActive || isBuildCameraHandoffPending}
+          buildInteractionLockLabel={isBuildCameraHandoffActive || isBuildCameraHandoffPending
+            ? `🎥 Moving to ${buildModalV2ViewModel.activeLandmark?.title ?? 'the next landmark'}…`
+            : '⚒️ Finishing the current construction beat…'}
           buildHoldFeedbackLabel={buildHoldFeedbackLabel}
           isBuildModalHatcheryGuidanceActive={isBuildModalHatcheryGuidanceActive}
           discountRate={activeBuildDiscountRate}
@@ -16860,6 +17034,12 @@ export function IslandRunBoardPrototype({
 
       {buildLevelCompletion && (
         <div className="island-run-overlay-root bm2-level-complete" role="presentation">
+          <div className="bm2-level-complete__scene-fx" aria-hidden="true">
+            <span className="bm2-level-complete__shine" />
+            {Array.from({ length: 12 }, (_, index) => (
+              <span key={index} className={`bm2-level-complete__sparkle bm2-level-complete__sparkle--${index + 1}`} />
+            ))}
+          </div>
           <section
             className="bm2-level-complete__card"
             role="status"

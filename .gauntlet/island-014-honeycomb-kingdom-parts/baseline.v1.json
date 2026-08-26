@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "goal": {
+    "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "authority": "exact"
+  },
+  "current": {
+    "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/island-014-v8-final-visible-loaded-2026-08-25.png",
+    "sha256": "4a9142ed3e3f1ea4f7ac3e5d2875c1b0b6847eb5fca3e4aaed89e2ff618d9a64",
+    "independentScore": 0.64,
+    "authority": "accepted-current-baseline"
+  },
+  "salvageDecision": {
+    "decision": "partial-salvage",
+    "preserve": ["canonical gameplay route", "36-tile board logic", "five landmark progression", "three-robot construction choreography", "completion pop and sparkle beat", "Great Honeyfall mission state machine", "camera and evidence controls"],
+    "rebuildByPart": ["landmark geometry", "source-specific scenery density", "honeycomb surface language", "honey liquid material and silhouettes"],
+    "reason": "The runtime systems are production-valid, while landmark and environment source likeness remain below the visual gate."
+  },
+  "baselineMismatch": {
+    "largest": "The source is a dense luminous gold cathedral-city; the current result reads as sparse pale procedural towers with weak architectural mass and ornament.",
+    "secondary": ["landmarks lack distinct readable identities", "scenery is too empty", "honey lacks translucent viscous depth", "hidden-view coherence is unproven"],
+    "requiredNextEvidence": "naked nine-angle palace macro blockout before detail or materials"
+  }
+}

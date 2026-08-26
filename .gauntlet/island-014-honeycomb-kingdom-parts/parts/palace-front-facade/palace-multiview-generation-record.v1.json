@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "mode": "built-in-imagegen",
+  "useCase": "source-referenced 360 production reference inference",
+  "sourceAuthority": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932"
+  },
+  "prompt": "Create a clean professional 3D environment-production turnaround reference sheet for the exact same Honeycomb Kingdom royal palace in the supplied source crop. Preserve the source as visual authority: compact broad golden honey-cathedral palace, large welcoming purple bee-emblem doorway first in the hierarchy, four large occupied honeycomb bay masses second, dark honeycomb rose window third, central amber honey dome with smaller satellite domes, delicious glossy honey drips, gold-bronze framing, dark amber recesses. Do not make it tall, narrow, pyramidal, or crowded with many tiny repetitive windows. Show four separate consistent views of one coherent solid building: front-left 3/4, exact left side, rear 3/4, exact rear. All views must agree in proportions and construction and reveal believable solid depth, buttresses, rear service apse, roof transitions, honey channels, and dome supports. Neutral matte charcoal studio background, even reference lighting, no ground scenery, no UI, no labels, no text, no people, no robots, no perspective exaggeration. The palace must look buildable as a true 360-degree procedural Three.js asset, not a cardboard facade or illustration.",
+  "output": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-multiview-turnaround-v001.png",
+    "sha256": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3"
+  },
+  "authorityLimit": "This generated sheet is a derived implementation aid for side and rear inference only. It cannot revise the exact source's front identity, hierarchy, scale, colors, or proportions. Generated inconsistencies must be rejected during curation before any geometry is built."
+}

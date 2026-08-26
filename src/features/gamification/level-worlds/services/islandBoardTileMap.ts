@@ -17,6 +17,7 @@ import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
 import {
   getCactusCanyonDynamiteQuantityForTile,
+  getGreatHoneyfallNectarQuantityForTile,
   isFirstLightAssemblyDynamiteTile,
   isFrostwellDrillTile,
   isRootheartPowerComponentTile,
@@ -36,7 +37,7 @@ export type IslandTileMapEntry = {
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
   /** Presentation marker for a canonical island-specific mission landing. */
-  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite';
+  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar';
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
 };
@@ -326,6 +327,14 @@ export function generateTileMap(
         ...entry,
         signatureMissionKind: 'cactus_canyon_dynamite',
         signatureMissionAmount: cactusCanyonDynamite,
+      };
+    }
+    const greatHoneyfallNectar = getGreatHoneyfallNectarQuantityForTile(islandNumber, entry.index, tileCount);
+    if (greatHoneyfallNectar > 0) {
+      return {
+        ...entry,
+        signatureMissionKind: 'great_honeyfall_nectar',
+        signatureMissionAmount: greatHoneyfallNectar,
       };
     }
     return entry;
