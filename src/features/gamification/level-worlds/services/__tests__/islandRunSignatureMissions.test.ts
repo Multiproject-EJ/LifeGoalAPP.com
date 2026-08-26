@@ -15,6 +15,7 @@ import {
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
   collectFirstLightAssemblyDynamiteForLanding,
+  collectFirstLightAssemblyDynamiteForRoute,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
   getCactusCanyonAvailableDynamite,
@@ -359,6 +360,35 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(first.dynamiteCollected, 1, 'first landing collects the finite cache');
       assertEqual(duplicate.dynamiteCollected, 0, 'the same cache cannot be collected twice');
       assertEqual(getFirstLightAssemblyAvailableDynamite(progress), 1, 'one collected charge remains available');
+
+      const routePass = collectFirstLightAssemblyDynamiteForRoute({
+        ledger: {},
+        islandNumber: 1,
+        cycleIndex: 0,
+        landingTileIndex: 4,
+        routeTileIndices: [1, 2, 3, 4],
+        nowMs: 12,
+      });
+      const routeProgress = resolveFirstLightAssemblyCraterProgress({
+        ledger: routePass.ledger,
+        islandNumber: 1,
+        cycleIndex: 0,
+      });
+      assertEqual(routePass.dynamiteCollected, 1, 'crossing the route starts the mission without exact-land RNG');
+      assertEqual(routePass.collectionKind, 'route_pass', 'crossed cache reports the route-pass presentation');
+      assertEqual(routePass.collectedTileIndex, 1, 'the first unclaimed crossed cache is secured');
+      assertEqual(routeProgress.claimedDynamiteTileIndices.length, 1, 'a roll can secure at most one cache');
+
+      const landingPriority = collectFirstLightAssemblyDynamiteForRoute({
+        ledger: {},
+        islandNumber: 1,
+        cycleIndex: 0,
+        landingTileIndex: 3,
+        routeTileIndices: [1, 2, 3],
+        nowMs: 13,
+      });
+      assertEqual(landingPriority.collectionKind, 'landing', 'exact landing takes priority over crossed caches');
+      assertEqual(landingPriority.collectedTileIndex, 3, 'the landed cache is the one secured');
     },
   },
   {

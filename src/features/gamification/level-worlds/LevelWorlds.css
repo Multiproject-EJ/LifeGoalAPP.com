@@ -5282,6 +5282,15 @@
   position: absolute;
   width: 52px;
   height: 52px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  pointer-events: auto;
   --tile-thickness: 5px;
   color: var(--tile-ink);
   font-weight: 850;
@@ -5289,6 +5298,90 @@
   /* Smooth state changes on the whole unit (completed-encounter mute, …) */
   transition: filter 300ms ease;
   transform-style: preserve-3d;
+}
+
+.island-tile:focus-visible,
+.island-tile--info-open {
+  z-index: 18;
+  outline: none;
+  filter: brightness(1.12) drop-shadow(0 0 8px rgba(255, 224, 143, 0.82));
+}
+
+.island-tile:focus-visible .island-tile__face,
+.island-tile--info-open .island-tile__face {
+  box-shadow:
+    0 0 0 3px rgba(255, 244, 207, 0.92),
+    0 0 0 6px rgba(69, 166, 183, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.island-tile-info-popover {
+  position: absolute;
+  z-index: 80;
+  width: 224px;
+  box-sizing: border-box;
+  padding: 13px 38px 13px 14px;
+  border: 1px solid rgba(237, 202, 119, 0.7);
+  border-radius: 13px;
+  color: #f7f0db;
+  background:
+    linear-gradient(135deg, rgba(34, 67, 78, 0.98), rgba(7, 24, 34, 0.98) 68%),
+    #071822;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.46),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  text-align: left;
+  transform: translate(-50%, -100%);
+  animation: island-tile-info-enter 160ms ease-out both;
+  pointer-events: auto;
+}
+
+.island-tile-info-popover--below {
+  transform: translate(-50%, 0);
+  transform-origin: 50% 0;
+}
+
+.island-tile-info-popover__eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: #e7c46f;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.island-tile-info-popover > strong {
+  display: block;
+  color: #fff8e7;
+  font: 800 15px/1.15 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.island-tile-info-popover > p {
+  margin: 6px 0 0;
+  color: rgba(224, 239, 241, 0.84);
+  font: 600 11px/1.4 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  text-shadow: none;
+}
+
+.island-tile-info-popover__close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid rgba(234, 207, 140, 0.36);
+  border-radius: 50%;
+  color: #f7edd2;
+  background: rgba(3, 15, 23, 0.55);
+  font: 400 18px/1 Georgia, serif;
+  cursor: pointer;
+}
+
+@keyframes island-tile-info-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .island-tile__shadow {

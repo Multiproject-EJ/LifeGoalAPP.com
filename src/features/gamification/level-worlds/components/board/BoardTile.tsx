@@ -192,6 +192,9 @@ export interface BoardTileProps {
   /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
    *  match the ring geometry regardless of viewport dimensions. */
   uniformScale: number;
+  onInspect?: () => void;
+  isInfoOpen?: boolean;
+  accessibilityLabel?: string;
 }
 
 export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
@@ -218,6 +221,9 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isDormant = false,
     livingTicketGrowthProgress = 1,
     uniformScale,
+    onInspect,
+    isInfoOpen = false,
+    accessibilityLabel,
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
@@ -267,7 +273,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   }
 
   return (
-    <div
+    <button
+      type="button"
       className={[
         'island-tile',
         `island-tile--${anchor.zBand}`,
@@ -290,8 +297,9 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         technologyFragment ? 'island-tile--technology-fragment' : '',
         isDormant ? 'island-tile--dormant' : '',
         isLivingTicketRegrowing ? 'island-tile--living-ticket-regrowing' : '',
+        isInfoOpen ? 'island-tile--info-open' : '',
       ].filter(Boolean).join(' ')}
-      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`
+      aria-label={accessibilityLabel ?? (technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`
         : signatureMissionKind === 'frostwell_drill'
           ? `Tile ${index + 1}. Frostwell drill spin`
           : signatureMissionKind === 'rootheart_power_component'
@@ -306,7 +314,10 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing
                 ? `Tile ${index + 1}. Event ticket regrowing`
-              : undefined}
+              : undefined)}
+      aria-expanded={isInfoOpen}
+      aria-controls={isInfoOpen ? `island-tile-info-${index}` : undefined}
+      onClick={onInspect}
       style={{
         left: position.x,
         top: position.y,
@@ -339,6 +350,6 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
       </span>
 
-    </div>
+    </button>
   );
 });

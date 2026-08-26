@@ -4,6 +4,8 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { getEffectiveIslandNumber, initStopBuildStatesForIsland } from './islandRunContractV2EssenceBuild';
 import { getIslandMissionBriefingBeatId } from './islandRunMissionBriefing';
 import { getIslandRunSignatureMissionKey } from './islandRunSignatureMissions';
+import { TOKEN_START_TILE_INDEX } from './islandBoardLayout';
+import { isIslandRunFragmentOnlyBoardPhase } from './islandRunFirstSessionTutorialUi';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 
 export interface ResetCurrentIslandMissionForDevResult {
@@ -16,9 +18,12 @@ export interface ResetCurrentIslandMissionForDevResult {
 /**
  * Builds a fresh mission attempt for the currently loaded island while
  * preserving the player's wallet, dice, egg, timer, collections, and account
- * progression. This is intentionally broader than deleting signature mission
- * progress: standard island missions derive their progress from the canonical
- * stop/build ledgers, so those current-island fields must be reset together.
+ * progression. The pawn returns to the route start; an Island 1 developer
+ * replay also releases any fragment-only intro gate so its signature pickups
+ * are active immediately. This is intentionally broader than deleting
+ * signature mission progress: standard island missions derive their progress
+ * from the canonical stop/build ledgers, so those current-island fields must
+ * be reset together.
  */
 export function buildCurrentIslandMissionResetRecord(
   current: IslandRunGameStateRecord,
@@ -33,10 +38,17 @@ export function buildCurrentIslandMissionResetRecord(
 
   delete signatureMissionProgressByIsland[signatureMissionKey];
   delete narrativeBeats[briefingBeatId];
+  const shouldReleaseIslandOneIntroGate = islandNumber === 1
+    && cycleIndex === 0
+    && isIslandRunFragmentOnlyBoardPhase(current.firstSessionTutorialState);
 
   return {
     ...current,
     runtimeVersion: current.runtimeVersion + 1,
+    tokenIndex: TOKEN_START_TILE_INDEX,
+    firstSessionTutorialState: shouldReleaseIslandOneIntroGate
+      ? 'first_roll_consumed'
+      : current.firstSessionTutorialState,
     activeStopIndex: 0,
     activeStopType: 'hatchery',
     bossTrialResolvedIslandNumber: current.bossTrialResolvedIslandNumber === islandNumber

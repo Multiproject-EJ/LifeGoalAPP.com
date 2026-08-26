@@ -568,6 +568,69 @@ export function collectFirstLightAssemblyDynamiteForLanding(options: {
   };
 }
 
+/**
+ * Resolves one finite Assembly Crater cache reached during a completed roll.
+ * An exact landing always wins. When the pawn passes an unclaimed cache on the
+ * way, that cache is secured instead so the mission begins with the route
+ * rather than depending on repeated exact-land RNG. At most one charge is
+ * collected per roll.
+ */
+export function collectFirstLightAssemblyDynamiteForRoute(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  landingTileIndex: number;
+  routeTileIndices: readonly number[];
+  nowMs: number;
+}): {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  dynamiteCollected: number;
+  collectedTileIndex: number | null;
+  collectionKind: 'landing' | 'route_pass' | null;
+} {
+  const landing = collectFirstLightAssemblyDynamiteForLanding({
+    ledger: options.ledger,
+    islandNumber: options.islandNumber,
+    cycleIndex: options.cycleIndex,
+    tileIndex: options.landingTileIndex,
+    nowMs: options.nowMs,
+  });
+  if (landing.dynamiteCollected > 0) {
+    return {
+      ...landing,
+      collectedTileIndex: options.landingTileIndex,
+      collectionKind: 'landing',
+    };
+  }
+
+  const visited = new Set<number>();
+  for (const tileIndex of options.routeTileIndices) {
+    if (tileIndex === options.landingTileIndex || visited.has(tileIndex)) continue;
+    visited.add(tileIndex);
+    const routePass = collectFirstLightAssemblyDynamiteForLanding({
+      ledger: options.ledger,
+      islandNumber: options.islandNumber,
+      cycleIndex: options.cycleIndex,
+      tileIndex,
+      nowMs: options.nowMs,
+    });
+    if (routePass.dynamiteCollected > 0) {
+      return {
+        ...routePass,
+        collectedTileIndex: tileIndex,
+        collectionKind: 'route_pass',
+      };
+    }
+  }
+
+  return {
+    ledger: options.ledger,
+    dynamiteCollected: 0,
+    collectedTileIndex: null,
+    collectionKind: null,
+  };
+}
+
 export function getGreatHoneyfallAvailableNectar(progress: GreatHoneyfallProgress): number {
   return Math.max(0, progress.nectarChargesEarned - progress.nectarChargesSpent);
 }

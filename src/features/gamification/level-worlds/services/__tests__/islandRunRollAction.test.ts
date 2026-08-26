@@ -115,6 +115,33 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
+    name: 'Island 001 first replay roll secures one crossed Assembly cache when the final tile is not dynamite',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 0,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+      });
+      const result = await withMockedRandom([0.2, 0.2], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.newTokenIndex, 4, 'two twos finish on the non-cache tile 4');
+      assertEqual(result.firstLightAssemblyDynamiteCollected, 1, 'the first roll secures one reached route cache');
+      assertEqual(result.firstLightAssemblyDynamiteCollectionKind, 'route_pass', 'the renderer can explain the en-route pickup');
+      const progress = resolveFirstLightAssemblyCraterProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 1,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.claimedDynamiteTileIndices.length, 1, 'the route pickup commits atomically with movement');
+      assertEqual(progress.claimedDynamiteTileIndices[0], 1, 'only the first crossed cache is consumed');
+    },
+  },
+  {
     name: 'Island 002 roll action persists the twentieth re-docking turn and emits the fourth lock once',
     run: async () => {
       resetEnvironment();

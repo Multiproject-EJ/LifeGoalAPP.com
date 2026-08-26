@@ -91,7 +91,7 @@ import {
   advanceCelestialRedockingForRoll,
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
-  collectFirstLightAssemblyDynamiteForLanding,
+  collectFirstLightAssemblyDynamiteForRoute,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
@@ -248,8 +248,10 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
-  /** One finite Island 001 Assembly Crater stick collected by this landing. */
+  /** One finite Island 001 Assembly Crater stick collected by this route. */
   firstLightAssemblyDynamiteCollected?: number;
+  /** Whether the Assembly cache was on the final tile or reached during movement. */
+  firstLightAssemblyDynamiteCollectionKind?: 'landing' | 'route_pass' | null;
   /** Canonical number of dynamite sticks collected on this Island 013 landing. */
   cactusCanyonDynamiteCollected?: number;
   /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
@@ -446,14 +448,20 @@ async function performRollAction(options: {
       })
     : null;
   const firstLightAssemblyLanding = ordinaryTileGameplayActive
-    ? collectFirstLightAssemblyDynamiteForLanding({
+    ? collectFirstLightAssemblyDynamiteForRoute({
         ledger: state.signatureMissionProgressByIsland,
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,
-        tileIndex: newTokenIndex,
+        landingTileIndex: newTokenIndex,
+        routeTileIndices: hopSequence,
         nowMs,
       })
-    : { ledger: state.signatureMissionProgressByIsland, dynamiteCollected: 0 };
+    : {
+        ledger: state.signatureMissionProgressByIsland,
+        dynamiteCollected: 0,
+        collectedTileIndex: null,
+        collectionKind: null,
+      };
   const frostwellLanding = ordinaryTileGameplayActive
     ? grantFrostwellDrillSpinForLanding({
         ledger: firstLightAssemblyLanding.ledger,
@@ -606,6 +614,7 @@ async function performRollAction(options: {
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
     firstLightAssemblyDynamiteCollected: firstLightAssemblyLanding.dynamiteCollected,
+    firstLightAssemblyDynamiteCollectionKind: firstLightAssemblyLanding.collectionKind,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     greatHoneyfallNectarCollected: greatHoneyfallLanding.nectarCollected,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,

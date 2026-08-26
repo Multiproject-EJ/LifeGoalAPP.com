@@ -95,6 +95,40 @@ async function seedCompletedIslandTwoMission(): Promise<Session> {
 
 export const islandRunMissionResetActionTests: TestCase[] = [
   {
+    name: 'Island 001 developer replay returns to route start and releases the fragment-only pickup gate',
+    run: () => {
+      resetHarness();
+      const session = makeSession();
+      const before = {
+        ...readIslandRunGameStateRecord(session),
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        tokenIndex: 31,
+        firstSessionTutorialState: 'awaiting_first_roll' as const,
+        signatureMissionProgressByIsland: {
+          [getIslandRunSignatureMissionKey(0, 1)]: {
+            missionId: 'first-light-assembly-crater' as const,
+            version: 1 as const,
+            claimedDynamiteTileIndices: [0, 1, 2],
+            chargesDetonated: 2,
+            lastDetonatedSector: 1,
+            startedAtMs: 10,
+            completedAtMs: null,
+            updatedAtMs: 20,
+          },
+        },
+      };
+      const after = buildCurrentIslandMissionResetRecord(before);
+      assertEqual(after.tokenIndex, 0, 'fresh mission replay begins from the canonical route start');
+      assertEqual(after.firstSessionTutorialState, 'first_roll_consumed', 'mission pickups are active without reopening the phone');
+      assertEqual(
+        after.signatureMissionProgressByIsland[getIslandRunSignatureMissionKey(0, 1)],
+        undefined,
+        'old Assembly collection and detonation progress is cleared',
+      );
+    },
+  },
+  {
     name: 'builder clears only the loaded island mission while preserving player resources and collections',
     run: async () => {
       const session = await seedCompletedIslandTwoMission();

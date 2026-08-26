@@ -112,8 +112,8 @@ import {
   getStopTicketPrepayCost,
   getStopTicketsPaidForIsland,
   isStopTicketPaid,
-  payStopTicket,
 } from '../services/islandRunStopTickets';
+import { purchaseIslandRunStopTicket } from '../services/islandRunStopTicketAction';
 import { resolveIslandRunStopTapOutcome } from '../services/islandRunStopTapRouting';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { shouldGateIslandOneGuestTravel } from '../services/islandRunGuestTravelGate';
@@ -220,7 +220,6 @@ import {
   applyStoryPrologueSeenMarker,
   applyStopBuildSpendBatch,
   applyStopObjectiveProgress,
-  applyStopTicketPayment,
   postponeIslandRunStop,
   applyWalletDiamondsSet,
   applyWalletShardsDelta,
@@ -5823,65 +5822,55 @@ export function IslandRunBoardPrototype({
     setLandingText('🚪 Dormant door challenge: reveal doors until 3 matching prizes appear.');
   }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
 
-  const handlePrepayStopTicket = useCallback((stopId: string) => {
+  const handlePrepayStopTicket = useCallback(async (stopId: string) => {
     const stopIndex = stopIndexByStopId.get(stopId);
     if (stopIndex === undefined) return;
-    const result = payStopTicket({
-      effectiveIslandNumber,
-      islandNumber,
-      stopIndex,
-      essence: runtimeStateRef.current.essence,
-      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
-      stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
-      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
-      prepay: true,
-    });
-
-    if (!result.ok) {
-      if (result.reason === 'insufficient_essence') {
-        setLandingText(`Not enough money — need ${result.cost} 💰 to prepay this discounted ticket.`);
-      } else if (result.reason === 'already_paid') {
-        setLandingText('That landmark ticket is already prepaid. Finish the prerequisite landmark to enter.');
-        setPrepayTicketPromptStopId(null);
-      } else {
-        setPrepayTicketPromptStopId(null);
-      }
-      return;
-    }
-
-    if (!result.alreadyFree) {
-      const nextRuntimeState = applyStopTicketPayment({
+    try {
+      const result = await purchaseIslandRunStopTicket({
         session,
         client,
-        essence: result.essence,
-        essenceLifetimeSpent: result.essenceLifetimeSpent,
-        stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+        stopIndex,
+        prepay: true,
         triggerSource: 'stop_ticket_prepay_discount',
       });
-      setRuntimeState((current) => ({
-        ...current,
-        essence: nextRuntimeState.essence,
-        essenceLifetimeSpent: nextRuntimeState.essenceLifetimeSpent,
-        stopTicketsPaidByIsland: nextRuntimeState.stopTicketsPaidByIsland,
-      }));
-      void recordTelemetryEvent({
-        userId: session.user.id,
-        eventType: 'economy_spend',
-        metadata: {
-          stage: 'island_run_stop_ticket_prepaid',
-          island_number: islandNumber,
-          stop_id: stopId,
-          stop_index: stopIndex,
-          cost: result.cost,
-          discount_rate: 0.2,
-        },
-      });
-      const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
-      setLandingText(`${paidStop?.title ?? stopId} ticket prepaid for ${result.cost} 💰 (20% off). Complete the previous landmark to enter.`);
+      runtimeStateRef.current = result.record;
+      setRuntimeState(result.record);
+
+      if (result.status === 'rejected') {
+        if (result.reason === 'insufficient_essence') {
+          setLandingText(`Not enough money — need ${result.cost} 💰 to prepay this discounted ticket.`);
+        } else if (result.reason === 'already_paid') {
+          setLandingText('That landmark ticket is already prepaid. Finish the prerequisite landmark to enter.');
+          setPrepayTicketPromptStopId(null);
+        } else {
+          setPrepayTicketPromptStopId(null);
+        }
+        return;
+      }
+
+      if (result.status === 'paid') {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'economy_spend',
+          metadata: {
+            stage: 'island_run_stop_ticket_prepaid',
+            island_number: result.islandNumber,
+            stop_id: stopId,
+            stop_index: stopIndex,
+            cost: result.cost,
+            discount_rate: 0.2,
+          },
+        });
+        const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
+        setLandingText(`${paidStop?.title ?? stopId} ticket prepaid for ${result.cost} 💰 (20% off). Complete the previous landmark to enter.`);
+      }
+      setPrepayTicketPromptStopId(null);
+      setCameraMode('board_follow');
+    } catch (error) {
+      console.warn('[Island Run] Failed to save prepaid landmark pass', error);
+      setLandingText('Pass save was interrupted. Close this window and try again.');
     }
-    setPrepayTicketPromptStopId(null);
-    setCameraMode('board_follow');
-  }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, session, stopIndexByStopId]);
+  }, [client, islandStopPlan, session, stopIndexByStopId]);
 
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
   // The Boss door's "finish this landmark before rolling again" gate is
@@ -6141,77 +6130,62 @@ export function IslandRunBoardPrototype({
    * (insufficient essence, etc.): surface the reason via landing text and keep
    * the prompt open so the user can earn more and retry.
    */
-  const handlePayStopTicket = useCallback((stopId: string) => {
+  const handlePayStopTicket = useCallback(async (stopId: string) => {
     const stopIndex = stopIndexByStopId.get(stopId);
     if (stopIndex === undefined) return;
-    const result = payStopTicket({
-      effectiveIslandNumber,
-      islandNumber,
-      stopIndex,
-      essence: runtimeStateRef.current.essence,
-      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
-      stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
-      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
-    });
-
-    if (!result.ok) {
-      if (result.reason === 'insufficient_essence') {
-        setLandingText(`Not enough money — need ${result.cost} 💰 to open this stop.`);
-      } else if (result.reason === 'previous_stop_not_complete') {
-        setLandingText('Complete the previous stop before opening this one.');
-        setTicketPromptStopId(null);
-      } else if (result.reason === 'already_paid') {
-        // Ticket already paid (race with another action) — open the stop.
-        setTicketPromptStopId(null);
-        requestActiveStopTransition(stopId, 'ticket_already_paid');
-        setIsTopbarMenuPrimed(false);
-        setFocusedStopId(stopId);
-        setCameraMode('stop_focus');
-      } else {
-        setTicketPromptStopId(null);
-      }
-      return;
-    }
-
-    // Happy path: deduct essence, record ticket, open stop.
-    // Hatchery (stop 0) is free — `alreadyFree` means this was a no-op success
-    // and we just want to open the stop without writing, telemetry, or a
-    // "paid" landing toast.
-    if (!result.alreadyFree) {
-      const nextRuntimeState = applyStopTicketPayment({
+    try {
+      const result = await purchaseIslandRunStopTicket({
         session,
         client,
-        essence: result.essence,
-        essenceLifetimeSpent: result.essenceLifetimeSpent,
-        stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+        stopIndex,
         triggerSource: 'stop_ticket_payment',
       });
-      setRuntimeState((current) => ({
-        ...current,
-        essence: nextRuntimeState.essence,
-        essenceLifetimeSpent: nextRuntimeState.essenceLifetimeSpent,
-        stopTicketsPaidByIsland: nextRuntimeState.stopTicketsPaidByIsland,
-      }));
-      void recordTelemetryEvent({
-        userId: session.user.id,
-        eventType: 'economy_spend',
-        metadata: {
-          stage: 'island_run_stop_ticket_paid',
-          island_number: islandNumber,
-          stop_id: stopId,
-          stop_index: stopIndex,
-          cost: result.cost,
-        },
-      });
-      const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
-      setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 💰 paid.`);
+      runtimeStateRef.current = result.record;
+      setRuntimeState(result.record);
+
+      if (result.status === 'rejected') {
+        if (result.reason === 'insufficient_essence') {
+          setLandingText(`Not enough money — need ${result.cost} 💰 to open this stop.`);
+        } else if (result.reason === 'previous_stop_not_complete') {
+          setLandingText('Complete the previous stop before opening this one.');
+          setTicketPromptStopId(null);
+        } else if (result.reason === 'already_paid') {
+          setTicketPromptStopId(null);
+          requestActiveStopTransition(stopId, 'ticket_already_paid');
+          setIsTopbarMenuPrimed(false);
+          setFocusedStopId(stopId);
+          setCameraMode('stop_focus');
+        } else {
+          setTicketPromptStopId(null);
+        }
+        return;
+      }
+
+      if (result.status === 'paid') {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'economy_spend',
+          metadata: {
+            stage: 'island_run_stop_ticket_paid',
+            island_number: result.islandNumber,
+            stop_id: stopId,
+            stop_index: stopIndex,
+            cost: result.cost,
+          },
+        });
+        const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
+        setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 💰 paid.`);
+      }
+      setTicketPromptStopId(null);
+      requestActiveStopTransition(stopId, 'ticket_paid_open');
+      setIsTopbarMenuPrimed(false);
+      setFocusedStopId(stopId);
+      setCameraMode('stop_focus');
+    } catch (error) {
+      console.warn('[Island Run] Failed to save landmark pass', error);
+      setLandingText('Pass save was interrupted. Close this window and try again.');
     }
-    setTicketPromptStopId(null);
-    requestActiveStopTransition(stopId, 'ticket_paid_open');
-    setIsTopbarMenuPrimed(false);
-    setFocusedStopId(stopId);
-    setCameraMode('stop_focus');
-  }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, requestActiveStopTransition, session, stopIndexByStopId]);
+  }, [client, islandStopPlan, requestActiveStopTransition, session, stopIndexByStopId]);
 
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
 
@@ -7869,7 +7843,9 @@ export function IslandRunBoardPrototype({
         } else if ((rollResult.firstLightAssemblyDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
-          setLandingText('🧨 Assembly charge secured! Open the crater mission to excavate the next civic sector.');
+          setLandingText(rollResult.firstLightAssemblyDynamiteCollectionKind === 'route_pass'
+            ? '🧨 Assembly charge secured along the route! Open the crater mission to excavate the next civic sector.'
+            : '🧨 Assembly charge secured! Open the crater mission to excavate the next civic sector.');
           openFirstLightAssemblyCrater();
         } else if ((rollResult.cactusCanyonDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);

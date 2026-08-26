@@ -1,8 +1,9 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { BoardTile } from './BoardTile';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
 import type { VisibleTechnologyFragment } from '../../services/islandTechnologyFragmentVisuals';
+import { resolveIslandBoardTileInfo } from '../../services/islandBoardTileInfo';
 
 export interface BoardTileGridProps {
   anchors: TileAnchor[];
@@ -35,6 +36,8 @@ export interface BoardTileGridProps {
 export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridProps) {
   const {
     anchors,
+    boardWidth,
+    boardHeight,
     stopMap,
     tileMap,
     ordinaryTilesActive = true,
@@ -51,6 +54,21 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     uniformScale,
     toScreen,
   } = props;
+
+  const [inspectedTileIndex, setInspectedTileIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    setInspectedTileIndex(null);
+  }, [tokenIndex, tileMap]);
+
+  useEffect(() => {
+    if (inspectedTileIndex === null) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setInspectedTileIndex(null);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [inspectedTileIndex]);
 
   const visibleTechnologyFragmentsByTile = useMemo(() => new Map(visibleTechnologyFragments.map((fragment) => [fragment.tileIndex, fragment])), [visibleTechnologyFragments]);
 
@@ -82,6 +100,28 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     if (count === 0) return new Set<number>();
     return new Set<number>([(tokenIndex + 1) % count, (tokenIndex - 1 + count) % count]);
   }, [tokenIndex, anchors.length]);
+
+  const inspectedAnchor = inspectedTileIndex === null ? null : anchors[inspectedTileIndex] ?? null;
+  const inspectedEntry = inspectedTileIndex === null ? undefined : tileMap[inspectedTileIndex];
+  const inspectedPosition = inspectedAnchor ? toScreen(inspectedAnchor) : null;
+  const inspectedTechnologyFragment = inspectedTileIndex === null
+    ? undefined
+    : visibleTechnologyFragmentsByTile.get(inspectedTileIndex);
+  const inspectedTileInfo = inspectedTileIndex === null ? null : resolveIslandBoardTileInfo({
+    entry: inspectedEntry,
+    isStop: stopMap.has(inspectedTileIndex),
+    isDormant: !ordinaryTilesActive && !inspectedTechnologyFragment,
+    isEncounterCompleted: completedEncounterIndices.has(inspectedTileIndex),
+    livingTicketGrowthProgress,
+    technologyFragment: inspectedTechnologyFragment,
+    trafficLightCharge,
+    trafficLightChargeTarget,
+  });
+  const popoverWidth = 224;
+  const popoverLeft = inspectedPosition
+    ? Math.max(popoverWidth / 2 + 12, Math.min(boardWidth - popoverWidth / 2 - 12, inspectedPosition.x))
+    : 0;
+  const showPopoverBelow = Boolean(inspectedPosition && inspectedPosition.y < boardHeight * 0.34);
 
   return (
     <div className="island-run-board__tiles">
@@ -134,6 +174,16 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
         const isEncounterCompleted = isEncounter && completedEncounterIndices.has(index);
         const technologyFragment = visibleTechnologyFragmentsByTile.get(index);
         const isDormant = !ordinaryTilesActive && !technologyFragment;
+        const tileInfo = resolveIslandBoardTileInfo({
+          entry: tileMap[index],
+          isStop,
+          isDormant,
+          isEncounterCompleted,
+          livingTicketGrowthProgress,
+          technologyFragment,
+          trafficLightCharge,
+          trafficLightChargeTarget,
+        });
 
         return (
           <BoardTile
@@ -161,9 +211,40 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
             isDormant={isDormant}
             livingTicketGrowthProgress={tileType === 'free_ticket' ? livingTicketGrowthProgress : 1}
             uniformScale={uniformScale}
+            onInspect={() => setInspectedTileIndex((current) => current === index ? null : index)}
+            isInfoOpen={inspectedTileIndex === index}
+            accessibilityLabel={technologyFragment
+              ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}. Tap for details.`
+              : `Tile ${index + 1}. ${tileInfo.title}. Tap for details.`}
           />
         );
       })}
+
+      {inspectedPosition && inspectedTileInfo && inspectedTileIndex !== null ? (
+        <aside
+          id={`island-tile-info-${inspectedTileIndex}`}
+          className={`island-tile-info-popover${showPopoverBelow ? ' island-tile-info-popover--below' : ''}`}
+          role="dialog"
+          aria-label={`Tile ${inspectedTileIndex + 1}: ${inspectedTileInfo.title}`}
+          onPointerDown={(event) => event.stopPropagation()}
+          style={{
+            left: popoverLeft,
+            top: inspectedPosition.y + (showPopoverBelow ? 38 : -38),
+          }}
+        >
+          <span className="island-tile-info-popover__eyebrow">Tile {String(inspectedTileIndex + 1).padStart(2, '0')}</span>
+          <button
+            type="button"
+            className="island-tile-info-popover__close"
+            aria-label="Close tile information"
+            onClick={() => setInspectedTileIndex(null)}
+          >
+            ×
+          </button>
+          <strong>{inspectedTileInfo.title}</strong>
+          <p>{inspectedTileInfo.description}</p>
+        </aside>
+      ) : null}
 
       {/* Render collectibles as siblings of every tile. A fragment nested in a
           scaled tile inherits that tile's tiny scale and stacking context,

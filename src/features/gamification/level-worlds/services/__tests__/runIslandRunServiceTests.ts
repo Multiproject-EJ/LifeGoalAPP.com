@@ -47,6 +47,8 @@ import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test
 import { islandRunDormantDoorMinigameTests } from './islandRunDormantDoorMinigame.test';
 import { islandRunTrafficLightTileTests } from './islandRunTrafficLightTile.test';
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
+import { islandRunStopTicketActionTests } from './islandRunStopTicketAction.test';
+import { islandBoardTileInfoTests } from './islandBoardTileInfo.test';
 import { islandRunLifeIntakeServiceTests } from './islandRunLifeIntakeService.test';
 import { islandRunHabitSuggestionEngineTests } from './islandRunHabitSuggestionEngine.test';
 import { islandRunAdaptiveAreasTests } from './islandRunAdaptiveAreas.test';
@@ -290,6 +292,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunDormantDoorMinigame', tests: islandRunDormantDoorMinigameTests },
   { label: 'islandRunTrafficLightTile', tests: islandRunTrafficLightTileTests },
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
+  { label: 'islandRunStopTicketAction', tests: islandRunStopTicketActionTests },
+  { label: 'islandBoardTileInfo', tests: islandBoardTileInfoTests },
   { label: 'islandRunLifeIntakeService', tests: islandRunLifeIntakeServiceTests },
   { label: 'islandRunHabitSuggestionEngine', tests: islandRunHabitSuggestionEngineTests },
   { label: 'islandRunHabitLandmarkAction', tests: islandRunHabitLandmarkActionTests },
