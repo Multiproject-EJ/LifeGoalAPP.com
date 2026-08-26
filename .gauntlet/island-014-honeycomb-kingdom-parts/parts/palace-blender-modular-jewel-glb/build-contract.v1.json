@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-headless-blender-modular-full-palace-blockout",
+  "partId": "palace-blender-modular-jewel-glb",
+  "constructionFamily": "blender-modular-honey-jewel-palace-runtime-glb",
+  "representationRoute": "full closed Blender-authored modular palace with bevelled tower kit, attached curve tracery, physically based gold/amber/purple/honey materials, exported as optimized GLB and loaded by the actual runtime",
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "role": "immutable source-facing authority"
+    },
+    "exactCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "role": "front architecture authority"
+    },
+    "generatedTurnaroundV2": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/isolation/generated-references/palace-source-faithful-turnaround-v002.png",
+      "sha256": "b8bb417929884d95729c041e46f33161d442292955ffd5069d4e9f60c5c134c5",
+      "generationRecord": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/palace-multiview-generation-record.v2.json",
+      "role": "hidden-side and rear continuity aid only; may not override exact front"
+    },
+    "retiredImmediatePredecessor": {
+      "review": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-rounded-jewel-hive-cathedral/qc-review.v1.json",
+      "sha256": "eb8156bc5c91f18761c6da530b9a6d518349040d7717cd2f7bf575ec156a36c1",
+      "mustNotRepeat": ["generic mound", "egg or gourd masses", "cardboard honey", "sparse isolated collars", "weak four-bay grouping", "blank side or rear"]
+    }
+  },
+  "tooling": {
+    "blender": "/Applications/Blender.app/Contents/MacOS/Blender",
+    "mode": "headless CLI only; never open or control the Blender GUI",
+    "runtimeAsset": "src/features/gamification/level-worlds/dev/assets/island014/honeycomb-royal-palace-v001.glb",
+    "sourceBlend": "work/island-visual-library/island-014-honeycomb-kingdom/source/palace-blender-modular-jewel-v001.blend"
+  },
+  "lockedSubassemblies": [
+    "A broad royal stair and deep purple honey-arch entrance",
+    "B four countable inhabited front bay towers",
+    "C tall elegant central civic lantern with embedded honeycomb rose",
+    "D four subordinate shoulder/satellite towers with varied height",
+    "E attached wraparound gold-bronze honeycomb ribs, window frames, eaves, and buttresses",
+    "F physically based wax, gold, dark recess, amber glazing, purple enamel, and honey materials",
+    "G glossy viscous honey shelves, curtains, ropes, beads, and teardrops welded to ledges",
+    "H quieter authored rear apse and side service bays"
+  ],
+  "requiredConstruction": [
+    "Model a complete closed palace landmark, not a front facade and not a cluster of spheres. The overall silhouette must be broad, stepped, architectural, and source-led.",
+    "Use reusable bevelled modular tower components: polygonal/cylindrical inhabited drums, arched window recesses, honeycomb-ribbed shallow cupolas, eaves, finials, buttresses, and stair/portal pieces.",
+    "The royal portal must be the front contrast anchor: broad purple double doors behind a deep gold honey arch, readable bee crest, center seam, handles, warm dark reveal, and grounded stairs.",
+    "Exactly four dominant front bay towers must be countable at front, 45-degree, 315-degree, clay, and phone views. Each is a true closed volume with occupied dark window cells and actual side returns.",
+    "Create continuous gold-bronze tracery using bevelled curves or closed tube meshes attached to tower walls and cupolas. The honeycomb pattern must wrap corners and remain structural, not float as sparse hex badges.",
+    "Cupolas must be shallow segmented civic domes with external honeycomb/radial cage ribs and varied hierarchy. Avoid generic mound, egg/gourd masses, simple cones, smooth onion bulbs, mosque silhouette, or many equal towers.",
+    "Use physically based materials: metallic rough gold/bronze, warm wax stone, near-black occupied recesses, emissive/transmissive amber glazing, glossy deep purple enamel, and amber honey with transmission/clearcoat-like specular response.",
+    "Honey must originate under ledges/channels as a thick convex shelf, sagging curtain, multiple fused ropes, beads, and weighted terminal drops. It must look delicious and viscous in dedicated close proof; no rectangular cardboard sheet or lamp/post silhouette.",
+    "Author the rear and sides with fewer but real windows, honeycomb ribs, buttresses, service doorway/aperture, honey channels, and subordinate roof rhythm.",
+    "Source images may be loaded as non-rendering Blender reference planes only. No source or generated pixels may be exported as runtime texture, camera projection, facade card, alpha billboard, or emitted image plane.",
+    "Export one optimized GLB, validate that runtime loads it, and capture evidence from the same exported geometry/materials."
+  ],
+  "budgets": {
+    "maximumTriangles": 300000,
+    "maximumRuntimeDrawCalls": 96,
+    "maximumGlbBytes": 12582912,
+    "maximumRuntimeImageProjectionTextures": 0,
+    "minimumDistinctMaterialFamilies": 6
+  },
+  "workerAllowlist": {
+    "blenderScript": ["scripts/blender/build_island014_modular_jewel_palace.py"],
+    "runtimeAsset": ["src/features/gamification/level-worlds/dev/assets/island014/honeycomb-royal-palace-v001.glb"],
+    "sourceBlend": ["work/island-visual-library/island-014-honeycomb-kingdom/source/palace-blender-modular-jewel-v001.blend"],
+    "runtimeIntegration": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "evidence": ["work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-blender-modular-jewel-v001-r01"],
+    "validation": [".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-blender-modular-jewel-glb/build-validation.v1.json"],
+    "forbidden": ["other landmarks", "terrain", "mission/gameplay", "robots/commissioning FX", "source image modifications", "retired evidence/reviews"]
+  },
+  "capture": {
+    "required": [
+      "orbit-000-materials-on", "orbit-045-materials-on", "orbit-090-materials-on", "orbit-135-materials-on",
+      "orbit-180-materials-on", "orbit-225-materials-on", "orbit-270-materials-on", "orbit-315-materials-on",
+      "orbit-000-clay", "orbit-045-clay", "orbit-315-clay", "front-close-materials-on",
+      "front-close-honey-material-proof", "phone-overview"
+    ],
+    "render": "Blender headless from the exported GLB or export-identical scene, transparent/neutral studio background, fixed cameras, no UI overlays",
+    "integrity": "immutable r01; write renders first, manifest last, then independently hash GLB, blend, script, runtime integration, and every evidence image",
+    "gate": "Every required category at least 0.85. One blockout plus one bounded correction. Hard veto for mound/egg/gourd, cardboard honey, source projection, card/disk/shard/open shell, simple cones/onion fort, fewer than four countable bays, or weak phone identity."
+  }
+}

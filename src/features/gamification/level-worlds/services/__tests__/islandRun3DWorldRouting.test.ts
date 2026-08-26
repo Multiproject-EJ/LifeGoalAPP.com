@@ -29,15 +29,19 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(12)?.role, 'ordinary', 'Island 012 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.worldSourceNumber, 13, 'Island 013 owns the Cactus Canyon world');
       assertEqual(resolveIslandRun3DWorldRoute(13)?.role, 'ordinary', 'Island 013 keeps the ordinary-island role');
-      assertEqual(resolveIslandRun3DWorldRoute(22), null, 'Island 022 remains development-only until its visual Gauntlet passes');
+      assertEqual(resolveIslandRun3DWorldRoute(14)?.worldSourceNumber, 14, 'Island 014 owns the Honeycomb Kingdom world');
+      assertEqual(resolveIslandRun3DWorldRoute(14)?.role, 'ordinary', 'Island 014 keeps the ordinary-island role');
+      assertEqual(resolveIslandRun3DWorldRoute(16)?.worldSourceNumber, 22, 'runtime Island 016 owns the Fisherman\'s Village world');
+      assertEqual(resolveIslandRun3DWorldRoute(16)?.role, 'ordinary', 'Island 016 remains an ordinary mission island');
+      assertEqual(resolveIslandRun3DWorldRoute(22), null, 'runtime Island 022 stays free after the explicit reassignment to 016');
     },
   },
   {
     name: 'uses each completed visual world once during the reassignment',
     run: () => {
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 12, 'twelve authored world packs are currently routed');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 12, 'runtime islands are unique');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 12, 'visual source packs are unique');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 14, 'fourteen authored world packs are currently routed');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 14, 'runtime islands are unique');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 14, 'visual source packs are unique');
     },
   },
 ];

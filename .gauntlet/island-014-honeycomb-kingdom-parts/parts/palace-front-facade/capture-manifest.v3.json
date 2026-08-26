@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "partId": "palace-front-facade",
+  "constructionFamily": "procedural-threejs-unified-volumetric-cathedral-gable-facade",
+  "iteration": "blockout",
+  "status": "immutable-awaiting-independent-review",
+  "buildContract": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/build-contract.v2.json",
+    "sha256": "423c2bc9f6f1b8fa90cfac8aa1923af86cc5e434bf04d5c388491d207f67fa0b"
+  },
+  "retiredFamilyReview": {
+    "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.v2.json",
+    "sha256": "b435b4e21c034a7913220fea1b27dfa06ef68cb21b56fb18145b8360a3c5c4d3"
+  },
+  "evidenceRoot": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-v002-r01",
+  "renderMode": "actual-mesh-materials-off-svg-plus-browser-jpeg",
+  "captures": [
+    {"view":"orbit-000-front","svg":{"path":"island-014-palace-facade-000-v003.svg","sha256":"53d7a8138d8a7ad4cbed7bb4f83ed57983f005acabc5b7a0b10f69f88feff08d"},"jpeg":{"path":"island-014-palace-facade-000-v003.jpg","sha256":"03686c48bb431e779ea7892f91f241e1690fecafd5a6a3922bf2e46fb954a5ad"}},
+    {"view":"orbit-045-front-right","svg":{"path":"island-014-palace-facade-045-v003.svg","sha256":"255f845edd36bd383e2896fa657d304e95936d086a0f6c4bf26bb82f3a405dfa"},"jpeg":{"path":"island-014-palace-facade-045-v003.jpg","sha256":"5057fe91e3554c1a8bec69db297ab7583a6fe180e7ec9420d7f300c977fe8ee2"}},
+    {"view":"orbit-315-front-left","svg":{"path":"island-014-palace-facade-315-v003.svg","sha256":"3dd2145c8b4673183a39a924ed3714145aa6e10950ec832b9d94e748fddeefbe"},"jpeg":{"path":"island-014-palace-facade-315-v003.jpg","sha256":"d31b300b155a46bfe0d14a907bbda293b620c0df9c3f5aed03ce4865cc39600e"}},
+    {"view":"facade-closeup","svg":{"path":"island-014-palace-facade-close-v003.svg","sha256":"b5617e5dc022b1cafa6e005ebcb01e717baacf629aa094879dc9e4a989bf6c1a"},"jpeg":{"path":"island-014-palace-facade-close-v003.jpg","sha256":"4eb43a359277c53c1c1bc515740e485c178d653658e22eed8ec251a51605d425"}}
+  ],
+  "familyAssertions": [
+    "Retired applied rose/bay/frame rail/rib family deleted rather than reused.",
+    "One closed central gable and two closed interpenetrating occupied pylons form the front skin.",
+    "Door, rose, four bay sockets, short floor joints, and banners are skin-owned.",
+    "Overall facade width and height stay within the accepted palace macro silhouette."
+  ],
+  "gate": {
+    "minimumEveryRequiredCategory": 0.85,
+    "oneCorrectionMaximum": true,
+    "correctionsUsed": 0
+  }
+}

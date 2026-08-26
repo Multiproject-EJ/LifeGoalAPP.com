@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export interface IslandConstructionRevealPart {
   mesh: THREE.Mesh;
+  baseScale: THREE.Vector3;
   materials: Array<THREE.Material & { opacity: number; transparent: boolean; depthWrite: boolean }>;
   baseOpacities: number[];
   threshold: number;
@@ -19,6 +20,7 @@ export interface IslandConstructionLevelDelta {
   stageCounts: Readonly<Record<number, number>>;
   revealBatchCount: number;
   applyProgress: (progress: number, options?: { working?: boolean }) => void;
+  applyCommissioningScale: (scaleMultiplier: number, reducedMotion?: boolean) => void;
 }
 
 function quantize(value: number) {
@@ -219,6 +221,7 @@ export function prepareIslandConstructionLevelDelta(options: {
       : 0.5;
     return {
       mesh,
+      baseScale: mesh.scale.clone(),
       materials,
       baseOpacities: originalMaterials.map((material) => material.opacity),
       threshold: candidate.stage === null
@@ -242,6 +245,14 @@ export function prepareIslandConstructionLevelDelta(options: {
     });
   };
 
+  const applyCommissioningScale = (scaleMultiplier: number, reducedMotion = false) => {
+    const resolvedScale = reducedMotion ? 1 : THREE.MathUtils.clamp(scaleMultiplier, 0.82, 1.12);
+    revealParts.forEach((part) => {
+      if (part.temporary) return;
+      part.mesh.scale.copy(part.baseScale).multiplyScalar(resolvedScale);
+    });
+  };
+
   applyProgress(0);
   return {
     currentRoot: options.currentRoot,
@@ -252,5 +263,6 @@ export function prepareIslandConstructionLevelDelta(options: {
     stageCounts,
     revealBatchCount: revealParts.length,
     applyProgress,
+    applyCommissioningScale,
   };
 }

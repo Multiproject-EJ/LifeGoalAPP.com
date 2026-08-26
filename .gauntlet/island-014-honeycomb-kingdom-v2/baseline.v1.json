@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-014-honeycomb-kingdom-v2",
+  "capturedAt": "2026-08-25",
+  "goalAuthority": {
+    "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "pixelSize": [1023, 1537],
+    "authority": "exact"
+  },
+  "currentBaseline": {
+    "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/island-014-gauntlet-v2-baseline-2026-08-25.png",
+    "sha256": "f867d10764befd1d437d08f609d79cf87edf3ed03df39f57fcd1cb6127972583",
+    "pixelSize": [354, 832],
+    "runtimeUrl": "http://127.0.0.1:4175/dev/island-template-kit?mode=3d&island=14&level=3&guides=0&island3dEvidence=1&island3dQuality=low",
+    "userScore": 0.3,
+    "previousInternalFidelity": 0.64
+  },
+  "salvageDecision": {
+    "decision": "salvage-infrastructure-rebuild-visual-surface",
+    "retain": ["unique-island-routing", "canonical-board-integration", "five-landmark-build-levels", "three-robot-construction", "commissioning-pop", "quality-tier-and-batching-hooks"],
+    "replaceOrExpand": ["terrain-silhouette", "palace-architecture", "landmark-ornament", "honey-material", "honey-drip-geometry", "honeycomb-surface-system", "gardens", "background-colony", "signature-mission-spectacle"],
+    "reason": "The current scene proves the runtime route and construction system but reads as sparse brown blockout-like geometry rather than the source's luminous, dense, delicious Honeycomb Kingdom."
+  },
+  "largestMismatches": [
+    "central palace is a simple stacked brown mass instead of a luminous many-towered honeycomb cathedral",
+    "terrain is a flat clean plate rather than fractured, flower-covered honey-rock terraces",
+    "honeyfalls are thin opaque ribbons without viscous bulges, pooled lips, highlights or dangling drips",
+    "hexagonal patterns are too sparse and too small to read at phone scale",
+    "gold, wax, amber glass, green foliage and flower accents lack the source's value separation and abundance",
+    "background depth lacks enough hive islets, bee traffic and cloud layering"
+  ]
+}

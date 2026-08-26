@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9996270396270396,
+  "angles": [
+    {
+      "path": ".img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/nursery-r47-orbit-090-crop.png",
+      "areaFraction": 0.9884646464646465,
+      "ratio": 0.988833442154028,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/nursery-r47-orbit-270-crop.png",
+      "areaFraction": 0.9994973544973546,
+      "ratio": 0.9998702664848548,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Deterministic volume check only. Independent visual structural gate: 8.0/10 overall, honeycomb-shell 0.87, no hard veto."
+}

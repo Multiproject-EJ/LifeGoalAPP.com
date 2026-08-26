@@ -1,0 +1,482 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "auditor": {
+    "role": "independent-read-only-building-pov-quality-lord",
+    "method": "visual-first full-world orbit and phone audit; source/runtime hashes verified before scoring"
+  },
+  "repositoryHandshake": {
+    "worktree": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom",
+    "branch": "codex/island-014-honeycomb-kingdom",
+    "head": "5bb96d95df4906b5d3096b86ac375286c7e34b4a",
+    "dirtyWorktreeExpected": true,
+    "mutations": "No source, code, test, documentation, geometry, runtime, or existing evidence file was modified. Only this audit and temporary crops under the authorized audit directory were written."
+  },
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e"
+    },
+    "currentRuntime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "ec8966f2d4786d3777f53f4425f860381461067f9618cd3a62f5efae6c004274"
+    },
+    "evidencePacket": {
+      "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/honeyfall-royal-parterre-v004-r10",
+      "manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/honeyfall-royal-parterre-v004-r10/capture-manifest.v1.json",
+      "integrity": "PASS; every raster hash in the manifest independently matched",
+      "method": "CPU triangle projection of actual Three.js geometry and instance transforms"
+    },
+    "evidenceLimit": "The packet accurately supports geometry, silhouette, occlusion, placement and screen-space readability review. It does not reproduce GPU refraction, environment reflections, live transparency ordering or post-processing; scores do not treat those absent effects as geometry defects."
+  },
+  "scoringPolicy": {
+    "scale": "0-10",
+    "ten": "source-role-specific, authored and readable from every required view including phone",
+    "five": "recognizable but generic, incomplete, occluded or dependent on one favorable view",
+    "zero": "missing or unreadable",
+    "requiredViews": [
+      "orbit-000-front",
+      "orbit-045",
+      "orbit-090",
+      "orbit-180-rear",
+      "orbit-270",
+      "orbit-315",
+      "phone-000"
+    ],
+    "worstViewGoverns": true
+  },
+  "buildings": [
+    {
+      "id": "royal-palace",
+      "name": "Royal Palace",
+      "sourceRole": "hero honeycomb royal cathedral and island identity anchor",
+      "categoryScores": {
+        "macroSilhouette": 4.6,
+        "sourceRoleIdentity": 4.4,
+        "honeycombLanguage": 4.1,
+        "architecturalDetail": 3.6,
+        "doorWindowMechanismReadability": 4.2,
+        "sideRearCompleteness": 3.1,
+        "scale": 7.0,
+        "placement": 6.2,
+        "phonePov": 4.1
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 5.4,
+          "visibility": "dominant and mostly visible",
+          "finding": "The purple royal door, four orange shoulder caps and tall crown establish hierarchy, but the body is a pale low-poly mound/tower with sparse isolated hex windows rather than the source's dense inhabited honey cathedral. Great Honeyfall arcs and the floating crown network cross the facade and compete with the palace silhouette."
+        },
+        {
+          "view": "orbit-045",
+          "score": 4.2,
+          "visibility": "mostly visible; door partly lost",
+          "finding": "The oblique exposes one large egg-like side lobe, blank wax planes and applied collars. The palace loses its cathedral front stack and reads as an assembled toy hive with mission conduits crossing its face."
+        },
+        {
+          "view": "orbit-090",
+          "score": 3.7,
+          "visibility": "side silhouette visible; entrance hidden",
+          "finding": "The side is dominated by a smooth bulging pod and tall drum. Honeycomb structure is sparse, the small windows read as badges, and there is little architectural depth or civic side authorship."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 3.3,
+          "visibility": "rear fully exposed",
+          "finding": "The weakest view is a broad generic mound under a blank cylindrical lantern. A tiny dark rear opening and two hex cells do not create a royal rear elevation; large mission supports merge into the crown and side lobes."
+        },
+        {
+          "view": "orbit-270",
+          "score": 3.7,
+          "visibility": "opposite side exposed",
+          "finding": "The opposite side repeats the same primitive pod/drum grammar. Door, four-bay hierarchy and cathedral identity disappear, while the mission arch occludes the middle tier."
+        },
+        {
+          "view": "orbit-315",
+          "score": 4.1,
+          "visibility": "front oblique visible",
+          "finding": "The purple entrance returns, but a foreground archive tower and honey conduit overlap the palace, and the shell still reads as stacked bulbous primitives rather than continuous honeycomb architecture."
+        },
+        {
+          "view": "phone-000",
+          "score": 4.1,
+          "visibility": "hero remains visible but fine identity collapses",
+          "finding": "Scale preserves the palace as the focal point and the purple door survives, but honeycomb architecture, occupied windows and four-bay grouping collapse into a bright gold tower. Floating islands and the oversized mission crown add substantial silhouette noise."
+        }
+      ],
+      "governingWorstView": {
+        "view": "orbit-180-rear",
+        "score": 3.3
+      },
+      "defects": [
+        "generic beehive mound and tall blank drum",
+        "egg-like side masses and toy-castle assembly",
+        "sparse applied hex badges instead of continuous civic honeycomb",
+        "feature-poor side and rear elevations",
+        "Great Honeyfall arcs and crown structure collide with or occlude the landmark silhouette",
+        "phone view preserves height but not source identity"
+      ],
+      "action": {
+        "type": "REPLACE_CONSTRUCTION_FAMILY",
+        "reason": "The failures are structural across front, profile and rear; adding ornament cannot turn the mound/drum massing into the source's compact inhabited cathedral."
+      }
+    },
+    {
+      "id": "queen-nursery",
+      "name": "Queen's Nursery",
+      "sourceRole": "royal brood hatchery with egg/nursery identity",
+      "categoryScores": {
+        "macroSilhouette": 5.6,
+        "sourceRoleIdentity": 6.1,
+        "honeycombLanguage": 4.5,
+        "architecturalDetail": 4.1,
+        "doorWindowMechanismReadability": 4.3,
+        "sideRearCompleteness": 4.2,
+        "scale": 3.8,
+        "placement": 3.9,
+        "phonePov": 2.4
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 4.2,
+          "visibility": "small, rear-left and partly overlapped by palace/mission structure",
+          "finding": "The egg body, royal crown and bee crest suggest a nursery, but it reads as a small egg on a narrow pedestal. Door and brood-wing architecture are too small and partly hidden by the palace and garden."
+        },
+        {
+          "view": "orbit-045",
+          "score": 3.9,
+          "visibility": "edge view with substantial distance and overlap",
+          "finding": "The egg/crown survives, but lower chambers and entrance merge into the satellite terrain; the building becomes a generic domed post."
+        },
+        {
+          "view": "orbit-090",
+          "score": 4.5,
+          "visibility": "distant side silhouette visible",
+          "finding": "The stretched egg shell is readable, but honeycomb cells and the door are not. Radial symmetry substitutes for authored nursery side architecture."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 5.0,
+          "visibility": "nearer and mostly visible; base partly occluded by terrain roof and flowers",
+          "finding": "This is the clearest role read: crowned egg, small brood pods and arched openings. The foundation and entrance are still buried by the satellite plate, and the rear has no separate nursery/chamber program."
+        },
+        {
+          "view": "orbit-270",
+          "score": 4.4,
+          "visibility": "side/rear view at medium distance",
+          "finding": "The silhouette remains coherent, but details collapse to a sphere-on-column primitive and the small cell band is not legible."
+        },
+        {
+          "view": "orbit-315",
+          "score": 4.7,
+          "visibility": "favorable oblique but partially screened by flowers/terrain",
+          "finding": "Crown and egg identity are visible; door, brood wings and shell pattern remain too small for an L3 landmark."
+        },
+        {
+          "view": "phone-000",
+          "score": 2.4,
+          "visibility": "present but tiny",
+          "finding": "At phone scale it is a gold dot/tower behind the palace. Egg, door, brood chambers and honeycomb language are not reliably recognizable."
+        }
+      ],
+      "governingWorstView": {
+        "view": "phone-000",
+        "score": 2.4
+      },
+      "defects": [
+        "underscaled relative to its L3 satellite plot",
+        "stretched sphere-on-pedestal primitive read",
+        "door and brood wings disappear outside the favorable rear oblique",
+        "sparse shell honeycomb",
+        "garden and terrain occlude the lower program",
+        "phone role identity collapses"
+      ],
+      "action": {
+        "type": "BOUNDED_EDIT",
+        "reason": "The egg, crown and brood-wing concept is distinctive enough to keep. A bounded proportion/readability pass can widen and lower the shell, enlarge the door and brood pods, thicken the cell band, increase overall scale and clear the lower occlusion without changing the family."
+      }
+    },
+    {
+      "id": "pollinator-yard",
+      "name": "Pollinator Yard",
+      "sourceRole": "open cooperative pollination garden and work mechanism",
+      "categoryScores": {
+        "macroSilhouette": 5.1,
+        "sourceRoleIdentity": 6.6,
+        "honeycombLanguage": 5.7,
+        "architecturalDetail": 4.5,
+        "doorWindowMechanismReadability": 6.0,
+        "sideRearCompleteness": 6.0,
+        "scale": 4.0,
+        "placement": 4.7,
+        "phonePov": 2.7
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 4.9,
+          "visibility": "rear-right; ring and halo visible but small",
+          "finding": "The six-post pergola, central bee totem, hex halo and planting ring communicate an outdoor pollination yard. Thin posts and flowers disappear into the environment, and the palace/mission silhouette dominates it."
+        },
+        {
+          "view": "orbit-045",
+          "score": 5.0,
+          "visibility": "near edge, partially clipped by garden and frame",
+          "finding": "The circular work-yard mechanism stays coherent, but the torus canopy reads like a thin hoop and the six honeycomb planters are not individually readable."
+        },
+        {
+          "view": "orbit-090",
+          "score": 5.1,
+          "visibility": "front-right with reasonable exposure",
+          "finding": "The radial plan reads from above, but the central bee/totem is nearly hidden by ring overlap and the structure lacks the weight expected of an L3 landmark."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 5.8,
+          "visibility": "near-left and best exposed",
+          "finding": "Best view: the central totem, gold pergola and planted work circle are recognizable. Flowers crowd the base, while the halo and ring overlap into one line."
+        },
+        {
+          "view": "orbit-270",
+          "score": 5.3,
+          "visibility": "rear-right with clear ring profile",
+          "finding": "The radial design is complete from the opposite side, but all architectural members are thin and the honeycomb identity depends almost entirely on one floating halo."
+        },
+        {
+          "view": "orbit-315",
+          "score": 4.8,
+          "visibility": "distant rear edge",
+          "finding": "The hoop remains visible but planters, lanterns and the central mechanism merge into nearby flowers and dark terrain."
+        },
+        {
+          "view": "phone-000",
+          "score": 2.7,
+          "visibility": "present as a tiny ring",
+          "finding": "Only a small gold ring and hex outline survive. The bee totem, six planters, discipline/work mechanism and garden purpose cannot be read."
+        }
+      ],
+      "governingWorstView": {
+        "view": "phone-000",
+        "score": 2.7
+      },
+      "defects": [
+        "thin torus-and-post construction",
+        "central mechanism occluded by its own ring",
+        "planters and lanterns merge with ambient flowers",
+        "underscaled open silhouette",
+        "phone view retains only a generic hoop"
+      ],
+      "action": {
+        "type": "BOUNDED_EDIT",
+        "reason": "The radial pollinator-yard family and 360 completeness work. Scale, member thickness, halo height, planter size, central-totem contrast and local scenery clearance can be corrected without replacing the construction grammar."
+      }
+    },
+    {
+      "id": "hive-archives",
+      "name": "Hive Archives",
+      "sourceRole": "wisdom/archive landmark with visible books, records and civic knowledge storage",
+      "categoryScores": {
+        "macroSilhouette": 4.4,
+        "sourceRoleIdentity": 2.9,
+        "honeycombLanguage": 4.2,
+        "architecturalDetail": 3.7,
+        "doorWindowMechanismReadability": 3.8,
+        "sideRearCompleteness": 3.4,
+        "scale": 4.7,
+        "placement": 4.3,
+        "phonePov": 2.3
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 4.7,
+          "visibility": "front-left and reasonably large; base obscured by flowers",
+          "finding": "The building is a stacked cylinder/dome with small purple hex windows. The open-book geometry is not visible, the side pods are buried, and nothing in the silhouette communicates archive or wisdom."
+        },
+        {
+          "view": "orbit-045",
+          "score": 4.2,
+          "visibility": "far-left/edge oblique",
+          "finding": "It reads as a generic hive watchtower. Repeated primitive tiers and tiny applied windows replace library halls, shelves, reading bays or a book-shaped entrance."
+        },
+        {
+          "view": "orbit-090",
+          "score": 4.0,
+          "visibility": "distant rear-left",
+          "finding": "The domed tower remains present but source-role identity disappears. Side and rear surfaces are broad and blank except for isolated cell badges."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 4.3,
+          "visibility": "back-right with silhouette exposed",
+          "finding": "Hex crown and purple windows survive, but the rear is still the same tapered cylinder. No authored archive entrance, stack rhythm or reading program is visible."
+        },
+        {
+          "view": "orbit-270",
+          "score": 4.6,
+          "visibility": "front-right with tower clear",
+          "finding": "The landmark is recognizable only as a generic honey tower. Purple apertures add contrast but do not establish archives."
+        },
+        {
+          "view": "orbit-315",
+          "score": 4.8,
+          "visibility": "near foreground and relatively clear",
+          "finding": "Best exposure still shows a primitive domed silo with tiny windows; the book and reading pods remain hidden by scale, angle and flowers."
+        },
+        {
+          "view": "phone-000",
+          "score": 2.3,
+          "visibility": "present but tiny",
+          "finding": "It resolves as another small gold tower, easily confused with the nursery. No book, wisdom crown, reading pod or archive mechanism survives."
+        }
+      ],
+      "governingWorstView": {
+        "view": "phone-000",
+        "score": 2.3
+      },
+      "defects": [
+        "generic stacked cylinder and dome",
+        "toy silo/watchtower silhouette",
+        "open-book and reading-pod identity hidden",
+        "blank side and rear surfaces",
+        "lower door/program occluded by flowers and terrain",
+        "phone silhouette confused with Queen's Nursery"
+      ],
+      "action": {
+        "type": "REPLACE_CONSTRUCTION_FAMILY",
+        "reason": "Archive identity is absent from the macro silhouette in every view. A new family needs an unmistakable open-book/hex-library mass, visible reading hall, shelf/window rhythm and authored rear rather than more badges on the existing tower."
+      }
+    },
+    {
+      "id": "nectar-trials",
+      "name": "Nectar Trials",
+      "sourceRole": "arena/pavilion for visible nectar challenges and crossed-hammer trials",
+      "categoryScores": {
+        "macroSilhouette": 5.7,
+        "sourceRoleIdentity": 5.9,
+        "honeycombLanguage": 5.4,
+        "architecturalDetail": 4.5,
+        "doorWindowMechanismReadability": 4.1,
+        "sideRearCompleteness": 5.7,
+        "scale": 4.6,
+        "placement": 5.1,
+        "phonePov": 3.1
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 5.5,
+          "visibility": "front-right and clearly visible",
+          "finding": "The purple canopy, gold ring, columns and bee crest create a distinct event pavilion. The canopy hides the crossed hammers and nectar core, so it reads more as a tent than an arena challenge."
+        },
+        {
+          "view": "orbit-045",
+          "score": 5.8,
+          "visibility": "near foreground with strong canopy read",
+          "finding": "The pavilion is recognizable, but the thin columns and broad flat canopy dominate; the challenge mechanism remains buried beneath the roof."
+        },
+        {
+          "view": "orbit-090",
+          "score": 5.2,
+          "visibility": "front-left with moderate garden overlap",
+          "finding": "Radial construction is coherent, yet the hammers, core and arena floor merge into the canopy and flowers. The source-role read depends mostly on purple color."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 5.4,
+          "visibility": "back-left and exposed",
+          "finding": "The building is complete from behind, but radial symmetry offers no authored arena entrance or spectator/challenge face. The central mechanism remains occluded."
+        },
+        {
+          "view": "orbit-270",
+          "score": 5.4,
+          "visibility": "rear-left with clear canopy silhouette",
+          "finding": "Canopy and ring survive, but thin posts, tiny banners and hidden hammers create a generic gazebo read."
+        },
+        {
+          "view": "orbit-315",
+          "score": 5.2,
+          "visibility": "distant right edge",
+          "finding": "Purple provides separation, although the small structure competes with flowers and terrain and its challenge content is not readable."
+        },
+        {
+          "view": "phone-000",
+          "score": 3.1,
+          "visibility": "small but purple canopy survives",
+          "finding": "The purple pavilion is distinguishable from the other satellites, but it is only a colored tent. Crossed hammers, nectar core, arena floor and honeycomb trial language disappear."
+        }
+      ],
+      "governingWorstView": {
+        "view": "phone-000",
+        "score": 3.1
+      },
+      "defects": [
+        "flat low-poly tent/gazebo canopy",
+        "crossed hammers and nectar core hidden beneath canopy",
+        "thin columns and banners",
+        "flowers occlude arena floor",
+        "phone identity depends on purple color rather than mechanism"
+      ],
+      "action": {
+        "type": "BOUNDED_EDIT",
+        "reason": "The radial arena/pavilion family is distinct and 360-complete. Raising the canopy, enlarging and rotating the crossed hammers/core, thickening columns and ring, exposing the arena floor and increasing scale can restore trial identity without replacing the family."
+      }
+    }
+  ],
+  "rankedHighestImpactFixes": [
+    {
+      "rank": 1,
+      "building": "Royal Palace",
+      "scope": "construction-family replacement",
+      "impact": "The hero occupies the most pixels in every composition; replacing the mound/drum family and separating Great Honeyfall FX from its silhouette would improve source identity, 360 quality and phone hierarchy simultaneously."
+    },
+    {
+      "rank": 2,
+      "building": "Hive Archives",
+      "scope": "construction-family replacement",
+      "impact": "It currently contributes almost no role-specific information and is confused with the nursery. A book/hex-library silhouette would diversify the four satellite identities immediately."
+    },
+    {
+      "rank": 3,
+      "building": "Queen's Nursery",
+      "scope": "salvageable bounded edit",
+      "impact": "Its egg concept already works; a proportion, scale, doorway and lower-clearance pass can turn a tiny pedestal object into a readable brood landmark at relatively low cost."
+    },
+    {
+      "rank": 4,
+      "building": "Nectar Trials",
+      "scope": "salvageable bounded edit",
+      "impact": "The purple pavilion is compositionally distinct. Exposing and enlarging the crossed-hammer/nectar mechanism would convert color-only identity into an instantly readable arena."
+    },
+    {
+      "rank": 5,
+      "building": "Pollinator Yard",
+      "scope": "salvageable bounded edit",
+      "impact": "The radial yard is already conceptually correct; thickening, scaling and clearing its existing mechanism would improve phone readability without major reconstruction."
+    }
+  ],
+  "familyDisposition": {
+    "constructionFamilyReplacement": [
+      "Royal Palace",
+      "Hive Archives"
+    ],
+    "salvageableBoundedEdit": [
+      "Queen's Nursery",
+      "Pollinator Yard",
+      "Nectar Trials"
+    ]
+  },
+  "crossBuildingFindings": [
+    "Phone composition is the governing view for all four satellite landmarks; their role-specific details are too small relative to the palace, floating terrain and mission crown.",
+    "Ambient flowers are improved in r10 but still cover doors, arena floors and lower program on the satellites.",
+    "The nursery and archives share too much sphere/cylinder/dome grammar and become confusable at distance.",
+    "The palace mission infrastructure is visually coupled to the hero shell and should be offset or staged so it does not become part of the permanent building silhouette.",
+    "Radially symmetric yard and arena families are coherent from 360 degrees, but thin members and hidden mechanisms make them feel like props rather than L3 buildings."
+  ],
+  "overallVerdict": {
+    "readyForTenOutOfTenClaim": false,
+    "finding": "All five buildings are present and the palace establishes scale, but no building reaches a robust all-view, phone-readable source-role standard. The most important work is structural replacement of the palace and archives, followed by bounded satellite scale/mechanism passes."
+  }
+}

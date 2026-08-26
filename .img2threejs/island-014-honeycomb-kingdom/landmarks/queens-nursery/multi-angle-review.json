@@ -1,0 +1,10 @@
+{
+  "referenceAreaFraction": 0.9990601851851851,
+  "angles": [
+    {"path":"nursery-orbit-180-crop.png","areaFraction":0.9957202380952381,"ratio":0.9966569110255076,"degenerate":false},
+    {"path":"nursery-orbit-315-crop.png","areaFraction":0.9990041208791208,"ratio":0.9999438829543048,"degenerate":false}
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "limitation": "The deterministic mask treated most crop pixels as foreground because the Nursery remains embedded in the world scene. This proves only that the captured orbit does not collapse; it does not approve likeness, materials, framing, or isolation quality."
+}

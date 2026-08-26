@@ -1,0 +1,26 @@
+[
+  {
+    "id": "royal-egg-silhouette",
+    "tier": "critical",
+    "score": 0.58,
+    "minimumScore": 0.80,
+    "passed": false,
+    "critique": "The runtime is recognizably egg-shaped, but it is too broad and architectural. The pale open cage dominates the apex, while the source is a compact pointed jewel egg seated in a low collar."
+  },
+  {
+    "id": "honeycomb-shell-system",
+    "tier": "critical",
+    "score": 0.28,
+    "minimumScore": 0.80,
+    "passed": false,
+    "critique": "The source is covered by large dark recessed cells with thick bright borders. The runtime shell is mostly blank gold; its few small perimeter windows do not read as a shell-wide honeycomb network."
+  },
+  {
+    "id": "edible-wax-honey-response",
+    "tier": "critical",
+    "score": 0.35,
+    "minimumScore": 0.75,
+    "passed": false,
+    "critique": "The runtime evidence is flat yellow-orange with limited caramel depth, glossy meniscus highlights, or viscous honey contrast. CPU evidence cannot prove the final GPU response, but the current value separation is already insufficient."
+  }
+]

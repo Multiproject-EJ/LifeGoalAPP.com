@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "queued-after-palace-completion",
+  "landmarkId": "hatchery",
+  "group": "queen-hatchery",
+  "partIds": ["hatchery-egg-shell", "hatchery-nursery-base", "hatchery-crown", "hatchery-cell-ornament"],
+  "constructionFamily": "procedural-threejs-royal-brood-egg-cathedral",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "inventory": ".gauntlet/island-014-honeycomb-kingdom-parts/part-inventory.v1.json",
+    "sourceCue": "The HATCHERY panel's large tapered honeycomb egg and Queen's Nursery copy, plus the source island's subordinate golden hive architecture."
+  },
+  "workerAllowlist": {
+    "implementation": ["createHatchery in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "evidence": ["isolated actual-mesh orbit evidence under evidence/hatchery-v001-*"],
+    "forbidden": ["royal palace", "other landmarks", "terrain", "board", "honeyfalls", "mission", "robots", "gameplay"]
+  },
+  "requiredFeatures": [
+    "A single unmistakable tapered royal brood egg is the hero silhouette: weighted base, narrower shoulder, pointed crown, and visible six-sided shell segmentation from every orbit.",
+    "The egg is visibly housed in a broad nursery base with an egg-seat collar, centered purple arched nursery door, short entry stairs, and two low brood wings that support rather than compete with the egg.",
+    "Honeycomb shell structure uses sparse large structural cells plus medium collar cells over dark or translucent amber recesses; never uniform tiny wallpaper.",
+    "A substantial royal crown collar and queen/bee finial seat cleanly on the egg tip with rear continuity and no floating socket.",
+    "Warm internal nursery glow and occupied brood-wing windows survive the phone overview while the egg remains the first read.",
+    "360 geometry is closed and coherent: no front card, blank rear, intersecting wings, or unsupported crown."
+  ],
+  "strictRejects": ["smooth undecorated sphere", "generic beehive hut", "egg floating above base", "crown piercing or hovering", "tiny hex wallpaper", "wings wider or taller than the hero egg", "front-only door card"],
+  "capture": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "additional": ["high-front", "phone-overview", "materials-off", "materials-on"],
+    "reviewCategories": ["egg-identity", "nursery-foundation", "crown-attachment", "cell-depth", "side-rear-continuity", "phone-readability"],
+    "gate": "Every required category at least 0.85; one correction maximum."
+  }
+}

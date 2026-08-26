@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "status": "awaiting-independent-terminal-quality-lord-review",
+  "partId": "palace-front-facade",
+  "constructionFamily": "blender-solid-modular-honey-cathedral-facade",
+  "authority": {
+    "qcReview": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v2.json", "sha256": "4b6468a09f61d3716855bad1dff6d587980547cf22e2579f21c7c6712ca8214b"},
+    "correctionContract": {"path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/correction-contract.blender.v2.json", "sha256": "ab6a37d63a18d148de37fbbe44b22f41eac4d9e01d8e5dcf01390bd40b3bb325"}
+  },
+  "toolchain": {
+    "blenderVersion": "5.2.0 LTS",
+    "builder": {"path": "scripts/blender/build-island014-palace-facade-v2.py", "sha256": "64bf84f048ecd5c0dd1a5dc42377ddfcc851965d6801874d1c8ed08361e4686e"},
+    "evidenceRenderer": {"path": "scripts/render-island014-palace-clay-orbit.mjs", "sha256": "7bb18ff0fc495aed618fe07dabaa7132b90250a34c1df5dc98dd68b69c3992f3"}
+  },
+  "artifacts": {
+    "blend": {"path": "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v003.blend", "sha256": "6376216b1257f11235c8d380d5ed86e29e0e7b965ae1d65797242f7a25d24b7e"},
+    "glb": {"path": "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v003.glb", "sha256": "1474b40b147a11d86c4d3ca5cd6ab8021e4372a915da1b53c14a179828ef8642"},
+    "runtimeJson": {"path": "src/features/gamification/level-worlds/dev/assets/island14PalaceFacadeBlenderV2.json", "sha256": "5aa19df271befe557b4ba11a1825d0dd4d5f2e3c7f77e6b6b7109cfcb7e42c87"},
+    "runtimeIntegration": {"path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts", "sha256": "26ae8e035bd16cafced8f03f597fa9fd3a466eb11088d3eb71933104b1955094"}
+  },
+  "meshAudit": {"runtimeMeshParts":22,"triangles":2600,"budgetMaximumMeshParts":24,"budgetMaximumTriangles":22000,"coordinateMap":"three(x,y,z)=blender(x,z,-y)","correctionsUsed":1},
+  "measurements": {"doorOpeningWidth":1.12,"roseOuterDiameter":0.80,"roseDiameterToDoorWidth":0.714286,"roseFrontProjection":0.06,"roseCoreRecess":0.177,"doorPlaneRecessBehindArch":0.18,"doorSeamHeightFraction":0.895,"doorSeamWidth":0.055,"beeSigilDiameter":0.23,"handleDiameter":0.11},
+  "captureManifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/capture-manifest.v1.json",
+  "correctionBudget": {"maximum":1,"used":1,"remaining":0}
+}

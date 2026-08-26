@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-first-visual-gate-valid-r02"
+  },
+  "subject": "Island 014 threejs closed cross-plan honey cathedral shell immutable r02 gate",
+  "constructionFamily": "threejs-closed-cross-plan-honey-cathedral-shell",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/build-contract.v1.json",
+      "sha256": "68ad6e6eabd37ac94b6dd2013913d849e2c8c7895033bec0973916fdbf735343"
+    },
+    "captureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-true-360-shell-v001-r02/capture-manifest.v1.json",
+      "sha256": "a56859f49505b4e78abfc5e5cd08a015d99f5d4dce908b9ecfae5bcaf4e3c041"
+    },
+    "hashVerification": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-true-360-shell-v001-r02/hash-verification.v1.json",
+      "sha256": "440a6494ed8343aba8df61b32a0c071dfb96748774902d65d77c612036d1be42"
+    },
+    "runtime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "d673d9660b8e476a67d6c13818fc99a125cf22e89542a1059d092feb5cd43430"
+    },
+    "priorReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/qc-review.v1.json",
+      "sha256": "e31e2be0c77ef5f6bf316532412dfc261a18f82c461f06027fb506a651d05350",
+      "treatment": "evidence-invalid STOP only; no visual-family outcome carried into this review"
+    }
+  },
+  "evidenceIntegrity": {
+    "valid": true,
+    "independentVerification": "Quality Lord re-hashed all 13 SVG and all 13 PNG files plus runtime before opening any pixels.",
+    "verifiedEvidenceFiles": 26,
+    "evidenceMismatches": 0,
+    "runtimeMatch": true,
+    "finding": "The r02 packet is immutable and valid for terminal first-pass scoring."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "criticalFirstPassFloor": 0.50,
+    "worstViewCategoryGoverns": true,
+    "hardVetoRetiresFirstPass": true,
+    "oneBoundedCorrectionMaximum": true,
+    "correctionsUsed": 0,
+    "correctionsRemainingIfEligible": 1,
+    "allowedActions": [
+      "APPROVE",
+      "ONE-BOUNDED-CORRECTION",
+      "RETIRE-FAMILY",
+      "STOP"
+    ]
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "sourceIdentity": 0.38,
+      "silhouetteVolume": 0.55,
+      "doorFirstHierarchy": 0.62,
+      "fourBayReadability": 0.55,
+      "attachment": 0.58,
+      "crossViewCoherence": 0.35,
+      "sideRearAuthorship": null,
+      "honeyMaterialRead": 0.50,
+      "phoneReadability": 0.42,
+      "note": "The front is closed and entrance-led, but it is a sparse boxy onion-dome fort. The huge black circular entrance/rose assembly, flat wall fields, repeated hemispheres, and pale orange finish do not reproduce the source's compact ornate honey cathedral."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "sourceIdentity": 0.32,
+      "silhouetteVolume": 0.52,
+      "doorFirstHierarchy": 0.45,
+      "fourBayReadability": 0.45,
+      "attachment": 0.38,
+      "crossViewCoherence": 0.30,
+      "sideRearAuthorship": 0.45,
+      "honeyMaterialRead": 0.48,
+      "phoneReadability": 0.35,
+      "note": "The source-facing facade thins into broad planar slabs, the purple door breaks into a wedge, the circular rose/backplane exposes substantial side depth, and repeated domes replace occupied honeycomb bay masses."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.50,
+      "doorFirstHierarchy": null,
+      "fourBayReadability": 0.35,
+      "attachment": 0.45,
+      "crossViewCoherence": 0.30,
+      "sideRearAuthorship": 0.42,
+      "honeyMaterialRead": 0.42,
+      "phoneReadability": 0.30,
+      "note": "A real side wall exists, but it is a broad under-authored slab with sparse extruded windows, flat purple strips, generic domes, and the front circular feature visible as an oversized disk/paper edge."
+    },
+    {
+      "view": "orbit-135-materials-on",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.48,
+      "doorFirstHierarchy": null,
+      "fourBayReadability": 0.35,
+      "attachment": 0.28,
+      "crossViewCoherence": 0.22,
+      "sideRearAuthorship": 0.45,
+      "honeyMaterialRead": 0.42,
+      "phoneReadability": 0.28,
+      "note": "The giant front circular backplane protrudes beyond the palace silhouette, and side posts/windows read as loosely attached pieces rather than wrapped structural ribs and occupied bays."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.52,
+      "doorFirstHierarchy": null,
+      "fourBayReadability": 0.35,
+      "attachment": 0.50,
+      "crossViewCoherence": 0.42,
+      "sideRearAuthorship": 0.55,
+      "honeyMaterialRead": 0.42,
+      "phoneReadability": 0.30,
+      "note": "The rear is closed and authored with a subordinate service apse, but it remains a sparse box-and-dome elevation without source-like honeycomb framing, glazing, selective drips, or inhabited civic depth."
+    },
+    {
+      "view": "orbit-225-materials-on",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.48,
+      "doorFirstHierarchy": null,
+      "fourBayReadability": 0.35,
+      "attachment": 0.28,
+      "crossViewCoherence": 0.22,
+      "sideRearAuthorship": 0.45,
+      "honeyMaterialRead": 0.42,
+      "phoneReadability": 0.28,
+      "note": "The opposite rear oblique repeats the protruding front disk, slab side, sparse openings, and loosely attached dark posts."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.50,
+      "doorFirstHierarchy": null,
+      "fourBayReadability": 0.35,
+      "attachment": 0.45,
+      "crossViewCoherence": 0.30,
+      "sideRearAuthorship": 0.42,
+      "honeyMaterialRead": 0.42,
+      "phoneReadability": 0.30,
+      "note": "The right side is volumetric but generic and sparsely authored; honeycomb civic structure does not wrap the corner."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.42,
+      "doorFirstHierarchy": 0.25,
+      "fourBayReadability": 0.40,
+      "attachment": 0.22,
+      "crossViewCoherence": 0.18,
+      "sideRearAuthorship": 0.40,
+      "honeyMaterialRead": 0.45,
+      "phoneReadability": 0.25,
+      "note": "The royal-front assembly turns into broad diagonal black/purple planar shards and gaps. Door and rose no longer read as coherent forms, producing a camera-dependent facade collapse."
+    },
+    {
+      "view": "orbit-000-materials-off",
+      "sourceIdentity": 0.35,
+      "silhouetteVolume": 0.58,
+      "doorFirstHierarchy": 0.55,
+      "fourBayReadability": 0.50,
+      "attachment": 0.55,
+      "crossViewCoherence": 0.35,
+      "sideRearAuthorship": null,
+      "honeyMaterialRead": null,
+      "phoneReadability": 0.35,
+      "note": "Naked geometry confirms a closed shell but also the overscaled circular front disk, broad sparse slabs, and repeated hemisphere-on-drum vocabulary."
+    },
+    {
+      "view": "orbit-045-materials-off",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.50,
+      "doorFirstHierarchy": 0.42,
+      "fourBayReadability": 0.40,
+      "attachment": 0.35,
+      "crossViewCoherence": 0.28,
+      "sideRearAuthorship": 0.42,
+      "honeyMaterialRead": null,
+      "phoneReadability": 0.30,
+      "note": "The naked oblique proves the ornate read is not carried around the corner and the front disk is insufficiently buried into the body."
+    },
+    {
+      "view": "orbit-315-materials-off",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.42,
+      "doorFirstHierarchy": 0.25,
+      "fourBayReadability": 0.35,
+      "attachment": 0.22,
+      "crossViewCoherence": 0.18,
+      "sideRearAuthorship": 0.38,
+      "honeyMaterialRead": null,
+      "phoneReadability": 0.25,
+      "note": "The geometry remains closed, but the front is still a layered disk/gable assembly with poor burial and no source-like cross-corner integration."
+    },
+    {
+      "view": "front-close-materials-on",
+      "sourceIdentity": 0.35,
+      "silhouetteVolume": 0.48,
+      "doorFirstHierarchy": 0.62,
+      "fourBayReadability": 0.35,
+      "attachment": 0.45,
+      "crossViewCoherence": 0.30,
+      "sideRearAuthorship": null,
+      "honeyMaterialRead": 0.48,
+      "phoneReadability": 0.45,
+      "note": "The purple doorway and bees are visible, but the bees float in giant black voids and the entrance lacks the source's dense gold-bronze enclosure, glazing, honeycomb detail, and refined royal-door proportions."
+    },
+    {
+      "view": "phone-overview",
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.50,
+      "doorFirstHierarchy": 0.50,
+      "fourBayReadability": 0.35,
+      "attachment": 0.40,
+      "crossViewCoherence": 0.30,
+      "sideRearAuthorship": null,
+      "honeyMaterialRead": 0.30,
+      "phoneReadability": 0.32,
+      "note": "At phone scale the asset reduces to a pale orange onion-dome fort. Honeycomb bays, dark amber glazing, bee details, purple royal identity, ribs, and delicious honey drips largely disappear."
+    }
+  ],
+  "categorySummary": {
+    "sourceIdentity": 0.25,
+    "silhouetteVolume": 0.42,
+    "doorFirstHierarchy": 0.25,
+    "fourBayReadability": 0.35,
+    "attachment": 0.22,
+    "crossViewCoherence": 0.18,
+    "sideRearAuthorship": 0.38,
+    "honeyMaterialRead": 0.30,
+    "phoneReadability": 0.25
+  },
+  "worstRequiredScore": {
+    "value": 0.18,
+    "views": [
+      "orbit-315-materials-on",
+      "orbit-315-materials-off"
+    ],
+    "dimension": "crossViewCoherence"
+  },
+  "hardVetoEvaluation": {
+    "cardOrPaperEdgeRead": {
+      "present": true,
+      "exactEvidence": "At 090, 135, 225, and 270 degrees the circular front rose/backplane exposes a large disk edge outside the body silhouette; at 315 materials-on the facade becomes diagonal planar shards."
+    },
+    "openShell": {
+      "present": false,
+      "exactEvidence": "The shell and rear are visibly closed; no blue background shows through, and the validated runtime reports zero open surfaces."
+    },
+    "detachedOrInsufficientlyIntegratedDetail": {
+      "present": true,
+      "exactEvidence": "The front circular assembly is insufficiently buried and reads as a separate disk; bee emblems float in large dark voids and several side posts/windows read as loosely attached pieces."
+    },
+    "unauthoredRear": {
+      "present": false,
+      "exactEvidence": "The 180-degree view includes a closed subordinate service apse and rear openings, although side-rear authorship scores only 0.55 there."
+    },
+    "cameraDependentRequiredFormCollapse": {
+      "present": true,
+      "exactEvidence": "The coherent 000-degree purple door/rose read disappears at 315 degrees into black and purple diagonal planar fragments."
+    },
+    "forbiddenOnionDomeMosqueFortDrift": {
+      "present": true,
+      "exactEvidence": "The oversized hero onion dome, repeated hemisphere-on-drum roofs, sparse ochre slabs, and generic window posts dominate every orbit and the phone view."
+    }
+  },
+  "largestMismatch": "The exact source is a compact, ornate, inhabited honey cathedral whose gold-bronze ribs, four occupied honeycomb bay masses, purple bee doorway, amber glazing, and selective drips read as one coherent civic body. This valid family is a sparse boxy onion-dome fort with an oversized protruding circular front disk, weak honey materials, and a 315-degree facade collapse.",
+  "gateEvaluation": {
+    "everyRequiredCategoryAtLeast085": false,
+    "criticalFirstPassFloorMet": false,
+    "hardVetoPresent": true,
+    "eligibleForBoundedCorrection": false,
+    "finding": "The immutable r02 packet validates the family, but the worst required score is 0.18, far below the 0.50 correction floor. Card/paper-edge, detached-integration, camera-dependent required-form collapse, and forbidden-archetype vetoes are also present. Under the Gauntlet, the unused correction allowance cannot be granted."
+  },
+  "action": "RETIRE-FAMILY"
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "status": "retired-after-blockout-gate",
+  "partId": "pollinator-yard",
+  "constructionFamily": "threejs-fused-seven-cell-pollinator-work-hall-v3",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/pollinator-yard/isolation/derived-crops/pollinator-yard-visible-source-crop-v001.png",
+    "secondaryTurnaround": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.png",
+    "secondaryTurnaroundMetadata": "docs/visual-references/island-014-honeycomb-kingdom/secondary-inferred/pollinator-yard-turnaround-v1.md",
+    "inventory": ".gauntlet/island-014-honeycomb-kingdom-parts/part-inventory.v1.json"
+  },
+  "workerAllowlist": {
+    "implementation": [
+      "createIsland14PollinatorYardV2 only in src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts"
+    ],
+    "evidence": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/pollinator-yard-v003-*",
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v009-*"
+    ],
+    "forbidden": [
+      "queen hatchery",
+      "hive archives",
+      "nectar trials",
+      "royal palace",
+      "terrain",
+      "route",
+      "mission",
+      "gameplay"
+    ]
+  },
+  "requiredFeatures": [
+    "A low broad hexagonal civic yard with a clear front entry and open perimeter work apron.",
+    "Exactly six large connected occupied hex-cell room pods visibly surround one dominant central chamber; the seven cells read as one fused civic building rather than loose badges.",
+    "Thick warm-gold structural frames sit over dark recessed sockets with selective amber inner glow and real depth.",
+    "The six-cell identity remains legible at front, both three-quarters, side, rear, and phone overview.",
+    "A low broad crown and finial support seat on the central chamber and remain subordinate to the seven-cell silhouette.",
+    "A bee relief is embedded into the front central cell, survives phone scale, and never becomes a detached mascot.",
+    "Side and rear faces are fully closed and authored with connected cell walls, a subordinate service entry, and plausible structural continuation.",
+    "Small work-tool and honey accents stay subordinate and do not obscure the six-plus-one cell count."
+  ],
+  "strictRejects": [
+    "flower or giant petal silhouette",
+    "planter cluster",
+    "open pergola or gazebo",
+    "ferris wheel or pollen rotor",
+    "flat honeycomb badge facade",
+    "detached bee mascot",
+    "front-only treatment or blank rear",
+    "seven equal loose cells without a dominant center chamber",
+    "more than one bounded correction in this construction family"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 90, 135, 180, 225, 270, 315],
+    "additional": ["phone-overview", "front-close", "rear-close", "materials-off"],
+    "reviewCategories": ["source-identity", "silhouette", "seven-cell-unity", "surface-depth", "side-rear-continuity", "bee-readability", "phone-readability"],
+    "blockoutGate": "All structural categories at least 0.75 with no strict reject.",
+    "finalGate": "All required categories at least 0.85 with no strict reject."
+  },
+  "budget": {
+    "constructionFamilies": 1,
+    "boundedCorrections": 1
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25T15:58:45.631Z",
+  "status": "structurally-validated-awaiting-independent-visual-review",
+  "constructionFamily": "threejs-rounded-layered-jewel-hive-cathedral",
+  "sourceHashes": {
+    "exactSource": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+    "exactCrop": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+    "sideRearInferenceAid": "cf8486e879a188b3a00db9b1e65bd99b6b940f567161664b4f8136734f9425a3"
+  },
+  "artifactHashes": {
+    "runtime": "c7c3774bcb07ed8f3172cbed88f704418d8d211185fa6eb1939569c2ffc9ef03",
+    "buildContract": "8c036996bb3b545364af21a2a5cc333b5a5edc6b10971b1c165b5dd103dff46d",
+    "renderer": "ddc0a2252ecbd0d2bca941c908a07d5cb27269c5216228b385d301f85dc2ea0d"
+  },
+  "cathedral": {
+    "constructionFamily": "threejs-rounded-layered-jewel-hive-cathedral",
+    "subassemblyOrder": [
+      "A-rounded-macro",
+      "B-deep-portal",
+      "C-four-front-bays",
+      "D-continuous-tracery",
+      "E-scalloped-cupolas",
+      "F-glazing-filigree",
+      "G-attached-honey",
+      "H-authored-rear"
+    ],
+    "facadeWidth": 3.38,
+    "footprintDepth": 2.58,
+    "footprintDepthRatio": 0.7633136094674556,
+    "totalHeight": 3.98,
+    "totalHeightRatio": 1.1775147928994083,
+    "outerDoorWidth": 1.1,
+    "purpleDoorWidth": 0.48,
+    "embeddedRoseWidth": 0.8,
+    "frontDominantBayCount": 4,
+    "frontExoskeletonCoverage": 0.72,
+    "sideExoskeletonCoverage": 0.48,
+    "scallopedCupolaCount": 5,
+    "simpleConeRoofCount": 0,
+    "smoothOnionRoofCount": 0,
+    "honeyCurtainCount": 5,
+    "honeyAssembly": "attached-shelf+sagging-curtain+tapering-strands+convex-highlight+weighted-teardrops",
+    "runtimeProjectionCount": 0,
+    "facadeCardCount": 0,
+    "authoredElevations": [
+      "front",
+      "left",
+      "right",
+      "rear"
+    ]
+  },
+  "metrics": {
+    "meshCount": 27,
+    "triangleCount": 32364,
+    "openPlaneCount": 0,
+    "forbiddenLiveNames": []
+  },
+  "checks": {
+    "sourceHashMatches": true,
+    "cropHashMatches": true,
+    "multiviewHashMatches": true,
+    "contractHashMatches": true,
+    "correctConstructionFamily": true,
+    "subassemblyOrderComplete": true,
+    "runtimeProjectionCountZero": true,
+    "facadeCardCountZero": true,
+    "simpleConeRoofCountZero": true,
+    "smoothOnionRoofCountZero": true,
+    "forbiddenLiveMeshCountZero": true,
+    "openPlaneCountZero": true,
+    "footprintDepthRatioInContract": true,
+    "totalHeightInContract": true,
+    "royalDoorWidthInContract": true,
+    "purpleDoorWidthInContract": true,
+    "embeddedRoseWidthInContract": true,
+    "fourFrontBays": true,
+    "frontCoverageAtLeast065": true,
+    "sideCoverageAtLeast040": true,
+    "fiveScallopedCupolas": true,
+    "fiveAttachedHoneyCurtains": true,
+    "authoredHoneyAssembly": true,
+    "allElevationsAuthored": true,
+    "runtimeDrawCallsAtMost64": true,
+    "trianglesAtMost120000": true,
+    "allRequiredEvidencePresent": true,
+    "allRasterEvidencePresent": true
+  },
+  "verification": {
+    "runtimeSha256": "c7c3774bcb07ed8f3172cbed88f704418d8d211185fa6eb1939569c2ffc9ef03",
+    "runtimeMatches": true,
+    "captureManifestSha256": "fbbdab2e15696ffbc2493169424e879c3bccb8168a6363844d7d76e29f017382",
+    "evidenceFileCount": 28,
+    "evidenceMismatchCount": 0,
+    "views": [
+      {
+        "id": "orbit-000-materials-on",
+        "svgSha256": "e3351fb2c3052a4e6a87ee14dd86bc8096f262df31a79dea66a6c88a14fe7c12",
+        "rasterSha256": "d0a982aa57cb38c0e28790081868971570159849b2037b770e2f668bdedc3fd0",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-045-materials-on",
+        "svgSha256": "c9f9ba114941f6a3e543093a93a2dde958ded2d9dfb0a3c79d0a8d5ee69ecffa",
+        "rasterSha256": "28a1443868aab503bedf449aa70ac51c7abdbc6780ba3b420aa6ecb7e7f2fc22",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-090-materials-on",
+        "svgSha256": "307b60de45c3dd3fecf4c5e3cc99b7e9571d706aa8f306da18733a9c0d8012bd",
+        "rasterSha256": "b4f7a247bed3453edf8d6245b88de85418386a93f6134ebefa5ec3218baa35c8",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-135-materials-on",
+        "svgSha256": "9032fd0cafa4d6ec85d25ca7fa87d87e47efbe5831c3a8b79e5ca64470bc72f4",
+        "rasterSha256": "c5f69a771380394c930d13960260a26a736c7f3ff1b0582b4061e6fc4914ad64",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-180-materials-on",
+        "svgSha256": "6af77af2bcc4dc0c723169cb1d34f9a400506daee7c42482ee0d15654e120a07",
+        "rasterSha256": "c4372de5fff45b6035e40566e37dedad3ce3c4ae02bc482c059768311517cd87",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-225-materials-on",
+        "svgSha256": "ed027043ce26f07f6168b19685234ab3ada01d79625eec5e0ffb3c15d1853369",
+        "rasterSha256": "04bbfa5a11e89b0010f78d0264954ec782a5c2c55a8ecf29598d08620d48287f",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-270-materials-on",
+        "svgSha256": "c527c63337e53f2e94df005574c9edb11803685f12284ef0d788bc01c268c1f3",
+        "rasterSha256": "498aec434ef6be62771bceda09cb8d63d61f88d925d5c58b8a60c9c6b1f484cf",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-315-materials-on",
+        "svgSha256": "bf9359ba303f999bf32e6684f2e2bdd1dd8f035449dcc565856918be1a2d4985",
+        "rasterSha256": "d05554fcfccd16657b34ffe8ee02db61923b4db702182813d6658a69a80e9543",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-000-materials-off",
+        "svgSha256": "b96d3d490da4d5e8cbcafa95b6fd5f595c5a3f80323a59d47203e0a44007678e",
+        "rasterSha256": "bf8857ce5adc0aaeb6ca189254e9d09b758355e197d47e1af89382c75a19ee62",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-045-materials-off",
+        "svgSha256": "d3220dfc849cd829cdea37e261c3a5a43a0f7eab9aa614dcd8b0b7874fd81b75",
+        "rasterSha256": "1dc0c65216583ebe16614567883ff8442eb5c46be224d95bbb8612659709077a",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "orbit-315-materials-off",
+        "svgSha256": "bfa0d61ff5d1c5296c704eb1309545f29ed41c574bb8587d189b43ef86c2effc",
+        "rasterSha256": "9dc7a96b02bbd460da6faffc4208cf117990009b3dfec06cb2c4327f5eebef34",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "front-close-materials-on",
+        "svgSha256": "66826bbdb1df697299f5e84427771ed6a43cb6b7f5917f002c7e88e6578cbf90",
+        "rasterSha256": "34202d12a3337393b46ce3daf03d7f0dde7b6020c80c2bbcd5292b13692d6267",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "front-close-honey-material-proof",
+        "svgSha256": "95c3fbc75e9a3ed6eee969f07db05779c41f6f68387c3143bbb9e34fe60a91ff",
+        "rasterSha256": "919486fc9817da3e19bfb0ad29173029e48796dcb08ec924a95d4fcd0fb2c66a",
+        "svgMatches": true,
+        "rasterMatches": true
+      },
+      {
+        "id": "phone-overview",
+        "svgSha256": "5f77f02ac197ca1aeb693afadde6f37a565e7f41f2a84ae66081ab9161b84ad4",
+        "rasterSha256": "53aadc2ce170980da25b59f2ebb79d4fcc167222edaef7558187987851bf84b5",
+        "svgMatches": true,
+        "rasterMatches": true
+      }
+    ]
+  },
+  "passed": true,
+  "note": "Deterministic structural validation and hash verification authorize independent visual review only; they are not likeness approval."
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id":"royal-egg-silhouette",
+    "tier":"critical",
+    "score":0.68,
+    "minimumScore":0.80,
+    "passed":false,
+    "critique":"The narrower core and compressed crown improve the dominant egg read by +0.10, but the result remains a small building with a door, cage and side pod rather than the compact jewel egg in the source."
+  },
+  {
+    "id":"honeycomb-shell-system",
+    "tier":"critical",
+    "score":0.44,
+    "minimumScore":0.80,
+    "passed":false,
+    "critique":"Larger dark cells are now visible and improve this system by +0.16, but they remain sparse perimeter windows. The source requires a continuous interlocking cell field across almost the entire visible egg."
+  },
+  {
+    "id":"edible-wax-honey-response",
+    "tier":"critical",
+    "score":0.38,
+    "minimumScore":0.75,
+    "passed":false,
+    "critique":"Value contrast improves slightly, but the CPU proof remains flat and opaque. Live GPU material evidence is still required after the structural family is corrected."
+  }
+]

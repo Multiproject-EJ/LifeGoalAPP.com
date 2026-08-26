@@ -62,6 +62,7 @@ export type IslandRunTileRewardObjectKind =
   | 'frostwell_drill'
   | 'rootheart_power_component'
   | 'cactus_canyon_dynamite'
+  | 'great_honeyfall_nectar'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
@@ -70,6 +71,7 @@ export function resolveIslandRunTileRewardObjectKind(
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.signatureMissionKind === 'rootheart_power_component') return 'rootheart_power_component';
   if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
+  if (entry.signatureMissionKind === 'great_honeyfall_nectar') return 'great_honeyfall_nectar';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -437,6 +439,28 @@ function createCactusCanyonDynamiteCache(
   return root;
 }
 
+function createGreatHoneyfallNectar(materials: RewardMaterials, quality: Island3DQuality): THREE.Group {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_14_ROYAL_NECTAR_PICKUP';
+  const segments = qualitySegments(quality);
+  const drop = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, segments, Math.max(6, Math.floor(segments * 0.7))),
+    materials.amber,
+  );
+  drop.scale.set(0.9, 1.28, 0.9);
+  drop.position.y = 0.05;
+  const point = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.22, segments), materials.amber);
+  point.position.y = 0.27;
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 6, segments * 2), materials.goldGlow);
+  halo.rotation.x = Math.PI / 2;
+  halo.position.y = -0.15;
+  const crownCell = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.06, 6), materials.gold);
+  crownCell.rotation.x = Math.PI / 2;
+  crownCell.position.set(0, 0.05, 0.19);
+  root.add(drop, point, halo, crownCell);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
   if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
@@ -444,6 +468,7 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
   if (kind === 'cactus_canyon_dynamite') {
     return createCactusCanyonDynamiteCache(materials, quality, entry.signatureMissionAmount ?? 1);
   }
+  if (kind === 'great_honeyfall_nectar') return createGreatHoneyfallNectar(materials, quality);
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -507,6 +532,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
         ? 1.04
       : tileEntry.signatureMissionKind === 'cactus_canyon_dynamite'
         ? 1.08
+      : tileEntry.signatureMissionKind === 'great_honeyfall_nectar'
+        ? 1.18
       : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'

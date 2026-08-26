@@ -1,0 +1,478 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-26",
+  "auditor": {
+    "role": "independent-read-only-final-building-pov-quality-lord",
+    "method": "Exact source inspected first, followed by every required r15 full-world raster at native pixels; dependency and evidence hashes were checked only after visual scoring."
+  },
+  "repositoryHandshake": {
+    "worktree": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-014-honeycomb-kingdom",
+    "branch": "codex/island-014-honeycomb-kingdom",
+    "head": "5bb96d95df4906b5d3096b86ac375286c7e34b4a",
+    "dirtyWorktreeExpected": true,
+    "authorizedMutation": ".gauntlet/island-014-quality-audit-2026-08-26/final-building-pov-qc.v1.json only"
+  },
+  "authority": {
+    "exactSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "scope": "The Royal Palace is directly visible architecture. Satellite architecture is not shown as exact buildings; satellite source-role identity is governed by the visible source panels: Hatchery egg/nursery, Habit bee-in-honeycomb pollination, Wisdom honeycomb plus open book, and Arena crossed mallets."
+    },
+    "evidencePacket": {
+      "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15",
+      "manifest": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/capture-manifest.v1.json",
+      "manifestSha256": "97671d977e202eaed8aa2ca19a21b689f4f6df021abbe976ea724cb6b90a7e82",
+      "manifestStatus": "candidate-awaiting-source-return-review",
+      "integrity": "PASS: source, runtime, all three declared runtime dependencies, every SVG, and every raster independently matched the manifest hashes."
+    },
+    "dependencyHashes": [
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+        "sha256": "1276c2bce5afd40190c5f72d99b1d41cfd70de5fe1b85c4e7e58c68b439e5b80",
+        "verified": true
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14RoyalCathedralV7.ts",
+        "sha256": "83d3619f20cf81cbc03976f864603bf3d5bcc67f36beebfa89ef7681fcb3a36a",
+        "verified": true
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14SatelliteLandmarksV2.ts",
+        "sha256": "bc4e8a4b2bf3b52cc4599f8ab7d04d6090bdb32645af1f8af0fbab8331307bd7",
+        "verified": true
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island14HoneyWorldPresentationV2.ts",
+        "sha256": "18f4acfab73374cd6cdb6dd2fca8940c3ef47fe42345b630bb37beb9bad2a6d9",
+        "verified": true
+      }
+    ],
+    "inspectedRasters": [
+      {
+        "view": "orbit-000-front",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-000-materials-on.png",
+        "sha256": "4f374c84ddd5223c4ceab02a868077690d0a68f4cb5252ded984e24ade7ae5c6"
+      },
+      {
+        "view": "orbit-045",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-045-materials-on.png",
+        "sha256": "4ad36f5af475413603e92619bb25805c47110417af7d94fb0aae86f0b0dcf52d"
+      },
+      {
+        "view": "orbit-090",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-090-materials-on.png",
+        "sha256": "7db413c1bff94d7d5031ce1aeb938d2d022928039fca098ab4ccd10baf4fdafa"
+      },
+      {
+        "view": "orbit-180-rear",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-180-materials-on.png",
+        "sha256": "51f92ca92aa17e72073eaf007d24f26491152ccda9de11bfe1d575b484daf88e"
+      },
+      {
+        "view": "orbit-270",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-270-materials-on.png",
+        "sha256": "dba67e90f7bdfd82364d5411f3012add40f84f37e3c85c1ff70dfd8f174076c7"
+      },
+      {
+        "view": "orbit-315",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-315-materials-on.png",
+        "sha256": "6b0b1f177ac9033ec76ba4cd5755f1bb299f8bc023e376df8639878a36c5eee9"
+      },
+      {
+        "view": "orbit-180-rear-clay",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/orbit-180-materials-off.png",
+        "sha256": "9a12ee781ff03a1fd6738426fe5dc03bb3bc2f20a94e0d9463bf630fd7da2ac8"
+      },
+      {
+        "view": "phone-000",
+        "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/cathedral-honey-world-v007-r15/phone-overview.png",
+        "sha256": "774325b3f37a456a7949a7c7ea9776ec05a752f6efa70890374db1b6dc49d17b"
+      }
+    ],
+    "evidenceMethod": "CPU triangle projection of actual Three.js meshes and InstancedMesh transforms, with approximate materials.",
+    "evidenceLimit": "Valid for geometry, silhouette, occlusion, placement, mechanism visibility, and screen-space readability. It does not reproduce GPU refraction, environment reflections, post-processing, live tile rendering, or final transparency ordering; those absent effects were not scored as geometry defects."
+  },
+  "scoringPolicy": {
+    "scale": "0-10",
+    "approvalThreshold": 8.5,
+    "ten": "source-role-specific, complete, structurally authored, and unmistakable from every required desktop and phone view",
+    "five": "recognizable in favorable views but generic, incomplete, self-occluded, placement-occluded, or weak at phone scale",
+    "zero": "required landmark fully missing or unreadable in the view",
+    "requiredViews": [
+      "orbit-000-front",
+      "orbit-045",
+      "orbit-090",
+      "orbit-180-rear",
+      "orbit-270",
+      "orbit-315",
+      "phone-000"
+    ],
+    "worstViewGoverns": true,
+    "hardVetoes": [
+      "required landmark disappears behind another landmark in a required orbit view",
+      "source-defining mechanism is hidden in every practical view",
+      "side or rear collapses to blank/generic mass",
+      "phone silhouette loses its source role"
+    ]
+  },
+  "buildings": [
+    {
+      "id": "royal-palace",
+      "name": "Royal Palace",
+      "sourceRole": "hero honeycomb royal cathedral and island identity anchor",
+      "categoryScores": {
+        "macroSilhouette": 6.2,
+        "sourceRoleIdentity": 5.8,
+        "honeycombLanguage": 5.7,
+        "architecturalDetail": 5.0,
+        "doorWindowMechanismReadability": 6.2,
+        "sideRearCompleteness": 4.9,
+        "scale": 8.0,
+        "placement": 7.2,
+        "phonePov": 5.9
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 6.2,
+          "finding": "The deep purple portal, orange shoulder cupolas, frontal hex windows, and dominant central lantern establish a royal cathedral. Against the exact source, the composition remains much more rectangular and sparse: the source's dense inhabited honeycomb bays, layered filigree, clustered towers, and continuous golden lattice are reduced to a broad block plus a simple tall drum."
+        },
+        {
+          "view": "orbit-045",
+          "score": 5.8,
+          "finding": "The portal and front hierarchy survive, but the oblique exposes large pale roof and wall planes. The central tower reads as a cylindrical civic tower rather than the source's intricately faceted honey palace."
+        },
+        {
+          "view": "orbit-090",
+          "score": 4.9,
+          "finding": "The weakest palace profile is dominated by the blank drum, broad plain roof shoulders, and isolated applied hex windows. Door hierarchy and the source's clustered front-bay silhouette disappear."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 5.4,
+          "finding": "A real rear door, window rhythm, cupolas, and roof are present, so this is no longer a blank shell. The rear still resolves as one broad wall under a simple drum with limited depth, inhabitability, or honeycomb architectural density. The clay view confirms this is geometry rather than material-only loss."
+        },
+        {
+          "view": "orbit-270",
+          "score": 4.9,
+          "finding": "The opposite profile repeats the sparse drum-and-shoulder massing. A few windows and domes provide authorship, but the landmark loses the compact ornate hive-cathedral identity seen in the exact source."
+        },
+        {
+          "view": "orbit-315",
+          "score": 5.8,
+          "finding": "The purple portal and front domes return clearly, while the open-book Archives overlaps the lower court rather than the palace itself. The facade remains visually thin relative to the source's layered royal exoskeleton."
+        },
+        {
+          "view": "phone-000",
+          "score": 5.9,
+          "finding": "The palace remains the unmistakable central hero and its purple door and orange dome survive. Fine honeycomb architecture collapses into a bright tower, and the source's luxurious multi-tower palace identity does not survive at the same strength."
+        }
+      ],
+      "governingWorstView": {
+        "views": [
+          "orbit-090",
+          "orbit-270"
+        ],
+        "score": 4.9
+      },
+      "hardVeto": "Side profiles remain generic and fail the 8.5 identity/completeness threshold.",
+      "action": {
+        "type": "NO_BOUNDED_FIX_JUSTIFIED",
+        "next": "construction-family replacement or substantial macro-shell re-authoring",
+        "reason": "The governing defect is the continuous drum/roof/wall massing across both profiles, not a local detail, color, or camera issue. More applied ornament cannot supply the missing source silhouette and depth."
+      }
+    },
+    {
+      "id": "queen-nursery",
+      "name": "Queen's Nursery",
+      "sourceRole": "royal brood hatchery with egg/nursery identity",
+      "categoryScores": {
+        "macroSilhouette": 7.4,
+        "sourceRoleIdentity": 7.5,
+        "honeycombLanguage": 6.7,
+        "architecturalDetail": 6.5,
+        "doorWindowMechanismReadability": 6.6,
+        "sideRearCompleteness": 7.0,
+        "scale": 6.5,
+        "placement": 0.0,
+        "phonePov": 5.6
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 6.6,
+          "finding": "The broad egg chamber, crown/bee crest, side brood pod, and occupied cells create a clear nursery identity. It is distant and partially screened by the palace, so the door and lower brood program are weak."
+        },
+        {
+          "view": "orbit-045",
+          "score": 0.0,
+          "finding": "The entire nursery is occluded by the palace/Archives sightline; no egg, crown, door, pod, or honeycomb cell is visible. This is a placement hard veto under worst-view governance."
+        },
+        {
+          "view": "orbit-090",
+          "score": 6.4,
+          "finding": "The egg and brood-pod silhouette is readable behind the palace. Crown and shell cells survive, but the entry is hidden and the building remains distant."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 7.2,
+          "finding": "A strong favorable view: the broad egg chamber, attached pod, crown/bee crest, purple doorway, and shell cell rhythm are all legible and form a complete rear/side building."
+        },
+        {
+          "view": "orbit-270",
+          "score": 7.2,
+          "finding": "The nursery is large and distinct at the near-left plot. Broad massing avoids the old egg-on-pedestal read; pod, crown, and doorway remain attached and coherent."
+        },
+        {
+          "view": "orbit-315",
+          "score": 6.8,
+          "finding": "The crowned egg identity remains strong, although the lower door and window program merge into terrain and vegetation."
+        },
+        {
+          "view": "phone-000",
+          "score": 5.6,
+          "finding": "The broad egg is distinguishable at upper left, but crown, brood pods, doorway, and honeycomb cells are mostly sub-icon scale."
+        }
+      ],
+      "governingWorstView": {
+        "view": "orbit-045",
+        "score": 0.0
+      },
+      "hardVeto": "A required L3 landmark disappears completely at orbit 045.",
+      "action": {
+        "type": "BOUNDED_PLACEMENT_AND_SCALE_FIX",
+        "next": "Retain the broad-egg family; move it outward within its satellite plot until its crown and upper egg clear the palace/Archives at 045, then raise phone-scale size approximately 10-15% without colliding with the island edge.",
+        "reason": "The construction family is role-specific and works in exposed views. The governing failure is integration placement plus phone scale, not geometry replacement."
+      }
+    },
+    {
+      "id": "pollinator-yard",
+      "name": "Pollinator Yard",
+      "sourceRole": "open cooperative pollination workyard with an unmistakable bee/honeycomb mechanism",
+      "categoryScores": {
+        "macroSilhouette": 5.4,
+        "sourceRoleIdentity": 5.8,
+        "honeycombLanguage": 5.8,
+        "architecturalDetail": 5.1,
+        "doorWindowMechanismReadability": 5.2,
+        "sideRearCompleteness": 5.0,
+        "scale": 4.3,
+        "placement": 0.0,
+        "phonePov": 2.8
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 4.7,
+          "finding": "The striped central pollen rotor and honeycomb frame are present just right of the palace, but the broad workyard, planters, posts, and radial mechanism merge into the palace shoulder and parterre. It reads as a small machine rather than an L3 yard."
+        },
+        {
+          "view": "orbit-045",
+          "score": 5.1,
+          "finding": "The rotor is more exposed and its black/gold bands separate from the palace. The court and six work bays remain absorbed into the terrain, so source-role identity depends on one small rotor."
+        },
+        {
+          "view": "orbit-090",
+          "score": 5.3,
+          "finding": "The mechanism is front-center and recognizable as a pollination apparatus. It remains underscaled, with little phone-readable honeycomb yard silhouette around it."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 3.5,
+          "finding": "Only a partial small rotor/work assembly is visible left of the palace; most of the yard is occluded and the mechanism is not a dominant landmark."
+        },
+        {
+          "view": "orbit-270",
+          "score": 0.0,
+          "finding": "The Pollinator Yard is fully hidden by the palace and surrounding architecture. No rotor, honeycomb frame, yard, or planter silhouette is readable."
+        },
+        {
+          "view": "orbit-315",
+          "score": 3.6,
+          "finding": "A partial rotor peeks from behind the palace, but its yard and supporting structure remain hidden."
+        },
+        {
+          "view": "phone-000",
+          "score": 2.8,
+          "finding": "The landmark collapses to a tiny striped button beside the palace. Bee/honeycomb mechanism, six work bays, and cooperative yard purpose are unreadable."
+        }
+      ],
+      "governingWorstView": {
+        "view": "orbit-270",
+        "score": 0.0
+      },
+      "hardVeto": "A required L3 landmark disappears completely at orbit 270 and is sub-icon scale on phone.",
+      "action": {
+        "type": "BOUNDED_PLACEMENT_SCALE_AND_MECHANISM_FIX",
+        "next": "Retain the radial family; move the yard outward, enlarge its overall footprint approximately 20%, and raise/enlarge the rotor and high honeycomb halo until they clear the palace silhouette at 180/270 and remain legible on phone.",
+        "reason": "The exposed 045/090 views prove the mechanism concept works. Occlusion and insufficient vertical/phone silhouette are the governing defects."
+      }
+    },
+    {
+      "id": "hive-archives",
+      "name": "Hive Archives",
+      "sourceRole": "wisdom/archive landmark with visible open book, records, and honeycomb knowledge storage",
+      "categoryScores": {
+        "macroSilhouette": 8.0,
+        "sourceRoleIdentity": 8.2,
+        "honeycombLanguage": 6.9,
+        "architecturalDetail": 6.5,
+        "doorWindowMechanismReadability": 7.1,
+        "sideRearCompleteness": 7.0,
+        "scale": 7.8,
+        "placement": 7.2,
+        "phonePov": 6.5
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 7.8,
+          "finding": "The monumental open-book roof, contrasting purple pages, deep arched door, and shelf windows are immediately distinct from every other building. The hex/library surface rhythm remains lighter than the source panel's explicit honeycomb-and-book icon."
+        },
+        {
+          "view": "orbit-045",
+          "score": 7.2,
+          "finding": "The roof stays unmistakably book-shaped from the oblique; side windows and reading mass are authored. Some page planes read thin and the rear/side library program is modest."
+        },
+        {
+          "view": "orbit-090",
+          "score": 6.6,
+          "finding": "The distant side/rear preserves the open-book crest, but the reading hall, doorway, and shelf-cell rhythm are too small to fully support the archive role."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 6.8,
+          "finding": "The book silhouette and rear hex crown remain visible and the rear is not blank. The rear door/window program is less explicit than the front."
+        },
+        {
+          "view": "orbit-270",
+          "score": 7.8,
+          "finding": "A strong near view: open book, purple pages, deep entrance, side pod, and window rhythm are all legible and structurally attached."
+        },
+        {
+          "view": "orbit-315",
+          "score": 8.0,
+          "finding": "The clearest role read in the packet. The book roof dominates its plot without becoming a generic tower, and the doorway and honeycomb apertures survive."
+        },
+        {
+          "view": "phone-000",
+          "score": 6.5,
+          "finding": "The open-book roof remains uniquely recognizable at lower left, but reading hall, shelves, doorway depth, and honeycomb cells are too small to reach the all-category approval threshold."
+        }
+      ],
+      "governingWorstView": {
+        "view": "phone-000",
+        "score": 6.5
+      },
+      "hardVeto": null,
+      "action": {
+        "type": "BOUNDED_PHONE_READABILITY_FIX",
+        "next": "Retain the open-book family; enlarge/thicken the purple page pair and high hex wisdom crown approximately 15%, and strengthen the rear door/shelf-cell contrast without increasing the foundation.",
+        "reason": "Construction-family replacement succeeded. The remaining gap is phone-scale page/honeycomb readability and rear program, both bounded meso edits."
+      }
+    },
+    {
+      "id": "nectar-trials",
+      "name": "Nectar Trials",
+      "sourceRole": "arena/pavilion for visible nectar challenges and crossed-hammer trials",
+      "categoryScores": {
+        "macroSilhouette": 6.9,
+        "sourceRoleIdentity": 5.8,
+        "honeycombLanguage": 6.1,
+        "architecturalDetail": 5.7,
+        "doorWindowMechanismReadability": 4.8,
+        "sideRearCompleteness": 6.7,
+        "scale": 6.5,
+        "placement": 6.3,
+        "phonePov": 4.5
+      },
+      "viewScores": [
+        {
+          "view": "orbit-000-front",
+          "score": 6.2,
+          "finding": "The large purple open-oculus ring, thick posts, and high hex crest create a distinct event pavilion. The source-defining crossed hammers and nectar core remain largely hidden below the ring, so the role still reads as gazebo first, trials second."
+        },
+        {
+          "view": "orbit-045",
+          "score": 6.4,
+          "finding": "The near view clearly shows a complete circular arena and open center. The canopy/ring still blocks the hammers from the elevated world camera, despite their enlarged geometry."
+        },
+        {
+          "view": "orbit-090",
+          "score": 6.0,
+          "finding": "The pavilion remains coherent from the side and its central challenge volume is present, but crossed-hammer identity is not unmistakable."
+        },
+        {
+          "view": "orbit-180-rear",
+          "score": 5.8,
+          "finding": "Rear construction is complete, with posts, ring, crest, and interior volume. The mechanism becomes a dark orange mass under the roof rather than readable crossed tools."
+        },
+        {
+          "view": "orbit-270",
+          "score": 5.8,
+          "finding": "The opposite side holds its arena silhouette but repeats the same self-occlusion of the trial mechanism."
+        },
+        {
+          "view": "orbit-315",
+          "score": 5.6,
+          "finding": "The landmark remains distinct on the right edge, while the oculus and hex crest dominate and the crossed hammers disappear inside the pavilion."
+        },
+        {
+          "view": "phone-000",
+          "score": 4.5,
+          "finding": "Purple ring and hex crest survive as a separate pavilion, but the source panel's defining crossed mallets and nectar challenge are unreadable."
+        }
+      ],
+      "governingWorstView": {
+        "view": "phone-000",
+        "score": 4.5
+      },
+      "hardVeto": "The source-defining crossed-hammer mechanism is not readable at phone scale and is self-occluded in every world view.",
+      "action": {
+        "type": "BOUNDED_MECHANISM_SIGHTLINE_FIX",
+        "next": "Retain the arena family; lift the crossed hammers and honey core into the open oculus, enlarge hammer heads approximately 40-60%, rotate their crossed silhouette toward the island camera, and keep the canopy ring behind rather than over them.",
+        "reason": "The arena silhouette and 360 construction are sound. One mechanism/sightline correction directly targets the governing source-role failure."
+      }
+    }
+  ],
+  "rankedBoundedFixes": [
+    {
+      "rank": 1,
+      "building": "Pollinator Yard",
+      "impact": "Restores a fully missing required view and makes the core mechanism phone-readable."
+    },
+    {
+      "rank": 2,
+      "building": "Queen's Nursery",
+      "impact": "Restores a fully missing required view while preserving a successful broad-egg family."
+    },
+    {
+      "rank": 3,
+      "building": "Nectar Trials",
+      "impact": "Converts a generic pavilion read into the exact crossed-hammer Arena role across desktop and phone."
+    },
+    {
+      "rank": 4,
+      "building": "Hive Archives",
+      "impact": "Strengthens the already successful open-book family at phone and rear views."
+    }
+  ],
+  "nonBoundedStructuralFinding": {
+    "building": "Royal Palace",
+    "finding": "The rebuilt palace is materially better than the retired mound family and has genuine front/rear architecture, but both profiles remain a sparse drum over broad planar shoulders. Reaching 8.5 in every category requires macro-shell work, not another ornament pass."
+  },
+  "overallVerdict": {
+    "readyForEveryCategoryAtLeast8_5": false,
+    "bestBuilding": {
+      "building": "Hive Archives",
+      "governingScore": 6.5
+    },
+    "hardVetoes": [
+      "Queen's Nursery fully occluded at orbit 045",
+      "Pollinator Yard fully occluded at orbit 270",
+      "Royal Palace profiles remain generic and below source identity threshold",
+      "Nectar Trials crossed hammers are not phone-readable"
+    ],
+    "finding": "r15 delivers five distinct construction families in favorable views and fixes the old Archives/Nursery silhouette confusion. It does not pass the final all-view gate: two satellites disappear due placement, the palace profile/rear density remains far below the exact source, and the Trials mechanism does not survive phone scale."
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-sole-bounded-correction",
+  "partId": "palace-front-facade",
+  "constructionFamily": "blender-solid-modular-honey-cathedral-facade",
+  "authority": {
+    "qcReview": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v2.json",
+    "qcReviewSha256": "4b6468a09f61d3716855bad1dff6d587980547cf22e2579f21c7c6712ca8214b",
+    "action": "ONE-BOUNDED-CORRECTION"
+  },
+  "hypothesis": "Rebalance only the existing central-axis recesses so the occupied royal doorway reads first and the smaller seated rose reads second, without changing the already credible closed shell, four bays, attachment or macro silhouette.",
+  "allowedChanges": [
+    "Uniform scale and local depth position of the existing rose ring, radial divisions, core and backplane as one assembly.",
+    "Local depth position of the existing closed royal door backplane and existing reveal tunnel walls.",
+    "Scale, thickness and local face offset of the existing door seam, two handles and bee sigil only.",
+    "Output corrected immutable DCC artifacts as palace-front-facade-v003.blend and palace-front-facade-v003.glb while preserving v002.",
+    "Update the stable runtime descriptor island14PalaceFacadeBlenderV2.json to the corrected mesh and record its new hash."
+  ],
+  "measurableTargets": {
+    "roseDiameterToDoorWidth": [0.70, 0.78],
+    "roseFrontProjectionMaximum": 0.06,
+    "roseCoreMinimumRecess": 0.12,
+    "doorBackplaneRecess": [0.14, 0.20],
+    "doorSeamMinimumHeightFraction": 0.70,
+    "doorSeamMinimumWidth": 0.04,
+    "beeSigilMinimumVisibleDiameter": 0.18,
+    "handleMinimumVisibleDiameter": 0.06,
+    "hierarchy": "Door first, rose second at front, 45, 315, close and phone overview."
+  },
+  "frozen": [
+    "accepted palace macro dimensions and transforms",
+    "facade rear wall, gable silhouette, side buttresses, banners, stairs and attachment transforms",
+    "all four bay positions, sizes, closed backplanes, reveal tunnels and topology",
+    "part count except subdivisions needed to preserve existing named central-axis parts",
+    "all other palace, ornament, terrain, mission, robot, camera and gameplay systems"
+  ],
+  "evidence": {
+    "directory": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02",
+    "versionSuffix": "v006",
+    "requiredViews": ["front-000", "oblique-045", "oblique-315", "facade-closeup"],
+    "correctionsUsedAfterThisPass": 1
+  },
+  "terminalGate": "The corrected worst required score must be at least 0.85 and improve by at least 0.10. No further correction is allowed for this family."
+}

@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-terminal-corrected-visual-gate"
+  },
+  "subject": "Island 014 blender-solid-modular-honey-cathedral-facade terminal corrected geometry gate",
+  "constructionFamily": "blender-solid-modular-honey-cathedral-facade",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "priorQcReview": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v2.json",
+      "sha256": "4b6468a09f61d3716855bad1dff6d587980547cf22e2579f21c7c6712ca8214b"
+    },
+    "correctionContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/correction-contract.blender.v2.json",
+      "sha256": "ab6a37d63a18d148de37fbbe44b22f41eac4d9e01d8e5dcf01390bd40b3bb325"
+    },
+    "correctedCaptureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/capture-manifest.v1.json",
+      "sha256": "781893c26720dd740ead4807fb72ecef25c23b31644898dc19ea7c04d63719c1"
+    },
+    "evidenceIntegrity": "All four corrected v006 SVG/JPEG hash pairs match the immutable corrected capture manifest. The JPEGs are rasterizations of the actual-mesh, materials-stripped SVG evidence."
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "minimumWorstScoreGain": 0.10,
+    "worstViewCategoryGoverns": true,
+    "openHoleOrHollowCardIsHardVeto": true,
+    "sameDominantDefectAfterCorrectionRequiresRetirement": true,
+    "postCorrectionBelow075RequiresRetirement": true,
+    "correctionsUsed": 1,
+    "correctionsRemaining": 0,
+    "allowedTerminalActions": [
+      "APPROVE",
+      "RETIRE-FAMILY",
+      "STOP"
+    ]
+  },
+  "evidence": [
+    {
+      "view": "front-000",
+      "svg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-000-v006.svg",
+      "svgSha256": "af4cef8ec013d18decea1d4911d28c820b6c632fc9723b7e216b60b9f132d661",
+      "jpg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-000-v006.jpg",
+      "jpgSha256": "1c0cf7cc46adc2662d678517fcf8be5bf3fd2f76505a7c01e7b66185e4fd6ece"
+    },
+    {
+      "view": "oblique-045",
+      "svg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-045-v006.svg",
+      "svgSha256": "e0c8c076c93760e73b264e318ad2c72c93298ef22cb5b993238885bbc1c06dd4",
+      "jpg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-045-v006.jpg",
+      "jpgSha256": "aa02f7ce370b056bf5678a8935704900cfdfab320f21d2f30f2316587daa71df"
+    },
+    {
+      "view": "oblique-315",
+      "svg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-315-v006.svg",
+      "svgSha256": "098772d9bb17e943551f7fcca6949c59bb683a109aefc4a5dfa2a04742eb45e8",
+      "jpg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-315-v006.jpg",
+      "jpgSha256": "fcfdc9ca7b75e1924a48a8ec482193015de1fa027a140f705ec7409883e63fc9"
+    },
+    {
+      "view": "facade-closeup",
+      "svg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-close-v006.svg",
+      "svgSha256": "940707e31612242b0eefd7afd6fde7fa41fd2b8d0c1b1e240030407e0557a8e6",
+      "jpg": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-facade-blender-v002-r02/island-014-palace-facade-close-v006.jpg",
+      "jpgSha256": "742599ea25891a62ff6fb6dc560ce6b1345467bc53e997f71065025da72b3c6e"
+    }
+  ],
+  "perViewScores": [
+    {
+      "view": "front-000",
+      "sourceIdentity": 0.68,
+      "silhouetteVolume": 0.76,
+      "recessDepth": 0.79,
+      "cathedralHierarchy": 0.70,
+      "fourBayObliqueReadability": 0.90,
+      "attachment": 0.80,
+      "crossViewCoherence": 0.80,
+      "phoneReadability": 0.68,
+      "note": "The correction visibly shrinks and seats the rose, deepens the closed door, and enlarges the seam and three central ornaments. Nevertheless the high-contrast radial rose remains the first broad-view focal point, while the nominal bee sigil reads as a faceted disk and the handles as small balls rather than a royal occupied entrance."
+    },
+    {
+      "view": "oblique-045",
+      "sourceIdentity": 0.63,
+      "silhouetteVolume": 0.76,
+      "recessDepth": 0.77,
+      "cathedralHierarchy": 0.62,
+      "fourBayObliqueReadability": 0.84,
+      "attachment": 0.82,
+      "crossViewCoherence": 0.80,
+      "phoneReadability": 0.62,
+      "note": "The shell remains closed and attached and all four bays are countable. The thick radial rose still leads; the door seam is present, but both handles and the bee identity of the sigil do not remain readable at this required oblique or intended phone scale."
+    },
+    {
+      "view": "oblique-315",
+      "sourceIdentity": 0.64,
+      "silhouetteVolume": 0.76,
+      "recessDepth": 0.77,
+      "cathedralHierarchy": 0.63,
+      "fourBayObliqueReadability": 0.84,
+      "attachment": 0.82,
+      "crossViewCoherence": 0.80,
+      "phoneReadability": 0.63,
+      "note": "The opposite oblique confirms closed topology, stable attachment, and a preserved four-bay count. It also confirms the same hierarchy failure: the rose reads first and the door ornaments collapse into generic faceted dots."
+    },
+    {
+      "view": "facade-closeup",
+      "sourceIdentity": 0.66,
+      "silhouetteVolume": 0.72,
+      "recessDepth": 0.82,
+      "cathedralHierarchy": 0.72,
+      "fourBayObliqueReadability": null,
+      "attachment": 0.80,
+      "crossViewCoherence": 0.80,
+      "phoneReadability": 0.70,
+      "note": "The close view proves a materially deeper, fully closed door and a long center seam. Both handles are visible here, but the oversized spherical ornaments and disk-like sigil still do not reproduce the source's crisp bee-marked purple royal doorway, and the improvement does not survive the oblique views."
+    }
+  ],
+  "categorySummary": {
+    "sourceIdentity": 0.63,
+    "silhouetteVolume": 0.72,
+    "recessDepth": 0.77,
+    "cathedralHierarchy": 0.62,
+    "fourBayObliqueReadability": 0.84,
+    "attachment": 0.80,
+    "crossViewCoherence": 0.80,
+    "phoneReadability": 0.62
+  },
+  "correctionTargetVerification": {
+    "roseDiameterToDoorWidth": {
+      "manifestValue": 0.714286,
+      "contractRange": [
+        0.70,
+        0.78
+      ],
+      "numericClaimWithinRange": true,
+      "visibleFinding": "The rose is smaller than v005, but its dense radial face still occupies approximately the same salient visual footprint as the visible door leaf/recess and remains the first broad-view focal point; the intended visible hierarchy is not achieved."
+    },
+    "roseProjectionAndCoreRecess": {
+      "manifestFrontProjection": 0.06,
+      "contractFrontProjectionMaximum": 0.06,
+      "manifestCoreRecess": 0.177,
+      "contractCoreRecessMinimum": 0.12,
+      "numericClaimsMeetTargets": true,
+      "visibleFinding": "The occupied core recess is clear, but both obliques still present a thick barrel-like rose assembly whose silhouette dominates the entrance."
+    },
+    "doorBackplaneRecess": {
+      "manifestValue": 0.18,
+      "contractRange": [
+        0.14,
+        0.20
+      ],
+      "numericClaimWithinRange": true,
+      "visibleFinding": "Pass: the corrected door plane is visibly behind the arch and no background shows through."
+    },
+    "doorSeam": {
+      "manifestHeightFraction": 0.895,
+      "contractMinimumHeightFraction": 0.70,
+      "manifestWidth": 0.055,
+      "contractMinimumWidth": 0.04,
+      "numericClaimsMeetTargets": true,
+      "visibleFinding": "The seam is clear in front and close evidence and remains detectable at both obliques."
+    },
+    "beeSigil": {
+      "manifestDiameter": 0.23,
+      "contractMinimumVisibleDiameter": 0.18,
+      "numericClaimMeetsTarget": true,
+      "visibleFinding": "Fail semantically: a central faceted circular mass is visible, but it is not recognizable as a bee sigil in the front or either oblique."
+    },
+    "handles": {
+      "manifestDiameter": 0.11,
+      "contractMinimumVisibleDiameter": 0.06,
+      "numericClaimMeetsTarget": true,
+      "visibleFinding": "Both spherical handles are visible in front and close evidence, but their two-handle identity does not remain legible in both oblique views or at intended phone scale."
+    },
+    "hierarchy": {
+      "contractTarget": "Door first, rose second at front, 45, 315, close and phone overview.",
+      "pass": false,
+      "visibleFinding": "The door leads only in the cropped close view. The rose remains first in the front and both obliques, and no corrected phone-overview evidence demonstrates reversal at intended scale."
+    }
+  },
+  "hardVetoAndRegressionEvaluation": {
+    "openHoleHollowCardOrBackground": {
+      "present": false,
+      "finding": "No background is visible through door, rose, or bay openings; closed backplanes and reveal tunnels survive both obliques."
+    },
+    "fewerThanFourCountableBays": {
+      "present": false,
+      "finding": "Two lower and two upper bays remain countable at both 45 and 315 degrees."
+    },
+    "unattachedOrOpenCentralGeometry": {
+      "present": false,
+      "finding": "The corrected central parts remain attached and closed."
+    },
+    "attachmentRegressionGreaterThan005": {
+      "present": false,
+      "finding": "Worst attachment remains 0.80, unchanged from v005."
+    },
+    "crossViewRegressionGreaterThan005": {
+      "present": false,
+      "finding": "Worst cross-view coherence improves from 0.78 to 0.80."
+    },
+    "roseStillFirst": {
+      "present": true,
+      "finding": "The rose remains the first focal point in front, 45, and 315 evidence, triggering the correction contract's hard reject condition."
+    },
+    "doorDetailsUnreadableInAnyRequiredView": {
+      "present": true,
+      "finding": "The bee sigil is not semantically recognizable and both handles do not remain independently readable at both required obliques, triggering the correction contract's hard reject condition."
+    }
+  },
+  "deltaAgainstFirstGate": {
+    "priorWorstRequiredScore": 0.50,
+    "correctedWorstRequiredScore": 0.62,
+    "worstScoreGain": 0.12,
+    "minimumRequiredGain": 0.10,
+    "minimumGainMet": true,
+    "correctedWorstAtLeast075": false,
+    "everyRequiredCategoryAtLeast085": false,
+    "categoryWorstDeltas": {
+      "sourceIdentity": 0.06,
+      "silhouetteVolume": 0.02,
+      "recessDepth": 0.11,
+      "cathedralHierarchy": 0.12,
+      "fourBayObliqueReadability": 0.02,
+      "attachment": 0.00,
+      "crossViewCoherence": 0.02,
+      "phoneReadability": 0.12
+    }
+  },
+  "worstRequiredScore": {
+    "value": 0.62,
+    "views": [
+      "oblique-045"
+    ],
+    "dimensions": [
+      "cathedralHierarchy",
+      "phoneReadability"
+    ]
+  },
+  "largestMismatch": "The source is an inhabited honey royal cathedral whose saturated, bee-marked doorway leads and whose smaller rose supports it. The corrected blockout remains a broad low-poly fortification led by a thick radial rose; its nominal bee sigil and handles collapse into generic faceted dots at the required obliques and phone scale.",
+  "terminalDecision": {
+    "finding": "The sole correction produces a real +0.12 worst-score gain and preserves closed topology, four bays, attachment, and cross-view coherence. It still repeats the dominant rose-first/under-articulated-door defect, has a corrected worst score below 0.75, triggers two explicit correction-contract hard rejects, and leaves every governed category below the 0.85 approval threshold. No second correction is permitted.",
+    "action": "RETIRE-FAMILY"
+  },
+  "action": "RETIRE-FAMILY"
+}

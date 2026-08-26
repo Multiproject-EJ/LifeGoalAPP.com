@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace monolithic extruded cathedral hull naked macro shell",
+  "constructionFamily": "procedural-threejs-monolithic-extruded-cathedral-hull",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v7.json",
+      "sha256": "ecbb7926abcef18199f42b9c9701dee00aa691093e09b6a28d4edce4467e55a9"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v10.json",
+      "sha256": "8f8ed23e4ff03693d5722987b58c304f376e11a8f5dd771d9e242673e331a967"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "mandatoryRetireBelow": 0.75,
+    "minimumCorrectionGain": 0.10,
+    "hiddenViews": "secondary volume-coherence evidence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.46,
+      "depthIntegration": 0.55,
+      "sourceLikeness": 0.38,
+      "sideRearCoherence": 0.58,
+      "note": "The palace now occupies the court continuously and no pylon gap remains, but the inhabited cathedral is replaced by a huge rectangular lower wall and stacked terrace slabs. The shoulder domes are mostly buried and the source's broad domed-tower silhouette is absent."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.42,
+      "depthIntegration": 0.51,
+      "sourceLikeness": 0.35,
+      "sideRearCoherence": 0.55,
+      "note": "The exact front-three-quarter comparison reads as a stepped bunker/ziggurat. Long flat walls, terrace bands, and a thin keep-on-platform hierarchy are materially unlike the compact ornate cathedral mass in the source."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.38,
+      "depthIntegration": 0.45,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.48,
+      "note": "The side exposes a flat single-depth extruded card: a near-rectangular wall with horizontal ledges and hemispheres placed on terraces. It has volume but not credible cathedral depth articulation."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.41,
+      "depthIntegration": 0.49,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.52,
+      "note": "Rear-oblique evidence confirms a monolithic stepped block with diagonal triangulation artifacts rather than nested architectural volumes."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.45,
+      "depthIntegration": 0.53,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.56,
+      "note": "The rear is closed and symmetric, but the dominant blank rectangular hull and shelf-like shoulders are a flat-card solution, not a believable palace back volume."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.41,
+      "depthIntegration": 0.49,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.52,
+      "note": "The opposite rear-oblique view repeats the ziggurat silhouette, blank side plane, and terrace-mounted dome grammar."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.38,
+      "depthIntegration": 0.45,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.48,
+      "note": "The opposite side confirms the flat single-depth extrusion and weak side/rear architectural credibility."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.42,
+      "depthIntegration": 0.51,
+      "sourceLikeness": 0.35,
+      "sideRearCoherence": 0.55,
+      "note": "The second front-adjacent view confirms that stepped slabs, not embedded domed cathedral bays, control the silhouette."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.35,
+    "viewDegrees": 45,
+    "dimension": "sourceLikeness"
+  },
+  "representationAssessment": {
+    "pylonDefectRemoved": true,
+    "emptyCourtGapRemoved": true,
+    "continuousClosedHullAchieved": true,
+    "sourceCathedralSilhouetteAchieved": false,
+    "sideRearCredibilityAchieved": false,
+    "flatCardRisk": "realized",
+    "zigguratRisk": "realized",
+    "finding": "The representation solves continuity literally but not architecturally. Its single extrusion turns the palace into a stack of broad planar slabs, suppresses the domed shoulders, and creates flat-card side views."
+  },
+  "vetoes": [
+    {
+      "type": "flat-single-depth-facade-card",
+      "views": [45, 90, 135, 225, 270, 315],
+      "finding": "Large uninterrupted front/side planes and nearly constant extrusion depth dominate; side views read as a rectangular card with ledges rather than a deep cathedral."
+    },
+    {
+      "type": "ziggurat-massing",
+      "views": [0, 45, 90, 135, 180, 225, 270, 315],
+      "finding": "The lower hull is organized as stacked horizontal terraces that bury the shoulder domes and produce a stepped bunker silhouette foreign to the source."
+    },
+    {
+      "type": "central-thin-keep-on-platform",
+      "views": [0, 45, 90, 180, 270, 315],
+      "finding": "The keep remains visually isolated atop the upper slab rather than growing from a dense inhabited cathedral body."
+    }
+  ],
+  "largestMismatch": "The source is a compact vertical cathedral composed of interlocked inhabited bays and dominant domed shoulders. This family substitutes a wide blank rectangular hull and stacked terrace shelves, so the palace reads as a ziggurat/bunker with a keep and loose domes on top.",
+  "terminalReason": "The worst required score is 0.35, far below the 0.75 retirement floor, and the contract's flat-card and thin-keep-on-platform strict rejects are present. Correcting those defects would require replacing the single-depth extruded-hull grammar, not a bounded variable adjustment.",
+  "action": "retire-family"
+}

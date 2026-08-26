@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-second-manual-dcc-family-blockout",
+  "partId": "palace-front-facade",
+  "representationRoute": "blender-authored-solid-modular-facade-exported-to-threejs-buffer-geometry",
+  "constructionFamily": "blender-solid-modular-honey-cathedral-facade",
+  "routeAuthority": {
+    "userDecisionLog": ".gauntlet/island-014-honeycomb-kingdom-parts/user-decisions.v1.jsonl",
+    "userDecision": "okay lets give you access to blender then, and you can try",
+    "retiredFirstBlenderFamily": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v1.json",
+    "differenceFromRetiredFamily": "No Boolean cutters and no through-shell openings. A closed rear gable wall plus separately closed masonry volumes, continuous reveal tunnels, and solid backplanes create every recess."
+  },
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "acceptedMacro": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v12.json",
+    "retiredFirstBlenderReview": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/qc-review.blender.v1.json"
+  },
+  "workerAllowlist": {
+    "source": ["scripts/blender/build-island014-palace-facade-v2.py"],
+    "dccArtifacts": [
+      "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v002.blend",
+      "work/island-visual-library/island-014-honeycomb-kingdom/blender/palace-front-facade-v002.glb"
+    ],
+    "runtimeExport": ["src/features/gamification/level-worlds/dev/assets/island14PalaceFacadeBlenderV2.json"],
+    "integration": ["palace facade-owned assembly inside createRoyalPalace in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "forbidden": ["accepted palace macro dimensions or transforms", "court and stairs", "palace ornament system", "other landmarks", "terrain", "board", "mission", "robots", "gameplay"]
+  },
+  "coordinateContract": {
+    "threejs": {"up": "+Y", "front": "+Z", "right": "+X", "units": "world units"},
+    "blender": {"up": "+Z", "front": "-Y", "right": "+X", "units": "metres treated as world units"},
+    "exportMap": "three(x,y,z)=blender(x,z,-y)",
+    "origin": "palace-root local coordinates; facade base remains seated at palace y approximately 0.46"
+  },
+  "requiredTopology": [
+    "A continuous closed rear cathedral gable wall from base through apex encloses the facade at every oblique. It is a volumetric host, never a visible forward slab.",
+    "The front masonry skin is assembled from separately closed deep volumes around the openings. It leaves designed apertures to the rear wall but never exposes background through the building.",
+    "The royal doorway is a 1.05 to 1.18 world-unit pointed occupied recess: purple split door on the rear wall, dark reveal tunnel, thick masonry arch, center seam, handles and bee sigil. The front and close clay views must read the doorway geometry without depending on color.",
+    "The rose is a recessed occupied socket with a dark rear plane, inner purple core, thick integrated ring and six radial divisions.",
+    "Exactly four honeycomb window recesses are countable at front, 45 and 315 degrees: two dominant lower bays and two subordinate upper bays. Each has solid backplane, reveal tunnel, inner liner and amber core.",
+    "Two compact solid side buttresses with caps and anchored purple banners overlap the gable host and remain inside the accepted 3.38-unit width.",
+    "Every recess is physically closed by a backplane. No ray from the review cameras may see the background through the door, rose or any bay."
+  ],
+  "silhouetteAndHierarchy": [
+    "Broad lower cathedral body with doorway as primary read, four honeycomb bays as secondary rhythm, rose and gable as tertiary crown.",
+    "One coherent centered gable, stepped shoulders and compact side pylons; no giant planar wings or unsupported outline frames.",
+    "Depth must remain evident at both required obliques while preserving four-bay count and the stair-door axis."
+  ],
+  "strictRejects": [
+    "any open-hole, hollow-card or visible-background read",
+    "any Boolean cutter or reuse of the retired through-shell topology",
+    "blank central slab hiding the royal doorway",
+    "fewer than four countable occupied bays at 45 or 315 degrees",
+    "door narrower than 1.05 world units",
+    "forward-mounted rose or bay panel with no occupied recess",
+    "facade outside accepted macro width or height silhouette",
+    "unattached, non-manifold, reversed-normal or degenerate hero geometry",
+    "more than one bounded correction for this second Blender family"
+  ],
+  "meshBudgets": {
+    "targetTriangles": 14000,
+    "hardMaximumTriangles": 22000,
+    "maximumRuntimeMeshParts": 24,
+    "minimumNamedParts": 10
+  },
+  "capture": {
+    "firstGate": ["front-000", "oblique-045", "oblique-315", "facade-closeup"],
+    "postBlockout": [0, 45, 90, 135, 180, 225, 270, 315, "facade-closeup", "phone-overview", "wireframe", "normals", "materials-on", "materials-off"],
+    "reviewCategories": ["source-identity", "silhouette-volume", "recess-depth", "cathedral-hierarchy", "four-bay-oblique-readability", "attachment", "cross-view-coherence", "phone-readability"],
+    "gate": "Every required category at least 0.85; one bounded correction maximum. Any critical first-pass score below 0.50 or any open-hole/hollow-card read retires the family immediately."
+  }
+}

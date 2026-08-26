@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "status": "retired-after-bounded-correction",
+  "retiredAt": "2026-08-25",
+  "retirementEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v5.json",
+  "retirementReason": "Correction gained only 0.07 and worst score 0.69 remained below 0.75; box-based representation stayed assembled rather than continuously faceted.",
+  "boundedCorrectionEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v4.json",
+  "family": "procedural-threejs-interlocked-nave-transept-cathedral",
+  "replaces": "procedural-threejs-nested-closed-volume-cathedral",
+  "worker": "palace-macro-worker",
+  "allowlist": {
+    "files": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "functions": ["createRoyalPalace"],
+    "parts": ["palace-lower-cathedral-body", "palace-central-keep", "palace-main-dome", "palace-upper-crown", "palace-satellite-tower-family"]
+  },
+  "frozen": ["court and stairs", "all non-palace landmarks", "terrain", "board and route", "materials", "honey", "mission", "robots", "camera", "gameplay controllers", "palace facade and ornament systems"],
+  "budget": {"blockouts": 1, "boundedCorrections": 1, "visualReviews": 2},
+  "constructionRule": "Build one interpenetrating cathedral from independently closed chamfered nave, transept, shoulder, apse, keep, drum, dome, lantern, and tower-stage volumes. Every adjacent structural volume must overlap in X/Z footprint and Y range; no tangent or separate pillar sockets.",
+  "requiredHierarchy": [
+    "one low broad royal plinth",
+    "one deep axial nave intersecting one broad transept to create a closed cross-shaped cathedral body",
+    "four domed two-stage satellite shoulders physically overlapping the transept/nave envelope",
+    "one faceted two-stage central keep rising from the nave/transept intersection",
+    "one source-scale hero dome seated on the faceted keep",
+    "one small seated lantern/crown continuing the same load axis"
+  ],
+  "suggestedMacroRanges": {
+    "plinth": {"width": [3.2, 3.38], "depth": [2.0, 2.2], "topY": [0.82, 0.95]},
+    "nave": {"width": [1.65, 1.9], "depth": [1.5, 1.8], "topY": [1.9, 2.1]},
+    "transept": {"width": [2.9, 3.15], "depth": [1.1, 1.35], "topY": [1.75, 1.95]},
+    "centralKeep": {"width": [1.05, 1.4], "depth": [0.82, 1.15], "topY": [2.72, 2.95]},
+    "heroDome": {"diameter": [0.96, 1.04], "topY": [3.2, 3.4]},
+    "frontSatelliteDomeTopY": [2.2, 2.42],
+    "rearSatelliteDomeTopY": [2.0, 2.22],
+    "totalMacroHeight": [3.65, 3.85]
+  },
+  "requiredEvidenceNames": ["PALACE_PLINTH", "PALACE_NAVE", "PALACE_TRANSEPT", "PALACE_KEEP_LOWER", "PALACE_KEEP_UPPER", "PALACE_HIVE_DOME", "PALACE_UPPER_KEEP", "PALACE_CROWN_HIVE_DOME", "PALACE_TURRET_1_BASE", "PALACE_TURRET_1_DRUM", "PALACE_TURRET_1_HIVE_DOME"],
+  "pivots": {"root": "court centre at y=0", "front": "+Z", "growth": "bottom-anchored +Y"},
+  "thresholds": {"perView": 0.85, "worstDimensionGain": 0.1, "mandatoryRetireBelow": 0.75},
+  "reviewPriority": [0, 45, 315, 135, 225, 180, 90, 270],
+  "forbidden": ["four equal stacked tiers", "plain central shaft", "separate pillar satellites", "flat facade slab", "floating sockets", "open root slots", "camera-facing-only shell", "oversized spherical hero dome", "micro-detail used to hide failed massing", "any gameplay or route edit"]
+}

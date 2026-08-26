@@ -236,6 +236,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '⚙';
   } else if (signatureMissionKind === 'cactus_canyon_dynamite') {
     iconContent = signatureMissionAmount >= 3 ? '🧨³' : '🧨';
+  } else if (signatureMissionKind === 'great_honeyfall_nectar') {
+    iconContent = '🍯';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
@@ -277,6 +279,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         signatureMissionKind === 'frostwell_drill' ? 'island-tile--frostwell-drill' : '',
         signatureMissionKind === 'rootheart_power_component' ? 'island-tile--rootheart-power-component' : '',
         signatureMissionKind === 'cactus_canyon_dynamite' ? 'island-tile--cactus-canyon-dynamite' : '',
+        signatureMissionKind === 'great_honeyfall_nectar' ? 'island-tile--great-honeyfall-nectar' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -292,6 +295,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
             ? `Tile ${index + 1}. Rootheart Powerworks component`
             : signatureMissionKind === 'cactus_canyon_dynamite'
               ? `Tile ${index + 1}. Cactus Canyon dynamite cache, ${signatureMissionAmount} stick${signatureMissionAmount === 1 ? '' : 's'}`
+            : signatureMissionKind === 'great_honeyfall_nectar'
+              ? `Tile ${index + 1}. Royal nectar for the Great Honeyfall`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing

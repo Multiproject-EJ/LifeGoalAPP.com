@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 12 | 13 | 22;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 12 | 13 | 14 | 22;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -27,6 +27,11 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 10, worldSourceNumber: 10, role: 'arena' },
   { runtimeIslandNumber: 12, worldSourceNumber: 12, role: 'ordinary' },
   { runtimeIslandNumber: 13, worldSourceNumber: 13, role: 'ordinary' },
+  { runtimeIslandNumber: 14, worldSourceNumber: 14, role: 'ordinary' },
+  // Eivind explicitly promoted the completed Fisherman's Village pack into
+  // runtime Island 016. Source 022 remains an internal visual-pack identity;
+  // runtime progression, story, persistence and PWA copy all use Island 016.
+  { runtimeIslandNumber: 16, worldSourceNumber: 22, role: 'ordinary' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

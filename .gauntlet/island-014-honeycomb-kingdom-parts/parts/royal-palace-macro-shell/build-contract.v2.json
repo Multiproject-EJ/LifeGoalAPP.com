@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "status": "retired-after-bounded-correction",
+  "retiredAt": "2026-08-25",
+  "retirementEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v3.json",
+  "retirementReason": "Corrected worst score 0.61 was below the mandatory 0.75 survival floor; shaft-plus-pillars silhouette remained generic.",
+  "boundedCorrectionEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v2.json",
+  "family": "procedural-threejs-nested-closed-volume-cathedral",
+  "replaces": "procedural-threejs-continuous-cathedral-massing",
+  "worker": "palace-macro-worker",
+  "allowlist": {
+    "files": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"],
+    "functions": ["createRoyalPalace"],
+    "parts": ["palace-lower-cathedral-body", "palace-central-keep", "palace-main-dome", "palace-upper-crown", "palace-satellite-tower-family"]
+  },
+  "frozen": ["court and stairs", "all non-palace landmarks", "terrain", "board and route", "materials", "honey", "mission", "robots", "camera", "gameplay controllers", "palace facade and ornament systems"],
+  "budget": {"blockouts": 1, "boundedCorrections": 1, "visualReviews": 2},
+  "constructionRule": "Every structural tier must be an independently closed three-dimensional volume with an explicit X width and Z depth. No tall front-outline extrusion may carry one constant depth through multiple tiers.",
+  "requiredHierarchy": [
+    "four nested chamfered lower-body tiers with visible setbacks in both X and Z",
+    "one closed central keep fully seated into the upper lower-body tier",
+    "one hero dome approximately 0.50 radius, visibly seated on its drum",
+    "one smaller closed upper lantern and crown continuously seated on the hero dome axis",
+    "exactly four satellite towers embedded into the lower-body corners"
+  ],
+  "sourceScaleTargets": {
+    "palaceWidth": [3.2, 3.38],
+    "visibleHeight": [3.65, 3.85],
+    "lowerBodyHeight": [1.9, 2.08],
+    "heroDomeDiameter": [0.96, 1.04],
+    "frontSatelliteDiameter": [0.74, 0.8],
+    "palaceToCourtDiameter": [0.68, 0.72]
+  },
+  "pivots": {"root": "court centre at y=0", "front": "+Z", "growth": "bottom-anchored +Y"},
+  "sockets": ["palace-body-root", "central-keep", "main-dome", "upper-crown", "satellite-left-front", "satellite-right-front", "satellite-left-rear", "satellite-right-rear"],
+  "thresholds": {"perView": 0.85, "worstDimensionGain": 0.1},
+  "reviewPriority": [135, 225, 0, 180, 90, 270, 45, 315],
+  "forbidden": ["smooth stacked cylinder tower", "flat facade slab", "floating sockets", "open root slots", "camera-facing-only shell", "oversized spherical hero dome", "micro-detail used to hide failed massing", "any gameplay or route edit"]
+}

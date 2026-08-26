@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-first-visual-gate"
+  },
+  "subject": "Island 014 threejs closed cross-plan honey cathedral shell first gate",
+  "constructionFamily": "threejs-closed-cross-plan-honey-cathedral-shell",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/build-contract.v1.json",
+      "sha256": "68ad6e6eabd37ac94b6dd2013913d849e2c8c7895033bec0973916fdbf735343"
+    },
+    "multiviewGenerationRecord": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-front-facade/palace-multiview-generation-record.v1.json",
+      "sha256": "acaeafe6c315087e09d0bfa5838f0ac9d38266abcdcdb63c6a97abf7f19e671f",
+      "authority": "hidden-view-inference-only"
+    },
+    "buildValidation": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-true-360-shell/build-validation.v1.json",
+      "sha256": "a098805492d587a25d8aecf7527bca8c6eeec63d934d5883f1367e4fe718b9eb",
+      "role": "structural-capture-authorization-only"
+    },
+    "captureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-true-360-shell-v001-r01/capture-manifest.v1.json",
+      "sha256": "eff7463a161c382b97e95e5cdab6b3220c701cfe9d751751bb2043043005c739"
+    }
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "criticalFirstPassFloor": 0.50,
+    "worstViewCategoryGoverns": true,
+    "versionedEvidenceMustMatchManifest": true,
+    "hardVetoRetiresValidFirstPass": true,
+    "oneBoundedCorrectionMaximum": true,
+    "correctionsUsed": 0,
+    "correctionsRemainingIfEligible": 1,
+    "allowedActions": [
+      "APPROVE",
+      "ONE-BOUNDED-CORRECTION",
+      "RETIRE-FAMILY",
+      "STOP"
+    ]
+  },
+  "evidenceIntegrity": {
+    "valid": false,
+    "pngCount": 13,
+    "pngHashMatches": 1,
+    "pngHashMismatches": 12,
+    "svgCount": 13,
+    "svgHashMatches": 0,
+    "svgHashMismatches": 13,
+    "onlyMatchingPng": "front-close-materials-on.png",
+    "finding": "The directory contents were changed or regenerated after the hashes recorded in capture-manifest.v1.json. The packet cannot serve as immutable Quality-Lord evidence."
+  },
+  "pngHashAudit": [
+    {
+      "view": "orbit-000-materials-on",
+      "expected": "61e82bcb7d0d6213ec1d1defafa22f373b64765ca8d7c890e306239b75919059",
+      "actual": "292da42b81c93e13b9d36a3fbe8d5c66c1a63c43a3bd6f7382fe70a8507b3319",
+      "match": false
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "expected": "c5dcae626f2e78bcac3d30d1ea3aee2a49aae3e5db130b61e97f07be71d93b74",
+      "actual": "85ddd8eb12478f67b64eae1f37cccb1c99e623ed470d530f10f3c07eef1876c4",
+      "match": false
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "expected": "3b3b39cf68b44f415d5f2a89db6dbabcf3067b9ed2ecf434496ce9f934ec63d7",
+      "actual": "d3e03f37ec4c3932e939891d60258264048f95ebcb97cee8333773419f8df3d8",
+      "match": false
+    },
+    {
+      "view": "orbit-135-materials-on",
+      "expected": "4759fb4d85e056434acd20faba004b59fc4b5638411a5674a1a1a9ebb365dd92",
+      "actual": "ed5206c4bbf73d72ff4060e142dc64e279eee309ab13a2ab6a3271230c0a3351",
+      "match": false
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "expected": "5267839885b5c2fce27db35a58b6d368d1ec17e0cea8814843ac83bb2cfccbcb",
+      "actual": "e0897a223ad555d394f498552b41b0a1190a21c6c3276ffa04897e9172d12003",
+      "match": false
+    },
+    {
+      "view": "orbit-225-materials-on",
+      "expected": "184fda027814034d49719518e3a5228c1a69e095f070514eb9d380ca806a8cac",
+      "actual": "ddec69102fb6a44d268db9ff24140eaa1de71dd3645bbbbc8b133fc6a01270f6",
+      "match": false
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "expected": "4200186aef4f39f89ab7c1da5e16437847df4d3798b6f36f79a24deaa9500777",
+      "actual": "dc9ad94d9c58f288aa403f8457aa4cb05c82c73e9822139b3286bd4b3883f68e",
+      "match": false
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "expected": "56c46a200c94adca642ce86e2a4b64955e3784d02fe9dc99527ba4dca78b2e9d",
+      "actual": "be9967fe6afaafbafce9085714ee09b7054e755f42c0f888f5115f61d7e3c915",
+      "match": false
+    },
+    {
+      "view": "orbit-000-materials-off",
+      "expected": "356b03b667d890312626617b1ea8f39bcf8760ac2bc124bfa3c776f2e3ad3154",
+      "actual": "bcefb29694de2bc351c988476c1d440b90c1a308b4705289d95f8266821b28e8",
+      "match": false
+    },
+    {
+      "view": "orbit-045-materials-off",
+      "expected": "fd02dc08471389da16f5d4d0e1befd8e84dfad40923807cc805039013ed30cbe",
+      "actual": "7f2f091dae85f7a85583e8c48de5a517f6fdb6b1a34db8ba5d4a50996a5caf8d",
+      "match": false
+    },
+    {
+      "view": "orbit-315-materials-off",
+      "expected": "3965fb1ff64b58f6028fcb11fbaa37695dac7b969429cd4deb8ac9b78f6b67a4",
+      "actual": "6c12309007be3c55cc2d6ac77b2f57ca38f8e8b7285dea08641074d6ef0a3e38",
+      "match": false
+    },
+    {
+      "view": "front-close-materials-on",
+      "expected": "db187f4dae4fb38e5e9719b277bb79b65966fb2933d61803e9a3467ad0591fc5",
+      "actual": "db187f4dae4fb38e5e9719b277bb79b65966fb2933d61803e9a3467ad0591fc5",
+      "match": true
+    },
+    {
+      "view": "phone-overview",
+      "expected": "029f10bc955397faddd26d15ed97a4b426db5c1cc08ba3982e48001bbe36bf3d",
+      "actual": "c713445bae43577eae432f95796e0efe97d8161dfc35c8ebf654f6abb1de3e10",
+      "match": false
+    }
+  ],
+  "provisionalPixelScores": {
+    "authority": "non-terminal-observation-only-because-hashes-fail",
+    "perView": [
+      {
+        "view": "orbit-000-materials-on",
+        "sourceIdentity": 0.38,
+        "silhouetteVolume": 0.55,
+        "doorFirstHierarchy": 0.62,
+        "fourBayReadability": 0.55,
+        "attachment": 0.58,
+        "crossViewCoherence": 0.35,
+        "sideRearAuthorship": null,
+        "honeyMaterialRead": 0.50,
+        "phoneReadability": 0.42,
+        "note": "The front is closed and door-led, but it reads as a boxy onion-dome complex with an enormous dark arch/rose assembly rather than the source's ornate compact honey cathedral."
+      },
+      {
+        "view": "orbit-045-materials-on",
+        "sourceIdentity": 0.32,
+        "silhouetteVolume": 0.52,
+        "doorFirstHierarchy": 0.45,
+        "fourBayReadability": 0.45,
+        "attachment": 0.38,
+        "crossViewCoherence": 0.30,
+        "sideRearAuthorship": 0.45,
+        "honeyMaterialRead": 0.48,
+        "phoneReadability": 0.35,
+        "note": "The front insert becomes thin and angular, side walls are broad blank slabs, and repeated onion domes dominate the intended occupied bay hierarchy."
+      },
+      {
+        "view": "orbit-090-materials-on",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.50,
+        "doorFirstHierarchy": null,
+        "fourBayReadability": 0.35,
+        "attachment": 0.45,
+        "crossViewCoherence": 0.30,
+        "sideRearAuthorship": 0.42,
+        "honeyMaterialRead": 0.42,
+        "phoneReadability": 0.30,
+        "note": "The side exists as volume but is an under-authored slab with sparse protruding windows, flat banners, repeated domes, and the front circular feature visible as an oversized disk."
+      },
+      {
+        "view": "orbit-135-materials-on",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.48,
+        "doorFirstHierarchy": null,
+        "fourBayReadability": 0.35,
+        "attachment": 0.28,
+        "crossViewCoherence": 0.22,
+        "sideRearAuthorship": 0.45,
+        "honeyMaterialRead": 0.42,
+        "phoneReadability": 0.28,
+        "note": "The giant front rose/backplane disk protrudes outside the body silhouette, while side ornaments and dark buttresses read as loosely attached pieces."
+      },
+      {
+        "view": "orbit-180-materials-on",
+        "sourceIdentity": 0.30,
+        "silhouetteVolume": 0.52,
+        "doorFirstHierarchy": null,
+        "fourBayReadability": 0.35,
+        "attachment": 0.50,
+        "crossViewCoherence": 0.42,
+        "sideRearAuthorship": 0.55,
+        "honeyMaterialRead": 0.42,
+        "phoneReadability": 0.30,
+        "note": "The rear is authored and closed, with a subordinate service apse, but remains a sparse box-and-dome composition with little wrapped honey-cathedral structure or inhabited detail."
+      },
+      {
+        "view": "orbit-225-materials-on",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.48,
+        "doorFirstHierarchy": null,
+        "fourBayReadability": 0.35,
+        "attachment": 0.28,
+        "crossViewCoherence": 0.22,
+        "sideRearAuthorship": 0.45,
+        "honeyMaterialRead": 0.42,
+        "phoneReadability": 0.28,
+        "note": "The opposite rear oblique repeats the protruding front disk, slab sides, and loosely attached dark posts/windows."
+      },
+      {
+        "view": "orbit-270-materials-on",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.50,
+        "doorFirstHierarchy": null,
+        "fourBayReadability": 0.35,
+        "attachment": 0.45,
+        "crossViewCoherence": 0.30,
+        "sideRearAuthorship": 0.42,
+        "honeyMaterialRead": 0.42,
+        "phoneReadability": 0.30,
+        "note": "The right side is volumetric but generic and sparsely authored, with no source-like honeycomb civic facade wrapping the corner."
+      },
+      {
+        "view": "orbit-315-materials-on",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.42,
+        "doorFirstHierarchy": 0.25,
+        "fourBayReadability": 0.40,
+        "attachment": 0.22,
+        "crossViewCoherence": 0.18,
+        "sideRearAuthorship": 0.40,
+        "honeyMaterialRead": 0.45,
+        "phoneReadability": 0.25,
+        "note": "The royal-front assembly collapses into broad diagonal planar shards and black gaps; doorway and rose cease to read as the coherent forms shown at 000 degrees."
+      },
+      {
+        "view": "orbit-000-materials-off",
+        "sourceIdentity": 0.35,
+        "silhouetteVolume": 0.58,
+        "doorFirstHierarchy": 0.55,
+        "fourBayReadability": 0.50,
+        "attachment": 0.55,
+        "crossViewCoherence": 0.35,
+        "sideRearAuthorship": null,
+        "honeyMaterialRead": null,
+        "phoneReadability": 0.35,
+        "note": "Naked geometry confirms a closed shell but also the overscaled circular front disk, broad sparse slabs, and repeated hemisphere-on-drum vocabulary."
+      },
+      {
+        "view": "orbit-045-materials-off",
+        "sourceIdentity": 0.30,
+        "silhouetteVolume": 0.50,
+        "doorFirstHierarchy": 0.42,
+        "fourBayReadability": 0.40,
+        "attachment": 0.35,
+        "crossViewCoherence": 0.28,
+        "sideRearAuthorship": 0.42,
+        "honeyMaterialRead": null,
+        "phoneReadability": 0.30,
+        "note": "The oblique naked view shows that the ornate read is not carried around the corner and that the front disk is insufficiently buried into the body."
+      },
+      {
+        "view": "orbit-315-materials-off",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.42,
+        "doorFirstHierarchy": 0.25,
+        "fourBayReadability": 0.35,
+        "attachment": 0.22,
+        "crossViewCoherence": 0.18,
+        "sideRearAuthorship": 0.38,
+        "honeyMaterialRead": null,
+        "phoneReadability": 0.25,
+        "note": "Materials-off confirms the 315-degree planar/sharded front collapse is geometry, not a material illusion."
+      },
+      {
+        "view": "front-close-materials-on",
+        "sourceIdentity": 0.35,
+        "silhouetteVolume": 0.48,
+        "doorFirstHierarchy": 0.62,
+        "fourBayReadability": 0.35,
+        "attachment": 0.45,
+        "crossViewCoherence": 0.30,
+        "sideRearAuthorship": null,
+        "honeyMaterialRead": 0.48,
+        "phoneReadability": 0.45,
+        "note": "The purple doorway and bees are visible, but the bees float in large black voids and the entrance lacks the source's dense architectural enclosure and refined purple royal-door proportions."
+      },
+      {
+        "view": "phone-overview",
+        "sourceIdentity": 0.25,
+        "silhouetteVolume": 0.50,
+        "doorFirstHierarchy": 0.50,
+        "fourBayReadability": 0.35,
+        "attachment": 0.40,
+        "crossViewCoherence": 0.30,
+        "sideRearAuthorship": null,
+        "honeyMaterialRead": 0.30,
+        "phoneReadability": 0.32,
+        "note": "At phone scale the asset reduces to a pale orange onion-dome fort; honeycomb structure, occupied bays, bee details, purple royal identity, glazing, and drips largely disappear."
+      }
+    ],
+    "categorySummary": {
+      "sourceIdentity": 0.25,
+      "silhouetteVolume": 0.42,
+      "doorFirstHierarchy": 0.25,
+      "fourBayReadability": 0.35,
+      "attachment": 0.22,
+      "crossViewCoherence": 0.18,
+      "sideRearAuthorship": 0.38,
+      "honeyMaterialRead": 0.30,
+      "phoneReadability": 0.25
+    },
+    "worstVisibleScore": {
+      "value": 0.18,
+      "view": "orbit-315-materials-on and orbit-315-materials-off",
+      "dimension": "crossViewCoherence"
+    }
+  },
+  "hardVetoObservationOnUntrustedPixels": {
+    "cardOrCameraDependentFacadeCollapse": {
+      "present": true,
+      "evidence": "At 315 degrees the front arch/door assembly becomes broad diagonal planar shards and black gaps; materials-off confirms the same geometric collapse."
+    },
+    "openShell": {
+      "present": false,
+      "evidence": "The visible shell and rear are closed, and build-validation reports zero open surfaces; dark openings appear backed rather than showing the blue environment."
+    },
+    "detachedOrInsufficientlyBuriedHeroDetail": {
+      "present": true,
+      "evidence": "The giant circular rose/backplane protrudes beyond the palace side silhouette at 090, 135, 225, and 270 degrees; bee emblems float within large dark front voids."
+    },
+    "unauthoredRear": {
+      "present": false,
+      "evidence": "The 180-degree view contains a closed subordinate service apse, windows, and stepped mass, although its authorship quality is only provisional 0.55."
+    },
+    "forbiddenArchetypeDrift": {
+      "present": true,
+      "evidence": "Across the orbit, repeated hemisphere-on-drum roofs and the oversized hero onion dome make the asset read as a generic onion-dome mosque/fort rather than the exact honey cathedral."
+    }
+  },
+  "largestVisibleMismatch": "The exact source is a compact, ornate, inhabited honey cathedral whose gold-bronze ribs, honeycomb bays, purple bee doorway, amber glazing, and drips remain legible as one coherent civic body. The current untrusted packet shows a sparse boxy onion-dome fort with an oversized protruding circular front disk and a 315-degree facade collapse.",
+  "gateEvaluation": {
+    "evidenceCanSupportTerminalFamilyDecision": false,
+    "everyRequiredCategoryAtLeast085OnCurrentPixels": false,
+    "criticalFirstPassFloorMetOnCurrentPixels": false,
+    "hardVetoVisibleOnCurrentPixels": true,
+    "boundedCorrectionLegallyAvailable": false,
+    "finding": "The current visible files would independently force retirement because the provisional worst score is 0.18 and card/camera-dependent, detached-detail, and forbidden-archetype vetoes are visible. However, 12 of 13 PNG hashes and all 13 SVG hashes fail the frozen manifest. Under the immutable artifact contract, those files are not authoritative evidence, so the Quality Lord cannot issue APPROVE, CORRECTION, or RETIRE-FAMILY against this packet. A new immutable capture directory and matching manifest are required."
+  },
+  "action": "STOP"
+}

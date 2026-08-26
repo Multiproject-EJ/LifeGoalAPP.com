@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-visual-gate"
+  },
+  "subject": "Island 014 Royal Palace naked macro shell",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/build-contract.v1.json",
+      "sha256": "3538c48bb77e8d97af6239607bab10db50f02decc5185abfb1b954322febedfe"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v1.json",
+      "sha256": "99d704b2b41064caad691382a20fe7ccc5d5c0c285ab54254e6456ab17afceaa"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.62,
+      "depthIntegration": 0.58,
+      "sourceLikeness": 0.55,
+      "sideRearCoherence": 0.61,
+      "note": "Front hierarchy is legible, but the main dome is oversized and spherical, satellite towers are buried, and the lower body reads as stepped slabs rather than one vertically integrated cathedral mass."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.48,
+      "depthIntegration": 0.38,
+      "sourceLikeness": 0.42,
+      "sideRearCoherence": 0.41,
+      "note": "The favorable-front read collapses into thin stacked facade planes, open slots, and a disconnected hollow crown; tower-to-body integration is not volumetrically credible."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.56,
+      "depthIntegration": 0.48,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.50,
+      "note": "Hidden side is evaluated only for volume. The dome survives, but the lower cathedral becomes rectangular tiers with large flat interruptions and weak tower burial."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.44,
+      "depthIntegration": 0.32,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.35,
+      "note": "Least-flattering transition exposes broad paper-thin diagonal slabs, discontinuous voids, and a crown that reads as floating frame geometry instead of a load-bearing upper mass."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.58,
+      "depthIntegration": 0.47,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.51,
+      "note": "Rear volume remains broadly symmetrical, but it is dominated by blank box tiers and a central flat slab; the articulated tower family does not form a continuous cathedral envelope."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.45,
+      "depthIntegration": 0.34,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.36,
+      "note": "Opposite transition repeats the same slab collapse, open root slots, and detached crown-frame problem, confirming a construction-family defect rather than a single-view accident."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.55,
+      "depthIntegration": 0.46,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.49,
+      "note": "Opposite side retains the large dome but shows thin rectangular body layers and insufficiently integrated satellite towers."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.50,
+      "depthIntegration": 0.39,
+      "sourceLikeness": 0.44,
+      "sideRearCoherence": 0.43,
+      "note": "Returning toward the exact visible side does not recover the source's cohesive taper; facade masses remain planar, fragmented, and weakly connected to the main dome."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.32,
+    "viewDegrees": 135,
+    "dimension": "depthIntegration"
+  },
+  "vetoes": [
+    "camera-dependent front read",
+    "flat-plane collapse in both oblique transitions",
+    "visible open slots and discontinuous massing",
+    "floating/disconnected upper crown-frame",
+    "forbidden flat facade slab archetype"
+  ],
+  "largestMismatch": "The exact source is a cohesive, vertically tapering cathedral whose main dome, keep, lower body, and satellite towers interlock into one load-bearing honeycomb silhouette. This family only approximates that hierarchy from the front; both oblique transitions reveal stacked paper-thin slabs, large voids, and a disconnected crown, so the volume is camera-dependent rather than genuinely three-dimensional.",
+  "delta": {
+    "baseline": "first naked blockout of this construction family",
+    "measuredGain": null,
+    "reason": "No prior same-family naked macro-shell review exists; bounded-correction eligibility is denied by hard vetoes and critical scores below 0.50."
+  },
+  "action": "retire-family"
+}

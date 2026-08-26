@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "retired-after-bounded-correction",
+  "retiredAt": "2026-08-25",
+  "retirementEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v8.json",
+  "retirementReason": "Worst score reached only 0.60; four shoulder towers remained dome-capped tapering pylons and correction budget was spent.",
+  "boundedCorrectionEvidence": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v7.json",
+  "family": "procedural-threejs-buttressed-hemidome-cathedral",
+  "replaces": "procedural-threejs-faceted-frustum-cluster-cathedral",
+  "worker": "palace-macro-worker",
+  "allowlist": {"files": ["src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"], "functions": ["createRoyalPalace"]},
+  "frozen": ["court and stairs", "all non-palace landmarks", "terrain", "board and route", "materials", "honey", "mission", "robots", "camera", "gameplay controllers", "palace facade and ornament systems"],
+  "budget": {"blockouts": 1, "boundedCorrections": 1, "visualReviews": 2},
+  "constructionRule": "Use thick closed tapered 8-sided body/drum volumes and true upper-hemisphere dome shells closed by matching horizontal base disks. Drum top diameter must match or exceed 85% of its dome diameter. Dome volume must read as a cap beginning at the drum collar; full-sphere silhouettes are forbidden.",
+  "requiredHierarchy": [
+    "one broad thick lower cathedral frustum with buttressed shoulder depth",
+    "two deeply overlapping broad transept shoulders and one rear apse",
+    "two thick faceted central keep/drum stages whose upper width matches the hero hemidome",
+    "exactly four thick two-stage satellite shoulders whose drum tops match their hemidome diameter",
+    "one closed hero hemidome, four closed subordinate hemidomes, and one small closed crown hemidome",
+    "one continuous taper with no pylon, lollipop, separate pillar, or full-sphere roof read"
+  ],
+  "sourceScaleTargets": {"palaceWidth": [3.2, 3.38], "visibleHeight": [3.65, 3.85], "heroDomeDiameter": [0.96, 1.04], "frontSatelliteDomeDiameter": [0.68, 0.76], "rearSatelliteDomeDiameter": [0.58, 0.68]},
+  "requiredEvidenceNames": ["PALACE_NAVE", "PALACE_TRANSEPT_LEFT", "PALACE_TRANSEPT_RIGHT", "PALACE_KEEP_LOWER", "PALACE_KEEP_UPPER", "PALACE_HIVE_DOME", "PALACE_HIVE_DOME_BASE_CAP", "PALACE_TURRET_1_BASE", "PALACE_TURRET_1_DRUM", "PALACE_TURRET_1_HIVE_DOME", "PALACE_TURRET_1_HIVE_DOME_BASE_CAP"],
+  "thresholds": {"perView": 0.85, "worstDimensionGain": 0.1, "mandatoryRetireBelow": 0.75},
+  "reviewPriority": [0, 45, 315, 135, 225, 180, 90, 270],
+  "forbidden": ["full visible sphere roof", "ball on pylon", "narrow tower neck beneath a wide dome", "rectangular nave wall", "box keep", "separate pillar satellite", "equal stacked tiers", "flat facade slab", "floating socket", "open root slot", "camera-facing-only shell", "micro-detail used to hide failed massing", "any gameplay or route edit"]
+}

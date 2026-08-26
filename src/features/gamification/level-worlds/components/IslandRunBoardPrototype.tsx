@@ -467,6 +467,7 @@ import {
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
+  activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
   fundFrostwellIceworks,
@@ -477,17 +478,20 @@ import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_SPIN_METERS,
+  GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_FIRST_TREASURE_NAME,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCactusCanyonAvailableDynamite,
+  getGreatHoneyfallAvailableNectar,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
   getSunkenSandsTreasureRevealProgress,
   isRootheartPowerworksCollectionComplete,
   resolveCactusCanyonSpiralProgress,
+  resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
@@ -1932,6 +1936,8 @@ export function IslandRunBoardPrototype({
   const [cactusCanyonLastBlastSegments, setCactusCanyonLastBlastSegments] = useState<number | null>(null);
   const [cactusCanyonConstructionSequence, setCactusCanyonConstructionSequence] = useState(0);
   const [cactusCanyonPendingBlast, setCactusCanyonPendingBlast] = useState<{ before: number; after: number } | null>(null);
+  const [isActivatingGreatHoneyfall, setIsActivatingGreatHoneyfall] = useState(false);
+  const [greatHoneyfallConstructionSequence, setGreatHoneyfallConstructionSequence] = useState(0);
   const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
   const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
@@ -3080,6 +3086,13 @@ export function IslandRunBoardPrototype({
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
   const cactusCanyonAvailableDynamite = getCactusCanyonAvailableDynamite(cactusCanyonSpiralProgress);
   const cactusCanyonSpiralCompleted = cactusCanyonSpiralProgress.completedAtMs !== null;
+  const greatHoneyfallProgress = useMemo(() => resolveGreatHoneyfallProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 14,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const greatHoneyfallAvailableNectar = getGreatHoneyfallAvailableNectar(greatHoneyfallProgress);
+  const greatHoneyfallCompleted = greatHoneyfallProgress.completedAtMs !== null;
   const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -6580,7 +6593,9 @@ export function IslandRunBoardPrototype({
       ? {
           title: buildLevelCompletion.title,
           stopId: buildLevelCompletion.stopId,
+          previousLevel: Math.max(0, buildLevelCompletion.level - 1),
           level: buildLevelCompletion.level,
+          presentationSequence: buildLevelCompletion.reviewId,
           isFullyBuilt: buildLevelCompletion.isFullyBuilt,
           isAdvanceReady: buildLevelCompletion.isAdvanceReady,
           isAdvanceQueued: buildLevelCompletion.isAdvanceQueued,
@@ -12709,6 +12724,52 @@ export function IslandRunBoardPrototype({
     }
   }, [client, isBlastingCactusCanyonSpiral, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
 
+  const handleActivateGreatHoneyfall = useCallback(async () => {
+    if (isActivatingGreatHoneyfall) return;
+    if (greatHoneyfallCompleted) {
+      // Replay is presentation-only; canonical completion remains unchanged.
+      setGreatHoneyfallConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setLandingText('🍯 The Great Honeyfall Coronation rises again!');
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('reward_claim');
+      return;
+    }
+    setIsActivatingGreatHoneyfall(true);
+    try {
+      const result = await activateGreatHoneyfallReservoir({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_nectar') {
+          setLandingText('Land on a glowing royal-nectar tile before opening the next Honeyfall reservoir.');
+        }
+        return;
+      }
+      // The canonical action is committed before this coronation presentation.
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('activate_great_honeyfall_reservoir', fresh);
+      setGreatHoneyfallConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      const completed = result.activatedReservoirs >= GREAT_HONEYFALL_MAX_STAGE;
+      setLandingText(completed
+        ? '👑 The Great Honeyfall Coronation is complete — every golden cascade is flowing!'
+        : `🍯 Royal reservoir ${result.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} is flowing.`);
+      playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
+    } finally {
+      setIsActivatingGreatHoneyfall(false);
+    }
+  }, [
+    client,
+    greatHoneyfallCompleted,
+    isActivatingGreatHoneyfall,
+    playIslandRunSound,
+    session,
+    setRuntimeStateWithTrace,
+    triggerIslandRunHaptic,
+  ]);
+
   const handleFundFrostwell = useCallback(async () => {
     if (isFundingFrostwell) return;
     setIsFundingFrostwell(true);
@@ -14397,8 +14458,16 @@ export function IslandRunBoardPrototype({
                     : cactusCanyonSpiralCompleted,
                   constructionSequence: cactusCanyonConstructionSequence,
                 }}
+                greatHoneyfallPresentation={{
+                  activatedReservoirs: isIslandVisualPreview && islandArtPreviewNumber === 14
+                    ? GREAT_HONEYFALL_MAX_STAGE
+                    : greatHoneyfallProgress.activatedReservoirs,
+                  constructionSequence: greatHoneyfallConstructionSequence,
+                }}
                 onSignatureMissionClick={islandArtPreviewNumber === 12
                   ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
+                  : islandArtPreviewNumber === 14
+                    ? isIslandVisualPreview ? undefined : handleActivateGreatHoneyfall
                   : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10 && islandArtPreviewNumber !== 13
                     ? undefined
                     : islandArtPreviewNumber === 13
@@ -14469,6 +14538,27 @@ export function IslandRunBoardPrototype({
                   {cactusCanyonSpiralCompleted
                     ? 'Mountain railway online'
                     : `${cactusCanyonSpiralProgress.segmentsExcavated}/${CACTUS_CANYON_SPIRAL_MAX_SEGMENTS} sections · 🧨 ${cactusCanyonAvailableDynamite}`}
+                </span>
+              </button>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 14 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--great-honeyfall"
+                onClick={() => void handleActivateGreatHoneyfall()}
+                disabled={isActivatingGreatHoneyfall}
+                aria-label={greatHoneyfallCompleted
+                  ? 'Replay the Great Honeyfall Coronation'
+                  : 'Open the next royal nectar reservoir'}
+              >
+                <span aria-hidden="true">{greatHoneyfallCompleted ? '👑' : '🍯'}</span>
+                <span>
+                  <strong>Great Honeyfall</strong>
+                  {greatHoneyfallCompleted
+                    ? 'Coronation complete · Replay'
+                    : greatHoneyfallAvailableNectar > 0
+                      ? `${greatHoneyfallProgress.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} reservoirs · Open next`
+                      : `${greatHoneyfallProgress.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} reservoirs · Find nectar`}
                 </span>
               </button>
             ) : null}

@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-terminal-visual-gate"
+  },
+  "subject": "Island 014 rounded jewel hive cathedral terminal gate",
+  "constructionFamily": "threejs-rounded-layered-jewel-hive-cathedral",
+  "inputs": {
+    "originalSource": {
+      "path": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "sha256": "3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e",
+      "authority": "exact-original-pixels"
+    },
+    "sourceCrop": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "buildContract": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-rounded-jewel-hive-cathedral/build-contract.v1.json",
+      "sha256": "8c036996bb3b545364af21a2a5cc333b5a5edc6b10971b1c165b5dd103dff46d"
+    },
+    "captureManifest": {
+      "path": "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-rounded-jewel-hive-cathedral-v001-r01/capture-manifest.v1.json",
+      "sha256": "fbbdab2e15696ffbc2493169424e879c3bccb8168a6363844d7d76e29f017382"
+    },
+    "buildValidation": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-rounded-jewel-hive-cathedral/build-validation.v1.json",
+      "sha256": "8c1f4dd4b5bc024eb0b6791c68aa3520a84564bf5e5a3b1422ee9cab0a1d0da0"
+    },
+    "runtime": {
+      "path": "src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts",
+      "sha256": "c7c3774bcb07ed8f3172cbed88f704418d8d211185fa6eb1939569c2ffc9ef03"
+    }
+  },
+  "evidenceIntegrity": {
+    "valid": true,
+    "independentVerification": "Quality Lord independently re-hashed the two source authorities, contract, manifest, validation, all 14 SVG and 14 PNG evidence files, and the frozen runtime before opening any pixels.",
+    "verifiedEvidenceFiles": 28,
+    "evidenceMismatches": 0,
+    "runtimeMatch": true
+  },
+  "reviewPolicy": {
+    "requiredCategoryScore": 0.85,
+    "worstViewCategoryGoverns": true,
+    "correctionsUsed": 1,
+    "correctionsRemaining": 0,
+    "allowedActions": [
+      "APPROVE",
+      "RETIRE-FAMILY",
+      "STOP"
+    ],
+    "stopReservedForIntegrityFailure": true
+  },
+  "perViewScores": [
+    {
+      "view": "orbit-000-materials-on",
+      "sourceIdentity": 0.40,
+      "silhouetteVolume": 0.44,
+      "doorFirstHierarchy": 0.72,
+      "fourFrontBays": 0.58,
+      "physicalAttachmentNoCards": 0.52,
+      "crossViewCoherence": 0.48,
+      "sideRearAuthorship": null,
+      "continuousHoneycombCivicTracery": 0.26,
+      "glazingFiligreeValueRead": 0.28,
+      "glossyViscousAttachedHoney": 0.22,
+      "phoneIdentity": 0.38,
+      "note": "The purple bee door is the first focal point and four rounded front pods can be inferred, but the source's compact ornate cathedral is replaced by a bulbous hive mound with a blank pale center, isolated hex collars, open-cage cupolas, and opaque orange shelf forms."
+    },
+    {
+      "view": "orbit-045-materials-on",
+      "sourceIdentity": 0.34,
+      "silhouetteVolume": 0.40,
+      "doorFirstHierarchy": 0.66,
+      "fourFrontBays": 0.50,
+      "physicalAttachmentNoCards": 0.46,
+      "crossViewCoherence": 0.44,
+      "sideRearAuthorship": 0.38,
+      "continuousHoneycombCivicTracery": 0.22,
+      "glazingFiligreeValueRead": 0.24,
+      "glossyViscousAttachedHoney": 0.20,
+      "phoneIdentity": 0.34,
+      "note": "The doorway remains legible, but the oblique reveals oversized egg-like lobes, protruding isolated collars, skeletal cupolas, stick supports, and flat honey shelves instead of an integrated inhabited civic facade."
+    },
+    {
+      "view": "orbit-090-materials-on",
+      "sourceIdentity": 0.24,
+      "silhouetteVolume": 0.30,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.34,
+      "physicalAttachmentNoCards": 0.40,
+      "crossViewCoherence": 0.38,
+      "sideRearAuthorship": 0.32,
+      "continuousHoneycombCivicTracery": 0.20,
+      "glazingFiligreeValueRead": 0.22,
+      "glossyViscousAttachedHoney": 0.20,
+      "phoneIdentity": 0.28,
+      "note": "The side reads unmistakably as a giant smooth beehive mound with bulbous add-ons. Sparse hex windows and rails do not form the required continuous tracery, and the source's layered cathedral architecture is absent."
+    },
+    {
+      "view": "orbit-135-materials-on",
+      "sourceIdentity": 0.20,
+      "silhouetteVolume": 0.28,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.28,
+      "physicalAttachmentNoCards": 0.34,
+      "crossViewCoherence": 0.34,
+      "sideRearAuthorship": 0.28,
+      "continuousHoneycombCivicTracery": 0.18,
+      "glazingFiligreeValueRead": 0.20,
+      "glossyViscousAttachedHoney": 0.18,
+      "phoneIdentity": 0.24,
+      "note": "Rear-oblique pixels expose large unarticulated lobes, stick-supported ornaments, a dark side door, and sparse surface authorship. The form reads as assembled hive pods rather than one royal cathedral."
+    },
+    {
+      "view": "orbit-180-materials-on",
+      "sourceIdentity": 0.20,
+      "silhouetteVolume": 0.28,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": null,
+      "physicalAttachmentNoCards": 0.40,
+      "crossViewCoherence": 0.34,
+      "sideRearAuthorship": 0.30,
+      "continuousHoneycombCivicTracery": 0.18,
+      "glazingFiligreeValueRead": 0.20,
+      "glossyViscousAttachedHoney": 0.18,
+      "phoneIdentity": 0.24,
+      "note": "The rear is technically occupied, but its dominant silhouette is a huge rounded hive mound beneath a cylindrical lantern and skeletal cap. Three tiny openings and a small apse do not provide source-like civic authorship."
+    },
+    {
+      "view": "orbit-225-materials-on",
+      "sourceIdentity": 0.20,
+      "silhouetteVolume": 0.28,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.28,
+      "physicalAttachmentNoCards": 0.34,
+      "crossViewCoherence": 0.34,
+      "sideRearAuthorship": 0.28,
+      "continuousHoneycombCivicTracery": 0.18,
+      "glazingFiligreeValueRead": 0.20,
+      "glossyViscousAttachedHoney": 0.18,
+      "phoneIdentity": 0.24,
+      "note": "The opposite rear oblique confirms the same generic mound, sparse rails and collars, dark side opening, and protruding ornaments without a continuous honeycomb enclosure."
+    },
+    {
+      "view": "orbit-270-materials-on",
+      "sourceIdentity": 0.24,
+      "silhouetteVolume": 0.30,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.34,
+      "physicalAttachmentNoCards": 0.40,
+      "crossViewCoherence": 0.38,
+      "sideRearAuthorship": 0.32,
+      "continuousHoneycombCivicTracery": 0.20,
+      "glazingFiligreeValueRead": 0.22,
+      "glossyViscousAttachedHoney": 0.20,
+      "phoneIdentity": 0.28,
+      "note": "The right side mirrors the giant smooth hive-lobe construction. It has volume but not the source's stepped palace silhouette, dense filigree, amber glazing, or integrated bay architecture."
+    },
+    {
+      "view": "orbit-315-materials-on",
+      "sourceIdentity": 0.34,
+      "silhouetteVolume": 0.40,
+      "doorFirstHierarchy": 0.66,
+      "fourFrontBays": 0.50,
+      "physicalAttachmentNoCards": 0.46,
+      "crossViewCoherence": 0.44,
+      "sideRearAuthorship": 0.38,
+      "continuousHoneycombCivicTracery": 0.22,
+      "glazingFiligreeValueRead": 0.24,
+      "glossyViscousAttachedHoney": 0.20,
+      "phoneIdentity": 0.34,
+      "note": "The doorway survives from this oblique, but mound-scale side pods, isolated hex collars, empty broad walls, and flat orange honey shelves dominate the read."
+    },
+    {
+      "view": "orbit-000-materials-off",
+      "sourceIdentity": 0.38,
+      "silhouetteVolume": 0.44,
+      "doorFirstHierarchy": 0.68,
+      "fourFrontBays": 0.56,
+      "physicalAttachmentNoCards": 0.54,
+      "crossViewCoherence": 0.48,
+      "sideRearAuthorship": null,
+      "continuousHoneycombCivicTracery": 0.24,
+      "glazingFiligreeValueRead": null,
+      "glossyViscousAttachedHoney": null,
+      "phoneIdentity": 0.36,
+      "note": "Clay confirms actual volume and a real entrance return, but it also confirms that the architectural identity is a bulbous mound assembled from oval pods, sparse collars, and cage roofs rather than a compact honeycomb cathedral."
+    },
+    {
+      "view": "orbit-045-materials-off",
+      "sourceIdentity": 0.32,
+      "silhouetteVolume": 0.38,
+      "doorFirstHierarchy": 0.62,
+      "fourFrontBays": 0.48,
+      "physicalAttachmentNoCards": 0.46,
+      "crossViewCoherence": 0.42,
+      "sideRearAuthorship": 0.36,
+      "continuousHoneycombCivicTracery": 0.20,
+      "glazingFiligreeValueRead": null,
+      "glossyViscousAttachedHoney": null,
+      "phoneIdentity": 0.32,
+      "note": "Clay shows the pods are modeled geometry, but the stick-supported collars and open cupola cages look appended, while the facade body remains broad and nearly unarticulated."
+    },
+    {
+      "view": "orbit-315-materials-off",
+      "sourceIdentity": 0.32,
+      "silhouetteVolume": 0.38,
+      "doorFirstHierarchy": 0.62,
+      "fourFrontBays": 0.48,
+      "physicalAttachmentNoCards": 0.46,
+      "crossViewCoherence": 0.42,
+      "sideRearAuthorship": 0.36,
+      "continuousHoneycombCivicTracery": 0.20,
+      "glazingFiligreeValueRead": null,
+      "glossyViscousAttachedHoney": null,
+      "phoneIdentity": 0.32,
+      "note": "The opposite clay oblique reproduces the same attached-pod mound and weak architectural integration; no material effect is hiding a source-like structural facade."
+    },
+    {
+      "view": "front-close-materials-on",
+      "sourceIdentity": 0.42,
+      "silhouetteVolume": 0.42,
+      "doorFirstHierarchy": 0.76,
+      "fourFrontBays": 0.52,
+      "physicalAttachmentNoCards": 0.50,
+      "crossViewCoherence": 0.46,
+      "sideRearAuthorship": null,
+      "continuousHoneycombCivicTracery": 0.28,
+      "glazingFiligreeValueRead": 0.30,
+      "glossyViscousAttachedHoney": 0.22,
+      "phoneIdentity": 0.40,
+      "note": "Door seam, bee crest, and purple value are readable, but the surrounding focal field is an empty pale wall with isolated hex frames. It lacks the source's dark occupied cells, amber glass, gold filigree density, stairs, and royal facade layering."
+    },
+    {
+      "view": "front-close-honey-material-proof",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.34,
+      "doorFirstHierarchy": null,
+      "fourFrontBays": 0.44,
+      "physicalAttachmentNoCards": 0.38,
+      "crossViewCoherence": 0.38,
+      "sideRearAuthorship": null,
+      "continuousHoneycombCivicTracery": 0.20,
+      "glazingFiligreeValueRead": 0.22,
+      "glossyViscousAttachedHoney": 0.18,
+      "phoneIdentity": 0.28,
+      "note": "The shelf and curtain touch the building, but the opaque planar slab, sharp folded edges, vertical stick-like strands, and horizontal white oval read as cardboard signage or an awning rather than glossy, sagging, delicious honey."
+    },
+    {
+      "view": "phone-overview",
+      "sourceIdentity": 0.30,
+      "silhouetteVolume": 0.36,
+      "doorFirstHierarchy": 0.68,
+      "fourFrontBays": 0.44,
+      "physicalAttachmentNoCards": 0.46,
+      "crossViewCoherence": 0.42,
+      "sideRearAuthorship": null,
+      "continuousHoneycombCivicTracery": 0.20,
+      "glazingFiligreeValueRead": 0.22,
+      "glossyViscousAttachedHoney": 0.18,
+      "phoneIdentity": 0.30,
+      "note": "At phone scale the purple entrance survives, but the palace resolves as a pale generic beehive mound. Honeycomb structure, four civic bays, glazing, filigree, and glossy honey disappear."
+    }
+  ],
+  "categorySummary": {
+    "sourceIdentity": 0.20,
+    "silhouetteVolume": 0.28,
+    "doorFirstHierarchy": 0.62,
+    "fourFrontBays": 0.28,
+    "physicalAttachmentNoCards": 0.34,
+    "crossViewCoherence": 0.34,
+    "sideRearAuthorship": 0.28,
+    "continuousHoneycombCivicTracery": 0.18,
+    "glazingFiligreeValueRead": 0.20,
+    "glossyViscousAttachedHoney": 0.18,
+    "phoneIdentity": 0.24
+  },
+  "worstRequiredScore": {
+    "value": 0.18,
+    "dimensions": [
+      "continuousHoneycombCivicTracery",
+      "glossyViscousAttachedHoney"
+    ],
+    "views": [
+      "orbit-135-materials-on",
+      "orbit-180-materials-on",
+      "orbit-225-materials-on",
+      "front-close-honey-material-proof",
+      "phone-overview"
+    ]
+  },
+  "hardVetoEvaluation": {
+    "genericKeepOrBeehiveMound": {
+      "present": true,
+      "finding": "Orbit 090, 135, 180, 225, and 270 are dominated by one giant rounded hive body and large egg-like side lobes. This is the contract's explicit generic beehive-mound archetype, not the source's compact inhabited honey cathedral."
+    },
+    "simpleConesOrOnionDomes": {
+      "present": false,
+      "finding": "The small caps are skeletal scalloped cages rather than literal simple cones or onion domes; their source likeness is still poor but this specific veto is not asserted."
+    },
+    "detachedOrCardboardHoney": {
+      "present": true,
+      "finding": "The honey proof shows contact at the shelf, but the broad opaque planar curtain, hard folded edges, stick-like strands, and flat highlight read as cardboard awning geometry rather than attached viscous liquid."
+    },
+    "diskShardCardOpenShellOrProjection": {
+      "present": false,
+      "finding": "The main building is actual modeled volume, not a projection or facade card; no environment background appears through the occupied body. The crown is disk-like and cupolas are skeletal, but the whole palace does not collapse into the prohibited disk/shard/card representation."
+    },
+    "detachedOrFloatingArchitecture": {
+      "present": false,
+      "finding": "Several collars and rails look weakly perched on thin supports, but the evidence does not prove a fully free-floating required hero part. This remains a low attachment score rather than an additional hard veto."
+    }
+  },
+  "largestMismatch": "The exact source is a compact, ornate, inhabited golden cathedral whose silhouette, walls, towers, glazing, and honey are unified by dense honeycomb civic structure. This family instead reads in every side and rear view as a giant smooth beehive mound assembled from egg-like pods, isolated collars, cage roofs, and flat opaque honey awnings.",
+  "terminalGateEvaluation": {
+    "everyRequiredCategoryAtLeast085": false,
+    "hardVetoPresent": true,
+    "integrityFailure": false,
+    "correctionBudgetRemaining": false,
+    "finding": "The 0.18 worst required score is far below 0.85, and both the explicit generic-beehive-mound veto and cardboard-honey veto are visible in valid immutable evidence. With the family's sole bounded correction already consumed, approval is impossible and STOP is inapplicable because integrity is valid."
+  },
+  "action": "RETIRE-FAMILY"
+}

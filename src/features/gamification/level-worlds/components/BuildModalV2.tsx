@@ -23,7 +23,9 @@ export interface BuildModalV2Props {
 export interface BuildModalV2LevelReview {
   title: string;
   stopId: string;
+  previousLevel: number;
   level: number;
+  presentationSequence: number;
   isFullyBuilt: boolean;
   isAdvanceReady: boolean;
   isAdvanceQueued: boolean;

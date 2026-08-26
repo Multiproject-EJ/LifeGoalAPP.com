@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9996620046620046,
+  "angles": [
+    {
+      "path": ".img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/nursery-r45-orbit-090-crop.png",
+      "areaFraction": 0.9884949494949495,
+      "ratio": 0.9888291691441942,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-014-honeycomb-kingdom/landmarks/queens-nursery/nursery-r45-orbit-270-crop.png",
+      "areaFraction": 0.9994973544973546,
+      "ratio": 0.9998352941655457,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Deterministic volume check only. The independent visual gate separately scored r45 at 7.5/10 with no hard veto."
+}

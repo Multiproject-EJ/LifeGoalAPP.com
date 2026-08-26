@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-25",
+  "status": "authorized-after-palace-facade-gate",
+  "partId": "palace-ornament-system",
+  "constructionFamily": "procedural-threejs-deep-honeycomb-cathedral-ornament",
+  "authority": {
+    "exactSource": "docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+    "exactCrop": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+    "inventory": ".gauntlet/island-014-honeycomb-kingdom-parts/part-inventory.v1.json",
+    "userDecision": ".gauntlet/island-014-honeycomb-kingdom-parts/user-decisions.v1.jsonl",
+    "macroException": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v12.json"
+  },
+  "workerAllowlist": {
+    "implementation": [
+      "createRoyalPalace ornament-owned nodes in src/features/gamification/level-worlds/dev/Island14HoneycombKingdomThreeWorld.ts"
+    ],
+    "evidence": [
+      "scripts/render-island014-palace-clay-orbit.mjs ornament isolation only",
+      "work/island-visual-library/island-014-honeycomb-kingdom/evidence/palace-ornament-v001-*"
+    ],
+    "forbidden": [
+      "macro dimensions or transforms",
+      "court and stairs",
+      "facade nodes or facade transforms",
+      "other landmarks",
+      "terrain",
+      "mission",
+      "gameplay"
+    ]
+  },
+  "frozenDependencies": [
+    "accepted palace macro silhouette and all macro transforms",
+    "approved palace facade and all facade transforms",
+    "palace court and stair axis",
+    "main dome and satellite dome dimensions"
+  ],
+  "requiredFeatures": [
+    "Three visibly different honeycomb scales: large inhabited window cells, medium structural cell bands, and sparse small trim cells. The hierarchy must never become uniform wallpaper.",
+    "Large and medium cells use thick gold structural frames over dark recessed sockets so they read as dimensional architecture from both front and three-quarter views.",
+    "The lower cathedral body, central keep, and four satellite tower bodies each receive occupied honeycomb windows with warm amber inner glow on front, side, and rear-facing surfaces.",
+    "The hero dome receives coherent gold longitudinal ribs and at least one latitude collar that follow the dome instead of floating above it; satellite domes use a simpler subordinate rib family.",
+    "Filigree floor collars and corner ribs unify the cathedral tiers while preserving the approved stepped silhouette and keeping the royal door, rose window, and four facade bays unobstructed.",
+    "At least four warm palace lamps and one dominant bee crest/royal emblem survive the phone overview.",
+    "All ornament embeds into or closely seats on its owning surface with no floating sockets, z-fighting, rear discontinuities, or accidental intersections."
+  ],
+  "scaleLanguage": {
+    "heroCells": "0.24-0.34 world-unit radius; sparse occupied bays and facade anchors",
+    "structuralCells": "0.13-0.21 world-unit radius; tier and tower rhythm",
+    "trimCells": "0.07-0.11 world-unit radius; only on collars, crown, or selected seams",
+    "minimumFrameThickness": "0.035 world units at phone-readable surfaces"
+  },
+  "phoneRead": [
+    "Door and rose window remain focal points one and two.",
+    "Honeycomb structure is unmistakable without dissolving into visual noise.",
+    "Dark recess, edible amber glow, and pale-gold rib contrast survive the overview camera.",
+    "Hero dome remains dominant over all satellite ornaments."
+  ],
+  "strictRejects": [
+    "flat hex decals or paper-thin cards",
+    "uniform tiny honeycomb wallpaper",
+    "ornament changing the approved macro silhouette",
+    "rose window, royal door, stairs, or banners obscured",
+    "dome ribs reading as detached hoops",
+    "front-only treatment with blank side or rear architecture",
+    "more than one correction within this construction family"
+  ],
+  "capture": {
+    "viewsDegrees": [0, 45, 135, 180, 225, 315],
+    "additional": ["phone-overview", "facade-closeup", "rear-closeup", "materials-on", "materials-off"],
+    "reviewCategories": ["source-identity", "surface-depth", "honeycomb-scale-hierarchy", "dome-integration", "side-rear-continuity", "phone-readability"],
+    "gate": "All required categories at least 0.85. The user-accepted palace-macro drift does not waive ornament quality."
+  }
+}

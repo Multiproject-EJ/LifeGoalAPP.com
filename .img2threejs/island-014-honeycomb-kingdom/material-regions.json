@@ -1,0 +1,84 @@
+{
+  "referenceId": "island-014-honeycomb-kingdom-source",
+  "regions": [
+    {
+      "componentId": "royal-palace",
+      "regionId": "gold-bronze-architecture",
+      "sourceImage": "../../docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "bbox": { "x": 370, "y": 300, "width": 285, "height": 360 },
+      "family": "metal",
+      "subtype": "aged-gold-bronze",
+      "finish": "polished-edges-rough-cavities",
+      "materialSpecId": "gold-bronze",
+      "materialId": "metal.brass",
+      "confidence": 0.92
+    },
+    {
+      "componentId": "honey-rock-terrain",
+      "regionId": "amber-honey-cliff",
+      "sourceImage": "../../docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "bbox": { "x": 95, "y": 755, "width": 265, "height": 285 },
+      "family": "stone",
+      "subtype": "wax-rock-with-honey-coating",
+      "finish": "rough-rock-glossy-honey",
+      "materialSpecId": "honey-rock",
+      "materialId": "stone.natural",
+      "confidence": 0.9
+    },
+    {
+      "componentId": "flower-terraces",
+      "regionId": "foliage-and-petals",
+      "sourceImage": "../../docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "bbox": { "x": 30, "y": 620, "width": 250, "height": 260 },
+      "family": "organic",
+      "subtype": "foliage-and-petals",
+      "finish": "matte-waxy",
+      "materialSpecId": "garden-ecology",
+      "materialId": "plastic.matte",
+      "confidence": 0.91
+    },
+    {
+      "componentId": "royal-palace",
+      "regionId": "royal-purple-enamel",
+      "sourceImage": "../../docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "bbox": { "x": 460, "y": 505, "width": 105, "height": 120 },
+      "family": "coating",
+      "subtype": "purple-enamel",
+      "finish": "satin",
+      "materialSpecId": "royal-enamel",
+      "materialId": "coating.painted-metal",
+      "confidence": 0.86
+    },
+    {
+      "componentId": "honey-flow",
+      "regionId": "flowing-honey",
+      "sourceImage": "../../docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "bbox": { "x": 270, "y": 770, "width": 245, "height": 290 },
+      "family": "liquid",
+      "subtype": "viscous-amber-honey",
+      "finish": "glossy-translucent-like",
+      "materialSpecId": "honey-flow",
+      "materialId": "glass.clear",
+      "confidence": 0.9
+    },
+    {
+      "componentId": "sky-colony-depth",
+      "regionId": "blue-sky-cloud-counterfield",
+      "sourceImage": "../../docs/visual-references/island-014-honeycomb-kingdom/014-source.png",
+      "bbox": { "x": 650, "y": 265, "width": 340, "height": 285 },
+      "family": "environment",
+      "subtype": "blue-sky-and-cream-cloud",
+      "finish": "volumetric-gradient",
+      "materialSpecId": "sky-cloud",
+      "materialId": "glass.frosted",
+      "confidence": 0.88
+    }
+  ],
+  "notObservedMaterials": [
+    {
+      "id": "rear-service-surfaces",
+      "status": "inferred",
+      "reason": "Rear faces are not visible; extend the corresponding front/side material family without claiming exact recovery."
+    }
+  ]
+}

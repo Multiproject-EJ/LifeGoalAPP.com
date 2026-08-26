@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-25",
+  "reviewer": {
+    "role": "independent-quality-lord",
+    "mode": "read-only-final-family-gate"
+  },
+  "subject": "Island 014 Royal Palace replacement naked macro shell after bounded correction",
+  "constructionFamily": "procedural-threejs-nested-closed-volume-cathedral",
+  "inputs": {
+    "sourceAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/palace-lower-cathedral-body/isolation/derived-crops/palace-visible-source-crop-v001.png",
+      "sha256": "f0cb00739957d5789199a28d0bc4c9d770e346dd836bda3a112c7061a518b932",
+      "authority": "exact-visible-front-three-quarter"
+    },
+    "captureManifest": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/capture-manifest.v3.json",
+      "sha256": "6b235062ca82c69bf35842f49191501475f7a027251456dbe7fe0c9cf5a0c7b5"
+    },
+    "correctionAuthority": {
+      "path": ".gauntlet/island-014-honeycomb-kingdom-parts/parts/royal-palace-macro-shell/qc-review.v2.json",
+      "sha256": "451d64c192448365247968e0196eb727e88244610d6d581be86c6f47ca171c63"
+    }
+  },
+  "reviewPolicy": {
+    "requiredPerViewScore": 0.85,
+    "worstViewGoverns": true,
+    "minimumCorrectionGain": 0.1,
+    "mandatoryRetireBelow": 0.75,
+    "correctionBudgetRemaining": 0,
+    "hiddenViews": "volume-coherence only; source likeness is not scored where the source provides no exact hidden authority"
+  },
+  "perViewScores": [
+    {
+      "degrees": 0,
+      "silhouetteMassHierarchy": 0.65,
+      "depthIntegration": 0.72,
+      "sourceLikeness": 0.61,
+      "sideRearCoherence": 0.75,
+      "note": "The central keep and satellite shoulders are visibly taller, so the front no longer reads primarily as a ziggurat. It still lacks the source's interlocked multi-stage cathedral shoulders: the keep is a plain shaft and the satellites are isolated corner posts rather than integrated tower masses."
+    },
+    {
+      "degrees": 45,
+      "silhouetteMassHierarchy": 0.68,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.62,
+      "sideRearCoherence": 0.76,
+      "note": "Vertical redistribution is clear and all volumes remain seated. The long plain keep and tall cylindrical satellite posts leave the silhouette generic and insufficiently cathedral-like."
+    },
+    {
+      "degrees": 90,
+      "silhouetteMassHierarchy": 0.72,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Hidden side remains closed and coherent; raised satellites improve shoulder height but read as separate pillars, not embedded nested towers."
+    },
+    {
+      "degrees": 135,
+      "silhouetteMassHierarchy": 0.70,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "The least-flattering transition remains volumetrically sound with no planar collapse or open slot. Hierarchy improvement is limited because the central shaft and horizontal lower bands are still weakly interlocked."
+    },
+    {
+      "degrees": 180,
+      "silhouetteMassHierarchy": 0.70,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "Rear continuity survives the correction, but the plain central shaft and detached pillar-like satellites remain evident."
+    },
+    {
+      "degrees": 225,
+      "silhouetteMassHierarchy": 0.70,
+      "depthIntegration": 0.79,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.80,
+      "note": "Opposite transition confirms stable closed volume and symmetry; the same generic shaft-plus-corner-post construction limits identity."
+    },
+    {
+      "degrees": 270,
+      "silhouetteMassHierarchy": 0.72,
+      "depthIntegration": 0.78,
+      "sourceLikeness": null,
+      "sideRearCoherence": 0.79,
+      "note": "Opposite side is coherent, but satellites remain vertically raised without becoming structurally integrated cathedral shoulders."
+    },
+    {
+      "degrees": 315,
+      "silhouetteMassHierarchy": 0.68,
+      "depthIntegration": 0.76,
+      "sourceLikeness": 0.62,
+      "sideRearCoherence": 0.76,
+      "note": "Front-adjacent view confirms improved vertical emphasis but not the source's layered taper, coupled satellite towers, or continuous domed cathedral profile."
+    }
+  ],
+  "worstRequiredScore": {
+    "value": 0.61,
+    "viewDegrees": 0,
+    "dimension": "sourceLikeness"
+  },
+  "hypothesisEvaluation": {
+    "hypothesis": "Redistributing existing closed-volume height from the broad equal-weight lower tiers into a taller, narrower central keep and visibly raised embedded satellite towers will change the exact front read from a ziggurat to the source's vertically integrated cathedral while preserving the replacement family's repaired side/rear coherence.",
+    "result": "partially-supported-but-insufficient",
+    "evidence": "The front is more vertical and the hidden views remain coherent, but the keep became a plain shaft and the satellites became tall corner posts instead of the source's interlocked multi-stage cathedral shoulders.",
+    "priorWorstScore": 0.50,
+    "correctedWorstScore": 0.61,
+    "worstScoreGain": 0.11,
+    "minimumGainSatisfied": true,
+    "targetWorstScore": 0.75,
+    "targetSatisfied": false,
+    "approvalThreshold": 0.85,
+    "approvalSatisfied": false,
+    "maximumCriticalRegression": 0.00,
+    "regressionLimitSatisfied": true,
+    "vetoReturned": false
+  },
+  "vetoes": [],
+  "largestMismatch": "The source's macro identity comes from a broad but continuously interlocked cathedral: a faceted central keep, tall domed shoulder towers, and nested lower masses climb together. The corrected family instead resolves into one plain rectangular keep over horizontal bands with four separate pillar-like satellites, so its vertical gain does not produce the required source silhouette.",
+  "terminalReason": "The bounded correction achieved +0.11 worst-score gain without regression or a returned veto, but the corrected worst score is 0.61, below the mandatory 0.75 retirement threshold and far below the 0.85 approval gate. This construction family has no correction budget remaining.",
+  "action": "retire-family"
+}

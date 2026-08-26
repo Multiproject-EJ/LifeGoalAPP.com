@@ -43,6 +43,10 @@ import {
 } from '../../dev/Island1ThreeWorld';
 import { prepareIslandConstructionLevelDelta } from '../../dev/IslandConstructionLevelDelta';
 import {
+  ISLAND_CONSTRUCTION_COMMISSIONING_DURATION_SECONDS,
+  resolveIslandConstructionCommissioningBeat,
+} from '../../dev/IslandConstructionCommissioningFx';
+import {
   ISLAND_LANDMARK_CONSTRUCTION_PROFILES,
   resolveIslandLandmarkConstructionProfile,
 } from '../../dev/IslandConstructionAuthoring';
@@ -135,6 +139,11 @@ import {
   createIsland22FishermansVillageMaterials,
   isIsland22RouteCorridorClear,
 } from '../../dev/Island22FishermansVillageThreeWorld';
+import {
+  buildIsland14HoneycombLandmark,
+  createIsland14HoneycombLivingAmbience,
+  createIsland14HoneycombMaterials,
+} from '../../dev/Island14HoneycombKingdomThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
@@ -145,7 +154,7 @@ import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarne
 
 export const island5ThreePilotContractTests: TestCase[] = [
   {
-    name: 'authors the approved Island 022 fisherman village macro composition without taking a production route',
+    name: 'authors runtime Island 016 from the approved Fisherman\'s Village source pack 022',
     run: () => {
       const materials = createIsland22FishermansVillageMaterials();
       const scene = new THREE.Scene();
@@ -189,9 +198,98 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'requires authored five-stage landmark construction across Islands 002 through 010',
+    name: 'builds Island 014 as a source-specific Honeycomb Kingdom with five additive landmarks',
     run: () => {
-      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 45, 'nine authored worlds need five landmark construction profiles each');
+      const materials = createIsland14HoneycombMaterials();
+      const scene = new THREE.Scene();
+      const ambience = createIsland14HoneycombLivingAmbience(scene, ISLAND_3D_QUALITY_PROFILES.low, materials);
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_MAIN_HONEY_ISLAND')), 'Island 014 needs a real floating honey-rock terrain root');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_HONEYFALL_1_FALL')), 'Island 014 needs source-defining flowing honey below its terraces');
+      assertEqual(ambience.root.userData.honeyfallFinishSystem?.version, 'gooey-amber-v2', 'Honeyfalls need the deep-core, fold and trapped-bubble finish system');
+      assertEqual(ambience.root.userData.gardenRichnessSystem?.version, 'royal-parterre-v4', 'Honeycomb terraces need source-visible, phone-scaled blooms with real foliage mass');
+      assert(ambience.root.userData.gardenRichnessSystem?.leavesPerFlower === 2, 'each planted bloom needs a pair of readable leaves');
+      assert(ambience.root.userData.gardenRichnessSystem?.maximumForegroundBloomScale <= 1.2, 'foreground parterre flowers must not obscure landmarks or the board at phone scale');
+      assert(ambience.root.userData.gardenRichnessSystem?.maximumGardenBloomScale <= 1.3, 'world garden flowers must remain secondary to the hive architecture');
+      assert(ambience.root.userData.gardenRichnessSystem?.foregroundParterreCount >= 5, 'phone-facing terraces need repeated royal honeycomb parterres');
+      assertEqual(ambience.root.userData.gardenRichnessSystem?.raisedHexCellsPerParterre, 7, 'each foreground parterre needs a readable seven-cell honeycomb rosette');
+      assertEqual(ambience.root.userData.gardenRichnessSystem?.flowersPerParterre, 3, 'each foreground parterre needs a large three-flower bouquet');
+      assertEqual(ambience.root.userData.gardenRichnessSystem?.pooledHoneyPerParterre, 1, 'each foreground parterre needs one glossy amber honey pool');
+      assertEqual(ambience.root.userData.gardenRichnessSystem?.nectarBeadsPerParterre, 3, 'each foreground parterre needs three small edible-honey beads rather than another oversized bloom');
+      assertEqual(ambience.root.userData.gardenRichnessSystem?.centerMedallionsPerParterre, 1, 'each foreground parterre needs one readable honeycomb center medallion');
+      assert(Boolean(ambience.root.children.find((object) => object instanceof THREE.Mesh && object.material === materials.honeyGlass)), 'batched Honeyfalls must retain their shared deep amber candy core material');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_FLYING_BEE_1')), 'Island 014 needs living airborne bee workers');
+      assertEqual(materials.honeyRock.map?.name, 'ISLAND_14_HONEYCOMB_PATTERN', 'hero terrain must carry an explicit large-scale honeycomb material pattern');
+      assert(materials.honeyLiquid.clearcoat === 1 && materials.honeyLiquid.roughness <= 0.05, 'flowing honey must retain a glossy clear-coated edible surface response');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_GREAT_HONEYFALL_CORONATION')), 'Island 014 needs its authored Great Honeyfall Coronation mission spectacle');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_BROAD_RESERVOIR_TO_FALL_WELD')), 'the coronation reservoir must visibly weld into the falling honey body');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_THICK_ASYMMETRICAL_MAIN_FALL')), 'the coronation needs one thick phone-readable hero cascade');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_AUTHORED_RIGHT_CASCADE')), 'the coronation cascade must retain its right-side authored face');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_AUTHORED_REAR_CASCADE')), 'the coronation cascade must retain its rear authored face');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_AUTHORED_LEFT_CASCADE')), 'the coronation cascade must retain its left-side authored face');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_BROAD_GLOSSY_IMPACT_MENISCUS')), 'the falling honey must land in a broad glossy impact meniscus');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_THICK_POOL_OVERFLOW_FALL')), 'the completed mission needs a thick attached overflow into the lower catch pool');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_IMPACT_SURGE_LOBE_1')), 'the impact pool needs animated viscous surge geometry');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_SOLID_SURFACE_GLINT_1')), 'the honey body needs embedded solid glints rather than view-facing cards');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_GLISTENING_HONEY_SPARKLES')), 'the completed coronation needs a living island-wide sparkle payoff');
+      const staticBatchMetrics = ambience.root.userData.staticBatchMetrics as { batchCount: number; sourceMeshCount: number };
+      assert(staticBatchMetrics.sourceMeshCount >= 300, 'Island 014 should retain its dense authored scenery before batching');
+      assert(
+        // One dedicated refraction-rich liquid batch is intentionally kept
+        // separate from architectural honey glass for source-defining falls.
+        staticBatchMetrics.batchCount <= 15,
+        `Island 014 static scenery must stay within its low-quality submission budget (actual ${staticBatchMetrics.batchCount})`,
+      );
+      assertEqual(ISLAND_5_LANDMARKS.length, 5, 'the shared world contract must retain five landmark families');
+      ISLAND_5_LANDMARKS.forEach((landmark) => {
+        const l1 = buildIsland14HoneycombLandmark(landmark, 1, 'low', materials);
+        const l2 = buildIsland14HoneycombLandmark(landmark, 2, 'low', materials);
+        const l3 = buildIsland14HoneycombLandmark(landmark, 3, 'low', materials);
+        const countMeshes = (root: THREE.Object3D) => {
+          let count = 0;
+          root.traverse((object) => { if (object instanceof THREE.Mesh) count += 1; });
+          return count;
+        };
+        assert(countMeshes(l2) > countMeshes(l1), `${landmark.id} L2 must add geometry to its finished L1 identity`);
+        assert(countMeshes(l3) > countMeshes(l2), `${landmark.id} L3 must add restored/premium geometry to L2`);
+        assertEqual(l3.userData.landmarkId, landmark.id, `${landmark.id} must retain its canonical click identity`);
+        assertEqual(l3.userData.sculptRuntime.clickable, true, `${landmark.id} must remain clickable`);
+        assertEqual(l3.userData.sculptRuntime.explodable, true, `${landmark.id} must remain structurally inspectable`);
+        const completedBatchMetrics = l3.userData.completedBatchMetrics as { batchCount: number; sourceMeshCount: number };
+        assert(completedBatchMetrics.sourceMeshCount > completedBatchMetrics.batchCount, `${landmark.id} completed geometry must be batched for low/medium gameplay`);
+      });
+      const palace = buildIsland14HoneycombLandmark(ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'boss')!, 3, 'low', materials);
+      assertEqual(palace.userData.royalCathedralV7?.constructionFamily, 'threejs-broad-gabled-glazed-hex-cell-royal-cathedral', 'the royal palace must retain its authored bee-civilization cathedral family after runtime batching');
+      assert(palace.scale.y / palace.scale.x >= 1.2, 'the source-defining palace must retain its tall cathedral silhouette');
+      const hatchery = buildIsland14HoneycombLandmark(ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'hatchery')!, 3, 'low', materials);
+      assertEqual(hatchery.userData.constructionFamily, 'threejs-continuous-honeycomb-brood-egg-v3', 'the Queen\'s Nursery must retain its authored continuous honeycomb egg family after runtime batching');
+    },
+  },
+  {
+    name: 'finishes landmark levels with one bounded pop and reduced-motion-safe sparkle beat',
+    run: () => {
+      const start = resolveIslandConstructionCommissioningBeat(0);
+      const overshoot = resolveIslandConstructionCommissioningBeat(
+        ISLAND_CONSTRUCTION_COMMISSIONING_DURATION_SECONDS * 0.24,
+      );
+      const settled = resolveIslandConstructionCommissioningBeat(
+        ISLAND_CONSTRUCTION_COMMISSIONING_DURATION_SECONDS,
+      );
+      const reduced = resolveIslandConstructionCommissioningBeat(
+        ISLAND_CONSTRUCTION_COMMISSIONING_DURATION_SECONDS * 0.24,
+        true,
+      );
+      assert(start.active && start.scaleMultiplier < 1, 'commissioning should begin from a bounded visual compression');
+      assert(overshoot.scaleMultiplier > 1 && overshoot.scaleMultiplier <= 1.12, 'commissioning should overshoot without becoming a giant landmark');
+      assertEqual(settled.active, false, 'commissioning must terminate instead of looping');
+      assertEqual(settled.scaleMultiplier, 1, 'commissioning must return additive geometry to authored scale');
+      assertEqual(reduced.scaleMultiplier, 1, 'reduced motion must not scale landmark geometry');
+      assertEqual(reduced.sparkleProgress, 1, 'reduced motion must suppress moving sparkle particles');
+    },
+  },
+  {
+    name: 'requires authored five-stage landmark construction across Islands 002 through 010 and Island 014',
+    run: () => {
+      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 50, 'ten authored worlds need five landmark construction profiles each');
       const frostmoonProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(3, landmark.id)
       ));
@@ -302,6 +400,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(rootheartProfiles.some((profile) => profile?.choreography.stationStep === -1) && rootheartProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Rootheart needs clockwise and counter-clockwise routes');
       assert(rootheartProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Rootheart landmarks need phase-shaped relocation routes');
       assert(rootheartProfiles.every((profile) => profile?.stageNames.some((name) => /root|canopy|branch|leaf|acorn|firefly|spiralwood|saplight/i.test(name))), 'Rootheart reveal stories must use the actual canopy-city construction language');
+      const honeycombProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(14, landmark.id));
+      assert(honeycombProfiles.every(Boolean), 'Honeycomb Kingdom needs a construction choreography for every landmark');
+      assertEqual(new Set(honeycombProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Honeycomb landmarks must not share one generic robot choreography');
+      assert(new Set(honeycombProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Honeycomb Kingdom must use at least four collision-tested base routes');
+      assert(honeycombProfiles.some((profile) => profile?.choreography.stationStep === -1) && honeycombProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Honeycomb Kingdom needs clockwise and counter-clockwise routes');
+      assert(honeycombProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Honeycomb landmarks need phase-shaped relocation routes');
+      assert(honeycombProfiles.every((profile) => profile?.stageNames.some((name) => /honey|hive|bee|nectar|pollinator|brood|queen/i.test(name))), 'Honeycomb reveal stories must use the actual bee-civilization construction language');
       const levels = [[0, 1], [1, 2], [2, 3]] as const;
       const island2Materials = createIsland2CelestialMaterials();
       const island3Materials = createIsland3FrostmoonMaterials();
@@ -312,6 +417,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const island8Materials = createIsland8EverblossomMaterials();
       const island9Materials = createIsland9HeartshaftMaterials();
       const island10Materials = createIsland10RootheartMaterials();
+      const island14Materials = createIsland14HoneycombMaterials();
       const worldFactories = [
         {
           world: 2,
@@ -365,6 +471,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
           world: 10,
           build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
             buildIsland10RootheartLandmark(landmark, level, 'low', island10Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 14,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland14HoneycombLandmark(landmark, level, 'low', island14Materials, { constructionPreview: mode })
           ),
         },
       ];
@@ -1319,20 +1431,21 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'essence_crystal', 'currency tiles keep the canonical Essence identity');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'universal_reward_token', 'ordinary reward progress may use the Universal Reward Token visual language');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: 'cactus_canyon_dynamite' }), 'cactus_canyon_dynamite', 'Cactus Canyon cache gets a distinct 3D dynamite identity');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: 'great_honeyfall_nectar' }), 'great_honeyfall_nectar', 'Honeycomb Kingdom nectar gets a distinct glossy 3D pickup identity');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true, signatureMissionKind: undefined }), 'active_landmark_door', 'only the active door cluster gets a door sigil');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: false, signatureMissionKind: undefined }), null, 'inactive doors must not imply a collectible reward');
     },
   },
   {
-    name: 'batches the Island 012 canonical route and tile rewards without adding gameplay authority',
+    name: 'batches authored canonical routes and tile rewards without adding gameplay authority',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage;'),
-        'Islands 007, 012, 013 and development-only 022 should use the proven per-material instanced route path',
+        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom;'),
+        'Islands 007, 012, 013, 014 and runtime 016 should use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
       assert(pilotSource.includes('compactCollectibles: isAbyssalPearlKingdom || isSunkenSands'), 'Island 012 rewards should collapse their static submeshes while retaining per-tile transforms');
@@ -1894,6 +2007,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/BuildModalV2.tsx', 'utf8');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const debugPanelSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunDebugPanel.tsx', 'utf8');
+      const commissioningSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandConstructionCommissioningFx.ts', 'utf8');
+      const presentationSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRunConstructionPresentation.ts', 'utf8');
       assert(!pilotSource.includes('Island5LandmarkBuildPreview'), 'Build mode must not create a duplicate Island 5 WebGL renderer');
       assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
       assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
@@ -1912,6 +2027,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes("buildAuthoredLandmark(definition, currentLevel, 'current')"), 'construction comparison must retain unbatched funded geometry');
       assert(pilotSource.includes("buildAuthoredLandmark(definition, targetLevel, 'target')"), 'construction comparison must expose semantic target-level parts');
       assert(pilotSource.includes('constructionCrewRevealStages'), 'the five-stage reveal distribution must be exposed for live QA');
+      assert(pilotSource.includes('constructionCommissioningFx.trigger'), 'completed levels must trigger the shared commissioning beat');
+      assert(pilotSource.includes('applyCommissioningScale'), 'only additive construction geometry should consume the finish pop');
+      assert(commissioningSource.includes('new THREE.Points') && commissioningSource.includes('new THREE.PointLight'), 'the finish beat needs one pooled sparkle burst and one light flash');
+      assert(presentationSource.includes('options.levelReview?.stopId ?? landmark?.stopId'), 'a completion beat must remain on the landmark that actually finished');
+      assert(presentationSource.includes('sourceLevel') && pilotSource.includes('next?.sourceLevel'), 'level review must reconstruct the completed additive L(n-1) to Ln delta');
+      assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(commissioningSource), 'commissioning FX must remain presentation-only');
       assert(pilotSource.includes('constructionTheatre.setCrewScale(0.11)'), 'the live construction crew must remain miniature beside the authored landmark');
       assert(theatreSource.includes('THREE.MathUtils.clamp(scale, 0.035, 1.25)'), 'the theatre must honor the authored low-profile landmark crew scale instead of silently raising it');
       assert(theatreSource.includes('THREE.MathUtils.clamp(crewScale / 0.58, 0.18, 1.25)'), 'miniature crew occupancy must contract with the rendered workers while retaining a conservative floor');
@@ -1958,8 +2079,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 22].includes(islandParam)'), 'the workbench should expose all routed worlds plus development-only Island 022 for repeatable landmark QA');
-      assert(pageSource.includes('islandNumber === 22') && pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench may preview Island 022 without adding it to production routing');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16].includes(islandParam)'), 'the workbench should expose all authored runtime worlds through Island 016 for repeatable landmark QA');
+      assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(
@@ -1996,6 +2117,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(routingSource.includes('runtimeIslandNumber: 2, worldSourceNumber: 2') && routingSource.includes('runtimeIslandNumber: 3, worldSourceNumber: 3'), 'Islands 002 and 003 must route their dedicated Celestial and Frostmoon world packs');
       assert(routingSource.includes('runtimeIslandNumber: 4, worldSourceNumber: 4') && routingSource.includes('runtimeIslandNumber: 5, worldSourceNumber: 5'), 'the citadel and tropical arena worlds must retain stable Island 004/005 identities');
       assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
+      assert(routingSource.includes('runtimeIslandNumber: 14, worldSourceNumber: 14'), 'Island 014 must route its dedicated Honeycomb Kingdom world pack');
       assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
       assert(
         boardSource.includes('const shouldRenderIsland5Three = canUseIsland5Three')
@@ -2008,6 +2130,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('ISLAND_1_LANDMARK_LABELS[preset.id'), 'Island 001 workbench focus controls must use First Light landmark labels');
       assert(pilotSource.includes('ISLAND_2_CELESTIAL_LANDMARK_LABELS[preset.id') && pilotSource.includes('ISLAND_3_FROSTMOON_LANDMARK_LABELS[preset.id'), 'Islands 002 and 003 workbench focus controls must expose their authored landmark names');
       assert(pilotSource.includes('ISLAND_6_MOONVEIL_LANDMARK_LABELS[preset.id'), 'Island 006 workbench focus controls must expose its authored Moonveil landmark names');
+      assert(pilotSource.includes('ISLAND_14_HONEYCOMB_LANDMARK_LABELS[preset.id'), 'Island 014 workbench focus controls must expose its authored Honeycomb landmark names');
       assert(celestialSource.includes("boss: 'Solspire Palace'") && celestialSource.includes("hatchery: 'Cloudnest Conservatory'"), 'Island 002 must retain its palace and cloudnest identities');
       assert(celestialSource.includes('function createSolspirePalace') && celestialSource.includes('function createCloudnest') && celestialSource.includes('function createAstralGate'), 'Island 002 needs distinct procedural landmark families');
       assert(celestialSource.includes("cloud.name = 'ISLAND_2_CLOUD_FLOOR_CLUSTER'") && celestialSource.includes("ribbon.name = 'ISLAND_2_CLOUD_WATERFALL'"), 'Island 002 must carry cloud-floor depth and animated waterfalls');
