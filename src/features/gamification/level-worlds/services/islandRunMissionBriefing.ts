@@ -214,10 +214,10 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   16: {
     progressKind: 'fishermans_fishing',
     headline: 'The Hundred-Kilo Catch',
-    missionStatement: 'The Fisherman’s Village needs a full market catch from its central pond. Recover the village rod, cast from marked shore tiles and reel every catch in by hand—but watch the water carefully.',
+    missionStatement: 'The Fisherman’s Village needs a full market catch from its central pond. Land at one of the rod stations around the shore and reel every catch in by hand—but watch the water carefully.',
     primaryObjective: 'Catch 100 kg / 220.5 lb of fish.',
     supportingObjective: 'Restore the five village landmarks after the pond disturbance.',
-    fieldProtocol: 'Land on the rod first. Fishing spots then cast into the central pond; the catch only counts after the reel is completed.',
+    fieldProtocol: 'Every 🎣 landing casts into the central pond. The catch only counts after the reel is completed.',
     caretakerSignal: 'The old fishers say the pond has a bottom. None of them sound certain.',
   },
 });

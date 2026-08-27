@@ -341,8 +341,8 @@ rule. Approved source SHA-256:
   physical phone performance is still unverified; production routing remains
   unchanged.
 - Eivind then approved a complete development mission slice around the refined
-  dragon. The deterministic progression collects a fishing rod on board tile 2,
-  casts toward individually glowing fish tiles, and uses repeated pull inputs
+  dragon. The deterministic progression originally collected one fishing rod
+  and cast toward individually glowing fish tiles, using repeated pull inputs
   for catches of different sizes. Four catches total `46 kg`; the next scripted
   ten-pull monster catch weighs `32 kg`, bringing the meter to exactly `78 kg /
   172.0 lb` and locking all fishing input during the dragon event. The dragon's
@@ -368,6 +368,14 @@ rule. Approved source SHA-256:
   slice, not production admission: final hero-creature detail, an apples-to-
   apples isolated reference diagnostic and physical iPhone PWA profiling remain
   open gates.
+- The 2026-08-27 live-play correction removes that hard-to-hit two-step route.
+  Runtime Island 016 now has six reusable fishing-rod stations spread around
+  the ring and clear of every expandable landmark-door cluster. Every rod
+  landing equips the rod if necessary and immediately starts the reel sequence;
+  there are no separate fish-icon tiles. Successful catches briefly present a
+  foreground catch-and-goal celebration, then retain only a compact progress
+  strip below the canonical reward bar. The strip remains absent before the
+  first successful catch, so it cannot hide behind or compete with the top HUD.
 
 ## Deferred story threads preserved from this request
 

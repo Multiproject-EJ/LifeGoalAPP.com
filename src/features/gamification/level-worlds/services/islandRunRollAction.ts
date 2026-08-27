@@ -258,7 +258,7 @@ export interface IslandRunRollActionResult {
   cactusCanyonDynamiteCollected?: number;
   /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
   greatHoneyfallNectarCollected?: number;
-  /** True only on the landing that collects Island 016's fishing rod. */
+  /** True only on the first Island 016 rod landing that equips the reusable rod. */
   fishermansVillageRodCollected?: boolean;
   /** Canonical catch waiting for the player's reel interaction. */
   fishermansVillagePendingCatch?: FishermansVillagePendingCatch | null;

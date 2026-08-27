@@ -1974,6 +1974,12 @@ export function IslandRunBoardPrototype({
   const [isReelingFishingCatch, setIsReelingFishingCatch] = useState(false);
   const [fishingReelPulse, setFishingReelPulse] = useState(0);
   const [fishingCatchMessage, setFishingCatchMessage] = useState<string | null>(null);
+  const [fishingCatchCelebration, setFishingCatchCelebration] = useState<{
+    catchId: number;
+    kilograms: number;
+    fishCaughtKg: number;
+    label: string;
+  } | null>(null);
   const [dragonCinematicStartedAtMs, setDragonCinematicStartedAtMs] = useState<number | null>(null);
   const [dragonCinematicElapsedSeconds, setDragonCinematicElapsedSeconds] = useState(0);
 
@@ -7953,17 +7959,15 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
-        } else if (rollResult.fishermansVillageRodCollected) {
-          setShowEncounterModal(false);
-          setEncounterResolved(false);
-          setLandingText('🎣 Fishing rod collected! The four fish-marked shore tiles can now cast into the central pond.');
         } else if (rollResult.fishermansVillagePendingCatch) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setFishingPullsRemaining(rollResult.fishermansVillagePendingCatch.pullsRequired);
           setFishingCatchMessage(null);
           setShowFishermansFishing(true);
-          setLandingText('🎣 Line cast into the central pond—something is on the hook!');
+          setLandingText(rollResult.fishermansVillageRodCollected
+            ? '🎣 Rod ready—your first cast is already on the line!'
+            : '🎣 Line cast into the central pond—something is on the hook!');
         } else if ((rollResult.firstLightAssemblyDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -12869,6 +12873,11 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [rootheartCompletionCelebrationId]);
   useEffect(() => {
+    if (!fishingCatchCelebration) return undefined;
+    const timer = window.setTimeout(() => setFishingCatchCelebration(null), 3_200);
+    return () => window.clearTimeout(timer);
+  }, [fishingCatchCelebration]);
+  useEffect(() => {
     if (
       islandNumber !== 16
       || !fishermansFishingProgress.pendingCatch
@@ -12977,6 +12986,14 @@ export function IslandRunBoardPrototype({
         ? 'The hook came back empty.'
         : `${result.kind === 'colossal' ? 'COLOSSAL CATCH' : `${result.kind.toUpperCase()} FISH`} · +${result.kilograms} kg / ${(result.kilograms * 2.2046226218).toFixed(1)} lb`;
       setFishingCatchMessage(catchLabel);
+      if (result.kilograms > 0) {
+        setFishingCatchCelebration({
+          catchId: result.catchId,
+          kilograms: result.kilograms,
+          fishCaughtKg: result.fishCaughtKg,
+          label: result.kind === 'colossal' ? 'Colossal catch!' : `${result.kind} fish caught!`,
+        });
+      }
       setLandingText(result.kilograms <= 0
         ? '🎣 Nothing this time—the pond is still moving below.'
         : `🎣 ${catchLabel} · ${result.fishCaughtKg}/${FISHERMANS_VILLAGE_FISH_TARGET_KG} kg`);
@@ -14591,6 +14608,25 @@ export function IslandRunBoardPrototype({
             </div>
           </button>
 
+          {islandNumber === 16 && fishermansFishingProgress.fishCaughtKg > 0 ? (
+            <div
+              className={`fishermans-fishing-mini${fishingCatchCelebration ? ' fishermans-fishing-mini--catch' : ''}`}
+              role="progressbar"
+              aria-label={`Fishing catch ${fishermansFishingProgress.fishCaughtKg} of ${FISHERMANS_VILLAGE_FISH_TARGET_KG} kilograms`}
+              aria-valuenow={fishermansFishingProgress.fishCaughtKg}
+              aria-valuemin={0}
+              aria-valuemax={FISHERMANS_VILLAGE_FISH_TARGET_KG}
+            >
+              <span aria-hidden="true">🎣</span>
+              <span className="fishermans-fishing-mini__track" aria-hidden="true">
+                <i style={{ width: `${Math.min(100, fishermansFishingProgress.fishCaughtKg)}%` }} />
+                <b style={{ left: `${FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG}%` }} />
+              </span>
+              <strong>{fishermansFishingProgress.fishCaughtKg} kg</strong>
+              <small>{(fishermansFishingProgress.fishCaughtKg * 2.2046226218).toFixed(1)} lb</small>
+            </div>
+          ) : null}
+
           <div className="island-run-board__rewardbar-side-rail" aria-label="Reward bar quick actions">
             {Array.from({ length: rewardBarSideSlotCount }, (_, index) => {
               if (index === rewardBarEggManiaSlotIndex) {
@@ -14943,26 +14979,6 @@ export function IslandRunBoardPrototype({
             {isIslandVisualPreview ? (
               <div className="island-run-board__three-preview-badge" aria-hidden="true">
                 DEV · 3D VISUAL PREVIEW
-              </div>
-            ) : null}
-            {!isIslandVisualPreview && islandArtPreviewNumber === 16 ? (
-              <div className="fishermans-fishing-meter" aria-label={`Fishing mission ${fishermansFishingProgress.fishCaughtKg} of ${FISHERMANS_VILLAGE_FISH_TARGET_KG} kilograms`}>
-                <div className="fishermans-fishing-meter__heading">
-                  <span aria-hidden="true">🎣</span>
-                  <strong>{fishermansFishingProgress.rodCollectedAtMs === null ? 'Find the rod' : 'Village catch'}</strong>
-                  <b>{fishermansFishingProgress.fishCaughtKg} kg / {(fishermansFishingProgress.fishCaughtKg * 2.2046226218).toFixed(1)} lb</b>
-                </div>
-                <div className="fishermans-fishing-meter__track" aria-hidden="true">
-                  <span style={{ width: `${Math.min(100, fishermansFishingProgress.fishCaughtKg)}%` }} />
-                  <i style={{ left: `${FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG}%` }} />
-                </div>
-                <small>{fishermansFishingProgress.dragonTriggeredAtMs !== null
-                  ? 'The pond has opened—hold on.'
-                  : fishermansFishingProgress.rodCollectedAtMs === null
-                    ? 'Land on the 🎣 tile to begin.'
-                    : fishermansFishingProgress.pendingCatch
-                      ? 'Something is on the line!'
-                      : 'Land on a 🐟 tile to cast into the pond.'}</small>
               </div>
             ) : null}
             {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 3 ? (
@@ -19117,6 +19133,28 @@ export function IslandRunBoardPrototype({
           </div>
         );
       })()}
+
+      {islandNumber === 16 && fishingCatchCelebration && typeof document !== 'undefined' ? createPortal((
+        <aside
+          key={fishingCatchCelebration.catchId}
+          className="fishermans-catch-celebration"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="fishermans-catch-celebration__fish" aria-hidden="true">🐟</span>
+          <span className="fishermans-catch-celebration__copy">
+            <small>{fishingCatchCelebration.label}</small>
+            <strong>+{fishingCatchCelebration.kilograms} kg</strong>
+            <span>+{(fishingCatchCelebration.kilograms * 2.2046226218).toFixed(1)} lb</span>
+          </span>
+          <span className="fishermans-catch-celebration__goal">
+            <span aria-hidden="true">
+              <i style={{ width: `${Math.min(100, fishingCatchCelebration.fishCaughtKg)}%` }} />
+            </span>
+            <b>{fishingCatchCelebration.fishCaughtKg} / {FISHERMANS_VILLAGE_FISH_TARGET_KG} kg</b>
+          </span>
+        </aside>
+      ), document.body) : null}
 
       {ticketTileCelebration && typeof document !== 'undefined' ? createPortal((
         <aside

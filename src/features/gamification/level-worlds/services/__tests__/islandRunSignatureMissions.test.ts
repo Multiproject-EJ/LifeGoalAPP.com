@@ -6,8 +6,7 @@ import {
   FROSTWELL_DRILL_TILE_INDICES,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
-  FISHERMANS_VILLAGE_FISHING_TILE_INDICES,
-  FISHERMANS_VILLAGE_ROD_TILE_INDEX,
+  FISHERMANS_VILLAGE_ROD_TILE_INDICES,
   GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_DICE,
@@ -790,35 +789,57 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'Fisherman’s Village exposes one rod and four fishing spots clear of landmark doors',
+    name: 'Fisherman’s Village exposes six reusable rod stations clear of every landmark-door cluster',
     run: () => {
-      const map = applyLandmarkDoorTiles(generateTileMap(16, getIslandRarity(16), 'fishermans-village', 2), { expandedActiveStopId: 'hatchery' });
-      assertEqual(map[FISHERMANS_VILLAGE_ROD_TILE_INDEX]?.signatureMissionKind, 'fishermans_rod', 'rod tile is visible');
-      FISHERMANS_VILLAGE_FISHING_TILE_INDICES.forEach((index) => {
-        assertEqual(map[index]?.signatureMissionKind, 'fishermans_fishing_spot', `tile ${index} is a fishing spot`);
-        assert(map[index]?.tileType !== 'landmark_door', `tile ${index} remains clear of a door cluster`);
+      assertEqual(FISHERMANS_VILLAGE_ROD_TILE_INDICES.length, 6, 'six rod stations ship around the route');
+      (['hatchery', 'habit', 'mystery', 'wisdom'] as const).forEach((expandedActiveStopId) => {
+        const map = applyLandmarkDoorTiles(
+          generateTileMap(16, getIslandRarity(16), 'fishermans-village', 2),
+          { expandedActiveStopId },
+        );
+        FISHERMANS_VILLAGE_ROD_TILE_INDICES.forEach((index) => {
+          assertEqual(map[index]?.signatureMissionKind, 'fishermans_rod', `tile ${index} remains a rod station`);
+          assert(map[index]?.tileType !== 'landmark_door', `tile ${index} remains clear of ${expandedActiveStopId} doors`);
+        });
       });
     },
   },
   {
-    name: 'Fisherman’s Village requires the rod before a fishing landing can hook a catch',
+    name: 'Every Fisherman’s Village rod landing equips the rod and immediately hooks a catch',
     run: () => {
-      const blocked = collectFishermansVillageLanding({
+      const first = collectFishermansVillageLanding({
         ledger: {}, islandNumber: 16, cycleIndex: 0,
-        tileIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[0], nowMs: 10, randomValue: 0.7,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.7,
       });
-      assertEqual(blocked.pendingCatch, null, 'fishing without the rod is blocked');
-      const rod = collectFishermansVillageLanding({
-        ledger: {}, islandNumber: 16, cycleIndex: 0,
-        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDEX, nowMs: 11, randomValue: 0,
+      assertEqual(first.rodCollected, true, 'first rod landing equips the reusable rod');
+      assertEqual(first.pendingCatch?.kind, 'medium', 'first rod landing also starts the fishing sequence');
+      const key = getIslandRunSignatureMissionKey(0, 16);
+      const firstProgress = resolveFishermansVillageFishingProgress({ ledger: first.ledger, cycleIndex: 0 });
+      const second = collectFishermansVillageLanding({
+        ledger: { ...first.ledger, [key]: { ...firstProgress, pendingCatch: null } },
+        islandNumber: 16, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[1], nowMs: 12, randomValue: 0.7,
       });
-      assertEqual(rod.rodCollected, true, 'rod landing collects the rod');
-      const hooked = collectFishermansVillageLanding({
-        ledger: rod.ledger, islandNumber: 16, cycleIndex: 0,
-        tileIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[0], nowMs: 12, randomValue: 0.7,
-      });
-      assertEqual(hooked.pendingCatch?.kind, 'medium', 'weighted catch becomes a medium fish');
-      assertEqual(resolveFishermansVillageFishingProgress({ ledger: hooked.ledger, cycleIndex: 0 }).fishCaughtKg, 0, 'kilograms wait for the reel action');
+      assertEqual(second.rodCollected, false, 'later rod landings reuse the equipped rod');
+      assertEqual(second.pendingCatch?.kind, 'medium', 'later rod landings start another fishing sequence');
+      assertEqual(resolveFishermansVillageFishingProgress({ ledger: second.ledger, cycleIndex: 0 }).fishCaughtKg, 0, 'kilograms still wait for the reel action');
+    },
+  },
+  {
+    name: 'Fisherman’s Village celebrates a catch above the HUD then keeps only a mini bar below the reward bar',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      assert(boardSource.includes('className="fishermans-catch-celebration"'), 'successful catches render a foreground celebration');
+      assert(boardSource.includes('className={`fishermans-fishing-mini'), 'caught progress renders as a compact reward-bar companion');
+      assert(boardSource.includes('fishermansFishingProgress.fishCaughtKg > 0'), 'mini progress stays hidden until the player catches fish');
+      assert(boardSource.includes("? '🎣 Rod ready—your first cast is already on the line!'"), 'the first rod landing opens the catch flow instead of stopping at a pickup message');
+      assert(!boardSource.includes('four fish-marked shore tiles'), 'stale fish-tile guidance is removed');
+      assert(!boardSource.includes('className="fishermans-fishing-meter"'), 'the old permanent board-overlay meter is removed');
+      assert(cssSource.includes('top: calc(100% + 7px)'), 'mini progress sits below the existing reward bar');
+      assert(cssSource.includes('z-index: calc(var(--island-run-mission-overlay-z, 22000) + 20)'), 'catch celebration renders above modal and HUD layers');
     },
   },
   {
@@ -841,7 +862,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
           },
         },
         islandNumber: 16, cycleIndex: 0,
-        tileIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[1], nowMs: 5, randomValue: 0,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[1], nowMs: 5, randomValue: 0,
       });
       assertEqual(prepared.pendingCatch?.kind, 'colossal', 'fifth successful catch is the authored shock catch');
       assertEqual(prepared.pendingCatch?.kilograms, 32, 'colossal catch fills 46 to 78 exactly');

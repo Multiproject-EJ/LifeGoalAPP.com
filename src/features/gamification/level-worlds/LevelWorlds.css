@@ -24282,37 +24282,71 @@
 
 .island-tile--frostwell-drill .island-tile__face { border-color: #81e9f6; background: radial-gradient(circle, #dffbff 0 12%, #3c9abb 25%, #233b77 70%); box-shadow: inset 0 0 12px rgba(190, 250, 255, .72), 0 0 11px rgba(68, 218, 244, .75); }
 .island-tile--frostwell-drill .island-tile__value { color: #fff1ac; filter: drop-shadow(0 2px 2px #08223c); }
-.island-tile--fishermans-rod .island-tile__face,
-.island-tile--fishermans-fishing-spot .island-tile__face {
+.island-tile--fishermans-rod .island-tile__face {
   border-color: #77f1dc;
   background: radial-gradient(circle at 45% 35%, #e7fff3 0 10%, #42cfc0 25%, #11668d 68%, #102b56);
   box-shadow: inset 0 0 12px rgba(212, 255, 242, .76), 0 0 13px rgba(56, 226, 211, .82);
 }
-.island-tile--fishermans-rod .island-tile__value,
-.island-tile--fishermans-fishing-spot .island-tile__value { filter: drop-shadow(0 2px 2px #063354); }
+.island-tile--fishermans-rod .island-tile__value { filter: drop-shadow(0 2px 2px #063354); }
 
-.fishermans-fishing-meter {
+.fishermans-fishing-mini {
   position: absolute;
-  z-index: 18;
-  top: max(72px, calc(env(safe-area-inset-top) + 60px));
-  left: 50%;
-  width: min(310px, calc(100% - 92px));
-  padding: 9px 11px 8px;
-  border: 1px solid rgba(151, 255, 230, .58);
-  border-radius: 14px;
+  z-index: 0;
+  top: calc(100% + 7px);
+  left: 0;
+  width: 100%;
+  min-height: 26px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid rgba(151, 255, 230, .52);
+  border-radius: 999px;
   color: #ecfff9;
-  background: linear-gradient(135deg, rgba(4, 50, 72, .92), rgba(8, 29, 57, .9));
-  box-shadow: 0 7px 24px rgba(0, 18, 35, .34), inset 0 1px rgba(255, 255, 255, .11);
-  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(4, 50, 72, .94), rgba(8, 29, 57, .93));
+  box-shadow: 0 5px 15px rgba(0, 18, 35, .28), inset 0 1px rgba(255, 255, 255, .1);
   pointer-events: none;
 }
-.fishermans-fishing-meter__heading { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px; font-size: .68rem; }
-.fishermans-fishing-meter__heading strong { font-size: .72rem; letter-spacing: .02em; }
-.fishermans-fishing-meter__heading b { color: #ffde83; font-size: .62rem; }
-.fishermans-fishing-meter__track { position: relative; height: 8px; margin: 6px 0 4px; overflow: hidden; border-radius: 999px; background: rgba(0, 8, 28, .72); }
-.fishermans-fishing-meter__track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4de2d3, #6fc6ff 64%, #ffdc77); box-shadow: 0 0 10px #48e3d2; transition: width 520ms cubic-bezier(.2,.8,.2,1); }
-.fishermans-fishing-meter__track i { position: absolute; top: -2px; width: 2px; height: 12px; background: #ff8f75; box-shadow: 0 0 5px #ff6b56; }
-.fishermans-fishing-meter small { display: block; color: #a9d9d4; font-size: .57rem; text-align: center; }
+.fishermans-fishing-mini > span:first-child { font-size: .74rem; }
+.fishermans-fishing-mini strong { color: #ffe28d; font: 900 .61rem/1 ui-sans-serif, system-ui; white-space: nowrap; }
+.fishermans-fishing-mini small { color: #a9d9d4; font: 800 .49rem/1 ui-sans-serif, system-ui; white-space: nowrap; }
+.fishermans-fishing-mini__track { position: relative; height: 7px; overflow: hidden; border-radius: 999px; background: rgba(0, 8, 28, .72); }
+.fishermans-fishing-mini__track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4de2d3, #6fc6ff 64%, #ffdc77); box-shadow: 0 0 8px #48e3d2; transition: width 560ms cubic-bezier(.2,.8,.2,1); }
+.fishermans-fishing-mini__track b { position: absolute; top: -2px; width: 2px; height: 11px; background: #ff8f75; box-shadow: 0 0 5px #ff6b56; }
+.fishermans-fishing-mini--catch { animation: fishermans-mini-catch 760ms cubic-bezier(.18,.88,.32,1); }
+
+.fishermans-catch-celebration {
+  position: fixed;
+  z-index: calc(var(--island-run-mission-overlay-z, 22000) + 20);
+  top: max(10px, calc(env(safe-area-inset-top) + 8px));
+  left: 50%;
+  width: min(346px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: auto auto minmax(92px, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 236, 139, .75);
+  border-radius: 18px;
+  color: #effffb;
+  background: linear-gradient(145deg, rgba(9, 83, 104, .98), rgba(6, 30, 64, .98));
+  box-shadow: 0 14px 36px rgba(0, 10, 32, .55), inset 0 1px rgba(255, 255, 255, .18);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: fishermans-catch-celebration 3.2s cubic-bezier(.18,.88,.32,1) both;
+}
+.fishermans-catch-celebration__fish { font-size: 2rem; filter: drop-shadow(0 0 9px rgba(90, 245, 221, .86)); }
+.fishermans-catch-celebration__copy { display: grid; gap: 1px; }
+.fishermans-catch-celebration__copy small { color: #84f0df; font: 900 .55rem/1 ui-sans-serif, system-ui; letter-spacing: .05em; text-transform: uppercase; }
+.fishermans-catch-celebration__copy strong { color: #ffe68e; font: 950 1.05rem/1.05 ui-sans-serif, system-ui; white-space: nowrap; }
+.fishermans-catch-celebration__copy span { color: #bde5e5; font: 800 .56rem/1 ui-sans-serif, system-ui; }
+.fishermans-catch-celebration__goal { display: grid; gap: 4px; }
+.fishermans-catch-celebration__goal > span { height: 9px; overflow: hidden; border-radius: 999px; background: rgba(0, 8, 28, .72); }
+.fishermans-catch-celebration__goal i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4de2d3, #6fc6ff, #ffdc77); box-shadow: 0 0 10px #48e3d2; }
+.fishermans-catch-celebration__goal b { color: #d9f8ef; font: 850 .58rem/1 ui-sans-serif, system-ui; text-align: center; }
+@keyframes fishermans-mini-catch { 0% { transform: translateY(-8px) scale(.92); opacity: .45; } 55% { transform: translateY(1px) scale(1.045); opacity: 1; } }
+@keyframes fishermans-catch-celebration { 0% { opacity: 0; transform: translate(-50%, -18px) scale(.88); } 12%, 76% { opacity: 1; transform: translate(-50%, 0) scale(1); } 86% { transform: translate(-50%, 0) scale(1.025); } 100% { opacity: 0; transform: translate(-50%, -7px) scale(.93); } }
 
 .fishermans-fishing-modal__backdrop {
   position: fixed;
@@ -24375,7 +24409,9 @@
   .fishermans-fishing-modal--pull-a .fishermans-fishing-modal__catch,
   .fishermans-fishing-modal--pull-b .fishermans-fishing-modal__fisher,
   .fishermans-fishing-modal--pull-b .fishermans-fishing-modal__catch,
-  .fishermans-fishing-modal__result { animation: none; }
+  .fishermans-fishing-modal__result,
+  .fishermans-fishing-mini--catch,
+  .fishermans-catch-celebration { animation: none; }
 }
 
 .island-tile--rootheart-power-component .island-tile__face {

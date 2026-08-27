@@ -18,7 +18,6 @@ import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
 import {
   getCactusCanyonDynamiteQuantityForTile,
   getGreatHoneyfallNectarQuantityForTile,
-  isFishermansVillageFishingTile,
   isFishermansVillageRodTile,
   isFirstLightAssemblyDynamiteTile,
   isFrostwellDrillTile,
@@ -39,7 +38,7 @@ export type IslandTileMapEntry = {
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
   /** Presentation marker for a canonical island-specific mission landing. */
-  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod' | 'fishermans_fishing_spot';
+  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod';
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
 };
@@ -316,9 +315,6 @@ export function generateTileMap(
   return tiles.map((entry) => {
     if (isFishermansVillageRodTile(islandNumber, entry.index)) {
       return { ...entry, signatureMissionKind: 'fishermans_rod' };
-    }
-    if (isFishermansVillageFishingTile(islandNumber, entry.index)) {
-      return { ...entry, signatureMissionKind: 'fishermans_fishing_spot' };
     }
     if (isFirstLightAssemblyDynamiteTile(islandNumber, entry.index)) {
       return { ...entry, signatureMissionKind: 'first_light_dynamite', signatureMissionAmount: 1 };

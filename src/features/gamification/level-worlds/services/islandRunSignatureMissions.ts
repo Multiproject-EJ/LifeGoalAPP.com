@@ -71,9 +71,12 @@ export const FISHERMANS_VILLAGE_ISLAND_NUMBER = 16;
 export const FISHERMANS_VILLAGE_FISH_TARGET_KG = 100;
 export const FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG = 78;
 export const FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG = 46;
-export const FISHERMANS_VILLAGE_ROD_TILE_INDEX = 2;
-/** Four playable shoreline casts, deliberately clear of landmark-door clusters. */
-export const FISHERMANS_VILLAGE_FISHING_TILE_INDICES = Object.freeze([8, 17, 26, 35] as const);
+/**
+ * Six reusable fishing-rod stations spread around the pond route. Each index is
+ * deliberately clear of the four expandable landmark-door clusters, so a rod
+ * cannot disappear when a nearby landmark becomes active.
+ */
+export const FISHERMANS_VILLAGE_ROD_TILE_INDICES = Object.freeze([2, 8, 11, 17, 26, 35] as const);
 
 export type FishermansVillageCatchKind = 'nothing' | 'small' | 'medium' | 'large' | 'colossal';
 
@@ -618,13 +621,8 @@ export function resolveFishermansVillageFishingProgress(options: {
 
 export function isFishermansVillageRodTile(islandNumber: number, tileIndex: number): boolean {
   return islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
-    && tileIndex === FISHERMANS_VILLAGE_ROD_TILE_INDEX;
-}
-
-export function isFishermansVillageFishingTile(islandNumber: number, tileIndex: number): boolean {
-  return islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
-    && FISHERMANS_VILLAGE_FISHING_TILE_INDICES.includes(
-      tileIndex as typeof FISHERMANS_VILLAGE_FISHING_TILE_INDICES[number],
+    && FISHERMANS_VILLAGE_ROD_TILE_INDICES.includes(
+      tileIndex as typeof FISHERMANS_VILLAGE_ROD_TILE_INDICES[number],
     );
 }
 
@@ -681,33 +679,24 @@ export function collectFishermansVillageLanding(options: {
   }
   const current = resolveFishermansVillageFishingProgress(options);
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
-  if (isFishermansVillageRodTile(options.islandNumber, options.tileIndex) && current.rodCollectedAtMs === null) {
-    return {
-      rodCollected: true,
-      pendingCatch: null,
-      ledger: {
-        ...options.ledger,
-        [key]: { ...current, rodCollectedAtMs: options.nowMs, updatedAtMs: options.nowMs },
-      },
-    };
-  }
   if (
-    !isFishermansVillageFishingTile(options.islandNumber, options.tileIndex)
-    || current.rodCollectedAtMs === null
+    !isFishermansVillageRodTile(options.islandNumber, options.tileIndex)
     || current.pendingCatch !== null
-    || current.dragonTriggeredAtMs !== null
+    || (current.dragonTriggeredAtMs !== null && current.repairCompletedAtMs === null)
     || current.completedAtMs !== null
   ) {
     return { ledger: options.ledger, rodCollected: false, pendingCatch: null };
   }
+  const rodCollected = current.rodCollectedAtMs === null;
   const pendingCatch = resolveFishermansVillageCatch(options.randomValue, current, options.tileIndex);
   return {
-    rodCollected: false,
+    rodCollected,
     pendingCatch,
     ledger: {
       ...options.ledger,
       [key]: {
         ...current,
+        rodCollectedAtMs: current.rodCollectedAtMs ?? options.nowMs,
         castsCompleted: current.castsCompleted + 1,
         pendingCatch,
         updatedAtMs: options.nowMs,

@@ -288,11 +288,11 @@ export function resolveIslandMissionTrackerPresentation(options: {
       const pounds = progress.fishCaughtKg * 2.2046226218;
       objectives = [
         objective(
-          progress.rodCollectedAtMs === null ? 'Find the Fishing Rod' : 'Catch Fish',
+          'Catch Fish',
           progress.fishCaughtKg,
           FISHERMANS_VILLAGE_FISH_TARGET_KG,
           progress.rodCollectedAtMs === null
-            ? 'Find rod'
+            ? 'Land on a 🎣 tile'
             : `${progress.fishCaughtKg} kg / ${pounds.toFixed(1)} lb`,
         ),
         objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
