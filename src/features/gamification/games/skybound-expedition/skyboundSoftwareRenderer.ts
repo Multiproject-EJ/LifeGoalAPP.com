@@ -5,7 +5,6 @@ import {
   type SkyboundLevelId,
 } from '../../level-worlds/services/skyboundExpeditionFlight';
 import type { SkyboundAircraftId } from '../../level-worlds/services/skyboundPilotAcademy';
-import cadetChaseSpriteUrl from './assets/cadet-chase-sprite-v1.png';
 import type { SkyboundAimView } from './skyboundExpeditionRenderer';
 
 type SoftwarePhase = 'aiming' | 'flying' | 'result';
@@ -256,12 +255,24 @@ function drawCloud(
   context.restore();
 }
 
-function drawVectorAircraft(
+interface AircraftPoint3 { x:number; y:number; z:number; }
+interface AircraftFace3 { points:AircraftPoint3[]; color:string; shade:number; }
+
+function shadeHex(color:string,factor:number) {
+  const value=Number.parseInt(color.slice(1),16);
+  const channel=(shift:number)=>clamp(Math.round(((value>>shift)&255)*factor),0,255);
+  return `rgb(${channel(16)},${channel(8)},${channel(0)})`;
+}
+
+function drawSoftwareAircraft3d(
   context:CanvasRenderingContext2D,
   aircraftId:SkyboundAircraftId,
   boosting:boolean,
   time:number,
   detached:readonly string[],
+  struggling=false,
+  pitch=0,
+  bank=0,
 ) {
   const colors:Record<SkyboundAircraftId,[string,string,string]>={
     toy_glider:['#f7efeb','#0b2949','#f2bd45'],
@@ -271,17 +282,65 @@ function drawVectorAircraft(
     goldwing_fighter:['#fff9df','#162947','#f3ce4e'],
   };
   const [primary,secondary,accent]=colors[aircraftId];
+  const faces:AircraftFace3[]=[];
+  const addPrism=(id:string,outline:readonly [number,number][],halfHeight:number,color:string,transform?:(point:AircraftPoint3)=>AircraftPoint3)=>{
+    if(detached.includes(id))return;
+    const top=outline.map(([x,z])=>({x,y:halfHeight,z}));
+    const bottom=outline.map(([x,z])=>({x,y:-halfHeight,z}));
+    const apply=(points:AircraftPoint3[])=>transform?points.map(transform):points;
+    faces.push({points:apply(top),color,shade:1.08},{points:apply([...bottom].reverse()),color,shade:.58});
+    for(let index=0;index<outline.length;index+=1){const next=(index+1)%outline.length;faces.push({points:apply([top[index],top[next],bottom[next],bottom[index]]),color,shade:.78+(index%2)*.08});}
+  };
+  const rotateControl=(hingeZ:number,angle:number)=>(point:AircraftPoint3)=>{
+    const z=point.z-hingeZ;const cosine=Math.cos(angle);const sine=Math.sin(angle);
+    return{x:point.x,y:point.y*cosine-z*sine,z:hingeZ+point.y*sine+z*cosine};
+  };
+
+  const flutter=struggling?Math.sin(time*.027)*.16:0;
+  const wingSweep=aircraftId==='jet_trainer'?.5:aircraftId==='storm_interceptor'?.72:aircraftId==='goldwing_fighter'?.42:0;
+  addPrism('left-wing',[[0,.58],[-3.25,-.05+wingSweep],[-2.82,-.82+wingSweep],[0,-.38]],.095,primary);
+  addPrism('right-wing',[[0,.58],[3.25,-.05+wingSweep],[2.82,-.82+wingSweep],[0,-.38]],.095,primary);
+  addPrism('left-aileron',[[-3.02,-.72+wingSweep],[-1.2,-.48],[-.48,-.35],[-2.78,-.98+wingSweep]],.07,secondary,rotateControl(-.5,clamp(-bank*.45+flutter,-.42,.42)));
+  addPrism('right-aileron',[[3.02,-.72+wingSweep],[1.2,-.48],[.48,-.35],[2.78,-.98+wingSweep]],.07,secondary,rotateControl(-.5,clamp(bank*.45-flutter,-.42,.42)));
+  addPrism('left-tailplane',[[0,-1.28],[-1.25,-1.45],[-1.08,-1.93],[0,-1.72]],.07,primary);
+  addPrism('right-tailplane',[[0,-1.28],[1.25,-1.45],[1.08,-1.93],[0,-1.72]],.07,primary);
+  addPrism('left-elevator',[[-1.12,-1.82],[-.15,-1.65],[-.08,-1.88],[-1,-2.05]],.055,accent,rotateControl(-1.75,clamp(-pitch*.28+flutter*.5,-.34,.34)));
+  addPrism('right-elevator',[[1.12,-1.82],[.15,-1.65],[.08,-1.88],[1,-2.05]],.055,accent,rotateControl(-1.75,clamp(-pitch*.28+flutter*.5,-.34,.34)));
+
+  const ringZ=[-1.9,-1.25,-.25,.75,1.55,2.05];
+  const ringX=[.25,.48,.62,.58,.43,.18];
+  const ringY=[.22,.39,.48,.45,.32,.15];
+  const fuselageRings=ringZ.map((z,ringIndex)=>Array.from({length:8},(_,index)=>{const angle=(index/8)*Math.PI*2;return{x:Math.cos(angle)*ringX[ringIndex],y:Math.sin(angle)*ringY[ringIndex],z};}));
+  for(let ring=0;ring<fuselageRings.length-1;ring+=1){for(let index=0;index<8;index+=1){const next=(index+1)%8;faces.push({points:[fuselageRings[ring][index],fuselageRings[ring][next],fuselageRings[ring+1][next],fuselageRings[ring+1][index]],color:index<4?secondary:primary,shade:.68+((index+2)%5)*.095});}}
+  if(!detached.includes('nose-cap'))faces.push({points:[...fuselageRings[fuselageRings.length-1]],color:accent,shade:1.1});
+
+  if(!detached.includes('canopy')){
+    const canopyBase=Array.from({length:10},(_,index)=>{const angle=(index/10)*Math.PI*2;return{x:Math.cos(angle)*.38,y:.4+Math.max(0,Math.sin(angle))*.36,z:.38+Math.sin(angle)*.62};});
+    const canopyTop={x:0,y:.83,z:.42};
+    for(let index=0;index<10;index+=1){faces.push({points:[canopyBase[index],canopyBase[(index+1)%10],canopyTop],color:'#64e9f4',shade:.7+(index%3)*.12});}
+  }
+
+  if(!detached.includes('tail-fin')){
+    const left=[{x:-.075,y:.05,z:-1.45},{x:-.075,y:1.05,z:-1.72},{x:-.075,y:.45,z:-2.05},{x:-.075,y:.05,z:-1.95}];
+    const right=left.map((point)=>({...point,x:.075}));
+    faces.push({points:left,color:secondary,shade:.72},{points:[...right].reverse(),color:secondary,shade:.96});
+    for(let index=0;index<4;index+=1){const next=(index+1)%4;faces.push({points:[left[index],left[next],right[next],right[index]],color:index===1?accent:secondary,shade:.82});}
+  }
+
+  const yaw=-.31;const elevation=.42+clamp(pitch,-.7,.8)*.08;const cosineYaw=Math.cos(yaw);const sineYaw=Math.sin(yaw);const cosineElevation=Math.cos(elevation);const sineElevation=Math.sin(elevation);
+  const projectPoint=(point:AircraftPoint3)=>{const x=point.x*cosineYaw-point.z*sineYaw;const z=point.x*sineYaw+point.z*cosineYaw;return{x:x*28,y:-(point.y*cosineElevation+z*sineElevation)*28,depth:z*cosineElevation-point.y*sineElevation};};
+  const projected=faces.map((face)=>({face,points:face.points.map(projectPoint),depth:face.points.reduce((sum,point)=>sum+projectPoint(point).depth,0)/face.points.length})).sort((a,b)=>b.depth-a.depth);
   if(boosting) {
-    const flame=context.createLinearGradient(0,30,0,100);
+    const tail=projectPoint({x:0,y:0,z:-2});const flame=context.createLinearGradient(tail.x,tail.y,tail.x,tail.y+86);
     flame.addColorStop(0,'#fff');flame.addColorStop(.3,'#64f5ff');flame.addColorStop(1,'rgba(47,170,255,0)');
     context.fillStyle=flame;
-    context.beginPath();context.moveTo(-8,35);context.lineTo(0,104+Math.sin(time*.03)*12);context.lineTo(8,35);context.fill();
+    context.beginPath();context.moveTo(tail.x-7,tail.y+5);context.lineTo(tail.x,tail.y+78+Math.sin(time*.03)*12);context.lineTo(tail.x+7,tail.y+5);context.fill();
   }
-  if(!detached.includes('left-wing')) { context.fillStyle=primary;context.beginPath();context.moveTo(-4,-10);context.lineTo(-82,20);context.lineTo(-58,38);context.lineTo(-3,18);context.closePath();context.fill(); }
-  if(!detached.includes('right-wing')) { context.fillStyle=primary;context.beginPath();context.moveTo(4,-10);context.lineTo(82,20);context.lineTo(58,38);context.lineTo(3,18);context.closePath();context.fill(); }
-  context.fillStyle=secondary;context.beginPath();context.moveTo(0,-48);context.quadraticCurveTo(20,-14,11,53);context.lineTo(0,65);context.lineTo(-11,53);context.quadraticCurveTo(-20,-14,0,-48);context.fill();
-  context.fillStyle=accent;context.beginPath();context.ellipse(0,-30,9,15,0,0,Math.PI*2);context.fill();
-  context.strokeStyle=accent;context.lineWidth=3;context.beginPath();context.moveTo(-58,28);context.lineTo(-12,10);context.moveTo(58,28);context.lineTo(12,10);context.stroke();
+  context.lineJoin='round';context.lineWidth=.9;
+  for(const item of projected){const [first,...rest]=item.points;context.beginPath();context.moveTo(first.x,first.y);for(const point of rest)context.lineTo(point.x,point.y);context.closePath();context.fillStyle=shadeHex(item.face.color,item.face.shade);context.fill();context.strokeStyle='rgba(4,24,44,.28)';context.stroke();}
+  if(aircraftId==='prop_trainer'){
+    const hub=projectPoint({x:0,y:0,z:2.2});const angle=time*.028;context.save();context.translate(hub.x,hub.y);context.rotate(angle);context.strokeStyle='#142b45';context.lineWidth=6;context.lineCap='round';context.beginPath();context.moveTo(-35,0);context.lineTo(35,0);context.moveTo(0,-35);context.lineTo(0,35);context.stroke();context.fillStyle=accent;context.beginPath();context.arc(0,0,7,0,Math.PI*2);context.fill();context.restore();
+  }
 }
 
 export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInput) {
@@ -291,9 +350,6 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
   const level=getSkyboundLevel(input.levelId);
   const course=getSkyboundCourseObjects(input.levelId,input.goalDistance);
   const islands=createFloatingIslands(input.goalDistance);
-  const cadetSprite=new Image();
-  cadetSprite.decoding='async';
-  cadetSprite.src=cadetChaseSpriteUrl;
   let width=1;
   let height=1;
   let frame=0;
@@ -392,12 +448,16 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       }
     }
 
+    const aimingPlaneX=width/2+clamp(aim.pullX/110,-1,1)*34;
+    const aimingPlaneY=height*.66+aim.power*height*.095;
     if(phase==='aiming') {
       const launchY=height*.75;
       const wood=context.createLinearGradient(0,launchY-120,0,launchY+80);wood.addColorStop(0,'#a8672c');wood.addColorStop(.45,'#6c381e');wood.addColorStop(1,'#2e1d21');
       context.strokeStyle=wood;context.lineWidth=clamp(width*.035,13,25);context.lineCap='round';
       context.beginPath();context.moveTo(width*.34,launchY+80);context.lineTo(width*.4,launchY-78);context.moveTo(width*.66,launchY+80);context.lineTo(width*.6,launchY-78);context.stroke();
-      context.strokeStyle='#4deaff';context.lineWidth=5;context.shadowBlur=12;context.shadowColor='#4deaff';context.beginPath();context.moveTo(width*.4,launchY-78);context.quadraticCurveTo(width*.5,launchY-30+aim.power*55,width*.6,launchY-78);context.stroke();context.shadowBlur=0;
+      context.strokeStyle='#4deaff';context.lineWidth=5+aim.power*2.5;context.shadowBlur=12+aim.power*18;context.shadowColor='#4deaff';
+      context.beginPath();context.moveTo(width*.4,launchY-78);context.lineTo(aimingPlaneX-8,aimingPlaneY+24);context.moveTo(width*.6,launchY-78);context.lineTo(aimingPlaneX+8,aimingPlaneY+24);context.stroke();context.shadowBlur=0;
+      if(aim.power>.03){context.strokeStyle=`rgba(105,247,255,${.18+aim.power*.55})`;context.lineWidth=3;context.beginPath();context.ellipse(aimingPlaneX,aimingPlaneY,75+aim.power*14,42+aim.power*9,time*.001,0,Math.PI*2);context.stroke();}
     }
 
     if(input.isBoosting()) {
@@ -409,9 +469,9 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       }
     }
 
-    const planeX=width/2+(flight?.bankRad??0)*34;
-    const planeY=height*(phase==='aiming'?.7:.73)-pitch*13;
-    const planeScale=clamp(width/720,.68,1.22)*(input.isBoosting()?1.04:1);
+    const planeX=phase==='aiming'?aimingPlaneX:width/2+(flight?.bankRad??0)*34;
+    const planeY=phase==='aiming'?aimingPlaneY:height*.73-pitch*13;
+    const planeScale=clamp(width/620,.82,1.48)*(input.isBoosting()?1.04:1);
     context.save();
     const shakeX=(seeded(Math.floor(time),2)-.5)*shake*18;
     const shakeY=(seeded(Math.floor(time),5)-.5)*shake*12;
@@ -422,14 +482,9 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       context.strokeStyle='rgba(120,255,239,.78)';context.lineWidth=3;context.shadowBlur=18;context.shadowColor='#74ffef';
       context.beginPath();context.ellipse(0,5,112,57,time*.001,0,Math.PI*2);context.stroke();context.shadowBlur=0;
     }
-    if(input.aircraftId==='toy_glider'&&cadetSprite.complete&&cadetSprite.naturalWidth>0&&(flight?.detachedPartIds.length??0)===0) {
-      context.shadowColor='rgba(1,16,34,.42)';context.shadowBlur=20;context.drawImage(cadetSprite,-126,-91,252,168);context.shadowBlur=0;
-      if(input.isBoosting()) {
-        const flame=context.createLinearGradient(0,52,0,125);flame.addColorStop(0,'#fff');flame.addColorStop(.3,'#64f5ff');flame.addColorStop(1,'rgba(47,170,255,0)');context.fillStyle=flame;context.beginPath();context.moveTo(-8,49);context.lineTo(0,127+Math.sin(time*.03)*10);context.lineTo(8,49);context.fill();
-      }
-    } else {
-      drawVectorAircraft(context,input.aircraftId,input.isBoosting(),time,flight?.detachedPartIds??[]);
-    }
+    const integrityCapacity=flight?Math.max(1,flight.integrity+flight.hazardHits):1;
+    const struggling=Boolean(flight)&&!input.isStabilizing()&&(speed<20||Math.abs(pitch)>.62||Math.abs(flight?.bankRad??0)>.5||(flight?.integrity??1)/integrityCapacity<.62);
+    drawSoftwareAircraft3d(context,input.aircraftId,input.isBoosting(),time,flight?.detachedPartIds??[],struggling,pitch,flight?.bankRad??0);
     context.restore();
 
     for(let index=0;index<(flight?.detachedPartIds.length??0);index+=1) {
@@ -458,5 +513,5 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     frame=requestAnimationFrame(animate);
   };
   frame=requestAnimationFrame(animate);
-  return()=>{cancelAnimationFrame(frame);observer.disconnect();cadetSprite.src='';};
+  return()=>{cancelAnimationFrame(frame);observer.disconnect();};
 }

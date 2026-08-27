@@ -114,6 +114,33 @@ function addPanelLine(parent: THREE.Object3D, side: -1 | 1) {
   return line;
 }
 
+function addControlSurface(
+  runtime: CadetGliderRuntime,
+  parent: THREE.Object3D,
+  id: string,
+  size: [number, number, number],
+  position: [number, number, number],
+  surfaceMaterial: THREE.Material,
+) {
+  const pivot = new THREE.Group();
+  pivot.name = `${id}__hinge`;
+  pivot.position.set(...position);
+  pivot.userData.sculptComponentId = id;
+  pivot.userData.joint = 'hinge';
+  const surface = new THREE.Mesh(new THREE.BoxGeometry(...size), surfaceMaterial);
+  surface.name = id;
+  surface.position.z = size[2] * -0.38;
+  surface.castShadow = true;
+  surface.receiveShadow = true;
+  pivot.add(surface);
+  parent.add(pivot);
+  runtime.nodes[id] = pivot;
+  runtime.meshes[id] = surface;
+  runtime.colliders[id] = { type:'box', size };
+  runtime.destructionGroups[id] = [];
+  return pivot;
+}
+
 export function createCadetToyGliderModel(): CadetGliderModel {
   const root = new THREE.Group() as CadetGliderModel;
   root.name = 'Cadet Toy Glider Flight Root';
@@ -166,6 +193,8 @@ export function createCadetToyGliderModel(): CadetGliderModel {
   runtime.meshes['left-panel-line'] = leftPanel;
   runtime.nodes['right-panel-line'] = rightPanel;
   runtime.meshes['right-panel-line'] = rightPanel;
+  addControlSurface(runtime, leftWing, 'left-aileron', [1.35, 0.075, 0.32], [-1.62, 0.08, -0.43], navy);
+  addControlSurface(runtime, rightWing, 'right-aileron', [1.35, 0.075, 0.32], [1.62, 0.08, -0.43], navy);
 
   const leftTail = markPart(root, runtime, 'left-tailplane', new THREE.Mesh(makeWingGeometry(-1, true), white),
     new THREE.Vector3(-0.28, 0.1, -1.42), { type: 'box', size: [1.2, 0.13, 0.75] });
@@ -173,9 +202,12 @@ export function createCadetToyGliderModel(): CadetGliderModel {
   const rightTail = markPart(root, runtime, 'right-tailplane', new THREE.Mesh(makeWingGeometry(1, true), white),
     new THREE.Vector3(0.28, 0.1, -1.42), { type: 'box', size: [1.2, 0.13, 0.75] });
   addEdgeTrim(rightTail, 1, true);
+  addControlSurface(runtime, leftTail, 'left-elevator', [0.52, 0.065, 0.2], [-0.58, 0.07, -0.24], gold);
+  addControlSurface(runtime, rightTail, 'right-elevator', [0.52, 0.065, 0.2], [0.58, 0.07, -0.24], gold);
 
-  markPart(root, runtime, 'tail-fin', new THREE.Mesh(makeFinGeometry(), navy),
+  const tailFin = markPart(root, runtime, 'tail-fin', new THREE.Mesh(makeFinGeometry(), navy),
     new THREE.Vector3(0, 0.56, -1.48), { type: 'box', size: [0.22, 1.05, 0.76] });
+  addControlSurface(runtime, tailFin, 'rudder', [0.09, 0.58, 0.24], [0, 0.18, -0.34], gold);
   markPart(root, runtime, 'canopy', new THREE.Mesh(new THREE.SphereGeometry(1, 24, 14), cyan),
     new THREE.Vector3(0, 0.48, 0.48), { type: 'sphere', size: [0.39, 0.3, 0.65] });
   runtime.meshes.canopy.scale.set(0.39, 0.3, 0.65);

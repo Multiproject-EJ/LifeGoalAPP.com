@@ -2,6 +2,7 @@ import type { SkyboundAircraftId } from './skyboundPilotAcademy';
 
 export type SkyboundLevelId = 'meadow' | 'coast' | 'canyon' | 'storm' | 'stratosphere';
 export type SkyboundFlightStatus = 'flying' | 'landed' | 'crashed' | 'finished';
+export type SkyboundTerminalReason = 'goal' | 'touchdown' | 'hard_impact' | 'integrity_failure' | null;
 export type SkyboundUpgradeKind = 'launcher' | 'airframe' | 'engine';
 export type SkyboundCourseObjectKind = 'salvage' | 'wind_ring' | 'hazard';
 
@@ -59,6 +60,8 @@ export interface SkyboundFlightState {
   fuel: number;
   stabilizer: number;
   elapsedMs: number;
+  airborneMs: number;
+  groundContactMs: number;
   maxAltitude: number;
   boostUsed: number;
   stabilizerUsed: number;
@@ -72,6 +75,7 @@ export interface SkyboundFlightState {
   impactSerial: number;
   bestStreak: number;
   currentStreak: number;
+  terminalReason: SkyboundTerminalReason;
 }
 
 export interface SkyboundFlightControl {
@@ -303,6 +307,8 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     fuel: (1 + (input.upgrades.engine * 0.18)) * tuning.fuel,
     stabilizer: (1 + (input.upgrades.airframe * 0.12)) * tuning.stability,
     elapsedMs: 0,
+    airborneMs: 0,
+    groundContactMs: 0,
     maxAltitude: startY,
     boostUsed: 0,
     stabilizerUsed: 0,
@@ -316,6 +322,7 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     impactSerial: 0,
     bestStreak: 0,
     currentStreak: 0,
+    terminalReason: null,
   };
 }
 
@@ -414,6 +421,9 @@ export function stepSkyboundFlight(
   if (Math.abs(lateralX) >= 19.9) lateralVelocity *= -0.2;
   const elapsedMs = state.elapsedMs + safeDtMs;
   const groundHeight = getSkyboundGroundHeight(level.id, x);
+  const clearance = y - (groundHeight + 1.2);
+  const airborneMs = state.airborneMs + (clearance > 2.4 ? safeDtMs : 0);
+  let groundContactMs = clearance <= 0 ? state.groundContactMs + safeDtMs : 0;
   const fuelDrain = isBoosting ? dt * 0.31 : 0;
   const fuel = Math.max(0, state.fuel - fuelDrain);
   const stabilizerDrain = isStabilizing ? dt * 0.24 : 0;
@@ -430,6 +440,7 @@ export function stepSkyboundFlight(
   let detachedPartIds = [...state.detachedPartIds];
   let currentStreak = state.currentStreak;
   let bestStreak = state.bestStreak;
+  let terminalReason: SkyboundTerminalReason = null;
 
   for (const object of getSkyboundCourseObjects(level.id, state.goalDistance)) {
     if (resolvedObjectIds.includes(object.id)) continue;
@@ -456,7 +467,10 @@ export function stepSkyboundFlight(
       const damageOrder = ['left-wing', 'right-tailplane', 'tail-fin', 'right-wing', 'left-tailplane'];
       const damagedPart = damageOrder[Math.min(damageOrder.length - 1, hazardHits - 1)];
       detachedPartIds = [...new Set([...detachedPartIds, damagedPart])];
-      if (integrity === 0) status = 'crashed';
+      if (integrity === 0) {
+        status = 'crashed';
+        terminalReason = 'integrity_failure';
+      }
     }
     bestStreak = Math.max(bestStreak, currentStreak);
   }
@@ -465,16 +479,35 @@ export function stepSkyboundFlight(
     detachedPartIds = [...new Set([...detachedPartIds, 'right-wing', 'left-tailplane', 'canopy', 'nose-cap'])];
   } else if (x >= state.goalDistance) {
     status = 'finished';
-  } else if (y <= groundHeight + 1.2 && elapsedMs > 350) {
+    terminalReason = 'goal';
+  } else if (clearance <= 0) {
     settledY = groundHeight + 1.2;
-    status = vy >= -12 && Math.abs(pitchRad) <= 0.72 ? 'landed' : 'crashed';
-    if (status === 'crashed') {
+    const launchGraceActive = elapsedMs < 1_800 || airborneMs < 850;
+    const hardImpact = !launchGraceActive && (vy < -15 || Math.abs(pitchRad) > 0.92);
+    const controlledTouchdown = !launchGraceActive && vx <= 9 && vy >= -8 && Math.abs(pitchRad) <= 0.72;
+    if (hardImpact) {
+      status = 'crashed';
+      terminalReason = 'hard_impact';
       impactSerial += 1;
       integrity = 0;
       detachedPartIds = ['left-wing', 'right-wing', 'left-tailplane', 'right-tailplane', 'tail-fin', 'canopy', 'nose-cap'];
+      vx = 0;
+      vy = 0;
+    } else if (controlledTouchdown) {
+      status = 'landed';
+      terminalReason = 'touchdown';
+      vx = 0;
+      vy = 0;
+    } else {
+      // A brief runway/terrain brush should read as a recoverable skim, not an
+      // abrupt end screen. Forward energy is preserved while the airframe gets
+      // a small deterministic rebound and enough time for the pilot to correct.
+      status = 'flying';
+      vx = Math.max(7.5, vx * (launchGraceActive ? 0.98 : 0.92));
+      vy = Math.max(launchGraceActive ? 5.4 : 3.2, Math.abs(vy) * 0.28);
+      bankRad *= 0.82;
+      groundContactMs = Math.min(groundContactMs, 240);
     }
-    vx = 0;
-    vy = 0;
   }
 
   return {
@@ -491,6 +524,8 @@ export function stepSkyboundFlight(
     fuel,
     stabilizer,
     elapsedMs,
+    airborneMs,
+    groundContactMs,
     maxAltitude: Math.max(state.maxAltitude, y),
     boostUsed: state.boostUsed + fuelDrain,
     stabilizerUsed: state.stabilizerUsed + stabilizerDrain,
@@ -503,6 +538,7 @@ export function stepSkyboundFlight(
     impactSerial,
     currentStreak,
     bestStreak,
+    terminalReason,
   };
 }
 

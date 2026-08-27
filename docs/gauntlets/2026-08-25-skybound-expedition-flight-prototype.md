@@ -208,6 +208,30 @@ development route remains available for isolated flight-feel work, while the
 same game now also launches as `skybound_expedition`, the fifth canonical timed
 event. All five aircraft ranks and all 20 exercises/checkrides are playable.
 
+## Flight-feel correction gate — 2026-08-27
+
+Player review scored the first integrated 3D feel below the acceptance bar in
+three related areas. This correction pass is not accepted until all three are
+observable in the same phone-width playthrough:
+
+- Holding the launch gesture physically pulls the aircraft backward and down,
+  stretches two live launcher bands, brightens a tension field, flexes the
+  wings/control surfaces, and adds a restrained full-power tremble. Release
+  must snap that stored pose into forward flight.
+- Ground classification has a real launch grace period. A brief early runway or
+  terrain brush produces a recoverable skim; only a slow controlled touchdown,
+  a genuinely hard impact, total integrity loss, or the real exam gate ends the
+  sortie. Every terminal state records its reason.
+- Runtime aircraft presentation uses mesh geometry, not a chase-view raster.
+  All five aircraft inherit named aileron, elevator, rudder, wing-flex, damage,
+  and effect pivots. Energetic level flight settles into smooth surfaces;
+  low-energy, extreme-attitude, or damaged flight produces deterministic
+  flutter and shudder. The prop trainer also drives a real propeller pivot.
+
+The existing concept PNG remains a design reference only. The compatibility
+renderer may draw a procedural vector silhouette when WebGL is unavailable,
+but it may not load or draw the aircraft artwork.
+
 ### Canonical player loop
 
 1. Earn a ticket from the shared Island Run event economy.

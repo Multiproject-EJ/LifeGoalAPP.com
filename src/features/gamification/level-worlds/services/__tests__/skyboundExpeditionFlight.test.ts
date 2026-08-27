@@ -226,4 +226,38 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(start.stabilizer === 1, 'Stabilizer must not mutate prior state');
     },
   },
+  {
+    name: 'keeps an early terrain brush recoverable instead of ending the sortie',
+    run: () => {
+      const state = {
+        ...createSkyboundFlight({ power: .35, angleDeg: 24, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
+        x: 20,
+        y: 1.25,
+        vx: 24,
+        vy: -5,
+        elapsedMs: 700,
+        airborneMs: 640,
+      };
+      const next = stepSkyboundFlight(state, { pitch: .2, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(next.status === 'flying', 'launch grace should turn an early terrain brush into a skim');
+      assert(next.vy > 0, 'the skim should give the pilot a readable recovery bounce');
+      assert(next.terminalReason === null, 'a recoverable brush must not acquire a terminal reason');
+    },
+  },
+  {
+    name: 'ends only a deliberate slow touchdown or a genuinely hard impact',
+    run: () => {
+      const base = {
+        ...createSkyboundFlight({ power: 1, angleDeg: 35, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
+        x: 30,
+        y: 1.3,
+        elapsedMs: 4_000,
+        airborneMs: 3_000,
+      };
+      const landed = stepSkyboundFlight({ ...base, vx: 7, vy: -2, pitchRad: .2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(landed.status === 'landed' && landed.terminalReason === 'touchdown', 'slow level contact should be a controlled touchdown');
+      const crashed = stepSkyboundFlight({ ...base, vx: 26, vy: -22, pitchRad: 1 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(crashed.status === 'crashed' && crashed.terminalReason === 'hard_impact', 'a steep high-speed impact should still crash');
+    },
+  },
 ];

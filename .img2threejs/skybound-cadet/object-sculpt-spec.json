@@ -603,13 +603,15 @@
     "currentPass": "blockout",
     "completedPasses": [],
     "lastCompletedPass": "",
-    "blockedReason": "blockout requires a browser screenshot and self-correction review before structural-pass unlocks",
+    "blockedReason": "",
     "nextRequiredEvidence": [
-      "blockout browser render screenshot from your agent's browser/screenshot tool",
-      "side-by-side reference/render comparison sheet",
-      "AI vision score >= 0.7 with layer scores and mismatch critique",
-      "critical semantic feature scores from the same image pair meeting their individual thresholds",
-      "reviewHistory entry for blockout with action=continue"
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
     ]
   },
   "lookDevTargets": {
@@ -4706,9 +4708,119 @@
         "palette",
         "component hierarchy"
       ]
+    },
+    {
+      "timestamp": "2026-08-27T18:22:33.602031+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.43,
+      "aiVisionScore": 0.43,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.52,
+        "proportion": 0.4,
+        "materials": 0.45,
+        "depth": 0.56,
+        "presentation": 0.31
+      },
+      "featureReviews": [
+        {
+          "id": "aircraft-identity",
+          "score": 0.55,
+          "critical": true
+        },
+        {
+          "id": "volumetric-body",
+          "score": 0.56,
+          "critical": true
+        },
+        {
+          "id": "articulated-flight-surfaces",
+          "score": 0.62,
+          "critical": true
+        },
+        {
+          "id": "canopy-and-trim",
+          "score": 0.45,
+          "critical": false
+        }
+      ],
+      "referenceScreenshot": ".img2threejs/skybound-cadet/cadet-toy-glider-isolated-v1.png",
+      "renderScreenshot": ".img2threejs/skybound-cadet/renders/2026-08-27-aim-software-3d.jpg",
+      "comparisonImage": ".img2threejs/skybound-cadet/renders/2026-08-27-aim-comparison.png",
+      "cameraView": "live chase/launcher three-quarter",
+      "notes": "2D gate evidence is insufficient for final 3D acceptance; orbit capture remains mandatory.",
+      "aiVisionNotes": "The aircraft is recognizably modeled with shaded faces rather than pasted artwork. The comparison is dominated by runtime framing: the craft is small and rear-facing while the reference is a close three-quarter front view. This proves the flat-image defect is removed, but not reference-level model fidelity."
     }
   ],
-  "reviewHistory": [],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-27T18:22:33.602031+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.43,
+      "aiVisionScore": 0.43,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.52,
+        "proportion": 0.4,
+        "materials": 0.45,
+        "depth": 0.56,
+        "presentation": 0.31
+      },
+      "featureReviews": [
+        {
+          "id": "aircraft-identity",
+          "score": 0.55,
+          "critical": true
+        },
+        {
+          "id": "volumetric-body",
+          "score": 0.56,
+          "critical": true
+        },
+        {
+          "id": "articulated-flight-surfaces",
+          "score": 0.62,
+          "critical": true
+        },
+        {
+          "id": "canopy-and-trim",
+          "score": 0.45,
+          "critical": false
+        }
+      ],
+      "action": "refine-code",
+      "summary": "The live route now uses geometry instead of aircraft artwork and reads as volumetric in chase view, but this capture is not close or reference-matched enough to accept visual fidelity.",
+      "matched": [
+        "white/navy/gold aircraft identity",
+        "volumetric faceted fuselage and canopy",
+        "separate wing and tail surfaces",
+        "no raster aircraft in the runtime"
+      ],
+      "mismatches": [
+        "aircraft occupies too little of the frame",
+        "reference canopy and rounded body refinement are not yet matched",
+        "review browser lacks WebGL so this evidence covers the polygonal compatibility renderer only",
+        "no true orbit capture yet"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "increase chase aircraft readability",
+        "capture WebGL fixed and orbit views in a capable browser",
+        "refine canopy and fuselage curvature",
+        "make control-surface motion more legible at phone scale"
+      ],
+      "evidence": [],
+      "outOfSequence": true,
+      "visualEvidence": {
+        "referenceScreenshot": ".img2threejs/skybound-cadet/cadet-toy-glider-isolated-v1.png",
+        "renderScreenshot": ".img2threejs/skybound-cadet/renders/2026-08-27-aim-software-3d.jpg",
+        "comparisonImage": ".img2threejs/skybound-cadet/renders/2026-08-27-aim-comparison.png",
+        "cameraView": "live chase/launcher three-quarter",
+        "notes": "2D gate evidence is insufficient for final 3D acceptance; orbit capture remains mandatory.",
+        "aiVisionNotes": "The aircraft is recognizably modeled with shaded faces rather than pasted artwork. The comparison is dominated by runtime framing: the craft is small and rear-facing while the reference is a close three-quarter front view. This proves the flat-image defect is removed, but not reference-level model fidelity."
+      }
+    }
+  ],
   "lodPlan": [
     {
       "tier": "near",
@@ -4928,6 +5040,97 @@
           "source": "reference-pixel-extraction"
         }
       }
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.3029,
+        "aspectRatioDelta": 0.3928,
+        "scaleDelta": 0.18,
+        "bilateralSymmetryError": 0.4971,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 52.45,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 24.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 52.45
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 27.38
+            },
+            {
+              "componentId": null,
+              "deltaE": 52.45
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 52.45
+            },
+            {
+              "componentId": null,
+              "deltaE": 52.45
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.72
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.303 is below threshold 0.85",
+        "aspect-ratio delta 0.393 exceeds threshold 0.05",
+        "scale delta 0.180 exceeds threshold 0.08",
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [],
+      "renderHash": "7b3685b55b12e61f",
+      "passId": "blockout"
     }
   ]
 }

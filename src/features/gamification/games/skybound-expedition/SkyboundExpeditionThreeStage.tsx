@@ -9,6 +9,7 @@ import {
 } from '../../level-worlds/services/skyboundExpeditionFlight';
 import type { SkyboundAircraftId } from '../../level-worlds/services/skyboundPilotAcademy';
 import { createSkyboundAircraftLights, createSkyboundAircraftModel } from './skyboundAircraftModels';
+import { applySkyboundAircraftMotion, getSkyboundLaunchPose } from './skyboundAircraftMotion';
 import type { SkyboundAimView } from './skyboundExpeditionRenderer';
 import { startSkyboundSoftwareRenderer } from './skyboundSoftwareRenderer';
 
@@ -175,13 +176,16 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     arm.castShadow = true;
     launchRig.add(arm);
   }
-  const band = new THREE.Mesh(
-    new THREE.TorusGeometry(1.42, 0.07, 8, 28, Math.PI),
-    new THREE.MeshStandardMaterial({ color: 0x0a2344, roughness: 0.7 }),
-  );
-  band.position.set(0, 4.15, -2.6);
-  band.rotation.z = Math.PI;
-  launchRig.add(band);
+  for (const side of [-1, 1]) {
+    const band = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.055, 0.075, 1, 10),
+      new THREE.MeshStandardMaterial({ color: 0x153f69, emissive: 0x23b5d1, emissiveIntensity: 0.35, roughness: 0.58 }),
+    );
+    band.name = side < 0 ? 'skybound-launch-band-left' : 'skybound-launch-band-right';
+    band.castShadow = true;
+    launchRig.add(band);
+  }
+  launchRig.name = 'skybound-launch-rig';
   launchRig.visible = aircraftId === 'toy_glider';
   scene.add(launchRig);
 
@@ -356,7 +360,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
     scene.add(createSkyboundAircraftLights());
     const objectMeshes = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
     const plane = createSkyboundAircraftModel(props.aircraftId);
-    plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 0.72 : props.aircraftId === 'prop_trainer' ? 0.78 : 0.82);
+    plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 0.9 : props.aircraftId === 'prop_trainer' ? 0.94 : 0.98);
     scene.add(plane);
     const runtime = plane.userData.sculptRuntime;
     const flame = new THREE.Mesh(
@@ -374,6 +378,32 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
     stabilizerAura.rotation.x = Math.PI / 2;
     stabilizerAura.visible = false;
     plane.add(stabilizerAura);
+    const tensionAura = new THREE.Mesh(
+      new THREE.TorusGeometry(2.25, 0.055, 8, 52),
+      new THREE.MeshBasicMaterial({ color: 0x5cf4ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }),
+    );
+    tensionAura.name = 'launch-tension-aura';
+    tensionAura.position.z = -0.15;
+    plane.add(tensionAura);
+    const leftLaunchBand = scene.getObjectByName('skybound-launch-band-left') as THREE.Mesh | undefined;
+    const rightLaunchBand = scene.getObjectByName('skybound-launch-band-right') as THREE.Mesh | undefined;
+    const launchRig = scene.getObjectByName('skybound-launch-rig');
+    const bandAxis = new THREE.Vector3(0, 1, 0);
+    const bandStart = new THREE.Vector3();
+    const bandEnd = new THREE.Vector3();
+    const bandDirection = new THREE.Vector3();
+    const updateLaunchBand = (band:THREE.Mesh | undefined, side:-1|1, tension:number) => {
+      if (!band) return;
+      bandStart.set(side * 1.35, 4.15, -2.6);
+      bandEnd.set(plane.position.x + side * 0.16, plane.position.y - 0.34, plane.position.z + 1.82);
+      bandDirection.copy(bandEnd).sub(bandStart);
+      const length = Math.max(0.1, bandDirection.length());
+      band.position.copy(bandStart).add(bandEnd).multiplyScalar(0.5);
+      band.quaternion.setFromUnitVectors(bandAxis, bandDirection.normalize());
+      band.scale.set(1 + tension * 0.34, length, 1 + tension * 0.34);
+      const material = band.material as THREE.MeshStandardMaterial;
+      material.emissiveIntensity = 0.35 + tension * 1.8;
+    };
 
     const debris: DebrisBody[] = [];
     const detached = new Set<string>();
@@ -417,6 +447,8 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       const phase = phaseRef.current;
       const aim = aimRef.current;
       const ground = getSkyboundGroundHeight(props.levelId, flight?.x ?? 0);
+      const integrityCapacity = flight ? Math.max(1, flight.integrity + flight.hazardHits) : 1;
+      const launchPose = getSkyboundLaunchPose(aim.power, aim.pullX, aim.dragging);
 
       if (flight) {
         plane.position.set(flight.lateralX, flight.y, flight.x);
@@ -433,16 +465,40 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
           plane.rotation.x += crashElapsed * 0.48;
         }
       } else {
-        plane.position.set(0, 5.25 + Math.sin(time * 0.0018) * 0.08, -0.3);
-        plane.rotation.set(-(aim.angleDeg * Math.PI) / 180, 0, 0);
+        const tensionBuzz = Math.sin(time * 0.032) * launchPose.vibration;
+        plane.position.set(launchPose.lateral + tensionBuzz * 0.12, launchPose.height + tensionBuzz * 0.08, launchPose.forward);
+        plane.rotation.set(-(aim.angleDeg * Math.PI) / 180 + launchPose.pitchJolt, tensionBuzz * 0.045, tensionBuzz * 0.035);
+      }
+
+      const speed = flight ? Math.hypot(flight.vx, flight.vy) : 0;
+      const motionPose = applySkyboundAircraftMotion(runtime, {
+        phase,
+        timeSeconds: time / 1000,
+        dtSeconds: dt,
+        aimPower: aim.power,
+        aimDragging: aim.dragging,
+        pitchRad: flight?.pitchRad ?? (aim.angleDeg * Math.PI) / 180,
+        bankRad: flight?.bankRad ?? 0,
+        speed,
+        integrityRatio: flight ? flight.integrity / integrityCapacity : 1,
+        boosting: boostingRef.current,
+        stabilizing: stabilizingRef.current,
+      });
+      if (motionPose.mode === 'struggling') {
+        plane.rotation.y += motionPose.shudder;
+        plane.position.y += Math.abs(motionPose.shudder) * 0.28;
       }
 
       flame.visible = phase === 'flying' && boostingRef.current;
       flame.scale.y = 0.7 + Math.sin(time * 0.024) * 0.22;
-      const propeller = runtime.nodes.propeller;
-      if (propeller) propeller.rotation.z += dt * (phase === 'flying' ? 26 : 7);
       stabilizerAura.visible = phase === 'flying' && stabilizingRef.current;
       stabilizerAura.rotation.z += dt * 1.8;
+      tensionAura.visible = phase === 'aiming' && aim.power > 0.035;
+      tensionAura.scale.setScalar(0.72 + launchPose.tension * 0.36 + Math.sin(time * 0.018) * launchPose.vibration * 0.03);
+      (tensionAura.material as THREE.MeshBasicMaterial).opacity = 0.08 + launchPose.tension * 0.58;
+      if (launchRig) launchRig.visible = props.aircraftId === 'toy_glider' && phase === 'aiming';
+      updateLaunchBand(leftLaunchBand, -1, launchPose.tension);
+      updateLaunchBand(rightLaunchBand, 1, launchPose.tension);
 
       for (const body of debris) {
         body.velocity.y -= 12 * dt;
@@ -470,15 +526,18 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       }
 
       const target = plane.position;
-      const desiredCamera = new THREE.Vector3(target.x * 0.78, target.y + 4.4, target.z - (phase === 'aiming' ? 12.5 : 13.5));
-      if (phase === 'aiming') desiredCamera.x += 7.5;
+      const desiredCamera = phase === 'aiming'
+        ? new THREE.Vector3(6.2, 8.1, -11.2)
+        : new THREE.Vector3(target.x * 0.78 + 3.7, target.y + 3.65, target.z - 12.2);
       camera.position.lerp(desiredCamera, 1 - Math.exp(-dt * 5.2));
       if (shake > 0.01) {
         camera.position.x += (seeded(Math.floor(time), 3) - 0.5) * shake * 0.7;
         camera.position.y += (seeded(Math.floor(time), 8) - 0.5) * shake * 0.45;
         shake *= Math.pow(0.045, dt);
       }
-      const lookTarget = new THREE.Vector3(target.x * 0.88, target.y + 0.8, target.z + (phase === 'aiming' ? 4 : 14));
+      const lookTarget = phase === 'aiming'
+        ? new THREE.Vector3(0, 4.1, -0.35)
+        : new THREE.Vector3(target.x * 0.88, target.y + 0.55, target.z + 13);
       camera.lookAt(lookTarget);
       renderer.render(scene, camera);
       frame = requestAnimationFrame(animate);

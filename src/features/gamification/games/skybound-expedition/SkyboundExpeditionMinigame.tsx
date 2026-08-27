@@ -105,6 +105,9 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
       const next=stepSkyboundFlight(current,controlRef.current,upgradesRef.current,time-previous);previous=time;flightRef.current=next;
       if(time-lastUi>50||next.status!=='flying'){setFlight(next);lastUi=time;}
       if(next.status!=='flying'){
+        const terminalCinematicMs=next.status==='crashed'?1_150:next.status==='finished'?850:550;
+        await new Promise<void>((resolve)=>window.setTimeout(resolve,terminalCinematicMs));
+        if(phaseRef.current!=='flying')return;
         let nextEvaluation=evaluateSkyboundLesson(lessonId,next);let nextAcademy=settleSkyboundAcademyLesson(academyRef.current,nextEvaluation);let reward=scoreSkyboundFlight(next);
         let settlementFailed=false;let settlementSuffix='';
         if(canonicalConfig&&activeAttemptIdRef.current){const settlement=await canonicalConfig.requestSortieSettlement(activeAttemptIdRef.current,next);if(settlement.ok){activeAttemptIdRef.current=null;nextEvaluation=settlement.evaluation;nextAcademy=settlement.progress.progress;reward=settlement.salvageAwarded;setCanonicalTickets(settlement.ticketsRemaining);setUpgrades(settlement.progress.upgrades);setSalvage(settlement.progress.salvage);settlementSuffix=` · +${settlement.salvageAwarded} salvage${settlement.rewardBarProgressAdded>0?` · +${settlement.rewardBarProgressAdded} event progress`:''}${settlement.ticketsAwarded>0?` · +${settlement.ticketsAwarded} tickets`:''}`;}else settlementFailed=true;}
