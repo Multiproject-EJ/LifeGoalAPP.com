@@ -113,12 +113,16 @@ export function resolveAllLandmarkDoorsRouteToBoss(input: {
 }
 
 // Encounter tile placement relative to the board's tileCount.
-// Normal islands: 1 encounter (gated by dayIndex).
+// Normal islands: 1 encounter (gated by dayIndex). The normal position sits
+// just before the start/caretaker sector and deliberately clears every
+// possible three-tile landmark-door cluster on the production ring. The old
+// 0.15 position resolved to tile 5, so the Habit door always replaced the
+// encounter before the player could see or use it.
 // Seasonal / rare islands: 2 encounters, always active.
 // Positions are chosen as fractions of the ring so they spread evenly on any
 // tile count (profile-driven, per the canonical contract — no fixed indices).
 const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
-  normal: [0.15],
+  normal: [34 / 36],
   seasonal: [0.275, 0.775],
   rare: [0.275, 0.775],
 };

@@ -1,4 +1,4 @@
-import { generateTileMap, getIslandRarity } from '../islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity } from '../islandBoardTileMap';
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../islandRunEconomy';
 import { generateIslandStopPlan } from '../islandRunStops';
 import { resolveCollectibleForClaim } from '../islandRunRuntimeState';
@@ -21,13 +21,20 @@ export const islandRunFoundationTests: TestCase[] = [
     },
   },
   {
-    name: 'normal-island encounter tile unlocks after day index 2',
+    name: 'normal-island encounter unlocks after day index 2 and survives landmark-door overlays',
     run: () => {
       const before = generateTileMap(3, 'normal', 'forest', 1);
       const after = generateTileMap(3, 'normal', 'forest', 2);
-      // Normal-island encounter sits at floor(0.15 × 36) = index 5 on the ring.
-      assert(before[5]?.tileType !== 'encounter', 'Expected day 1 encounter to remain hidden on normal islands');
-      assertEqual(after[5]?.tileType, 'encounter', 'Expected day 2 encounter tile to unlock');
+      // Normal-island encounter sits at floor((34 / 36) × 36) = index 34.
+      // This is clear of all four possible three-tile landmark-door clusters.
+      assert(before[34]?.tileType !== 'encounter', 'Expected day 1 encounter to remain hidden on normal islands');
+      assertEqual(after[34]?.tileType, 'encounter', 'Expected day 2 encounter tile to unlock');
+
+      for (const expandedActiveStopId of ['hatchery', 'habit', 'mystery', 'wisdom'] as const) {
+        const finalMap = applyLandmarkDoorTiles(after, { expandedActiveStopId });
+        assertEqual(finalMap[34]?.tileType, 'encounter', `Expected encounter to survive the ${expandedActiveStopId} door overlay`);
+        assertEqual(finalMap.filter((entry) => entry.tileType === 'encounter').length, 1, `Expected one playable encounter with ${expandedActiveStopId} active`);
+      }
     },
   },
   {
