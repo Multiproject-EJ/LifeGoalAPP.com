@@ -6,6 +6,7 @@ import {
 } from '../../level-worlds/services/skyboundExpeditionFlight';
 import type { SkyboundAircraftId } from '../../level-worlds/services/skyboundPilotAcademy';
 import type { SkyboundAimView } from './skyboundExpeditionRenderer';
+import { getSkyboundWorldPresentation, type SkyboundWorldLandmark, type SkyboundWorldPresentation } from './skyboundWorldPresentation';
 
 type SoftwarePhase = 'aiming' | 'flying' | 'result';
 
@@ -194,14 +195,15 @@ function drawFloatingIsland(
   p:ProjectedPoint,
   island:FloatingIsland,
   accent:string,
+  world:SkyboundWorldPresentation,
 ) {
   const radius=clamp(island.radius*p.scale*.48,3,180);
   if(radius<3||p.y<-220||p.y>900)return;
   context.save();
   context.translate(p.x,p.y);
   const cliff=context.createLinearGradient(0,0,0,radius*2.3);
-  cliff.addColorStop(0,'#7b6a55');
-  cliff.addColorStop(.42,'#584b43');
+  cliff.addColorStop(0,world.cliffColor);
+  cliff.addColorStop(.42,'#3d4050');
   cliff.addColorStop(1,'rgba(39,38,49,.15)');
   context.fillStyle=cliff;
   context.beginPath();
@@ -219,9 +221,9 @@ function drawFloatingIsland(
     context.stroke();
   }
   const grass=context.createLinearGradient(0,-radius*.22,0,radius*.2);
-  grass.addColorStop(0,'#b5ef72');
-  grass.addColorStop(.45,'#60ae4b');
-  grass.addColorStop(1,'#367545');
+  grass.addColorStop(0,world.surfaceColor);
+  grass.addColorStop(.45,world.surfaceColor);
+  grass.addColorStop(1,world.cliffColor);
   context.fillStyle=grass;
   context.beginPath();
   context.ellipse(0,0,radius,radius*.28,0,0,Math.PI*2);
@@ -255,6 +257,45 @@ function drawCloud(
   context.restore();
 }
 
+function drawWorldLandmark(
+  context:CanvasRenderingContext2D,
+  p:ProjectedPoint,
+  landmark:SkyboundWorldLandmark,
+  accent:string,
+  time:number,
+) {
+  if(p.depth<4||p.depth>650||p.y<-240||p.y>950)return;
+  const unit=clamp(p.scale*landmark.scale,.18,4.5);
+  context.save();context.translate(p.x,p.y);context.lineCap='round';context.lineJoin='round';
+  if(landmark.kind==='academy_tower') {
+    drawTower(context,{...p,x:0,y:0},20*landmark.scale,accent);
+  } else if(landmark.kind==='wind_turbine') {
+    context.strokeStyle='#eef9f6';context.lineWidth=Math.max(2,unit*1.5);context.beginPath();context.moveTo(0,0);context.lineTo(0,-22*unit);context.stroke();
+    context.translate(0,-22*unit);context.rotate(time*.0012);for(let blade=0;blade<3;blade+=1){context.rotate(Math.PI*2/3);context.fillStyle='#f7fffd';context.fillRect(-unit*.7,-unit*.8,unit*1.4,-8*unit);}context.fillStyle=accent;context.beginPath();context.arc(0,0,unit*1.2,0,Math.PI*2);context.fill();
+  } else if(landmark.kind==='training_balloon') {
+    context.fillStyle='#fff0b4';context.strokeStyle='#e85b58';context.lineWidth=Math.max(2,unit*1.3);context.beginPath();context.ellipse(0,Math.sin(time*.0011)*unit*2,6*unit,8*unit,0,0,Math.PI*2);context.fill();context.stroke();context.strokeStyle='#39d8e8';context.beginPath();context.moveTo(-5*unit,0);context.lineTo(5*unit,0);context.stroke();context.fillStyle='#5a3a2b';context.fillRect(-1.5*unit,9*unit,3*unit,2.5*unit);
+  } else if(landmark.kind==='lighthouse') {
+    context.fillStyle='#f7efe2';context.strokeStyle='#d84b45';context.lineWidth=Math.max(2,unit*1.6);context.beginPath();context.moveTo(-3*unit,0);context.lineTo(-2*unit,-20*unit);context.lineTo(2*unit,-20*unit);context.lineTo(3*unit,0);context.closePath();context.fill();context.stroke();context.fillStyle=accent;context.beginPath();context.arc(0,-21*unit,1.6*unit,0,Math.PI*2);context.fill();context.rotate(time*.00075);const beam=context.createLinearGradient(0,0,22*unit,0);beam.addColorStop(0,'rgba(255,244,171,.6)');beam.addColorStop(1,'rgba(255,244,171,0)');context.fillStyle=beam;context.beginPath();context.moveTo(0,-21*unit);context.lineTo(24*unit,-25*unit);context.lineTo(24*unit,-17*unit);context.closePath();context.fill();
+  } else if(landmark.kind==='sea_stack'||landmark.kind==='mesa') {
+    const mesa=landmark.kind==='mesa';context.fillStyle=mesa?'#9d5137':'#526973';for(let stack=0;stack<3;stack+=1){const h=(mesa?18:13)*unit+stack*3*unit;const w=(mesa?7:5)*unit-stack*.6*unit;context.fillRect((stack-1)*7*unit-w/2,-h,w,h);context.fillStyle=stack%2?accent:(mesa?'#9d5137':'#526973');}
+  } else if(landmark.kind==='coastal_arch'||landmark.kind==='rock_arch') {
+    context.strokeStyle=landmark.kind==='rock_arch'?'#9c5137':'#596b72';context.lineWidth=Math.max(5,unit*4);context.beginPath();context.arc(0,0,9*unit,Math.PI,Math.PI*2);context.stroke();context.beginPath();context.moveTo(-9*unit,0);context.lineTo(-9*unit,10*unit);context.moveTo(9*unit,0);context.lineTo(9*unit,10*unit);context.stroke();
+  } else if(landmark.kind==='thermal_column') {
+    context.strokeStyle='rgba(255,224,126,.62)';context.lineWidth=Math.max(1,unit);for(let ring=0;ring<5;ring+=1){const phase=(time*.001+ring*.22)%1;context.beginPath();context.ellipse(0,(8-ring*5-phase*5)*unit,(4+ring*.8)*unit,unit*1.2,phase,0,Math.PI*2);context.stroke();}
+  } else if(landmark.kind==='thunderhead') {
+    context.globalAlpha=.82;context.fillStyle='#46536b';for(let puff=0;puff<7;puff+=1){context.beginPath();context.ellipse((puff-3)*3.5*unit,-seeded(puff,4)*4*unit,(4+seeded(puff,8)*3)*unit,3.2*unit,0,0,Math.PI*2);context.fill();}
+  } else if(landmark.kind==='lightning_beacon'||landmark.kind==='storm_spire') {
+    context.fillStyle='#293047';const count=landmark.kind==='storm_spire'?3:1;for(let spike=0;spike<count;spike+=1){const x=(spike-(count-1)/2)*6*unit;context.beginPath();context.moveTo(x,-27*unit-spike*4*unit);context.lineTo(x-3*unit,0);context.lineTo(x+3*unit,0);context.fill();}if(landmark.kind==='lightning_beacon'&&Math.sin(time*.013)>.75){context.strokeStyle='#d9f8ff';context.lineWidth=Math.max(1.5,unit*1.4);context.beginPath();context.moveTo(0,-31*unit);context.lineTo(-3*unit,-23*unit);context.lineTo(2*unit,-16*unit);context.lineTo(-1*unit,-9*unit);context.stroke();}
+  } else if(landmark.kind==='aurora') {
+    context.globalCompositeOperation='screen';for(let ribbon=0;ribbon<3;ribbon+=1){context.strokeStyle=ribbon===1?'rgba(103,246,210,.3)':'rgba(113,154,255,.24)';context.lineWidth=(5+ribbon*2)*unit;context.beginPath();for(let x=-18;x<=18;x+=3){const y=Math.sin(x*.25+time*.001+ribbon)*3+ribbon*5;if(x===-18)context.moveTo(x*unit,y*unit);else context.lineTo(x*unit,y*unit);}context.stroke();}
+  } else if(landmark.kind==='orbital_marker') {
+    context.strokeStyle=accent;context.lineWidth=Math.max(2,unit*1.2);context.beginPath();context.ellipse(0,0,8*unit,8*unit,.45,0,Math.PI*2);context.stroke();context.fillStyle='#246ca1';context.fillRect(-14*unit,-1.5*unit,7*unit,3*unit);context.fillRect(7*unit,-1.5*unit,7*unit,3*unit);
+  } else if(landmark.kind==='star_cluster') {
+    context.fillStyle='#fff1b6';for(let star=0;star<42;star+=1){const x=(seeded(star,2)-.5)*48*unit;const y=(seeded(star,5)-.5)*26*unit;const s=.5+seeded(star,8)*1.4;context.fillRect(x,y,s,s);}
+  }
+  context.restore();
+}
+
 interface AircraftPoint3 { x:number; y:number; z:number; }
 interface AircraftFace3 { points:AircraftPoint3[]; color:string; shade:number; }
 
@@ -273,6 +314,7 @@ function drawSoftwareAircraft3d(
   struggling=false,
   pitch=0,
   bank=0,
+  vaporStrength=0,
 ) {
   const colors:Record<SkyboundAircraftId,[string,string,string]>={
     toy_glider:['#f7efeb','#0b2949','#f2bd45'],
@@ -330,6 +372,7 @@ function drawSoftwareAircraft3d(
   const yaw=-.31;const elevation=.42+clamp(pitch,-.7,.8)*.08;const cosineYaw=Math.cos(yaw);const sineYaw=Math.sin(yaw);const cosineElevation=Math.cos(elevation);const sineElevation=Math.sin(elevation);
   const projectPoint=(point:AircraftPoint3)=>{const x=point.x*cosineYaw-point.z*sineYaw;const z=point.x*sineYaw+point.z*cosineYaw;return{x:x*28,y:-(point.y*cosineElevation+z*sineElevation)*28,depth:z*cosineElevation-point.y*sineElevation};};
   const projected=faces.map((face)=>({face,points:face.points.map(projectPoint),depth:face.points.reduce((sum,point)=>sum+projectPoint(point).depth,0)/face.points.length})).sort((a,b)=>b.depth-a.depth);
+  if(vaporStrength>.05){context.strokeStyle=`rgba(218,250,255,${clamp(vaporStrength*.5,0,.48)})`;context.lineWidth=2+vaporStrength*2;for(const side of [-1,1]){const tip=projectPoint({x:side*2.7,y:0,z:-.35});const tail=projectPoint({x:side*2.5,y:-.08,z:-3.7-vaporStrength*2.4});context.beginPath();context.moveTo(tip.x,tip.y);context.lineTo(tail.x,tail.y);context.stroke();}}
   if(boosting) {
     const tail=projectPoint({x:0,y:0,z:-2});const flame=context.createLinearGradient(tail.x,tail.y,tail.x,tail.y+86);
     flame.addColorStop(0,'#fff');flame.addColorStop(.3,'#64f5ff');flame.addColorStop(1,'rgba(47,170,255,0)');
@@ -338,6 +381,7 @@ function drawSoftwareAircraft3d(
   }
   context.lineJoin='round';context.lineWidth=.9;
   for(const item of projected){const [first,...rest]=item.points;context.beginPath();context.moveTo(first.x,first.y);for(const point of rest)context.lineTo(point.x,point.y);context.closePath();context.fillStyle=shadeHex(item.face.color,item.face.shade);context.fill();context.strokeStyle='rgba(4,24,44,.28)';context.stroke();}
+  for(const side of [-1,1]){const light=projectPoint({x:side*2.62,y:.08,z:-.28});context.fillStyle=side<0?'#ff625a':'#70ffac';context.shadowColor=context.fillStyle;context.shadowBlur=8;context.beginPath();context.arc(light.x,light.y,2.2,0,Math.PI*2);context.fill();context.shadowBlur=0;}
   if(aircraftId==='prop_trainer'){
     const hub=projectPoint({x:0,y:0,z:2.2});const angle=time*.028;context.save();context.translate(hub.x,hub.y);context.rotate(angle);context.strokeStyle='#142b45';context.lineWidth=6;context.lineCap='round';context.beginPath();context.moveTo(-35,0);context.lineTo(35,0);context.moveTo(0,-35);context.lineTo(0,35);context.stroke();context.fillStyle=accent;context.beginPath();context.arc(0,0,7,0,Math.PI*2);context.fill();context.restore();
   }
@@ -348,6 +392,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
   const context=canvas.getContext('2d');
   if(!context)return()=>undefined;
   const level=getSkyboundLevel(input.levelId);
+  const world=getSkyboundWorldPresentation(input.levelId);
   const course=getSkyboundCourseObjects(input.levelId,input.goalDistance);
   const islands=createFloatingIslands(input.goalDistance);
   let width=1;
@@ -356,6 +401,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
   let lastImpactSerial=0;
   let previousSalvage=0;
   let previousRings=0;
+  let previousNearMisses=0;
   let feedbackText='';
   let feedbackColor='#ffffff';
   let feedbackAge=0;
@@ -390,9 +436,11 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       feedbackText='WIND GATE  +2 STREAK';feedbackColor='#8ff8ff';feedbackAge=1;
     } else if(flight&&flight.salvageCollected>previousSalvage) {
       feedbackText='ACADEMY CREST  +1';feedbackColor='#ffe47d';feedbackAge=.82;
+    } else if(flight&&flight.nearMisses>previousNearMisses) {
+      feedbackText='NEAR MISS  +1 STREAK';feedbackColor='#ffda77';feedbackAge=1;
     }
-    if(flight){previousSalvage=flight.salvageCollected;previousRings=flight.ringsCleared;}
-    else {previousSalvage=0;previousRings=0;}
+    if(flight){previousSalvage=flight.salvageCollected;previousRings=flight.ringsCleared;previousNearMisses=flight.nearMisses;}
+    else {previousSalvage=0;previousRings=0;previousNearMisses=0;}
     feedbackAge=Math.max(0,feedbackAge-dt);
     const pitch=flight?.pitchRad??aim.angleDeg*Math.PI/180;
     const horizon=height*(.43+clamp(pitch,-.7,.8)*.12);
@@ -406,7 +454,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     const sky=context.createLinearGradient(0,0,0,height);
     if(input.levelId==='storm'){sky.addColorStop(0,'#101b3c');sky.addColorStop(.55,'#51668e');sky.addColorStop(1,'#b3c5d6');}
     else if(input.levelId==='stratosphere'){sky.addColorStop(0,'#04122d');sky.addColorStop(.56,'#3c7dc5');sky.addColorStop(1,'#e0f5ff');}
-    else {sky.addColorStop(0,level.skyTop);sky.addColorStop(.58,'#63bced');sky.addColorStop(1,'#e6f8ff');}
+    else {sky.addColorStop(0,level.skyTop);sky.addColorStop(.58,world.hazeColor);sky.addColorStop(1,world.lowerDeckColor);}
     context.fillStyle=sky;context.fillRect(0,0,width,height);
 
     const sunX=width*.78-distance*.035;
@@ -415,18 +463,23 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     sun.addColorStop(0,'rgba(255,249,194,.9)');sun.addColorStop(.2,'rgba(255,226,129,.35)');sun.addColorStop(1,'rgba(255,226,129,0)');
     context.fillStyle=sun;context.fillRect(0,0,width,height*.55);
 
-    for(let index=0;index<18;index+=1) {
+    if(input.levelId==='stratosphere'){context.fillStyle='rgba(255,241,182,.82)';for(let star=0;star<80;star+=1){context.fillRect(seeded(star,2)*width,seeded(star,5)*height*.58,seeded(star,8)*1.8+.4,seeded(star,8)*1.8+.4);}}
+
+    for(let index=0;index<world.cloudCount;index+=1) {
       const cloudZ=20+index*47;
       const p=project((seeded(index,3)-.5)*90,4+seeded(index,8)*78,cloudZ);
-      if(p.depth>4&&p.depth<560)drawCloud(context,p,10+seeded(index,5)*14,.32+seeded(index,1)*.34);
+      if(p.depth>4&&p.depth<560)drawCloud(context,p,10+seeded(index,5)*14,world.cloudOpacity*(.58+seeded(index,1)*.36));
     }
 
     const farIslands=islands.filter((island)=>island.z>distance-12&&island.z<distance+650).sort((a,b)=>b.z-a.z);
-    for(const island of farIslands)drawFloatingIsland(context,project(island.x,island.y,island.z),island,level.accent);
+    for(const island of farIslands)drawFloatingIsland(context,project(island.x,island.y,island.z),island,level.accent,world);
+
+    for(const landmark of world.landmarks){const z=18+landmark.distanceRatio*Math.max(120,input.goalDistance-36);drawWorldLandmark(context,project(landmark.lateralX,landmark.altitude,z),landmark,level.accent,time);}
 
     if(input.levelId==='storm') {
       context.strokeStyle='rgba(179,214,255,.34)';context.lineWidth=1.5;
       for(let index=0;index<3;index+=1){const x=(seeded(Math.floor(time/700),index)*width);context.beginPath();context.moveTo(x,0);context.lineTo(x-12,height*.18);context.lineTo(x+5,height*.3);context.stroke();}
+      context.strokeStyle='rgba(190,218,242,.27)';context.lineWidth=1;for(let drop=0;drop<70;drop+=1){const x=(seeded(drop,3)*width+time*.24)%(width+30)-15;const y=(seeded(drop,7)*height+time*(.38+seeded(drop,9)*.2))%(height+40)-20;context.beginPath();context.moveTo(x,y);context.lineTo(x-6,y+18);context.stroke();}
     }
 
     const resolved=new Set(flight?.resolvedObjectIds??[]);
@@ -486,7 +539,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     }
     const integrityCapacity=flight?Math.max(1,flight.integrity+flight.hazardHits):1;
     const struggling=Boolean(flight)&&!input.isStabilizing()&&(speed<20||Math.abs(pitch)>.62||Math.abs(flight?.bankRad??0)>.5||(flight?.integrity??1)/integrityCapacity<.62);
-    drawSoftwareAircraft3d(context,input.aircraftId,input.isBoosting(),time,flight?.detachedPartIds??[],struggling,pitch,flight?.bankRad??0);
+    drawSoftwareAircraft3d(context,input.aircraftId,input.isBoosting(),time,flight?.detachedPartIds??[],struggling,pitch,flight?.bankRad??0,clamp((speed-26)/34+Math.abs(flight?.bankRad??0)*.38+(struggling ? .2 : 0),0,.82));
     context.restore();
 
     for(let index=0;index<(flight?.detachedPartIds.length??0);index+=1) {

@@ -67,9 +67,11 @@ export interface SkyboundFlightState {
   stabilizerUsed: number;
   goalDistance: number;
   resolvedObjectIds: readonly string[];
+  resolvedNearMissObjectIds: readonly string[];
   salvageCollected: number;
   ringsCleared: number;
   hazardHits: number;
+  nearMisses: number;
   integrity: number;
   detachedPartIds: readonly string[];
   impactSerial: number;
@@ -317,9 +319,11 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     stabilizerUsed: 0,
     goalDistance: clamp(input.goalDistance ?? level.goalDistance, 80, level.goalDistance),
     resolvedObjectIds: [],
+    resolvedNearMissObjectIds: [],
     salvageCollected: 0,
     ringsCleared: 0,
     hazardHits: 0,
+    nearMisses: 0,
     integrity: tuning.integrity,
     detachedPartIds: [],
     impactSerial: 0,
@@ -340,7 +344,15 @@ function getDeterministicWind(level: SkyboundLevelDefinition, x: number, elapsed
   ) * level.windStrength;
 }
 
-function segmentIntersectsCourseObject(
+function getCourseObjectInteractionRadius(object: SkyboundCourseObject) {
+  return object.kind === 'salvage'
+    ? Math.max(3.6, object.radius * 0.54)
+    : object.kind === 'wind_ring'
+      ? Math.max(7.5, object.radius * 0.55)
+      : Math.max(8, object.radius * 0.72);
+}
+
+function getSegmentDistanceToCourseObject(
   startX: number,
   startY: number,
   endX: number,
@@ -358,12 +370,7 @@ function segmentIntersectsCourseObject(
   const nearestX = startX + (segmentX * progress);
   const nearestY = startY + (segmentY * progress);
   const nearestLateralX = startLateralX + ((endLateralX - startLateralX) * progress);
-  const interactionRadius = object.kind === 'salvage'
-    ? Math.max(3.6, object.radius * 0.54)
-    : object.kind === 'wind_ring'
-      ? Math.max(7.5, object.radius * 0.55)
-      : Math.max(8, object.radius * 0.72);
-  return Math.hypot(object.x - nearestX, object.y - nearestY, (object.lateralX ?? 0) - nearestLateralX) <= interactionRadius + 1.2;
+  return Math.hypot(object.x - nearestX, object.y - nearestY, (object.lateralX ?? 0) - nearestLateralX);
 }
 
 export function stepSkyboundFlight(
@@ -448,9 +455,11 @@ export function stepSkyboundFlight(
   let status: SkyboundFlightStatus = 'flying';
   let settledY = y;
   const resolvedObjectIds = [...state.resolvedObjectIds];
+  const resolvedNearMissObjectIds = [...state.resolvedNearMissObjectIds];
   let salvageCollected = state.salvageCollected;
   let ringsCleared = state.ringsCleared;
   let hazardHits = state.hazardHits;
+  let nearMisses = state.nearMisses;
   let integrity = state.integrity;
   let impactSerial = state.impactSerial;
   let detachedPartIds = [...state.detachedPartIds];
@@ -461,8 +470,23 @@ export function stepSkyboundFlight(
 
   for (const object of getSkyboundCourseObjects(level.id, state.goalDistance)) {
     if (resolvedObjectIds.includes(object.id)) continue;
-    if (!segmentIntersectsCourseObject(state.x, state.y, x, y, state.lateralX, lateralX, object)) continue;
+    const objectDistance = getSegmentDistanceToCourseObject(state.x, state.y, x, y, state.lateralX, lateralX, object);
+    const collisionDistance = getCourseObjectInteractionRadius(object) + 1.2;
+    const intersects = objectDistance <= collisionDistance;
+    const crossedHazard = object.kind === 'hazard' && state.x <= object.x && x >= object.x;
+    if (!intersects) {
+      if (crossedHazard && !resolvedNearMissObjectIds.includes(object.id)) {
+        resolvedNearMissObjectIds.push(object.id);
+        if (objectDistance <= collisionDistance + 6.5) {
+          nearMisses += 1;
+          currentStreak += 1;
+          bestStreak = Math.max(bestStreak, currentStreak);
+        }
+      }
+      continue;
+    }
     resolvedObjectIds.push(object.id);
+    if (object.kind === 'hazard' && !resolvedNearMissObjectIds.includes(object.id)) resolvedNearMissObjectIds.push(object.id);
     if (object.kind === 'salvage') {
       salvageCollected += 1;
       currentStreak += 1;
@@ -561,9 +585,11 @@ export function stepSkyboundFlight(
     boostUsed: state.boostUsed + fuelDrain,
     stabilizerUsed: state.stabilizerUsed + stabilizerDrain,
     resolvedObjectIds,
+    resolvedNearMissObjectIds,
     salvageCollected,
     ringsCleared,
     hazardHits,
+    nearMisses,
     integrity,
     detachedPartIds,
     impactSerial,
@@ -579,7 +605,7 @@ export function stepSkyboundFlight(
 export function scoreSkyboundFlight(state: SkyboundFlightState): number {
   const completionBonus = state.status === 'finished' ? 170 + (state.goalDistance * 0.08) : 0;
   const landingBonus = state.status === 'landed' ? 55 : 0;
-  const courseBonus = (state.salvageCollected * 18) + (state.ringsCleared * 45) + (state.bestStreak * 4);
+  const courseBonus = (state.salvageCollected * 18) + (state.ringsCleared * 45) + (state.nearMisses * 25) + (state.bestStreak * 4);
   const smoothFlightBonus = Math.min(120, Math.round(state.smoothFlightMs / 500));
   const hazardPenalty = state.hazardHits * 20;
   return Math.max(45, Math.round((Math.min(state.x, state.goalDistance) * 0.32) + (state.maxAltitude * 1.15) + completionBonus + landingBonus + courseBonus + smoothFlightBonus - hazardPenalty));

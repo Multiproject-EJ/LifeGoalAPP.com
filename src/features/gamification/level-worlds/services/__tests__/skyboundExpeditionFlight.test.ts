@@ -12,6 +12,7 @@ import {
   type SkyboundUpgrades,
 } from '../skyboundExpeditionFlight';
 import { getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../skyboundFlightFeel';
+import { getSkyboundWorldPresentation } from '../../../games/skybound-expedition/skyboundWorldPresentation';
 
 type TestCase = { name: string; run: () => void };
 
@@ -133,6 +134,18 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
     },
   },
   {
+    name: 'gives every level a deterministic world identity with multiple visual anchors',
+    run: () => {
+      const signatures = SKYBOUND_LEVELS.map((level) => {
+        const presentation = getSkyboundWorldPresentation(level.id);
+        assert(presentation.landmarks.length >= 3, `${level.id} should expose at least three identity anchors`);
+        assert(new Set(presentation.landmarks.map((landmark) => landmark.kind)).size >= 3, `${level.id} should combine distinct landmark families`);
+        return presentation.signature;
+      });
+      assert(new Set(signatures).size === SKYBOUND_LEVELS.length, 'each level should have a unique world signature');
+    },
+  },
+  {
     name: 'collects salvage and clears rings once without mutating prior state',
     run: () => {
       const objects = getSkyboundCourseObjects('meadow');
@@ -182,6 +195,37 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(next.hazardHits === 1, 'hazard should register once');
       assert(next.currentStreak === 0, 'hazard should break the current streak');
       assert(next.vx < state.vx, 'hazard should produce a readable speed loss');
+    },
+  },
+  {
+    name: 'awards a close hazard pass once without also recording a collision',
+    run: () => {
+      const hazard = getSkyboundCourseObjects('meadow').find((object) => object.kind === 'hazard');
+      assert(hazard, 'meadow should include a hazard');
+      const state = {
+        ...createSkyboundFlight({
+          power: 1,
+          angleDeg: 35,
+          upgrades: SKYBOUND_STARTER_UPGRADES,
+          levelId: 'meadow',
+        }),
+        x: hazard.x - 3,
+        y: hazard.y + 15,
+        lateralX: hazard.lateralX ?? 0,
+        vx: 70,
+        vy: 0,
+        currentStreak: 2,
+        bestStreak: 2,
+      };
+      const closePass = stepSkyboundFlight(state, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(closePass.nearMisses === 1, 'passing through the hazard proximity band should award one near-miss');
+      assert(closePass.hazardHits === 0, 'a near-miss must not also count as a collision');
+      assert(closePass.currentStreak === 3, 'a near-miss should extend the skill streak');
+      const repeated = stepSkyboundFlight(closePass, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(repeated.nearMisses === 1, 'the same hazard must not award more than one near-miss');
+      const collision = stepSkyboundFlight({ ...state, y: hazard.y }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(collision.hazardHits === 1 && collision.nearMisses === 0, 'a direct hit should remain a collision, not a near-miss');
+      assert(scoreSkyboundFlight({ ...closePass, status: 'landed' }) > scoreSkyboundFlight({ ...closePass, status: 'landed', nearMisses: 0 }), 'near-misses should add bounded settlement value');
     },
   },
   {

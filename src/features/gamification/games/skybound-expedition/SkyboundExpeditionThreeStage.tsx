@@ -12,6 +12,7 @@ import { createSkyboundAircraftLights, createSkyboundAircraftModel } from './sky
 import { applySkyboundAircraftMotion, getSkyboundLaunchPose } from './skyboundAircraftMotion';
 import type { SkyboundAimView } from './skyboundExpeditionRenderer';
 import { startSkyboundSoftwareRenderer } from './skyboundSoftwareRenderer';
+import { getSkyboundWorldPresentation, type SkyboundWorldLandmark } from './skyboundWorldPresentation';
 
 type StagePhase = 'aiming' | 'flying' | 'result';
 
@@ -68,11 +69,12 @@ function makeCloud() {
 
 function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: number, aircraftId: SkyboundAircraftId) {
   const level = getSkyboundLevel(levelId);
+  const world = getSkyboundWorldPresentation(levelId);
   scene.background = new THREE.Color(level.skyBottom);
-  scene.fog = new THREE.FogExp2(level.skyTop, levelId === 'storm' ? 0.008 : levelId === 'stratosphere' ? 0.0035 : 0.0055);
+  scene.fog = new THREE.FogExp2(world.hazeColor, levelId === 'storm' ? 0.008 : levelId === 'stratosphere' ? 0.0035 : 0.0055);
 
-  const cliffColor = levelId === 'canyon' ? 0x7e4936 : levelId === 'storm' ? 0x283047 : levelId === 'stratosphere' ? 0x52677e : 0x675845;
-  const grassColor = levelId === 'storm' ? 0x50665c : levelId === 'stratosphere' ? 0x7ca4a3 : new THREE.Color(level.ground).getHex();
+  const cliffColor = new THREE.Color(world.cliffColor).getHex();
+  const grassColor = new THREE.Color(world.surfaceColor).getHex();
   const cliffMaterial = new THREE.MeshStandardMaterial({ color: cliffColor, roughness: 0.96, flatShading: true });
   const grassMaterial = new THREE.MeshStandardMaterial({ color: grassColor, roughness: 0.82 });
   const academyMaterial = new THREE.MeshStandardMaterial({ color: 0xf4efe1, roughness: 0.48, metalness: 0.04 });
@@ -103,14 +105,18 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
       tower.add(windowBand);
     }
     tower.position.set(x, y, z);
+    tower.name = 'skybound-academy-tower';
     scene.add(tower);
   };
 
   const addFloatingIsland = (x: number, topY: number, z: number, radius: number, academy = false) => {
     const island = new THREE.Group();
-    const cliff = new THREE.Mesh(new THREE.ConeGeometry(radius, radius * 1.7, 9), cliffMaterial);
+    const cliffGeometry = levelId === 'canyon'
+      ? new THREE.CylinderGeometry(radius * 0.58, radius * 0.88, radius * 1.55, 8)
+      : new THREE.ConeGeometry(radius, radius * 1.7, levelId === 'storm' ? 7 : 9);
+    const cliff = new THREE.Mesh(cliffGeometry, cliffMaterial);
     cliff.position.y = -radius * 0.84;
-    cliff.rotation.z = Math.PI;
+    if (levelId !== 'canyon') cliff.rotation.z = Math.PI;
     cliff.castShadow = true;
     cliff.receiveShadow = true;
     island.add(cliff);
@@ -133,7 +139,7 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
 
   const cloudSea = new THREE.Mesh(
     new THREE.PlaneGeometry(240, goalDistance + 520),
-    new THREE.MeshBasicMaterial({ color: 0xe6f7ff, transparent: true, opacity: levelId === 'storm' ? 0.34 : 0.62, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: world.lowerDeckColor, transparent: true, opacity: world.lowerDeckOpacity, depthWrite: false }),
   );
   cloudSea.rotation.x = -Math.PI / 2;
   cloudSea.position.set(0, -8.5, goalDistance / 2);
@@ -197,6 +203,67 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     }
   }
 
+  const worldMotion: THREE.Object3D[] = [];
+  const landmarkStone = new THREE.MeshStandardMaterial({ color:world.cliffColor,roughness:.94,flatShading:true });
+  const landmarkLight = new THREE.MeshStandardMaterial({ color:level.accent,emissive:level.accent,emissiveIntensity:1.1,roughness:.32,metalness:.28 });
+  const addLandmark = (landmark:SkyboundWorldLandmark) => {
+    const group = new THREE.Group();
+    const z = 18 + landmark.distanceRatio * Math.max(120, goalDistance - 36);
+    const addPillar = (x:number,height:number,radius:number,material:THREE.Material=landmarkStone) => {
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(radius*.72,radius,height,8),material);
+      pillar.position.set(x,height/2,0);pillar.castShadow=true;group.add(pillar);return pillar;
+    };
+    if (landmark.kind === 'academy_tower') {
+      addAcademyTower(landmark.lateralX,landmark.altitude,z,landmark.scale*.72);
+      return;
+    }
+    if (landmark.kind === 'wind_turbine') {
+      addPillar(0,19,.48,new THREE.MeshStandardMaterial({color:0xe8f3f0,roughness:.48}));
+      const rotor = new THREE.Group();rotor.position.y=18.8;
+      const hub = new THREE.Mesh(new THREE.SphereGeometry(.72,12,8),landmarkLight);rotor.add(hub);
+      for(let blade=0;blade<3;blade+=1){const arm=new THREE.Mesh(new THREE.BoxGeometry(.45,6.7,.16),new THREE.MeshStandardMaterial({color:0xf4faf7,roughness:.4}));arm.position.y=3.15;arm.rotation.z=(blade/3)*Math.PI*2;rotor.add(arm);}
+      rotor.userData.skyboundWorldMotion='turbine';group.add(rotor);worldMotion.push(rotor);
+    } else if (landmark.kind === 'training_balloon') {
+      const balloon=new THREE.Mesh(new THREE.SphereGeometry(4,18,12),new THREE.MeshStandardMaterial({color:0xfff0b4,emissive:0x4d2c08,emissiveIntensity:.16,roughness:.58}));balloon.scale.y=1.18;group.add(balloon);
+      for(let stripe=0;stripe<3;stripe+=1){const band=new THREE.Mesh(new THREE.TorusGeometry(3.65-stripe*.35,.22,8,30),new THREE.MeshStandardMaterial({color:stripe%2?0x39d8e8:0xe85b58,roughness:.42}));band.rotation.x=Math.PI/2;band.position.y=(stripe-1)*1.35;group.add(band);}
+      const basket=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.2,1.2),landmarkStone);basket.position.y=-5;group.add(basket);group.userData.skyboundWorldMotion='float';worldMotion.push(group);
+    } else if (landmark.kind === 'lighthouse') {
+      const body=addPillar(0,18,2.2,new THREE.MeshStandardMaterial({color:0xf8efe2,roughness:.62}));
+      for(let stripe=0;stripe<3;stripe+=1){const band=new THREE.Mesh(new THREE.CylinderGeometry(2.1-stripe*.17,2.22-stripe*.17,2.3,16),new THREE.MeshStandardMaterial({color:0xd84b45,roughness:.55}));band.position.y=4.2+stripe*4.5;group.add(band);}
+      body.scale.x=.92;const beacon=new THREE.Group();beacon.position.y=19;
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(.7,12,8),landmarkLight);beacon.add(lamp);
+      const beam=new THREE.Mesh(new THREE.ConeGeometry(4.3,24,18,1,true),new THREE.MeshBasicMaterial({color:0xfff0a5,transparent:true,opacity:.13,depthWrite:false,blending:THREE.AdditiveBlending}));beam.rotation.z=-Math.PI/2;beam.position.x=12;beacon.add(beam);beacon.userData.skyboundWorldMotion='beacon';group.add(beacon);worldMotion.push(beacon);
+    } else if (landmark.kind === 'sea_stack' || landmark.kind === 'mesa') {
+      const mesa=landmark.kind==='mesa';
+      for(let stack=0;stack<3;stack+=1){const height=(mesa?18:13)+stack*4;const pillar=addPillar((stack-1)*5.2,height,(mesa?4.8:3.3)-stack*.3);pillar.position.z=(stack%2)*2.5;}
+    } else if (landmark.kind === 'coastal_arch' || landmark.kind === 'rock_arch') {
+      const archMaterial=landmark.kind==='rock_arch'?new THREE.MeshStandardMaterial({color:0x9c5137,roughness:.96,flatShading:true}):landmarkStone;
+      addPillar(-5.4,14,2.8,archMaterial);addPillar(5.4,14,2.8,archMaterial);
+      const arch=new THREE.Mesh(new THREE.TorusGeometry(5.5,2.4,8,24,Math.PI),archMaterial);arch.position.y=13;arch.rotation.z=0;group.add(arch);
+    } else if (landmark.kind === 'thermal_column') {
+      const column=new THREE.Mesh(new THREE.CylinderGeometry(3.5,7,34,18,1,true),new THREE.MeshBasicMaterial({color:0xffd170,transparent:true,opacity:.13,depthWrite:false,blending:THREE.AdditiveBlending}));column.position.y=17;group.add(column);
+      for(let ring=0;ring<5;ring+=1){const flow=new THREE.Mesh(new THREE.TorusGeometry(3.5+ring*.55,.13,8,30),new THREE.MeshBasicMaterial({color:0xffec9b,transparent:true,opacity:.42,depthWrite:false}));flow.rotation.x=Math.PI/2;flow.position.y=4+ring*6;flow.userData.skyboundWorldMotion='thermal';flow.userData.motionOffset=ring;group.add(flow);worldMotion.push(flow);}
+    } else if (landmark.kind === 'thunderhead') {
+      const thunderMaterial=new THREE.MeshStandardMaterial({color:0x46536b,emissive:0x11182b,emissiveIntensity:.35,roughness:1,transparent:true,opacity:.9});
+      for(let puff=0;puff<7;puff+=1){const cloud=new THREE.Mesh(new THREE.IcosahedronGeometry(4.2+seeded(puff,z)*3,1),thunderMaterial);cloud.position.set((puff-3)*3.1,seeded(puff,4)*4,(seeded(puff,8)-.5)*4);cloud.scale.y=.7;group.add(cloud);}
+      group.userData.skyboundWorldMotion='thunder';worldMotion.push(group);
+    } else if (landmark.kind === 'lightning_beacon' || landmark.kind === 'storm_spire') {
+      const count=landmark.kind==='storm_spire'?3:1;
+      for(let spike=0;spike<count;spike+=1){const spire=new THREE.Mesh(new THREE.ConeGeometry(2.2+spike*.4,24+spike*7,6),landmarkStone);spire.position.set((spike-(count-1)/2)*5,(24+spike*7)/2,0);group.add(spire);}
+      if(landmark.kind==='lightning_beacon'){const bolt=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,29,0),new THREE.Vector3(-2,24,0),new THREE.Vector3(1,19,0),new THREE.Vector3(-1,14,0)]),new THREE.LineBasicMaterial({color:0xd7f7ff,transparent:true,opacity:.92}));bolt.userData.skyboundWorldMotion='lightning';group.add(bolt);worldMotion.push(bolt);}
+    } else if (landmark.kind === 'aurora') {
+      for(let ribbon=0;ribbon<3;ribbon+=1){const aurora=new THREE.Mesh(new THREE.PlaneGeometry(28+ribbon*7,6+ribbon*2,10,1),new THREE.MeshBasicMaterial({color:ribbon===1?0x6cebd9:0x79a6ff,transparent:true,opacity:.15+ribbon*.04,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));aurora.position.set((ribbon-1)*4,ribbon*5,0);aurora.rotation.z=(ribbon-1)*.18;aurora.userData.skyboundWorldMotion='aurora';aurora.userData.motionOffset=ribbon;group.add(aurora);worldMotion.push(aurora);}
+    } else if (landmark.kind === 'orbital_marker') {
+      const marker=new THREE.Mesh(new THREE.TorusGeometry(7,.28,10,42),landmarkLight);marker.rotation.y=.45;group.add(marker);
+      for(const side of [-1,1]){const panel=new THREE.Mesh(new THREE.BoxGeometry(5,.15,2.2),new THREE.MeshStandardMaterial({color:0x246ca1,emissive:0x0e304c,emissiveIntensity:.7,metalness:.45,roughness:.34}));panel.position.x=side*7;group.add(panel);}group.userData.skyboundWorldMotion='orbit';worldMotion.push(group);
+    } else if (landmark.kind === 'star_cluster') {
+      const positions=new Float32Array(90*3);for(let index=0;index<90;index+=1){positions[index*3]=(seeded(index,2)-.5)*70;positions[index*3+1]=(seeded(index,5)-.5)*38;positions[index*3+2]=(seeded(index,8)-.5)*18;}
+      const stars=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(positions,3)),new THREE.PointsMaterial({color:0xfff1b6,size:.48,transparent:true,opacity:.86,sizeAttenuation:true}));group.add(stars);
+    }
+    group.name=`skybound-landmark-${landmark.id}`;group.scale.setScalar(landmark.scale);group.position.set(landmark.lateralX,landmark.altitude,z);group.userData.skyboundBaseY=landmark.altitude;scene.add(group);
+  };
+  world.landmarks.forEach(addLandmark);
+
   const objectMeshes = new Map<string, THREE.Object3D>();
   for (const object of getSkyboundCourseObjects(levelId, goalDistance)) {
     let mesh: THREE.Object3D;
@@ -248,13 +315,14 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
   gate.position.z = goalDistance;
   scene.add(gate);
 
-  for (let index = 0; index < 34; index += 1) {
+  for (let index = 0; index < world.cloudCount; index += 1) {
     const cloud = makeCloud();
+    cloud.traverse((object)=>{if(object instanceof THREE.Mesh){const material=object.material as THREE.MeshStandardMaterial;material.color.set(world.cloudColor);material.opacity=world.cloudOpacity;}});
     cloud.position.set((seeded(index, 3) - 0.5) * 70, 18 + seeded(index, 7) * 44, seeded(index, 11) * goalDistance);
     cloud.scale.setScalar(0.8 + seeded(index, 12) * 1.8);
     scene.add(cloud);
   }
-  return objectMeshes;
+  return { objectMeshes, worldMotion };
 }
 
 function startSoftwareFlightRenderer(
@@ -369,11 +437,30 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       airRush.add(streak);
     }
     camera.add(airRush);
-    const objectMeshes = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
+    const { objectMeshes, worldMotion } = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
     const plane = createSkyboundAircraftModel(props.aircraftId);
     plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 1.02 : props.aircraftId === 'prop_trainer' ? 1.04 : 1.08);
     scene.add(plane);
     const runtime = plane.userData.sculptRuntime;
+    const wingtipVapors: THREE.Mesh[] = [];
+    for (const side of [-1, 1] as const) {
+      const navigationLight = new THREE.Mesh(
+        new THREE.SphereGeometry(0.11, 10, 8),
+        new THREE.MeshStandardMaterial({ color:side < 0 ? 0xff594f : 0x70ffab,emissive:side < 0 ? 0xff160f : 0x16ff68,emissiveIntensity:2.4,roughness:.18 }),
+      );
+      navigationLight.name = side < 0 ? 'left-navigation-light' : 'right-navigation-light';
+      navigationLight.position.set(side * 2.55, 0.03, -0.22);
+      plane.add(navigationLight);
+      const vapor = new THREE.Mesh(
+        new THREE.CylinderGeometry(.035,.2,5.8,8,1,true),
+        new THREE.MeshBasicMaterial({ color:0xdafaff,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending }),
+      );
+      vapor.name = side < 0 ? 'left-wingtip-vapor' : 'right-wingtip-vapor';
+      vapor.rotation.x = Math.PI / 2;
+      vapor.position.set(side * 2.48, -0.04, -3.2);
+      plane.add(vapor);
+      wingtipVapors.push(vapor);
+    }
     const flame = new THREE.Mesh(
       new THREE.ConeGeometry(0.28, 2.1, 14),
       new THREE.MeshBasicMaterial({ color: 0x64f6ff, transparent: true, opacity: 0.78, blending: THREE.AdditiveBlending }),
@@ -501,6 +588,14 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         plane.position.y += Math.abs(motionPose.shudder) * 0.28;
       }
 
+      const vaporStrength = phase === 'flying'
+        ? clamp((speed - 26) / 34 + (Math.abs(flight?.bankRad ?? 0) * .38) + (motionPose.mode === 'struggling' ? .2 : 0), 0, .82)
+        : 0;
+      for (const vapor of wingtipVapors) {
+        (vapor.material as THREE.MeshBasicMaterial).opacity = vaporStrength * (.52 + Math.sin(time * .017 + vapor.position.x) * .1);
+        vapor.scale.y = .72 + speedEnergy * .7;
+      }
+
       flame.visible = phase === 'flying' && boostingRef.current;
       flame.scale.y = 0.7 + Math.sin(time * 0.024) * 0.22;
       stabilizerAura.visible = phase === 'flying' && stabilizingRef.current;
@@ -535,6 +630,21 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         } else if (object.userData.courseKind === 'wind_ring') {
           object.rotation.z = Math.sin(time * 0.0015 + object.position.z) * 0.08;
         }
+      }
+
+      for (const object of worldMotion) {
+        const motion = String(object.userData.skyboundWorldMotion ?? '');
+        const offset = Number(object.userData.motionOffset ?? 0);
+        if (motion === 'turbine') object.rotation.z = time * 0.0012;
+        else if (motion === 'beacon') object.rotation.y = time * 0.00075;
+        else if (motion === 'float') object.position.y = Number(object.userData.skyboundBaseY ?? 0) + Math.sin(time * 0.0011 + object.position.z) * 0.8;
+        else if (motion === 'thermal') {
+          object.rotation.z = time * (0.00045 + offset * 0.00008);
+          object.scale.setScalar(0.86 + ((time * 0.0003 + offset * 0.16) % 0.28));
+        } else if (motion === 'thunder') object.scale.setScalar(1 + Math.sin(time * 0.0015 + object.position.z) * 0.035);
+        else if (motion === 'lightning') object.visible = Math.sin(time * 0.013 + object.position.z) > 0.82;
+        else if (motion === 'aurora') object.position.y = offset * 5 + Math.sin(time * 0.0009 + offset) * 1.2;
+        else if (motion === 'orbit') object.rotation.z = time * 0.00035;
       }
 
       const rushStrength=phase==='flying'?clamp(speedEnergy+(boostingRef.current ? 0.34 : 0),0,1):0;
@@ -593,6 +703,6 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       onPointerUp={props.onPointerUp}
       onPointerCancel={props.onPointerUp}
     />
-    {webglUnavailable && <div className="skybound__webgl-fallback" role="status"><strong>CHASE CAM · LIVE</strong><span>Academy airspace</span></div>}
+    {webglUnavailable && <div className="skybound__webgl-fallback" role="status"><strong>CHASE CAM · LIVE</strong><span>{getSkyboundLevel(props.levelId).name}</span></div>}
   </>);
 }

@@ -406,3 +406,93 @@ cannot prove final WebGL aircraft shading, moving-part readability, or orbit
 volume. The next highest-value loop is a real-device/WebGL aircraft-and-world
 fidelity pass, followed by authored level-specific course moments rather than
 additional shell UI.
+
+## World-identity Gauntlet loop 3 — 2026-08-27
+
+The next bounded slice addresses the largest remaining visual/gameplay gap:
+the five ranks currently share one floating-island language with palette
+changes. A player should recognize the current Academy range in the first
+second of flight without reading the HUD.
+
+### Execution contract
+
+- **Meadow Campus:** green training islands, Academy pylons, striped practice
+  balloons, and moving wind turbines establish a friendly first-flight school.
+- **Coastal Airfield:** a blue ocean/cloud deck, lighthouse beacons, sea stacks,
+  and a large coastal arch create lower, broader horizon scale.
+- **Sunset Canyon:** red mesas, rock arches, and translucent thermal columns
+  make altitude exchange and close passes visually legible.
+- **Thunder Range:** dense thunderheads, rain, lightning beacons, and dark range
+  spires create a hazardous storm corridor without hiding course objects.
+- **Goldwing Stratosphere:** a dark upper sky, stars, aurora ribbons, and orbital
+  navigation markers create a visibly final, high-altitude exam world.
+- Passing close to a hazard without colliding awards one deterministic
+  **near-miss** and streak point. It scores once per hazard and remains transient
+  flight state; it does not create a currency or persistence owner.
+- Both WebGL and the compatibility renderer must express the same world identity
+  and near-miss feedback. Runtime art remains procedural and deterministic, with
+  no remote assets or new dependency.
+
+### Acceptance evidence
+
+- Pure tests prove a near-miss scores once, a collision does not also count as a
+  near-miss, and the bonus raises settlement without bypassing canonical actions.
+- Each of the five world presentations has a deterministic identity contract and
+  at least three named visual anchors.
+- Phone-width replay shows the Meadow identity, readable fly-by scale, and live
+  near-miss feedback without horizontal overflow or browser console errors.
+- Full Island Run service suite, architecture guard, production build, and
+  `git diff --check` remain green.
+
+### Authority, rollback, and stop rule
+
+This slice may add presentation configuration, procedural world geometry,
+transient near-miss fields, score value, and HUD feedback. It may not change
+ticket ownership, reward-bar authority, lesson unlocks, upgrade persistence, or
+database shape. Rollback is limited to those presentation and transient-flight
+changes. Revise again if two unlocked levels still read as the same place when
+their HUD is hidden, or if landmarks obscure the authored rings and hazards.
+
+### Loop 3 evidence and decision
+
+- One shared deterministic presentation map now gives all five ranges a unique
+  signature and four authored anchors: Meadow turbines/balloons/towers, Coast
+  lighthouse/sea stacks/arch, Canyon mesas/thermals/rock arch, Storm
+  thunderheads/beacons/spires, and Stratosphere stars/aurora/orbital markers.
+- WebGL geometry includes moving rotors, lighthouse beams, rising thermals,
+  intermittent lightning, aurora motion, orbital markers, aircraft navigation
+  lights, and speed/bank-driven wingtip vapour. The compatibility renderer
+  expresses the same landmark families plus storm rain and procedural 3D
+  aircraft trails; neither renderer loads a runtime concept image.
+- A hazard proximity band now awards one near-miss per crossed hazard, extends
+  the streak, and adds 25 bounded salvage points. Direct collision takes
+  precedence and cannot also award the near-miss. The field remains transient
+  sortie state and is settled through the existing canonical action.
+- The phone replay reached 360/360m, naturally earned one near-miss with zero
+  impacts, displayed the result breakdown, had no horizontal document overflow,
+  and produced no browser warnings or errors. Evidence is stored at
+  `.img2threejs/skybound-cadet/renders/2026-08-27-world-identity-v3.png` and
+  `.img2threejs/skybound-cadet/renders/2026-08-27-near-miss-result-v3.png`.
+- Full Island Run service suite passed: 1,882 tests, 0 failures. Architecture
+  guard passed with 0 violations and the same 3 allowlisted warnings. Production
+  Vite build passed with existing chunk/import warnings only. Repository-wide
+  TypeScript still stops only on the known generated Supabase/Postgrest type
+  incompatibilities and reports no Skybound error. `git diff --check` passed.
+- The isolated-aircraft Tier-1 diagnostic correctly failed when given the full
+  phone game frame (IoU 0.127, aspect delta 0.242, scale delta 0.276). That is an
+  apples-to-oranges capture, so it is not recorded as model acceptance. A fixed
+  isolated aircraft view plus meaningful WebGL orbit views remain mandatory.
+
+| Loop 3 gate | Score | Decision |
+| --- | ---: | --- |
+| Meadow world identity | 7/10 | Pass for compatibility-renderer slice |
+| Other four world contracts | 5/10 | Implemented, not yet live-play reviewed |
+| Fly-by scale and atmosphere | 7/10 | Improved with landmarks, rain, stars, vapour |
+| Near-miss risk/reward feedback | 7/10 | Pure tests and live replay passed |
+| Aircraft readability | 6/10 | Improved lights/trails; still lacks WebGL orbit proof |
+| Real-device/WebGL evidence | 3/10 | Still the blocking visual gate |
+
+**Gauntlet decision: refine-code.** This is a substantive world/gameplay
+improvement, not completion. The next loop should capture isolated multi-angle
+WebGL aircraft evidence and then play one unlocked lesson in each promoted range
+to tune landmark scale and occlusion from actual motion.
