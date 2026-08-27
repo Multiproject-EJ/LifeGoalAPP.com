@@ -450,12 +450,13 @@ import {
 } from '../services/islandRunMinigameLauncherService';
 import {
   initSkyboundAcademyProgressForEvent,
+  installSkyboundAircraftPart,
   settleSkyboundSortie,
   startSkyboundSortie,
   upgradeSkyboundFleetPart,
 } from '../services/islandRunSkyboundAcademyActions';
 import type { SkyboundFlightState, SkyboundUpgradeKind } from '../services/skyboundExpeditionFlight';
-import type { SkyboundLessonId } from '../services/skyboundPilotAcademy';
+import type { SkyboundAcademyRankId, SkyboundLessonId } from '../services/skyboundPilotAcademy';
 import {
   canOpenIslandRunOverlayWhileRollingState,
   resolveIslandRunPlaceholderDescriptor,
@@ -9953,6 +9954,11 @@ export function IslandRunBoardPrototype({
             },
             requestUpgrade: async (kind: SkyboundUpgradeKind) => {
               const result = await upgradeSkyboundFleetPart({ session, client, eventId: effectiveActiveTimedEvent.eventId, kind, triggerSource: 'skybound_upgrade' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, cost: result.cost, progress: result.progress, failureReason: result.failureReason };
+            },
+            requestAssemblyPart: async (rankId: SkyboundAcademyRankId) => {
+              const result = await installSkyboundAircraftPart({ session, client, eventId: effectiveActiveTimedEvent.eventId, rankId, triggerSource: 'skybound_aircraft_assembly' });
               if (result.ok) setRuntimeState(result.record);
               return { ok: result.ok, cost: result.cost, progress: result.progress, failureReason: result.failureReason };
             },

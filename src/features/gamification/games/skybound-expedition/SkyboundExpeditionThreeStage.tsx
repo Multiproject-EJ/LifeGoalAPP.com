@@ -8,7 +8,7 @@ import {
   type SkyboundLevelId,
 } from '../../level-worlds/services/skyboundExpeditionFlight';
 import type { SkyboundAircraftId } from '../../level-worlds/services/skyboundPilotAcademy';
-import { createSkyboundAircraftLights, createSkyboundAircraftModel } from './skyboundAircraftModels';
+import { applySkyboundAircraftAssembly, createSkyboundAircraftLights, createSkyboundAircraftModel } from './skyboundAircraftModels';
 import { applySkyboundAircraftMotion, getSkyboundLaunchPose } from './skyboundAircraftMotion';
 import type { SkyboundAimView } from './skyboundExpeditionRenderer';
 import { startSkyboundSoftwareRenderer } from './skyboundSoftwareRenderer';
@@ -26,6 +26,7 @@ interface Props {
   boosting: boolean;
   stabilizing: boolean;
   aircraftId: SkyboundAircraftId;
+  assemblyLevel: number;
   onPointerDown: React.PointerEventHandler<HTMLCanvasElement>;
   onPointerMove: React.PointerEventHandler<HTMLCanvasElement>;
   onPointerUp: React.PointerEventHandler<HTMLCanvasElement>;
@@ -399,6 +400,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       levelId: props.levelId,
       goalDistance: props.goalDistance,
       aircraftId: props.aircraftId,
+      assemblyLevel: props.assemblyLevel,
       getFlight: () => flightRef.current,
       getPhase: () => phaseRef.current,
       getAim: () => aimRef.current,
@@ -438,7 +440,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
     }
     camera.add(airRush);
     const { objectMeshes, worldMotion } = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
-    const plane = createSkyboundAircraftModel(props.aircraftId);
+    const plane = applySkyboundAircraftAssembly(createSkyboundAircraftModel(props.aircraftId),props.assemblyLevel);
     plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 1.02 : props.aircraftId === 'prop_trainer' ? 1.04 : 1.08);
     scene.add(plane);
     const runtime = plane.userData.sculptRuntime;
@@ -450,6 +452,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       );
       navigationLight.name = side < 0 ? 'left-navigation-light' : 'right-navigation-light';
       navigationLight.position.set(side * 2.55, 0.03, -0.22);
+      navigationLight.visible=side<0?props.assemblyLevel>=1:props.assemblyLevel>=2;
       plane.add(navigationLight);
       const vapor = new THREE.Mesh(
         new THREE.CylinderGeometry(.035,.2,5.8,8,1,true),
@@ -458,6 +461,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       vapor.name = side < 0 ? 'left-wingtip-vapor' : 'right-wingtip-vapor';
       vapor.rotation.x = Math.PI / 2;
       vapor.position.set(side * 2.48, -0.04, -3.2);
+      vapor.visible=side<0?props.assemblyLevel>=1:props.assemblyLevel>=2;
       plane.add(vapor);
       wingtipVapors.push(vapor);
     }
@@ -483,6 +487,11 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
     tensionAura.name = 'launch-tension-aura';
     tensionAura.position.z = -0.15;
     plane.add(tensionAura);
+    const flowAura = new THREE.Mesh(
+      new THREE.TorusGeometry(3.7,.055,8,56),
+      new THREE.MeshBasicMaterial({color:0xffed91,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}),
+    );
+    flowAura.name='flow-lock-aura';flowAura.rotation.x=Math.PI/2;flowAura.position.z=-1.2;plane.add(flowAura);
     const leftLaunchBand = scene.getObjectByName('skybound-launch-band-left') as THREE.Mesh | undefined;
     const rightLaunchBand = scene.getObjectByName('skybound-launch-band-right') as THREE.Mesh | undefined;
     const launchRig = scene.getObjectByName('skybound-launch-rig');
@@ -570,6 +579,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
 
       const speed = flight ? Math.hypot(flight.vx, flight.vy) : 0;
       const speedEnergy = clamp((speed - 18) / 58, 0, 1);
+      const flowStrength=flight?.flowCharge??0;
       const motionPose = applySkyboundAircraftMotion(runtime, {
         phase,
         timeSeconds: time / 1000,
@@ -589,7 +599,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       }
 
       const vaporStrength = phase === 'flying'
-        ? clamp((speed - 26) / 34 + (Math.abs(flight?.bankRad ?? 0) * .38) + (motionPose.mode === 'struggling' ? .2 : 0), 0, .82)
+        ? clamp((speed - 26) / 34 + (Math.abs(flight?.bankRad ?? 0) * .38) + (motionPose.mode === 'struggling' ? .2 : 0)+flowStrength*.34, 0, 1)
         : 0;
       for (const vapor of wingtipVapors) {
         (vapor.material as THREE.MeshBasicMaterial).opacity = vaporStrength * (.52 + Math.sin(time * .017 + vapor.position.x) * .1);
@@ -603,6 +613,10 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       tensionAura.visible = phase === 'aiming' && aim.power > 0.035;
       tensionAura.scale.setScalar(0.72 + launchPose.tension * 0.36 + Math.sin(time * 0.018) * launchPose.vibration * 0.03);
       (tensionAura.material as THREE.MeshBasicMaterial).opacity = 0.08 + launchPose.tension * 0.58;
+      flowAura.visible=phase==='flying'&&flowStrength>.05;
+      flowAura.rotation.z+=dt*(1.2+flowStrength*3.8);
+      flowAura.scale.setScalar(.78+flowStrength*.34);
+      (flowAura.material as THREE.MeshBasicMaterial).opacity=flowStrength*.5;
       if (launchRig) launchRig.visible = props.aircraftId === 'toy_glider' && phase === 'aiming';
       updateLaunchBand(leftLaunchBand, -1, launchPose.tension);
       updateLaunchBand(rightLaunchBand, 1, launchPose.tension);
@@ -647,7 +661,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         else if (motion === 'orbit') object.rotation.z = time * 0.00035;
       }
 
-      const rushStrength=phase==='flying'?clamp(speedEnergy+(boostingRef.current ? 0.34 : 0),0,1):0;
+      const rushStrength=phase==='flying'?clamp(speedEnergy+(boostingRef.current ? 0.34 : 0)+flowStrength*.38,0,1):0;
       airRush.visible=rushStrength>.08;
       airRushMaterial.opacity=.08+rushStrength*.42;
       for(const child of airRush.children){
@@ -656,7 +670,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       }
 
       const target = plane.position;
-      const targetFov=phase==='flying'?62+(speedEnergy*9)+(boostingRef.current?5:0):58;
+      const targetFov=phase==='flying'?62+(speedEnergy*9)+(boostingRef.current?5:0)+(flowStrength*3):58;
       camera.fov+=(targetFov-camera.fov)*(1-Math.exp(-dt*3.6));
       camera.updateProjectionMatrix();
       const desiredCamera = phase === 'aiming'
@@ -690,7 +704,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         }
       });
     };
-  }, [props.aircraftId, props.goalDistance, props.levelId, props.sortieKey]);
+  }, [props.aircraftId, props.assemblyLevel, props.goalDistance, props.levelId, props.sortieKey]);
 
   return (<>
     <canvas

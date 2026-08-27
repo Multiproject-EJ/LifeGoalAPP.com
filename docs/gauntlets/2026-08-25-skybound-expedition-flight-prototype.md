@@ -496,3 +496,67 @@ their HUD is hidden, or if landmarks obscure the authored rings and hazards.
 improvement, not completion. The next loop should capture isolated multi-angle
 WebGL aircraft evidence and then play one unlocked lesson in each promoted range
 to tune landmark scale and occlusion from actual motion.
+
+## Evolution-loop Gauntlet loop 4 — 2026-08-27
+
+Eivind clarified that the current complete-aircraft steering course represented
+the destination, not the opening loop. Each rank must begin with a barely
+airworthy fuselage, pay distance earnings into visible physical construction,
+and teach the player to find a sensitive speed/pitch/bank flow envelope before
+the checkride.
+
+### Vertical slice and authority
+
+- All five promoted ranks now start at assembly stage 0 and share one canonical
+  four-installation arc: first wing, second wing, tail/control pack, then the
+  rank-specific propulsion/launch package.
+- Lesson 1 remains the fuselage flight test. Lesson 2 requires the first wing,
+  Lesson 3 requires both wings, and the checkride requires all four parts as
+  well as the existing sequential lesson completion.
+- Part purchase spends earned Academy salvage through
+  `installSkyboundAircraftPart`; React owns no duplicate economy or progression
+  state. Old saves infer completed assembly from already-completed lessons.
+- Incomplete stages materially change deterministic flight: launch energy,
+  lift, pitch/bank authority, stability, and boost availability scale with the
+  installed parts. A one-wing aircraft has a persistent asymmetric bank and
+  lateral bias.
+- Both WebGL and compatibility renderers remove the uninstalled physical wing,
+  tail, hook/drive, propeller, intake, coil, and trim nodes. The hangar strip
+  names the next part, its cost and benefit, and rebuilds the same aircraft.
+
+### Flow and economy contract
+
+- Stable altitude clearance, near-level pitch, shallow bank, adequate assembly,
+  and an aircraft-relative speed corridor charge a deterministic Flow meter.
+  At 62% the craft enters Flow Lock, retains target energy, steadies its vertical
+  velocity, brightens the HUD/airframe aura, and strengthens speed lines and
+  wing vapour. Leaving the envelope drains the meter instead of ending the
+  sortie abruptly.
+- Flight speed is presented in km/h so the useful corridor reads near the
+  intended 200 mark. Boost is unavailable until the propulsion package exists,
+  making its timing part of the complete-aircraft skill.
+- Settlement now exposes distance, flow, course, finish/landing/altitude bonus,
+  and collision deduction components. Distance is the dependable base income;
+  failed lessons still bank it. Displayed goal distance is capped at the course
+  finish, and terrain skims count as bounded damaging impacts in standards.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,885 tests, 0 failures. New tests cover
+  four-stage assembly pricing/persistence, canonical salvage deduction, lesson
+  gates, incomplete-airframe physics, boost lockout, and Flow scoring.
+- Production Vite build passed with existing chunk/import warnings only.
+  Architecture guard passed with 0 violations and the same 3 allowlisted legacy
+  warnings. Full TypeScript reports only the repository's pre-existing generated
+  Supabase/PostgREST errors and no Skybound file.
+- Phone-width compatibility-renderer replay started at Build 0/4, flew a 164m
+  fuselage test, banked salvage, installed a visibly asymmetric first wing, then
+  completed all four Cadet installations. A complete unassisted glider reached
+  360/360m; the core crest objective correctly remained a player-skill gate.
+  Browser console showed no warnings or errors.
+
+**Gauntlet decision: pass the evolution-loop slice, continue fidelity.** The
+missing-body-to-complete-plane economy and Flow contract now exist generically
+for every rank. Remaining quality work is authored launch-facility animation per
+rank, live WebGL multi-angle proof for all five completed/incomplete aircraft,
+and human control tuning of the Flow corridor on a real device.

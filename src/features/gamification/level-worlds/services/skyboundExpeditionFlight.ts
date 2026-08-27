@@ -34,6 +34,7 @@ export interface SkyboundLaunchInput {
   levelId: SkyboundLevelId;
   goalDistance?: number;
   aircraftId?: SkyboundAircraftId;
+  assemblyLevel?: number;
 }
 
 export interface SkyboundCourseObject {
@@ -49,6 +50,7 @@ export interface SkyboundFlightState {
   status: SkyboundFlightStatus;
   levelId: SkyboundLevelId;
   aircraftId: SkyboundAircraftId;
+  assemblyLevel: number;
   x: number;
   y: number;
   lateralX: number;
@@ -78,6 +80,7 @@ export interface SkyboundFlightState {
   bestStreak: number;
   currentStreak: number;
   smoothFlightMs: number;
+  flowCharge: number;
   stallMs: number;
   terrainSkims: number;
   terminalReason: SkyboundTerminalReason;
@@ -231,6 +234,14 @@ const AIRCRAFT_TUNING: Record<SkyboundAircraftId, { speed:number; lift:number; c
   goldwing_fighter: { speed:1.62,lift:1.18,control:1.36,fuel:1.75,stability:1.72,integrity:5 },
 };
 
+const ASSEMBLY_TUNING = [
+  {speed:.55,lift:.24,control:.16,stability:.35},
+  {speed:.66,lift:.42,control:.3,stability:.46},
+  {speed:.79,lift:.68,control:.58,stability:.66},
+  {speed:.9,lift:.86,control:.82,stability:.86},
+  {speed:1,lift:1,control:1,stability:1},
+] as const;
+
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.max(minimum, Math.min(maximum, value));
 }
@@ -292,15 +303,18 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
   const level = getSkyboundLevel(input.levelId);
   const aircraftId = input.aircraftId ?? 'toy_glider';
   const tuning = AIRCRAFT_TUNING[aircraftId];
+  const assemblyLevel = clamp(Math.floor(input.assemblyLevel ?? 4),0,4);
+  const assembly = ASSEMBLY_TUNING[assemblyLevel];
   const power = clamp(input.power, 0, 1);
   const angleRad = (clamp(input.angleDeg, 12, 58) * Math.PI) / 180;
-  const launchSpeed = (46 + (input.upgrades.launcher * 6.5)) * (0.38 + (power * 0.62)) * tuning.speed;
+  const launchSpeed = (46 + (input.upgrades.launcher * 6.5)) * (0.38 + (power * 0.62)) * tuning.speed * assembly.speed;
   const startY = getSkyboundGroundHeight(level.id, 0) + 6;
 
   return {
     status: 'flying',
     levelId: level.id,
     aircraftId,
+    assemblyLevel,
     x: 0,
     y: startY,
     lateralX: 0,
@@ -310,7 +324,7 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     pitchRad: angleRad,
     bankRad: 0,
     fuel: (1 + (input.upgrades.engine * 0.18)) * tuning.fuel,
-    stabilizer: (1 + (input.upgrades.airframe * 0.12)) * tuning.stability,
+    stabilizer: (1 + (input.upgrades.airframe * 0.12)) * tuning.stability * assembly.stability,
     elapsedMs: 0,
     airborneMs: 0,
     groundContactMs: 0,
@@ -330,6 +344,7 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     bestStreak: 0,
     currentStreak: 0,
     smoothFlightMs: 0,
+    flowCharge: 0,
     stallMs: 0,
     terrainSkims: 0,
     terminalReason: null,
@@ -383,6 +398,8 @@ export function stepSkyboundFlight(
 
   const level = getSkyboundLevel(state.levelId);
   const tuning = AIRCRAFT_TUNING[state.aircraftId];
+  const assemblyLevel = clamp(Math.floor(state.assemblyLevel ?? 4),0,4);
+  const assembly = ASSEMBLY_TUNING[assemblyLevel];
   const safeDtMs = clamp(Number.isFinite(dtMs) ? dtMs : 0, 0, SKYBOUND_MAX_STEP_MS);
   const dt = safeDtMs / 1000;
   if (dt === 0) return state;
@@ -393,14 +410,15 @@ export function stepSkyboundFlight(
   const velocityAngle = Math.atan2(state.vy, Math.max(0.001, state.vx));
   const targetPitch = clamp(velocityAngle + (pitchInput * 0.48), -0.95, 1.12);
   let pitchRad = state.pitchRad + ((targetPitch - state.pitchRad) * Math.min(1, dt * 4.8));
-  const bankTarget = steerInput * 0.72;
+  const asymmetricWingBias = assemblyLevel === 1 ? -0.24 : 0;
+  const bankTarget = steerInput * 0.72 * assembly.control + asymmetricWingBias;
   let bankRad = state.bankRad + ((bankTarget - state.bankRad) * Math.min(1, dt * 5.6));
 
   const effectiveDrag = level.drag * (1 - (Math.min(upgrades.airframe, 5) * 0.045));
-  const liftAcceleration = speed * (0.13 + (upgrades.airframe * 0.019)) * level.liftScale * tuning.lift;
-  const controlAcceleration = pitchInput * (7.2 + (upgrades.airframe * 0.65)) * tuning.control;
+  const liftAcceleration = speed * (0.13 + (upgrades.airframe * 0.019)) * level.liftScale * tuning.lift * assembly.lift;
+  const controlAcceleration = pitchInput * (7.2 + (upgrades.airframe * 0.65)) * tuning.control * assembly.control;
   const wind = getDeterministicWind(level, state.x, state.elapsedMs);
-  const isBoosting = control.boost && state.fuel > 0;
+  const isBoosting = control.boost && state.fuel > 0 && assemblyLevel >= 4;
   const isStabilizing = control.stabilize === true && state.stabilizer > 0;
   const boostAcceleration = isBoosting ? 18 + (upgrades.engine * 4.2) : 0;
   const stabilizerWindScale = isStabilizing ? 0.24 : 1;
@@ -422,10 +440,25 @@ export function stepSkyboundFlight(
     - (state.vy * stabilizerDamping)
   ) * dt;
   let lateralVelocity = state.lateralVelocity + (
-    (steerInput * (10.5 + (upgrades.airframe * 0.8)))
+    (steerInput * (10.5 + (upgrades.airframe * 0.8)) * assembly.control)
+    + (assemblyLevel === 1 ? -1.8 : 0)
     - (state.lateralVelocity * (isStabilizing ? 3.2 : 1.45))
     + (wind * 0.055 * stabilizerWindScale)
   ) * dt;
+
+  const flowTargetSpeed = (50 + upgrades.launcher * 2.4 + upgrades.engine * 2.8) * tuning.speed;
+  const flowEnvelope = assemblyLevel >= 3
+    && speed >= flowTargetSpeed * .78
+    && speed <= flowTargetSpeed * 1.24
+    && Math.abs(pitchRad) < .3
+    && Math.abs(bankRad) < .42;
+  const flowCharge = clamp(state.flowCharge + (flowEnvelope ? dt * .72 : -dt * .58),0,1);
+  const flowLocked = flowCharge >= .62;
+  if(flowLocked){
+    vx += (flowTargetSpeed-vx)*Math.min(1,dt*.82);
+    vy += (-vy*.42)*dt;
+    pitchRad *= Math.max(0,1-dt*.28);
+  }
 
   // A low-energy climb now develops into a readable, recoverable stall. The
   // aircraft gently noses over and trades altitude for speed instead of
@@ -526,7 +559,7 @@ export function stepSkyboundFlight(
     const launchGraceActive = elapsedMs < 1_800 || airborneMs < 850;
     const severeImpact = vy < -21 || Math.abs(pitchRad) > 1.02;
     const hardImpact = !launchGraceActive && state.terrainSkims >= 2 && severeImpact;
-    const controlledTouchdown = !launchGraceActive && vx <= 9 && vy >= -8 && Math.abs(pitchRad) <= 0.72;
+    const controlledTouchdown = !launchGraceActive && vx <= 14 && vy >= -10 && Math.abs(pitchRad) <= 0.72;
     if (hardImpact) {
       status = 'crashed';
       terminalReason = 'hard_impact';
@@ -560,7 +593,7 @@ export function stepSkyboundFlight(
   const isStalled = status === 'flying' && resultingSpeed < 18 && pitchRad > 0.18;
   const isSmooth = status === 'flying'
     && clearance > 6
-    && resultingSpeed >= 24
+    && flowLocked
     && Math.abs(pitchRad) < 0.34
     && Math.abs(bankRad) < 0.48
     && impactSerial === state.impactSerial;
@@ -596,17 +629,22 @@ export function stepSkyboundFlight(
     currentStreak,
     bestStreak,
     smoothFlightMs: state.smoothFlightMs + (isSmooth ? safeDtMs : 0),
+    flowCharge,
     stallMs: state.stallMs + (isStalled ? safeDtMs : 0),
     terrainSkims,
     terminalReason,
   };
 }
 
-export function scoreSkyboundFlight(state: SkyboundFlightState): number {
-  const completionBonus = state.status === 'finished' ? 170 + (state.goalDistance * 0.08) : 0;
-  const landingBonus = state.status === 'landed' ? 55 : 0;
-  const courseBonus = (state.salvageCollected * 18) + (state.ringsCleared * 45) + (state.nearMisses * 25) + (state.bestStreak * 4);
-  const smoothFlightBonus = Math.min(120, Math.round(state.smoothFlightMs / 500));
-  const hazardPenalty = state.hazardHits * 20;
-  return Math.max(45, Math.round((Math.min(state.x, state.goalDistance) * 0.32) + (state.maxAltitude * 1.15) + completionBonus + landingBonus + courseBonus + smoothFlightBonus - hazardPenalty));
+export interface SkyboundFlightScoreBreakdown { distance:number;flow:number;course:number;finish:number;landing:number;altitude:number;collisionPenalty:number;total:number; }
+export function getSkyboundFlightScoreBreakdown(state:SkyboundFlightState):SkyboundFlightScoreBreakdown {
+  const distance=Math.round(Math.min(state.x,state.goalDistance)*.55);
+  const finish=state.status==='finished'?Math.round(140+state.goalDistance*.06):0;
+  const landing=state.status==='landed'?55:0;
+  const course=(state.salvageCollected*18)+(state.ringsCleared*45)+(state.nearMisses*25)+(state.bestStreak*4);
+  const flow=Math.min(160,Math.round(state.smoothFlightMs/420));
+  const altitude=Math.round(state.maxAltitude*.55);
+  const collisionPenalty=(state.hazardHits+Math.max(0,Math.min(3,state.terrainSkims)-1))*20;
+  return{distance,flow,course,finish,landing,altitude,collisionPenalty,total:Math.max(45,distance+flow+course+finish+landing+altitude-collisionPenalty)};
 }
+export function scoreSkyboundFlight(state: SkyboundFlightState): number { return getSkyboundFlightScoreBreakdown(state).total; }

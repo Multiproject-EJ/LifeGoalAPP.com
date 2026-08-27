@@ -9,6 +9,7 @@ import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
 import {
   settleSkyboundSortie,
   startSkyboundSortie,
+  installSkyboundAircraftPart,
   upgradeSkyboundFleetPart,
 } from '../islandRunSkyboundAcademyActions';
 import { createSkyboundAcademyEventProgress } from '../skyboundAcademyStorage';
@@ -154,6 +155,7 @@ export const islandRunSkyboundAcademyActionsTests: TestCase[] = [
     run: async () => {
       const progress = createSkyboundAcademyEventProgress(10);
       progress.progress.completedLessonIds = ['cadet_launch', 'cadet_gates', 'cadet_weather'];
+      progress.progress.aircraftAssemblyLevels.cadet = 4;
       progress.salvage = 200;
       reset({
         ...academyEventOverrides(),
@@ -179,6 +181,19 @@ export const islandRunSkyboundAcademyActionsTests: TestCase[] = [
       const duplicate = await settleSkyboundSortie({ session: session(), client: null, eventId: EVENT_ID, attemptId: 'cadet-exam-pass', flight });
       assertEqual(duplicate.ticketsAwarded, 0, 'duplicate exam callback should not refill tickets again');
       assertEqual(duplicate.ticketsRemaining, 3, 'shared wallet should remain unchanged after duplicate callback');
+    },
+  },
+  {
+    name: 'earned salvage installs the next visible aircraft part through the canonical action',
+    run: async () => {
+      const progress=createSkyboundAcademyEventProgress(10);
+      progress.salvage=100;
+      reset({...academyEventOverrides(),minigameTicketsByEvent:{[EVENT_ID]:1},skyboundAcademyProgressByEvent:{[EVENT_ID]:progress}});
+      const installed=await installSkyboundAircraftPart({session:session(),client:null,eventId:EVENT_ID,rankId:'cadet'});
+      assertEqual(installed.ok,true,'Cadet should be able to install its first wing');
+      assertEqual(installed.cost,70,'the first Cadet wing should use the declared build cost');
+      assertEqual(installed.progress.salvage,30,'part purchase should deduct salvage once');
+      assertEqual(installed.progress.progress.aircraftAssemblyLevels.cadet,1,'the canonical event record should persist the visible build stage');
     },
   },
 ];

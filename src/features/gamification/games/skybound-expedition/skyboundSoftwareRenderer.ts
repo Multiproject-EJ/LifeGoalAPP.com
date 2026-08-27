@@ -15,6 +15,7 @@ export interface SkyboundSoftwareRendererInput {
   levelId: SkyboundLevelId;
   goalDistance: number;
   aircraftId: SkyboundAircraftId;
+  assemblyLevel: number;
   getFlight: () => SkyboundFlightState | null;
   getPhase: () => SoftwarePhase;
   getAim: () => SkyboundAimView;
@@ -315,6 +316,7 @@ function drawSoftwareAircraft3d(
   pitch=0,
   bank=0,
   vaporStrength=0,
+  assemblyLevel=4,
 ) {
   const colors:Record<SkyboundAircraftId,[string,string,string]>={
     toy_glider:['#f7efeb','#0b2949','#f2bd45'],
@@ -382,7 +384,7 @@ function drawSoftwareAircraft3d(
   context.lineJoin='round';context.lineWidth=.9;
   for(const item of projected){const [first,...rest]=item.points;context.beginPath();context.moveTo(first.x,first.y);for(const point of rest)context.lineTo(point.x,point.y);context.closePath();context.fillStyle=shadeHex(item.face.color,item.face.shade);context.fill();context.strokeStyle='rgba(4,24,44,.28)';context.stroke();}
   for(const side of [-1,1]){const light=projectPoint({x:side*2.62,y:.08,z:-.28});context.fillStyle=side<0?'#ff625a':'#70ffac';context.shadowColor=context.fillStyle;context.shadowBlur=8;context.beginPath();context.arc(light.x,light.y,2.2,0,Math.PI*2);context.fill();context.shadowBlur=0;}
-  if(aircraftId==='prop_trainer'){
+  if(aircraftId==='prop_trainer'&&assemblyLevel>=4){
     const hub=projectPoint({x:0,y:0,z:2.2});const angle=time*.028;context.save();context.translate(hub.x,hub.y);context.rotate(angle);context.strokeStyle='#142b45';context.lineWidth=6;context.lineCap='round';context.beginPath();context.moveTo(-35,0);context.lineTo(35,0);context.moveTo(0,-35);context.lineTo(0,35);context.stroke();context.fillStyle=accent;context.beginPath();context.arc(0,0,7,0,Math.PI*2);context.fill();context.restore();
   }
 }
@@ -539,7 +541,12 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     }
     const integrityCapacity=flight?Math.max(1,flight.integrity+flight.hazardHits):1;
     const struggling=Boolean(flight)&&!input.isStabilizing()&&(speed<20||Math.abs(pitch)>.62||Math.abs(flight?.bankRad??0)>.5||(flight?.integrity??1)/integrityCapacity<.62);
-    drawSoftwareAircraft3d(context,input.aircraftId,input.isBoosting(),time,flight?.detachedPartIds??[],struggling,pitch,flight?.bankRad??0,clamp((speed-26)/34+Math.abs(flight?.bankRad??0)*.38+(struggling ? .2 : 0),0,.82));
+    const assemblyLevel=Math.max(0,Math.min(4,Math.floor(flight?.assemblyLevel??input.assemblyLevel)));
+    const missingAssemblyParts=[...(assemblyLevel<1?['left-wing']:[]),...(assemblyLevel<2?['right-wing']:[]),...(assemblyLevel<3?['left-tailplane','right-tailplane','tail-fin']:[])];
+    const hiddenParts=[...new Set([...(flight?.detachedPartIds??[]),...missingAssemblyParts])];
+    const flowStrength=flight?.flowCharge??0;
+    if(flowStrength>.05){context.strokeStyle=`rgba(255,232,112,${flowStrength*.55})`;context.lineWidth=2+flowStrength*4;context.beginPath();context.ellipse(0,0,104+flowStrength*16,55+flowStrength*9,time*.001,0,Math.PI*2);context.stroke();}
+    drawSoftwareAircraft3d(context,input.aircraftId,input.isBoosting()&&assemblyLevel>=4,time,hiddenParts,struggling,pitch,flight?.bankRad??0,clamp((speed-26)/34+Math.abs(flight?.bankRad??0)*.38+(struggling ? .2 : 0)+flowStrength*.34,0,1),assemblyLevel);
     context.restore();
 
     for(let index=0;index<(flight?.detachedPartIds.length??0);index+=1) {

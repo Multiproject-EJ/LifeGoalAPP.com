@@ -109,3 +109,16 @@ export function createSkyboundAircraftModel(aircraftId:SkyboundAircraftId):Skybo
   else if(aircraftId==='goldwing_fighter')buildGoldwing(root);
   return root;
 }
+
+export function applySkyboundAircraftAssembly(root:SkyboundAircraftModel,assemblyLevel:number) {
+  const level=Math.max(0,Math.min(4,Math.floor(assemblyLevel)));
+  const runtime=root.userData.sculptRuntime;
+  const setVisible=(ids:readonly string[],visible:boolean)=>ids.forEach((id)=>{const node=runtime.nodes[id];if(node)node.visible=visible;});
+  setVisible(['left-wing'],level>=1);
+  setVisible(['right-wing'],level>=2);
+  setVisible(['left-tailplane','right-tailplane','tail-fin','gear-strut--1','gear-strut-1'],level>=3);
+  const propulsionIds=['rear-nozzle','launch-hook','propeller-hub','propeller','intake--1','intake-1','storm-coil--1','storm-coil-1','trainer-cyan-spine','goldwing-spine','gold-wingtip--1','gold-wingtip-1'];
+  setVisible(propulsionIds,level>=4);
+  root.userData.assemblyLevel=level;
+  return root;
+}

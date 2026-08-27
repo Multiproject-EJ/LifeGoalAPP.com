@@ -4,6 +4,9 @@ import {
   SKYBOUND_LESSONS,
   createSkyboundAcademyProgress,
   evaluateSkyboundLesson,
+  getSkyboundAssemblyLevel,
+  getSkyboundAssemblyPartCost,
+  installSkyboundNextAssemblyPart,
   isSkyboundCadetLessonUnlocked,
   isSkyboundRankUnlocked,
   isSkyboundLessonUnlocked,
@@ -79,7 +82,9 @@ export const skyboundPilotAcademyTests: TestCase[] = [
       assert(isSkyboundCadetLessonUnlocked(initial, 'cadet_launch'), 'Launch Drill should be open immediately');
       assert(!isSkyboundCadetLessonUnlocked(initial, 'cadet_gates'), 'Precision Gates should initially be locked');
       const evaluation = evaluateSkyboundLesson('cadet_launch', flightResult({ distance: 170, salvage: 3, rings: 0, hazards: 1 }));
-      const settled = settleSkyboundAcademyLesson(initial, evaluation);
+      const completed = settleSkyboundAcademyLesson(initial, evaluation);
+      assert(!isSkyboundCadetLessonUnlocked(completed, 'cadet_gates'), 'the next drill should wait for its visible wing installation');
+      const settled = installSkyboundNextAssemblyPart(completed, 'cadet');
       assert(isSkyboundCadetLessonUnlocked(settled, 'cadet_gates'), 'passing Launch Drill should unlock Precision Gates');
     },
   },
@@ -105,6 +110,7 @@ export const skyboundPilotAcademyTests: TestCase[] = [
     name: 'promotes the Cadet to Trainee only after passing the mini exam',
     run: () => {
       let progress = createSkyboundAcademyProgress();
+      for(let part=0;part<4;part+=1)progress=installSkyboundNextAssemblyPart(progress,'cadet');
       for (const lesson of SKYBOUND_CADET_LESSONS) {
         const evaluation = evaluateSkyboundLesson(lesson.id, flightResult({ distance: 400, salvage: 8, rings: 3, hazards: 0 }));
         progress = settleSkyboundAcademyLesson(progress, evaluation);
@@ -119,6 +125,7 @@ export const skyboundPilotAcademyTests: TestCase[] = [
     run: () => {
       let progress = createSkyboundAcademyProgress();
       for (const lesson of SKYBOUND_LESSONS) {
+        while(getSkyboundAssemblyLevel(progress,lesson.rankId)<(lesson.exam?4:lesson.index))progress=installSkyboundNextAssemblyPart(progress,lesson.rankId);
         assert(isSkyboundLessonUnlocked(progress, lesson.id), `${lesson.id} should unlock in sequence during a perfect career`);
         const evaluation = evaluateSkyboundLesson(lesson.id, flightResult({ distance: 2_000, salvage: 30, rings: 20, hazards: 0 }));
         progress = settleSkyboundAcademyLesson(progress, evaluation);
@@ -127,6 +134,19 @@ export const skyboundPilotAcademyTests: TestCase[] = [
       assert(progress.medalRankIds.length === 5, 'each rank exam should award one medal');
       assert(progress.promotedRankIds.length === 5, 'all five aircraft ranks should be unlocked');
       assert(progress.certificateAwarded, 'the final wings exam should award the certificate');
+    },
+  },
+  {
+    name: 'builds every aircraft from fuselage through four priced physical parts',
+    run: () => {
+      let progress=createSkyboundAcademyProgress();
+      assert(getSkyboundAssemblyLevel(progress,'cadet')===0,'fresh Cadet aircraft should begin as a bare fuselage');
+      for(let expected=1;expected<=4;expected+=1){
+        progress=installSkyboundNextAssemblyPart(progress,'cadet');
+        assert(getSkyboundAssemblyLevel(progress,'cadet')===expected,`installation ${expected} should advance exactly once`);
+        assert(getSkyboundAssemblyPartCost('cadet',expected as 1|2|3|4)>0,'every installed part should have a salvage cost');
+      }
+      assert(installSkyboundNextAssemblyPart(progress,'cadet')===progress,'a completed aircraft must not install a fifth part');
     },
   },
 ];

@@ -335,7 +335,7 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
     run: () => {
       const base = {
         ...createSkyboundFlight({ power: 1, angleDeg: 35, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
-        x: 25, y: 54, vx: 36, vy: 0, pitchRad: 0.06, bankRad: 0,
+        x: 25, y: 54, vx: 48, vy: 0, pitchRad: 0.06, bankRad: 0, flowCharge:.72,
       };
       const smooth = stepSkyboundFlight(base, { pitch: 0, steer: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(smooth.smoothFlightMs === 64, 'stable energetic flight should accumulate flow time');
@@ -347,6 +347,18 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       const ordinaryScore = scoreSkyboundFlight({ ...smooth, status: 'landed', smoothFlightMs: 0 });
       const flowScore = scoreSkyboundFlight({ ...smooth, status: 'landed', smoothFlightMs: 20_000 });
       assert(flowScore > ordinaryScore, 'holding smooth flow should add a bounded settlement bonus');
+    },
+  },
+  {
+    name: 'makes a bare fuselage visibly weaker than a completed aircraft',
+    run: () => {
+      const bare=createSkyboundFlight({power:1,angleDeg:35,upgrades:SKYBOUND_STARTER_UPGRADES,levelId:'meadow',assemblyLevel:0});
+      const complete=createSkyboundFlight({power:1,angleDeg:35,upgrades:SKYBOUND_STARTER_UPGRADES,levelId:'meadow',assemblyLevel:4});
+      assert(bare.vx<complete.vx*.65,'bare fuselage should leave the sling with much less forward energy');
+      const bareStep=stepSkyboundFlight({...bare,x:20,y:48,vx:30,vy:0},{pitch:1,steer:1,boost:true},SKYBOUND_STARTER_UPGRADES,64);
+      const completeStep=stepSkyboundFlight({...complete,x:20,y:48,vx:30,vy:0},{pitch:1,steer:1,boost:true},SKYBOUND_STARTER_UPGRADES,64);
+      assert(Math.abs(bareStep.vy)<Math.abs(completeStep.vy),'installed wings and controls should produce stronger pitch authority');
+      assert(bareStep.fuel===bare.fuel,'the missing propulsion package must make boost unavailable');
     },
   },
 ];

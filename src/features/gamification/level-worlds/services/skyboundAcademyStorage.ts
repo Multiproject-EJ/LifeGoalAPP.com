@@ -24,7 +24,7 @@ export interface SkyboundAcademyEventProgress extends SkyboundAcademySave {
 }
 
 const boundedLevel = (value:unknown) => typeof value === 'number' && Number.isFinite(value) ? Math.max(0,Math.min(5,Math.floor(value))) : 0;
-export function createSkyboundAcademySave():SkyboundAcademySave { return { progress:createSkyboundAcademyProgress(), upgrades:{...SKYBOUND_STARTER_UPGRADES}, salvage:180 }; }
+export function createSkyboundAcademySave():SkyboundAcademySave { return { progress:createSkyboundAcademyProgress(), upgrades:{...SKYBOUND_STARTER_UPGRADES}, salvage:0 }; }
 export function sanitizeSkyboundAcademySave(value:unknown):SkyboundAcademySave {
   const fallback=createSkyboundAcademySave(); if(!value||typeof value!=='object')return fallback;
   const source=value as Partial<SkyboundAcademySave>; const upgrades=source.upgrades as Partial<SkyboundUpgrades>|undefined;

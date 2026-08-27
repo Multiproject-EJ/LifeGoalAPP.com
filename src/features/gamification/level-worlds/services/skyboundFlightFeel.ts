@@ -68,6 +68,10 @@ export function getSkyboundFlightTelemetry(state:SkyboundFlightState):SkyboundFl
   const integrityRatio = state.integrity / capacity;
   const energy = clamp((speed - 12) / 54, 0, 1);
 
+  if (state.assemblyLevel < 3) {
+    return { condition:'damaged',label:'INCOMPLETE AIRFRAME',instruction:state.assemblyLevel===0?'The fuselage can only coast — earn the first wing':'Counter the imbalance and protect speed',speed,altitude:state.y,clearance,energy,warning:true };
+  }
+
   if (speed < 18 && state.pitchRad > 0.18) {
     return { condition:'stall',label:'STALL · DROP NOSE',instruction:'Push forward to rebuild airspeed',speed,altitude:state.y,clearance,energy,warning:true };
   }
@@ -83,5 +87,7 @@ export function getSkyboundFlightTelemetry(state:SkyboundFlightState):SkyboundFl
   if (state.pitchRad < -0.24 || state.vy < -8) {
     return { condition:'dive',label:'DIVE · BUILD SPEED',instruction:'Recover before the terrain',speed,altitude:state.y,clearance,energy,warning:clearance < 14 };
   }
-  return { condition:'smooth',label:'SMOOTH FLOW',instruction:'Hold the energy line',speed,altitude:state.y,clearance,energy,warning:false };
+  return state.flowCharge>=.62
+    ? { condition:'smooth',label:'FLOW LOCK',instruction:'Hold this pitch and bank',speed,altitude:state.y,clearance,energy,warning:false }
+    : { condition:'smooth',label:'SEEK FLOW',instruction:'Level near 200 km/h; use small inputs',speed,altitude:state.y,clearance,energy,warning:false };
 }

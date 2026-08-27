@@ -5,10 +5,15 @@ import {
 } from './skyboundAcademyStorage';
 import {
   evaluateSkyboundLesson,
+  getSkyboundAssemblyLevel,
+  getSkyboundAssemblyPartCost,
+  getSkyboundNextAssemblyPart,
+  installSkyboundNextAssemblyPart,
   isSkyboundLessonUnlocked,
   settleSkyboundAcademyLessonWithRewards,
   type SkyboundLessonEvaluation,
   type SkyboundLessonId,
+  type SkyboundAcademyRankId,
 } from './skyboundPilotAcademy';
 import {
   getSkyboundUpgradeCost,
@@ -65,6 +70,16 @@ export interface SkyboundUpgradeResult {
   cost: number;
   progress: SkyboundAcademyEventProgress;
   failureReason?: SkyboundUpgradeFailureReason;
+}
+
+export type SkyboundAssemblyPurchaseFailureReason = 'missing_event' | 'rank_locked' | 'aircraft_complete' | 'insufficient_salvage';
+
+export interface SkyboundAssemblyPurchaseResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  cost: number;
+  progress: SkyboundAcademyEventProgress;
+  failureReason?: SkyboundAssemblyPurchaseFailureReason;
 }
 
 function currentProgress(record: IslandRunGameStateRecord, eventId: string): SkyboundAcademyEventProgress {
@@ -301,6 +316,45 @@ export function upgradeSkyboundFleetPart(options: {
     progress: nextProgress,
     triggerSource: options.triggerSource ?? 'upgrade_skybound_fleet_part',
   });
+    return { record: next, ok: true, cost, progress: nextProgress };
+  });
+}
+
+export function installSkyboundAircraftPart(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  rankId: SkyboundAcademyRankId;
+  triggerSource?: string;
+}): Promise<SkyboundAssemblyPurchaseResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const eventId = options.eventId.trim();
+    const current = getIslandRunStateSnapshot(options.session);
+    const progress = eventId ? currentProgress(current, eventId) : createSkyboundAcademyEventProgress(Date.now());
+    if (!eventId) return { record: current, ok: false, cost: 0, progress, failureReason: 'missing_event' };
+    if (!progress.progress.promotedRankIds.includes(options.rankId)) return { record: current, ok: false, cost: 0, progress, failureReason: 'rank_locked' };
+    const part = getSkyboundNextAssemblyPart(progress.progress, options.rankId);
+    if (!part) return { record: current, ok: false, cost: 0, progress, failureReason: 'aircraft_complete' };
+    const cost = getSkyboundAssemblyPartCost(options.rankId, part.level);
+    if (progress.salvage < cost) return { record: current, ok: false, cost, progress, failureReason: 'insufficient_salvage' };
+    const nextAcademy = installSkyboundNextAssemblyPart(progress.progress, options.rankId);
+    if (getSkyboundAssemblyLevel(nextAcademy, options.rankId) === getSkyboundAssemblyLevel(progress.progress, options.rankId)) {
+      return { record: current, ok: false, cost, progress, failureReason: 'aircraft_complete' };
+    }
+    const nextProgress: SkyboundAcademyEventProgress = {
+      ...progress,
+      progress: nextAcademy,
+      salvage: progress.salvage - cost,
+      updatedAtMs: Date.now(),
+    };
+    const next = await commitProgress({
+      session: options.session,
+      client: options.client,
+      record: current,
+      eventId,
+      progress: nextProgress,
+      triggerSource: options.triggerSource ?? 'install_skybound_aircraft_part',
+    });
     return { record: next, ok: true, cost, progress: nextProgress };
   });
 }
