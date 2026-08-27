@@ -460,6 +460,11 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(modalSource.includes('island-mission-tracker__command-insignia'), 'military header carries the shield-and-chevron insignia');
       assert(modalSource.includes('island-mission-tracker__checklist'), 'phone tracker renders objectives as checklist rows');
       assert(modalSource.includes('island-mission-tracker__objective-marker'), 'each short objective carries a visual progress marker');
+      assert(modalSource.includes('island-mission-tracker__objective-row--actionable'), 'the live mission phone exposes each objective as an action');
+      assert(modalSource.includes('island-mission-tracker__objective-detail'), 'objectives without a dedicated panel open concise information inside the phone');
+      assert(boardSource.includes("objective.label.toLowerCase().includes('build landmarks')"), 'Build Landmarks routes to the existing Build flow');
+      assert(boardSource.includes('handleMissionPhoneObjectiveSelect'), 'dedicated signature objectives route through the board mission launcher');
+      assert(boardSource.includes("[1, 3, 10, 13].includes(islandNumber)"), 'only islands with dedicated mission panels are marked as external launches');
       assert(modalSource.includes('aria-label="Mission progress"'), 'phone tracker exposes accessible overall progress');
       assert(boardSource.includes('/tech/ExpeditionPhone_v19_folded.webp'), 'the board affordance uses the folded phone hardware');
       assert(modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker unfolds through the authored phone-opening sequence');

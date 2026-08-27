@@ -43,7 +43,10 @@ import {
 } from '../services/islandRunDiceThrowPresentation';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
-import { IslandMissionBriefingModal } from './IslandMissionBriefingModal';
+import {
+  IslandMissionBriefingModal,
+  type MissionObjectiveAction,
+} from './IslandMissionBriefingModal';
 import { IslandBoardSymbolLegendModal } from './IslandBoardSymbolLegendModal';
 import { ConfettiBurst } from './ConfettiBurst';
 import {
@@ -3161,6 +3164,55 @@ export function IslandRunBoardPrototype({
     islandNumber: activeMissionBriefing?.islandNumber ?? islandNumber,
     state: runtimeState,
   }), [activeMissionBriefing?.islandNumber, islandNumber, runtimeState]);
+  const missionPhoneObjectiveActions = useMemo<readonly MissionObjectiveAction[]>(() => (
+    currentMissionTracker.objectives.map((objective, objectiveIndex) => {
+      if (objective.label.toLowerCase().includes('build landmarks')) return 'launch';
+      if (objectiveIndex === 0 && [1, 3, 10, 13].includes(islandNumber)) return 'launch';
+      return 'details';
+    })
+  ), [currentMissionTracker.objectives, islandNumber]);
+  const missionPhoneObjectiveDetails = useMemo(() => (
+    currentMissionTracker.objectives.map((objective, objectiveIndex) => (
+      objective.label.toLowerCase().includes('build landmarks')
+        ? 'Open Build and raise every island landmark to its final level.'
+        : objectiveIndex === 0
+          ? currentMissionTracker.briefing.primaryObjective
+          : currentMissionTracker.briefing.supportingObjective
+    ))
+  ), [currentMissionTracker.briefing, currentMissionTracker.objectives]);
+  const handleMissionPhoneObjectiveSelect = useCallback((objectiveIndex: number) => {
+    const objective = currentMissionTracker.objectives[objectiveIndex];
+    if (!objective) return;
+
+    setShowMissionPhoneBriefing(false);
+    if (objective.label.toLowerCase().includes('build landmarks')) {
+      openBuildPanelFromFooter();
+      return;
+    }
+
+    if (objectiveIndex !== 0) return;
+    if (islandNumber === 1) {
+      openFirstLightAssemblyCrater();
+      return;
+    }
+    if (islandNumber === 3) {
+      openFrostwellMission();
+      return;
+    }
+    if (islandNumber === 10) {
+      openRootheartPowerworks();
+      return;
+    }
+    if (islandNumber === 13) openCactusCanyonSpiral();
+  }, [
+    currentMissionTracker.objectives,
+    islandNumber,
+    openBuildPanelFromFooter,
+    openCactusCanyonSpiral,
+    openFirstLightAssemblyCrater,
+    openFrostwellMission,
+    openRootheartPowerworks,
+  ]);
   const missionPhoneCompletionPercent = currentMissionTracker.overallProgressPercent;
   const cactusCanyonSpiralProgress = useMemo(() => resolveCactusCanyonSpiralProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
@@ -18596,7 +18648,10 @@ export function IslandRunBoardPrototype({
           : null}
         progress={displayedMissionTracker.objectives}
         overallProgressPercent={displayedMissionTracker.overallProgressPercent}
+        objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
+        objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
+        onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
         onAcknowledge={() => {
           if (showMissionPhoneBriefing) {
             setShowMissionPhoneBriefing(false);

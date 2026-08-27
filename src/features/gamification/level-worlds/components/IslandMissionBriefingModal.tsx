@@ -4,12 +4,17 @@ import { lockPageScroll } from '../../../../utils/scrollLock';
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 
+export type MissionObjectiveAction = 'launch' | 'details';
+
 export interface IslandMissionBriefingModalProps {
   isOpen: boolean;
   presentation: IslandMissionBriefingPresentation | null;
   progress?: readonly IslandMissionTrackerObjective[];
   overallProgressPercent?: number;
+  objectiveActions?: readonly MissionObjectiveAction[];
+  objectiveDetails?: readonly string[];
   acknowledgeLabel?: string;
+  onObjectiveSelect?: (objectiveIndex: number) => void;
   onAcknowledge: () => void;
 }
 
@@ -57,13 +62,18 @@ export function IslandMissionBriefingModal({
   presentation,
   progress = [],
   overallProgressPercent,
+  objectiveActions = [],
+  objectiveDetails = [],
   acknowledgeLabel = 'Accept field order',
+  onObjectiveSelect,
   onAcknowledge,
 }: IslandMissionBriefingModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<MissionPhonePhase>('unfolding');
+  const [selectedObjectiveIndex, setSelectedObjectiveIndex] = React.useState<number | null>(null);
   const titleId = React.useId();
   const acknowledgeRef = React.useRef<HTMLButtonElement | null>(null);
   const onAcknowledgeRef = React.useRef(onAcknowledge);
+  const onObjectiveSelectRef = React.useRef(onObjectiveSelect);
   const phaseRef = React.useRef<MissionPhonePhase>('unfolding');
   const closeTimerRef = React.useRef<number | null>(null);
 
@@ -72,29 +82,47 @@ export function IslandMissionBriefingModal({
     setPhase(nextPhase);
   }, []);
 
-  const requestClose = React.useCallback(() => {
+  const requestFold = React.useCallback((onFolded: () => void) => {
     if (phaseRef.current === 'folding') return;
     const reduceMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
-      onAcknowledgeRef.current();
+      onFolded();
       return;
     }
     updatePhase('folding');
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null;
-      onAcknowledgeRef.current();
+      onFolded();
     }, MISSION_PHONE_FOLD_DURATION_MS);
   }, [updatePhase]);
+
+  const requestClose = React.useCallback(() => {
+    requestFold(() => onAcknowledgeRef.current());
+  }, [requestFold]);
+
+  const handleObjectiveClick = React.useCallback((objectiveIndex: number) => {
+    const action = objectiveActions[objectiveIndex] ?? 'details';
+    if (action === 'details') {
+      setSelectedObjectiveIndex(objectiveIndex);
+      return;
+    }
+    requestFold(() => onObjectiveSelectRef.current?.(objectiveIndex));
+  }, [objectiveActions, requestFold]);
 
   React.useEffect(() => {
     onAcknowledgeRef.current = onAcknowledge;
   }, [onAcknowledge]);
 
   React.useEffect(() => {
+    onObjectiveSelectRef.current = onObjectiveSelect;
+  }, [onObjectiveSelect]);
+
+  React.useEffect(() => {
     if (!isOpen || typeof document === 'undefined') {
       if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
+      setSelectedObjectiveIndex(null);
       updatePhase('unfolding');
       return undefined;
     }
@@ -156,6 +184,9 @@ export function IslandMissionBriefingModal({
     : 0;
   const overallPercent = Math.max(0, Math.min(100, Math.round(overallProgressPercent ?? derivedOverallPercent)));
   const missionTitle = presentation.headline;
+  const selectedObjective = selectedObjectiveIndex === null
+    ? null
+    : normalizedProgress[selectedObjectiveIndex] ?? null;
 
   return createPortal(
     <div className="island-mission-tracker" data-phase={phase} role="presentation">
@@ -209,31 +240,72 @@ export function IslandMissionBriefingModal({
             <h2 id={titleId}>{missionTitle}</h2>
           </header>
 
-          <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
-            {normalizedProgress.map((item) => (
-              <li
-                key={item.label}
-                className={item.complete ? 'island-mission-tracker__checklist-item--complete' : undefined}
-                aria-label={`${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`}
+          {selectedObjective ? (
+            <section className="island-mission-tracker__objective-detail" aria-label={`${selectedObjective.label} mission information`}>
+              <button
+                type="button"
+                className="island-mission-tracker__objective-back"
+                onClick={() => setSelectedObjectiveIndex(null)}
               >
-                <span
-                  className="island-mission-tracker__objective-marker"
-                  aria-hidden="true"
-                  style={{ '--mission-objective-progress': `${Math.round((item.value / item.target) * 360)}deg` } as React.CSSProperties}
-                >
-                  <span>
-                    {item.complete ? '✓' : <MissionObjectiveGlyph label={item.label} />}
-                  </span>
+                <span aria-hidden="true">‹</span> Objectives
+              </button>
+              <div className="island-mission-tracker__objective-detail-card">
+                <span className="island-mission-tracker__objective-detail-glyph" aria-hidden="true">
+                  <MissionObjectiveGlyph label={selectedObjective.label} />
                 </span>
-                <span className="island-mission-tracker__objective-copy">
-                  <strong>{item.label}</strong>
-                </span>
-                <span className="island-mission-tracker__objective-count">
-                  {item.complete ? 'Done' : item.displayValue ?? `${Math.floor(item.value)} / ${Math.floor(item.target)}`}
-                </span>
-              </li>
-            ))}
-          </ol>
+                <small>Mission objective</small>
+                <h3>{selectedObjective.label}</h3>
+                <p>{objectiveDetails[selectedObjectiveIndex ?? 0] ?? presentation.primaryObjective}</p>
+              </div>
+            </section>
+          ) : (
+            <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
+              {normalizedProgress.map((item, objectiveIndex) => {
+                const objectiveLabel = `${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`;
+                const objectiveContent = (
+                  <>
+                    <span
+                      className="island-mission-tracker__objective-marker"
+                      aria-hidden="true"
+                      style={{ '--mission-objective-progress': `${Math.round((item.value / item.target) * 360)}deg` } as React.CSSProperties}
+                    >
+                      <span>
+                        {item.complete ? '✓' : <MissionObjectiveGlyph label={item.label} />}
+                      </span>
+                    </span>
+                    <span className="island-mission-tracker__objective-copy">
+                      <strong>{item.label}</strong>
+                    </span>
+                    <span className="island-mission-tracker__objective-count">
+                      {item.complete ? 'Done' : item.displayValue ?? `${Math.floor(item.value)} / ${Math.floor(item.target)}`}
+                    </span>
+                    {onObjectiveSelect ? <span className="island-mission-tracker__objective-chevron" aria-hidden="true">›</span> : null}
+                  </>
+                );
+                return (
+                  <li
+                    key={item.label}
+                    className={item.complete ? 'island-mission-tracker__checklist-item--complete' : undefined}
+                  >
+                    {onObjectiveSelect ? (
+                      <button
+                        type="button"
+                        className="island-mission-tracker__objective-row island-mission-tracker__objective-row--actionable"
+                        aria-label={`${objectiveLabel}. Open objective.`}
+                        onClick={() => handleObjectiveClick(objectiveIndex)}
+                      >
+                        {objectiveContent}
+                      </button>
+                    ) : (
+                      <div className="island-mission-tracker__objective-row" aria-label={objectiveLabel}>
+                        {objectiveContent}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          )}
 
           <footer className="island-mission-tracker__overall" aria-label="Mission progress">
             <span>
