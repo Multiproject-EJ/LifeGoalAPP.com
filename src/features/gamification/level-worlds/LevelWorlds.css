@@ -929,55 +929,6 @@
   outline-offset: 2px;
 }
 
-/* Expedition Phone mission uplink — stacked above the Compass in the same
-   lower-right thumb rail. The badge carries live mission completion. */
-.island-run-prototype__mission-phone-floating {
-  position: absolute;
-  right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
-  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 152px);
-  z-index: 18;
-  width: 46px;
-  height: 46px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px;
-  border: 2px solid rgba(101, 225, 232, 0.9);
-  border-radius: 999px;
-  background: radial-gradient(circle at 45% 30%, rgba(234, 255, 255, 0.98), rgba(119, 222, 226, 0.9) 58%, rgba(19, 91, 112, 0.95));
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.84), 0 8px 18px rgba(0, 0, 0, 0.3), 0 0 15px rgba(60, 223, 230, 0.22);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.island-run-prototype__mission-phone-floating img {
-  width: 28px;
-  height: 38px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 2px rgba(2, 20, 30, 0.45));
-}
-.island-run-prototype__mission-phone-floating > span {
-  position: absolute;
-  right: -7px;
-  top: -7px;
-  min-width: 24px;
-  height: 20px;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  padding: 0 4px;
-  border: 2px solid #fff5c6;
-  border-radius: 999px;
-  color: #fff8d9;
-  background: #a32d29;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-  font: 950 0.54rem/1 ui-sans-serif, system-ui, sans-serif;
-}
-.island-run-prototype__mission-phone-floating--complete > span { background: #21724f; }
-.island-run-prototype__mission-phone-floating:focus-visible {
-  outline: 2px solid rgba(255, 230, 147, 0.98);
-  outline-offset: 2px;
-}
-
 .island-run-prototype__footer {
   position: absolute;
   left: 0;
@@ -3226,6 +3177,68 @@
   justify-content: center;
   gap: var(--rewardbar-side-slot-gap, 8px);
   z-index: 2;
+}
+
+/* One compact, permanent mission entry follows the active event buttons. The
+   full tracker remains portal-owned; no mission copy is allowed to float over
+   the board itself. */
+.island-run-board__mission-phone-rail {
+  position: relative;
+  width: 56px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  padding: 2px 2px 10px;
+  border: 2px solid rgba(101, 225, 232, 0.9);
+  border-radius: 17px;
+  color: #f4ffff;
+  background: radial-gradient(circle at 45% 25%, rgba(234, 255, 255, 0.98), rgba(62, 166, 181, 0.94) 54%, rgba(9, 49, 68, 0.98));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.84), 0 7px 16px rgba(0, 0, 0, 0.3), 0 0 14px rgba(60, 223, 230, 0.22);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.island-run-board__mission-phone-rail img {
+  width: 25px;
+  height: 35px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(2, 20, 30, 0.48));
+}
+
+.island-run-board__mission-phone-rail > span {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  min-width: 25px;
+  min-height: 19px;
+  display: grid;
+  place-items: center;
+  padding: 1px 4px;
+  border: 2px solid #fff5c6;
+  border-radius: 999px;
+  color: #fff8d9;
+  background: #a32d29;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  font: 950 0.52rem/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+.island-run-board__mission-phone-rail > small {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  left: 2px;
+  color: #efffff;
+  font: 900 0.5rem/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 20, 30, 0.9);
+}
+
+.island-run-board__mission-phone-rail--complete > span { background: #21724f; }
+.island-run-board__mission-phone-rail:focus-visible {
+  outline: 2px solid rgba(255, 230, 147, 0.98);
+  outline-offset: 2px;
 }
 
 /* Decorative event title banner */
@@ -6279,7 +6292,7 @@
 .island-mission-tracker {
   position: fixed;
   inset: 0;
-  z-index: 12400;
+  z-index: var(--island-run-mission-overlay-z, 22000);
   display: grid;
   place-items: center;
   box-sizing: border-box;
@@ -23541,7 +23554,9 @@
 .island-run-board__three-preview .island-5-three-pilot__train-ride-hud {
   position: absolute;
   z-index: 12;
-  top: max(calc(env(safe-area-inset-top) + 76px), 86px);
+  /* The ride controls belong below both fixed HUD rows; scene-local z-index
+     cannot lift them through the reward bar's stacking context. */
+  top: max(calc(env(safe-area-inset-top) + 164px), 176px);
   left: 50%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -24180,6 +24195,17 @@
   overflow-y: auto;
   background: radial-gradient(circle at 50% 35%, rgba(33, 80, 62, .44), rgba(5, 12, 14, .84));
   backdrop-filter: blur(7px) saturate(.9);
+}
+
+/* Shared contract for every long-lived signature mission dialog. This class is
+   applied to body portals and intentionally outranks the board top bar,
+   reward bar, and scene HUD. */
+.island-run-signature-mission-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--island-run-mission-overlay-z, 22000);
+  place-items: center;
+  isolation: isolate;
 }
 
 .rootheart-powerworks-modal {
@@ -25121,7 +25147,6 @@
 .island-run-prototype--build-exclusive .island-run-prototype__best-next-action-chip,
 .island-run-prototype--build-exclusive .island-run-board__dice-roll-overlay,
 .island-run-prototype--build-exclusive .island-run-prototype__camera-reset-floating,
-.island-run-prototype--build-exclusive .island-run-prototype__mission-phone-floating,
 .island-run-prototype--build-exclusive .island-run-prototype__compass-floating,
 .island-run-prototype--build-exclusive .island-run-prototype__footer,
 .island-run-prototype--build-exclusive .island-run-landmark-coachmark,
@@ -25419,7 +25444,6 @@
 .island-run-prototype--arena-battle .island-run-prototype__best-next-action-chip,
 .island-run-prototype--arena-battle .island-run-landmark-coachmark,
 .island-run-prototype--arena-battle .island-run-prototype__camera-reset-floating,
-.island-run-prototype--arena-battle .island-run-prototype__mission-phone-floating,
 .island-run-prototype--arena-battle .island-run-prototype__compass-floating,
 .island-run-prototype--arena-battle .island-run-prototype__footer,
 .island-run-prototype--arena-battle .island-run-board__three-preview-badge,

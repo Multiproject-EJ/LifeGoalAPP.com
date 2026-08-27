@@ -430,7 +430,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 001 exposes a lower-right phone briefing with live mission progress and automatic clear routing',
+    name: 'Island missions expose a compact reward-rail phone above the HUD with live progress and queued pickup handoff',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -438,7 +438,13 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx', 'utf8');
       const trackerSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRunMissionTracker.ts', 'utf8');
       const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
-      assert(boardSource.includes('island-run-prototype__mission-phone-floating'), 'board renders the mission phone affordance');
+      assert(boardSource.includes('island-run-board__rewardbar-side-rail'), 'board renders the shared right-side HUD rail');
+      assert(boardSource.includes('island-run-board__mission-phone-rail'), 'board renders the compact mission phone beneath event actions');
+      assert(boardSource.includes('rewardBarMissionSlotIndex'), 'mission phone owns a stable slot after active minigame actions');
+      assert(boardSource.includes('shouldRenderLegacySignatureMissionPills = false'), 'large scene-space mission cards stay retired');
+      assert(boardSource.includes("setQueuedSignatureMissionPresentation('first_light_assembly')"), 'a Concord pickup queues a simultaneous Assembly pickup instead of dropping its presentation');
+      assert(boardSource.includes('if (!queuedSignatureMissionPresentation || doesModalOwnAttention) return undefined;'), 'queued mission presentation waits for the current popup to close');
+      assert(boardSource.includes('openQueuedSignatureMissionPresentation(mission)'), 'closing the first popup releases the queued mission panel');
       assert(boardSource.includes("showIslandClearCelebrationFromAnywhere('island_001_assembly_and_landmarks_complete')"), 'completed mission and landmarks auto-open island clear');
       assert(boardSource.includes('resolveIslandMissionTrackerPresentation'), 'board delegates phone progress to the canonical read model');
       assert(!boardSource.includes('standardMissionCompletionPercent'), 'board no longer owns generic phone progress arithmetic');
@@ -456,7 +462,10 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(!modalSource.includes('Command council'), 'compact tracker removes the command-council information wall');
       assert(!modalSource.includes('presentation.missionStatement'), 'compact tracker removes the long mission paragraph');
       assert(!modalSource.includes('presentation.caretakerSignal'), 'compact tracker removes the caretaker quote');
-      assert(cssSource.includes('.island-run-prototype__mission-phone-floating'), 'phone affordance has its own lower-right presentation contract');
+      assert(cssSource.includes('.island-run-board__mission-phone-rail'), 'phone affordance has a compact reward-rail presentation contract');
+      assert(cssSource.includes('.island-run-signature-mission-overlay'), 'signature mission dialogs share one foreground portal layer');
+      assert(cssSource.includes('z-index: var(--island-run-mission-overlay-z, 22000)'), 'mission overlays outrank the board HUD');
+      assert(cssSource.includes("top: max(calc(env(safe-area-inset-top) + 164px), 176px)"), 'Canyon train ride controls sit below the top and reward bars');
       assert(cssSource.includes('.island-mission-tracker__phone'), 'tracker preserves the 3D board behind a physical phone presentation');
       assert(cssSource.includes(".island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen"), 'the mission display powers on only after the phone fully unfolds');
       assert(cssSource.includes('@keyframes island-mission-tracker-screen-boot'), 'the powered display has an authored black-screen ignition sequence');

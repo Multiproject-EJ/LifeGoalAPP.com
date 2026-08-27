@@ -673,6 +673,7 @@ const ISLAND_DURATION_SEC = 72 * 60 * 60;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 type DevIslandJumpDigits = [number, number, number];
 type DevIslandJumpDigitIndex = 0 | 1 | 2;
+type QueuedSignatureMissionPresentation = 'first_light_assembly' | 'cactus_canyon_spiral' | 'frostwell_iceworks';
 const DEV_ISLAND_JUMP_DIGIT_LABELS = ['hundreds', 'tens', 'ones'] as const;
 
 function islandNumberToDevJumpDigits(islandNumber: number): DevIslandJumpDigits {
@@ -1899,6 +1900,10 @@ export function IslandRunBoardPrototype({
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [showMissionPhoneBriefing, setShowMissionPhoneBriefing] = useState(false);
+  // Presentation-only queue: a roll may earn both a Concord fragment and a
+  // signature-mission pickup. The pickup modal gets the first beat; its mission
+  // panel is released after that full-attention surface closes.
+  const [queuedSignatureMissionPresentation, setQueuedSignatureMissionPresentation] = useState<QueuedSignatureMissionPresentation | null>(null);
   useEffect(() => {
     if (!showMissionBriefingPreview) return;
     setActiveMissionBriefing({
@@ -2283,6 +2288,7 @@ export function IslandRunBoardPrototype({
     // Close any open tech surface when switching islands (the modal owns its own
     // auto-dismiss timer, so there is nothing else to clean up here).
     setTechCollectionModal(null);
+    setQueuedSignatureMissionPresentation(null);
     setTechCompletionCelebration(showConcordCompletionPreview
       ? {
           collectedSlots: [0, 1, 2, 3, 4, 5, 6, 7, 8],
@@ -2318,6 +2324,9 @@ export function IslandRunBoardPrototype({
   // never replace a live 3D island after a renderer restart or build beat.
   const shouldRenderIsland5Three = canUseIsland5Three
     && (!isIslandVisualPreview || isIsland5ThreePreviewRequested);
+  // Legacy scene-space mission cards could be occluded by the top and reward
+  // bars. Persistent mission access now lives in the shared reward-bar rail.
+  const shouldRenderLegacySignatureMissionPills = false;
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
@@ -2688,6 +2697,17 @@ export function IslandRunBoardPrototype({
   const closeRootheartPowerworks = useCallback(() => {
     setShowRootheartPowerworks(false);
   }, []);
+  const openQueuedSignatureMissionPresentation = useCallback((mission: QueuedSignatureMissionPresentation) => {
+    if (mission === 'first_light_assembly') {
+      openFirstLightAssemblyCrater();
+      return;
+    }
+    if (mission === 'cactus_canyon_spiral') {
+      openCactusCanyonSpiral();
+      return;
+    }
+    openFrostwellMission();
+  }, [openCactusCanyonSpiral, openFirstLightAssemblyCrater, openFrostwellMission]);
   const previousBuildCameraStopIdRef = useRef<string | null>(null);
   const [buildLevelCompletion, setBuildLevelCompletion] = useState<ActiveBuildLevelReview | null>(null);
   const buildLevelCompletionRef = useRef<ActiveBuildLevelReview | null>(null);
@@ -7829,13 +7849,21 @@ export function IslandRunBoardPrototype({
         const concordPickup = rollResult.concordFragmentPickup;
         const concordPickupTileIndex = concordPickup?.tileIndex ?? currentIndex;
         const concordPickupTile = landmarkDoorTileMap[concordPickupTileIndex];
-        if (maybeCollectTechItem(
+        const collectedConcordFragment = maybeCollectTechItem(
           concordPickupTile?.tileType ?? landedTile?.tileType ?? 'micro',
           concordPickupTileIndex,
           concordPickup?.reason,
-        )) {
+        );
+        if (collectedConcordFragment) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
+          if ((rollResult.firstLightAssemblyDynamiteCollected ?? 0) > 0) {
+            setQueuedSignatureMissionPresentation('first_light_assembly');
+          } else if ((rollResult.cactusCanyonDynamiteCollected ?? 0) > 0) {
+            setQueuedSignatureMissionPresentation('cactus_canyon_spiral');
+          } else if (rollResult.frostwellSpinGranted) {
+            setQueuedSignatureMissionPresentation('frostwell_iceworks');
+          }
         } else if (!ordinaryTileGameplayActive) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -8834,9 +8862,10 @@ export function IslandRunBoardPrototype({
     isEggManiaActive ? 1 : 0,
     hasRewardBarTimedEventQuickAction ? rewardBarTimedEventSlotIndex + 1 : 0,
   );
+  const rewardBarMissionSlotIndex = rewardBarRailContentSlotCount;
   const rewardBarSideSlotCount = Math.max(
     hatcheryPendingEggCount,
-    rewardBarRailContentSlotCount,
+    rewardBarMissionSlotIndex + 1,
   );
   const openHatcheryQuickAccess = useCallback(() => {
     requestActiveStopTransition('hatchery', 'manifest_quick_access');
@@ -10623,6 +10652,7 @@ export function IslandRunBoardPrototype({
       setActiveMissionBriefing(null);
       setPendingMissionBriefing(null);
       setShowMissionPhoneBriefing(false);
+      setQueuedSignatureMissionPresentation(null);
       setShowIslandClearCelebration(false);
       setLandingText(`🧪 DEV mission reset: Island ${String(result.islandNumber).padStart(3, '0')} is ready to replay.`);
       setShowTopbarMenu(false);
@@ -12737,10 +12767,23 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [rootheartCompletionCelebrationId]);
   useEffect(() => {
-    if (!pendingMissionBriefing || doesModalOwnAttention) return;
+    if (!pendingMissionBriefing || doesModalOwnAttention || queuedSignatureMissionPresentation) return;
     setActiveMissionBriefing(pendingMissionBriefing);
     setPendingMissionBriefing(null);
-  }, [doesModalOwnAttention, pendingMissionBriefing]);
+  }, [doesModalOwnAttention, pendingMissionBriefing, queuedSignatureMissionPresentation]);
+  useEffect(() => {
+    if (!queuedSignatureMissionPresentation || doesModalOwnAttention) return undefined;
+    const mission = queuedSignatureMissionPresentation;
+    const timer = window.setTimeout(() => {
+      setQueuedSignatureMissionPresentation(null);
+      openQueuedSignatureMissionPresentation(mission);
+    }, 180);
+    return () => window.clearTimeout(timer);
+  }, [
+    doesModalOwnAttention,
+    openQueuedSignatureMissionPresentation,
+    queuedSignatureMissionPresentation,
+  ]);
   useEffect(() => {
     if (
       islandNumber !== 1
@@ -14418,6 +14461,24 @@ export function IslandRunBoardPrototype({
                 );
               }
 
+              if (index === rewardBarMissionSlotIndex) {
+                return (
+                  <span key="mission-phone" className="island-run-board__rewardbar-side-slot">
+                    <button
+                      type="button"
+                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}`}
+                      aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+                      title="Mission tracker"
+                      onClick={() => setShowMissionPhoneBriefing(true)}
+                    >
+                      <img src="/tech/ExpeditionPhone_v19_folded.webp" alt="" aria-hidden="true" />
+                      <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
+                      <small>Mission</small>
+                    </button>
+                  </span>
+                );
+              }
+
               return (
                 <span
                   key={`rewardbar-side-placeholder-${index}`}
@@ -14688,7 +14749,7 @@ export function IslandRunBoardPrototype({
                 DEV · 3D VISUAL PREVIEW
               </div>
             ) : null}
-            {!isIslandVisualPreview && islandArtPreviewNumber === 3 ? (
+            {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 3 ? (
               <button
                 type="button"
                 className="island-run-board__signature-mission-pill"
@@ -14706,7 +14767,7 @@ export function IslandRunBoardPrototype({
                 </span>
               </button>
             ) : null}
-            {!isIslandVisualPreview && islandArtPreviewNumber === 10 ? (
+            {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 10 ? (
               <button
                 type="button"
                 className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--rootheart"
@@ -14724,7 +14785,7 @@ export function IslandRunBoardPrototype({
                 </span>
               </button>
             ) : null}
-            {!isIslandVisualPreview && islandArtPreviewNumber === 13 ? (
+            {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 13 ? (
               <button
                 type="button"
                 className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--canyon-spiral"
@@ -14740,7 +14801,7 @@ export function IslandRunBoardPrototype({
                 </span>
               </button>
             ) : null}
-            {!isIslandVisualPreview && islandArtPreviewNumber === 14 ? (
+            {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 14 ? (
               <button
                 type="button"
                 className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--great-honeyfall"
@@ -14761,7 +14822,7 @@ export function IslandRunBoardPrototype({
                 </span>
               </button>
             ) : null}
-            {!isIslandVisualPreview && islandArtPreviewNumber === 12 ? (
+            {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 12 ? (
               <button
                 type="button"
                 className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--sunken-treasure"
@@ -14893,17 +14954,6 @@ export function IslandRunBoardPrototype({
         onClick={resetCameraFromTopbarMenu}
       >
         🔎
-      </button>
-
-      <button
-        type="button"
-        className={`island-run-prototype__mission-phone-floating${currentMissionTracker.complete ? ' island-run-prototype__mission-phone-floating--complete' : ''}`}
-        aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
-        title="Mission tracker"
-        onClick={() => setShowMissionPhoneBriefing(true)}
-      >
-        <img src="/tech/ExpeditionPhone_v19_folded.webp" alt="" aria-hidden="true" />
-        <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
       </button>
 
       <button
@@ -18917,7 +18967,7 @@ export function IslandRunBoardPrototype({
 
       {showFrostwellMission && typeof document !== 'undefined' ? createPortal((
         <div
-          className="frostwell-mission-modal__backdrop"
+          className="island-run-signature-mission-overlay frostwell-mission-modal__backdrop"
           role="presentation"
           onClick={closeFrostwellMission}
         >
@@ -19030,7 +19080,7 @@ export function IslandRunBoardPrototype({
 
       {showFirstLightAssemblyCrater && typeof document !== 'undefined' ? createPortal((
         <div
-          className="island-stop-modal__backdrop cactus-canyon-spiral-modal__backdrop"
+          className="island-run-signature-mission-overlay island-stop-modal__backdrop cactus-canyon-spiral-modal__backdrop"
           role="presentation"
           onClick={closeFirstLightAssemblyCrater}
         >
@@ -19116,7 +19166,7 @@ export function IslandRunBoardPrototype({
 
       {showCactusCanyonSpiral && typeof document !== 'undefined' ? createPortal((
         <div
-          className="frostwell-mission-modal__backdrop cactus-canyon-spiral-modal__backdrop"
+          className="island-run-signature-mission-overlay frostwell-mission-modal__backdrop cactus-canyon-spiral-modal__backdrop"
           role="presentation"
           onClick={closeCactusCanyonSpiral}
         >
@@ -19209,7 +19259,7 @@ export function IslandRunBoardPrototype({
 
       {showRootheartPowerworks && typeof document !== 'undefined' ? createPortal((
         <div
-          className="rootheart-powerworks-modal__backdrop"
+          className="island-run-signature-mission-overlay rootheart-powerworks-modal__backdrop"
           role="presentation"
           onClick={closeRootheartPowerworks}
         >

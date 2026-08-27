@@ -233,7 +233,9 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     name: 'board lets Concord fragments collect before special tile routing can steal the landing',
     run: () => {
       includes(boardSource, 'const concordPickup = rollResult.concordFragmentPickup;');
-      includes(boardSource, 'if (maybeCollectTechItem(');
+      includes(boardSource, 'const collectedConcordFragment = maybeCollectTechItem(');
+      includes(boardSource, 'if (collectedConcordFragment) {');
+      includes(boardSource, "setQueuedSignatureMissionPresentation('first_light_assembly')");
       includes(boardSource, 'concordPickup?.reason,');
       includes(boardSource, "} else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId)");
       includes(boardSource, 'const maybeCollectTechItem = useCallback((');
