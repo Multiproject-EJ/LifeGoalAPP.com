@@ -302,3 +302,107 @@ local save path is intentionally separate from canonical event mode.
 - The local play server returns HTTP 200 at
   `http://127.0.0.1:5199/dev/skybound-expedition`. Final human phone playfeel
   review of this integration checkpoint remains the next visual gate.
+
+## Flight-feel Gauntlet loop 2 — 2026-08-27
+
+Eivind rated the current playable experience **2/10** after the first launch,
+aircraft-motion, and ground-contact correction. The progression architecture is
+not the active risk in this loop: the ticket wallet, five ranks, twenty lessons,
+upgrade economy, reward-bar settlement, models, and level themes already exist.
+The failed gate is the connection between the player's hand and the aircraft.
+
+### Baseline critique
+
+| Gate | Baseline | Observed failure |
+| --- | ---: | --- |
+| Launch anticipation | 4/10 | The mesh and bands react, but a quick launch can skip the readable charge beat. |
+| Aircraft readability | 3/10 | The procedural aircraft is real geometry, but the chase framing leaves it too small to read under pressure. |
+| Flight control | 2/10 | Pointer input is absolute to the canvas, so control depends on where the gesture begins. |
+| World speed/depth | 4/10 | Perspective props exist, but camera FOV and air-rush feedback do not scale clearly with energy. |
+| Collision/recovery | 3/10 | Physics can recover, but the HUD does not tell the pilot whether the craft is skimming, stalling, or damaged. |
+| Progression feedback | 5/10 | The five-rank shell and rewards are visible, but this cannot compensate for weak flying. |
+
+### Bounded correction slice
+
+1. Replace absolute pointer steering with a relative, dead-zoned virtual flight
+   stick whose anchor, displacement, and command are visible while held.
+2. Classify every live frame as smooth flow, climb, dive, ground effect, stall,
+   or airframe strain and show speed, altitude, and accumulated smooth-flight
+   time without obscuring the course.
+3. Make smooth flight a deterministic scored behavior; make low-energy stall
+   readable and recoverable rather than an invisible early ending.
+4. Drive chase distance, FOV, bank roll, and air-rush streaks from actual speed,
+   boost, and attitude in both WebGL and compatibility renderers.
+5. Add a bounded impact vignette and recovery instruction when a hazard hit is
+   registered; preserve the existing deterministic destruction and terminal
+   reasons.
+6. Give the one-tap full-power fallback a visible charge sequence before it
+   releases so it demonstrates the same anticipation as a manual pull.
+
+### Acceptance evidence
+
+- Pure tests prove virtual-stick dead zone/direction, deterministic flight-mode
+  classification, smooth-flight accumulation, scoring value, and recoverable
+  stall/skim behavior.
+- At 390×844, the stick follows the held pointer, climb/dive/bank commands read
+  correctly, and the plane can recover after a low-energy or terrain warning.
+- A browser replay shows visible speed-dependent framing, a legible aircraft,
+  live condition telemetry, and no abrupt result while the aircraft remains in
+  valid flight.
+- Targeted tests, the full Island Run service suite, architecture guard,
+  production build, `git diff --check`, and browser console remain clean.
+
+### Rollback and stop rule
+
+This slice may add presentation state and pure transient flight metrics; it may
+not create another persistence owner or bypass the canonical event actions.
+Rollback is limited to the flight-feel helper, transient fields, stage feedback,
+and CSS. Stop and revise the interaction model if the 390×844 replay still
+requires screen-position steering or if telemetry hides the approaching course.
+
+### Loop 2 evidence and decision
+
+- Relative input now anchors where the pointer goes down, applies an 8% dead
+  zone, limits displacement to an 82px-equivalent radius, and renders the live
+  stick position. A first-flight coach explains climb, dive, and bank.
+- Live telemetry classifies smooth flow, climb, dive, terrain lift, stall, and
+  airframe strain. It exposes airspeed, altitude, energy, and accumulated flow
+  time. Smooth flight adds at most 120 salvage to settlement.
+- Low-energy nose-high flight now produces a deterministic recoverable stall.
+  The first two severe terrain contacts become visible recovery skims; a third
+  severe impact may still destroy the craft. Hazard impacts retain integrity
+  loss, named-part detachment, camera shake, and terminal integrity failure.
+- The one-tap launch now shows four charge poses over 390ms before release.
+  WebGL chase framing moves 1.8 world units closer for Cadet, scales the model
+  from 0.9 to 1.02, widens FOV from 62 toward 76 with speed/boost, rolls with
+  bank, and drives thirty camera-space air-rush streaks. The software fallback
+  received equivalent energy-based FOV, streak, and aircraft-scale tuning.
+- Browser evidence is stored at
+  `.img2threejs/skybound-cadet/renders/2026-08-27-launch-charge-v2.png` and
+  `.img2threejs/skybound-cadet/renders/2026-08-27-flight-feel-v2.png`.
+- The phone-width replay had no horizontal overflow and no browser warnings or
+  errors. The same unassisted full-power launch that previously hard-crashed at
+  304/360m recovered from terrain contact and reached 360/360m.
+- Full Island Run service suite passed: 1,880 tests, 0 failures. Production Vite
+  build passed with the existing chunk/import warnings. Architecture guard
+  passed with 0 violations and the same 3 allowlisted warnings. Full TypeScript
+  still stops only on the repository's pre-existing Supabase generated-type
+  incompatibilities and reports no Skybound error. `git diff --check` passed.
+
+### Honest re-score
+
+| Gate | Before | After loop 2 | Decision |
+| --- | ---: | ---: | --- |
+| Launch anticipation | 4/10 | 7/10 | Pass for this slice |
+| Aircraft readability | 3/10 | 5/10 | Improved, still below final bar |
+| Flight control | 2/10 | 6/10 | Pass for relative-control slice |
+| World speed/depth | 4/10 | 6/10 | Improved, needs real-device WebGL review |
+| Collision/recovery | 3/10 | 7/10 | Pass for abrupt-ending correction |
+| Progression feedback | 5/10 | 5/10 | Intentionally unchanged this loop |
+
+**Gauntlet decision: revise, not complete.** The interaction slice passed, but
+the in-app test browser used the procedural software 3D fallback and therefore
+cannot prove final WebGL aircraft shading, moving-part readability, or orbit
+volume. The next highest-value loop is a real-device/WebGL aircraft-and-world
+fidelity pass, followed by authored level-specific course moments rather than
+additional shell UI.

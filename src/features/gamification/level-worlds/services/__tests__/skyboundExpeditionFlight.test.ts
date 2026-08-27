@@ -11,6 +11,7 @@ import {
   type SkyboundFlightState,
   type SkyboundUpgrades,
 } from '../skyboundExpeditionFlight';
+import { getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../skyboundFlightFeel';
 
 type TestCase = { name: string; run: () => void };
 
@@ -256,8 +257,52 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       };
       const landed = stepSkyboundFlight({ ...base, vx: 7, vy: -2, pitchRad: .2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(landed.status === 'landed' && landed.terminalReason === 'touchdown', 'slow level contact should be a controlled touchdown');
-      const crashed = stepSkyboundFlight({ ...base, vx: 26, vy: -22, pitchRad: 1 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      const firstSevereContact = stepSkyboundFlight({ ...base, vx: 26, vy: -22, pitchRad: 1, terrainSkims: 0 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(firstSevereContact.status === 'flying' && firstSevereContact.terrainSkims === 1, 'a first severe contact should produce one recoverable Academy skim');
+      const crashed = stepSkyboundFlight({ ...base, vx: 26, vy: -24, pitchRad: 1.08, terrainSkims: 2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(crashed.status === 'crashed' && crashed.terminalReason === 'hard_impact', 'a steep high-speed impact should still crash');
+    },
+  },
+  {
+    name: 'maps the virtual flight stick relative to its own anchor with a dead zone',
+    run: () => {
+      const neutral = getSkyboundFlightStickControl({ x: 100, y: 100 }, { x: 104, y: 97 }, 82);
+      assert(neutral.pitch === 0 && neutral.steer === 0, 'small hand movement should remain inside the stick dead zone');
+      const climbRight = getSkyboundFlightStickControl({ x: 100, y: 100 }, { x: 158, y: 48 }, 82);
+      assert(climbRight.pitch > 0.5, 'dragging upward should command a climb');
+      assert(climbRight.steer > 0.5, 'dragging right should command a right bank');
+      assert(climbRight.magnitude > 0.8, 'large displacement should visibly approach full stick deflection');
+    },
+  },
+  {
+    name: 'classifies smooth flight, stalls, and damaged airframes deterministically',
+    run: () => {
+      const base = {
+        ...createSkyboundFlight({ power: 1, angleDeg: 35, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
+        x: 40, y: 52, vx: 34, vy: 0, pitchRad: 0.08, bankRad: 0.1,
+      };
+      assert(getSkyboundFlightTelemetry(base).condition === 'smooth', 'level energy flight should read as smooth flow');
+      assert(getSkyboundFlightTelemetry({ ...base, vx: 13, pitchRad: 0.55 }).condition === 'stall', 'low-speed nose-high flight should warn of a stall');
+      assert(getSkyboundFlightTelemetry({ ...base, integrity: 1, hazardHits: 2 }).condition === 'damaged', 'low integrity should read as airframe strain');
+    },
+  },
+  {
+    name: 'tracks smooth flight as a scored skill and keeps a stall recoverable',
+    run: () => {
+      const base = {
+        ...createSkyboundFlight({ power: 1, angleDeg: 35, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
+        x: 25, y: 54, vx: 36, vy: 0, pitchRad: 0.06, bankRad: 0,
+      };
+      const smooth = stepSkyboundFlight(base, { pitch: 0, steer: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(smooth.smoothFlightMs === 64, 'stable energetic flight should accumulate flow time');
+      const stallStart = { ...base, vx: 13, vy: 1, pitchRad: 0.62 };
+      const stalled = stepSkyboundFlight(stallStart, { pitch: -1, steer: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(stalled.status === 'flying', 'a low-energy stall should remain recoverable');
+      assert(stalled.stallMs > 0, 'a stall should accumulate readable warning time');
+      assert(stalled.vy < stallStart.vy, 'stall physics should begin trading altitude for airspeed');
+      const ordinaryScore = scoreSkyboundFlight({ ...smooth, status: 'landed', smoothFlightMs: 0 });
+      const flowScore = scoreSkyboundFlight({ ...smooth, status: 'landed', smoothFlightMs: 20_000 });
+      assert(flowScore > ordinaryScore, 'holding smooth flow should add a bounded settlement bonus');
     },
   },
 ];

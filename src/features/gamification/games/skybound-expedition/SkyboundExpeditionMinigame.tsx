@@ -6,6 +6,7 @@ import {
   scoreSkyboundFlight, stepSkyboundFlight, upgradeSkyboundPart,
   type SkyboundFlightControl, type SkyboundFlightState, type SkyboundUpgradeKind, type SkyboundUpgrades,
 } from '../../level-worlds/services/skyboundExpeditionFlight';
+import { getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../../level-worlds/services/skyboundFlightFeel';
 import {
   SKYBOUND_AIRCRAFT_RANKS, SKYBOUND_LESSONS, evaluateSkyboundLesson, getSkyboundLesson,
   getSkyboundRank, getSkyboundRankLessons, isSkyboundLessonUnlocked, settleSkyboundAcademyLesson,
@@ -19,6 +20,7 @@ import fleetEvolutionStripUrl from './assets/fleet-evolution-strip-v1.png';
 import './skyboundExpedition.css';
 
 type Phase = 'aiming' | 'flying' | 'result';
+interface FlightStickView { anchorX:number; anchorY:number; offsetX:number; offsetY:number; magnitude:number; }
 const DEFAULT_AIM:SkyboundAimView={power:0,angleDeg:35,pullX:0,pullY:0,dragging:false};
 const DEFAULT_CONTROL:SkyboundFlightControl={pitch:0,steer:0,boost:false,stabilize:false};
 const INTEGRITY:Record<SkyboundAcademyRankId,number>={cadet:3,trainee:3,aviator:4,elite:4,ace:5};
@@ -52,6 +54,9 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
   const academyRef=useRef<SkyboundAcademyProgress>(initial.progress);
   const phaseRef=useRef<Phase>('aiming');
   const dragStartRef=useRef<{x:number;y:number}|null>(null);
+  const flightDragRef=useRef<{x:number;y:number}|null>(null);
+  const impactSerialRef=useRef(0);
+  const launchChargeRef=useRef(false);
   const unlockedAtStart=SKYBOUND_AIRCRAFT_RANKS.filter((rank)=>initial.progress.promotedRankIds.includes(rank.id));
   const latestRank=unlockedAtStart[unlockedAtStart.length-1]??SKYBOUND_AIRCRAFT_RANKS[0];
   const firstOpen=getSkyboundRankLessons(latestRank.id).find((lesson)=>!initial.progress.completedLessonIds.includes(lesson.id))??getSkyboundRankLessons(latestRank.id)[0];
@@ -69,6 +74,9 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
   const [sortieKey,setSortieKey]=useState(0);
   const [showHangar,setShowHangar]=useState(false);
   const [showCertificate,setShowCertificate]=useState(false);
+  const [flightStick,setFlightStick]=useState<FlightStickView|null>(null);
+  const [impactPulse,setImpactPulse]=useState(false);
+  const [launchCharging,setLaunchCharging]=useState(false);
   const [message,setMessage]=useState('Set launch power, release, then fly into the 3D training world.');
   const lesson=getSkyboundLesson(lessonId);
   const rank=getSkyboundRank(lesson.rankId);
@@ -82,6 +90,7 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
   useEffect(()=>{if(!canonicalConfig)saveSkyboundAcademySave({progress:academy,upgrades,salvage});},[academy,canonicalConfig,salvage,upgrades]);
 
   const launch=useCallback(async()=>{
+    launchChargeRef.current=false;setLaunchCharging(false);
     const currentAim=aimRef.current;
     if(currentAim.power<0.18){setAim(DEFAULT_AIM);setMessage(`Add more ${rank.aircraftId==='toy_glider'?'sling tension':'launch thrust'} before release.`);return;}
     if(canonicalConfig){const attemptId=createAttemptId();const start=await canonicalConfig.requestSortieStart(attemptId,lesson.id);if(!start.ok){setCanonicalTickets(start.ticketsRemaining);setAim(DEFAULT_AIM);setMessage('No sortie tickets remain. Fill the Island Run reward bar or pass a rank exam.');playIslandRunSound('market_insufficient_coins');return;}activeAttemptIdRef.current=attemptId;setCanonicalTickets(start.ticketsRemaining);setAcademy(start.progress.progress);setUpgrades(start.progress.upgrades);setSalvage(start.progress.salvage);}
@@ -91,10 +100,17 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
     setMessage('Drag to bank and climb. Pulse Boost for speed; hold Stabilize through gusts.');setPhase('flying');playIslandRunSound('minigame_open');
   },[canonicalConfig,lesson.goalDistance,lesson.id,lesson.levelId,rank.aircraftId,setAcademy,setAim,setPhase,setUpgrades]);
   const fullPowerLaunch=()=>{
-    const charged={...DEFAULT_AIM,power:1,angleDeg:40};
-    aimRef.current=charged;
-    setAimState(charged);
-    window.setTimeout(()=>{void launch();},0);
+    if(phaseRef.current!=='aiming'||launchChargeRef.current)return;
+    launchChargeRef.current=true;setLaunchCharging(true);
+    setMessage('Launch chief charging the Academy sling…');
+    const chargeSteps=[
+      {power:.22,angleDeg:36,pullX:-8,pullY:32,dragging:true},
+      {power:.5,angleDeg:38,pullX:-14,pullY:72,dragging:true},
+      {power:.78,angleDeg:40,pullX:-18,pullY:112,dragging:true},
+      {power:1,angleDeg:40,pullX:-20,pullY:150,dragging:true},
+    ];
+    chargeSteps.forEach((charged,index)=>window.setTimeout(()=>setAim(charged),index*85));
+    window.setTimeout(()=>{const charged={...chargeSteps[chargeSteps.length-1],dragging:false};aimRef.current=charged;setAimState(charged);void launch();},390);
   };
 
   useEffect(()=>{
@@ -132,18 +148,29 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
     window.addEventListener('keydown',down);window.addEventListener('keyup',up);return()=>{window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);};
   },[]);
 
-  const updateControl=(canvas:HTMLCanvasElement,clientX:number,clientY:number)=>{const rect=canvas.getBoundingClientRect();const x=clamp((clientX-rect.left)/rect.width,0,1);const y=clamp((clientY-rect.top)/rect.height,0,1);controlRef.current.steer=clamp((x-.5)*2.6,-1,1);controlRef.current.pitch=clamp((.5-y)*2.6,-1,1);};
-  const handlePointerDown:React.PointerEventHandler<HTMLCanvasElement>=(event)=>{event.currentTarget.setPointerCapture(event.pointerId);if(phaseRef.current==='aiming'){dragStartRef.current={x:event.clientX,y:event.clientY};setAim({...aimRef.current,dragging:true});setMessage(`Pull down to build ${rank.aircraftId==='toy_glider'?'sling power':'launch thrust'}, then release.`);}else if(phaseRef.current==='flying')updateControl(event.currentTarget,event.clientX,event.clientY);};
-  const handlePointerMove:React.PointerEventHandler<HTMLCanvasElement>=(event)=>{if(!event.currentTarget.hasPointerCapture(event.pointerId))return;if(phaseRef.current==='aiming'&&dragStartRef.current){const rect=event.currentTarget.getBoundingClientRect();const pullY=Math.max(0,event.clientY-dragStartRef.current.y);const pullX=dragStartRef.current.x-event.clientX;const power=clamp(Math.hypot(pullX*.55,pullY)/(rect.height*.28),0,1);const angleDeg=clamp(28+(pullY/Math.max(1,rect.height))*48+(pullX/Math.max(1,rect.width))*10,18,56);setAim({power,angleDeg,pullX,pullY,dragging:true});}else if(phaseRef.current==='flying')updateControl(event.currentTarget,event.clientX,event.clientY);};
-  const handlePointerUp:React.PointerEventHandler<HTMLCanvasElement>=(event)=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);dragStartRef.current=null;if(phaseRef.current==='aiming')void launch();if(phaseRef.current==='flying'){controlRef.current.pitch=0;controlRef.current.steer=0;}};
+  useEffect(()=>{
+    const serial=flight?.impactSerial??0;
+    if(phase!=='flying'||serial<=impactSerialRef.current)return undefined;
+    impactSerialRef.current=serial;
+    setImpactPulse(true);
+    setMessage('AIRFRAME HIT — level the wings, rebuild speed, or hold Stabilize.');
+    const timeout=window.setTimeout(()=>setImpactPulse(false),420);
+    return()=>window.clearTimeout(timeout);
+  },[flight?.impactSerial,phase]);
 
-  const prepareSortie=(nextLessonId:SkyboundLessonId)=>{const nextLesson=getSkyboundLesson(nextLessonId);setSelectedRankId(nextLesson.rankId);setLessonId(nextLessonId);flightRef.current=null;setFlight(null);setEvaluation(null);controlRef.current={...DEFAULT_CONTROL};setAim(DEFAULT_AIM);setSortieKey((value)=>value+1);setMessage(`${getSkyboundRank(nextLesson.rankId).launchMethod}: pull down, release, then fly.`);setPhase('aiming');};
+  const updateFlightControl=(canvas:HTMLCanvasElement,clientX:number,clientY:number)=>{const rect=canvas.getBoundingClientRect();const anchor=flightDragRef.current;if(!anchor)return;const current={x:clientX-rect.left,y:clientY-rect.top};const control=getSkyboundFlightStickControl(anchor,current,Math.min(86,rect.width*.24));controlRef.current.steer=control.steer;controlRef.current.pitch=control.pitch;setFlightStick({anchorX:anchor.x,anchorY:anchor.y,offsetX:control.displayX,offsetY:control.displayY,magnitude:control.magnitude});};
+  const handlePointerDown:React.PointerEventHandler<HTMLCanvasElement>=(event)=>{if(phaseRef.current==='aiming'&&launchChargeRef.current)return;event.currentTarget.setPointerCapture(event.pointerId);if(phaseRef.current==='aiming'){dragStartRef.current={x:event.clientX,y:event.clientY};setAim({...aimRef.current,dragging:true});setMessage(`Pull down to build ${rank.aircraftId==='toy_glider'?'sling power':'launch thrust'}, then release.`);}else if(phaseRef.current==='flying'){const rect=event.currentTarget.getBoundingClientRect();flightDragRef.current={x:event.clientX-rect.left,y:event.clientY-rect.top};controlRef.current.pitch=0;controlRef.current.steer=0;setFlightStick({anchorX:flightDragRef.current.x,anchorY:flightDragRef.current.y,offsetX:0,offsetY:0,magnitude:0});}};
+  const handlePointerMove:React.PointerEventHandler<HTMLCanvasElement>=(event)=>{if(!event.currentTarget.hasPointerCapture(event.pointerId))return;if(phaseRef.current==='aiming'&&dragStartRef.current){const rect=event.currentTarget.getBoundingClientRect();const pullY=Math.max(0,event.clientY-dragStartRef.current.y);const pullX=dragStartRef.current.x-event.clientX;const power=clamp(Math.hypot(pullX*.55,pullY)/(rect.height*.28),0,1);const angleDeg=clamp(28+(pullY/Math.max(1,rect.height))*48+(pullX/Math.max(1,rect.width))*10,18,56);setAim({power,angleDeg,pullX,pullY,dragging:true});}else if(phaseRef.current==='flying')updateFlightControl(event.currentTarget,event.clientX,event.clientY);};
+  const handlePointerUp:React.PointerEventHandler<HTMLCanvasElement>=(event)=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);dragStartRef.current=null;flightDragRef.current=null;if(phaseRef.current==='aiming')void launch();if(phaseRef.current==='flying'){controlRef.current.pitch=0;controlRef.current.steer=0;setFlightStick(null);}};
+
+  const prepareSortie=(nextLessonId:SkyboundLessonId)=>{const nextLesson=getSkyboundLesson(nextLessonId);setSelectedRankId(nextLesson.rankId);setLessonId(nextLessonId);flightRef.current=null;setFlight(null);setEvaluation(null);controlRef.current={...DEFAULT_CONTROL};flightDragRef.current=null;setFlightStick(null);impactSerialRef.current=0;setImpactPulse(false);launchChargeRef.current=false;setLaunchCharging(false);setAim(DEFAULT_AIM);setSortieKey((value)=>value+1);setMessage(`${getSkyboundRank(nextLesson.rankId).launchMethod}: pull down, release, then fly.`);setPhase('aiming');};
   const selectRank=(rankId:SkyboundAcademyRankId)=>{if(phase==='flying'||!academy.promotedRankIds.includes(rankId))return;setSelectedRankId(rankId);const lessons=getSkyboundRankLessons(rankId);const next=lessons.find((candidate)=>!academy.completedLessonIds.includes(candidate.id))??lessons[0];prepareSortie(next.id);};
   const buyUpgrade=async(kind:SkyboundUpgradeKind)=>{const current=upgradesRef.current[kind];const cost=getSkyboundUpgradeCost(kind,current);if(current>=SKYBOUND_MAX_UPGRADE_LEVEL){setMessage(`${UPGRADE_COPY[kind].title} is maxed.`);return;}if(canonicalConfig){const result=await canonicalConfig.requestUpgrade(kind);if(!result.ok){setMessage(result.failureReason==='insufficient_salvage'?`Need ${Math.max(0,result.cost-result.progress.salvage)} more salvage.`:`${UPGRADE_COPY[kind].title} cannot be upgraded yet.`);playIslandRunSound('market_insufficient_coins');return;}setAcademy(result.progress.progress);setUpgrades(result.progress.upgrades);setSalvage(result.progress.salvage);}else{if(salvage<cost){setMessage(`Need ${cost-salvage} more salvage.`);playIslandRunSound('market_insufficient_coins');return;}setSalvage((value)=>value-cost);setUpgrades(upgradeSkyboundPart(upgradesRef.current,kind));}setMessage(`${UPGRADE_COPY[kind].title} upgraded for the whole fleet.`);playIslandRunSound('build_upgrade');};
   const resetCareer=()=>{if(canonicalConfig)return;const fresh=clearSkyboundAcademySave();setAcademy(fresh.progress);setUpgrades(fresh.upgrades);setSalvage(fresh.salvage);setShowHangar(false);prepareSortie('cadet_launch');};
   const nextLesson=SKYBOUND_LESSONS[lesson.globalIndex+1];
   const distance=Math.round(Math.min(flight?.x??0,lesson.goalDistance));const progress=clamp(distance/lesson.goalDistance,0,1);
   const fuel=flight?clamp(flight.fuel/(1+upgrades.engine*.18),0,1):1;const stability=flight?clamp(flight.stabilizer/(1+upgrades.airframe*.12),0,1):1;
+  const telemetry=flight?getSkyboundFlightTelemetry(flight):null;
   const completed=academy.completedLessonIds.length;
 
   return <main className={`skybound skybound--${rank.id}`} aria-label="Skybound Pilot Academy full 3D event">
@@ -163,11 +190,11 @@ export default function SkyboundExpeditionMinigame({onComplete,ticketBudget=0,la
 
       <div className="skybound__course-row"><div><strong>{rank.callsign} · {lesson.name}</strong><span>{lesson.briefing}</span></div><strong>{distance} / {lesson.goalDistance}m</strong></div>
       <div className="skybound__progress"><i style={{width:`${progress*100}%`}} /></div>
-      <div className={`skybound__stage is-${phase}`}>
+      <div className={`skybound__stage is-${phase}${telemetry?` is-${telemetry.condition}`:''}${impactPulse?' has-impact':''}`}>
         <SkyboundExpeditionThreeStage phase={phase} levelId={lesson.levelId} goalDistance={lesson.goalDistance} aircraftId={rank.aircraftId} flight={flight} aim={aim} sortieKey={sortieKey} boosting={controlRef.current.boost} stabilizing={controlRef.current.stabilize===true} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}/>
-        {phase==='aiming'&&<><div className="skybound__aircraft-card"><span>RANK {rank.rank} · {rank.title}</span><strong>{rank.aircraftName}</strong><small>{rank.launchMethod} · {rank.theme}</small></div><div className="skybound__aim-hud"><span><b>{Math.round(aim.power*100)}%</b>{rank.aircraftId==='toy_glider'?'SLING POWER':'LAUNCH THRUST'}</span><span><b>{Math.round(aim.angleDeg)}°</b>DEPARTURE</span></div><button type="button" className="skybound__launch-button" disabled={(canonicalConfig?canonicalTickets:academy.tickets)<1} onClick={fullPowerLaunch}>{(canonicalConfig?canonicalTickets:academy.tickets)<1?'EARN A TICKET ON THE REWARD BAR':'FULL POWER · 1 TICKET'}</button><div className="skybound__tip">INSTRUCTOR · {lesson.instructorTip}</div></>}
-        {phase==='flying'&&<><div className="skybound__flight-stats"><span><b>◆</b> {flight?.salvageCollected??0}</span><span><b>◎</b> {flight?.ringsCleared??0}</span><span className={(flight?.integrity??3)<=1?'has-hits':''}><b>▰</b> {flight?.integrity??INTEGRITY[rank.id]}/{INTEGRITY[rank.id]}</span>{(flight?.currentStreak??0)>1&&<span className="is-streak">×{flight?.currentStreak}</span>}</div><div className="skybound__flight-hud"><div className="skybound__meters"><label>BOOST<i><b style={{width:`${fuel*100}%`}}/></i></label><label>STABILITY<i><b style={{width:`${stability*100}%`}}/></i></label></div><div className="skybound__actions"><button type="button" className="skybound__stabilize" disabled={stability<=0} onPointerDown={(event)=>{event.stopPropagation();event.currentTarget.setPointerCapture(event.pointerId);controlRef.current.stabilize=true;}} onPointerUp={(event)=>{event.stopPropagation();controlRef.current.stabilize=false;}}>STABILIZE</button><button type="button" className="skybound__boost" disabled={fuel<=0} onPointerDown={(event)=>{event.stopPropagation();event.currentTarget.setPointerCapture(event.pointerId);controlRef.current.boost=true;}} onPointerUp={(event)=>{event.stopPropagation();controlRef.current.boost=false;}}>BOOST</button></div></div></>}
-        {phase==='result'&&flight&&evaluation&&<div className="skybound__result" role="dialog" aria-label="Academy lesson result"><span className={`skybound__result-badge ${evaluation.ace?'is-finished':''}`}>{evaluation.ace?'ACE · 3/3':evaluation.passed?'PASS · 2/3+':'RETRAIN'}</span><strong>{Math.round(flight.x)}m</strong><span>+{lastReward} salvage · +{evaluation.academyXpEarned} XP</span><div className="skybound__result-stats"><span><b>◆</b>{flight.salvageCollected}</span><span><b>◎</b>{flight.ringsCleared}</span><span className={flight.hazardHits>0?'has-hits':''}><b>⚠</b>{flight.hazardHits}</span><span><b>×</b>{flight.bestStreak}</span></div><div className="skybound__standards">{evaluation.standardResults.map((standard)=><span key={standard.id} className={standard.met?'is-met':''}><b>{standard.met?'✓':'○'}</b>{standard.label}</span>)}</div>{evaluation.passed&&lesson.exam&&<div className="skybound__promotion">🏅 {rank.title.toUpperCase()} MEDAL EARNED{nextLesson?` · ${getSkyboundRank(nextLesson.rankId).aircraftName.toUpperCase()} UNLOCKED`:''}</div>}<button type="button" onClick={()=>evaluation.passed&&nextLesson?prepareSortie(nextLesson.id):prepareSortie(lessonId)}>{evaluation.passed&&nextLesson?'NEXT FLIGHT':'FLY AGAIN · 1 TICKET'}</button></div>}
+        {phase==='aiming'&&<><div className="skybound__aircraft-card"><span>RANK {rank.rank} · {rank.title}</span><strong>{rank.aircraftName}</strong><small>{rank.launchMethod} · {rank.theme}</small></div><div className="skybound__aim-hud"><span><b>{Math.round(aim.power*100)}%</b>{rank.aircraftId==='toy_glider'?'SLING POWER':'LAUNCH THRUST'}</span><span><b>{Math.round(aim.angleDeg)}°</b>DEPARTURE</span></div><button type="button" className="skybound__launch-button" disabled={launchCharging||(canonicalConfig?canonicalTickets:academy.tickets)<1} onClick={fullPowerLaunch}>{(canonicalConfig?canonicalTickets:academy.tickets)<1?'EARN A TICKET ON THE REWARD BAR':launchCharging?'CHARGING SLING…':'FULL POWER · 1 TICKET'}</button><div className="skybound__tip">INSTRUCTOR · {lesson.instructorTip}</div></>}
+        {phase==='flying'&&telemetry&&<><div className={`skybound__telemetry is-${telemetry.condition}`}><span>{telemetry.warning?'⚠ ':''}{telemetry.label}</span><strong>{Math.round(telemetry.speed)}<small>m/s</small></strong><div><b>ALT {Math.round(telemetry.altitude)}m</b><b>FLOW {Math.round((flight?.smoothFlightMs??0)/1000)}s</b></div><i><b style={{width:`${telemetry.energy*100}%`}}/></i><small>{telemetry.instruction}</small></div><div className="skybound__flight-stats"><span><b>◆</b> {flight?.salvageCollected??0}</span><span><b>◎</b> {flight?.ringsCleared??0}</span><span className={(flight?.integrity??3)<=1?'has-hits':''}><b>▰</b> {flight?.integrity??INTEGRITY[rank.id]}/{INTEGRITY[rank.id]}</span>{(flight?.currentStreak??0)>1&&<span className="is-streak">×{flight?.currentStreak}</span>}</div>{flight&&flight.elapsedMs<2200&&!flightStick&&<div className="skybound__stick-coach"><b>PRESS + DRAG ANYWHERE</b><span>↑ climb · ↓ dive · ← → bank</span></div>}{flightStick&&<div className="skybound__flight-stick" style={{left:flightStick.anchorX,top:flightStick.anchorY}}><span>FLIGHT STICK</span><i style={{transform:`translate(${flightStick.offsetX}px, ${flightStick.offsetY}px) scale(${.85+flightStick.magnitude*.18})`}}/></div>}<div className="skybound__flight-hud"><div className="skybound__meters"><label>BOOST<i><b style={{width:`${fuel*100}%`}}/></i></label><label>STABILITY<i><b style={{width:`${stability*100}%`}}/></i></label></div><div className="skybound__actions"><button type="button" className="skybound__stabilize" disabled={stability<=0} onPointerDown={(event)=>{event.stopPropagation();event.currentTarget.setPointerCapture(event.pointerId);controlRef.current.stabilize=true;}} onPointerUp={(event)=>{event.stopPropagation();controlRef.current.stabilize=false;}}>STABILIZE</button><button type="button" className="skybound__boost" disabled={fuel<=0} onPointerDown={(event)=>{event.stopPropagation();event.currentTarget.setPointerCapture(event.pointerId);controlRef.current.boost=true;}} onPointerUp={(event)=>{event.stopPropagation();controlRef.current.boost=false;}}>BOOST</button></div></div></>}
+        {phase==='result'&&flight&&evaluation&&<div className="skybound__result" role="dialog" aria-label="Academy lesson result"><span className={`skybound__result-badge ${evaluation.ace?'is-finished':''}`}>{evaluation.ace?'ACE · 3/3':evaluation.passed?'PASS · 2/3+':'RETRAIN'}</span><strong>{Math.round(flight.x)}m</strong><span>+{lastReward} salvage · +{evaluation.academyXpEarned} XP · {Math.round(flight.smoothFlightMs/1000)}s flow</span><div className="skybound__result-stats"><span><b>◆</b>{flight.salvageCollected}</span><span><b>◎</b>{flight.ringsCleared}</span><span className={flight.hazardHits>0?'has-hits':''}><b>⚠</b>{flight.hazardHits}</span><span><b>×</b>{flight.bestStreak}</span></div><div className="skybound__standards">{evaluation.standardResults.map((standard)=><span key={standard.id} className={standard.met?'is-met':''}><b>{standard.met?'✓':'○'}</b>{standard.label}</span>)}</div>{evaluation.passed&&lesson.exam&&<div className="skybound__promotion">🏅 {rank.title.toUpperCase()} MEDAL EARNED{nextLesson?` · ${getSkyboundRank(nextLesson.rankId).aircraftName.toUpperCase()} UNLOCKED`:''}</div>}<button type="button" onClick={()=>evaluation.passed&&nextLesson?prepareSortie(nextLesson.id):prepareSortie(lessonId)}>{evaluation.passed&&nextLesson?'NEXT FLIGHT':'FLY AGAIN · 1 TICKET'}</button></div>}
       </div>
       <p className="skybound__message" aria-live="polite">{message}</p>
       <section className="skybound__upgrades" aria-label="Fleet upgrades">{(Object.keys(UPGRADE_COPY) as SkyboundUpgradeKind[]).map((kind)=>{const copy=UPGRADE_COPY[kind];const level=upgrades[kind];const cost=getSkyboundUpgradeCost(kind,level);const maxed=level>=SKYBOUND_MAX_UPGRADE_LEVEL;return <button type="button" key={kind} disabled={phase==='flying'||maxed} className={salvage>=cost&&phase!=='flying'?'can-buy':''} onClick={()=>{void buyUpgrade(kind);}}><span className="skybound__upgrade-icon">{copy.icon}</span><span><strong>{copy.title}</strong><small>{copy.effect}</small></span><span className="skybound__upgrade-price"><b>LV {level}</b><small>{maxed?'MAX':`◆ ${cost}`}</small></span></button>;})}</section>

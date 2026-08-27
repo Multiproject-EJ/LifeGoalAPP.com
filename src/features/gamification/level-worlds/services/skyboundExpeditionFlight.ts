@@ -75,6 +75,9 @@ export interface SkyboundFlightState {
   impactSerial: number;
   bestStreak: number;
   currentStreak: number;
+  smoothFlightMs: number;
+  stallMs: number;
+  terrainSkims: number;
   terminalReason: SkyboundTerminalReason;
 }
 
@@ -322,6 +325,9 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     impactSerial: 0,
     bestStreak: 0,
     currentStreak: 0,
+    smoothFlightMs: 0,
+    stallMs: 0,
+    terrainSkims: 0,
     terminalReason: null,
   };
 }
@@ -379,7 +385,7 @@ export function stepSkyboundFlight(
   const speed = Math.max(0.001, Math.hypot(state.vx, state.vy));
   const velocityAngle = Math.atan2(state.vy, Math.max(0.001, state.vx));
   const targetPitch = clamp(velocityAngle + (pitchInput * 0.48), -0.95, 1.12);
-  const pitchRad = state.pitchRad + ((targetPitch - state.pitchRad) * Math.min(1, dt * 4.8));
+  let pitchRad = state.pitchRad + ((targetPitch - state.pitchRad) * Math.min(1, dt * 4.8));
   const bankTarget = steerInput * 0.72;
   let bankRad = state.bankRad + ((bankTarget - state.bankRad) * Math.min(1, dt * 5.6));
 
@@ -414,6 +420,16 @@ export function stepSkyboundFlight(
     + (wind * 0.055 * stabilizerWindScale)
   ) * dt;
 
+  // A low-energy climb now develops into a readable, recoverable stall. The
+  // aircraft gently noses over and trades altitude for speed instead of
+  // continuing with invisible lift until it meets the ground.
+  const stallSeverity = clamp((19 - speed) / 8, 0, 1) * clamp((pitchRad - 0.12) / 0.55, 0, 1);
+  if (stallSeverity > 0) {
+    pitchRad -= stallSeverity * 0.48 * dt;
+    vx += stallSeverity * 3.4 * dt;
+    vy -= stallSeverity * 10.5 * dt;
+  }
+
   vx = Math.max(2, vx);
   const x = Math.max(state.x, state.x + (vx * dt));
   const y = state.y + (vy * dt);
@@ -440,6 +456,7 @@ export function stepSkyboundFlight(
   let detachedPartIds = [...state.detachedPartIds];
   let currentStreak = state.currentStreak;
   let bestStreak = state.bestStreak;
+  let terrainSkims = state.terrainSkims;
   let terminalReason: SkyboundTerminalReason = null;
 
   for (const object of getSkyboundCourseObjects(level.id, state.goalDistance)) {
@@ -483,7 +500,8 @@ export function stepSkyboundFlight(
   } else if (clearance <= 0) {
     settledY = groundHeight + 1.2;
     const launchGraceActive = elapsedMs < 1_800 || airborneMs < 850;
-    const hardImpact = !launchGraceActive && (vy < -15 || Math.abs(pitchRad) > 0.92);
+    const severeImpact = vy < -21 || Math.abs(pitchRad) > 1.02;
+    const hardImpact = !launchGraceActive && state.terrainSkims >= 2 && severeImpact;
     const controlledTouchdown = !launchGraceActive && vx <= 9 && vy >= -8 && Math.abs(pitchRad) <= 0.72;
     if (hardImpact) {
       status = 'crashed';
@@ -507,8 +525,21 @@ export function stepSkyboundFlight(
       vy = Math.max(launchGraceActive ? 5.4 : 3.2, Math.abs(vy) * 0.28);
       bankRad *= 0.82;
       groundContactMs = Math.min(groundContactMs, 240);
+      if (state.groundContactMs === 0) {
+        terrainSkims += 1;
+        if (!launchGraceActive) impactSerial += 1;
+      }
     }
   }
+
+  const resultingSpeed = Math.hypot(vx, vy);
+  const isStalled = status === 'flying' && resultingSpeed < 18 && pitchRad > 0.18;
+  const isSmooth = status === 'flying'
+    && clearance > 6
+    && resultingSpeed >= 24
+    && Math.abs(pitchRad) < 0.34
+    && Math.abs(bankRad) < 0.48
+    && impactSerial === state.impactSerial;
 
   return {
     ...state,
@@ -538,6 +569,9 @@ export function stepSkyboundFlight(
     impactSerial,
     currentStreak,
     bestStreak,
+    smoothFlightMs: state.smoothFlightMs + (isSmooth ? safeDtMs : 0),
+    stallMs: state.stallMs + (isStalled ? safeDtMs : 0),
+    terrainSkims,
     terminalReason,
   };
 }
@@ -546,6 +580,7 @@ export function scoreSkyboundFlight(state: SkyboundFlightState): number {
   const completionBonus = state.status === 'finished' ? 170 + (state.goalDistance * 0.08) : 0;
   const landingBonus = state.status === 'landed' ? 55 : 0;
   const courseBonus = (state.salvageCollected * 18) + (state.ringsCleared * 45) + (state.bestStreak * 4);
+  const smoothFlightBonus = Math.min(120, Math.round(state.smoothFlightMs / 500));
   const hazardPenalty = state.hazardHits * 20;
-  return Math.max(45, Math.round((Math.min(state.x, state.goalDistance) * 0.32) + (state.maxAltitude * 1.15) + completionBonus + landingBonus + courseBonus - hazardPenalty));
+  return Math.max(45, Math.round((Math.min(state.x, state.goalDistance) * 0.32) + (state.maxAltitude * 1.15) + completionBonus + landingBonus + courseBonus + smoothFlightBonus - hazardPenalty));
 }

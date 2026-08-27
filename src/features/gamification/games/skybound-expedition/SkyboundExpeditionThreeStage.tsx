@@ -343,6 +343,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
     }
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 850);
+    scene.add(camera);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -358,9 +359,19 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
     scene.add(createSkyboundAircraftLights());
+    const airRush = new THREE.Group();
+    airRush.name = 'skybound-air-rush';
+    const airRushMaterial = new THREE.MeshBasicMaterial({ color:0xcaf9ff,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending });
+    for(let index=0;index<30;index+=1){
+      const streak=new THREE.Mesh(new THREE.BoxGeometry(.018,.018,2.4+seeded(index,12)*3.8),airRushMaterial);
+      streak.position.set((seeded(index,2)-.5)*14,(seeded(index,7)-.5)*9,-2-seeded(index,4)*28);
+      streak.userData.skyboundRushIndex=index;
+      airRush.add(streak);
+    }
+    camera.add(airRush);
     const objectMeshes = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
     const plane = createSkyboundAircraftModel(props.aircraftId);
-    plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 0.9 : props.aircraftId === 'prop_trainer' ? 0.94 : 0.98);
+    plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 1.02 : props.aircraftId === 'prop_trainer' ? 1.04 : 1.08);
     scene.add(plane);
     const runtime = plane.userData.sculptRuntime;
     const flame = new THREE.Mesh(
@@ -471,6 +482,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       }
 
       const speed = flight ? Math.hypot(flight.vx, flight.vy) : 0;
+      const speedEnergy = clamp((speed - 18) / 58, 0, 1);
       const motionPose = applySkyboundAircraftMotion(runtime, {
         phase,
         timeSeconds: time / 1000,
@@ -525,10 +537,21 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         }
       }
 
+      const rushStrength=phase==='flying'?clamp(speedEnergy+(boostingRef.current ? 0.34 : 0),0,1):0;
+      airRush.visible=rushStrength>.08;
+      airRushMaterial.opacity=.08+rushStrength*.42;
+      for(const child of airRush.children){
+        child.position.z+=dt*(9+speed*.28+(boostingRef.current?16:0));
+        if(child.position.z>-1.2){const index=Number(child.userData.skyboundRushIndex??0);child.position.z=-22-seeded(index+Math.floor(time/1000),14)*14;child.position.x=(seeded(index+Math.floor(time/900),3)-.5)*14;child.position.y=(seeded(index+Math.floor(time/1100),8)-.5)*9;}
+      }
+
       const target = plane.position;
+      const targetFov=phase==='flying'?62+(speedEnergy*9)+(boostingRef.current?5:0):58;
+      camera.fov+=(targetFov-camera.fov)*(1-Math.exp(-dt*3.6));
+      camera.updateProjectionMatrix();
       const desiredCamera = phase === 'aiming'
-        ? new THREE.Vector3(6.2, 8.1, -11.2)
-        : new THREE.Vector3(target.x * 0.78 + 3.7, target.y + 3.65, target.z - 12.2);
+        ? new THREE.Vector3(5.4, 7.55, -9.5)
+        : new THREE.Vector3(target.x * 0.78 + 3.25, target.y + 3.15-(flight?.pitchRad??0)*1.25, target.z-(10.35+speedEnergy*1.4));
       camera.position.lerp(desiredCamera, 1 - Math.exp(-dt * 5.2));
       if (shake > 0.01) {
         camera.position.x += (seeded(Math.floor(time), 3) - 0.5) * shake * 0.7;
@@ -537,8 +560,9 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       }
       const lookTarget = phase === 'aiming'
         ? new THREE.Vector3(0, 4.1, -0.35)
-        : new THREE.Vector3(target.x * 0.88, target.y + 0.55, target.z + 13);
+        : new THREE.Vector3(target.x * 0.88, target.y + 0.48+(flight?.pitchRad??0)*2.1, target.z + 13+speedEnergy*8);
       camera.lookAt(lookTarget);
+      if(phase==='flying'&&flight)camera.rotateZ(flight.bankRad*.16);
       renderer.render(scene, camera);
       frame = requestAnimationFrame(animate);
     };

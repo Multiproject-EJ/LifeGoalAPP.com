@@ -383,6 +383,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     const altitude=flight?.y??7;
     const lateral=flight?.lateralX??0;
     const speed=flight?Math.hypot(flight.vx,flight.vy):0;
+    const speedEnergy=clamp((speed-18)/58,0,1);
     if(flight&&flight.impactSerial!==lastImpactSerial){
       shake=1;lastImpactSerial=flight.impactSerial;feedbackText='IMPACT!';feedbackColor='#ff8a6e';feedbackAge=1;
     } else if(flight&&flight.ringsCleared>previousRings) {
@@ -395,7 +396,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     feedbackAge=Math.max(0,feedbackAge-dt);
     const pitch=flight?.pitchRad??aim.angleDeg*Math.PI/180;
     const horizon=height*(.43+clamp(pitch,-.7,.8)*.12);
-    const focal=Math.min(width,height)*(input.isBoosting()?1.32:1.08);
+    const focal=Math.min(width,height)*(1.16-speedEnergy*.14-(input.isBoosting() ? 0.08 : 0));
     const project=(worldX:number,worldY:number,worldZ:number):ProjectedPoint=>{
       const depth=Math.max(4,worldZ-distance+16);
       const scale=focal/depth;
@@ -460,18 +461,19 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       if(aim.power>.03){context.strokeStyle=`rgba(105,247,255,${.18+aim.power*.55})`;context.lineWidth=3;context.beginPath();context.ellipse(aimingPlaneX,aimingPlaneY,75+aim.power*14,42+aim.power*9,time*.001,0,Math.PI*2);context.stroke();}
     }
 
-    if(input.isBoosting()) {
-      context.strokeStyle='rgba(210,250,255,.55)';context.lineWidth=1.5;
-      for(let index=0;index<22;index+=1) {
-        const x=(seeded(index,7)*width+time*(.15+seeded(index,4)*.3))%(width+100)-50;
+    if(speedEnergy>.08||input.isBoosting()) {
+      const rush=clamp(speedEnergy+(input.isBoosting() ? 0.34 : 0),0,1);
+      context.strokeStyle=`rgba(210,250,255,${.1+rush*.52})`;context.lineWidth=1+rush*1.2;
+      for(let index=0;index<26;index+=1) {
+        const x=(seeded(index,7)*width+time*(.06+rush*(.2+seeded(index,4)*.32)))%(width+100)-50;
         const y=horizon+seeded(index,9)*(height-horizon);
-        context.beginPath();context.moveTo(x,y);context.lineTo(x+(x-width/2)*.18,y+18);context.stroke();
+        context.beginPath();context.moveTo(x,y);context.lineTo(x+(x-width/2)*(.08+rush*.16),y+8+rush*24);context.stroke();
       }
     }
 
     const planeX=phase==='aiming'?aimingPlaneX:width/2+(flight?.bankRad??0)*34;
     const planeY=phase==='aiming'?aimingPlaneY:height*.73-pitch*13;
-    const planeScale=clamp(width/620,.82,1.48)*(input.isBoosting()?1.04:1);
+    const planeScale=clamp(width/570,.9,1.55)*(input.isBoosting()?1.05:1);
     context.save();
     const shakeX=(seeded(Math.floor(time),2)-.5)*shake*18;
     const shakeY=(seeded(Math.floor(time),5)-.5)*shake*12;
