@@ -4416,6 +4416,10 @@ export default function Island5ThreePilot({
           ? [scene.getObjectByName('ISLAND_13_SPIRAL_RAIL_MISSION_HIT_TARGET')].filter(
               (candidate): candidate is THREE.Object3D => Boolean(candidate),
             )
+        : isHoneycombKingdom
+          ? [livingAmbience.root.getObjectByName('ISLAND_14_GREAT_HONEYFALL_MISSION_HIT_TARGET')].filter(
+              (candidate): candidate is THREE.Object3D => Boolean(candidate),
+            )
         : [];
     const clickableCactusCanyonTrain = isCactusCanyon
       ? [livingAmbience.root.getObjectByName('ISLAND_13_LOCOMOTIVE_ORBIT')].filter(

@@ -15,6 +15,13 @@ export interface IslandMissionBriefingModalProps {
   objectiveDetails?: readonly string[];
   acknowledgeLabel?: string;
   onObjectiveSelect?: (objectiveIndex: number) => void;
+  primaryActionLabel?: string;
+  primaryActionHint?: string;
+  primaryActionDisabled?: boolean;
+  primaryActionBusy?: boolean;
+  milestoneValue?: number;
+  milestoneCount?: number;
+  onPrimaryAction?: () => void;
   onAcknowledge: () => void;
 }
 
@@ -66,6 +73,13 @@ export function IslandMissionBriefingModal({
   objectiveDetails = [],
   acknowledgeLabel = 'Accept field order',
   onObjectiveSelect,
+  primaryActionLabel,
+  primaryActionHint,
+  primaryActionDisabled = false,
+  primaryActionBusy = false,
+  milestoneValue = 0,
+  milestoneCount = 0,
+  onPrimaryAction,
   onAcknowledge,
 }: IslandMissionBriefingModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<MissionPhonePhase>('unfolding');
@@ -306,6 +320,27 @@ export function IslandMissionBriefingModal({
               })}
             </ol>
           )}
+
+          {primaryActionLabel && onPrimaryAction ? (
+            <div className="island-mission-tracker__mission-action">
+              {milestoneCount > 0 ? (
+                <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
+                  {Array.from({ length: milestoneCount }, (_, index) => (
+                    <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">⬡</i>
+                  ))}
+                </span>
+              ) : null}
+              <button
+                type="button"
+                disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
+                onClick={onPrimaryAction}
+              >
+                <span aria-hidden="true">{milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
+                <strong>{primaryActionBusy ? 'PRESSURISING…' : primaryActionLabel}</strong>
+              </button>
+              {primaryActionHint ? <small>{primaryActionHint}</small> : null}
+            </div>
+          ) : null}
 
           <footer className="island-mission-tracker__overall" aria-label="Mission progress">
             <span>

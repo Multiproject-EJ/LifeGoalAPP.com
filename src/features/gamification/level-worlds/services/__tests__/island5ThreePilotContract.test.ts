@@ -258,6 +258,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(materials.honeyRock.map?.name, 'ISLAND_14_HONEYCOMB_PATTERN', 'hero terrain must carry an explicit large-scale honeycomb material pattern');
       assert(materials.honeyLiquid.clearcoat === 1 && materials.honeyLiquid.roughness <= 0.05, 'flowing honey must retain a glossy clear-coated edible surface response');
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_GREAT_HONEYFALL_CORONATION')), 'Island 014 needs its authored Great Honeyfall Coronation mission spectacle');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_ROYAL_PRESSURE_RESERVOIR')), 'Great Honeyfall needs one large phone-readable pressure reservoir');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_ROYAL_RESERVOIR_HONEY_FILL')), 'royal reservoir needs a visible rising honey volume');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_ROYAL_RESERVOIR_WAX_SEAL_BURST')), 'final reservoir stage needs an authored wax-seal burst');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_HONEY_EGG_COURIER_1')), 'Honey Egg Comb couriers must visibly work around the reservoir');
+      assert(Boolean(ambience.root.getObjectByName('ISLAND_14_GREAT_HONEYFALL_MISSION_HIT_TARGET')), 'the 3D reservoir must expose a reliable mission hit target');
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_BROAD_RESERVOIR_TO_FALL_WELD')), 'the coronation reservoir must visibly weld into the falling honey body');
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_THICK_ASYMMETRICAL_MAIN_FALL')), 'the coronation needs one thick phone-readable hero cascade');
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_AUTHORED_RIGHT_CASCADE')), 'the coronation cascade must retain its right-side authored face');
@@ -268,6 +273,15 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_IMPACT_SURGE_LOBE_1')), 'the impact pool needs animated viscous surge geometry');
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_V2_HONEYFALL_SOLID_SURFACE_GLINT_1')), 'the honey body needs embedded solid glints rather than view-facing cards');
       assert(Boolean(ambience.root.getObjectByName('ISLAND_14_GLISTENING_HONEY_SPARKLES')), 'the completed coronation needs a living island-wide sparkle payoff');
+      const reservoirFill = ambience.root.getObjectByName('ISLAND_14_ROYAL_RESERVOIR_HONEY_FILL')!;
+      ambience.setGreatHoneyfallStage?.(1, true);
+      ambience.animate(1);
+      ambience.animate(4.2);
+      assert(reservoirFill.scale.y > 0.08 && reservoirFill.scale.y < 0.4, 'first nectar delivery must visibly raise, but not complete, the central liquid line');
+      ambience.setGreatHoneyfallStage?.(4, true);
+      ambience.animate(5);
+      ambience.animate(13.3);
+      assertEqual(reservoirFill.scale.y, 1, 'fourth delivery must leave the royal reservoir visibly full');
       const staticBatchMetrics = ambience.root.userData.staticBatchMetrics as { batchCount: number; sourceMeshCount: number };
       assert(staticBatchMetrics.sourceMeshCount >= 300, 'Island 014 should retain its dense authored scenery before batching');
       assert(
@@ -2325,6 +2339,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
       assert(routingSource.includes('runtimeIslandNumber: 11, worldSourceNumber: 11'), 'Island 011 must route the preserved pre-crater First Light world identity');
       assert(routingSource.includes('runtimeIslandNumber: 14, worldSourceNumber: 14'), 'Island 014 must route its dedicated Honeycomb Kingdom world pack');
+      assert(pilotSource.includes("getObjectByName('ISLAND_14_GREAT_HONEYFALL_MISSION_HIT_TARGET')"), 'Island 014 palace reservoir must be tappable in the real 3D renderer');
+      assert(boardSource.includes('rollResult.greatHoneyfallNectarCollected'), 'the board must react when canonical roll gameplay awards royal nectar');
+      assert(boardSource.includes("setQueuedSignatureMissionPresentation('great_honeyfall')"), 'nectar pickup must queue its mission controller behind any competing full-attention reward');
       assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
       assert(
         boardSource.includes('const shouldRenderIsland5Three = canUseIsland5Three')

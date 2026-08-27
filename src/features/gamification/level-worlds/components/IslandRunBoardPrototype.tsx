@@ -680,7 +680,7 @@ const ISLAND_DURATION_SEC = 72 * 60 * 60;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 type DevIslandJumpDigits = [number, number, number];
 type DevIslandJumpDigitIndex = 0 | 1 | 2;
-type QueuedSignatureMissionPresentation = 'first_light_assembly' | 'cactus_canyon_spiral' | 'frostwell_iceworks';
+type QueuedSignatureMissionPresentation = 'first_light_assembly' | 'cactus_canyon_spiral' | 'frostwell_iceworks' | 'great_honeyfall';
 const DEV_ISLAND_JUMP_DIGIT_LABELS = ['hundreds', 'tens', 'ones'] as const;
 
 function islandNumberToDevJumpDigits(islandNumber: number): DevIslandJumpDigits {
@@ -2711,6 +2711,10 @@ export function IslandRunBoardPrototype({
   const closeRootheartPowerworks = useCallback(() => {
     setShowRootheartPowerworks(false);
   }, []);
+  const openGreatHoneyfallMission = useCallback(() => {
+    setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+    setShowMissionPhoneBriefing(true);
+  }, []);
   const openQueuedSignatureMissionPresentation = useCallback((mission: QueuedSignatureMissionPresentation) => {
     if (mission === 'first_light_assembly') {
       openFirstLightAssemblyCrater();
@@ -2720,8 +2724,12 @@ export function IslandRunBoardPrototype({
       openCactusCanyonSpiral();
       return;
     }
+    if (mission === 'great_honeyfall') {
+      openGreatHoneyfallMission();
+      return;
+    }
     openFrostwellMission();
-  }, [openCactusCanyonSpiral, openFirstLightAssemblyCrater, openFrostwellMission]);
+  }, [openCactusCanyonSpiral, openFirstLightAssemblyCrater, openFrostwellMission, openGreatHoneyfallMission]);
   const previousBuildCameraStopIdRef = useRef<string | null>(null);
   const [buildLevelCompletion, setBuildLevelCompletion] = useState<ActiveBuildLevelReview | null>(null);
   const buildLevelCompletionRef = useRef<ActiveBuildLevelReview | null>(null);
@@ -7936,6 +7944,8 @@ export function IslandRunBoardPrototype({
             setQueuedSignatureMissionPresentation('first_light_assembly');
           } else if ((rollResult.cactusCanyonDynamiteCollected ?? 0) > 0) {
             setQueuedSignatureMissionPresentation('cactus_canyon_spiral');
+          } else if ((rollResult.greatHoneyfallNectarCollected ?? 0) > 0) {
+            setQueuedSignatureMissionPresentation('great_honeyfall');
           } else if (rollResult.frostwellSpinGranted) {
             setQueuedSignatureMissionPresentation('frostwell_iceworks');
           }
@@ -7967,6 +7977,11 @@ export function IslandRunBoardPrototype({
           const collected = rollResult.cactusCanyonDynamiteCollected ?? 0;
           setLandingText(`🧨 Dynamite cache collected! +${collected} stick${collected === 1 ? '' : 's'} for the Canyon Spiral.`);
           openCactusCanyonSpiral();
+        } else if ((rollResult.greatHoneyfallNectarCollected ?? 0) > 0) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setLandingText('🍯 Royal nectar secured! Pour it into the palace reservoir and watch the pressure rise.');
+          openGreatHoneyfallMission();
         } else if (rollResult.frostwellSpinGranted) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -13097,6 +13112,7 @@ export function IslandRunBoardPrototype({
 
   const handleActivateGreatHoneyfall = useCallback(async () => {
     if (isActivatingGreatHoneyfall) return;
+    setShowMissionPhoneBriefing(false);
     if (greatHoneyfallCompleted) {
       // Replay is presentation-only; canonical completion remains unchanged.
       setGreatHoneyfallConstructionSequence((value) => value + 1);
@@ -13128,6 +13144,14 @@ export function IslandRunBoardPrototype({
         : `🍯 Royal reservoir ${result.activatedReservoirs}/${GREAT_HONEYFALL_MAX_STAGE} is flowing.`);
       playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
+      if (completed) {
+        window.setTimeout(() => {
+          openWinCelebrationModal([
+            { icon: '🍯', label: 'Royal reservoir', value: 'FULL' },
+            { icon: '👑', label: 'Great Honeyfall', value: 'FLOWING' },
+          ], 'Mission complete — Honeycomb Kingdom is flowing');
+        }, 7_200);
+      }
     } finally {
       setIsActivatingGreatHoneyfall(false);
     }
@@ -13135,6 +13159,7 @@ export function IslandRunBoardPrototype({
     client,
     greatHoneyfallCompleted,
     isActivatingGreatHoneyfall,
+    openWinCelebrationModal,
     playIslandRunSound,
     session,
     setRuntimeStateWithTrace,
@@ -14898,7 +14923,7 @@ export function IslandRunBoardPrototype({
                   : islandArtPreviewNumber === 12
                   ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
                   : islandArtPreviewNumber === 14
-                    ? isIslandVisualPreview ? undefined : handleActivateGreatHoneyfall
+                    ? isIslandVisualPreview ? undefined : openGreatHoneyfallMission
                   : isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10 && islandArtPreviewNumber !== 13
                     ? undefined
                     : islandArtPreviewNumber === 13
@@ -18652,6 +18677,29 @@ export function IslandRunBoardPrototype({
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
+        primaryActionLabel={showMissionPhoneBriefing && islandNumber === 14
+          ? greatHoneyfallCompleted
+            ? 'Replay the Great Honeyfall'
+            : greatHoneyfallAvailableNectar > 0
+              ? `Pour nectar · stage ${greatHoneyfallProgress.activatedReservoirs + 1} of ${GREAT_HONEYFALL_MAX_STAGE}`
+              : 'Find royal nectar on the route'
+          : undefined}
+        primaryActionHint={showMissionPhoneBriefing && islandNumber === 14
+          ? greatHoneyfallCompleted
+            ? 'Replay the wax-seal burst and royal cascade.'
+            : greatHoneyfallAvailableNectar > 0
+              ? 'The mission phone will fold so you can watch the reservoir fill in 3D.'
+              : 'Land on a glowing honey tile, then return here to pour it.'
+          : undefined}
+        primaryActionDisabled={showMissionPhoneBriefing && islandNumber === 14
+          ? !greatHoneyfallCompleted && greatHoneyfallAvailableNectar < 1
+          : false}
+        primaryActionBusy={isActivatingGreatHoneyfall}
+        milestoneValue={showMissionPhoneBriefing && islandNumber === 14 ? greatHoneyfallProgress.activatedReservoirs : 0}
+        milestoneCount={showMissionPhoneBriefing && islandNumber === 14 ? GREAT_HONEYFALL_MAX_STAGE : 0}
+        onPrimaryAction={showMissionPhoneBriefing && islandNumber === 14
+          ? () => void handleActivateGreatHoneyfall()
+          : undefined}
         onAcknowledge={() => {
           if (showMissionPhoneBriefing) {
             setShowMissionPhoneBriefing(false);

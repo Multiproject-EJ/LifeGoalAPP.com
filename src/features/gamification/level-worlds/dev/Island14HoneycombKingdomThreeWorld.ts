@@ -2403,6 +2403,137 @@ function createGreatHoneyfallCoronation(
   const crownValves = new THREE.Group();
   crownValves.name = 'ISLAND_14_HONEYFALL_CROWN_VALVES';
 
+  // The four route pickups now feed one phone-readable palace reservoir. Its
+  // liquid line rises monotonically with canonical mission progress, so every
+  // delivery builds visible anticipation before the final wax seal releases.
+  const royalReservoir = new THREE.Group();
+  royalReservoir.name = 'ISLAND_14_ROYAL_PRESSURE_RESERVOIR';
+  const reservoirPedestal = cylinder(0.9, 1.04, 0.34, materials.darkBronze, 'ISLAND_14_ROYAL_RESERVOIR_PEDESTAL', 5, 6);
+  reservoirPedestal.position.y = 4.42;
+  const reservoirLowerRim = torus(0.82, 0.09, materials.paleGold, 'ISLAND_14_ROYAL_RESERVOIR_LOWER_RIM', 5, 8, 30);
+  reservoirLowerRim.rotation.x = Math.PI / 2;
+  reservoirLowerRim.position.y = 4.62;
+  const reservoirUpperRim = reservoirLowerRim.clone();
+  reservoirUpperRim.name = 'ISLAND_14_ROYAL_RESERVOIR_UPPER_RIM';
+  reservoirUpperRim.position.y = 5.78;
+  const reservoirGlassMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffd978,
+    roughness: 0.04,
+    transmission: 0.58,
+    thickness: 0.5,
+    ior: 1.47,
+    clearcoat: 1,
+    clearcoatRoughness: 0.015,
+    transparent: true,
+    opacity: 0.4,
+    depthWrite: false,
+    emissive: 0xff8a00,
+    emissiveIntensity: 0.18,
+  });
+  const reservoirGlass = setMeshPresentation(
+    new THREE.Mesh(new THREE.CylinderGeometry(0.79, 0.72, 1.15, 6, 1, true), reservoirGlassMaterial),
+    'ISLAND_14_ROYAL_RESERVOIR_GLASS_CHAMBER',
+    5,
+  );
+  reservoirGlass.position.y = 5.2;
+  reservoirGlass.castShadow = false;
+  reservoirGlass.renderOrder = 6;
+  const reservoirFill = setMeshPresentation(
+    new THREE.Mesh(new THREE.CylinderGeometry(0.69, 0.64, 1, 6, 1, false), coronationAmber),
+    'ISLAND_14_ROYAL_RESERVOIR_HONEY_FILL',
+    5,
+  );
+  reservoirFill.castShadow = false;
+  reservoirFill.renderOrder = 5;
+  const reservoirSurface = sphere(0.67, coronationAmber, 'ISLAND_14_ROYAL_RESERVOIR_GLOSSY_SURFACE', 5, 18);
+  reservoirSurface.scale.set(1, 0.11, 1);
+  reservoirSurface.castShadow = false;
+  reservoirSurface.renderOrder = 7;
+  const reservoirGaugeCells: THREE.Object3D[] = [];
+  for (let index = 0; index < ISLAND_14_GREAT_HONEYFALL_MAX_STAGE; index += 1) {
+    const cell = createHexFrame(0.13, 0.035, 0.035, coronationLight, `ISLAND_14_ROYAL_RESERVOIR_GAUGE_${index + 1}`, 5);
+    cell.position.set((index - 1.5) * 0.28, 4.82, 0.73);
+    cell.rotation.x = Math.PI / 2;
+    reservoirGaugeCells.push(cell);
+    royalReservoir.add(cell);
+  }
+  for (let index = 0; index < 6; index += 1) {
+    const angle = index / 6 * Math.PI * 2;
+    const rib = cylinder(0.035, 0.035, 1.16, materials.paleGold, `ISLAND_14_ROYAL_RESERVOIR_RIB_${index + 1}`, 5, 6);
+    rib.position.set(Math.cos(angle) * 0.755, 5.2, Math.sin(angle) * 0.755);
+    royalReservoir.add(rib);
+  }
+  royalReservoir.add(
+    reservoirPedestal,
+    reservoirLowerRim,
+    reservoirUpperRim,
+    reservoirFill,
+    reservoirSurface,
+    reservoirGlass,
+  );
+  root.add(royalReservoir);
+
+  const reservoirBubbleCount = 14;
+  const reservoirBubbles = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.055, 7, 5),
+    coronationLight,
+    reservoirBubbleCount,
+  );
+  reservoirBubbles.name = 'ISLAND_14_ROYAL_RESERVOIR_PRESSURE_BUBBLES';
+  reservoirBubbles.castShadow = false;
+  reservoirBubbles.renderOrder = 8;
+  root.add(reservoirBubbles);
+
+  const pressureRingCount = 3;
+  const pressureRings = new THREE.InstancedMesh(
+    new THREE.TorusGeometry(0.86, 0.025, 6, 36),
+    coronationLight,
+    pressureRingCount,
+  );
+  pressureRings.name = 'ISLAND_14_ROYAL_RESERVOIR_PRESSURE_RINGS';
+  pressureRings.rotation.x = Math.PI / 2;
+  pressureRings.castShadow = false;
+  root.add(pressureRings);
+
+  const waxSeal = new THREE.Group();
+  waxSeal.name = 'ISLAND_14_ROYAL_RESERVOIR_WAX_SEAL';
+  waxSeal.position.set(0, 5.23, 0.79);
+  const waxSealDisk = cylinder(0.28, 0.3, 0.11, materials.honeyLiquid, 'ISLAND_14_ROYAL_RESERVOIR_WAX_SEAL_DISK', 5, 6);
+  waxSealDisk.rotation.x = Math.PI / 2;
+  const waxSealCell = createHexFrame(0.18, 0.045, 0.045, materials.paleGold, 'ISLAND_14_ROYAL_RESERVOIR_WAX_SEAL_CELL', 5);
+  waxSealCell.rotation.x = Math.PI / 2;
+  waxSealCell.position.z = 0.07;
+  waxSeal.add(waxSealDisk, waxSealCell);
+  root.add(waxSeal);
+
+  const waxShardCount = 18;
+  const waxSealShards = new THREE.InstancedMesh(
+    new THREE.TetrahedronGeometry(0.09, 0),
+    materials.honeyLiquid,
+    waxShardCount,
+  );
+  waxSealShards.name = 'ISLAND_14_ROYAL_RESERVOIR_WAX_SEAL_BURST';
+  waxSealShards.castShadow = false;
+  root.add(waxSealShards);
+
+  const honeyEggCouriers: THREE.Group[] = [];
+  for (let index = 0; index < 6; index += 1) {
+    const courier = createFlyingBee(materials, 100 + index);
+    courier.name = `ISLAND_14_HONEY_EGG_COURIER_${index + 1}`;
+    courier.scale.setScalar(1.05);
+    honeyEggCouriers.push(courier);
+    root.add(courier);
+  }
+
+  const missionHitTarget = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.18, 1.42, 3.1, 12),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+  );
+  missionHitTarget.name = 'ISLAND_14_GREAT_HONEYFALL_MISSION_HIT_TARGET';
+  missionHitTarget.position.y = 5.15;
+  missionHitTarget.userData.presentationRole = 'signature-mission-hit-target';
+  root.add(missionHitTarget);
+
   for (let index = 0; index < ISLAND_14_GREAT_HONEYFALL_MAX_STAGE; index += 1) {
     const angle = index / ISLAND_14_GREAT_HONEYFALL_MAX_STAGE * Math.PI * 2 + Math.PI / 4;
     const reservoir = new THREE.Group();
@@ -2580,8 +2711,11 @@ function createGreatHoneyfallCoronation(
   root.add(swarm);
 
   let stage = THREE.MathUtils.clamp(Math.floor(initialStage), 0, ISLAND_14_GREAT_HONEYFALL_MAX_STAGE);
-  let replayStartedAt: number | null = replayOnLoad ? 0 : null;
-  let currentBlend = stage / ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
+  let currentBlend = replayOnLoad ? 0 : stage / ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
+  let transitionStartedAt: number | null = replayOnLoad ? 0 : null;
+  let transitionFromBlend = currentBlend;
+  let transitionToBlend = stage / ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
+  let transitionDuration = stage >= ISLAND_14_GREAT_HONEYFALL_MAX_STAGE ? 8.2 : 4.8;
   const reducedMotion = typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const matrix = new THREE.Matrix4();
@@ -2592,18 +2726,140 @@ function createGreatHoneyfallCoronation(
   const hiddenPosition = new THREE.Vector3(0, -30, 0);
 
   const setStage = (nextStage: number, replay = false) => {
+    const previousStage = stage;
     stage = THREE.MathUtils.clamp(Math.floor(nextStage), 0, ISLAND_14_GREAT_HONEYFALL_MAX_STAGE);
-    replayStartedAt = replay ? 0 : null;
+    const targetBlend = stage / ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
+    if (!replay) {
+      currentBlend = targetBlend;
+      transitionStartedAt = null;
+      transitionFromBlend = targetBlend;
+      transitionToBlend = targetBlend;
+      return;
+    }
+    // A new delivery continues from the already-filled liquid line. Replaying
+    // a completed mission deliberately begins empty so the whole anticipation
+    // curve can be watched again without touching canonical progress.
+    transitionFromBlend = stage === previousStage ? 0 : currentBlend;
+    transitionToBlend = targetBlend;
+    transitionDuration = stage >= ISLAND_14_GREAT_HONEYFALL_MAX_STAGE ? 8.2 : 4.8;
+    currentBlend = transitionFromBlend;
+    transitionStartedAt = 0;
   };
 
   const animate = (elapsed: number) => {
-    if (replayStartedAt === 0) replayStartedAt = elapsed;
-    const replayProgress = replayStartedAt === null
-      ? 0
-      : THREE.MathUtils.clamp((elapsed - replayStartedAt) / 8.2, 0, 1);
-    const replayBlend = reducedMotion ? (replayStartedAt === null ? 0 : 1) : THREE.MathUtils.smoothstep(replayProgress, 0.08, 0.9);
-    const targetBlend = stage / ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
-    currentBlend = replayStartedAt === null ? targetBlend : replayBlend * targetBlend;
+    if (transitionStartedAt === 0) transitionStartedAt = elapsed;
+    const transitionActive = transitionStartedAt !== null;
+    const sequenceProgress = transitionStartedAt === null
+      ? 1
+      : THREE.MathUtils.clamp((elapsed - transitionStartedAt) / transitionDuration, 0, 1);
+    const easedSequence = reducedMotion
+      ? 1
+      : THREE.MathUtils.smoothstep(sequenceProgress, 0.04, 0.94);
+    currentBlend = transitionActive
+      ? THREE.MathUtils.lerp(transitionFromBlend, transitionToBlend, easedSequence)
+      : transitionToBlend;
+    if (transitionActive && sequenceProgress >= 1) {
+      currentBlend = transitionToBlend;
+      transitionStartedAt = null;
+    }
+
+    const fillAmount = Math.max(0.015, currentBlend);
+    reservoirFill.scale.set(1, fillAmount, 1);
+    reservoirFill.position.y = 4.64 + fillAmount * 0.5;
+    reservoirSurface.position.y = 4.64 + fillAmount;
+    reservoirSurface.scale.set(1 + Math.sin(elapsed * 1.8) * (reducedMotion ? 0 : 0.018), 0.11, 1);
+    reservoirGlassMaterial.emissiveIntensity = 0.14 + currentBlend * 0.48;
+    reservoirGaugeCells.forEach((cell, index) => {
+      const gaugeProgress = THREE.MathUtils.clamp(currentBlend * ISLAND_14_GREAT_HONEYFALL_MAX_STAGE - index, 0, 1);
+      const gaugeScale = gaugeProgress <= 0 ? 0.34 : 0.72 + THREE.MathUtils.smoothstep(gaugeProgress, 0.05, 0.78) * 0.38;
+      cell.scale.setScalar(gaugeScale);
+    });
+
+    for (let index = 0; index < reservoirBubbleCount; index += 1) {
+      if (currentBlend <= 0.01) {
+        scale.setScalar(0.001);
+        matrix.compose(hiddenPosition, identityQuaternion, scale);
+      } else {
+        const bubbleTravel = reducedMotion ? index / reservoirBubbleCount : (elapsed * (0.17 + index % 4 * 0.025) + index * 0.137) % 1;
+        const bubbleAngle = index * 2.399;
+        const bubbleRadius = 0.16 + index % 4 * 0.11;
+        const bubbleTop = 4.64 + currentBlend * 0.94;
+        const position = new THREE.Vector3(
+          Math.cos(bubbleAngle) * bubbleRadius,
+          THREE.MathUtils.lerp(4.68, bubbleTop, bubbleTravel),
+          Math.sin(bubbleAngle) * bubbleRadius,
+        );
+        const bubbleScale = (0.5 + index % 3 * 0.17) * (0.65 + currentBlend * 0.35);
+        scale.setScalar(bubbleScale);
+        matrix.compose(position, identityQuaternion, scale);
+      }
+      reservoirBubbles.setMatrixAt(index, matrix);
+    }
+    reservoirBubbles.instanceMatrix.needsUpdate = true;
+
+    const finalPressureActive = !reducedMotion
+      && transitionActive
+      && transitionToBlend >= 1
+      && sequenceProgress > 0.28
+      && sequenceProgress < 0.86;
+    for (let index = 0; index < pressureRingCount; index += 1) {
+      if (!finalPressureActive) {
+        scale.setScalar(0.001);
+        matrix.compose(hiddenPosition, identityQuaternion, scale);
+      } else {
+        const ringPhase = (sequenceProgress * 3.1 - index * 0.24 + 1) % 1;
+        const ringScale = 0.72 + ringPhase * 1.42;
+        scale.setScalar(ringScale);
+        matrix.compose(new THREE.Vector3(0, 5.2, 0), identityQuaternion, scale);
+      }
+      pressureRings.setMatrixAt(index, matrix);
+    }
+    pressureRings.instanceMatrix.needsUpdate = true;
+
+    const waxBulge = finalPressureActive ? 1 + Math.sin(elapsed * 13) * 0.075 + sequenceProgress * 0.16 : 1;
+    waxSeal.visible = currentBlend < 0.965;
+    waxSeal.scale.set(waxBulge, waxBulge, 1 + (waxBulge - 1) * 1.8);
+    const waxBurstActive = !reducedMotion
+      && transitionActive
+      && transitionToBlend >= 1
+      && sequenceProgress >= 0.69
+      && sequenceProgress < 0.98;
+    const waxBurstProgress = THREE.MathUtils.clamp((sequenceProgress - 0.69) / 0.29, 0, 1);
+    for (let index = 0; index < waxShardCount; index += 1) {
+      if (!waxBurstActive) {
+        scale.setScalar(0.001);
+        matrix.compose(hiddenPosition, identityQuaternion, scale);
+      } else {
+        const angle = index / waxShardCount * Math.PI * 2 + index * 0.37;
+        const radius = 0.18 + waxBurstProgress * (0.75 + index % 4 * 0.16);
+        const position = new THREE.Vector3(
+          Math.cos(angle) * radius,
+          5.23 + Math.sin(angle * 1.7) * radius * 0.48 + waxBurstProgress * 0.24,
+          0.82 + waxBurstProgress * (0.38 + index % 3 * 0.12),
+        );
+        quaternion.setFromEuler(new THREE.Euler(waxBurstProgress * 5 + index, angle, index * 0.4));
+        scale.setScalar((1 - waxBurstProgress * 0.72) * (0.72 + index % 3 * 0.12));
+        matrix.compose(position, quaternion, scale);
+      }
+      waxSealShards.setMatrixAt(index, matrix);
+    }
+    waxSealShards.instanceMatrix.needsUpdate = true;
+
+    honeyEggCouriers.forEach((courier, index) => {
+      const activeCourierCount = Math.max(2, Math.ceil(currentBlend * honeyEggCouriers.length));
+      courier.visible = index < activeCourierCount;
+      const angle = index / honeyEggCouriers.length * Math.PI * 2 + (reducedMotion ? 0 : elapsed * (0.52 + index % 2 * 0.08));
+      const radius = 1.02 + index % 2 * 0.18;
+      courier.position.set(
+        Math.cos(angle) * radius,
+        5.05 + index % 3 * 0.31 + Math.sin(elapsed * 1.4 + index) * (reducedMotion ? 0 : 0.08),
+        Math.sin(angle) * radius,
+      );
+      courier.rotation.y = -angle + Math.PI / 2;
+      (courier.userData.wings as THREE.Object3D[] | undefined)?.forEach((wing, wingIndex) => {
+        wing.rotation.x = reducedMotion ? 0 : Math.sin(elapsed * 22 + wingIndex * Math.PI) * 0.58;
+      });
+    });
     reservoirs.forEach((reservoir, index) => {
       const localProgress = THREE.MathUtils.clamp(
         currentBlend * ISLAND_14_GREAT_HONEYFALL_MAX_STAGE - index,
@@ -2711,7 +2967,7 @@ function createGreatHoneyfallCoronation(
     lightCrown.scale.setScalar(Math.max(0.02, helixReveal));
     honeycombWave.visible = coronationActive;
     for (let index = 0; index < 3; index += 1) {
-      const wavePhase = reducedMotion ? 1 : (replayProgress * 1.9 - index * 0.25 + 1) % 1;
+      const wavePhase = reducedMotion ? 1 : (sequenceProgress * 1.9 - index * 0.25 + 1) % 1;
       const waveScale = coronationActive ? 0.9 + wavePhase * 3.15 : 0.001;
       scale.setScalar(waveScale);
       matrix.compose(new THREE.Vector3(0, 0, 0), quaternion, scale);
@@ -2754,6 +3010,11 @@ function createGreatHoneyfallCoronation(
   root.userData.sculptRuntime = {
     parts: [
       ...reservoirs.map((object, index) => ({ id: `nectar-reservoir-${index + 1}`, object, role: 'mission-infrastructure' })),
+      { id: 'royal-pressure-reservoir', object: royalReservoir, role: 'mission-infrastructure' },
+      { id: 'royal-reservoir-honey-fill', object: reservoirFill, role: 'mission-infrastructure' },
+      { id: 'royal-reservoir-wax-seal', object: waxSeal, role: 'mission-spectacle' },
+      { id: 'royal-reservoir-pressure-rings', object: pressureRings, role: 'mission-spectacle' },
+      { id: 'honey-egg-couriers', object: root, role: 'mission-spectacle' },
       { id: 'palace-conduits', object: root, role: 'mission-infrastructure' },
       { id: 'coronation-liquid-helix', object: liquidHelix, role: 'mission-spectacle' },
       { id: 'coronation-sky-channels', object: root, role: 'mission-spectacle' },
@@ -3264,7 +3525,7 @@ export function createIsland14HoneycombLivingAmbience(
   // The signature mission uses asymmetric curved ropes attached to the
   // phone-facing cliff, with no slab geometry or freestanding fountain base.
   const greatHoneyfallCliff = new THREE.Group();
-  greatHoneyfallCliff.name = 'ISLAND_14_GREAT_HONEYFALL_CORONATION';
+  greatHoneyfallCliff.name = 'ISLAND_14_GREAT_HONEYFALL_CLIFF_SPECTACLE';
   greatHoneyfallCliff.userData.presentationRole = 'signature-mission-cliff-honeyfall';
   addGreatHoneyfallRopeCascade(
     greatHoneyfallCliff,
@@ -3304,7 +3565,9 @@ export function createIsland14HoneycombLivingAmbience(
     Number.isFinite(initialMissionStage) ? initialMissionStage : 0,
     replayMission,
   );
-  const initialHoneyfallVisible = Number.isFinite(initialMissionStage) && initialMissionStage > 0;
+  root.add(greatHoneyfall.root);
+  const initialHoneyfallVisible = Number.isFinite(initialMissionStage)
+    && initialMissionStage >= ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
   greatHoneyfallCliff.visible = initialHoneyfallVisible;
   if (honeyWorldV2.honeyfall) honeyWorldV2.honeyfall.root.visible = false;
 
@@ -3321,7 +3584,7 @@ export function createIsland14HoneycombLivingAmbience(
     root,
     setGreatHoneyfallStage: (stage, replay = false) => {
       greatHoneyfall.setStage(stage, replay);
-      greatHoneyfallCliff.visible = stage > 0;
+      greatHoneyfallCliff.visible = stage >= ISLAND_14_GREAT_HONEYFALL_MAX_STAGE;
       if (honeyWorldV2.honeyfall) honeyWorldV2.honeyfall.root.visible = false;
     },
     animate: (elapsed: number) => {
@@ -3331,7 +3594,10 @@ export function createIsland14HoneycombLivingAmbience(
       if (honeyWorldV2.honeyfall) {
         honeyWorldV2.honeyfall.root.visible = false;
       }
-      greatHoneyfallCliff.visible = missionBlend > 0.015;
+      // The world-scale cascade is the payoff, not an always-on preview: the
+      // reservoir fills for three stages, the fourth seal breaks, then the
+      // Great Honeyfall becomes visible and stays flowing.
+      greatHoneyfallCliff.visible = missionBlend > 0.92;
       const finalSurge = THREE.MathUtils.smoothstep(missionBlend, 0.78, 1);
       const honeyfallBoost = 1 + missionBlend * 0.24 + finalSurge * 0.38;
       const gardenGlow = missionBlend * 0.1 + finalSurge * 0.22;

@@ -6934,6 +6934,71 @@
   color: #aee5bc !important;
 }
 
+.island-mission-tracker__mission-action {
+  display: grid;
+  gap: 5px;
+  padding: 5px 3px 3px;
+  text-align: center;
+}
+
+.island-mission-tracker__milestones {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  color: #594016;
+  font-size: 1.05rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+}
+
+.island-mission-tracker__milestones > i {
+  font-style: normal;
+}
+
+.island-mission-tracker__milestones > i.is-filled {
+  color: #ffbf21;
+  text-shadow: 0 0 8px rgba(255, 179, 0, 0.78);
+}
+
+.island-mission-tracker__mission-action > button {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid #ffd36a;
+  border-radius: 8px;
+  color: #271400;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 29%),
+    linear-gradient(180deg, #ffd968, #ef9f00 64%, #bd6500);
+  box-shadow:
+    inset 0 -3px 0 rgba(89, 40, 0, 0.34),
+    0 0 18px rgba(255, 176, 0, 0.25);
+  font-size: 0.76rem;
+  letter-spacing: 0.045em;
+  cursor: pointer;
+}
+
+.island-mission-tracker__mission-action > button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.island-mission-tracker__mission-action > button:disabled {
+  color: #8a7b61;
+  border-color: rgba(218, 185, 120, 0.34);
+  background: linear-gradient(180deg, #3d3830, #211f1b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  cursor: default;
+}
+
+.island-mission-tracker__mission-action > small {
+  color: #f1d89b;
+  font-size: 0.66rem;
+  line-height: 1.15;
+}
+
 .island-mission-tracker__overall {
   display: grid;
   gap: 9px;

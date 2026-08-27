@@ -42,7 +42,7 @@ function restoredStops(count = 5) {
 
 export const islandRunMissionTrackerTests: TestCase[] = [
   {
-    name: 'mission registry aligns Islands 001-013 with the authored production worlds and approved headers',
+    name: 'mission registry aligns Islands 001-014 with the authored production worlds and approved headers',
     run: () => {
       const expected = [
         [1, 'First Light Kingdom', 'First Light Assembly'],
@@ -58,12 +58,37 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [11, 'First Light Kingdom', 'Reopen the First Light Route'],
         [12, 'Sunken Sands', 'Find the Sunscarab'],
         [13, 'Cactus Canyon', 'Carve the Canyon Spiral'],
+        [14, 'Honeycomb Kingdom', 'Awaken the Great Honeyfall'],
       ] as const;
       expected.forEach(([islandNumber, islandName, headline]) => {
         const presentation = getIslandMissionBriefingPresentation(islandNumber);
         assertEqual(presentation.islandName, islandName, `Island ${islandNumber} uses its production world name`);
         assertEqual(presentation.headline, headline, `Island ${islandNumber} uses its approved compact header`);
       });
+    },
+  },
+  {
+    name: 'Honeycomb Kingdom mission phone exposes live reservoir pressure progress and ready nectar',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 14);
+      const tracker = resolveIslandMissionTrackerPresentation({
+        islandNumber: 14,
+        state: makeState({
+          currentIslandNumber: 14,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'great-honeyfall-coronation', version: 1,
+              nectarChargesEarned: 3, nectarChargesSpent: 2,
+              activatedReservoirs: 2, lastActivatedReservoir: 2,
+              completedAtMs: null, updatedAtMs: 8,
+            },
+          },
+        }),
+      });
+      assertEqual(tracker.usesLiveSignatureProgress, true, 'Honeyfall phone reads canonical signature progress');
+      assertEqual(tracker.objectives[0].label, 'Fill Royal Reservoir', 'the primary objective names the visible 3D machine');
+      assertEqual(tracker.objectives[0].value, 2, 'only committed reservoir stages advance the mission ring');
+      assertEqual(tracker.objectives[0].displayValue, 'Nectar ready · 2 / 4', 'an unspent route pickup is clearly actionable');
     },
   },
   {

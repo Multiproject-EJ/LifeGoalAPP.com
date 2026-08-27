@@ -62,18 +62,18 @@ function cameraFor(degrees, width, height, mode = 'orbit', viewOptions = {}) {
   const route = mode === 'route';
   const landmark = mode === 'landmark';
   const target = viewOptions.target ?? (mission
-    ? new THREE.Vector3(2.24, -2.05, 5.76)
+    ? new THREE.Vector3(0, 3.9, 1.35)
     : phone
       ? new THREE.Vector3(0, -0.75, -0.05)
       : route
         ? new THREE.Vector3(0, 0.25, 0)
         : new THREE.Vector3(0, 1.35, 0.2));
   const camera = new THREE.PerspectiveCamera(mission || route ? 34 : landmark ? 32 : phone ? 43 : 40, width / height, 0.1, 120);
-  const radius = viewOptions.radius ?? (mission ? 10.8 : route ? 9.2 : landmark ? 5.4 : phone ? 27.8 : 18.5);
+  const radius = viewOptions.radius ?? (mission ? 9.4 : route ? 9.2 : landmark ? 5.4 : phone ? 27.8 : 18.5);
   const angle = THREE.MathUtils.degToRad(degrees);
   camera.position.set(
     target.x + Math.sin(angle) * radius,
-    viewOptions.cameraY ?? (mission ? 7.4 : route ? 7.2 : landmark ? target.y + 2.35 : phone ? 15.8 : 10.8),
+    viewOptions.cameraY ?? (mission ? 7.7 : route ? 7.2 : landmark ? target.y + 2.35 : phone ? 15.8 : 10.8),
     target.z + Math.cos(angle) * radius,
   );
   camera.lookAt(target);

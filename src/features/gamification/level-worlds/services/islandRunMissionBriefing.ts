@@ -41,6 +41,7 @@ export type IslandMissionProgressKind =
   | 'sunken_sands_treasure'
   | 'cactus_canyon_spiral'
   | 'fishermans_fishing'
+  | 'great_honeyfall_coronation'
   | 'planned_signature'
   | 'standard_landmarks';
 
@@ -201,6 +202,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'One controlled blast opens one section. Keep civilians and the summit train clear until every charge is accounted for.',
     caretakerSignal: 'The mountain can carry us—if every cut follows the stone instead of fighting it.',
   },
+  14: {
+    progressKind: 'great_honeyfall_coronation',
+    headline: 'Awaken the Great Honeyfall',
+    missionStatement: 'Honeycomb Kingdom\'s royal reservoir is dry. Recover four royal nectar charges from the glowing honeycomb route, pour each charge into the palace pressure chamber, and build toward one glorious release.',
+    primaryObjective: 'Collect four royal nectar charges and fill the royal reservoir.',
+    supportingObjective: 'Restore the five Honeycomb landmarks while the Honey Egg couriers prepare the coronation flow.',
+    fieldProtocol: 'One nectar charge commissions one reservoir stage. Watch the pressure, then stand clear when the fourth wax seal breaks.',
+    caretakerSignal: 'Fill it slowly. The final drop will wake every Honeyfall in the kingdom.',
+  },
   16: {
     progressKind: 'fishermans_fishing',
     headline: 'The Hundred-Kilo Catch',
@@ -226,6 +236,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   11: 'First Light Kingdom',
   12: 'Sunken Sands',
   13: 'Cactus Canyon',
+  14: 'Honeycomb Kingdom',
   16: "Fisherman's Village",
 });
 

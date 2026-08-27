@@ -12,15 +12,18 @@ import {
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FROSTWELL_DEPTH_METERS,
   FISHERMANS_VILLAGE_FISH_TARGET_KG,
+  GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCelestialRedockingDockedPlatformCount,
+  getGreatHoneyfallAvailableNectar,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveFirstLightAssemblyCraterProgress,
   resolveFrostwellIceworksProgress,
   resolveFishermansVillageFishingProgress,
+  resolveGreatHoneyfallProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
@@ -250,6 +253,28 @@ export function resolveIslandMissionTrackerPresentation(options: {
       });
       objectives = [
         objective('Blast Rail Sections', progress.segmentsExcavated, CACTUS_CANYON_SPIRAL_MAX_SEGMENTS),
+        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+      ];
+      break;
+    }
+    case 'great_honeyfall_coronation': {
+      const progress = resolveGreatHoneyfallProgress({
+        ledger: state.signatureMissionProgressByIsland,
+        cycleIndex: state.cycleIndex,
+        islandNumber,
+      });
+      const nectarReady = getGreatHoneyfallAvailableNectar(progress);
+      objectives = [
+        objective(
+          'Fill Royal Reservoir',
+          progress.activatedReservoirs,
+          GREAT_HONEYFALL_MAX_STAGE,
+          progress.completedAtMs !== null
+            ? 'Flowing'
+            : nectarReady > 0
+              ? `Nectar ready · ${progress.activatedReservoirs} / ${GREAT_HONEYFALL_MAX_STAGE}`
+              : `${progress.activatedReservoirs} / ${GREAT_HONEYFALL_MAX_STAGE}`,
+        ),
         objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
       ];
       break;
