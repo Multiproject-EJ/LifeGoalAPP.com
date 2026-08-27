@@ -16,6 +16,9 @@ import {
   HONEYCOMB_KINGDOM_ISLAND_NUMBER,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
+  FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG,
+  FISHERMANS_VILLAGE_FISH_TARGET_KG,
+  FISHERMANS_VILLAGE_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_FIRST_TREASURE_DICE,
@@ -36,9 +39,76 @@ import {
   resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
+  resolveFishermansVillageFishingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
+
+export type ReelFishermansVillageCatchResult =
+  | {
+      status: 'ok';
+      catchId: number;
+      kind: 'nothing' | 'small' | 'medium' | 'large' | 'colossal';
+      kilograms: number;
+      fishCaughtKg: number;
+      dragonTriggered: boolean;
+    }
+  | { status: 'wrong_island' | 'nothing_hooked' };
+
+export function reelFishermansVillageCatch(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ReelFishermansVillageCatchResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFishermansVillageFishingProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    const pending = progress.pendingCatch;
+    if (!pending) return { status: 'nothing_hooked' };
+
+    const nowMs = Date.now();
+    const fishCaughtKg = Math.min(FISHERMANS_VILLAGE_FISH_TARGET_KG, progress.fishCaughtKg + pending.kilograms);
+    const dragonTriggered = progress.dragonTriggeredAtMs === null
+      && fishCaughtKg >= FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG;
+    const completedAtMs = fishCaughtKg >= FISHERMANS_VILLAGE_FISH_TARGET_KG
+      ? progress.completedAtMs ?? nowMs
+      : progress.completedAtMs;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: {
+            ...progress,
+            successfulCatches: progress.successfulCatches + (pending.kilograms > 0 ? 1 : 0),
+            fishCaughtKg,
+            pendingCatch: null,
+            dragonTriggeredAtMs: dragonTriggered ? nowMs : progress.dragonTriggeredAtMs,
+            completedAtMs,
+            updatedAtMs: nowMs,
+          },
+        },
+      },
+      triggerSource: 'reel_fishermans_village_catch',
+    });
+    return {
+      status: 'ok',
+      catchId: pending.catchId,
+      kind: pending.kind,
+      kilograms: pending.kilograms,
+      fishCaughtKg,
+      dragonTriggered,
+    };
+  });
+}
 
 export type DetonateFirstLightAssemblyChargeResult =
   | {

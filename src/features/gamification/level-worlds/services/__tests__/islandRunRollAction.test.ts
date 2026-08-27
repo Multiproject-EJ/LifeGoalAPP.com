@@ -18,11 +18,14 @@ import {
   CELESTIAL_REDOCKING_ROLL_TARGET,
   FROSTWELL_DRILL_TILE_INDICES,
   FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
+  FISHERMANS_VILLAGE_FISHING_TILE_INDICES,
+  FISHERMANS_VILLAGE_ROD_TILE_INDEX,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   getIslandRunSignatureMissionKey,
   resolveFrostwellIceworksProgress,
   resolveFirstLightAssemblyCraterProgress,
+  resolveFishermansVillageFishingProgress,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveRootheartPowerworksProgress,
@@ -422,6 +425,38 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(result.frostwellSpinGranted, false, 'ordinary landing grants nothing');
       const state = readIslandRunGameStateRecord(makeSession());
       assertEqual(resolveFrostwellIceworksProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 3, cycleIndex: 0 }).spinsEarned, 0, 'mission remains unchanged');
+    },
+  },
+  {
+    name: 'Island 016 roll landing collects the rod, then persists a hooked catch for reeling',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: FISHERMANS_VILLAGE_ROD_TILE_INDEX - 2,
+        currentIslandNumber: 16,
+        cycleIndex: 0,
+      });
+      const rod = await withMockedRandom([0, 0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(rod.fishermansVillageRodCollected, true, 'roll result surfaces the rod pickup');
+      const afterRod = readIslandRunGameStateRecord(makeSession());
+      const rodProgress = resolveFishermansVillageFishingProgress({ ledger: afterRod.signatureMissionProgressByIsland, cycleIndex: 0 });
+      assert(rodProgress.rodCollectedAtMs !== null, 'rod pickup persists with movement');
+
+      seedState({ ...afterRod, tokenIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[0] - 2 });
+      const cast = await withMockedRandom([0, 0, 0.7], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(cast.fishermansVillagePendingCatch?.kind, 'medium', 'fishing landing resolves the weighted catch');
+      const afterCast = resolveFishermansVillageFishingProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        cycleIndex: 0,
+      });
+      assertEqual(afterCast.pendingCatch?.kind, 'medium', 'hooked catch survives reload until the player reels');
+      assertEqual(afterCast.fishCaughtKg, 0, 'landing alone cannot award kilograms');
     },
   },
   {

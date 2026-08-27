@@ -40,6 +40,7 @@ export type IslandMissionProgressKind =
   | 'rootheart_powerworks'
   | 'sunken_sands_treasure'
   | 'cactus_canyon_spiral'
+  | 'fishermans_fishing'
   | 'planned_signature'
   | 'standard_landmarks';
 
@@ -200,6 +201,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'One controlled blast opens one section. Keep civilians and the summit train clear until every charge is accounted for.',
     caretakerSignal: 'The mountain can carry us—if every cut follows the stone instead of fighting it.',
   },
+  16: {
+    progressKind: 'fishermans_fishing',
+    headline: 'The Hundred-Kilo Catch',
+    missionStatement: 'The Fisherman’s Village needs a full market catch from its central pond. Recover the village rod, cast from marked shore tiles and reel every catch in by hand—but watch the water carefully.',
+    primaryObjective: 'Catch 100 kg / 220.5 lb of fish.',
+    supportingObjective: 'Restore the five village landmarks after the pond disturbance.',
+    fieldProtocol: 'Land on the rod first. Fishing spots then cast into the central pond; the catch only counts after the reel is completed.',
+    caretakerSignal: 'The old fishers say the pond has a bottom. None of them sound certain.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
@@ -216,6 +226,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   11: 'First Light Kingdom',
   12: 'Sunken Sands',
   13: 'Cactus Canyon',
+  16: "Fisherman's Village",
 });
 
 function padIsland(islandNumber: number): string {

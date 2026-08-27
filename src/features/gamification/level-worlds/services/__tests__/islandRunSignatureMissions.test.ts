@@ -6,6 +6,8 @@ import {
   FROSTWELL_DRILL_TILE_INDICES,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
+  FISHERMANS_VILLAGE_FISHING_TILE_INDICES,
+  FISHERMANS_VILLAGE_ROD_TILE_INDEX,
   GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_DICE,
@@ -16,6 +18,7 @@ import {
   collectCactusCanyonDynamiteForLanding,
   collectFirstLightAssemblyDynamiteForLanding,
   collectFirstLightAssemblyDynamiteForRoute,
+  collectFishermansVillageLanding,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
   getCactusCanyonAvailableDynamite,
@@ -31,6 +34,7 @@ import {
   mergeIslandRunSignatureMissionProgress,
   resolveFrostwellIceworksProgress,
   resolveFirstLightAssemblyCraterProgress,
+  resolveFishermansVillageFishingProgress,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveGreatHoneyfallProgress,
@@ -45,6 +49,7 @@ import {
   detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
+  reelFishermansVillageCatch,
   blastCactusCanyonSpiralSection,
   spinFrostwellDrillWheel,
 } from '../islandRunSignatureMissionAction';
@@ -777,6 +782,80 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const poor = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
       assertEqual(poor.status, 'insufficient_essence', 'wallet guard blocks staged funding');
       assertEqual(readIslandRunGameStateRecord(makeSession()).essence, 599, 'blocked stage leaves wallet untouched');
+    },
+  },
+  {
+    name: 'Fisherman’s Village exposes one rod and four fishing spots clear of landmark doors',
+    run: () => {
+      const map = applyLandmarkDoorTiles(generateTileMap(16, getIslandRarity(16), 'fishermans-village', 2), { expandedActiveStopId: 'hatchery' });
+      assertEqual(map[FISHERMANS_VILLAGE_ROD_TILE_INDEX]?.signatureMissionKind, 'fishermans_rod', 'rod tile is visible');
+      FISHERMANS_VILLAGE_FISHING_TILE_INDICES.forEach((index) => {
+        assertEqual(map[index]?.signatureMissionKind, 'fishermans_fishing_spot', `tile ${index} is a fishing spot`);
+        assert(map[index]?.tileType !== 'landmark_door', `tile ${index} remains clear of a door cluster`);
+      });
+    },
+  },
+  {
+    name: 'Fisherman’s Village requires the rod before a fishing landing can hook a catch',
+    run: () => {
+      const blocked = collectFishermansVillageLanding({
+        ledger: {}, islandNumber: 16, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[0], nowMs: 10, randomValue: 0.7,
+      });
+      assertEqual(blocked.pendingCatch, null, 'fishing without the rod is blocked');
+      const rod = collectFishermansVillageLanding({
+        ledger: {}, islandNumber: 16, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDEX, nowMs: 11, randomValue: 0,
+      });
+      assertEqual(rod.rodCollected, true, 'rod landing collects the rod');
+      const hooked = collectFishermansVillageLanding({
+        ledger: rod.ledger, islandNumber: 16, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[0], nowMs: 12, randomValue: 0.7,
+      });
+      assertEqual(hooked.pendingCatch?.kind, 'medium', 'weighted catch becomes a medium fish');
+      assertEqual(resolveFishermansVillageFishingProgress({ ledger: hooked.ledger, cycleIndex: 0 }).fishCaughtKg, 0, 'kilograms wait for the reel action');
+    },
+  },
+  {
+    name: 'Fisherman’s Village colossal catch lands exactly on 78 kg and triggers the dragon once',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const key = getIslandRunSignatureMissionKey(0, 16);
+      const prepared = collectFishermansVillageLanding({
+        ledger: {
+          [key]: {
+            missionId: 'fishermans-village-fishing', version: 1,
+            rodCollectedAtMs: 1, castsCompleted: 4, successfulCatches: 4,
+            fishCaughtKg: 46, pendingCatch: null, dragonTriggeredAtMs: null,
+            repairCompletedAtMs: null, completedAtMs: null, updatedAtMs: 4,
+          },
+        },
+        islandNumber: 16, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_FISHING_TILE_INDICES[1], nowMs: 5, randomValue: 0,
+      });
+      assertEqual(prepared.pendingCatch?.kind, 'colossal', 'fifth successful catch is the authored shock catch');
+      assertEqual(prepared.pendingCatch?.kilograms, 32, 'colossal catch fills 46 to 78 exactly');
+      await writeIslandRunGameStateRecord({
+        session, client: null,
+        record: { ...base, currentIslandNumber: 16, signatureMissionProgressByIsland: prepared.ledger },
+      });
+      refreshIslandRunStateFromLocal(session);
+      const result = await reelFishermansVillageCatch({ session, client: null });
+      assertEqual(result.status, 'ok', 'reel action commits the hooked fish');
+      if (result.status !== 'ok') return;
+      assertEqual(result.fishCaughtKg, 78, 'meter lands on the interruption threshold');
+      assertEqual(result.dragonTriggered, true, 'threshold starts the dragon cinematic');
+      const progress = resolveFishermansVillageFishingProgress({
+        ledger: readIslandRunGameStateRecord(session).signatureMissionProgressByIsland,
+        cycleIndex: 0,
+      });
+      assert(progress.dragonTriggeredAtMs !== null, 'dragon edge persists canonically');
+      assertEqual(progress.pendingCatch, null, 'catch cannot be reeled twice');
     },
   },
   {

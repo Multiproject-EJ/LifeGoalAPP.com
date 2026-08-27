@@ -472,6 +472,7 @@ import {
   detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
+  reelFishermansVillageCatch,
   spinFrostwellDrillWheel,
 } from '../services/islandRunSignatureMissionAction';
 import {
@@ -479,6 +480,8 @@ import {
   CELESTIAL_REDOCKING_PLATFORM_COUNT,
   CELESTIAL_REDOCKING_ROLL_TARGET,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+  FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG,
+  FISHERMANS_VILLAGE_FISH_TARGET_KG,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_SPIN_METERS,
   GREAT_HONEYFALL_MAX_STAGE,
@@ -500,6 +503,7 @@ import {
   resolveFirstLightAssemblyCraterProgress,
   resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
+  resolveFishermansVillageFishingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from '../services/islandRunSignatureMissions';
@@ -1962,6 +1966,13 @@ export function IslandRunBoardPrototype({
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
   const [pendingRootheartPowerworksAutoOpen, setPendingRootheartPowerworksAutoOpen] = useState(false);
   const [rootheartCompletionCelebrationId, setRootheartCompletionCelebrationId] = useState<number | null>(null);
+  const [showFishermansFishing, setShowFishermansFishing] = useState(false);
+  const [fishingPullsRemaining, setFishingPullsRemaining] = useState(0);
+  const [isReelingFishingCatch, setIsReelingFishingCatch] = useState(false);
+  const [fishingReelPulse, setFishingReelPulse] = useState(0);
+  const [fishingCatchMessage, setFishingCatchMessage] = useState<string | null>(null);
+  const [dragonCinematicStartedAtMs, setDragonCinematicStartedAtMs] = useState<number | null>(null);
+  const [dragonCinematicElapsedSeconds, setDragonCinematicElapsedSeconds] = useState(0);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -3036,6 +3047,7 @@ export function IslandRunBoardPrototype({
     showFirstLightAssemblyCrater ||
     showCactusCanyonSpiral ||
     showRootheartPowerworks ||
+    showFishermansFishing ||
     Boolean(dormantDoorMiniGame) ||
     Boolean(trafficLightCoinFlip) ||
     Boolean(techCollectionModal) ||
@@ -3164,6 +3176,11 @@ export function IslandRunBoardPrototype({
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
   const greatHoneyfallAvailableNectar = getGreatHoneyfallAvailableNectar(greatHoneyfallProgress);
   const greatHoneyfallCompleted = greatHoneyfallProgress.completedAtMs !== null;
+  const fishermansFishingProgress = useMemo(() => resolveFishermansVillageFishingProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 16,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
   const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -5535,11 +5552,17 @@ export function IslandRunBoardPrototype({
   });
   const expandedActiveLandmarkDoorStopId = resolveExpandedLandmarkDoorStopIdForStatuses(contractV2Stops?.statusesByIndex);
   const landmarkDoorTileMap = useMemo(
-    () => applyLandmarkDoorTiles(tileMap, {
-      allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
-      expandedActiveStopId: expandedActiveLandmarkDoorStopId,
-    }),
-    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, tileMap],
+    () => {
+      const applied = applyLandmarkDoorTiles(tileMap, {
+        allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
+        expandedActiveStopId: expandedActiveLandmarkDoorStopId,
+      });
+      if (islandNumber !== 16 || fishermansFishingProgress.rodCollectedAtMs === null) return applied;
+      return applied.map((entry) => entry.signatureMissionKind === 'fishermans_rod'
+        ? { ...entry, signatureMissionKind: undefined }
+        : entry);
+    },
+    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.rodCollectedAtMs, islandNumber, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(__storeState.bonusTileChargeByIsland, islandNumber);
   // Show the optimistic mid-hop charge while a roll is animating so the lights
@@ -7868,6 +7891,17 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
+        } else if (rollResult.fishermansVillageRodCollected) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setLandingText('🎣 Fishing rod collected! The four fish-marked shore tiles can now cast into the central pond.');
+        } else if (rollResult.fishermansVillagePendingCatch) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setFishingPullsRemaining(rollResult.fishermansVillagePendingCatch.pullsRequired);
+          setFishingCatchMessage(null);
+          setShowFishermansFishing(true);
+          setLandingText('🎣 Line cast into the central pond—something is on the hook!');
         } else if ((rollResult.firstLightAssemblyDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -12749,6 +12783,7 @@ export function IslandRunBoardPrototype({
       showFirstLightAssemblyCrater ||
       showCactusCanyonSpiral ||
       showRootheartPowerworks ||
+      showFishermansFishing ||
       showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
@@ -12766,6 +12801,34 @@ export function IslandRunBoardPrototype({
     const timer = window.setTimeout(() => setRootheartCompletionCelebrationId(null), 5_200);
     return () => window.clearTimeout(timer);
   }, [rootheartCompletionCelebrationId]);
+  useEffect(() => {
+    if (
+      islandNumber !== 16
+      || !fishermansFishingProgress.pendingCatch
+      || showFishermansFishing
+      || doesModalOwnAttention
+    ) return undefined;
+    const timer = window.setTimeout(() => {
+      setFishingPullsRemaining(fishermansFishingProgress.pendingCatch?.pullsRequired ?? 1);
+      setFishingCatchMessage(null);
+      setShowFishermansFishing(true);
+    }, 260);
+    return () => window.clearTimeout(timer);
+  }, [doesModalOwnAttention, fishermansFishingProgress.pendingCatch, islandNumber, showFishermansFishing]);
+  useEffect(() => {
+    if (islandNumber !== 16 || fishermansFishingProgress.dragonTriggeredAtMs === null) return;
+    setShowFishermansFishing(false);
+    setDragonCinematicStartedAtMs((current) => current ?? Date.now());
+  }, [fishermansFishingProgress.dragonTriggeredAtMs, islandNumber]);
+  useEffect(() => {
+    if (dragonCinematicStartedAtMs === null) return undefined;
+    const updateElapsed = () => setDragonCinematicElapsedSeconds(
+      Math.max(0, (Date.now() - dragonCinematicStartedAtMs) / 1_000),
+    );
+    updateElapsed();
+    const interval = window.setInterval(updateElapsed, 50);
+    return () => window.clearInterval(interval);
+  }, [dragonCinematicStartedAtMs]);
   useEffect(() => {
     if (!pendingMissionBriefing || doesModalOwnAttention || queuedSignatureMissionPresentation) return;
     setActiveMissionBriefing(pendingMissionBriefing);
@@ -12811,6 +12874,10 @@ export function IslandRunBoardPrototype({
     return lockPageScroll();
   }, [showFrostwellMission]);
   useEffect(() => {
+    if (!showFishermansFishing || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showFishermansFishing]);
+  useEffect(() => {
     if (!showFirstLightAssemblyCrater || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showFirstLightAssemblyCrater]);
@@ -12822,6 +12889,49 @@ export function IslandRunBoardPrototype({
     if (!showRootheartPowerworks || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showRootheartPowerworks]);
+
+  const handlePullFishermansCatch = useCallback(async () => {
+    if (isReelingFishingCatch || !fishermansFishingProgress.pendingCatch) return;
+    setFishingReelPulse((value) => value + 1);
+    playIslandRunSound('stop_land');
+    triggerIslandRunHaptic('stop_land');
+    if (fishingPullsRemaining > 1) {
+      setFishingPullsRemaining((value) => Math.max(1, value - 1));
+      return;
+    }
+    setIsReelingFishingCatch(true);
+    try {
+      const result = await reelFishermansVillageCatch({ session, client });
+      if (result.status !== 'ok') return;
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      setRuntimeStateWithTrace('reel_fishermans_village_catch', fresh);
+      const catchLabel = result.kilograms <= 0
+        ? 'The hook came back empty.'
+        : `${result.kind === 'colossal' ? 'COLOSSAL CATCH' : `${result.kind.toUpperCase()} FISH`} · +${result.kilograms} kg / ${(result.kilograms * 2.2046226218).toFixed(1)} lb`;
+      setFishingCatchMessage(catchLabel);
+      setLandingText(result.kilograms <= 0
+        ? '🎣 Nothing this time—the pond is still moving below.'
+        : `🎣 ${catchLabel} · ${result.fishCaughtKg}/${FISHERMANS_VILLAGE_FISH_TARGET_KG} kg`);
+      if (result.dragonTriggered) {
+        setDragonCinematicStartedAtMs(Date.now());
+        window.setTimeout(() => setShowFishermansFishing(false), 900);
+      } else {
+        window.setTimeout(() => setShowFishermansFishing(false), 1_250);
+      }
+    } finally {
+      setIsReelingFishingCatch(false);
+    }
+  }, [
+    client,
+    fishermansFishingProgress.pendingCatch,
+    fishingPullsRemaining,
+    isReelingFishingCatch,
+    playIslandRunSound,
+    session,
+    setRuntimeStateWithTrace,
+    triggerIslandRunHaptic,
+  ]);
 
   const handleSpinFrostwell = useCallback(async () => {
     if (isSpinningFrostwell) return;
@@ -14722,6 +14832,15 @@ export function IslandRunBoardPrototype({
                     : greatHoneyfallProgress.activatedReservoirs,
                   constructionSequence: greatHoneyfallConstructionSequence,
                 }}
+                fishermansFishingPresentation={{
+                  fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === 16
+                    ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
+                    : fishermansFishingProgress.fishCaughtKg,
+                  previewElapsedSeconds: isIslandVisualPreview && islandArtPreviewNumber === 16
+                    ? 8.4
+                    : dragonCinematicElapsedSeconds,
+                  impactRepairProgress: fishermansFishingProgress.repairCompletedAtMs === null ? 0 : 1,
+                }}
                 onSignatureMissionClick={islandArtPreviewNumber === 1
                   ? isIslandVisualPreview ? undefined : openFirstLightAssemblyCrater
                   : islandArtPreviewNumber === 12
@@ -14747,6 +14866,26 @@ export function IslandRunBoardPrototype({
             {isIslandVisualPreview ? (
               <div className="island-run-board__three-preview-badge" aria-hidden="true">
                 DEV · 3D VISUAL PREVIEW
+              </div>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 16 ? (
+              <div className="fishermans-fishing-meter" aria-label={`Fishing mission ${fishermansFishingProgress.fishCaughtKg} of ${FISHERMANS_VILLAGE_FISH_TARGET_KG} kilograms`}>
+                <div className="fishermans-fishing-meter__heading">
+                  <span aria-hidden="true">🎣</span>
+                  <strong>{fishermansFishingProgress.rodCollectedAtMs === null ? 'Find the rod' : 'Village catch'}</strong>
+                  <b>{fishermansFishingProgress.fishCaughtKg} kg / {(fishermansFishingProgress.fishCaughtKg * 2.2046226218).toFixed(1)} lb</b>
+                </div>
+                <div className="fishermans-fishing-meter__track" aria-hidden="true">
+                  <span style={{ width: `${Math.min(100, fishermansFishingProgress.fishCaughtKg)}%` }} />
+                  <i style={{ left: `${FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG}%` }} />
+                </div>
+                <small>{fishermansFishingProgress.dragonTriggeredAtMs !== null
+                  ? 'The pond has opened—hold on.'
+                  : fishermansFishingProgress.rodCollectedAtMs === null
+                    ? 'Land on the 🎣 tile to begin.'
+                    : fishermansFishingProgress.pendingCatch
+                      ? 'Something is on the line!'
+                      : 'Land on a 🐟 tile to cast into the pond.'}</small>
               </div>
             ) : null}
             {shouldRenderLegacySignatureMissionPills && !isIslandVisualPreview && islandArtPreviewNumber === 3 ? (
@@ -18964,6 +19103,52 @@ export function IslandRunBoardPrototype({
           />
         );
       })(), document.body) : null}
+
+      {showFishermansFishing && fishermansFishingProgress.pendingCatch && typeof document !== 'undefined' ? createPortal((
+        <div className="island-run-signature-mission-overlay fishermans-fishing-modal__backdrop" role="presentation">
+          <section
+            className={`fishermans-fishing-modal${fishingReelPulse > 0
+              ? ` fishermans-fishing-modal--pull-${fishingReelPulse % 2 === 0 ? 'a' : 'b'}`
+              : ''}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fishermans-fishing-title"
+          >
+            <header>
+              <p>Island 016 · Central pond</p>
+              <h2 id="fishermans-fishing-title">Something is on the line!</h2>
+              <span>Keep the tension steady and pull it toward shore.</span>
+            </header>
+            <div className="fishermans-fishing-modal__scene" aria-hidden="true">
+              <div className="fishermans-fishing-modal__water">
+                <i /><i /><i />
+              </div>
+              <div className="fishermans-fishing-modal__fisher">🧑‍🌾<b>🎣</b></div>
+              <div className="fishermans-fishing-modal__line" />
+              <div className={`fishermans-fishing-modal__catch fishermans-fishing-modal__catch--${fishermansFishingProgress.pendingCatch.kind}`}>
+                {fishermansFishingProgress.pendingCatch.kind === 'nothing' ? '🫧' : '🐟'}
+              </div>
+            </div>
+            <div className="fishermans-fishing-modal__meter">
+              <div><strong>{fishermansFishingProgress.fishCaughtKg} kg</strong><span>/ {FISHERMANS_VILLAGE_FISH_TARGET_KG} kg</span><b>{(fishermansFishingProgress.fishCaughtKg * 2.2046226218).toFixed(1)} / 220.5 lb</b></div>
+              <div className="fishermans-fishing-modal__track"><span style={{ width: `${fishermansFishingProgress.fishCaughtKg}%` }} /></div>
+            </div>
+            {fishingCatchMessage ? (
+              <div className="fishermans-fishing-modal__result" role="status">{fishingCatchMessage}</div>
+            ) : (
+              <button
+                type="button"
+                className="fishermans-fishing-modal__pull"
+                onClick={() => void handlePullFishermansCatch()}
+                disabled={isReelingFishingCatch}
+              >
+                <span>REEL &amp; PULL</span>
+                <small>{fishingPullsRemaining} pull{fishingPullsRemaining === 1 ? '' : 's'} remaining</small>
+              </button>
+            )}
+          </section>
+        </div>
+      ), document.body) : null}
 
       {showFrostwellMission && typeof document !== 'undefined' ? createPortal((
         <div

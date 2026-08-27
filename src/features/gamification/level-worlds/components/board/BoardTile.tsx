@@ -246,6 +246,10 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = signatureMissionAmount >= 3 ? '🧨³' : '🧨';
   } else if (signatureMissionKind === 'great_honeyfall_nectar') {
     iconContent = '🍯';
+  } else if (signatureMissionKind === 'fishermans_rod') {
+    iconContent = '🎣';
+  } else if (signatureMissionKind === 'fishermans_fishing_spot') {
+    iconContent = '🐟';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
@@ -290,6 +294,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         signatureMissionKind === 'first_light_dynamite' ? 'island-tile--first-light-dynamite' : '',
         signatureMissionKind === 'cactus_canyon_dynamite' ? 'island-tile--cactus-canyon-dynamite' : '',
         signatureMissionKind === 'great_honeyfall_nectar' ? 'island-tile--great-honeyfall-nectar' : '',
+        signatureMissionKind === 'fishermans_rod' ? 'island-tile--fishermans-rod' : '',
+        signatureMissionKind === 'fishermans_fishing_spot' ? 'island-tile--fishermans-fishing-spot' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -310,6 +316,10 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
               ? `Tile ${index + 1}. Cactus Canyon dynamite cache, ${signatureMissionAmount} stick${signatureMissionAmount === 1 ? '' : 's'}`
             : signatureMissionKind === 'great_honeyfall_nectar'
               ? `Tile ${index + 1}. Royal nectar for the Great Honeyfall`
+            : signatureMissionKind === 'fishermans_rod'
+              ? `Tile ${index + 1}. Fisherman's rod pickup`
+            : signatureMissionKind === 'fishermans_fishing_spot'
+              ? `Tile ${index + 1}. Fishing spot casting into the central pond`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing

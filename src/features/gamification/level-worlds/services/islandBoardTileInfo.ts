@@ -83,6 +83,18 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
       description: 'Land here to collect nectar for the Great Honeyfall mission.',
     };
   }
+  if (entry?.signatureMissionKind === 'fishermans_rod') {
+    return {
+      title: 'Village Fishing Rod',
+      description: 'Land here to collect the rod, then seek the glowing fishing spots around the shore.',
+    };
+  }
+  if (entry?.signatureMissionKind === 'fishermans_fishing_spot') {
+    return {
+      title: 'Pond Fishing Spot',
+      description: 'After collecting the rod, land here to cast into the central pond and reel in a catch.',
+    };
+  }
 
   if (isStop) {
     return {

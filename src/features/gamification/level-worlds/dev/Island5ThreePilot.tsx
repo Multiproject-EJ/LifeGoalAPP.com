@@ -196,6 +196,7 @@ import {
   ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
   ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME,
 } from './Island22FishermansVillageThreeWorld';
+import type { Island22WaterDragonPresentation } from './Island22WaterDragonMission';
 import {
   buildIsland14HoneycombLandmark,
   createIsland14HoneycombBackdrop,
@@ -260,6 +261,7 @@ interface Island5ThreePilotProps {
   cactusCanyonSpiralPresentation?: Island13CactusCanyonSpiralPresentation;
   firstLightAssemblyCraterPresentation?: Island1AssemblyCraterPresentation;
   greatHoneyfallPresentation?: Island14GreatHoneyfallPresentation;
+  fishermansFishingPresentation?: Island22WaterDragonPresentation;
   onSignatureMissionClick?: () => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
@@ -2302,6 +2304,8 @@ interface Island5AmbienceRuntime {
   ) => void;
   updateSpiralRail?: (presentation: Island13CactusCanyonSpiralPresentation) => void;
   setGreatHoneyfallStage?: (stage: number, replay?: boolean) => void;
+  updateWaterDragonMission?: (presentation: Island22WaterDragonPresentation) => void;
+  getWaterDragonMissionCameraPose?: () => { position: THREE.Vector3; target: THREE.Vector3; shake: number };
   getTrainRidePose?: (
     view: Island13TrainRideView,
   ) => { position: THREE.Vector3; target: THREE.Vector3 } | null;
@@ -3350,6 +3354,7 @@ export default function Island5ThreePilot({
   cactusCanyonSpiralPresentation = { segmentsExcavated: 16, maxSegments: 16, completed: true },
   firstLightAssemblyCraterPresentation = { chargesDetonated: 0, targetCharges: 20, completed: false },
   greatHoneyfallPresentation = readInitialGreatHoneyfallPresentation(),
+  fishermansFishingPresentation = { fishCaughtKg: 0, previewElapsedSeconds: 0 },
   onSignatureMissionClick,
   caretakerEncounterOpen = false,
   onCaretakerClick,
@@ -3485,6 +3490,8 @@ export default function Island5ThreePilot({
   firstLightAssemblyCraterPresentationRef.current = firstLightAssemblyCraterPresentation;
   const greatHoneyfallPresentationRef = useRef(greatHoneyfallPresentation);
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
+  const fishermansFishingPresentationRef = useRef(fishermansFishingPresentation);
+  fishermansFishingPresentationRef.current = fishermansFishingPresentation;
   const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
   const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
   const onCaretakerClickRef = useRef(onCaretakerClick);
@@ -4183,6 +4190,7 @@ export default function Island5ThreePilot({
     );
     let cactusCanyonBlastStartedAtMs = Number.NEGATIVE_INFINITY;
     let cactusCanyonBlastCameraWasActive = false;
+    let waterDragonCameraWasActive = false;
     let firstLightAssemblyPresentationKey = '';
     let honeyfallLastConstructionSequence = Math.max(
       0,
@@ -4384,6 +4392,9 @@ export default function Island5ThreePilot({
     }
     if (isHoneycombKingdom) {
       livingAmbience.setGreatHoneyfallStage?.(greatHoneyfallPresentationRef.current.activatedReservoirs, false);
+    }
+    if (isFishermansVillage) {
+      livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
     }
     const clickableSignatureMissions = isAssemblyCraterFirstLight
       ? [scene.getObjectByName('ISLAND_1_ASSEMBLY_CRATER_MISSION_HIT_TARGET')].filter(
@@ -6625,6 +6636,9 @@ export default function Island5ThreePilot({
         if (isFrostmoonHaven) {
           livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
         }
+        if (isFishermansVillage) {
+          livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
+        }
         livingAmbience.animate(elapsed);
         firstLightAssemblyCrater?.animate(elapsed);
         if (isAssemblyCraterFirstLight && firstLightAssemblyCrater) {
@@ -6671,6 +6685,12 @@ export default function Island5ThreePilot({
         // reflecting canonical token occupancy so the landed-on reward does
         // not clip through the player piece.
         tileRewardObjects.animate(0, tokenIndexRef.current);
+        if (isFishermansVillage) {
+          livingAmbience.updateWaterDragonMission?.({
+            ...fishermansFishingPresentationRef.current,
+            reducedMotion: true,
+          });
+        }
       }
 
       updateConstructionPresentation();
@@ -7174,6 +7194,30 @@ export default function Island5ThreePilot({
             camera.lookAt(controls.target);
           }
         }
+      }
+      const waterDragonPresentation = fishermansFishingPresentationRef.current;
+      const waterDragonElapsed = Math.max(0, waterDragonPresentation.previewElapsedSeconds ?? 0);
+      const waterDragonCameraActive = isFishermansVillage
+        && waterDragonPresentation.fishCaughtKg >= 78
+        && waterDragonElapsed < 23.5;
+      if (waterDragonCameraActive) {
+        const pose = livingAmbience.getWaterDragonMissionCameraPose?.();
+        if (pose) {
+          waterDragonCameraWasActive = true;
+          transition = null;
+          controls.enabled = false;
+          camera.position.copy(pose.position);
+          if (!isReducedMotion && pose.shake > 0) {
+            camera.position.x += Math.sin(elapsed * 79) * pose.shake;
+            camera.position.y += Math.cos(elapsed * 91) * pose.shake * 0.6;
+          }
+          controls.target.copy(pose.target);
+          camera.lookAt(controls.target);
+        }
+      } else if (waterDragonCameraWasActive) {
+        waterDragonCameraWasActive = false;
+        controls.enabled = true;
+        applyPreset('overview', 0.72);
       }
       if (
         idleOverviewAt !== null

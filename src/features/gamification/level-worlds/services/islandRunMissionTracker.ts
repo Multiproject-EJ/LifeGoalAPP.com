@@ -11,6 +11,7 @@ import {
   CELESTIAL_REDOCKING_ROLL_TARGET,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FROSTWELL_DEPTH_METERS,
+  FISHERMANS_VILLAGE_FISH_TARGET_KG,
   ROOTHEART_POWER_COMPONENTS,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
@@ -19,6 +20,7 @@ import {
   resolveCelestialRedockingProgress,
   resolveFirstLightAssemblyCraterProgress,
   resolveFrostwellIceworksProgress,
+  resolveFishermansVillageFishingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
@@ -248,6 +250,26 @@ export function resolveIslandMissionTrackerPresentation(options: {
       });
       objectives = [
         objective('Blast Rail Sections', progress.segmentsExcavated, CACTUS_CANYON_SPIRAL_MAX_SEGMENTS),
+        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+      ];
+      break;
+    }
+    case 'fishermans_fishing': {
+      const progress = resolveFishermansVillageFishingProgress({
+        ledger: state.signatureMissionProgressByIsland,
+        cycleIndex: state.cycleIndex,
+        islandNumber,
+      });
+      const pounds = progress.fishCaughtKg * 2.2046226218;
+      objectives = [
+        objective(
+          progress.rodCollectedAtMs === null ? 'Find the Fishing Rod' : 'Catch Fish',
+          progress.fishCaughtKg,
+          FISHERMANS_VILLAGE_FISH_TARGET_KG,
+          progress.rodCollectedAtMs === null
+            ? 'Find rod'
+            : `${progress.fishCaughtKg} kg / ${pounds.toFixed(1)} lb`,
+        ),
         objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
       ];
       break;

@@ -65,6 +65,8 @@ export type IslandRunTileRewardObjectKind =
   | 'rootheart_power_component'
   | 'cactus_canyon_dynamite'
   | 'great_honeyfall_nectar'
+  | 'fishermans_rod'
+  | 'fishermans_fishing_spot'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
@@ -75,6 +77,8 @@ export function resolveIslandRunTileRewardObjectKind(
   if (entry.signatureMissionKind === 'rootheart_power_component') return 'rootheart_power_component';
   if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
   if (entry.signatureMissionKind === 'great_honeyfall_nectar') return 'great_honeyfall_nectar';
+  if (entry.signatureMissionKind === 'fishermans_rod') return 'fishermans_rod';
+  if (entry.signatureMissionKind === 'fishermans_fishing_spot') return 'fishermans_fishing_spot';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -464,6 +468,43 @@ function createGreatHoneyfallNectar(materials: RewardMaterials, quality: Island3
   return root;
 }
 
+function createFishermansRod(materials: RewardMaterials, quality: Island3DQuality): THREE.Group {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_16_FISHING_ROD_PICKUP';
+  const segments = qualitySegments(quality);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.86, segments), materials.amber);
+  rod.rotation.z = -0.56;
+  rod.position.y = 0.15;
+  const reel = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.035, 6, segments), materials.gold);
+  reel.rotation.y = Math.PI / 2;
+  reel.position.set(-0.17, -0.02, 0);
+  const line = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.52, 5), materials.parchment);
+  line.position.set(0.24, -0.17, 0);
+  line.rotation.z = 0.25;
+  const float = new THREE.Mesh(new THREE.SphereGeometry(0.065, segments, 8), materials.cyan);
+  float.position.set(0.3, -0.43, 0);
+  root.add(rod, reel, line, float);
+  return root;
+}
+
+function createFishermansFishingSpot(materials: RewardMaterials, quality: Island3DQuality): THREE.Group {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_16_FISHING_SPOT_PICKUP';
+  const segments = qualitySegments(quality);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.18, segments, 8), materials.cyan);
+  body.scale.set(1.45, 0.75, 0.72);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.25, 3), materials.cyan);
+  tail.rotation.z = -Math.PI / 2;
+  tail.position.x = -0.28;
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 4), materials.midnight);
+  eye.position.set(0.13, 0.045, 0.14);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.035, 6, segments * 2), materials.goldGlow);
+  halo.rotation.x = Math.PI / 2;
+  halo.position.y = -0.2;
+  root.add(body, tail, eye, halo);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
   if (kind === 'first_light_dynamite') {
@@ -477,6 +518,8 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
     return createCactusCanyonDynamiteCache(materials, quality, entry.signatureMissionAmount ?? 1);
   }
   if (kind === 'great_honeyfall_nectar') return createGreatHoneyfallNectar(materials, quality);
+  if (kind === 'fishermans_rod') return createFishermansRod(materials, quality);
+  if (kind === 'fishermans_fishing_spot') return createFishermansFishingSpot(materials, quality);
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -543,6 +586,10 @@ export function createIslandRunTileRewardThreeObjects(options: {
       : tileEntry.signatureMissionKind === 'cactus_canyon_dynamite'
         ? 1.08
       : tileEntry.signatureMissionKind === 'great_honeyfall_nectar'
+        ? 1.18
+      : tileEntry.signatureMissionKind === 'fishermans_rod'
+        ? 1.24
+      : tileEntry.signatureMissionKind === 'fishermans_fishing_spot'
         ? 1.18
       : tileEntry.tileType === 'free_ticket'
       ? 1.42

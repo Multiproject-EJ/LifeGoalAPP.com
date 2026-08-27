@@ -91,6 +91,7 @@ import {
   advanceCelestialRedockingForRoll,
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
+  collectFishermansVillageLanding,
   collectFirstLightAssemblyDynamiteForRoute,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
@@ -98,6 +99,7 @@ import {
   isRootheartPowerworksCollectionComplete,
   resolveRootheartPowerworksProgress,
   startCactusCanyonSpiralMission,
+  type FishermansVillagePendingCatch,
   type RootheartPowerComponentId,
 } from './islandRunSignatureMissions';
 import {
@@ -256,6 +258,10 @@ export interface IslandRunRollActionResult {
   cactusCanyonDynamiteCollected?: number;
   /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
   greatHoneyfallNectarCollected?: number;
+  /** True only on the landing that collects Island 016's fishing rod. */
+  fishermansVillageRodCollected?: boolean;
+  /** Canonical catch waiting for the player's reel interaction. */
+  fishermansVillagePendingCatch?: FishermansVillagePendingCatch | null;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
   rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
   /**
@@ -527,8 +533,18 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: cactusCanyonLanding.ledger, nectarCollected: 0 };
+  const fishermansVillageLanding = ordinaryTileGameplayActive
+    ? collectFishermansVillageLanding({
+        ledger: greatHoneyfallLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        nowMs,
+        randomValue: Math.random(),
+      })
+    : { ledger: greatHoneyfallLanding.ledger, rodCollected: false, pendingCatch: null };
   const celestialRedockingRoll = advanceCelestialRedockingForRoll({
-    ledger: greatHoneyfallLanding.ledger,
+    ledger: fishermansVillageLanding.ledger,
     islandNumber: state.currentIslandNumber,
     cycleIndex: state.cycleIndex,
     nowMs,
@@ -617,6 +633,8 @@ async function performRollAction(options: {
     firstLightAssemblyDynamiteCollectionKind: firstLightAssemblyLanding.collectionKind,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     greatHoneyfallNectarCollected: greatHoneyfallLanding.nectarCollected,
+    fishermansVillageRodCollected: fishermansVillageLanding.rodCollected,
+    fishermansVillagePendingCatch: fishermansVillageLanding.pendingCatch,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
     sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,

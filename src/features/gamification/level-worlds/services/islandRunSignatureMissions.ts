@@ -67,6 +67,24 @@ export const GREAT_HONEYFALL_NECTAR_TILE_FRACTIONS = Object.freeze([
   2 / 36, 11 / 36, 20 / 36, 29 / 36,
 ] as const);
 
+export const FISHERMANS_VILLAGE_ISLAND_NUMBER = 16;
+export const FISHERMANS_VILLAGE_FISH_TARGET_KG = 100;
+export const FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG = 78;
+export const FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG = 46;
+export const FISHERMANS_VILLAGE_ROD_TILE_INDEX = 2;
+/** Four playable shoreline casts, deliberately clear of landmark-door clusters. */
+export const FISHERMANS_VILLAGE_FISHING_TILE_INDICES = Object.freeze([8, 17, 26, 35] as const);
+
+export type FishermansVillageCatchKind = 'nothing' | 'small' | 'medium' | 'large' | 'colossal';
+
+export interface FishermansVillagePendingCatch {
+  catchId: number;
+  kind: FishermansVillageCatchKind;
+  kilograms: number;
+  pullsRequired: number;
+  tileIndex: number;
+}
+
 export interface FrostwellIceworksProgress {
   missionId: 'frostwell-iceworks';
   version: 2;
@@ -140,6 +158,20 @@ export interface GreatHoneyfallProgress {
   updatedAtMs: number;
 }
 
+export interface FishermansVillageFishingProgress {
+  missionId: 'fishermans-village-fishing';
+  version: 1;
+  rodCollectedAtMs: number | null;
+  castsCompleted: number;
+  successfulCatches: number;
+  fishCaughtKg: number;
+  pendingCatch: FishermansVillagePendingCatch | null;
+  dragonTriggeredAtMs: number | null;
+  repairCompletedAtMs: number | null;
+  completedAtMs: number | null;
+  updatedAtMs: number;
+}
+
 export type IslandRunSignatureMissionProgress =
   | CelestialRedockingProgress
   | FrostwellIceworksProgress
@@ -147,7 +179,8 @@ export type IslandRunSignatureMissionProgress =
   | SunkenSandsTreasureProgress
   | FirstLightAssemblyCraterProgress
   | CactusCanyonSpiralProgress
-  | GreatHoneyfallProgress;
+  | GreatHoneyfallProgress
+  | FishermansVillageFishingProgress;
 export type IslandRunSignatureMissionProgressByIsland = Record<string, IslandRunSignatureMissionProgress>;
 
 export function getIslandRunSignatureMissionKey(cycleIndex: number, islandNumber: number): string {
@@ -181,6 +214,47 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'fishermans-village-fishing' || record.mission_id === 'fishermans-village-fishing') {
+      const pendingRaw = record.pendingCatch ?? record.pending_catch;
+      const pendingRecord = pendingRaw && typeof pendingRaw === 'object' && !Array.isArray(pendingRaw)
+        ? pendingRaw as Record<string, unknown>
+        : null;
+      const pendingKind = pendingRecord?.kind;
+      const pendingCatch = pendingRecord
+        && (pendingKind === 'nothing' || pendingKind === 'small' || pendingKind === 'medium' || pendingKind === 'large' || pendingKind === 'colossal')
+        ? {
+            catchId: Math.max(1, finiteInteger(pendingRecord.catchId ?? pendingRecord.catch_id, 1)),
+            kind: pendingKind as FishermansVillageCatchKind,
+            kilograms: Math.max(0, finiteInteger(pendingRecord.kilograms)),
+            pullsRequired: Math.max(1, finiteInteger(pendingRecord.pullsRequired ?? pendingRecord.pulls_required, 1)),
+            tileIndex: Math.max(0, finiteInteger(pendingRecord.tileIndex ?? pendingRecord.tile_index)),
+          }
+        : null;
+      const timestamp = (camel: string, snake: string): number | null => {
+        const candidate = record[camel] ?? record[snake];
+        return typeof candidate === 'number' && Number.isFinite(candidate) ? Math.max(0, candidate) : null;
+      };
+      const fishCaughtKg = Math.max(0, Math.min(
+        FISHERMANS_VILLAGE_FISH_TARGET_KG,
+        finiteInteger(record.fishCaughtKg ?? record.fish_caught_kg),
+      ));
+      result[key] = {
+        missionId: 'fishermans-village-fishing',
+        version: 1,
+        rodCollectedAtMs: timestamp('rodCollectedAtMs', 'rod_collected_at_ms'),
+        castsCompleted: Math.max(0, finiteInteger(record.castsCompleted ?? record.casts_completed)),
+        successfulCatches: Math.max(0, finiteInteger(record.successfulCatches ?? record.successful_catches)),
+        fishCaughtKg,
+        pendingCatch,
+        dragonTriggeredAtMs: timestamp('dragonTriggeredAtMs', 'dragon_triggered_at_ms')
+          ?? (fishCaughtKg >= FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG ? 0 : null),
+        repairCompletedAtMs: timestamp('repairCompletedAtMs', 'repair_completed_at_ms'),
+        completedAtMs: timestamp('completedAtMs', 'completed_at_ms')
+          ?? (fishCaughtKg >= FISHERMANS_VILLAGE_FISH_TARGET_KG ? 0 : null),
+        updatedAtMs: Math.max(0, finiteInteger(record.updatedAtMs ?? record.updated_at_ms)),
+      };
+      return;
+    }
     if (record.missionId === 'celestial-great-redocking' || record.mission_id === 'celestial-great-redocking') {
       const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
       const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
@@ -514,6 +588,131 @@ export function resolveGreatHoneyfallProgress(options: {
     lastActivatedReservoir: null,
     completedAtMs: null,
     updatedAtMs: 0,
+  };
+}
+
+export function resolveFishermansVillageFishingProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): FishermansVillageFishingProgress {
+  const key = getIslandRunSignatureMissionKey(
+    options.cycleIndex,
+    options.islandNumber ?? FISHERMANS_VILLAGE_ISLAND_NUMBER,
+  );
+  const current = options.ledger[key];
+  return current?.missionId === 'fishermans-village-fishing' ? current : {
+    missionId: 'fishermans-village-fishing',
+    version: 1,
+    rodCollectedAtMs: null,
+    castsCompleted: 0,
+    successfulCatches: 0,
+    fishCaughtKg: 0,
+    pendingCatch: null,
+    dragonTriggeredAtMs: null,
+    repairCompletedAtMs: null,
+    completedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
+export function isFishermansVillageRodTile(islandNumber: number, tileIndex: number): boolean {
+  return islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
+    && tileIndex === FISHERMANS_VILLAGE_ROD_TILE_INDEX;
+}
+
+export function isFishermansVillageFishingTile(islandNumber: number, tileIndex: number): boolean {
+  return islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
+    && FISHERMANS_VILLAGE_FISHING_TILE_INDICES.includes(
+      tileIndex as typeof FISHERMANS_VILLAGE_FISHING_TILE_INDICES[number],
+    );
+}
+
+export function resolveFishermansVillageCatch(
+  randomValue: number,
+  progress: FishermansVillageFishingProgress,
+  tileIndex: number,
+): FishermansVillagePendingCatch {
+  const catchId = progress.castsCompleted + 1;
+  if (
+    progress.successfulCatches >= 4
+    || progress.fishCaughtKg >= FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG
+  ) {
+    return {
+      catchId,
+      kind: 'colossal',
+      kilograms: Math.max(1, FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG - progress.fishCaughtKg),
+      pullsRequired: 7,
+      tileIndex,
+    };
+  }
+  const normalized = Number.isFinite(randomValue) ? Math.max(0, Math.min(0.999999, randomValue)) : 0;
+  let kind: FishermansVillageCatchKind;
+  let kilograms: number;
+  let pullsRequired: number;
+  if (normalized < 0.18) {
+    kind = 'nothing'; kilograms = 0; pullsRequired = 1;
+  } else if (normalized < 0.56) {
+    kind = 'small'; kilograms = 3 + Math.floor((normalized - 0.18) / 0.38 * 5); pullsRequired = 2;
+  } else if (normalized < 0.86) {
+    kind = 'medium'; kilograms = 8 + Math.floor((normalized - 0.56) / 0.3 * 6); pullsRequired = 3;
+  } else {
+    kind = 'large'; kilograms = 15 + Math.floor((normalized - 0.86) / 0.14 * 8); pullsRequired = 5;
+  }
+  kilograms = Math.min(kilograms, Math.max(0, FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG - progress.fishCaughtKg));
+  if (kilograms <= 0) kind = 'nothing';
+  return { catchId, kind, kilograms, pullsRequired, tileIndex };
+}
+
+export function collectFishermansVillageLanding(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  tileIndex: number;
+  nowMs: number;
+  randomValue: number;
+}): {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  rodCollected: boolean;
+  pendingCatch: FishermansVillagePendingCatch | null;
+} {
+  if (options.islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER) {
+    return { ledger: options.ledger, rodCollected: false, pendingCatch: null };
+  }
+  const current = resolveFishermansVillageFishingProgress(options);
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  if (isFishermansVillageRodTile(options.islandNumber, options.tileIndex) && current.rodCollectedAtMs === null) {
+    return {
+      rodCollected: true,
+      pendingCatch: null,
+      ledger: {
+        ...options.ledger,
+        [key]: { ...current, rodCollectedAtMs: options.nowMs, updatedAtMs: options.nowMs },
+      },
+    };
+  }
+  if (
+    !isFishermansVillageFishingTile(options.islandNumber, options.tileIndex)
+    || current.rodCollectedAtMs === null
+    || current.pendingCatch !== null
+    || current.dragonTriggeredAtMs !== null
+    || current.completedAtMs !== null
+  ) {
+    return { ledger: options.ledger, rodCollected: false, pendingCatch: null };
+  }
+  const pendingCatch = resolveFishermansVillageCatch(options.randomValue, current, options.tileIndex);
+  return {
+    rodCollected: false,
+    pendingCatch,
+    ledger: {
+      ...options.ledger,
+      [key]: {
+        ...current,
+        castsCompleted: current.castsCompleted + 1,
+        pendingCatch,
+        updatedAtMs: options.nowMs,
+      },
+    },
   };
 }
 
@@ -972,6 +1171,29 @@ export function mergeIslandRunSignatureMissionProgress(
     const b = local[key];
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'fishermans-village-fishing' || b.missionId === 'fishermans-village-fishing') {
+      if (a.missionId !== 'fishermans-village-fishing') { merged[key] = b; return; }
+      if (b.missionId !== 'fishermans-village-fishing') { merged[key] = a; return; }
+      const earliest = (left: number | null, right: number | null): number | null => (
+        left === null ? right : right === null ? left : Math.min(left, right)
+      );
+      const latest = a.updatedAtMs >= b.updatedAtMs ? a : b;
+      const fishCaughtKg = Math.max(a.fishCaughtKg, b.fishCaughtKg);
+      merged[key] = {
+        missionId: 'fishermans-village-fishing',
+        version: 1,
+        rodCollectedAtMs: earliest(a.rodCollectedAtMs, b.rodCollectedAtMs),
+        castsCompleted: Math.max(a.castsCompleted, b.castsCompleted),
+        successfulCatches: Math.max(a.successfulCatches, b.successfulCatches),
+        fishCaughtKg,
+        pendingCatch: latest.fishCaughtKg < fishCaughtKg ? null : latest.pendingCatch,
+        dragonTriggeredAtMs: earliest(a.dragonTriggeredAtMs, b.dragonTriggeredAtMs),
+        repairCompletedAtMs: earliest(a.repairCompletedAtMs, b.repairCompletedAtMs),
+        completedAtMs: earliest(a.completedAtMs, b.completedAtMs),
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
     if (a.missionId === 'celestial-great-redocking' || b.missionId === 'celestial-great-redocking') {
       if (a.missionId !== 'celestial-great-redocking') { merged[key] = b; return; }
       if (b.missionId !== 'celestial-great-redocking') { merged[key] = a; return; }
