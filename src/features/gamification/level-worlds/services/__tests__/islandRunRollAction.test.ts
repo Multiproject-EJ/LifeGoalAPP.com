@@ -460,10 +460,10 @@ export const islandRunRollActionTests: TestCase[] = [
         currentIslandNumber: 13,
         cycleIndex: 0,
       });
-      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+      const result = await withMockedRandom([0, 0.2], () => executeIslandRunRollAction({
         session: makeSession(), client: null, diceMultiplier: 1,
       }));
-      assertEqual(result.newTokenIndex, 19, 'roll crosses the briefing trigger and lands on a dynamite cache');
+      assertEqual(result.newTokenIndex, 20, 'roll crosses the briefing trigger and lands on the collision-free dynamite cache');
       assertEqual(result.cactusCanyonDynamiteCollected, 1, 'landing emits the exact dynamite pickup quantity');
       const progress = resolveCactusCanyonSpiralProgress({
         ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
@@ -481,7 +481,7 @@ export const islandRunRollActionTests: TestCase[] = [
       seedState({
         runtimeVersion: 0,
         dicePool: 30,
-        tokenIndex: 17,
+        tokenIndex: 18,
         currentIslandNumber: 13,
         cycleIndex: 0,
         narrativeSeenState: { episodes: {}, beats: { 'MISSION-BRIEFING-C0-I013': 1 } },

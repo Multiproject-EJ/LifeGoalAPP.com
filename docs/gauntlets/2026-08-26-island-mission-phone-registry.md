@@ -89,3 +89,17 @@ planned mission appear playable before its canonical action service exists.
 - Verification: Island Run suite 1,846/1,846; architecture guard zero
   violations (three pre-existing allowlisted warnings); `git diff --check`
   passes.
+
+## 2026-08-28 staged-restoration follow-up
+
+- Broken Causeway, Moon Mirrors, Breathline, Great Pollination and Ignition
+  Chain have graduated from `planned_signature` to live
+  `staged_restoration` missions.
+- Their phones now read the shared canonical persisted mission record and
+  launch an actual collect/spend controller. Route crossings provide bounded
+  pity without changing movement, while exact landings remain first priority.
+- The five worlds retain separate object identities, stage counts, copy and 3D
+  finales. The shared engine is state architecture, not a generic visual skin.
+- Signature objects are additive to their underlying tile reward and resolve
+  through the collision-proof reservation service.
+- This follow-up does not make any of the five missions an island-travel gate.

@@ -95,12 +95,14 @@ import {
   collectFirstLightAssemblyDynamiteForRoute,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
+  collectStagedRestorationPickupForRoute,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
   resolveRootheartPowerworksProgress,
   startCactusCanyonSpiralMission,
   type FishermansVillagePendingCatch,
   type RootheartPowerComponentId,
+  type StagedRestorationPickupKind,
 } from './islandRunSignatureMissions';
 import {
   getIslandMissionBriefingBeatId,
@@ -258,6 +260,12 @@ export interface IslandRunRollActionResult {
   cactusCanyonDynamiteCollected?: number;
   /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
   greatHoneyfallNectarCollected?: number;
+  /** Collision-safe staged-restoration object secured on Islands 004/006–009. */
+  stagedRestorationPickup?: {
+    kind: StagedRestorationPickupKind;
+    tileIndex: number;
+    collectionKind: 'landing' | 'route_pass';
+  } | null;
   /** True only on the first Island 016 rod landing that equips the reusable rod. */
   fishermansVillageRodCollected?: boolean;
   /** Canonical catch waiting for the player's reel interaction. */
@@ -533,9 +541,26 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: cactusCanyonLanding.ledger, nectarCollected: 0 };
+  const stagedRestorationLanding = ordinaryTileGameplayActive
+    ? collectStagedRestorationPickupForRoute({
+        ledger: greatHoneyfallLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        landingTileIndex: newTokenIndex,
+        routeTileIndices: hopSequence,
+        tileCount: boardProfile.tileCount,
+        nowMs,
+      })
+    : {
+        ledger: greatHoneyfallLanding.ledger,
+        pickupCollected: 0,
+        collectedTileIndex: null,
+        collectionKind: null,
+        pickupKind: null,
+      };
   const fishermansVillageLanding = ordinaryTileGameplayActive
     ? collectFishermansVillageLanding({
-        ledger: greatHoneyfallLanding.ledger,
+        ledger: stagedRestorationLanding.ledger,
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,
         tileIndex: newTokenIndex,
@@ -604,7 +629,7 @@ async function performRollAction(options: {
       record: nextState,
       triggerSource: 'roll_action',
     });
-    if (!persistResult.ok) {
+    if (persistResult.ok === false) {
       throw new Error(persistResult.errorMessage);
     }
   } catch (err) {
@@ -633,6 +658,16 @@ async function performRollAction(options: {
     firstLightAssemblyDynamiteCollectionKind: firstLightAssemblyLanding.collectionKind,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     greatHoneyfallNectarCollected: greatHoneyfallLanding.nectarCollected,
+    stagedRestorationPickup: stagedRestorationLanding.pickupCollected > 0
+      && stagedRestorationLanding.pickupKind
+      && stagedRestorationLanding.collectedTileIndex !== null
+      && stagedRestorationLanding.collectionKind
+      ? {
+          kind: stagedRestorationLanding.pickupKind,
+          tileIndex: stagedRestorationLanding.collectedTileIndex,
+          collectionKind: stagedRestorationLanding.collectionKind,
+        }
+      : null,
     fishermansVillageRodCollected: fishermansVillageLanding.rodCollected,
     fishermansVillagePendingCatch: fishermansVillageLanding.pendingCatch,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,

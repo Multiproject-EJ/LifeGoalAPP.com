@@ -22,6 +22,8 @@ import {
   isFirstLightAssemblyDynamiteTile,
   isFrostwellDrillTile,
   isRootheartPowerComponentTile,
+  getStagedRestorationPickupForTile,
+  type StagedRestorationPickupKind,
 } from './islandRunSignatureMissions';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
@@ -38,7 +40,7 @@ export type IslandTileMapEntry = {
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
   /** Presentation marker for a canonical island-specific mission landing. */
-  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod';
+  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod' | StagedRestorationPickupKind;
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
 };
@@ -317,6 +319,14 @@ export function generateTileMap(
   }
 
   return tiles.map((entry) => {
+    const stagedRestorationPickup = getStagedRestorationPickupForTile(islandNumber, entry.index, tileCount);
+    if (stagedRestorationPickup) {
+      return {
+        ...entry,
+        signatureMissionKind: stagedRestorationPickup.kind,
+        signatureMissionAmount: stagedRestorationPickup.amount,
+      };
+    }
     if (isFishermansVillageRodTile(islandNumber, entry.index)) {
       return { ...entry, signatureMissionKind: 'fishermans_rod' };
     }

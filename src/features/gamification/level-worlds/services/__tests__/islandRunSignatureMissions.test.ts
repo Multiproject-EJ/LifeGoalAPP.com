@@ -20,6 +20,7 @@ import {
   collectFishermansVillageLanding,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
+  collectStagedRestorationPickupForRoute,
   getCactusCanyonAvailableDynamite,
   getCactusCanyonDynamiteQuantityForTile,
   getCelestialRedockingDockedPlatformCount,
@@ -29,6 +30,8 @@ import {
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
+  getStagedRestorationMissionDescriptor,
+  getStagedRestorationPickupTileIndices,
   grantFrostwellDrillSpinForLanding,
   mergeIslandRunSignatureMissionProgress,
   resolveFrostwellIceworksProgress,
@@ -40,9 +43,11 @@ import {
   resolveFrostwellSpinMeters,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
+  resolveStagedRestorationMissionProgress,
   sanitizeIslandRunSignatureMissionProgress,
 } from '../islandRunSignatureMissions';
 import {
+  activateStagedRestorationMissionStage,
   activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   detonateFirstLightAssemblyCharge,
@@ -66,6 +71,7 @@ import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity } from '../isl
 import { getIslandMissionBriefingPresentation } from '../islandRunMissionBriefing';
 import { getIslandRunBossReward } from '../islandRunBossReward';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+import { findIslandRunReservedTileCollisions } from '../islandRunTileReservations';
 
 const USER_ID = 'signature-mission-test-user';
 const makeSession = () => ({ access_token: 'token', refresh_token: 'refresh', expires_in: 3600, token_type: 'bearer', user: { id: USER_ID, user_metadata: {} } }) as unknown as import('@supabase/supabase-js').Session;
@@ -575,13 +581,13 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(caches.filter((entry) => entry.signatureMissionAmount === 3).length, 2, 'two rare caches carry three sticks');
       assert(caches.every((entry) => entry.tileType !== 'landmark_door'), 'dynamite caches remain clear of landmark doors');
       const locked = collectCactusCanyonDynamiteForLanding({
-        ledger: {}, islandNumber: 13, cycleIndex: 0, tileIndex: 19, tileCount: 36, nowMs: 9,
+        ledger: {}, islandNumber: 13, cycleIndex: 0, tileIndex: 20, tileCount: 36, nowMs: 9,
       });
       assertEqual(locked.dynamiteCollected, 0, 'collection remains locked before the briefing starts the mission');
       const startedKey = getIslandRunSignatureMissionKey(0, 13);
       const first = collectCactusCanyonDynamiteForLanding({
         ledger: { [startedKey]: { ...resolveCactusCanyonSpiralProgress({ ledger: {}, islandNumber: 13, cycleIndex: 0 }), startedAtMs: 10 } },
-        islandNumber: 13, cycleIndex: 0, tileIndex: 19, tileCount: 36, nowMs: 11,
+        islandNumber: 13, cycleIndex: 0, tileIndex: 20, tileCount: 36, nowMs: 11,
       });
       const progress = resolveCactusCanyonSpiralProgress({ ledger: first.ledger, islandNumber: 13, cycleIndex: 0 });
       assertEqual(first.dynamiteCollected, 1, 'single cache grants one stick');
@@ -904,6 +910,93 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(getFrostwellAvailableSpins(progress), 1, 'spin is queued');
       assertEqual(grantFrostwellDrillSpinForLanding({ ledger: first.ledger, islandNumber: 3, cycleIndex: 0, tileIndex: 2, nowMs: 11 }).granted, false, 'ordinary tile does not grant');
       assertEqual(grantFrostwellDrillSpinForLanding({ ledger: {}, islandNumber: 2, cycleIndex: 0, tileIndex: FROSTWELL_DRILL_TILE_INDICES[0], nowMs: 12 }).granted, false, 'other islands do not grant');
+    },
+  },
+  {
+    name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
+    run: () => {
+      [4, 6, 7, 8, 9].forEach((islandNumber) => {
+        const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
+        assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
+        if (!descriptor) return;
+        const indices = getStagedRestorationPickupTileIndices(islandNumber, 36);
+        assertEqual(indices.length, descriptor.stageCount * descriptor.chargeCostPerStage, `Island ${islandNumber} has the required route objects`);
+        assertEqual(new Set(indices).size, indices.length, `Island ${islandNumber} route objects are unique`);
+        assertEqual(findIslandRunReservedTileCollisions({ tileCount: 36, tileIndices: indices }).length, 0, `Island ${islandNumber} route clears every reserved slot`);
+      });
+    },
+  },
+  {
+    name: 'staged restoration route pity collects one object and cannot claim it twice',
+    run: () => {
+      const pickupTiles = getStagedRestorationPickupTileIndices(4, 36);
+      const first = collectStagedRestorationPickupForRoute({
+        ledger: {}, islandNumber: 4, cycleIndex: 0,
+        landingTileIndex: 2, routeTileIndices: [0, pickupTiles[0], 2], tileCount: 36, nowMs: 10,
+      });
+      assertEqual(first.pickupCollected, 1, 'route pass secures one pickup');
+      assertEqual(first.collectionKind, 'route_pass', 'pity source remains explicit');
+      const second = collectStagedRestorationPickupForRoute({
+        ledger: first.ledger, islandNumber: 4, cycleIndex: 0,
+        landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 20,
+      });
+      assertEqual(second.pickupCollected, 0, 'claimed pickup is idempotent');
+      const progress = resolveStagedRestorationMissionProgress({ ledger: second.ledger, islandNumber: 4, cycleIndex: 0 });
+      assertEqual(progress?.chargesEarned, 1, 'exactly one charge persists');
+      assertEqual(progress?.claimedPickupTileIndices.length, 1, 'exactly one claim index persists');
+    },
+  },
+  {
+    name: 'staged restoration sanitizer and conflict merge preserve monotonic progress',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 8);
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'great-pollination', claimed_pickup_tile_indices: [1, 8], charges_earned: 2, charges_spent: 1, activated_stages: 1, updated_at_ms: 10 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { missionId: 'great-pollination', claimedPickupTileIndices: [8, 16, 25], chargesEarned: 3, chargesSpent: 2, activatedStages: 2, updatedAtMs: 20 },
+      });
+      const merged = mergeIslandRunSignatureMissionProgress(remote, local);
+      const progress = resolveStagedRestorationMissionProgress({ ledger: merged, islandNumber: 8, cycleIndex: 0 });
+      assertEqual(progress?.claimedPickupTileIndices.length, 4, 'claim sets merge by union');
+      assertEqual(progress?.activatedStages, 2, 'highest committed stage wins');
+      assertEqual(progress?.chargesSpent, 2, 'spent charges cannot regress');
+    },
+  },
+  {
+    name: 'staged restoration action spends the exact authored charge cost and cannot overspend',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const key = getIslandRunSignatureMissionKey(base.cycleIndex, 4);
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...base,
+          currentIslandNumber: 4,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'broken-causeway', version: 1,
+              claimedPickupTileIndices: [1, 8], chargesEarned: 2, chargesSpent: 0,
+              activatedStages: 0, lastActivatedStage: null, completedAtMs: null, updatedAtMs: 10,
+            },
+          },
+        },
+      });
+      refreshIslandRunStateFromLocal(session);
+      const first = await activateStagedRestorationMissionStage({ session, client: null });
+      const second = await activateStagedRestorationMissionStage({ session, client: null });
+      const after = readIslandRunGameStateRecord(session);
+      const progress = resolveStagedRestorationMissionProgress({ ledger: after.signatureMissionProgressByIsland, islandNumber: 4, cycleIndex: 0 });
+      assertEqual(first.status, 'ok', 'two Masonry Sparks raise one span');
+      assertEqual(second.status, 'no_charges', 'repeat action cannot spend unavailable charges');
+      assertEqual(progress?.activatedStages, 1, 'one stage persists');
+      assertEqual(progress?.chargesSpent, 2, 'the descriptor cost is spent exactly once');
     },
   },
   {

@@ -207,6 +207,10 @@ import {
   type Island14GreatHoneyfallPresentation,
 } from './Island14HoneycombKingdomThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
+import {
+  createIslandStagedRestorationThreePresentation,
+  type IslandStagedRestorationPresentation,
+} from './IslandStagedRestorationThreePresentation';
 
 export type BuildLevel = 0 | 1 | 2 | 3;
 export type Island5LandmarkBuildLevels = Partial<Record<Island5LandmarkDefinition['id'], BuildLevel>>;
@@ -261,6 +265,7 @@ interface Island5ThreePilotProps {
   cactusCanyonSpiralPresentation?: Island13CactusCanyonSpiralPresentation;
   firstLightAssemblyCraterPresentation?: Island1AssemblyCraterPresentation;
   greatHoneyfallPresentation?: Island14GreatHoneyfallPresentation;
+  stagedRestorationPresentation?: IslandStagedRestorationPresentation;
   fishermansFishingPresentation?: Island22WaterDragonPresentation;
   onSignatureMissionClick?: () => void;
   caretakerEncounterOpen?: boolean;
@@ -3354,6 +3359,7 @@ export default function Island5ThreePilot({
   cactusCanyonSpiralPresentation = { segmentsExcavated: 16, maxSegments: 16, completed: true },
   firstLightAssemblyCraterPresentation = { chargesDetonated: 0, targetCharges: 20, completed: false },
   greatHoneyfallPresentation = readInitialGreatHoneyfallPresentation(),
+  stagedRestorationPresentation,
   fishermansFishingPresentation = { fishCaughtKg: 0, previewElapsedSeconds: 0 },
   onSignatureMissionClick,
   caretakerEncounterOpen = false,
@@ -3490,6 +3496,8 @@ export default function Island5ThreePilot({
   firstLightAssemblyCraterPresentationRef.current = firstLightAssemblyCraterPresentation;
   const greatHoneyfallPresentationRef = useRef(greatHoneyfallPresentation);
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
+  const stagedRestorationPresentationRef = useRef(stagedRestorationPresentation);
+  stagedRestorationPresentationRef.current = stagedRestorationPresentation;
   const fishermansFishingPresentationRef = useRef(fishermansFishingPresentation);
   fishermansFishingPresentationRef.current = fishermansFishingPresentation;
   const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
@@ -4396,7 +4404,25 @@ export default function Island5ThreePilot({
     if (isFishermansVillage) {
       livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
     }
-    const clickableSignatureMissions = isAssemblyCraterFirstLight
+    const stagedRestorationInitial = stagedRestorationPresentationRef.current;
+    const stagedRestorationRuntime = stagedRestorationInitial
+      && [4, 6, 7, 8, 9].includes(stagedRestorationInitial.islandNumber)
+      ? createIslandStagedRestorationThreePresentation({
+          islandNumber: stagedRestorationInitial.islandNumber,
+          stageCount: stagedRestorationInitial.stageCount,
+          quality: qualityProfile.id,
+        })
+      : null;
+    if (stagedRestorationRuntime && stagedRestorationInitial) {
+      scene.add(stagedRestorationRuntime.root);
+      stagedRestorationRuntime.update(stagedRestorationInitial, true);
+    }
+    let stagedRestorationPresentationKey = stagedRestorationInitial
+      ? `${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}:${(stagedRestorationInitial.claimedPickupTileIndices ?? []).join(',')}`
+      : '';
+    const clickableSignatureMissions = stagedRestorationRuntime
+      ? [stagedRestorationRuntime.missionHitTarget]
+      : isAssemblyCraterFirstLight
       ? [scene.getObjectByName('ISLAND_1_ASSEMBLY_CRATER_MISSION_HIT_TARGET')].filter(
           (candidate): candidate is THREE.Object3D => Boolean(candidate),
         )
@@ -4752,6 +4778,9 @@ export default function Island5ThreePilot({
     });
     tileRewardObjects.setFirstLightClaimedDynamiteTiles(
       firstLightAssemblyCraterPresentationRef.current.claimedDynamiteTileIndices ?? [],
+    );
+    tileRewardObjects.setStagedRestorationClaimedTiles(
+      stagedRestorationPresentationRef.current?.claimedPickupTileIndices ?? [],
     );
     scene.add(tileRewardObjects.root);
 
@@ -6493,6 +6522,18 @@ export default function Island5ThreePilot({
           sunkenSandsTreasurePresentationRef.current,
           isReducedMotion,
         );
+      }
+      if (stagedRestorationRuntime && stagedRestorationPresentationRef.current) {
+        const nextPresentation = stagedRestorationPresentationRef.current;
+        const nextKey = `${nextPresentation.activatedStages}:${nextPresentation.constructionSequence ?? 0}:${(nextPresentation.claimedPickupTileIndices ?? []).join(',')}`;
+        if (nextKey !== stagedRestorationPresentationKey) {
+          stagedRestorationPresentationKey = nextKey;
+          stagedRestorationRuntime.update(nextPresentation, isReducedMotion);
+          tileRewardObjects.setStagedRestorationClaimedTiles(nextPresentation.claimedPickupTileIndices ?? []);
+        }
+        stagedRestorationRuntime.animate(elapsed, isReducedMotion);
+        canvas.dataset.stagedRestorationStage = String(nextPresentation.activatedStages);
+        canvas.dataset.stagedRestorationIsland = String(nextPresentation.islandNumber);
       }
       if (isHoneycombKingdom) {
         const honeyfallPresentation = greatHoneyfallPresentationRef.current;

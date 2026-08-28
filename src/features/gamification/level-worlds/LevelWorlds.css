@@ -24579,6 +24579,18 @@
   filter: drop-shadow(0 2px 2px #5c2102);
 }
 
+.island-tile--staged-restoration-pickup .island-tile__face {
+  border-color: rgba(255, 226, 126, 0.96);
+  box-shadow:
+    0 0 0 2px rgba(114, 238, 255, 0.2),
+    0 0 18px rgba(255, 205, 75, 0.72),
+    inset 0 0 16px rgba(255, 245, 194, 0.24);
+}
+
+.island-tile--staged-restoration-pickup .island-tile__value {
+  filter: drop-shadow(0 0 6px rgba(255, 226, 126, 0.92));
+}
+
 .island-run-board__signature-mission-pill--great-honeyfall {
   border-color: rgba(255, 218, 94, .88);
   background:

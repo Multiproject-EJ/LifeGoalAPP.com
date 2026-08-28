@@ -475,6 +475,7 @@ import {
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
+  activateStagedRestorationMissionStage,
   activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
@@ -502,6 +503,8 @@ import {
   getCelestialRedockingDockedPlatformCount,
   getFirstLightAssemblyAvailableDynamite,
   getGreatHoneyfallAvailableNectar,
+  getStagedRestorationAvailableCharges,
+  getStagedRestorationMissionDescriptor,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
@@ -515,6 +518,7 @@ import {
   resolveFishermansVillageFishingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
+  resolveStagedRestorationMissionProgress,
 } from '../services/islandRunSignatureMissions';
 import {
   type IslandMissionBriefingTrigger,
@@ -1970,6 +1974,8 @@ export function IslandRunBoardPrototype({
   const [cactusCanyonPendingBlast, setCactusCanyonPendingBlast] = useState<{ before: number; after: number } | null>(null);
   const [isActivatingGreatHoneyfall, setIsActivatingGreatHoneyfall] = useState(false);
   const [greatHoneyfallConstructionSequence, setGreatHoneyfallConstructionSequence] = useState(0);
+  const [isActivatingStagedRestoration, setIsActivatingStagedRestoration] = useState(false);
+  const [stagedRestorationConstructionSequence, setStagedRestorationConstructionSequence] = useState(0);
   const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
   const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
@@ -3205,6 +3211,29 @@ export function IslandRunBoardPrototype({
     .slice(0, 4)
     .filter((buildState) => Boolean(buildState && buildState.buildLevel >= MAX_BUILD_LEVEL))
     .length;
+  const stagedRestorationDescriptor = useMemo(
+    () => getStagedRestorationMissionDescriptor(islandNumber),
+    [islandNumber],
+  );
+  const stagedRestorationVisualDescriptor = useMemo(
+    () => getStagedRestorationMissionDescriptor(islandArtPreviewNumber),
+    [islandArtPreviewNumber],
+  );
+  const stagedRestorationPreviewStage = useMemo(() => {
+    if (!isIslandVisualPreview || !stagedRestorationVisualDescriptor || typeof window === 'undefined') return null;
+    const requested = Number(new URLSearchParams(window.location.search).get('stagedMissionStage'));
+    return Number.isFinite(requested)
+      ? Math.max(0, Math.min(stagedRestorationVisualDescriptor.stageCount, Math.floor(requested)))
+      : stagedRestorationVisualDescriptor.stageCount;
+  }, [isIslandVisualPreview, stagedRestorationVisualDescriptor]);
+  const stagedRestorationProgress = useMemo(() => resolveStagedRestorationMissionProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber,
+  }), [islandNumber, runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const stagedRestorationAvailableCharges = stagedRestorationProgress
+    ? getStagedRestorationAvailableCharges(stagedRestorationProgress)
+    : 0;
   const currentMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
     islandNumber,
     state: runtimeState,
@@ -3216,10 +3245,10 @@ export function IslandRunBoardPrototype({
   const missionPhoneObjectiveActions = useMemo<readonly MissionObjectiveAction[]>(() => (
     currentMissionTracker.objectives.map((objective, objectiveIndex) => {
       if (objective.label.toLowerCase().includes('build landmarks')) return 'launch';
-      if (objectiveIndex === 0 && [1, 3, 10, 13].includes(islandNumber)) return 'launch';
+      if (objectiveIndex === 0 && ([1, 3, 10, 13].includes(islandNumber) || Boolean(stagedRestorationDescriptor))) return 'launch';
       return 'details';
     })
-  ), [currentMissionTracker.objectives, islandNumber]);
+  ), [currentMissionTracker.objectives, islandNumber, stagedRestorationDescriptor]);
   const missionPhoneObjectiveDetails = useMemo(() => (
     currentMissionTracker.objectives.map((objective, objectiveIndex) => (
       objective.label.toLowerCase().includes('build landmarks')
@@ -3252,7 +3281,11 @@ export function IslandRunBoardPrototype({
       openRootheartPowerworks();
       return;
     }
-    if (islandNumber === 13) openCactusCanyonSpiral();
+    if (islandNumber === 13) {
+      openCactusCanyonSpiral();
+      return;
+    }
+    if (stagedRestorationDescriptor) setShowMissionPhoneBriefing(true);
   }, [
     currentMissionTracker.objectives,
     islandNumber,
@@ -3261,6 +3294,7 @@ export function IslandRunBoardPrototype({
     openFirstLightAssemblyCrater,
     openFrostwellMission,
     openRootheartPowerworks,
+    stagedRestorationDescriptor,
   ]);
   const missionPhoneCompletionPercent = currentMissionTracker.overallProgressPercent;
   const cactusCanyonSpiralProgress = useMemo(() => resolveCactusCanyonSpiralProgress({
@@ -8019,6 +8053,20 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
+        } else if (rollResult.stagedRestorationPickup) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          // Signature objects are additive metadata on ordinary economy tiles.
+          // Dispatch the existing canonical tile-reward action as well, while
+          // keeping the mission pickup as the visible headline.
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, {
+            suppressLandingText: true,
+            suppressTechPickup: true,
+          });
+          const pickupLabel = getStagedRestorationMissionDescriptor(runtimeStateRef.current.currentIslandNumber)?.pickupLabel
+            ?? 'Mission object';
+          setLandingText(`${rollResult.stagedRestorationPickup.collectionKind === 'route_pass' ? '✨ Secured along the route' : '✨ Collected'}: ${pickupLabel}. Open the mission phone to activate the next transformation.`);
+          setShowMissionPhoneBriefing(true);
         } else if (rollResult.fishermansVillagePendingCatch) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -8028,28 +8076,33 @@ export function IslandRunBoardPrototype({
           setLandingText(rollResult.fishermansVillageRodCollected
             ? '🎣 Rod ready—your first cast is already on the line!'
             : '🎣 Line cast into the central pond—something is on the hook!');
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
         } else if ((rollResult.firstLightAssemblyDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText(rollResult.firstLightAssemblyDynamiteCollectionKind === 'route_pass'
             ? '🧨 Assembly charge secured along the route! Open the crater mission to excavate the next civic sector.'
             : '🧨 Assembly charge secured! Open the crater mission to excavate the next civic sector.');
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
           openFirstLightAssemblyCrater();
         } else if ((rollResult.cactusCanyonDynamiteCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
           const collected = rollResult.cactusCanyonDynamiteCollected ?? 0;
           setLandingText(`🧨 Dynamite cache collected! +${collected} stick${collected === 1 ? '' : 's'} for the Canyon Spiral.`);
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
           openCactusCanyonSpiral();
         } else if ((rollResult.greatHoneyfallNectarCollected ?? 0) > 0) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('🍯 Royal nectar secured! Pour it into the palace reservoir and watch the pressure rise.');
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
           openGreatHoneyfallMission();
         } else if (rollResult.frostwellSpinGranted) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('⛏ Drill tile! One Frostwell wheel spin is ready.');
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
           openFrostwellMission();
         } else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
           setShowEncounterModal(false);
@@ -8414,7 +8467,11 @@ export function IslandRunBoardPrototype({
   // still holds the pre-roll tokenIndex. Using that stale value seeded the
   // RNG against the wrong tile and violated the "same landing on reload
   // yields the same outcome" contract this seed is designed to provide.
-  const resolveTileLanding = (tileType: string, landingTileIndex: number) => {
+  const resolveTileLanding = (
+    tileType: string,
+    landingTileIndex: number,
+    options?: { suppressLandingText?: boolean; suppressTechPickup?: boolean },
+  ) => {
     const mult = Math.max(1, effectiveMultiplier);
     // Deterministic seed — derived from island, tile, and the per-session roll
     // index (not Date.now()). Same landing on reload yields the same outcome.
@@ -8430,7 +8487,7 @@ export function IslandRunBoardPrototype({
     // serialised tile-reward action below; if the wallet is actually shorter
     // than the ref suggests, the text slightly over-reports — rare enough in
     // practice that we accept the trade-off in exchange for synchronous UX.
-    switch (tileType) {
+    if (!options?.suppressLandingText) switch (tileType) {
       case 'currency':
         setLandingText(`💰 Currency tile! +${essenceDelta} money${multLabel}`);
         break;
@@ -8480,7 +8537,7 @@ export function IslandRunBoardPrototype({
         break;
     }
 
-    maybeCollectTechItem(tileType, landingTileIndex);
+    if (!options?.suppressTechPickup) maybeCollectTechItem(tileType, landingTileIndex);
 
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
       // Trigger flying feed particle animation for feeding tiles
@@ -13243,6 +13300,64 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic,
   ]);
 
+  const handleActivateStagedRestoration = useCallback(async () => {
+    if (isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
+    setShowMissionPhoneBriefing(false);
+    if (stagedRestorationProgress.completedAtMs !== null) {
+      // Canonical completion is immutable; this only replays the world payoff.
+      setStagedRestorationConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setLandingText(`✨ ${currentMissionTracker.briefing.headline} finale replaying.`);
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('reward_claim');
+      return;
+    }
+    setIsActivatingStagedRestoration(true);
+    try {
+      const result = await activateStagedRestorationMissionStage({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_charges') {
+          setLandingText(`Find ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route before activating the next stage.`);
+        }
+        return;
+      }
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('activate_staged_restoration_mission_stage', fresh);
+      setStagedRestorationConstructionSequence((value) => value + 1);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      const completed = result.completedAtMs !== null;
+      setLandingText(completed
+        ? `✨ ${currentMissionTracker.briefing.headline} complete — the whole island transformation is alive!`
+        : `✨ ${stagedRestorationDescriptor.stageLabel} ${result.activatedStages}/${stagedRestorationDescriptor.stageCount}.`);
+      playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
+      if (completed) {
+        window.setTimeout(() => {
+          openWinCelebrationModal([
+            { icon: '✨', label: stagedRestorationDescriptor.stageLabel, value: 'COMPLETE' },
+            { icon: '🏝️', label: currentMissionTracker.briefing.islandName, value: 'TRANSFORMED' },
+          ], `Mission complete — ${currentMissionTracker.briefing.headline}`);
+        }, 5_200);
+      }
+    } finally {
+      setIsActivatingStagedRestoration(false);
+    }
+  }, [
+    client,
+    currentMissionTracker.briefing.headline,
+    currentMissionTracker.briefing.islandName,
+    isActivatingStagedRestoration,
+    openWinCelebrationModal,
+    playIslandRunSound,
+    session,
+    setRuntimeStateWithTrace,
+    stagedRestorationDescriptor,
+    stagedRestorationProgress,
+    triggerIslandRunHaptic,
+  ]);
+
   const handleFundFrostwell = useCallback(async () => {
     if (isFundingFrostwell) return;
     setIsFundingFrostwell(true);
@@ -15005,6 +15120,18 @@ export function IslandRunBoardPrototype({
                     : greatHoneyfallProgress.activatedReservoirs,
                   constructionSequence: greatHoneyfallConstructionSequence,
                 }}
+                stagedRestorationPresentation={stagedRestorationVisualDescriptor ? {
+                  islandNumber: stagedRestorationVisualDescriptor.islandNumber,
+                  activatedStages: isIslandVisualPreview
+                    ? stagedRestorationPreviewStage ?? stagedRestorationVisualDescriptor.stageCount
+                    : stagedRestorationProgress?.activatedStages ?? 0,
+                  stageCount: stagedRestorationVisualDescriptor.stageCount,
+                  constructionSequence: stagedRestorationConstructionSequence + (
+                    isIslandVisualPreview && typeof window !== 'undefined'
+                    && new URLSearchParams(window.location.search).get('stagedMissionReplay') === '1' ? 1 : 0
+                  ),
+                  claimedPickupTileIndices: stagedRestorationProgress?.claimedPickupTileIndices ?? [],
+                } : undefined}
                 fishermansFishingPresentation={{
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === 16
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
@@ -15014,7 +15141,9 @@ export function IslandRunBoardPrototype({
                     : dragonCinematicElapsedSeconds,
                   impactRepairProgress: fishermansFishingProgress.repairCompletedAtMs === null ? 0 : 1,
                 }}
-                onSignatureMissionClick={islandArtPreviewNumber === 1
+                onSignatureMissionClick={getStagedRestorationMissionDescriptor(islandArtPreviewNumber)
+                  ? isIslandVisualPreview ? undefined : () => setShowMissionPhoneBriefing(true)
+                  : islandArtPreviewNumber === 1
                   ? isIslandVisualPreview ? undefined : openFirstLightAssemblyCrater
                   : islandArtPreviewNumber === 12
                   ? isIslandVisualPreview ? undefined : handleSunkenSandsTreasureClick
@@ -18773,27 +18902,48 @@ export function IslandRunBoardPrototype({
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
-        primaryActionLabel={showMissionPhoneBriefing && islandNumber === 14
+        primaryActionLabel={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+          ? stagedRestorationProgress.completedAtMs !== null
+            ? `Replay ${currentMissionTracker.briefing.headline}`
+            : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
+              ? `${stagedRestorationDescriptor.actionLabel} · ${stagedRestorationProgress.activatedStages + 1} of ${stagedRestorationDescriptor.stageCount}`
+              : `Find ${stagedRestorationDescriptor.pickupLabel}`
+          : showMissionPhoneBriefing && islandNumber === 14
           ? greatHoneyfallCompleted
             ? 'Replay the Great Honeyfall'
             : greatHoneyfallAvailableNectar > 0
               ? `Pour nectar · stage ${greatHoneyfallProgress.activatedReservoirs + 1} of ${GREAT_HONEYFALL_MAX_STAGE}`
               : 'Find royal nectar on the route'
           : undefined}
-        primaryActionHint={showMissionPhoneBriefing && islandNumber === 14
+        primaryActionHint={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+          ? stagedRestorationProgress.completedAtMs !== null
+            ? 'Replay the completed 3D transformation and island-wide finale.'
+            : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
+              ? 'The phone will fold so you can watch the next stage pop, flash and lock into the world.'
+              : `Collect glowing ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route. Passing one also secures it.`
+          : showMissionPhoneBriefing && islandNumber === 14
           ? greatHoneyfallCompleted
             ? 'Replay the wax-seal burst and royal cascade.'
             : greatHoneyfallAvailableNectar > 0
               ? 'The mission phone will fold so you can watch the reservoir fill in 3D.'
               : 'Land on a glowing honey tile, then return here to pour it.'
           : undefined}
-        primaryActionDisabled={showMissionPhoneBriefing && islandNumber === 14
+        primaryActionDisabled={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+          ? stagedRestorationProgress.completedAtMs === null
+            && stagedRestorationAvailableCharges < stagedRestorationDescriptor.chargeCostPerStage
+          : showMissionPhoneBriefing && islandNumber === 14
           ? !greatHoneyfallCompleted && greatHoneyfallAvailableNectar < 1
           : false}
-        primaryActionBusy={isActivatingGreatHoneyfall}
-        milestoneValue={showMissionPhoneBriefing && islandNumber === 14 ? greatHoneyfallProgress.activatedReservoirs : 0}
-        milestoneCount={showMissionPhoneBriefing && islandNumber === 14 ? GREAT_HONEYFALL_MAX_STAGE : 0}
-        onPrimaryAction={showMissionPhoneBriefing && islandNumber === 14
+        primaryActionBusy={isActivatingGreatHoneyfall || isActivatingStagedRestoration}
+        milestoneValue={showMissionPhoneBriefing && stagedRestorationProgress
+          ? stagedRestorationProgress.activatedStages
+          : showMissionPhoneBriefing && islandNumber === 14 ? greatHoneyfallProgress.activatedReservoirs : 0}
+        milestoneCount={showMissionPhoneBriefing && stagedRestorationDescriptor
+          ? stagedRestorationDescriptor.stageCount
+          : showMissionPhoneBriefing && islandNumber === 14 ? GREAT_HONEYFALL_MAX_STAGE : 0}
+        onPrimaryAction={showMissionPhoneBriefing && stagedRestorationDescriptor
+          ? () => void handleActivateStagedRestoration()
+          : showMissionPhoneBriefing && islandNumber === 14
           ? () => void handleActivateGreatHoneyfall()
           : undefined}
         onAcknowledge={() => {

@@ -158,6 +158,7 @@ import {
   createIsland14HoneycombMaterials,
 } from '../../dev/Island14HoneycombKingdomThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
+import { createIslandStagedRestorationThreePresentation } from '../../dev/IslandStagedRestorationThreePresentation';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
   resolveIslandRunMaxMultiplierThrowCadence,
@@ -166,6 +167,38 @@ import {
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'gives every staged restoration mission three construction robots, pop stages, sparkles, and a finale',
+    run: () => {
+      const missions = [
+        { islandNumber: 4 as const, stageCount: 3 },
+        { islandNumber: 6 as const, stageCount: 5 },
+        { islandNumber: 7 as const, stageCount: 4 },
+        { islandNumber: 8 as const, stageCount: 5 },
+        { islandNumber: 9 as const, stageCount: 8 },
+      ];
+
+      missions.forEach(({ islandNumber, stageCount }) => {
+        const runtime = createIslandStagedRestorationThreePresentation({ islandNumber, stageCount, quality: 'low' });
+        const robots = Array.from({ length: 3 }, (_, index) =>
+          runtime.root.getObjectByName(`ISLAND_MISSION_CONSTRUCTION_ROBOT_${index + 1}`));
+        const finale = runtime.root.getObjectByName(`ISLAND_${islandNumber}_MISSION_FINALE`);
+        assert(runtime.root.userData.presentationOnly === true, `Island ${islandNumber} mission visuals must remain read-only`);
+        assert(robots.every(Boolean), `Island ${islandNumber} needs all three construction robots`);
+        assert(Boolean(runtime.missionHitTarget), `Island ${islandNumber} needs a reliable 3D mission hit target`);
+
+        runtime.update({ islandNumber, stageCount, activatedStages: 1, constructionSequence: 1 });
+        runtime.animate(1, false);
+        assert(runtime.root.getObjectByName(`ISLAND_${islandNumber}_MISSION_STAGE_1`)?.visible === true, `Island ${islandNumber} must pop its first authored stage into view`);
+        assert(robots.every((robot) => robot?.parent?.visible === true), `Island ${islandNumber} must show all three robots during construction`);
+
+        runtime.update({ islandNumber, stageCount, activatedStages: stageCount, constructionSequence: 2 });
+        runtime.animate(3, false);
+        assert(finale?.visible === true, `Island ${islandNumber} must reveal its completed-mission finale`);
+        assert(Array.from({ length: stageCount }, (_, index) => runtime.root.getObjectByName(`ISLAND_${islandNumber}_MISSION_STAGE_${index + 1}`)?.visible).every(Boolean), `Island ${islandNumber} must retain every completed construction stage`);
+      });
+    },
+  },
   {
     name: 'projects Island 002 re-docking into four presentation-only platforms with tethers, collars, and reduced-motion state',
     run: async () => {

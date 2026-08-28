@@ -92,15 +92,23 @@ export const islandRunMissionTrackerTests: TestCase[] = [
     },
   },
   {
-    name: 'planned signature missions retain honest landmark counters until canonical mechanics exist',
+    name: 'staged restoration missions expose live canonical progress beside landmark counters',
     run: () => {
-      [4, 6, 7, 8, 9].forEach((islandNumber) => {
+      const expectedStageLabels = new Map([
+        [4, 'Causeway Spans'],
+        [6, 'Mirrors Aligned'],
+        [7, 'Districts Breathing'],
+        [8, 'Gardens Blooming'],
+        [9, 'Systems Ignited'],
+      ]);
+      expectedStageLabels.forEach((stageLabel, islandNumber) => {
         const tracker = resolveIslandMissionTrackerPresentation({
           islandNumber,
           state: makeState({ currentIslandNumber: islandNumber }),
         });
-        assertEqual(tracker.usesLiveSignatureProgress, false, `Island ${islandNumber} is explicitly design-only`);
-        assertEqual(tracker.objectives[0].label, 'Complete Landmarks', 'no dead signature counter is displayed');
+        assertEqual(tracker.usesLiveSignatureProgress, true, `Island ${islandNumber} reads canonical mission state`);
+        assertEqual(tracker.objectives[0].label, stageLabel, `Island ${islandNumber} names its authored visual transformation`);
+        assertEqual(tracker.objectives[0].value, 0, `Island ${islandNumber} starts with no activated stages`);
         assertEqual(tracker.objectives[1].label, 'Build Landmarks', 'canonical build progress remains visible');
       });
     },

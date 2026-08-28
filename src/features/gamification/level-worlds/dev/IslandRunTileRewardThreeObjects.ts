@@ -9,6 +9,7 @@ export interface IslandRunTileRewardThreeRuntime {
   animate: (elapsed: number, tokenIndex: number) => void;
   setCactusCanyonMissionStarted: (started: boolean) => void;
   setFirstLightClaimedDynamiteTiles: (tileIndices: readonly number[]) => void;
+  setStagedRestorationClaimedTiles: (tileIndices: readonly number[]) => void;
 }
 
 function compactRewardToVertexColorMesh(root: THREE.Group, material: THREE.MeshStandardMaterial, name: string) {
@@ -66,6 +67,7 @@ export type IslandRunTileRewardObjectKind =
   | 'cactus_canyon_dynamite'
   | 'great_honeyfall_nectar'
   | 'fishermans_rod'
+  | 'staged_restoration_pickup'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
@@ -77,6 +79,11 @@ export function resolveIslandRunTileRewardObjectKind(
   if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
   if (entry.signatureMissionKind === 'great_honeyfall_nectar') return 'great_honeyfall_nectar';
   if (entry.signatureMissionKind === 'fishermans_rod') return 'fishermans_rod';
+  if (entry.signatureMissionKind === 'causeway_masonry'
+    || entry.signatureMissionKind === 'moon_mirror_lens'
+    || entry.signatureMissionKind === 'breathline_pressure_pearl'
+    || entry.signatureMissionKind === 'pollination_pollen_light'
+    || entry.signatureMissionKind === 'ignition_core') return 'staged_restoration_pickup';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -499,6 +506,30 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
   }
   if (kind === 'great_honeyfall_nectar') return createGreatHoneyfallNectar(materials, quality);
   if (kind === 'fishermans_rod') return createFishermansRod(materials, quality);
+  if (kind === 'staged_restoration_pickup') {
+    const root = new THREE.Group();
+    root.name = `ISLAND_RUN_STAGED_RESTORATION_${entry.signatureMissionKind?.toUpperCase()}`;
+    const segments = qualitySegments(quality);
+    const material = entry.signatureMissionKind === 'breathline_pressure_pearl'
+      ? materials.cyan
+      : entry.signatureMissionKind === 'pollination_pollen_light'
+        ? materials.violet
+        : entry.signatureMissionKind === 'ignition_core'
+          ? materials.amber
+          : materials.gold;
+    const core = entry.signatureMissionKind === 'causeway_masonry'
+      ? new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.24, 0.22), material)
+      : entry.signatureMissionKind === 'moon_mirror_lens'
+        ? new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.07, segments), material)
+        : entry.signatureMissionKind === 'pollination_pollen_light'
+          ? new THREE.Mesh(new THREE.OctahedronGeometry(0.23, 1), material)
+          : new THREE.Mesh(new THREE.SphereGeometry(0.2, segments, Math.max(6, segments / 2)), material);
+    if (entry.signatureMissionKind === 'moon_mirror_lens') core.rotation.x = Math.PI / 2;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.035, 6, segments * 2), materials.goldGlow);
+    halo.rotation.x = Math.PI / 2;
+    root.add(core, halo);
+    return root;
+  }
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -568,6 +599,12 @@ export function createIslandRunTileRewardThreeObjects(options: {
         ? 1.18
       : tileEntry.signatureMissionKind === 'fishermans_rod'
         ? 1.24
+      : tileEntry.signatureMissionKind === 'causeway_masonry'
+        || tileEntry.signatureMissionKind === 'moon_mirror_lens'
+        || tileEntry.signatureMissionKind === 'breathline_pressure_pearl'
+        || tileEntry.signatureMissionKind === 'pollination_pollen_light'
+        || tileEntry.signatureMissionKind === 'ignition_core'
+        ? 1.16
       : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'
@@ -610,6 +647,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
 
   let cactusCanyonMissionStarted = true;
   let firstLightClaimedDynamiteTiles = new Set<number>();
+  let stagedRestorationClaimedTiles = new Set<number>();
   const update = (elapsed: number, tokenIndex: number) => {
     entries.forEach((entry) => {
       if (entry.signatureMissionKind === 'first_light_dynamite') {
@@ -619,6 +657,15 @@ export function createIslandRunTileRewardThreeObjects(options: {
       if (entry.signatureMissionKind === 'cactus_canyon_dynamite') {
         entry.root.visible = cactusCanyonMissionStarted;
         if (!cactusCanyonMissionStarted) return;
+      }
+      if ((entry.signatureMissionKind === 'causeway_masonry'
+        || entry.signatureMissionKind === 'moon_mirror_lens'
+        || entry.signatureMissionKind === 'breathline_pressure_pearl'
+        || entry.signatureMissionKind === 'pollination_pollen_light'
+        || entry.signatureMissionKind === 'ignition_core')
+        && stagedRestorationClaimedTiles.has(entry.tileIndex)) {
+        entry.root.visible = false;
+        return;
       }
       const occupied = entry.tileIndex === tokenIndex;
       const collectScale = occupied ? 0.08 : 1;
@@ -637,6 +684,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
     setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
     setFirstLightClaimedDynamiteTiles: (tileIndices) => {
       firstLightClaimedDynamiteTiles = new Set(tileIndices);
+    },
+    setStagedRestorationClaimedTiles: (tileIndices) => {
+      stagedRestorationClaimedTiles = new Set(tileIndices);
     },
   };
 }

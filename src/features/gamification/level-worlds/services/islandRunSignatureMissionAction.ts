@@ -32,6 +32,8 @@ import {
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   getRootheartPowerworksStageCost,
+  getStagedRestorationAvailableCharges,
+  getStagedRestorationMissionDescriptor,
   getSunkenSandsTreasureEssenceReward,
   isRootheartPowerworksCollectionComplete,
   resolveCactusCanyonSpiralProgress,
@@ -42,7 +44,77 @@ import {
   resolveFishermansVillageFishingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
+  resolveStagedRestorationMissionProgress,
 } from './islandRunSignatureMissions';
+
+export type ActivateStagedRestorationMissionResult =
+  | {
+      status: 'ok';
+      missionId: string;
+      activatedStages: number;
+      chargesRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_charges' | 'already_complete' | 'unsupported_island' };
+
+/** Canonical spend action shared by the five staged restoration missions. */
+export function activateStagedRestorationMissionStage(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ActivateStagedRestorationMissionResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    const descriptor = getStagedRestorationMissionDescriptor(state.currentIslandNumber);
+    if (!descriptor) return { status: 'unsupported_island' };
+    const progress = resolveStagedRestorationMissionProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (!progress) return { status: 'wrong_island' };
+    if (progress.completedAtMs !== null || progress.activatedStages >= descriptor.stageCount) {
+      return { status: 'already_complete' };
+    }
+    if (getStagedRestorationAvailableCharges(progress) < descriptor.chargeCostPerStage) {
+      return { status: 'no_charges' };
+    }
+
+    const nowMs = Date.now();
+    const activatedStages = Math.min(descriptor.stageCount, progress.activatedStages + 1);
+    const completedAtMs = activatedStages >= descriptor.stageCount
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const nextProgress = {
+      ...progress,
+      chargesSpent: progress.chargesSpent + descriptor.chargeCostPerStage,
+      activatedStages,
+      lastActivatedStage: activatedStages,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: `activate_${descriptor.missionId.replace(/-/g, '_')}_stage`,
+    });
+    return {
+      status: 'ok',
+      missionId: descriptor.missionId,
+      activatedStages,
+      chargesRemaining: getStagedRestorationAvailableCharges(nextProgress),
+      completedAtMs,
+    };
+  });
+}
 
 export type ReelFishermansVillageCatchResult =
   | {

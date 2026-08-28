@@ -248,6 +248,16 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '🍯';
   } else if (signatureMissionKind === 'fishermans_rod') {
     iconContent = '🎣';
+  } else if (signatureMissionKind === 'causeway_masonry') {
+    iconContent = '🧱';
+  } else if (signatureMissionKind === 'moon_mirror_lens') {
+    iconContent = '🌙';
+  } else if (signatureMissionKind === 'breathline_pressure_pearl') {
+    iconContent = '🫧';
+  } else if (signatureMissionKind === 'pollination_pollen_light') {
+    iconContent = '✿';
+  } else if (signatureMissionKind === 'ignition_core') {
+    iconContent = '🔥';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
@@ -293,6 +303,10 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         signatureMissionKind === 'cactus_canyon_dynamite' ? 'island-tile--cactus-canyon-dynamite' : '',
         signatureMissionKind === 'great_honeyfall_nectar' ? 'island-tile--great-honeyfall-nectar' : '',
         signatureMissionKind === 'fishermans_rod' ? 'island-tile--fishermans-rod' : '',
+        signatureMissionKind?.includes('causeway_') || signatureMissionKind?.includes('moon_mirror_')
+          || signatureMissionKind?.includes('breathline_') || signatureMissionKind?.includes('pollination_')
+          || signatureMissionKind === 'ignition_core'
+          ? 'island-tile--staged-restoration-pickup' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -315,6 +329,16 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
               ? `Tile ${index + 1}. Royal nectar for the Great Honeyfall`
             : signatureMissionKind === 'fishermans_rod'
               ? `Tile ${index + 1}. Fishing rod station. Landing starts a pond cast`
+            : signatureMissionKind === 'causeway_masonry'
+              ? `Tile ${index + 1}. Masonry Spark for the Broken Causeway`
+            : signatureMissionKind === 'moon_mirror_lens'
+              ? `Tile ${index + 1}. Moon Lens for the mirror circuit`
+            : signatureMissionKind === 'breathline_pressure_pearl'
+              ? `Tile ${index + 1}. Pressure Pearl for the Breathline`
+            : signatureMissionKind === 'pollination_pollen_light'
+              ? `Tile ${index + 1}. Pollen Light for the Great Pollination`
+            : signatureMissionKind === 'ignition_core'
+              ? `Tile ${index + 1}. Ignition Core for the forge chain`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing

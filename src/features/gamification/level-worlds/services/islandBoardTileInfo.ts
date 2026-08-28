@@ -89,6 +89,18 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
       description: 'Land here to cast into the central pond, then reel in whatever takes the hook.',
     };
   }
+  const restorationCopy = entry?.signatureMissionKind === 'causeway_masonry'
+    ? ['Masonry Spark', 'Recover this charged masonry to raise the next Broken Causeway span.']
+    : entry?.signatureMissionKind === 'moon_mirror_lens'
+      ? ['Moon Lens', 'Recover this lens to align the next mirror in Moonveil’s beam circuit.']
+      : entry?.signatureMissionKind === 'breathline_pressure_pearl'
+        ? ['Pressure Pearl', 'Recover this pearl to pressurize the next underwater district.']
+        : entry?.signatureMissionKind === 'pollination_pollen_light'
+          ? ['Pollen Light', 'Recover this living light to awaken the next garden family.']
+          : entry?.signatureMissionKind === 'ignition_core'
+            ? ['Ignition Core', 'Recover this core to fire the next mechanism in the volcanic chain.']
+            : null;
+  if (restorationCopy) return { title: restorationCopy[0], description: restorationCopy[1] };
 
   if (isStop) {
     return {

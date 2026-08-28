@@ -42,6 +42,7 @@ export type IslandMissionProgressKind =
   | 'cactus_canyon_spiral'
   | 'fishermans_fishing'
   | 'great_honeyfall_coronation'
+  | 'staged_restoration'
   | 'planned_signature'
   | 'standard_landmarks';
 
@@ -113,7 +114,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'The water is not gone. It is waiting beneath everything we fear to break.',
   },
   4: {
-    progressKind: 'planned_signature',
+    progressKind: 'staged_restoration',
     headline: 'Raise the Broken Causeway',
     missionStatement: 'Crown Citadel has lost the bridges joining its four outer districts to the central court. Recover the masonry and raise three causeway spans from the water.',
     primaryObjective: 'Raise all three causeway spans.',
@@ -131,7 +132,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'Restore the shore, then meet our guardian in the arena.',
   },
   6: {
-    progressKind: 'planned_signature',
+    progressKind: 'staged_restoration',
     headline: 'Rephase the Moon Mirrors',
     missionStatement: 'Moonveil Nexus has lost the beam chain that stabilizes its central moon core. Rotate five great mirrors back into alignment and restore the lunar circuit.',
     primaryObjective: 'Align all five moon mirrors.',
@@ -140,7 +141,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'Let the mirrors speak to one another again.',
   },
   7: {
-    progressKind: 'planned_signature',
+    progressKind: 'staged_restoration',
     headline: 'Restore the Breathline',
     missionStatement: 'Abyssal Pearl Kingdom is losing pressure across its living domes. Reconnect the Breathline through four districts and return oxygen to the pearl heart.',
     primaryObjective: 'Restore pressure to all four districts.',
@@ -149,7 +150,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'Give every district room to breathe again.',
   },
   8: {
-    progressKind: 'planned_signature',
+    progressKind: 'staged_restoration',
     headline: 'The Great Pollination',
     missionStatement: 'The botanical kingdom has beauty in abundance but its living systems have stopped exchanging energy. Restore each landmark family and reconnect springs, roots, glasshouses and pollinators.',
     primaryObjective: 'Restore the five Everblossom landmark families.',
@@ -158,7 +159,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     caretakerSignal: 'A garden can be perfectly arranged and still forget how to grow.',
   },
   9: {
-    progressKind: 'planned_signature',
+    progressKind: 'staged_restoration',
     headline: 'Restart the Ignition Chain',
     missionStatement: 'The lava kingdom draws power from a crater far below the route. Restore its suspended steel works and stabilize the machinery without sealing the volcano or cooling its living heart.',
     primaryObjective: 'Reconnect the crater-spanning forge systems.',

@@ -18,12 +18,15 @@ import {
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCelestialRedockingDockedPlatformCount,
   getGreatHoneyfallAvailableNectar,
+  getStagedRestorationAvailableCharges,
+  getStagedRestorationMissionDescriptor,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveFirstLightAssemblyCraterProgress,
   resolveFrostwellIceworksProgress,
   resolveFishermansVillageFishingProgress,
   resolveGreatHoneyfallProgress,
+  resolveStagedRestorationMissionProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from './islandRunSignatureMissions';
@@ -294,6 +297,34 @@ export function resolveIslandMissionTrackerPresentation(options: {
           progress.rodCollectedAtMs === null
             ? 'Land on a 🎣 tile'
             : `${progress.fishCaughtKg} kg / ${pounds.toFixed(1)} lb`,
+        ),
+        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+      ];
+      break;
+    }
+    case 'staged_restoration': {
+      const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
+      const progress = resolveStagedRestorationMissionProgress({
+        ledger: state.signatureMissionProgressByIsland,
+        cycleIndex: state.cycleIndex,
+        islandNumber,
+      });
+      if (!descriptor || !progress) {
+        usesLiveSignatureProgress = false;
+        objectives = resolveStandardObjectives({ islandNumber, state, landmarkCount });
+        break;
+      }
+      const chargesReady = getStagedRestorationAvailableCharges(progress);
+      objectives = [
+        objective(
+          descriptor.stageLabel,
+          progress.activatedStages,
+          descriptor.stageCount,
+          progress.completedAtMs !== null
+            ? 'Complete'
+            : chargesReady >= descriptor.chargeCostPerStage
+              ? `${chargesReady} ready · ${progress.activatedStages} / ${descriptor.stageCount}`
+              : `${progress.activatedStages} / ${descriptor.stageCount}`,
         ),
         objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
       ];
