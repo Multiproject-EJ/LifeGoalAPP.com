@@ -378,12 +378,25 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     for(let marker=zone.startX-90;marker<zone.startX;marker+=15){for(const side of [-1,1]){const lamp=new THREE.Mesh(new THREE.SphereGeometry(.2,8,6),lampMaterial);lamp.position.set(side*(zone.width/2+1.5),getSkyboundGroundHeight(levelId,marker)+.45,marker);scene.add(lamp);}}
   }
 
-  for (const object of getSkyboundCourseObjects(levelId, goalDistance, courseProfile)) {
+  const courseObjects=getSkyboundCourseObjects(levelId, goalDistance, courseProfile);
+  if(courseProfile==='storm_corridor'||courseProfile==='gold_formation'){
+    const routeObjects=courseObjects.filter((object)=>courseProfile==='gold_formation'?object.kind==='salvage':object.kind==='wind_ring');
+    const routeLine=new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(routeObjects.map((object)=>new THREE.Vector3(object.lateralX??0,object.y,object.x))),
+      new THREE.LineBasicMaterial({color:courseProfile==='gold_formation'?0xffdf61:0xb99cff,transparent:true,opacity:.38}),
+    );
+    routeLine.name=`skybound-${courseProfile}-flight-line`;
+    scene.add(routeLine);
+  }
+
+  for (const object of courseObjects) {
     let mesh: THREE.Object3D;
     if (object.kind === 'wind_ring') {
+      const ringColor=courseProfile==='gold_formation'?0xffdf61:courseProfile==='storm_corridor'?0xc2a0ff:0x5cf4ff;
+      const ringEmissive=courseProfile==='gold_formation'?0x8a5805:courseProfile==='storm_corridor'?0x4b257c:0x187a91;
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(Math.max(3.8, object.radius * 0.27), 0.42, 12, 38),
-        new THREE.MeshStandardMaterial({ color: 0x5cf4ff, emissive: 0x187a91, emissiveIntensity: 1.7, roughness: 0.25 }),
+        new THREE.MeshStandardMaterial({ color:ringColor,emissive:ringEmissive,emissiveIntensity:1.7,roughness:0.25 }),
       );
       const chevron = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.6, 3), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       chevron.rotation.x = Math.PI / 2;
@@ -486,7 +499,8 @@ function startSoftwareFlightRenderer(
       context.strokeStyle=aircraftColors[props.aircraftId][2];context.lineWidth=8;context.beginPath();context.moveTo(width*.34,height*.82);context.lineTo(width*.38,height*.61);context.moveTo(width*.66,height*.82);context.lineTo(width*.62,height*.61);context.stroke();
     }
     const resolved=new Set(flight?.resolvedObjectIds??[]);const visible=course.filter((object)=>!resolved.has(object.id)&&object.x>distance-8&&object.x<distance+520).sort((a,b)=>b.x-a.x);
-    for(const object of visible){const p=project(object.lateralX??0,object.y,object.x);if(p.y<-100||p.y>height+120)continue;const size=Math.max(2,object.radius*p.scale*.34);if(object.kind==='wind_ring'){context.strokeStyle='#63f4ff';context.lineWidth=Math.max(2,p.scale*.22);context.shadowBlur=12;context.shadowColor='#4beeff';context.beginPath();context.ellipse(p.x,p.y,size,size,0,0,Math.PI*2);context.stroke();context.shadowBlur=0;}else if(object.kind==='salvage'){context.fillStyle='#ffe064';context.save();context.translate(p.x,p.y);context.rotate(time*.002+object.x);context.fillRect(-size*.5,-size*.5,size,size);context.restore();}else{context.fillStyle='#a83248';for(let spike=-1;spike<=1;spike+=1){context.beginPath();context.moveTo(p.x+spike*size*.45,p.y-size);context.lineTo(p.x+(spike-.45)*size*.5,p.y+size*.8);context.lineTo(p.x+(spike+.45)*size*.5,p.y+size*.8);context.fill();}}}
+    if(props.courseProfile==='storm_corridor'||props.courseProfile==='gold_formation'){const route=course.filter((object)=>props.courseProfile==='gold_formation'?object.kind==='salvage':object.kind==='wind_ring').filter((object)=>object.x>distance-20&&object.x<distance+520);context.strokeStyle=props.courseProfile==='gold_formation'?'rgba(255,224,91,.42)':'rgba(193,160,255,.38)';context.lineWidth=2;context.beginPath();route.forEach((object,index)=>{const p=project(object.lateralX??0,object.y,object.x);if(index===0)context.moveTo(p.x,p.y);else context.lineTo(p.x,p.y);});context.stroke();}
+    for(const object of visible){const p=project(object.lateralX??0,object.y,object.x);if(p.y<-100||p.y>height+120)continue;const size=Math.max(2,object.radius*p.scale*.34);if(object.kind==='wind_ring'){const color=props.courseProfile==='gold_formation'?'#ffe05b':props.courseProfile==='storm_corridor'?'#c1a0ff':'#63f4ff';context.strokeStyle=color;context.lineWidth=Math.max(2,p.scale*.22);context.shadowBlur=12;context.shadowColor=color;context.beginPath();context.ellipse(p.x,p.y,size,size,0,0,Math.PI*2);context.stroke();context.shadowBlur=0;}else if(object.kind==='salvage'){context.fillStyle='#ffe064';context.save();context.translate(p.x,p.y);context.rotate(time*.002+object.x);context.fillRect(-size*.5,-size*.5,size,size);context.restore();}else{context.fillStyle='#a83248';for(let spike=-1;spike<=1;spike+=1){context.beginPath();context.moveTo(p.x+spike*size*.45,p.y-size);context.lineTo(p.x+(spike-.45)*size*.5,p.y+size*.8);context.lineTo(p.x+(spike+.45)*size*.5,p.y+size*.8);context.fill();}}}
     const gate=project(0,14,props.goalDistance);if(props.courseProfile!=='landing'&&gate.depth<520){const gateSize=Math.max(7,7*gate.scale);context.strokeStyle='#ffe16d';context.lineWidth=Math.max(2,gate.scale*.28);context.strokeRect(gate.x-gateSize,gate.y-gateSize,gateSize*2,gateSize*1.4);}
     if(isBoosting()){context.strokeStyle='rgba(190,248,255,.45)';context.lineWidth=2;for(let index=0;index<12;index+=1){const x=(index*97+time*.4)%width;context.beginPath();context.moveTo(x,horizon);context.lineTo(x+(x-width/2)*.18,height);context.stroke();}}
     const planeX=width/2+(flight?.bankRad??0)*26;const planeY=height*(phase==='aiming'?.67:.72)-(flight?.pitchRad??aim.angleDeg*Math.PI/180)*12;drawAircraft(planeX,planeY,flight?.bankRad??0,flight?.pitchRad??0,Math.max(.65,Math.min(1.08,width/650)),flight?.detachedPartIds??[]);

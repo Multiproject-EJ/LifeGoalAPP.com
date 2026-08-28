@@ -99,15 +99,15 @@ function drawDiamond(context:CanvasRenderingContext2D,x:number,y:number,size:num
   context.restore();
 }
 
-function drawRing(context:CanvasRenderingContext2D,p:ProjectedPoint,radius:number,time:number) {
+function drawRing(context:CanvasRenderingContext2D,p:ProjectedPoint,radius:number,time:number,palette:'cyan'|'gold'|'storm'='cyan') {
   const size=Math.max(7,radius*p.scale*.31);
   const pulse=1+Math.sin(time*.004+p.depth)*.045;
   context.save();
   context.translate(p.x,p.y);
   context.scale(1,pulse);
   context.shadowBlur=Math.min(28,size*.45);
-  context.shadowColor='#4cf2ff';
-  context.strokeStyle='rgba(105,246,255,.96)';
+  context.shadowColor=palette==='gold'?'#ffe05b':palette==='storm'?'#c1a0ff':'#4cf2ff';
+  context.strokeStyle=palette==='gold'?'rgba(255,224,91,.98)':palette==='storm'?'rgba(193,160,255,.98)':'rgba(105,246,255,.96)';
   context.lineWidth=clamp(p.scale*.28,2,9);
   context.beginPath();
   context.ellipse(0,0,size,size*.94,0,0,Math.PI*2);
@@ -561,10 +561,16 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
 
     const resolved=new Set(flight?.resolvedObjectIds??[]);
     const visible=course.filter((object)=>!resolved.has(object.id)&&object.x>distance-8&&object.x<distance+540).sort((a,b)=>b.x-a.x);
+    if(input.courseProfile==='storm_corridor'||input.courseProfile==='gold_formation'){
+      const route=course.filter((object)=>input.courseProfile==='gold_formation'?object.kind==='salvage':object.kind==='wind_ring').filter((object)=>object.x>distance-20&&object.x<distance+540);
+      context.strokeStyle=input.courseProfile==='gold_formation'?'rgba(255,224,91,.42)':'rgba(193,160,255,.38)';context.lineWidth=2;context.beginPath();
+      route.forEach((object,index)=>{const p=project(object.lateralX??0,object.y,object.x);if(index===0)context.moveTo(p.x,p.y);else context.lineTo(p.x,p.y);});context.stroke();
+    }
+
     for(const object of visible) {
       const p=project(object.lateralX??0,object.y,object.x);
       if(p.y<-160||p.y>height+170)continue;
-      if(object.kind==='wind_ring')drawRing(context,p,object.radius,time);
+      if(object.kind==='wind_ring')drawRing(context,p,object.radius,time,input.courseProfile==='gold_formation'?'gold':input.courseProfile==='storm_corridor'?'storm':'cyan');
       else if(object.kind==='salvage')drawDiamond(context,p.x,p.y,Math.max(4,object.radius*p.scale*.22),time+object.x);
       else drawHazard(context,p,object.radius,time);
     }

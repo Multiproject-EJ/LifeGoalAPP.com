@@ -5,7 +5,7 @@ export type SkyboundFlightStatus = 'flying' | 'landed' | 'crashed' | 'finished';
 export type SkyboundTerminalReason = 'goal' | 'touchdown' | 'hard_impact' | 'integrity_failure' | null;
 export type SkyboundUpgradeKind = 'launcher' | 'airframe' | 'engine';
 export type SkyboundCourseObjectKind = 'salvage' | 'wind_ring' | 'hazard';
-export type SkyboundCourseProfile = 'standard' | 'landing';
+export type SkyboundCourseProfile = 'standard' | 'landing' | 'storm_corridor' | 'gold_formation';
 export type SkyboundTouchdownGrade = 'gold' | 'silver' | 'bronze';
 
 export interface SkyboundTouchdownResult {
@@ -316,6 +316,44 @@ export function getSkyboundLandingZone(goalDistance:number) {
   return{startX:Math.max(40,endX-60),endX,width:24};
 }
 
+function getSkyboundStormCorridor(goalDistance:number):readonly SkyboundCourseObject[] {
+  const ringAltitudes=[62,84,57,91,70];
+  const ringLanes=[-12,10,-14,13,0];
+  const objects:SkyboundCourseObject[]=[];
+  for(let index=0;index<5;index+=1){
+    const x=138+((goalDistance-300)*(index/4));
+    const y=ringAltitudes[index];
+    const lateralX=ringLanes[index];
+    objects.push({id:`storm-corridor-ring-${index+1}`,kind:'wind_ring',x,y,lateralX,radius:15});
+    objects.push({id:`storm-corridor-crest-${index*2+1}`,kind:'salvage',x:x+24,y:y+3,lateralX,radius:7});
+    objects.push({id:`storm-corridor-crest-${index*2+2}`,kind:'salvage',x:x+40,y:y-2,lateralX:lateralX*.72,radius:7});
+    if(index<4){
+      const nextLane=ringLanes[index+1];
+      const blockingLane=nextLane>=0?-15:15;
+      objects.push({id:`storm-corridor-spire-${index+1}`,kind:'hazard',x:x+76,y:(y+ringAltitudes[index+1])/2,lateralX:blockingLane,radius:16});
+    }
+  }
+  return objects;
+}
+
+function getSkyboundGoldFormation(goalDistance:number):readonly SkyboundCourseObject[] {
+  const routeStart=180;
+  const routeSpan=Math.max(660,goalDistance-360);
+  const lanes=[0,-5,-10,-15,-11,-6,0,6,11,15,10,5];
+  const altitudeOffsets=[0,5,11,18,23,27,29,27,23,18,11,5];
+  const objects:SkyboundCourseObject[]=[];
+  for(let index=0;index<lanes.length;index+=1){
+    const ratio=index/(lanes.length-1);
+    const x=routeStart+(routeSpan*ratio);
+    const y=86+altitudeOffsets[index];
+    objects.push({id:`gold-formation-crest-${index+1}`,kind:'salvage',x,y,lateralX:lanes[index],radius:8});
+    if(index===2||index===5||index===8||index===11){
+      objects.push({id:`gold-formation-gate-${(index+1)/3}`,kind:'wind_ring',x:x+22,y:y+2,lateralX:lanes[index]*.72,radius:15});
+    }
+  }
+  return objects;
+}
+
 export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance = getSkyboundLevel(levelId).goalDistance, courseProfile:SkyboundCourseProfile='standard'): readonly SkyboundCourseObject[] {
   const level = getSkyboundLevel(levelId);
   const authored = SKYBOUND_COURSE_OBJECTS[levelId].filter((object) => object.x <= goalDistance + 20);
@@ -337,15 +375,20 @@ export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance 
       {id:`${levelId}-landing-approach-2`,kind:'wind_ring' as const,x:zone.startX-58,y:getSkyboundGroundHeight(levelId,zone.startX-58)+16,lateralX:0,radius:13},
       {id:`${levelId}-landing-approach-3`,kind:'wind_ring' as const,x:zone.startX-28,y:getSkyboundGroundHeight(levelId,zone.startX-28)+8,lateralX:0,radius:12},
     ];})()
+    : courseProfile==='storm_corridor'
+      ? getSkyboundStormCorridor(goalDistance)
+      : courseProfile==='gold_formation'
+        ? getSkyboundGoldFormation(goalDistance)
     : objects;
   const trainingLanes = [-9, 9, -12, 12, -7, 14, -14, 7];
   return profiledObjects.map((object) => {
     const isLandingApproach=courseProfile==='landing'&&object.id.includes('landing-approach');
+    const isAdvancedFormation=courseProfile==='storm_corridor'||courseProfile==='gold_formation';
     const laneCenter = trainingLanes[Math.floor(object.x / 90) % trainingLanes.length];
     return {
       ...object,
       y:isLandingApproach?object.y:clamp(object.y,level.targetAltitudeMin,level.targetAltitudeMax),
-      lateralX:isLandingApproach?0:clamp(laneCenter + ((object.lateralX ?? 0) * 0.35), -18, 18),
+      lateralX:isLandingApproach?0:isAdvancedFormation?clamp(object.lateralX??0,-18,18):clamp(laneCenter + ((object.lateralX ?? 0) * 0.35), -18, 18),
     };
   });
 }

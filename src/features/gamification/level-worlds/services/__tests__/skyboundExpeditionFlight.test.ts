@@ -19,6 +19,7 @@ import { getSkyboundFlightDirector, getSkyboundFlightStickControl, getSkyboundFl
 import { SKYBOUND_AIRCRAFT_RANKS, SKYBOUND_LESSONS } from '../skyboundPilotAcademy';
 import { getSkyboundLaunchFacility } from '../../../games/skybound-expedition/skyboundLaunchFacilities';
 import { getSkyboundWorldPresentation } from '../../../games/skybound-expedition/skyboundWorldPresentation';
+import { getSkyboundEngineAudioProfile } from '../../../games/skybound-expedition/skyboundFlightAudio';
 
 type TestCase = { name: string; run: () => void };
 
@@ -189,6 +190,43 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       const stabilized=stepSkyboundFlight({...flight,x:flareGate.x-1,y:flareGate.y,vx:30,vy:-2,pitchRad:.18}, {pitch:0,steer:0,boost:false,stabilize:false}, SKYBOUND_STARTER_UPGRADES, 50);
       assert(stabilized.ringsCleared===1,'crossing the flare gate should clear it');
       assert(stabilized.vx<=15.5,'the flare gate should bleed speed into the safe touchdown envelope');
+    },
+  },
+  {
+    name: 'authors advanced storm and Gold Wings formations instead of repeating the generic course',
+    run: () => {
+      const storm=getSkyboundCourseObjects('storm',1180,'storm_corridor');
+      const stormRings=storm.filter((object)=>object.kind==='wind_ring');
+      const stormHazards=storm.filter((object)=>object.kind==='hazard');
+      assert(stormRings.length===5,'Storm Corridor should teach an exact five-gate line');
+      assert(stormHazards.length===4,'Storm Corridor should place four authored blocking spires');
+      assert(new Set(stormRings.map((object)=>object.lateralX)).size>=4,'Storm gates should require deliberate crosswind lane changes');
+      assert(storm.every((object)=>object.y>=SKYBOUND_LEVELS[3].targetAltitudeMin&&object.y<=SKYBOUND_LEVELS[3].targetAltitudeMax),'Storm Corridor should stay inside the Elite altitude syllabus');
+
+      const formation=getSkyboundCourseObjects('stratosphere',1540,'gold_formation');
+      const crests=formation.filter((object)=>object.kind==='salvage');
+      const gates=formation.filter((object)=>object.kind==='wind_ring');
+      assert(crests.length===12,'Gold Formation should contain exactly the twelve required ceremonial crests');
+      assert(gates.length===4,'four gates should divide the Gold Wings route into readable phrases');
+      assert(crests.every((crest,index)=>index===0||crest.x>crests[index-1].x),'every formation crest should be collectable in one forward flight');
+      assert(Math.min(...crests.map((crest)=>crest.lateralX??0))<=-15&&Math.max(...crests.map((crest)=>crest.lateralX??0))>=15,'the formation should draw both wings across the full taught lateral corridor');
+      assert(JSON.stringify(formation)===JSON.stringify(getSkyboundCourseObjects('stratosphere',1540,'gold_formation')),'the ceremony route should remain deterministic');
+    },
+  },
+  {
+    name: 'gives every aircraft a distinct responsive engine voice',
+    run: () => {
+      const flight=createSkyboundFlight({power:1,angleDeg:35,upgrades:SKYBOUND_STARTER_UPGRADES,levelId:'canyon',aircraftId:'jet_trainer'});
+      const profiles=SKYBOUND_AIRCRAFT_RANKS.map((rank)=>getSkyboundEngineAudioProfile(rank.aircraftId,flight,false,false));
+      assert(new Set(profiles.map((profile)=>Math.round(profile.frequencyHz))).size===profiles.length,'each aircraft rank should have a distinct engine frequency');
+      assert(profiles.every((profile,index)=>index===0||profile.frequencyHz>profiles[index-1].frequencyHz),'engine pitch should progress from glider airflow to Goldwing turbine');
+      const cruise=getSkyboundEngineAudioProfile('jet_trainer',flight,false,false);
+      const boost=getSkyboundEngineAudioProfile('jet_trainer',flight,true,false);
+      const struggle=getSkyboundEngineAudioProfile('jet_trainer',{...flight,integrity:1,hazardHits:3},false,true);
+      const flow=getSkyboundEngineAudioProfile('jet_trainer',{...flight,flowCharge:.8},false,false);
+      assert(boost.frequencyHz>cruise.frequencyHz&&boost.filterHz>cruise.filterHz,'boost should audibly spool the engine up');
+      assert(struggle.flutterHz>cruise.flutterHz,'airframe struggle should introduce faster unstable flutter');
+      assert(flow.flutterHz<cruise.flutterHz,'Flow should settle the engine into a steadier tone');
     },
   },
   {

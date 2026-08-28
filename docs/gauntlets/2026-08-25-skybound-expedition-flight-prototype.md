@@ -1024,3 +1024,79 @@ complete mini-game catalogue instead of hiding valid exhibition games.
 continue toward 10/10.** The next loop should add rank-specific prop/jet sound,
 advanced authored formations, and a phone-calibrated safe-landing replay for
 gold, silver, and bronze ceremonies.
+
+## Advanced formations and engine voice Gauntlet loop 12 — 2026-08-28
+
+This loop replaced two remaining generic-feeling systems in the promoted
+ranks. The named advanced lessons now own their own flyable routes, and the
+five aircraft no longer share one silent flight identity.
+
+### Authored advanced courses
+
+- Elite Storm Corridor and Interceptor Checkride use an exact five-gate
+  crosswind course. Four blocking storm spires force deliberate lane changes,
+  while ten crests reward holding the safe line between gates.
+- Ace Gold Formation uses exactly twelve sequential ceremonial crests, so its
+  starred twelve-crest standard can be completed in one forward flight. The
+  route sweeps across both wings of the taught lateral corridor and is divided
+  into four readable gate phrases.
+- Both profiles are deterministic flight-service inputs stored on the flight
+  state. WebGL and compatibility renderers consume the same objects, use a
+  visible route line, and distinguish storm-purple gates from Goldwing-gold
+  gates. React selects a lesson profile but owns no collision, collection, or
+  scoring authority.
+- The live briefing now names `AUTHORED STORM CORRIDOR` or `GOLD WINGS
+  FORMATION`, making the mechanical change explicit before launch.
+
+### Rank-specific responsive engine sound
+
+- A new bounded Web Audio controller gives Toy Glider airflow, Prop Trainer,
+  Jet Trainer, Storm Interceptor, and Goldwing Fighter distinct frequency,
+  harmonic, filter, and gain profiles.
+- Speed and boost spool the voice upward; Flow settles flutter; stalls,
+  ground-effect, and damaged flight introduce faster instability. The
+  deterministic profile math is separately testable from browser playback.
+- Production playback honours the canonical Island Run SFX preference. The
+  development-only Academy Evaluator enables the voice for direct testing and
+  primes its audio context from the launch gesture for iOS autoplay safety.
+  The controller fades and closes on retry, lesson change, and unmount.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,898 tests, 0 failures. New coverage
+  verifies exact formation counts, one-pass crest ordering, lateral course
+  breadth, deterministic replay, five distinct rank voices, boost spool,
+  struggle flutter, and Flow settling.
+- Focused Island Run TypeScript passed. Architecture guard passed with 0
+  violations and the existing 3 allowlisted legacy warnings. Production Vite
+  build passed with the repository's existing mixed-import and large-chunk
+  warnings only.
+- Live evaluator replay confirmed both advanced briefings, objectives, aircraft
+  identities, course colours, route geometry, moving weather, and stable
+  compatibility rendering. The browser sandbox disables WebGL globally, so a
+  physical iPhone remains the authoritative gate for WebGL and audible mix.
+- Release reconnaissance found this branch 13 commits ahead of and 12 behind
+  local `main` before this loop's checkpoint. Seven files changed on both sides
+  and the dry merge contains two conflict blocks. The Capacitor project exists
+  and Xcode 26.6 is installed, but `ios/App/App/public` is absent, confirming
+  that the native wrapper has not received a current web bundle.
+- The repository-wide `tsc -b` still fails on the same Supabase/PostgREST type
+  incompatibilities in goals, actions, projects, routines, notifications,
+  contracts, and Today services. Neither this branch nor the twelve local-main
+  commits changed those source files, so this is a shared release gate rather
+  than a Skybound regression.
+
+| Loop 12 gate | Score | Decision |
+| --- | ---: | --- |
+| Advanced mission identity | 9/10 | Storm and Gold Formation now demand distinct authored lines |
+| Five-aircraft sound identity | 8/10 | Responsive synthesis is wired and deterministic; phone mix remains |
+| Renderer parity | 9/10 | Shared course service drives gold/purple routes in both renderers |
+| Release readiness | 6/10 | Feature gates pass; main reconciliation and full-build repair remain |
+| Physical-device confidence | 6/10 | iOS wrapper and real-device sound/WebGL/landing replay remain |
+
+**Gauntlet decision: pass the authored-course and engine-identity slice,
+continue into release hardening.** The next bounded work should repair the
+repository-wide TypeScript release gate, reconcile the two dry-merge conflict
+blocks with current `main`, then build and sync the Capacitor wrapper for a
+real-device landing, sound, and WebGL pass. Deployment, merge, and native
+publication remain explicit approval boundaries.
