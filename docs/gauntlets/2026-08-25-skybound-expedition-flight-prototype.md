@@ -679,3 +679,74 @@ fantasy and failure rule now match the intended game. The next fidelity loop
 should add a development-only rank/assembly preview, visually replay every
 world, and tune each altitude band, ground approach, and aircraft control
 response from real motion rather than static contracts alone.
+
+## Academy evaluator and energy-model Gauntlet loop 7 — 2026-08-28
+
+This loop made the complete five-rank curriculum directly testable and corrected
+two misleading progression signals found during live replay: later aircraft
+shared too much of the toy-glider wing silhouette, and the strongest Goldwing
+could generate free energy until it exceeded 450 km/h without pilot input.
+
+### Evaluator, aircraft, and world contract
+
+- The development route now exposes a disposable Academy Evaluator for rank,
+  lesson, aircraft build stage, and upgrade level. It creates an in-memory
+  career with the exact prerequisites required for the requested stage, grants
+  test-only tickets and salvage, updates the URL for reproducible scenarios,
+  and never reads or writes the production Academy save.
+- Each aircraft now owns a different physical wing planform: straight toy wing,
+  trainer wing, swept jet wing, deep interceptor delta, and broad Goldwing
+  delta. Propeller, intake, storm-coil, twin-fin, and gold-tip evolution remains
+  part of the same real Three.js hierarchy.
+- Meadow, Coast, and Canyon use continuous terrain under their launch course;
+  the Storm carrier and Goldwing stratosphere remain deliberately suspended
+  advanced worlds. Browser replay confirmed the grass sling yard, coastal short
+  field, canyon boost strip, and high-altitude Goldwing course as distinct
+  stages rather than one sky backdrop with colour swaps.
+- Course objects are clamped into the curriculum's displayed altitude band and
+  duplicate object identities are rejected. This keeps rings, salvage, and
+  hazards physically reachable within what the instructor tells the player to
+  practise.
+
+### Flow and flight-energy correction
+
+- Flow target speed now advances with the aircraft and installed upgrades:
+  125 km/h for the base toy glider through 215 km/h for the base Goldwing, with
+  the fully upgraded Goldwing capped at the intended 250 km/h target.
+- Launch energy uses a bounded rank contribution instead of multiplying the
+  entire launch impulse by late-rank speed tuning. Lift now acts perpendicular
+  to the velocity vector, and overspeed drag removes excess energy, so stronger
+  airframes improve control and retention without becoming perpetual engines.
+- A live max-rank replay launched at 296 km/h and reached 317 km/h after four
+  seconds without boost, compared with the previous 455+ km/h runaway. The HUD
+  correctly coached level flight near 250 km/h; reaching and holding Flow still
+  requires player pitch control.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,890 tests, 0 failures. New regressions
+  cover evaluator isolation/prerequisites, five unique wing silhouettes, world
+  terrain progression, unique in-band course objects, the Flow-speed ladder,
+  and a bounded unassisted max-rank flight.
+- Focused TypeScript compilation passed. Architecture guard passed with 0
+  violations and the same 3 allowlisted legacy warnings. Production Vite build
+  passed with existing mixed-import and chunk-size warnings only.
+- Browser replay produced no console errors. Evidence is saved at
+  `/private/tmp/skybound-coastal-airfield-v7.png`,
+  `/private/tmp/skybound-canyon-runway-v7.png`, and
+  `/private/tmp/skybound-goldwing-flow-v7.png`.
+
+| Loop 7 gate | Score | Decision |
+| --- | ---: | --- |
+| Five-rank testability | 9/10 | Reproducible, non-persistent evaluator passed |
+| Curriculum/world progression | 8/10 | First three grounded; two advanced suspended worlds |
+| Aircraft evolution readability | 7/10 | Five structural wing families; fine-detail polish remains |
+| Flow/energy integrity | 8/10 | Runaway removed and rank-relative targets verified |
+| Final environment art | 6/10 | Strong identities, still visibly procedural and mid-polish |
+
+**Gauntlet decision: pass the evaluator and energy slice, continue art/control
+polish.** The event is no longer a single late-game steering course: it exposes
+the intended fuselage-to-fighter school ladder and can be replayed at every
+construction state. The next loop should improve terrain landmark composition,
+tune touch steering into Flow on a real device, and add more aircraft motion
+feedback at stall, trim, and sustained smooth flight.

@@ -30,6 +30,7 @@ export interface SkyboundWorldPresentation {
   id: SkyboundLevelId;
   signature: string;
   groundedTrainingField: boolean;
+  continuousTerrain: boolean;
   surfaceColor: string;
   cliffColor: string;
   hazeColor: string;
@@ -46,6 +47,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
     id: 'meadow',
     signature: 'Grounded Academy practice field, low towers, turbines, and striped training balloons',
     groundedTrainingField: true,
+    continuousTerrain: true,
     surfaceColor: '#67ad50',
     cliffColor: '#6f604c',
     hazeColor: '#d6f7ff',
@@ -65,6 +67,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
     id: 'coast',
     signature: 'Ocean deck, lighthouse beacons, sea stacks, and coastal arch',
     groundedTrainingField: false,
+    continuousTerrain: true,
     surfaceColor: '#4d8067',
     cliffColor: '#596b72',
     hazeColor: '#c8f5ff',
@@ -84,6 +87,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
     id: 'canyon',
     signature: 'Red mesas, rock arches, and rising thermal columns',
     groundedTrainingField: false,
+    continuousTerrain: true,
     surfaceColor: '#ad623c',
     cliffColor: '#743c31',
     hazeColor: '#edaf78',
@@ -103,6 +107,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
     id: 'storm',
     signature: 'Thunderheads, driving rain, lightning beacons, and range spires',
     groundedTrainingField: false,
+    continuousTerrain: false,
     surfaceColor: '#425a59',
     cliffColor: '#232b42',
     hazeColor: '#64779c',
@@ -122,6 +127,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
     id: 'stratosphere',
     signature: 'Stars, aurora ribbons, and orbital navigation markers',
     groundedTrainingField: false,
+    continuousTerrain: false,
     surfaceColor: '#7699aa',
     cliffColor: '#445b72',
     hazeColor: '#193d70',

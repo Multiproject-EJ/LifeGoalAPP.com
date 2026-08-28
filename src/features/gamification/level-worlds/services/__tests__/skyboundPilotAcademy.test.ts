@@ -6,6 +6,7 @@ import {
   evaluateSkyboundLesson,
   getSkyboundAssemblyLevel,
   getSkyboundAssemblyPartCost,
+  getSkyboundRankLessons,
   installSkyboundNextAssemblyPart,
   isSkyboundCadetLessonUnlocked,
   isSkyboundRankUnlocked,
@@ -14,6 +15,7 @@ import {
   spendSkyboundSortieTicket,
 } from '../skyboundPilotAcademy';
 import { SKYBOUND_STARTER_UPGRADES, createSkyboundFlight } from '../skyboundExpeditionFlight';
+import { createSkyboundAcademyEvaluatorSave, getSkyboundAcademyEvaluatorLesson } from '../skyboundAcademyEvaluator';
 
 type TestCase = { name: string; run: () => void };
 
@@ -147,6 +149,22 @@ export const skyboundPilotAcademyTests: TestCase[] = [
         assert(getSkyboundAssemblyPartCost('cadet',expected as 1|2|3|4)>0,'every installed part should have a salvage cost');
       }
       assert(installSkyboundNextAssemblyPart(progress,'cadet')===progress,'a completed aircraft must not install a fifth part');
+    },
+  },
+  {
+    name: 'builds disposable evaluator careers for every rank without bypassing production progression rules',
+    run: () => {
+      for (const [rankIndex,rank] of SKYBOUND_AIRCRAFT_RANKS.entries()) {
+        const scenario={rankId:rank.id,lessonIndex:3,assemblyLevel:2 as const,upgradeLevel:4};
+        const save=createSkyboundAcademyEvaluatorSave(scenario);
+        const lesson=getSkyboundAcademyEvaluatorLesson(scenario);
+        assert(lesson.rankId===rank.id&&lesson.exam,`${rank.id} evaluator should select its checkride`);
+        assert(save.progress.promotedRankIds.length===rankIndex+1,`${rank.id} evaluator should unlock only reached ranks`);
+        assert(save.progress.aircraftAssemblyLevels[rank.id]===2,`${rank.id} evaluator should preserve the requested partial build`);
+        assert(save.upgrades.launcher===4&&save.upgrades.airframe===4&&save.upgrades.engine===4,'evaluator should apply the requested fleet upgrade level');
+        assert(!isSkyboundLessonUnlocked(save.progress,lesson.id),'a partial evaluator aircraft should expose, not weaken, the production checkride gate');
+        assert(save.progress.completedLessonIds.includes(getSkyboundRankLessons(rank.id)[2].id),'evaluator should pre-complete the lessons before its selected checkride');
+      }
     },
   },
 ];

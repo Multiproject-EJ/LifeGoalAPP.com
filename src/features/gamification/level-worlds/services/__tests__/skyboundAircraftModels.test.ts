@@ -1,6 +1,7 @@
 import { createSkyboundAircraftModel } from '../../../games/skybound-expedition/skyboundAircraftModels';
 import { applySkyboundAircraftMotion, getSkyboundAircraftMotionPose, getSkyboundLaunchPose } from '../../../games/skybound-expedition/skyboundAircraftMotion';
 import { SKYBOUND_AIRCRAFT_RANKS } from '../skyboundPilotAcademy';
+import * as THREE from 'three';
 
 type TestCase={name:string;run:()=>void};
 function assert(condition:unknown,message:string):asserts condition { if(!condition)throw new Error(message); }
@@ -32,6 +33,22 @@ export const skyboundAircraftModelsTests:TestCase[]=[
       assert(jet.userData.sculptRuntime.nodes['intake-1'],'the Vortex needs visible jet intakes');
       assert(elite.userData.sculptRuntime.nodes['storm-coil-1'],'the Tempest needs its storm-drive silhouette');
       assert(ace.userData.sculptRuntime.nodes['gold-wingtip-1'],'the Goldwing needs authored gold wing tips');
+    },
+  },
+  {
+    name:'evolves the real wing planform from straight trainer to swept combat aircraft',
+    run:()=>{
+      const signature=(aircraftId:(typeof SKYBOUND_AIRCRAFT_RANKS)[number]['aircraftId'])=>{
+        const wing=createSkyboundAircraftModel(aircraftId).userData.sculptRuntime.meshes['right-wing'];
+        wing.geometry.computeBoundingBox();const size=new THREE.Vector3();wing.geometry.boundingBox?.getSize(size);return `${size.x.toFixed(2)}:${size.z.toFixed(2)}`;
+      };
+      const signatures=SKYBOUND_AIRCRAFT_RANKS.map((rank)=>signature(rank.aircraftId));
+      assert(new Set(signatures).size===signatures.length,'each rank should own a measurably distinct wing silhouette');
+      const prop=createSkyboundAircraftModel('prop_trainer').userData.sculptRuntime.meshes['right-wing'];
+      const interceptor=createSkyboundAircraftModel('storm_interceptor').userData.sculptRuntime.meshes['right-wing'];
+      prop.geometry.computeBoundingBox();interceptor.geometry.computeBoundingBox();
+      const propSize=new THREE.Vector3();const interceptorSize=new THREE.Vector3();prop.geometry.boundingBox?.getSize(propSize);interceptor.geometry.boundingBox?.getSize(interceptorSize);
+      assert(interceptorSize.z>propSize.z*1.5,'combat aircraft should have a materially deeper swept planform than the straight-wing prop trainer');
     },
   },
   {

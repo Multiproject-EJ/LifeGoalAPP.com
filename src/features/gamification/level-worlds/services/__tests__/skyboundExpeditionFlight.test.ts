@@ -3,6 +3,7 @@ import {
   SKYBOUND_MAX_STEP_MS,
   SKYBOUND_STARTER_UPGRADES,
   createSkyboundFlight,
+  getSkyboundFlowTargetSpeedKmh,
   getSkyboundCourseObjects,
   getSkyboundUpgradeCost,
   scoreSkyboundFlight,
@@ -70,6 +71,19 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
     },
   },
   {
+    name: 'teaches a readable rank-by-rank Flow speed instead of runaway launch velocity',
+    run:()=>{
+      const targets=SKYBOUND_AIRCRAFT_RANKS.map((rank)=>getSkyboundFlowTargetSpeedKmh(rank.aircraftId,SKYBOUND_STARTER_UPGRADES));
+      assert(targets.every((target,index)=>index===0||target>targets[index-1]),'Flow target should rise with aircraft rank');
+      assert(targets[0]>=120&&targets[4]<=220,'the unupgraded Academy should teach a human-readable 125–215 km/h Flow ladder');
+      const aceTarget=getSkyboundFlowTargetSpeedKmh('goldwing_fighter',{launcher:5,airframe:5,engine:5});
+      assert(aceTarget===250,'the fully upgraded Goldwing should crest at a deliberate 250 km/h Flow target');
+      let ace=createSkyboundFlight({power:1,angleDeg:35,upgrades:{launcher:5,airframe:5,engine:5},levelId:'stratosphere',aircraftId:'goldwing_fighter',assemblyLevel:4});
+      for(let frame=0;frame<60;frame+=1)ace=stepSkyboundFlight(ace,{pitch:0,steer:0,boost:false}, {launcher:5,airframe:5,engine:5},64);
+      assert(Math.hypot(ace.vx,ace.vy)*3.6<340,'unassisted Goldwing flight should not create runaway speed above its Flow corridor');
+    },
+  },
+  {
     name: 'clamps long frame gaps to the simulation time budget',
     run: () => {
       const state = createSkyboundFlight({
@@ -130,6 +144,10 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(SKYBOUND_LEVELS.every((level, index) => index === 0 || level.finishAltitude > SKYBOUND_LEVELS[index - 1].finishAltitude), 'finish gates should climb with pilot rank');
       const expectedWorldByRank = { cadet:'meadow',trainee:'coast',aviator:'canyon',elite:'storm',ace:'stratosphere' } as const;
       for (const lesson of SKYBOUND_LESSONS) assert(lesson.levelId === expectedWorldByRank[lesson.rankId], `${lesson.rankId} lessons should stay in their graduated training world`);
+      assert(getSkyboundWorldPresentation('meadow').continuousTerrain,'Cadet should launch from continuous terrain');
+      assert(getSkyboundWorldPresentation('coast').continuousTerrain,'Trainee should graduate to a real coastal runway');
+      assert(getSkyboundWorldPresentation('canyon').continuousTerrain,'Aviator should fly inside a continuous canyon instead of floating islands');
+      assert(!getSkyboundWorldPresentation('storm').continuousTerrain&&!getSkyboundWorldPresentation('stratosphere').continuousTerrain,'only advanced ranks should graduate to suspended carrier and stratosphere facilities');
       const meadowObjects = getSkyboundCourseObjects('meadow');
       assert(meadowObjects.every((object) => object.y <= SKYBOUND_LEVELS[0].targetAltitudeMax + 1), 'Ground School objects should remain in the low training corridor');
     },
@@ -141,6 +159,8 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
         const first = getSkyboundCourseObjects(level.id);
         const second = getSkyboundCourseObjects(level.id);
         assert(JSON.stringify(first) === JSON.stringify(second), `${level.id} objects should be deterministic`);
+        assert(new Set(first.map((object)=>object.id)).size===first.length,`${level.id} should not contain duplicate course-object identities`);
+        assert(first.every((object)=>object.y>=level.targetAltitudeMin&&object.y<=level.targetAltitudeMax),`${level.id} objects should stay inside its taught altitude corridor`);
         assert(first.some((object) => object.kind === 'salvage'), `${level.id} should include salvage`);
         assert(first.some((object) => object.kind === 'wind_ring'), `${level.id} should include a wind ring`);
         assert(first.some((object) => object.kind === 'hazard'), `${level.id} should include a hazard`);

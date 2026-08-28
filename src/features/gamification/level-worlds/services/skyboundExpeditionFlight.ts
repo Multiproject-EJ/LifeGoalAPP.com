@@ -237,7 +237,6 @@ const SKYBOUND_COURSE_OBJECTS: Record<SkyboundLevelId, readonly SkyboundCourseOb
     { id: 'storm-salvage-4', kind: 'salvage', x: 298, y: 86, radius: 7 },
     { id: 'storm-hazard-2', kind: 'hazard', x: 351, y: 62, radius: 19 },
     { id: 'storm-ring-3', kind: 'wind_ring', x: 425, y: 73, radius: 16 },
-    { id: 'storm-salvage-5', kind: 'salvage', x: 466, y: 78, radius: 7 },
     { id: 'storm-salvage-6', kind: 'salvage', x: 483, y: 70, radius: 7 },
     { id: 'storm-hazard-3', kind: 'hazard', x: 548, y: 48, radius: 18 },
     { id: 'storm-ring-4', kind: 'wind_ring', x: 620, y: 58, radius: 16 },
@@ -264,6 +263,14 @@ const AIRCRAFT_TUNING: Record<SkyboundAircraftId, { speed:number; lift:number; c
   goldwing_fighter: { speed:1.62,lift:1.18,control:1.36,fuel:1.75,stability:1.72,integrity:5 },
 };
 
+const FLOW_SPEED_KMH:Record<SkyboundAircraftId,number>={
+  toy_glider:125,
+  prop_trainer:150,
+  jet_trainer:175,
+  storm_interceptor:195,
+  goldwing_fighter:215,
+};
+
 const ASSEMBLY_TUNING = [
   {speed:.55,lift:.24,control:.16,stability:.35},
   {speed:.66,lift:.42,control:.3,stability:.46},
@@ -280,13 +287,17 @@ export function getSkyboundLevel(levelId: SkyboundLevelId): SkyboundLevelDefinit
   return SKYBOUND_LEVELS.find((level) => level.id === levelId) ?? SKYBOUND_LEVELS[0];
 }
 
+export function getSkyboundFlowTargetSpeedKmh(aircraftId:SkyboundAircraftId,upgrades:SkyboundUpgrades) {
+  return FLOW_SPEED_KMH[aircraftId]+(clamp(upgrades.launcher,0,5)*3)+(clamp(upgrades.engine,0,5)*4);
+}
+
 export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance = getSkyboundLevel(levelId).goalDistance): readonly SkyboundCourseObject[] {
+  const level = getSkyboundLevel(levelId);
   const authored = SKYBOUND_COURSE_OBJECTS[levelId].filter((object) => object.x <= goalDistance + 20);
   const objects = [...authored];
   const lastX = objects.reduce((value, object) => Math.max(value, object.x), 0);
   for (let section = 0, x = lastX + 62; x < goalDistance - 22; section += 1, x += 72) {
     const wave = Math.sin((section + levelId.length) * 1.71);
-    const level = getSkyboundLevel(levelId);
     const altitudeSpan = level.targetAltitudeMax - level.targetAltitudeMin;
     const y = level.targetAltitudeMin + altitudeSpan * 0.52 + wave * altitudeSpan * 0.34;
     const lateralX = Math.round(Math.sin(section * 2.17 + levelId.length) * 8);
@@ -299,6 +310,7 @@ export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance 
     const laneCenter = trainingLanes[Math.floor(object.x / 90) % trainingLanes.length];
     return {
       ...object,
+      y: clamp(object.y,level.targetAltitudeMin,level.targetAltitudeMax),
       lateralX: clamp(laneCenter + ((object.lateralX ?? 0) * 0.35), -18, 18),
     };
   });
@@ -339,7 +351,8 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
   const assembly = ASSEMBLY_TUNING[assemblyLevel];
   const power = clamp(input.power, 0, 1);
   const angleRad = (clamp(input.angleDeg, 12, 58) * Math.PI) / 180;
-  const launchSpeed = (46 + (input.upgrades.launcher * 6.5)) * (0.38 + (power * 0.62)) * tuning.speed * assembly.speed * level.launchSpeedScale;
+  const rankSpeedFactor=1+((tuning.speed-1)*.18);
+  const launchSpeed = (42 + (input.upgrades.launcher * 4.3)) * (0.38 + (power * 0.62)) * rankSpeedFactor * assembly.speed * level.launchSpeedScale;
   const startY = getSkyboundGroundHeight(level.id, 0) + 1.2 + level.startClearance;
 
   return {
@@ -446,8 +459,11 @@ export function stepSkyboundFlight(
   const bankTarget = steerInput * 0.72 * assembly.control + asymmetricWingBias;
   let bankRad = state.bankRad + ((bankTarget - state.bankRad) * Math.min(1, dt * 5.6));
 
-  const effectiveDrag = level.drag * (1 - (Math.min(upgrades.airframe, 5) * 0.045));
-  const liftAcceleration = speed * (0.13 + (upgrades.airframe * 0.019)) * level.liftScale * tuning.lift * assembly.lift;
+  const flowTargetSpeed = getSkyboundFlowTargetSpeedKmh(state.aircraftId,upgrades)/3.6;
+  const overspeed=clamp((speed-flowTargetSpeed)/Math.max(1,flowTargetSpeed),0,1.5);
+  const effectiveDrag = (level.drag * (1 - (Math.min(upgrades.airframe, 5) * 0.035))) + (overspeed*.026);
+  const normalizedAirspeed=clamp(speed/Math.max(1,flowTargetSpeed),0,1.35);
+  const liftAcceleration=level.gravity*(.44+normalizedAirspeed*.48)*level.liftScale*(.94+(tuning.lift-1)*.35)*assembly.lift*(1+upgrades.airframe*.015);
   const controlAcceleration = pitchInput * (7.2 + (upgrades.airframe * 0.65)) * tuning.control * assembly.control;
   const wind = getDeterministicWind(level, state.x, state.elapsedMs);
   const isBoosting = control.boost && state.fuel > 0 && assemblyLevel >= 4;
@@ -459,13 +475,14 @@ export function stepSkyboundFlight(
 
   let vx = state.vx + (
     (Math.cos(pitchRad) * boostAcceleration)
+    - (Math.sin(velocityAngle) * liftAcceleration)
     + (wind * 0.11 * stabilizerWindScale)
     - (state.vx * effectiveDrag)
     - (isStabilizing ? state.vx * 0.052 : 0)
   ) * dt;
   let vy = state.vy + (
     (Math.sin(pitchRad) * boostAcceleration)
-    + liftAcceleration
+    + (Math.cos(velocityAngle) * liftAcceleration)
     + (controlAcceleration * stabilizerControlScale)
     - level.gravity
     - (state.vy * effectiveDrag * 0.5)
@@ -478,7 +495,6 @@ export function stepSkyboundFlight(
     + (wind * 0.055 * stabilizerWindScale)
   ) * dt;
 
-  const flowTargetSpeed = (50 + upgrades.launcher * 2.4 + upgrades.engine * 2.8) * tuning.speed;
   const flowEnvelope = assemblyLevel >= 3
     && speed >= flowTargetSpeed * .78
     && speed <= flowTargetSpeed * 1.24

@@ -140,15 +140,21 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     if (academy) addAcademyTower(x, topY + 1, z, radius > 22 ? 1.15 : 0.62);
   };
 
-  if (world.groundedTrainingField) {
-    const fieldGeometry = new THREE.PlaneGeometry(150, goalDistance + 260, 12, Math.max(28, Math.ceil(goalDistance / 8)));
+  if (world.continuousTerrain) {
+    if(levelId==='coast'){
+      const water=new THREE.Mesh(new THREE.PlaneGeometry(260,goalDistance+520),new THREE.MeshStandardMaterial({color:world.lowerDeckColor,roughness:.28,metalness:.08,transparent:true,opacity:.92}));
+      water.rotation.x=-Math.PI/2;water.position.set(0,-1.4,goalDistance/2);scene.add(water);
+    }
+    const terrainWidth=levelId==='meadow'?150:levelId==='coast'?120:190;
+    const fieldGeometry = new THREE.PlaneGeometry(terrainWidth, goalDistance + 260, 18, Math.max(28, Math.ceil(goalDistance / 8)));
     fieldGeometry.rotateX(-Math.PI / 2);
     const positions = fieldGeometry.getAttribute('position') as THREE.BufferAttribute;
     for (let index = 0; index < positions.count; index += 1) {
       const worldZ = positions.getZ(index) + goalDistance / 2;
       const lateral = positions.getX(index);
-      const rollOff = Math.max(0, Math.abs(lateral) - 34) * 0.045;
-      positions.setY(index, getSkyboundGroundHeight(levelId, worldZ) - 0.42 - rollOff);
+      const edgeDistance=Math.max(0,Math.abs(lateral)-(levelId==='coast'?28:34));
+      const terrainShape=levelId==='coast'?-edgeDistance*.16:levelId==='canyon'?edgeDistance*.28:-edgeDistance*.045;
+      positions.setY(index, getSkyboundGroundHeight(levelId, worldZ) - 0.42 + terrainShape);
     }
     positions.needsUpdate = true;
     fieldGeometry.computeVertexNormals();
@@ -156,13 +162,12 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     trainingField.position.z = goalDistance / 2;
     trainingField.receiveShadow = true;
     scene.add(trainingField);
-    for (const side of [-1, 1]) {
+    if(world.groundedTrainingField)for (const side of [-1, 1]) {
       const boundary = new THREE.Mesh(new THREE.BoxGeometry(.16,.12,goalDistance+90),new THREE.MeshBasicMaterial({color:side<0?0xf2e1a0:0xffffff}));
       boundary.position.set(side*18,.05,goalDistance/2);scene.add(boundary);
       for(let marker=0;marker<=goalDistance;marker+=45){const flag=new THREE.Mesh(new THREE.BoxGeometry(.9,1.4,.08),new THREE.MeshBasicMaterial({color:marker%90===0?0xffd85d:0x69e9f2}));flag.position.set(side*18,1,marker);scene.add(flag);}
     }
-    addAcademyTower(-14, getSkyboundGroundHeight(levelId, 8), 8, 0.68);
-    addAcademyTower(22, getSkyboundGroundHeight(levelId, goalDistance + 4), goalDistance + 4, 0.72);
+    if(world.groundedTrainingField){addAcademyTower(-14, getSkyboundGroundHeight(levelId, 8), 8, 0.68);addAcademyTower(22, getSkyboundGroundHeight(levelId, goalDistance + 4), goalDistance + 4, 0.72);}
   } else {
     const cloudSea = new THREE.Mesh(
       new THREE.PlaneGeometry(240, goalDistance + 520),
@@ -188,13 +193,15 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     addFloatingIsland(0, 15, goalDistance + 8, 31, true);
   }
 
+  const launchElevation=world.continuousTerrain?getSkyboundGroundHeight(levelId,4):0;
+  const launchFacilityRoot=new THREE.Group();launchFacilityRoot.position.y=launchElevation;scene.add(launchFacilityRoot);
   const runway = new THREE.Mesh(
     new THREE.BoxGeometry(facility.deckWidth, 0.28, facility.deckLength),
     new THREE.MeshStandardMaterial({ color: facility.deckColor, roughness: facility.kind === 'magnetic_rail' ? 0.34 : 0.78, metalness: facility.kind === 'slingshot' ? 0.04 : 0.34 }),
   );
   runway.position.set(0, 0.34, 4);
   runway.receiveShadow = true;
-  scene.add(runway);
+  launchFacilityRoot.add(runway);
   const markingCount = facility.kind === 'slingshot' ? 7 : 10;
   for (let index = 0; index < markingCount; index += 1) {
     const stripe = new THREE.Mesh(
@@ -202,7 +209,7 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
       new THREE.MeshBasicMaterial({ color: facility.edgeColor }),
     );
     stripe.position.set(0, 0.51, -facility.deckLength * .34 + index * (facility.deckLength * .72 / Math.max(1, markingCount - 1)));
-    scene.add(stripe);
+    launchFacilityRoot.add(stripe);
   }
 
   const launchMotion: THREE.Object3D[] = [];
@@ -210,11 +217,11 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     const lampMaterial = new THREE.MeshStandardMaterial({ color:facility.energyColor,emissive:facility.energyColor,emissiveIntensity:1.25,roughness:.22 });
     for (const side of [-1, 1]) {
       const edgeLine = new THREE.Mesh(new THREE.BoxGeometry(.12,.045,facility.deckLength*.92),new THREE.MeshBasicMaterial({color:facility.edgeColor}));
-      edgeLine.position.set(side*(facility.deckWidth*.44),.52,4);scene.add(edgeLine);
+      edgeLine.position.set(side*(facility.deckWidth*.44),.52,4);launchFacilityRoot.add(edgeLine);
       for(let lamp=0;lamp<8;lamp+=1){
         const light=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),lampMaterial.clone());
         light.position.set(side*(facility.deckWidth*.48),.63,-facility.deckLength*.34+lamp*(facility.deckLength*.68/7));
-        light.userData.skyboundLaunchPulse=true;scene.add(light);launchMotion.push(light);
+        light.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(light);launchMotion.push(light);
       }
     }
   }
@@ -240,28 +247,28 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
   }
   launchRig.name = 'skybound-launch-rig';
   launchRig.visible = facility.kind === 'slingshot';
-  scene.add(launchRig);
+  launchFacilityRoot.add(launchRig);
 
   if (facility.kind !== 'slingshot') {
     const railMaterial = new THREE.MeshStandardMaterial({ color: facility.energyColor, emissive: facility.energyColor, emissiveIntensity: 0.48, metalness: 0.62, roughness: 0.24 });
     for (const side of [-1, 1]) {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(facility.kind === 'runway' ? .12 : .22, .2, facility.deckLength*.62), railMaterial.clone());
-      rail.position.set(side * (facility.kind === 'runway' ? 2.2 : 1.15), 0.68, 3);rail.userData.skyboundLaunchPulse=true;scene.add(rail);launchMotion.push(rail);
+      rail.position.set(side * (facility.kind === 'runway' ? 2.2 : 1.15), 0.68, 3);rail.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(rail);launchMotion.push(rail);
     }
     if(facility.kind==='runway'){
       const hangar=new THREE.Group();const shell=new THREE.Mesh(new THREE.TorusGeometry(4.4,.38,8,24,Math.PI),new THREE.MeshStandardMaterial({color:0xe8edf0,roughness:.62,metalness:.18}));shell.rotation.z=Math.PI;hangar.add(shell);
-      for(const side of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.5,3.8,.7),shell.material);post.position.set(side*4.4,-1.8,0);hangar.add(post);}hangar.position.set(-11,4.2,-7);hangar.rotation.y=.3;scene.add(hangar);
-      const mast=new THREE.Mesh(new THREE.CylinderGeometry(.08,.12,5,8),shell.material);mast.position.set(6,3,-3);scene.add(mast);
-      const sock=new THREE.Mesh(new THREE.ConeGeometry(.42,2,10,1,true),new THREE.MeshBasicMaterial({color:0xff6f4a,side:THREE.DoubleSide}));sock.rotation.z=-Math.PI/2;sock.position.set(6.8,5,-3);sock.userData.skyboundWorldMotion='windsock';scene.add(sock);launchMotion.push(sock);
+      for(const side of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.5,3.8,.7),shell.material);post.position.set(side*4.4,-1.8,0);hangar.add(post);}hangar.position.set(-11,4.2,-7);hangar.rotation.y=.3;launchFacilityRoot.add(hangar);
+      const mast=new THREE.Mesh(new THREE.CylinderGeometry(.08,.12,5,8),shell.material);mast.position.set(6,3,-3);launchFacilityRoot.add(mast);
+      const sock=new THREE.Mesh(new THREE.ConeGeometry(.42,2,10,1,true),new THREE.MeshBasicMaterial({color:0xff6f4a,side:THREE.DoubleSide}));sock.rotation.z=-Math.PI/2;sock.position.set(6.8,5,-3);sock.userData.skyboundWorldMotion='windsock';launchFacilityRoot.add(sock);launchMotion.push(sock);
     }else if(facility.kind==='boost_runway'){
-      for(const side of [-1,1]){const panel=new THREE.Mesh(new THREE.BoxGeometry(3.7,2.8,.3),new THREE.MeshStandardMaterial({color:0x9c552d,roughness:.5,metalness:.35}));panel.position.set(side*3.3,1.7,-10);panel.rotation.x=-.32;scene.add(panel);}
-      for(const side of [-1,1]){const pylon=new THREE.Mesh(new THREE.CylinderGeometry(.28,.42,4.5,10),railMaterial.clone());pylon.position.set(side*4.3,2.7,-2);pylon.userData.skyboundLaunchPulse=true;scene.add(pylon);launchMotion.push(pylon);}
+      for(const side of [-1,1]){const panel=new THREE.Mesh(new THREE.BoxGeometry(3.7,2.8,.3),new THREE.MeshStandardMaterial({color:0x9c552d,roughness:.5,metalness:.35}));panel.position.set(side*3.3,1.7,-10);panel.rotation.x=-.32;launchFacilityRoot.add(panel);}
+      for(const side of [-1,1]){const pylon=new THREE.Mesh(new THREE.CylinderGeometry(.28,.42,4.5,10),railMaterial.clone());pylon.position.set(side*4.3,2.7,-2);pylon.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(pylon);launchMotion.push(pylon);}
     }else if(facility.kind==='storm_catapult'){
-      const shuttle=new THREE.Mesh(new THREE.BoxGeometry(3.2,.48,3.8),railMaterial.clone());shuttle.position.set(0,.82,-3);shuttle.userData.skyboundLaunchPulse=true;scene.add(shuttle);launchMotion.push(shuttle);
-      for(const side of [-1,1]){for(let coil=0;coil<3;coil+=1){const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.12,8,24),railMaterial.clone());ring.rotation.y=Math.PI/2;ring.position.set(side*4.8,1.2,-7+coil*5);ring.userData.skyboundLaunchPulse=true;scene.add(ring);launchMotion.push(ring);}}
+      const shuttle=new THREE.Mesh(new THREE.BoxGeometry(3.2,.48,3.8),railMaterial.clone());shuttle.position.set(0,.82,-3);shuttle.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(shuttle);launchMotion.push(shuttle);
+      for(const side of [-1,1]){for(let coil=0;coil<3;coil+=1){const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.12,8,24),railMaterial.clone());ring.rotation.y=Math.PI/2;ring.position.set(side*4.8,1.2,-7+coil*5);ring.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(ring);launchMotion.push(ring);}}
     }else{
-      const spine=new THREE.Mesh(new THREE.BoxGeometry(.34,.16,facility.deckLength*.78),railMaterial.clone());spine.position.set(0,.72,3);spine.userData.skyboundLaunchPulse=true;scene.add(spine);launchMotion.push(spine);
-      for(let arch=0;arch<4;arch+=1){const ring=new THREE.Mesh(new THREE.TorusGeometry(3.3,.13,10,38,Math.PI),railMaterial.clone());ring.rotation.z=Math.PI;ring.position.set(0,3.7,-8+arch*7);ring.userData.skyboundLaunchPulse=true;scene.add(ring);launchMotion.push(ring);}
+      const spine=new THREE.Mesh(new THREE.BoxGeometry(.34,.16,facility.deckLength*.78),railMaterial.clone());spine.position.set(0,.72,3);spine.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(spine);launchMotion.push(spine);
+      for(let arch=0;arch<4;arch+=1){const ring=new THREE.Mesh(new THREE.TorusGeometry(3.3,.13,10,38,Math.PI),railMaterial.clone());ring.rotation.z=Math.PI;ring.position.set(0,3.7,-8+arch*7);ring.userData.skyboundLaunchPulse=true;launchFacilityRoot.add(ring);launchMotion.push(ring);}
     }
   }
 
@@ -389,7 +396,7 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     cloud.scale.setScalar(0.8 + seeded(index, 12) * 1.8);
     scene.add(cloud);
   }
-  return { objectMeshes, worldMotion, launchMotion };
+  return { objectMeshes, worldMotion, launchMotion, launchElevation };
 }
 
 function startSoftwareFlightRenderer(
@@ -505,7 +512,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       airRush.add(streak);
     }
     camera.add(airRush);
-    const { objectMeshes, worldMotion, launchMotion } = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
+    const { objectMeshes, worldMotion, launchMotion, launchElevation } = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
     const plane = applySkyboundAircraftAssembly(createSkyboundAircraftModel(props.aircraftId),props.assemblyLevel);
     plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 1.02 : props.aircraftId === 'prop_trainer' ? 1.04 : 1.08);
     scene.add(plane);
@@ -645,8 +652,8 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         }
       } else {
         const tensionBuzz = Math.sin(time * 0.032) * launchPose.vibration;
-        const groundSchoolOffset = props.levelId === 'meadow' ? -3.05 : 0;
-        plane.position.set(launchPose.lateral + tensionBuzz * 0.12, launchPose.height + groundSchoolOffset + tensionBuzz * 0.08, launchPose.forward);
+        const terrainLaunchOffset = getSkyboundWorldPresentation(props.levelId).continuousTerrain ? launchElevation - 3.05 : 0;
+        plane.position.set(launchPose.lateral + tensionBuzz * 0.12, launchPose.height + terrainLaunchOffset + tensionBuzz * 0.08, launchPose.forward);
         plane.rotation.set(-(aim.angleDeg * Math.PI) / 180 + launchPose.pitchJolt, tensionBuzz * 0.045, tensionBuzz * 0.035);
       }
 
@@ -762,7 +769,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       camera.fov+=(targetFov-camera.fov)*(1-Math.exp(-dt*3.6));
       camera.updateProjectionMatrix();
       const desiredCamera = phase === 'aiming'
-        ? new THREE.Vector3(5.4, 7.55, -9.5)
+        ? new THREE.Vector3(5.4, 7.55 + (getSkyboundWorldPresentation(props.levelId).continuousTerrain?launchElevation:0), -9.5)
         : new THREE.Vector3(target.x * 0.78 + 3.25, target.y + 3.15-(flight?.pitchRad??0)*1.25, target.z-(10.35+speedEnergy*1.4));
       camera.position.lerp(desiredCamera, 1 - Math.exp(-dt * 5.2));
       if (shake > 0.01) {
@@ -771,7 +778,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         shake *= Math.pow(0.045, dt);
       }
       const lookTarget = phase === 'aiming'
-        ? new THREE.Vector3(0, 4.1, -0.35)
+        ? new THREE.Vector3(0, 4.1 + (getSkyboundWorldPresentation(props.levelId).continuousTerrain?launchElevation:0), -0.35)
         : new THREE.Vector3(target.x * 0.88, target.y + 0.48+(flight?.pitchRad??0)*2.1, target.z + 13+speedEnergy*8);
       camera.lookAt(lookTarget);
       if(phase==='flying'&&flight)camera.rotateZ(flight.bankRad*.16);

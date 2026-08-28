@@ -13,6 +13,24 @@ export { createCadetToyGliderLookDevLights as createSkyboundAircraftLights };
 
 const material = (color:number, metalness=0.08, roughness=0.38, emissive=0) => new THREE.MeshStandardMaterial({ color, metalness, roughness, emissive, emissiveIntensity: emissive ? 0.7 : 0 });
 
+function makeEvolutionWingGeometry(side:-1|1,span:number,rootChord:number,tipChord:number,sweep:number) {
+  const shape=new THREE.Shape();
+  shape.moveTo(0,rootChord*.5);
+  shape.lineTo(side*span,(tipChord*.5)-sweep);
+  shape.lineTo(side*span,(-tipChord*.5)-sweep);
+  shape.lineTo(0,-rootChord*.5);
+  shape.closePath();
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth:.13,bevelEnabled:true,bevelSegments:2,bevelSize:.028,bevelThickness:.02});
+  geometry.rotateX(Math.PI/2);geometry.center();return geometry;
+}
+
+function replaceWingPlanform(root:SkyboundAircraftModel,span:number,rootChord:number,tipChord:number,sweep:number) {
+  const runtime=root.userData.sculptRuntime;
+  runtime.meshes['left-wing'].geometry.dispose();runtime.meshes['left-wing'].geometry=makeEvolutionWingGeometry(-1,span,rootChord,tipChord,sweep);
+  runtime.meshes['right-wing'].geometry.dispose();runtime.meshes['right-wing'].geometry=makeEvolutionWingGeometry(1,span,rootChord,tipChord,sweep);
+  runtime.nodes['left-wing'].scale.set(1,1,1);runtime.nodes['right-wing'].scale.set(1,1,1);
+}
+
 function register(root:SkyboundAircraftModel,id:string,mesh:THREE.Mesh,parent:THREE.Object3D=root) {
   mesh.name=id; mesh.castShadow=true; mesh.receiveShadow=true; parent.add(mesh);
   root.userData.sculptRuntime.nodes[id]=mesh; root.userData.sculptRuntime.meshes[id]=mesh;
@@ -39,8 +57,7 @@ function addLandingGear(root:SkyboundAircraftModel) {
 
 function buildPropTrainer(root:SkyboundAircraftModel) {
   root.name='Kestrel Prop Trainer'; tint(root,0xe8f1e9,0x1c5685,0xf2b63d);
-  root.userData.sculptRuntime.nodes['left-wing'].scale.set(0.92,1,1.22);
-  root.userData.sculptRuntime.nodes['right-wing'].scale.set(0.92,1,1.22);
+  replaceWingPlanform(root,3.55,1.18,.72,.12);
   root.userData.sculptRuntime.meshes['fuselage-shell'].scale.set(0.72,0.55,2.15);
   const hub=register(root,'propeller-hub',new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.22,0.38,18),material(0xe8c456,0.55,0.24)));
   hub.position.set(0,0,2.27); hub.rotation.x=Math.PI/2;
@@ -58,10 +75,7 @@ function addJetIntakes(root:SkyboundAircraftModel,color:number) {
 
 function buildJetTrainer(root:SkyboundAircraftModel) {
   root.name='Vortex Jet Trainer'; tint(root,0xddebf1,0x123c68,0x42d9e8);
-  root.userData.sculptRuntime.nodes['left-wing'].scale.set(1.12,0.8,0.72);
-  root.userData.sculptRuntime.nodes['right-wing'].scale.set(1.12,0.8,0.72);
-  root.userData.sculptRuntime.nodes['left-wing'].rotation.y=-0.18;
-  root.userData.sculptRuntime.nodes['right-wing'].rotation.y=0.18;
+  replaceWingPlanform(root,3.45,1.78,.34,1.08);
   root.userData.sculptRuntime.meshes['fuselage-shell'].scale.set(0.58,0.43,2.42);
   addJetIntakes(root,0x163855);
   const stripe=register(root,'trainer-cyan-spine',new THREE.Mesh(new THREE.BoxGeometry(0.12,0.08,3.1),material(0x48e7ef,0.25,0.2,0x123f48)));
@@ -79,10 +93,7 @@ function addTwinFins(root:SkyboundAircraftModel,color:number) {
 
 function buildStormInterceptor(root:SkyboundAircraftModel) {
   root.name='Tempest Storm Interceptor'; tint(root,0x29395d,0x101a34,0x8cf5ff);
-  root.userData.sculptRuntime.nodes['left-wing'].scale.set(1.24,0.76,1.5);
-  root.userData.sculptRuntime.nodes['right-wing'].scale.set(1.24,0.76,1.5);
-  root.userData.sculptRuntime.nodes['left-wing'].rotation.y=-0.28;
-  root.userData.sculptRuntime.nodes['right-wing'].rotation.y=0.28;
+  replaceWingPlanform(root,3.78,2.28,.22,1.42);
   root.userData.sculptRuntime.meshes['fuselage-shell'].scale.set(0.62,0.42,2.58);
   addJetIntakes(root,0x6b56a3); addTwinFins(root,0x8d70cc);
   for(const side of [-1,1]) { const coil=register(root,`storm-coil-${side}`,new THREE.Mesh(new THREE.TorusGeometry(0.34,0.055,8,24),material(0x78f7ff,0.15,0.18,0x2d9ca8))); coil.position.set(side*0.72,0,-1.7); coil.rotation.x=Math.PI/2; }
@@ -90,10 +101,7 @@ function buildStormInterceptor(root:SkyboundAircraftModel) {
 
 function buildGoldwing(root:SkyboundAircraftModel) {
   root.name='Goldwing Fighter'; tint(root,0xfff8df,0x132642,0xf4c83e);
-  root.userData.sculptRuntime.nodes['left-wing'].scale.set(1.38,0.72,1.14);
-  root.userData.sculptRuntime.nodes['right-wing'].scale.set(1.38,0.72,1.14);
-  root.userData.sculptRuntime.nodes['left-wing'].rotation.y=0.12;
-  root.userData.sculptRuntime.nodes['right-wing'].rotation.y=-0.12;
+  replaceWingPlanform(root,4.08,2.42,.28,1.28);
   root.userData.sculptRuntime.meshes['fuselage-shell'].scale.set(0.59,0.4,2.72);
   addJetIntakes(root,0xd7a923); addTwinFins(root,0xf3c944);
   const crown=register(root,'goldwing-spine',new THREE.Mesh(new THREE.BoxGeometry(0.14,0.11,3.5),material(0xf6d35b,0.7,0.18,0x5a3b00)));
