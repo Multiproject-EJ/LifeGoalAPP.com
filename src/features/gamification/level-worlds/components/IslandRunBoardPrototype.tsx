@@ -20141,6 +20141,7 @@ export function IslandRunBoardPrototype({
         >
           <VaultIslandCollectionModal
             unlockedTreasureIds={vaultIslandCollection.unlockedTreasureIds}
+            collectionEntries={vaultIslandCollection.entries}
             holdingsValue={runtimeState.essence}
             initialView={vaultIslandFeaturedTreasure ? 'vault' : undefined}
             featuredTreasure={vaultIslandFeaturedTreasure}

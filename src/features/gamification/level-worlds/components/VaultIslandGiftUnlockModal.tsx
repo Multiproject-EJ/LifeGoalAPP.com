@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import { lockFullscreenPageScroll } from '../../../../utils/scrollLock';
+import { useVaultModalFocusTrap } from './useVaultModalFocusTrap';
 import './VaultIslandGiftUnlockModal.css';
 
 export interface VaultIslandGiftUnlockModalProps {
@@ -16,22 +17,14 @@ export function VaultIslandGiftUnlockModal({
   onGoToVault,
 }: VaultIslandGiftUnlockModalProps) {
   const primaryActionRef = useRef<HTMLButtonElement | null>(null);
+  const focusTrapRef = useVaultModalFocusTrap<HTMLDivElement>(onClose, primaryActionRef);
 
   useEffect(() => lockFullscreenPageScroll({ root: true }), []);
-
-  useEffect(() => {
-    primaryActionRef.current?.focus();
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="vault-island-gift-unlock" role="presentation">
+    <div ref={focusTrapRef} className="vault-island-gift-unlock" role="presentation" tabIndex={-1}>
       <div className="vault-island-gift-unlock__scrim" aria-hidden="true" />
       <CelebrationFireworks
         className="vault-island-gift-unlock__fireworks"
@@ -46,6 +39,7 @@ export function VaultIslandGiftUnlockModal({
         aria-modal="true"
         aria-labelledby="vault-island-gift-unlock-title"
         aria-describedby="vault-island-gift-unlock-description"
+        tabIndex={-1}
       >
         <p className="vault-island-gift-unlock__eyebrow">Gift from Island 004</p>
         <div className="vault-island-gift-unlock__medallion" aria-hidden="true">

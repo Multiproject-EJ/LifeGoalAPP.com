@@ -68,7 +68,7 @@ export const islandRunVaultCollectionTests: TestCase[] = [
     run: () => {
       assertDeepEqual(
         findNewVaultIslandCollectionEntry({ '3': 4 }, { '3': 4, '7': 1 }),
-        { treasureId: 'compass', sourceIslandNumber: 7 },
+        { treasureId: 'compass', sourceIslandNumber: 7, accessionNumber: 'VI-007-02' },
         'a first claim on a new island unlocks the next authored relic',
       );
       assertEqual(
@@ -93,9 +93,9 @@ export const islandRunVaultCollectionTests: TestCase[] = [
       assertDeepEqual(result.qualifyingIslandNumbers, [3, 7, 12], 'source islands are numeric and stable');
       assertDeepEqual(result.unlockedTreasureIds, ['crown', 'compass', 'obelisk'], 'relic order is canonical');
       assertDeepEqual(result.entries, [
-        { treasureId: 'crown', sourceIslandNumber: 3 },
-        { treasureId: 'compass', sourceIslandNumber: 7 },
-        { treasureId: 'obelisk', sourceIslandNumber: 12 },
+        { treasureId: 'crown', sourceIslandNumber: 3, accessionNumber: 'VI-003-01' },
+        { treasureId: 'compass', sourceIslandNumber: 7, accessionNumber: 'VI-007-02' },
+        { treasureId: 'obelisk', sourceIslandNumber: 12, accessionNumber: 'VI-012-03' },
       ], 'each relic retains its source island for future museum labels');
       assertEqual(result.unlockedCount, 3, 'five claims on one island still create one museum relic');
       assertEqual(result.nextTreasureId, 'egg', 'the next empty case has a stable identity');
@@ -134,12 +134,15 @@ export const islandRunVaultCollectionTests: TestCase[] = [
       const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/VaultIslandCollectionModal.tsx', 'utf8');
       const giftModalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/VaultIslandGiftUnlockModal.tsx', 'utf8');
       const giftModalCss = fsMod.readFileSync('src/features/gamification/level-worlds/components/VaultIslandGiftUnlockModal.css', 'utf8');
+      const labSource = fsMod.readFileSync('src/dev/VaultIslandLab.tsx', 'utf8');
+      const focusTrapSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/useVaultModalFocusTrap.ts', 'utf8');
       assert(boardSource.includes('resolveVaultIslandCollection(runtimeState.vaultRushClaimsByIsland)'), 'the board derives ownership from the canonical claim ledger');
       assert(boardSource.includes('isVaultIslandCollectionUnlocked(runtimeState.signatureMissionProgressByIsland)'), 'the board derives Vault Island access from the canonical Island 004 mission ledger');
       assert(boardSource.includes('showVaultIslandCollection && isVaultIslandUnlocked'), 'the fullscreen collection has no pre-unlock render path');
       assert(boardSource.includes('className="island-run-prototype__vault-island-floating"'), 'the earned circular Vault Island launcher is mounted beside the compass controls');
       assert(boardSource.includes('findNewVaultIslandCollectionEntry('), 'the canonical claim result is compared before launching a relic ceremony');
       assert(boardSource.includes('unlockedTreasureIds={vaultIslandCollection.unlockedTreasureIds}'), 'the board passes only presentation ownership into the modal');
+      assert(boardSource.includes('collectionEntries={vaultIslandCollection.entries}'), 'the board passes canonical relic provenance into the museum');
       assert(boardSource.includes('holdingsValue={runtimeState.essence}'), 'the room receives the canonical money balance as read-only presentation data');
       assert(boardSource.includes("initialView={vaultIslandFeaturedTreasure ? 'vault' : undefined}"), 'a new relic opens directly in the museum');
       assert(boardSource.includes('setShowVaultIslandGiftUnlock(true)'), 'Island 004 completion stages the dedicated gift reveal');
@@ -151,6 +154,12 @@ export const islandRunVaultCollectionTests: TestCase[] = [
       assert(giftModalSource.includes('<CelebrationFireworks'), 'the unlock reveal uses the shared premium fireworks');
       assert(giftModalSource.includes('vault-island-gift-unlock__spotlight-launcher'), 'the new permanent launcher is spotlighted in place');
       assert(giftModalCss.includes('@media (prefers-reduced-motion: reduce)'), 'the reveal has a reduced-motion treatment');
+      assert(modalSource.includes('useVaultModalFocusTrap'), 'the collection traps focus inside its fullscreen dialog');
+      assert(giftModalSource.includes('useVaultModalFocusTrap'), 'the gift reveal traps focus inside its fullscreen dialog');
+      assert(focusTrapSource.includes("event.key !== 'Tab'"), 'the shared focus trap handles keyboard tab wrapping');
+      assert(focusTrapSource.includes('previouslyFocused?.focus()'), 'the shared focus trap restores the launcher focus on close');
+      assert(labSource.includes('Collection register mode'), 'WebGL failure preserves a readable museum register');
+      assert(labSource.includes('Next relic'), 'the fallback register can browse every owned treasure without 3D hit targets');
       assert(!modalSource.includes('persistIslandRunRuntimeStatePatch'), 'the collection modal cannot write gameplay state');
       assert(!modalSource.includes('claimVaultRushReward'), 'the collection modal cannot grant its own rewards');
       assert(!giftModalSource.includes('persistIslandRunRuntimeStatePatch'), 'the gift reveal cannot write gameplay state');

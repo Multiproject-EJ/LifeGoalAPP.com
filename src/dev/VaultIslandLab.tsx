@@ -26,6 +26,7 @@ import {
   VAULT_TREASURE_DEFINITIONS,
   type VaultTreasureId,
 } from '../features/gamification/level-worlds/dev/VaultTreasureModels';
+import type { VaultIslandCollectionEntry } from '../features/gamification/level-worlds/services/islandRunVaultCollection';
 import './VaultIslandLab.css';
 
 const SOURCE_SRC = '/assets/dev/vault-island-lab/treasure-island-source.png';
@@ -36,6 +37,7 @@ export interface VaultIslandLabProps {
   embedded?: boolean;
   onClose?: () => void;
   unlockedTreasureIds?: readonly VaultTreasureId[];
+  collectionEntries?: readonly VaultIslandCollectionEntry[];
   initialView?: VaultIslandLabView;
   featuredTreasureId?: VaultTreasureId;
   featuredSourceIslandNumber?: number;
@@ -151,6 +153,7 @@ export default function VaultIslandLab({
   embedded = false,
   onClose,
   unlockedTreasureIds,
+  collectionEntries = [],
   initialView,
   featuredTreasureId,
   featuredSourceIslandNumber,
@@ -193,12 +196,22 @@ export default function VaultIslandLab({
   const cameraPreset = useMemo(() => (embedded ? 'phone' : readCameraPreset()), [embedded]);
   const qualityOptions = useMemo<VaultIslandQuality[]>(() => ['low', 'medium', 'high'], []);
   const selectedTreasure = useMemo(() => getVaultTreasureDefinition(selectedTreasureId), [selectedTreasureId]);
+  const selectedCollectionEntry = useMemo(
+    () => collectionEntries.find((entry) => entry.treasureId === selectedTreasureId) ?? null,
+    [collectionEntries, selectedTreasureId],
+  );
   const collectionValue = useMemo(
     () => VAULT_TREASURE_DEFINITIONS
       .filter((treasure) => availableTreasureIds.includes(treasure.id))
       .reduce((total, treasure) => total + treasure.value, 0),
     [availableTreasureIds],
   );
+  const selectNextTreasure = () => {
+    if (availableTreasureIds.length < 2) return;
+    const selectedIndex = availableTreasureIds.indexOf(selectedTreasureId);
+    setSelectedTreasureId(availableTreasureIds[(selectedIndex + 1) % availableTreasureIds.length]);
+    setIsMuseumCardExpanded(false);
+  };
 
   useEffect(() => {
     if (availableTreasureIds.length > 0 && !availableTreasureIds.includes(selectedTreasureId)) {
@@ -659,7 +672,9 @@ export default function VaultIslandLab({
         {renderError ? (
           <>
             <img className="vault-island-lab__fallback" src={FALLBACK_SRC} alt="Vault Island palace rising above its treasure galleries" />
-            <p className="vault-island-lab__fallback-note">{renderError}</p>
+            <p className="vault-island-lab__fallback-note">
+              {view === 'vault' ? 'Collection register mode' : renderError}
+            </p>
           </>
         ) : null}
         {!isReady && !renderError ? <div className="vault-island-lab__loading">Loading</div> : null}
@@ -701,27 +716,51 @@ export default function VaultIslandLab({
               Treasure lab
             </button>
           ) : null}
-        </div> : null}
-        {view === 'vault' && !renderError && availableTreasureIds.length > 0 ? (
+        </div> : (
+          <div className="vault-island-lab__hud vault-island-lab__hud--bottom vault-island-lab__hud--fallback">
+            <button type="button" onClick={() => setView((value) => (value === 'vault' ? 'exterior' : 'vault'))}>
+              {view === 'vault' ? 'Back to palace' : 'Collection register'}
+            </button>
+          </div>
+        )}
+        {view === 'vault' && availableTreasureIds.length > 0 ? (
           <article className={`vault-island-lab__treasure-card${isMuseumCardExpanded ? ' is-expanded' : ''}${featuredTreasureId === selectedTreasureId ? ' is-featured-relic' : ''}`} aria-live="polite">
             <header>
               <div>
                 <p>{featuredTreasureId === selectedTreasureId && featuredSourceIslandNumber
                   ? `New relic · Island ${featuredSourceIslandNumber}`
-                  : selectedTreasure.origin}</p>
+                  : selectedCollectionEntry
+                    ? `Recovered · Island ${selectedCollectionEntry.sourceIslandNumber}`
+                    : selectedTreasure.origin}</p>
                 <h2>{selectedTreasure.name}</h2>
               </div>
               <strong>{selectedTreasure.value.toLocaleString()}</strong>
             </header>
             <div className="vault-island-lab__treasure-meta">
               <span>{selectedTreasure.rarity}</span>
-              <span>Museum value</span>
+              <span>{selectedCollectionEntry?.accessionNumber ?? 'Museum value'}</span>
             </div>
-            {isMuseumCardExpanded ? <small>{selectedTreasure.materialStory}</small> : null}
+            {isMuseumCardExpanded ? (
+              <div className="vault-island-lab__treasure-details">
+                <small>{selectedTreasure.materialStory}</small>
+                {selectedCollectionEntry ? (
+                  <small>
+                    Recovered through Vault Rush on Island {selectedCollectionEntry.sourceIslandNumber}.
+                    {' '}Registry {selectedCollectionEntry.accessionNumber}.
+                  </small>
+                ) : null}
+              </div>
+            ) : null}
             <footer>
-              <button type="button" onClick={() => setRevealRun((value) => value + 1)}>
-                Reveal
-              </button>
+              {renderError ? (
+                <button type="button" onClick={selectNextTreasure} disabled={availableTreasureIds.length < 2}>
+                  Next relic
+                </button>
+              ) : (
+                <button type="button" onClick={() => setRevealRun((value) => value + 1)}>
+                  Reveal
+                </button>
+              )}
               <button
                 type="button"
                 aria-expanded={isMuseumCardExpanded}
@@ -731,7 +770,7 @@ export default function VaultIslandLab({
               </button>
             </footer>
           </article>
-        ) : view === 'vault' && !renderError ? (
+        ) : view === 'vault' ? (
           <article className="vault-island-lab__treasure-card vault-island-lab__treasure-card--empty" aria-live="polite">
             <p>Private collection</p>
             <h2>The treasury awaits</h2>
