@@ -439,7 +439,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
   const world=getSkyboundWorldPresentation(input.levelId);
   const launchFacility=getSkyboundLaunchFacility(input.aircraftId);
   const course=getSkyboundCourseObjects(input.levelId,input.goalDistance);
-  const islands=createFloatingIslands(input.goalDistance);
+  const islands=world.continuousTerrain?[]:createFloatingIslands(input.goalDistance);
   let width=1;
   let height=1;
   let frame=0;
@@ -512,24 +512,30 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
 
     for(let index=0;index<world.cloudCount;index+=1) {
       const cloudZ=20+index*47;
-      const cloudBase=world.groundedTrainingField?level.targetAltitudeMax+8:4;
-      const cloudSpan=world.groundedTrainingField?18:78;
+      const cloudBase=world.continuousTerrain?level.targetAltitudeMax+8:4;
+      const cloudSpan=world.continuousTerrain?18:78;
       const p=project((seeded(index,3)-.5)*90,cloudBase+seeded(index,8)*cloudSpan,cloudZ);
       if(p.depth>4&&p.depth<560)drawCloud(context,p,10+seeded(index,5)*14,world.cloudOpacity*(.58+seeded(index,1)*.36));
     }
 
-    if(world.groundedTrainingField){
+    if(world.continuousTerrain){
+      const terrainHalfWidth=input.levelId==='meadow'?72:input.levelId==='coast'?56:88;
+      const terrainColors=input.levelId==='meadow'?['#579c47','#63aa4d']:input.levelId==='coast'?['#416b57','#4b7962']:['#9e5134','#b5603b'];
       for(let far=500;far>4;far-=18){
         const near=Math.max(4,far-18);
         const zFar=distance+far;const zNear=distance+near;
-        const farLeft=project(-72,getSkyboundGroundHeight(input.levelId,zFar),zFar);
-        const farRight=project(72,getSkyboundGroundHeight(input.levelId,zFar),zFar);
-        const nearLeft=project(-72,getSkyboundGroundHeight(input.levelId,zNear),zNear);
-        const nearRight=project(72,getSkyboundGroundHeight(input.levelId,zNear),zNear);
-        context.fillStyle=Math.floor(far/18)%2===0?'#579c47':'#63aa4d';
+        const farLeft=project(-terrainHalfWidth,getSkyboundGroundHeight(input.levelId,zFar),zFar);
+        const farRight=project(terrainHalfWidth,getSkyboundGroundHeight(input.levelId,zFar),zFar);
+        const nearLeft=project(-terrainHalfWidth,getSkyboundGroundHeight(input.levelId,zNear),zNear);
+        const nearRight=project(terrainHalfWidth,getSkyboundGroundHeight(input.levelId,zNear),zNear);
+        context.fillStyle=terrainColors[Math.floor(far/18)%2];
         context.beginPath();context.moveTo(farLeft.x,farLeft.y);context.lineTo(farRight.x,farRight.y);context.lineTo(nearRight.x,nearRight.y);context.lineTo(nearLeft.x,nearLeft.y);context.closePath();context.fill();
+        if(input.levelId==='coast'){
+          context.fillStyle='#d7ba72';
+          for(const side of [-1,1]){const innerFar=project(side*37,getSkyboundGroundHeight(input.levelId,zFar)+.04,zFar);const outerFar=project(side*52,getSkyboundGroundHeight(input.levelId,zFar)+.04,zFar);const innerNear=project(side*37,getSkyboundGroundHeight(input.levelId,zNear)+.04,zNear);const outerNear=project(side*52,getSkyboundGroundHeight(input.levelId,zNear)+.04,zNear);context.beginPath();context.moveTo(innerFar.x,innerFar.y);context.lineTo(outerFar.x,outerFar.y);context.lineTo(outerNear.x,outerNear.y);context.lineTo(innerNear.x,innerNear.y);context.closePath();context.fill();}
+        }
       }
-      context.strokeStyle='rgba(255,239,169,.82)';context.lineWidth=2;
+      context.strokeStyle=input.levelId==='canyon'?'rgba(255,194,120,.58)':'rgba(255,239,169,.82)';context.lineWidth=2;
       for(const lane of [-18,18]){context.beginPath();for(let depth=6;depth<=500;depth+=12){const z=distance+depth;const p=project(lane,getSkyboundGroundHeight(input.levelId,z)+.15,z);if(depth===6)context.moveTo(p.x,p.y);else context.lineTo(p.x,p.y);}context.stroke();}
       for(let marker=Math.ceil((distance+20)/45)*45;marker<distance+500;marker+=45){const left=project(-18,getSkyboundGroundHeight(input.levelId,marker)+.2,marker);const right=project(18,getSkyboundGroundHeight(input.levelId,marker)+.2,marker);context.strokeStyle=marker%90===0?'rgba(255,220,92,.82)':'rgba(105,235,244,.58)';context.beginPath();context.moveTo(left.x,left.y);context.lineTo(right.x,right.y);context.stroke();}
     }else{
@@ -537,7 +543,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       for(const island of farIslands)drawFloatingIsland(context,project(island.x,island.y,island.z),island,level.accent,world);
     }
 
-    for(const landmark of world.landmarks){const z=18+landmark.distanceRatio*Math.max(120,input.goalDistance-36);drawWorldLandmark(context,project(landmark.lateralX,landmark.altitude,z),landmark,level.accent,time);}
+    for(const landmark of world.landmarks){const z=18+landmark.distanceRatio*Math.max(120,input.goalDistance-36);const landmarkAltitude=world.continuousTerrain?getSkyboundGroundHeight(input.levelId,z):landmark.altitude;drawWorldLandmark(context,project(landmark.lateralX,landmarkAltitude,z),landmark,level.accent,time);}
 
     if(input.levelId==='storm') {
       context.strokeStyle='rgba(179,214,255,.34)';context.lineWidth=1.5;

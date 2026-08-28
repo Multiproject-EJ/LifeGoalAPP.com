@@ -74,4 +74,15 @@ export const skyboundAircraftModelsTests:TestCase[]=[
       assert(Math.abs(pose.shudder)>0,'struggle feedback should include deterministic airframe shudder');
     },
   },
+  {
+    name:'retracts real landing gear after takeoff and settles the wings in Flow',
+    run:()=>{
+      const model=createSkyboundAircraftModel('prop_trainer');const runtime=model.userData.sculptRuntime;
+      const before=runtime.nodes['gear-strut-1'].rotation.x;
+      const pose=applySkyboundAircraftMotion(runtime,{phase:'flying',timeSeconds:2,dtSeconds:.016,aimPower:0,aimDragging:false,pitchRad:.04,bankRad:.02,speed:42,integrityRatio:1,boosting:false,stabilizing:false,flowStrength:.8,airborneSeconds:2});
+      assert(pose.mode==='flow','charged, stable flight should own a distinct motion state');
+      assert(pose.gearRetraction===1,'the trainer gear should fully retract after the initial climb');
+      assert(runtime.nodes['gear-strut-1'].rotation.x<before-.9,'the real gear hierarchy should visibly fold into the aircraft');
+    },
+  },
 ];

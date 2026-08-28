@@ -1,6 +1,8 @@
 import {
+  getSkyboundFlowTargetSpeedKmh,
   getSkyboundGroundHeight,
   type SkyboundFlightState,
+  type SkyboundUpgrades,
 } from './skyboundExpeditionFlight';
 
 export type SkyboundFlightCondition =
@@ -28,6 +30,25 @@ export interface SkyboundFlightStickControl {
   magnitude: number;
   displayX: number;
   displayY: number;
+}
+
+export type SkyboundFlightDirectorMode =
+  | 'flow'
+  | 'tracking'
+  | 'slow'
+  | 'fast'
+  | 'nose-high'
+  | 'banked'
+  | 'terrain';
+
+export interface SkyboundFlightDirector {
+  mode: SkyboundFlightDirectorMode;
+  cue: string;
+  detail: string;
+  targetSpeedKmh: number;
+  speedDeltaKmh: number;
+  alignment: number;
+  velocityAngleRad: number;
 }
 
 const clamp = (value:number, minimum:number, maximum:number) => Math.max(minimum, Math.min(maximum, value));
@@ -90,4 +111,27 @@ export function getSkyboundFlightTelemetry(state:SkyboundFlightState):SkyboundFl
   return state.flowCharge>=.62
     ? { condition:'smooth',label:'FLOW LOCK',instruction:'Hold this pitch and bank',speed,altitude:state.y,clearance,energy,warning:false }
     : { condition:'smooth',label:'SEEK FLOW',instruction:'Level near 200 km/h; use small inputs',speed,altitude:state.y,clearance,energy,warning:false };
+}
+
+export function getSkyboundFlightDirector(state:SkyboundFlightState, upgrades:SkyboundUpgrades):SkyboundFlightDirector {
+  const speed = Math.hypot(state.vx, state.vy);
+  const speedKmh = speed * 3.6;
+  const targetSpeedKmh = getSkyboundFlowTargetSpeedKmh(state.aircraftId, upgrades);
+  const speedRatio = speedKmh / Math.max(1, targetSpeedKmh);
+  const velocityAngleRad = Math.atan2(state.vy, Math.max(0.001, state.vx));
+  const ground = getSkyboundGroundHeight(state.levelId, state.x);
+  const clearance = state.y - ground;
+  const speedAlignment = 1 - clamp(Math.abs(1 - speedRatio) / 0.28, 0, 1);
+  const pitchAlignment = 1 - clamp(Math.abs(state.pitchRad) / 0.32, 0, 1);
+  const bankAlignment = 1 - clamp(Math.abs(state.bankRad) / 0.44, 0, 1);
+  const alignment = clamp((speedAlignment * 0.48) + (pitchAlignment * 0.3) + (bankAlignment * 0.22), 0, 1);
+  const base = { targetSpeedKmh, speedDeltaKmh:Math.round(speedKmh-targetSpeedKmh), alignment, velocityAngleRad };
+
+  if (state.flowCharge >= 0.62) return { ...base, mode:'flow', cue:'HOLD THE LINE', detail:'Flow locked · use fingertip corrections' };
+  if (clearance < 7 && state.vy < 2) return { ...base, mode:'terrain', cue:'CLIMB NOW', detail:'Terrain is inside the recovery margin' };
+  if (Math.abs(state.bankRad) > 0.42) return { ...base, mode:'banked', cue:'LEVEL WINGS', detail:'Bank is spilling lift and blocking Flow' };
+  if (speedRatio < 0.82) return { ...base, mode:'slow', cue:'LOWER THE NOSE', detail:'Trade a little altitude for airspeed' };
+  if (state.pitchRad > 0.34) return { ...base, mode:'nose-high', cue:'EASE FORWARD', detail:'The nose is above the efficient corridor' };
+  if (speedRatio > 1.16) return { ...base, mode:'fast', cue:'CLIMB 5° · THEN LEVEL', detail:'Convert excess speed without over-pitching' };
+  return { ...base, mode:'tracking', cue:'CENTER THE MARKER', detail:`Flow alignment ${Math.round(alignment*100)}%` };
 }

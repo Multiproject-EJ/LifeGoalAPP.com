@@ -12,7 +12,7 @@ import {
   type SkyboundFlightState,
   type SkyboundUpgrades,
 } from '../skyboundExpeditionFlight';
-import { getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../skyboundFlightFeel';
+import { getSkyboundFlightDirector, getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../skyboundFlightFeel';
 import { SKYBOUND_AIRCRAFT_RANKS, SKYBOUND_LESSONS } from '../skyboundPilotAcademy';
 import { getSkyboundLaunchFacility } from '../../../games/skybound-expedition/skyboundLaunchFacilities';
 import { getSkyboundWorldPresentation } from '../../../games/skybound-expedition/skyboundWorldPresentation';
@@ -372,6 +372,21 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(getSkyboundFlightTelemetry(base).condition === 'smooth', 'level energy flight should read as smooth flow');
       assert(getSkyboundFlightTelemetry({ ...base, vx: 13, pitchRad: 0.55 }).condition === 'stall', 'low-speed nose-high flight should warn of a stall');
       assert(getSkyboundFlightTelemetry({ ...base, integrity: 1, hazardHits: 2 }).condition === 'damaged', 'low integrity should read as airframe strain');
+    },
+  },
+  {
+    name: 'teaches the pilot how to enter Flow instead of exposing only raw telemetry',
+    run: () => {
+      const base = {
+        ...createSkyboundFlight({ power:1, angleDeg:35, upgrades:SKYBOUND_STARTER_UPGRADES, levelId:'coast', aircraftId:'prop_trainer' }),
+        x:80, y:42, vx:getSkyboundFlowTargetSpeedKmh('prop_trainer',SKYBOUND_STARTER_UPGRADES)/3.6, vy:0, pitchRad:.04, bankRad:.03,
+      };
+      const tracking=getSkyboundFlightDirector(base,SKYBOUND_STARTER_UPGRADES);
+      assert(tracking.mode==='tracking'&&tracking.alignment>.8,'an efficient level aircraft should visibly converge on the Flow gate');
+      assert(getSkyboundFlightDirector({...base,vx:18},SKYBOUND_STARTER_UPGRADES).mode==='slow','low energy should command the pilot to lower the nose');
+      assert(getSkyboundFlightDirector({...base,vx:58},SKYBOUND_STARTER_UPGRADES).mode==='fast','excess energy should teach a shallow climb rather than an arbitrary slowdown');
+      assert(getSkyboundFlightDirector({...base,bankRad:.62},SKYBOUND_STARTER_UPGRADES).mode==='banked','excess bank should explicitly block Flow');
+      assert(getSkyboundFlightDirector({...base,flowCharge:.72},SKYBOUND_STARTER_UPGRADES).mode==='flow','crossing the charge threshold should lock the flight director');
     },
   },
   {

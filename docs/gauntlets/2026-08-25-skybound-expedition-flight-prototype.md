@@ -750,3 +750,71 @@ the intended fuselage-to-fighter school ladder and can be replayed at every
 construction state. The next loop should improve terrain landmark composition,
 tune touch steering into Flow on a real device, and add more aircraft motion
 feedback at stall, trim, and sustained smooth flight.
+
+## Flight director and world-depth Gauntlet loop 8 — 2026-08-28
+
+This loop turned the energy model into a learnable flying exercise and removed
+the last floating-platform presentation from the first three school worlds,
+including the compatibility canvas used when WebGL is unavailable.
+
+### Flight instruction and moving-airframe contract
+
+- A deterministic flight director now compares current speed, pitch, bank,
+  velocity angle, terrain clearance, and Flow charge with the aircraft's real
+  rank-relative target. It gives one prioritized action: climb now, level wings,
+  lower the nose, ease forward, climb then level, centre the marker, or hold the
+  line after Flow locks.
+- The chase HUD now has a bank-responsive artificial horizon, target brackets,
+  a velocity marker, target speed, and signed speed delta. It waits until the
+  opening drag tutorial has cleared, so the two instruction systems do not
+  compete for the same centre-screen space.
+- Completed aircraft retract real landing-gear struts after takeoff. Smooth
+  Flow flight has a settled control-surface pose distinct from ordinary trim,
+  while struggling flight retains visible wing and control-surface flutter.
+- New pure-service coverage verifies director mode priority and alignment.
+  Model coverage verifies that the trainer's Flow pose is distinct and that
+  the gear nodes physically rotate into the airframe rather than merely hiding.
+
+### Continuous travel worlds
+
+- Meadow, Coast, and Canyon now anchor landmarks to their sampled ground
+  height. Coast adds a reclaimed central field with two sand shoreline ribbons;
+  Canyon adds a flyable floor with repeated side ridges and red-rock depth.
+- The software renderer now follows the same continuous-terrain contract,
+  palette, shoreline, ground-anchored landmarks, lane guides, and distance
+  markers. Floating-island generation is disabled outright for those worlds.
+- A clean-server browser replay confirmed that Coast and Canyon now retain a
+  visible ground plane from the launch facility to the horizon. Storm and
+  Stratosphere intentionally keep their suspended advanced-course fantasy.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,892 tests, 0 failures. Focused
+  TypeScript compilation passed. Architecture guard passed with 0 violations
+  and the same 3 allowlisted legacy warnings.
+- Production Vite build passed with the repository's existing mixed-import and
+  large-chunk warnings only. Skybound remains a separately emitted event chunk.
+- Live browser replay launched the Aviator jet into Canyon. After the opening
+  coach cleared, the director correctly changed to LOWER THE NOSE as the jet
+  climbed above its target band and fell 63 km/h below its 196 km/h Flow target.
+  The ground-impact end state was also replayed during the loop; contact ended
+  the sortie and displayed the Ground Impact result instead of timing out.
+- Browser console produced no warnings or errors. Evidence is saved at
+  `/private/tmp/skybound-coast-grounded-v8.png`,
+  `/private/tmp/skybound-canyon-grounded-v8.png`, and
+  `/private/tmp/skybound-flight-director-v8.png`.
+
+| Loop 8 gate | Score | Decision |
+| --- | ---: | --- |
+| Learnable Flow control | 8/10 | One prioritized cue plus spatial marker teaches the correction |
+| Grounded world continuity | 8/10 | Coast and Canyon now travel over continuous authored terrain |
+| Aircraft motion feedback | 8/10 | Gear, Flow trim, struggle, boost, and damage have distinct states |
+| Compatibility/WebGL parity | 8/10 | Same curriculum and terrain identity survive without WebGL |
+| Final environment art | 7/10 | Strong procedural composition; bespoke asset polish remains |
+
+**Gauntlet decision: pass the flight-instruction and world-depth slice, continue
+toward 10/10.** The core loop now teaches why a sortie succeeds or loses energy,
+and the first three ranks visually progress through grounded school worlds. The
+next fidelity loop should tune sustained touch control on a real phone, deepen
+the obstacle/landing missions, and replace the broadest procedural landmarks
+with bespoke production assets and sound.

@@ -162,6 +162,24 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     trainingField.position.z = goalDistance / 2;
     trainingField.receiveShadow = true;
     scene.add(trainingField);
+    const addTerrainRibbon=(lateralX:number,width:number,color:number,heightOffset=.04)=>{
+      const geometry=new THREE.PlaneGeometry(width,goalDistance+180,2,Math.max(24,Math.ceil(goalDistance/10)));
+      geometry.rotateX(-Math.PI/2);
+      const ribbonPositions=geometry.getAttribute('position') as THREE.BufferAttribute;
+      for(let index=0;index<ribbonPositions.count;index+=1){const worldZ=ribbonPositions.getZ(index)+goalDistance/2;ribbonPositions.setY(index,getSkyboundGroundHeight(levelId,worldZ)+heightOffset);}
+      ribbonPositions.needsUpdate=true;geometry.computeVertexNormals();
+      const ribbon=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.94,flatShading:true}));
+      ribbon.position.set(lateralX,0,goalDistance/2);ribbon.receiveShadow=true;scene.add(ribbon);
+    };
+    if(levelId==='coast'){
+      addTerrainRibbon(-36,13,0xd7ba72,.06);addTerrainRibbon(36,13,0xd7ba72,.06);
+      addTerrainRibbon(0,48,0x466f5a,.025);
+    }
+    if(levelId==='canyon'){
+      addTerrainRibbon(0,46,0xa95b39,.03);
+      const ridgeMaterial=new THREE.MeshStandardMaterial({color:world.cliffColor,roughness:.98,flatShading:true});
+      for(let ridge=0;ridge<Math.ceil(goalDistance/92)+2;ridge+=1){for(const side of [-1,1]){const height=11+seeded(ridge,side+7)*18;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(7+seeded(ridge,side+12)*5,0),ridgeMaterial);const z=34+ridge*92+seeded(ridge,side+19)*24;rock.position.set(side*(48+seeded(ridge,side+4)*16),getSkyboundGroundHeight(levelId,z)+height*.28,z);rock.scale.set(1.25,height/12,1.5);rock.castShadow=true;rock.receiveShadow=true;scene.add(rock);}}
+    }
     if(world.groundedTrainingField)for (const side of [-1, 1]) {
       const boundary = new THREE.Mesh(new THREE.BoxGeometry(.16,.12,goalDistance+90),new THREE.MeshBasicMaterial({color:side<0?0xf2e1a0:0xffffff}));
       boundary.position.set(side*18,.05,goalDistance/2);scene.add(boundary);
@@ -278,12 +296,15 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
   const addLandmark = (landmark:SkyboundWorldLandmark) => {
     const group = new THREE.Group();
     const z = 18 + landmark.distanceRatio * Math.max(120, goalDistance - 36);
+    const groundedAltitude = world.continuousTerrain
+      ? getSkyboundGroundHeight(levelId, z)
+      : landmark.altitude;
     const addPillar = (x:number,height:number,radius:number,material:THREE.Material=landmarkStone) => {
       const pillar = new THREE.Mesh(new THREE.CylinderGeometry(radius*.72,radius,height,8),material);
       pillar.position.set(x,height/2,0);pillar.castShadow=true;group.add(pillar);return pillar;
     };
     if (landmark.kind === 'academy_tower') {
-      addAcademyTower(landmark.lateralX,landmark.altitude,z,landmark.scale*.72);
+      addAcademyTower(landmark.lateralX,groundedAltitude,z,landmark.scale*.72);
       return;
     }
     if (landmark.kind === 'wind_turbine') {
@@ -329,7 +350,7 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
       const positions=new Float32Array(90*3);for(let index=0;index<90;index+=1){positions[index*3]=(seeded(index,2)-.5)*70;positions[index*3+1]=(seeded(index,5)-.5)*38;positions[index*3+2]=(seeded(index,8)-.5)*18;}
       const stars=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(positions,3)),new THREE.PointsMaterial({color:0xfff1b6,size:.48,transparent:true,opacity:.86,sizeAttenuation:true}));group.add(stars);
     }
-    group.name=`skybound-landmark-${landmark.id}`;group.scale.setScalar(landmark.scale);group.position.set(landmark.lateralX,landmark.altitude,z);group.userData.skyboundBaseY=landmark.altitude;scene.add(group);
+    group.name=`skybound-landmark-${landmark.id}`;group.scale.setScalar(landmark.scale);group.position.set(landmark.lateralX,groundedAltitude,z);group.userData.skyboundBaseY=groundedAltitude;scene.add(group);
   };
   world.landmarks.forEach(addLandmark);
 
@@ -672,6 +693,8 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         integrityRatio: flight ? flight.integrity / integrityCapacity : 1,
         boosting: boostingRef.current,
         stabilizing: stabilizingRef.current,
+        flowStrength,
+        airborneSeconds:(flight?.airborneMs ?? 0) / 1000,
       });
       if (motionPose.mode === 'struggling') {
         plane.rotation.y += motionPose.shudder;

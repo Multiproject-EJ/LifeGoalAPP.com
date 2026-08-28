@@ -22,16 +22,19 @@ export interface SkyboundAircraftMotionInput {
   integrityRatio: number;
   boosting: boolean;
   stabilizing: boolean;
+  flowStrength?: number;
+  airborneSeconds?: number;
 }
 
 export interface SkyboundAircraftMotionPose {
-  mode: 'launch-tension' | 'smooth' | 'struggling' | 'parked';
+  mode: 'launch-tension' | 'flow' | 'smooth' | 'struggling' | 'parked';
   aileron: number;
   elevator: number;
   rudder: number;
   wingFlex: number;
   shudder: number;
   propellerRate: number;
+  gearRetraction: number;
 }
 
 const clamp = (value:number, minimum:number, maximum:number) => Math.max(minimum, Math.min(maximum, value));
@@ -62,11 +65,12 @@ export function getSkyboundAircraftMotionPose(input:SkyboundAircraftMotionInput)
       wingFlex: 0.025 + (tension * 0.055),
       shudder: pulse * tension * tension * 0.035,
       propellerRate: 5 + (tension * 12),
+      gearRetraction: 0,
     };
   }
 
   if (input.phase !== 'flying') {
-    return { mode:'parked', aileron:0, elevator:0, rudder:0, wingFlex:0.018, shudder:0, propellerRate:4 };
+    return { mode:'parked', aileron:0, elevator:0, rudder:0, wingFlex:0.018, shudder:0, propellerRate:4, gearRetraction:0 };
   }
 
   const strain = Math.max(
@@ -76,16 +80,18 @@ export function getSkyboundAircraftMotionPose(input:SkyboundAircraftMotionInput)
     clamp((0.62 - input.integrityRatio) / 0.52, 0, 1),
   );
   const struggling = strain > 0.18 && !input.stabilizing;
+  const flowStrength = clamp(input.flowStrength ?? 0, 0, 1);
   const flutter = struggling ? Math.sin(input.timeSeconds * (22 + strain * 19)) * strain : 0;
   const boostFlex = input.boosting ? 0.035 : 0;
   return {
-    mode: struggling ? 'struggling' : 'smooth',
+    mode: struggling ? 'struggling' : flowStrength >= 0.62 ? 'flow' : 'smooth',
     aileron: clamp((-input.bankRad * 0.54) + (flutter * 0.12), -0.42, 0.42),
     elevator: clamp((-input.pitchRad * 0.28) + (flutter * 0.08), -0.34, 0.34),
     rudder: clamp((-input.bankRad * 0.32) + (flutter * 0.1), -0.3, 0.3),
-    wingFlex: 0.025 + clamp(input.speed / 90, 0, 1) * 0.055 + boostFlex + (flutter * 0.025),
+    wingFlex: 0.025 + clamp(input.speed / 90, 0, 1) * 0.055 + boostFlex + (flowStrength * 0.018) + (flutter * 0.025),
     shudder: flutter * 0.055,
     propellerRate: (input.boosting ? 48 : 23) * (struggling ? 0.72 + Math.sin(input.timeSeconds * 15) * 0.18 : 1),
+    gearRetraction: clamp(((input.airborneSeconds ?? 0) - 0.35) / 1.15, 0, 1),
   };
 }
 
@@ -109,6 +115,8 @@ export function applySkyboundAircraftMotion(runtime:CadetGliderRuntime,input:Sky
   rotate('left-wing', 'z', -pose.wingFlex);
   rotate('right-wing', 'z', pose.wingFlex);
   rotate('tail-fin', 'z', pose.shudder * 0.45);
+  rotate('gear-strut--1', 'x', -pose.gearRetraction * 1.12);
+  rotate('gear-strut-1', 'x', -pose.gearRetraction * 1.12);
   const propeller = runtime.nodes.propeller;
   if (propeller) propeller.rotation.z += Math.max(0, input.dtSeconds) * pose.propellerRate;
   return pose;
