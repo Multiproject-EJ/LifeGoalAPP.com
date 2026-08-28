@@ -140,28 +140,53 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     if (academy) addAcademyTower(x, topY + 1, z, radius > 22 ? 1.15 : 0.62);
   };
 
-  const cloudSea = new THREE.Mesh(
-    new THREE.PlaneGeometry(240, goalDistance + 520),
-    new THREE.MeshBasicMaterial({ color: world.lowerDeckColor, transparent: true, opacity: world.lowerDeckOpacity, depthWrite: false }),
-  );
-  cloudSea.rotation.x = -Math.PI / 2;
-  cloudSea.position.set(0, -8.5, goalDistance / 2);
-  scene.add(cloudSea);
-
-  addFloatingIsland(0, -0.7, 4, 24);
-  addAcademyTower(-14, 0.3, 8, 0.68);
-  const islandCount = Math.ceil(goalDistance / 58) + 7;
-  for (let index = 1; index < islandCount; index += 1) {
-    const side = index % 2 === 0 ? -1 : 1;
-    addFloatingIsland(
-      side * (24 + seeded(index, 5) * 28),
-      7 + seeded(index, 8) * 48,
-      index * 58 + seeded(index, 2) * 24,
-      8 + seeded(index, 10) * 10,
-      index % 7 === 0,
+  if (world.groundedTrainingField) {
+    const fieldGeometry = new THREE.PlaneGeometry(150, goalDistance + 260, 12, Math.max(28, Math.ceil(goalDistance / 8)));
+    fieldGeometry.rotateX(-Math.PI / 2);
+    const positions = fieldGeometry.getAttribute('position') as THREE.BufferAttribute;
+    for (let index = 0; index < positions.count; index += 1) {
+      const worldZ = positions.getZ(index) + goalDistance / 2;
+      const lateral = positions.getX(index);
+      const rollOff = Math.max(0, Math.abs(lateral) - 34) * 0.045;
+      positions.setY(index, getSkyboundGroundHeight(levelId, worldZ) - 0.42 - rollOff);
+    }
+    positions.needsUpdate = true;
+    fieldGeometry.computeVertexNormals();
+    const trainingField = new THREE.Mesh(fieldGeometry, new THREE.MeshStandardMaterial({ color:world.surfaceColor,roughness:.96,vertexColors:false }));
+    trainingField.position.z = goalDistance / 2;
+    trainingField.receiveShadow = true;
+    scene.add(trainingField);
+    for (const side of [-1, 1]) {
+      const boundary = new THREE.Mesh(new THREE.BoxGeometry(.16,.12,goalDistance+90),new THREE.MeshBasicMaterial({color:side<0?0xf2e1a0:0xffffff}));
+      boundary.position.set(side*18,.05,goalDistance/2);scene.add(boundary);
+      for(let marker=0;marker<=goalDistance;marker+=45){const flag=new THREE.Mesh(new THREE.BoxGeometry(.9,1.4,.08),new THREE.MeshBasicMaterial({color:marker%90===0?0xffd85d:0x69e9f2}));flag.position.set(side*18,1,marker);scene.add(flag);}
+    }
+    addAcademyTower(-14, getSkyboundGroundHeight(levelId, 8), 8, 0.68);
+    addAcademyTower(22, getSkyboundGroundHeight(levelId, goalDistance + 4), goalDistance + 4, 0.72);
+  } else {
+    const cloudSea = new THREE.Mesh(
+      new THREE.PlaneGeometry(240, goalDistance + 520),
+      new THREE.MeshBasicMaterial({ color: world.lowerDeckColor, transparent: true, opacity: world.lowerDeckOpacity, depthWrite: false }),
     );
+    cloudSea.rotation.x = -Math.PI / 2;
+    cloudSea.position.set(0, -8.5, goalDistance / 2);
+    scene.add(cloudSea);
+
+    addFloatingIsland(0, -0.7, 4, 24);
+    addAcademyTower(-14, 0.3, 8, 0.68);
+    const islandCount = Math.ceil(goalDistance / 58) + 7;
+    for (let index = 1; index < islandCount; index += 1) {
+      const side = index % 2 === 0 ? -1 : 1;
+      addFloatingIsland(
+        side * (24 + seeded(index, 5) * 28),
+        7 + seeded(index, 8) * 48,
+        index * 58 + seeded(index, 2) * 24,
+        8 + seeded(index, 10) * 10,
+        index % 7 === 0,
+      );
+    }
+    addFloatingIsland(0, 15, goalDistance + 8, 31, true);
   }
-  addFloatingIsland(0, 15, goalDistance + 8, 31, true);
 
   const runway = new THREE.Mesh(
     new THREE.BoxGeometry(facility.deckWidth, 0.28, facility.deckLength),
@@ -350,12 +375,17 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
   top.position.y = 14;
   gate.add(top);
   gate.position.z = goalDistance;
+  gate.position.y = world.groundedTrainingField
+    ? getSkyboundGroundHeight(levelId, goalDistance)
+    : level.finishAltitude - 7;
   scene.add(gate);
 
   for (let index = 0; index < world.cloudCount; index += 1) {
     const cloud = makeCloud();
     cloud.traverse((object)=>{if(object instanceof THREE.Mesh){const material=object.material as THREE.MeshStandardMaterial;material.color.set(world.cloudColor);material.opacity=world.cloudOpacity;}});
-    cloud.position.set((seeded(index, 3) - 0.5) * 70, 18 + seeded(index, 7) * 44, seeded(index, 11) * goalDistance);
+    const cloudBase = world.groundedTrainingField ? level.targetAltitudeMax + 8 : 18;
+    const cloudSpan = world.groundedTrainingField ? 18 : 44;
+    cloud.position.set((seeded(index, 3) - 0.5) * 70, cloudBase + seeded(index, 7) * cloudSpan, seeded(index, 11) * goalDistance);
     cloud.scale.setScalar(0.8 + seeded(index, 12) * 1.8);
     scene.add(cloud);
   }
@@ -615,7 +645,8 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         }
       } else {
         const tensionBuzz = Math.sin(time * 0.032) * launchPose.vibration;
-        plane.position.set(launchPose.lateral + tensionBuzz * 0.12, launchPose.height + tensionBuzz * 0.08, launchPose.forward);
+        const groundSchoolOffset = props.levelId === 'meadow' ? -3.05 : 0;
+        plane.position.set(launchPose.lateral + tensionBuzz * 0.12, launchPose.height + groundSchoolOffset + tensionBuzz * 0.08, launchPose.forward);
         plane.rotation.set(-(aim.angleDeg * Math.PI) / 180 + launchPose.pitchJolt, tensionBuzz * 0.045, tensionBuzz * 0.035);
       }
 

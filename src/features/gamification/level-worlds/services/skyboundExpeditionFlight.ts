@@ -16,7 +16,14 @@ export interface SkyboundLevelDefinition {
   id: SkyboundLevelId;
   name: string;
   subtitle: string;
+  trainingStage: string;
+  trainingFocus: string;
   goalDistance: number;
+  launchSpeedScale: number;
+  startClearance: number;
+  targetAltitudeMin: number;
+  targetAltitudeMax: number;
+  finishAltitude: number;
   gravity: number;
   drag: number;
   liftScale: number;
@@ -82,7 +89,7 @@ export interface SkyboundFlightState {
   smoothFlightMs: number;
   flowCharge: number;
   stallMs: number;
-  terrainSkims: number;
+  terrainImpacts: number;
   terminalReason: SkyboundTerminalReason;
 }
 
@@ -99,9 +106,16 @@ export const SKYBOUND_MAX_STEP_MS = 64;
 export const SKYBOUND_LEVELS: readonly SkyboundLevelDefinition[] = [
   {
     id: 'meadow',
-    name: 'Meadow Run',
-    subtitle: 'Learn the wind',
+    name: 'Meadow Ground School',
+    subtitle: 'First hops above the practice field',
+    trainingStage: 'GROUND SCHOOL',
+    trainingFocus: 'Launch, stay low, and learn when to climb',
     goalDistance: 360,
+    launchSpeedScale: 0.78,
+    startClearance: 1.45,
+    targetAltitudeMin: 5,
+    targetAltitudeMax: 22,
+    finishAltitude: 12,
     gravity: 11.4,
     drag: 0.014,
     liftScale: 1,
@@ -112,7 +126,8 @@ export const SKYBOUND_LEVELS: readonly SkyboundLevelDefinition[] = [
     accent: '#ffe27a',
   },
   {
-    id: 'coast', name: 'Coastal Airfield', subtitle: 'Build flight energy', goalDistance: 650,
+    id: 'coast', name: 'Coastal Airfield', subtitle: 'Build flight energy', trainingStage: 'BASIC FLIGHT', trainingFocus: 'Take off, hold altitude, and return safely', goalDistance: 650,
+    launchSpeedScale: 0.9, startClearance: 1.6, targetAltitudeMin: 16, targetAltitudeMax: 42, finishAltitude: 28,
     gravity: 11.7, drag: 0.015, liftScale: 0.98, windStrength: 3.2,
     skyTop: '#1765a4', skyBottom: '#c6f4ff', ground: '#467c5a', accent: '#ffe07a',
   },
@@ -120,7 +135,14 @@ export const SKYBOUND_LEVELS: readonly SkyboundLevelDefinition[] = [
     id: 'canyon',
     name: 'Canyon Lift',
     subtitle: 'Ride the rising air',
+    trainingStage: 'ENERGY SCHOOL',
+    trainingFocus: 'Trade height for speed and recover before terrain',
     goalDistance: 880,
+    launchSpeedScale: 1,
+    startClearance: 1.8,
+    targetAltitudeMin: 34,
+    targetAltitudeMax: 72,
+    finishAltitude: 48,
     gravity: 11.8,
     drag: 0.016,
     liftScale: 0.95,
@@ -134,7 +156,14 @@ export const SKYBOUND_LEVELS: readonly SkyboundLevelDefinition[] = [
     id: 'storm',
     name: 'Storm Passage',
     subtitle: 'Master the gusts',
+    trainingStage: 'COMBAT WEATHER',
+    trainingFocus: 'Control damage, crosswind, and low-visibility flight',
     goalDistance: 1260,
+    launchSpeedScale: 1.08,
+    startClearance: 2.2,
+    targetAltitudeMin: 52,
+    targetAltitudeMax: 96,
+    finishAltitude: 70,
     gravity: 12.1,
     drag: 0.018,
     liftScale: 0.9,
@@ -145,7 +174,8 @@ export const SKYBOUND_LEVELS: readonly SkyboundLevelDefinition[] = [
     accent: '#f9df63',
   },
   {
-    id: 'stratosphere', name: 'Goldwing Stratosphere', subtitle: 'Earn the final wings', goalDistance: 1660,
+    id: 'stratosphere', name: 'Goldwing Stratosphere', subtitle: 'Earn the final wings', trainingStage: 'ACE OPERATIONS', trainingFocus: 'Sustain high-altitude speed and precision', goalDistance: 1660,
+    launchSpeedScale: 1.16, startClearance: 3, targetAltitudeMin: 78, targetAltitudeMax: 132, finishAltitude: 102,
     gravity: 10.8, drag: 0.012, liftScale: 1.04, windStrength: 6.2,
     skyTop: '#07162f', skyBottom: '#5f8fd2', ground: '#3d536d', accent: '#ffe36d',
   },
@@ -159,16 +189,16 @@ export const SKYBOUND_STARTER_UPGRADES: SkyboundUpgrades = {
 
 const SKYBOUND_COURSE_OBJECTS: Record<SkyboundLevelId, readonly SkyboundCourseObject[]> = {
   meadow: [
-    { id: 'meadow-salvage-1', kind: 'salvage', x: 54, y: 38, radius: 7 },
-    { id: 'meadow-salvage-2', kind: 'salvage', x: 69, y: 47, lateralX: -4, radius: 7 },
-    { id: 'meadow-salvage-3', kind: 'salvage', x: 84, y: 54, lateralX: 4, radius: 7 },
-    { id: 'meadow-ring-1', kind: 'wind_ring', x: 120, y: 61, radius: 17 },
-    { id: 'meadow-salvage-4', kind: 'salvage', x: 151, y: 62, lateralX: 6, radius: 7 },
-    { id: 'meadow-salvage-5', kind: 'salvage', x: 166, y: 59, lateralX: 1, radius: 7 },
-    { id: 'meadow-salvage-6', kind: 'salvage', x: 181, y: 54, lateralX: -5, radius: 7 },
-    { id: 'meadow-hazard-1', kind: 'hazard', x: 214, y: 35, radius: 15 },
-    { id: 'meadow-ring-2', kind: 'wind_ring', x: 260, y: 36, lateralX: -5, radius: 17 },
-    { id: 'meadow-hazard-2', kind: 'hazard', x: 292, y: 18, lateralX: 6, radius: 12 },
+    { id: 'meadow-salvage-1', kind: 'salvage', x: 42, y: 6, radius: 7 },
+    { id: 'meadow-salvage-2', kind: 'salvage', x: 57, y: 8, lateralX: -4, radius: 7 },
+    { id: 'meadow-salvage-3', kind: 'salvage', x: 72, y: 10, lateralX: 4, radius: 7 },
+    { id: 'meadow-ring-1', kind: 'wind_ring', x: 105, y: 13, radius: 17 },
+    { id: 'meadow-salvage-4', kind: 'salvage', x: 137, y: 14, lateralX: 6, radius: 7 },
+    { id: 'meadow-salvage-5', kind: 'salvage', x: 152, y: 13, lateralX: 1, radius: 7 },
+    { id: 'meadow-salvage-6', kind: 'salvage', x: 167, y: 11, lateralX: -5, radius: 7 },
+    { id: 'meadow-hazard-1', kind: 'hazard', x: 205, y: 9, radius: 12 },
+    { id: 'meadow-ring-2', kind: 'wind_ring', x: 252, y: 15, lateralX: -5, radius: 17 },
+    { id: 'meadow-hazard-2', kind: 'hazard', x: 296, y: 8, lateralX: 6, radius: 10 },
   ],
   coast: [
     { id:'coast-salvage-1',kind:'salvage',x:62,y:37,lateralX:-3,radius:7 },
@@ -256,7 +286,9 @@ export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance 
   const lastX = objects.reduce((value, object) => Math.max(value, object.x), 0);
   for (let section = 0, x = lastX + 62; x < goalDistance - 22; section += 1, x += 72) {
     const wave = Math.sin((section + levelId.length) * 1.71);
-    const y = (levelId === 'stratosphere' ? 86 : levelId === 'storm' ? 70 : levelId === 'canyon' ? 61 : 52) + wave * 18;
+    const level = getSkyboundLevel(levelId);
+    const altitudeSpan = level.targetAltitudeMax - level.targetAltitudeMin;
+    const y = level.targetAltitudeMin + altitudeSpan * 0.52 + wave * altitudeSpan * 0.34;
     const lateralX = Math.round(Math.sin(section * 2.17 + levelId.length) * 8);
     const kind: SkyboundCourseObjectKind = section % 4 === 2 ? 'hazard' : section % 3 === 0 ? 'wind_ring' : 'salvage';
     objects.push({ id:`${levelId}-extended-${section}`,kind,x,y,lateralX,radius:kind==='salvage'?7:17 });
@@ -307,8 +339,8 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
   const assembly = ASSEMBLY_TUNING[assemblyLevel];
   const power = clamp(input.power, 0, 1);
   const angleRad = (clamp(input.angleDeg, 12, 58) * Math.PI) / 180;
-  const launchSpeed = (46 + (input.upgrades.launcher * 6.5)) * (0.38 + (power * 0.62)) * tuning.speed * assembly.speed;
-  const startY = getSkyboundGroundHeight(level.id, 0) + 6;
+  const launchSpeed = (46 + (input.upgrades.launcher * 6.5)) * (0.38 + (power * 0.62)) * tuning.speed * assembly.speed * level.launchSpeedScale;
+  const startY = getSkyboundGroundHeight(level.id, 0) + 1.2 + level.startClearance;
 
   return {
     status: 'flying',
@@ -346,7 +378,7 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     smoothFlightMs: 0,
     flowCharge: 0,
     stallMs: 0,
-    terrainSkims: 0,
+    terrainImpacts: 0,
     terminalReason: null,
   };
 }
@@ -498,7 +530,7 @@ export function stepSkyboundFlight(
   let detachedPartIds = [...state.detachedPartIds];
   let currentStreak = state.currentStreak;
   let bestStreak = state.bestStreak;
-  let terrainSkims = state.terrainSkims;
+  let terrainImpacts = state.terrainImpacts;
   let terminalReason: SkyboundTerminalReason = null;
 
   for (const object of getSkyboundCourseObjects(level.id, state.goalDistance)) {
@@ -551,42 +583,28 @@ export function stepSkyboundFlight(
 
   if (status === 'crashed') {
     detachedPartIds = [...new Set([...detachedPartIds, 'right-wing', 'left-tailplane', 'canopy', 'nose-cap'])];
-  } else if (x >= state.goalDistance) {
-    status = 'finished';
-    terminalReason = 'goal';
   } else if (clearance <= 0) {
     settledY = groundHeight + 1.2;
-    const launchGraceActive = elapsedMs < 1_800 || airborneMs < 850;
-    const severeImpact = vy < -21 || Math.abs(pitchRad) > 1.02;
-    const hardImpact = !launchGraceActive && state.terrainSkims >= 2 && severeImpact;
-    const controlledTouchdown = !launchGraceActive && vx <= 14 && vy >= -10 && Math.abs(pitchRad) <= 0.72;
-    if (hardImpact) {
-      status = 'crashed';
-      terminalReason = 'hard_impact';
-      impactSerial += 1;
-      integrity = 0;
-      detachedPartIds = ['left-wing', 'right-wing', 'left-tailplane', 'right-tailplane', 'tail-fin', 'canopy', 'nose-cap'];
-      vx = 0;
-      vy = 0;
-    } else if (controlledTouchdown) {
+    const controlledTouchdown = airborneMs >= 600 && vx <= 16 && vy >= -7 && Math.abs(pitchRad) <= 0.38;
+    groundContactMs = Math.max(safeDtMs, groundContactMs);
+    if (controlledTouchdown) {
       status = 'landed';
       terminalReason = 'touchdown';
       vx = 0;
       vy = 0;
     } else {
-      // A brief runway/terrain brush should read as a recoverable skim, not an
-      // abrupt end screen. Forward energy is preserved while the airframe gets
-      // a small deterministic rebound and enough time for the pilot to correct.
-      status = 'flying';
-      vx = Math.max(7.5, vx * (launchGraceActive ? 0.98 : 0.92));
-      vy = Math.max(launchGraceActive ? 5.4 : 3.2, Math.abs(vy) * 0.28);
-      bankRad *= 0.82;
-      groundContactMs = Math.min(groundContactMs, 240);
-      if (state.groundContactMs === 0) {
-        terrainSkims += 1;
-        if (!launchGraceActive) impactSerial += 1;
-      }
+      status = 'crashed';
+      terminalReason = 'hard_impact';
+      terrainImpacts += 1;
+      impactSerial += 1;
+      integrity = 0;
+      detachedPartIds = ['left-wing', 'right-wing', 'left-tailplane', 'right-tailplane', 'tail-fin', 'canopy', 'nose-cap'];
+      vx = 0;
+      vy = 0;
     }
+  } else if (x >= state.goalDistance) {
+    status = 'finished';
+    terminalReason = 'goal';
   }
 
   const resultingSpeed = Math.hypot(vx, vy);
@@ -631,7 +649,7 @@ export function stepSkyboundFlight(
     smoothFlightMs: state.smoothFlightMs + (isSmooth ? safeDtMs : 0),
     flowCharge,
     stallMs: state.stallMs + (isStalled ? safeDtMs : 0),
-    terrainSkims,
+    terrainImpacts,
     terminalReason,
   };
 }
@@ -644,7 +662,7 @@ export function getSkyboundFlightScoreBreakdown(state:SkyboundFlightState):Skybo
   const course=(state.salvageCollected*18)+(state.ringsCleared*45)+(state.nearMisses*25)+(state.bestStreak*4);
   const flow=Math.min(160,Math.round(state.smoothFlightMs/420));
   const altitude=Math.round(state.maxAltitude*.55);
-  const collisionPenalty=(state.hazardHits+Math.max(0,Math.min(3,state.terrainSkims)-1))*20;
+  const collisionPenalty=(state.hazardHits+Math.min(3,state.terrainImpacts))*20;
   return{distance,flow,course,finish,landing,altitude,collisionPenalty,total:Math.max(45,distance+flow+course+finish+landing+altitude-collisionPenalty)};
 }
 export function scoreSkyboundFlight(state: SkyboundFlightState): number { return getSkyboundFlightScoreBreakdown(state).total; }

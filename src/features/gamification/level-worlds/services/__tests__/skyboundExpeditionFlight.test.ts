@@ -12,7 +12,7 @@ import {
   type SkyboundUpgrades,
 } from '../skyboundExpeditionFlight';
 import { getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../skyboundFlightFeel';
-import { SKYBOUND_AIRCRAFT_RANKS } from '../skyboundPilotAcademy';
+import { SKYBOUND_AIRCRAFT_RANKS, SKYBOUND_LESSONS } from '../skyboundPilotAcademy';
 import { getSkyboundLaunchFacility } from '../../../games/skybound-expedition/skyboundLaunchFacilities';
 import { getSkyboundWorldPresentation } from '../../../games/skybound-expedition/skyboundWorldPresentation';
 
@@ -25,7 +25,7 @@ function assert(condition: unknown, message: string): asserts condition {
 function simulate(
   upgrades: SkyboundUpgrades,
   boost: boolean,
-  pitch = 0.2,
+  pitch = 0.42,
 ): SkyboundFlightState {
   let state = createSkyboundFlight({
     power: 1,
@@ -83,13 +83,12 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
     },
   },
   {
-    name: 'makes an upgraded pulse drive reach the gate substantially faster',
+    name: 'makes an upgraded pulse drive extend a controlled Ground School flight',
     run: () => {
       const passive = simulate(SKYBOUND_STARTER_UPGRADES, false);
       const boosted = simulate({ launcher: 0, airframe: 0, engine: 3 }, true);
-      assert(passive.status === 'finished', 'a modest climb input should make Meadow fair for a starter craft');
-      assert(boosted.status === 'finished', 'the upgraded pulse drive should reach the first gate');
-      assert(boosted.elapsedMs < passive.elapsedMs * 0.7, 'pulse drive should create a clearly faster flight');
+      assert(passive.status !== 'flying' && boosted.status !== 'flying', 'both deterministic training flights should settle');
+      assert(boosted.x > passive.x * 1.25, 'pulse drive should create materially more distance before contact or the finish gate');
     },
   },
   {
@@ -120,6 +119,19 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       };
       const landed = { ...finished, status: 'landed' as const };
       assert(scoreSkyboundFlight(finished) > scoreSkyboundFlight(landed), 'finishing the course should beat an equal-distance landing');
+    },
+  },
+  {
+    name: 'progresses from grounded school to high-altitude Ace operations',
+    run: () => {
+      assert(SKYBOUND_LEVELS[0].startClearance < 2, 'Ground School should launch immediately above the field');
+      assert(SKYBOUND_LEVELS[0].targetAltitudeMax <= 22, 'Ground School should remain visibly close to terrain');
+      assert(SKYBOUND_LEVELS.every((level, index) => index === 0 || level.targetAltitudeMin > SKYBOUND_LEVELS[index - 1].targetAltitudeMin), 'each world should teach a progressively higher altitude band');
+      assert(SKYBOUND_LEVELS.every((level, index) => index === 0 || level.finishAltitude > SKYBOUND_LEVELS[index - 1].finishAltitude), 'finish gates should climb with pilot rank');
+      const expectedWorldByRank = { cadet:'meadow',trainee:'coast',aviator:'canyon',elite:'storm',ace:'stratosphere' } as const;
+      for (const lesson of SKYBOUND_LESSONS) assert(lesson.levelId === expectedWorldByRank[lesson.rankId], `${lesson.rankId} lessons should stay in their graduated training world`);
+      const meadowObjects = getSkyboundCourseObjects('meadow');
+      assert(meadowObjects.every((object) => object.y <= SKYBOUND_LEVELS[0].targetAltitudeMax + 1), 'Ground School objects should remain in the low training corridor');
     },
   },
   {
@@ -284,7 +296,7 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
     },
   },
   {
-    name: 'keeps an early terrain brush recoverable instead of ending the sortie',
+    name: 'ends the sortie on the first ground contact even during launch training',
     run: () => {
       const state = {
         ...createSkyboundFlight({ power: .35, angleDeg: 24, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
@@ -296,13 +308,13 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
         airborneMs: 640,
       };
       const next = stepSkyboundFlight(state, { pitch: .2, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
-      assert(next.status === 'flying', 'launch grace should turn an early terrain brush into a skim');
-      assert(next.vy > 0, 'the skim should give the pilot a readable recovery bounce');
-      assert(next.terminalReason === null, 'a recoverable brush must not acquire a terminal reason');
+      assert(next.status === 'crashed', 'any unsafe ground contact should end the attempt immediately');
+      assert(next.terminalReason === 'hard_impact', 'unsafe ground contact should explain the terrain impact');
+      assert(next.integrity === 0, 'ground impact should make the airframe visibly fail');
     },
   },
   {
-    name: 'ends only a deliberate slow touchdown or a genuinely hard impact',
+    name: 'distinguishes a controlled touchdown from every unsafe ground hit',
     run: () => {
       const base = {
         ...createSkyboundFlight({ power: 1, angleDeg: 35, upgrades: SKYBOUND_STARTER_UPGRADES, levelId: 'meadow' }),
@@ -311,12 +323,12 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
         elapsedMs: 4_000,
         airborneMs: 3_000,
       };
-      const landed = stepSkyboundFlight({ ...base, vx: 7, vy: -2, pitchRad: .2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      const landed = stepSkyboundFlight({ ...base, vx: 7, vy: -2, pitchRad: .12 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(landed.status === 'landed' && landed.terminalReason === 'touchdown', 'slow level contact should be a controlled touchdown');
-      const firstSevereContact = stepSkyboundFlight({ ...base, vx: 26, vy: -22, pitchRad: 1, terrainSkims: 0 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
-      assert(firstSevereContact.status === 'flying' && firstSevereContact.terrainSkims === 1, 'a first severe contact should produce one recoverable Academy skim');
-      const crashed = stepSkyboundFlight({ ...base, vx: 26, vy: -24, pitchRad: 1.08, terrainSkims: 2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
-      assert(crashed.status === 'crashed' && crashed.terminalReason === 'hard_impact', 'a steep high-speed impact should still crash');
+      const noseHit = stepSkyboundFlight({ ...base, vx: 10, vy: -3, pitchRad: .75 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(noseHit.status === 'crashed' && noseHit.terminalReason === 'hard_impact', 'poor attitude should turn even a slow contact into a crash');
+      const fastHit = stepSkyboundFlight({ ...base, vx: 26, vy: -10, pitchRad: .2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(fastHit.status === 'crashed' && fastHit.terminalReason === 'hard_impact', 'excessive ground speed should crash on first contact');
     },
   },
   {

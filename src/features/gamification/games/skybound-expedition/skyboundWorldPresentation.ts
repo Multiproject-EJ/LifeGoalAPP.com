@@ -29,6 +29,7 @@ export interface SkyboundWorldLandmark {
 export interface SkyboundWorldPresentation {
   id: SkyboundLevelId;
   signature: string;
+  groundedTrainingField: boolean;
   surfaceColor: string;
   cliffColor: string;
   hazeColor: string;
@@ -43,25 +44,27 @@ export interface SkyboundWorldPresentation {
 const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
   meadow: {
     id: 'meadow',
-    signature: 'Academy towers, wind turbines, and striped practice balloons',
+    signature: 'Grounded Academy practice field, low towers, turbines, and striped training balloons',
+    groundedTrainingField: true,
     surfaceColor: '#67ad50',
     cliffColor: '#6f604c',
     hazeColor: '#d6f7ff',
     lowerDeckColor: '#e6f8ff',
-    lowerDeckOpacity: 0.62,
+    lowerDeckOpacity: 0,
     cloudColor: '#f6fdff',
     cloudOpacity: 0.72,
-    cloudCount: 26,
+    cloudCount: 9,
     landmarks: [
-      { id:'meadow-campus',kind:'academy_tower',lateralX:-25,altitude:12,distanceRatio:.18,scale:1.15 },
-      { id:'meadow-turbines',kind:'wind_turbine',lateralX:31,altitude:18,distanceRatio:.39,scale:1.2 },
-      { id:'meadow-balloons',kind:'training_balloon',lateralX:-18,altitude:62,distanceRatio:.62,scale:1.1 },
-      { id:'meadow-review-tower',kind:'academy_tower',lateralX:28,altitude:22,distanceRatio:.82,scale:.86 },
+      { id:'meadow-campus',kind:'academy_tower',lateralX:-25,altitude:0, distanceRatio:.18,scale:1.02 },
+      { id:'meadow-turbines',kind:'wind_turbine',lateralX:31,altitude:0, distanceRatio:.39,scale:.94 },
+      { id:'meadow-balloons',kind:'training_balloon',lateralX:-18,altitude:19,distanceRatio:.62,scale:.82 },
+      { id:'meadow-review-tower',kind:'academy_tower',lateralX:28,altitude:1,distanceRatio:.82,scale:.72 },
     ],
   },
   coast: {
     id: 'coast',
     signature: 'Ocean deck, lighthouse beacons, sea stacks, and coastal arch',
+    groundedTrainingField: false,
     surfaceColor: '#4d8067',
     cliffColor: '#596b72',
     hazeColor: '#c8f5ff',
@@ -80,6 +83,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
   canyon: {
     id: 'canyon',
     signature: 'Red mesas, rock arches, and rising thermal columns',
+    groundedTrainingField: false,
     surfaceColor: '#ad623c',
     cliffColor: '#743c31',
     hazeColor: '#edaf78',
@@ -98,6 +102,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
   storm: {
     id: 'storm',
     signature: 'Thunderheads, driving rain, lightning beacons, and range spires',
+    groundedTrainingField: false,
     surfaceColor: '#425a59',
     cliffColor: '#232b42',
     hazeColor: '#64779c',
@@ -116,6 +121,7 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
   stratosphere: {
     id: 'stratosphere',
     signature: 'Stars, aurora ribbons, and orbital navigation markers',
+    groundedTrainingField: false,
     surfaceColor: '#7699aa',
     cliffColor: '#445b72',
     hazeColor: '#193d70',
@@ -136,4 +142,3 @@ const WORLDS: Record<SkyboundLevelId, SkyboundWorldPresentation> = {
 export function getSkyboundWorldPresentation(levelId: SkyboundLevelId): SkyboundWorldPresentation {
   return WORLDS[levelId];
 }
-

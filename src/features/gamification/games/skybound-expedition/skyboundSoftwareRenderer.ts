@@ -1,5 +1,6 @@
 import {
   getSkyboundCourseObjects,
+  getSkyboundGroundHeight,
   getSkyboundLevel,
   type SkyboundFlightState,
   type SkyboundLevelId,
@@ -511,12 +512,30 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
 
     for(let index=0;index<world.cloudCount;index+=1) {
       const cloudZ=20+index*47;
-      const p=project((seeded(index,3)-.5)*90,4+seeded(index,8)*78,cloudZ);
+      const cloudBase=world.groundedTrainingField?level.targetAltitudeMax+8:4;
+      const cloudSpan=world.groundedTrainingField?18:78;
+      const p=project((seeded(index,3)-.5)*90,cloudBase+seeded(index,8)*cloudSpan,cloudZ);
       if(p.depth>4&&p.depth<560)drawCloud(context,p,10+seeded(index,5)*14,world.cloudOpacity*(.58+seeded(index,1)*.36));
     }
 
-    const farIslands=islands.filter((island)=>island.z>distance-12&&island.z<distance+650).sort((a,b)=>b.z-a.z);
-    for(const island of farIslands)drawFloatingIsland(context,project(island.x,island.y,island.z),island,level.accent,world);
+    if(world.groundedTrainingField){
+      for(let far=500;far>4;far-=18){
+        const near=Math.max(4,far-18);
+        const zFar=distance+far;const zNear=distance+near;
+        const farLeft=project(-72,getSkyboundGroundHeight(input.levelId,zFar),zFar);
+        const farRight=project(72,getSkyboundGroundHeight(input.levelId,zFar),zFar);
+        const nearLeft=project(-72,getSkyboundGroundHeight(input.levelId,zNear),zNear);
+        const nearRight=project(72,getSkyboundGroundHeight(input.levelId,zNear),zNear);
+        context.fillStyle=Math.floor(far/18)%2===0?'#579c47':'#63aa4d';
+        context.beginPath();context.moveTo(farLeft.x,farLeft.y);context.lineTo(farRight.x,farRight.y);context.lineTo(nearRight.x,nearRight.y);context.lineTo(nearLeft.x,nearLeft.y);context.closePath();context.fill();
+      }
+      context.strokeStyle='rgba(255,239,169,.82)';context.lineWidth=2;
+      for(const lane of [-18,18]){context.beginPath();for(let depth=6;depth<=500;depth+=12){const z=distance+depth;const p=project(lane,getSkyboundGroundHeight(input.levelId,z)+.15,z);if(depth===6)context.moveTo(p.x,p.y);else context.lineTo(p.x,p.y);}context.stroke();}
+      for(let marker=Math.ceil((distance+20)/45)*45;marker<distance+500;marker+=45){const left=project(-18,getSkyboundGroundHeight(input.levelId,marker)+.2,marker);const right=project(18,getSkyboundGroundHeight(input.levelId,marker)+.2,marker);context.strokeStyle=marker%90===0?'rgba(255,220,92,.82)':'rgba(105,235,244,.58)';context.beginPath();context.moveTo(left.x,left.y);context.lineTo(right.x,right.y);context.stroke();}
+    }else{
+      const farIslands=islands.filter((island)=>island.z>distance-12&&island.z<distance+650).sort((a,b)=>b.z-a.z);
+      for(const island of farIslands)drawFloatingIsland(context,project(island.x,island.y,island.z),island,level.accent,world);
+    }
 
     for(const landmark of world.landmarks){const z=18+landmark.distanceRatio*Math.max(120,input.goalDistance-36);drawWorldLandmark(context,project(landmark.lateralX,landmark.altitude,z),landmark,level.accent,time);}
 
@@ -536,7 +555,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
       else drawHazard(context,p,object.radius,time);
     }
 
-    const finalGate=project(0,58,input.goalDistance);
+    const finalGate=project(0,level.finishAltitude,input.goalDistance);
     if(finalGate.depth<620) {
       drawRing(context,finalGate,24,time);
       if(finalGate.depth<300) {

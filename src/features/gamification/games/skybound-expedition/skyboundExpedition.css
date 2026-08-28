@@ -244,6 +244,7 @@
 .skybound__course-row > div {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 7px;
 }
 
@@ -260,6 +261,15 @@
 .skybound__course-row span {
   color: rgba(224, 242, 250, 0.58);
   font-size: 9px;
+}
+
+.skybound__course-row em {
+  flex-basis: 100%;
+  color: #9cf5d2;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.1em;
 }
 
 .skybound__progress {

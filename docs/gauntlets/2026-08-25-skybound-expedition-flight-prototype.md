@@ -618,3 +618,64 @@ sortie has a readable beginning, flight state, and result. The next loop must
 expose a safe promoted-rank preview or fixture, replay all five facilities in
 motion, and tune the manual pull/Flow corridor on an actual touch device before
 raising the overall visual score beyond the current mid-build range.
+
+## Ground-school progression Gauntlet loop 6 — 2026-08-28
+
+Eivind corrected two foundational rules: the first rank should be a grounded
+beginner lesson rather than a late-game floating-sky course, and touching the
+ground must end every attempt. The previous recoverable-terrain-skim rule was
+therefore invalid even when it made unassisted runs feel forgiving.
+
+### Curriculum and terrain contract
+
+- Cadet now owns Meadow Ground School for all four lessons, Trainee owns the
+  Coastal Airfield, Aviator owns Canyon Lift, Elite owns Storm Passage, and Ace
+  owns Goldwing Stratosphere. No early-rank exam jumps into the next rank's
+  world.
+- The five worlds expose monotonically increasing target altitude bands and
+  finish-gate heights: 5–22m, 16–42m, 34–72m, 52–96m, and 78–132m. Launch
+  energy and starting clearance progress with the same curriculum.
+- Meadow course objects were rebuilt into a low 5–22m corridor. Its WebGL and
+  compatibility scenes replace the cloud sea and floating start/finish islands
+  with a continuous rolling practice field, boundary lines, distance markers,
+  grounded Academy towers, low gates, and sparse overhead clouds.
+- Ground contact resolves before goal completion. A slow, level, low-speed
+  contact after real airborne time is a controlled landing; every other terrain
+  contact immediately becomes a ground-impact crash, breaks the airframe, and
+  ends the sortie. There is no launch grace or recoverable skim.
+- Ground impact increments the displayed impact count, applies the canonical
+  collision deduction, and fails First Hop's Perfect Safety standard. A small
+  minimum salvage settlement remains so repeated failed throws can still fund
+  the first physical wing.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,887 tests, 0 failures. Added coverage
+  requires rank-to-world curriculum consistency, rising altitude bands and
+  finish gates, a low Meadow object corridor, first-contact termination, and
+  the controlled-touchdown versus crash distinction.
+- Architecture guard passed with 0 violations and the same 3 allowlisted
+  legacy warnings. Production Vite build passed with existing import/chunk-size
+  warnings only.
+- Fresh-port browser replay began from Build 0/4 on a visibly grounded field.
+  An unassisted bare-fuselage launch spent one ticket, travelled 32m, contacted
+  grass once, broke apart, and immediately opened the Ground Impact result.
+  The corrected result showed one impact, a -20 deduction, failed Perfect
+  Safety, and banked the bounded 45-salvage floor. Browser console had no
+  warnings or errors.
+- Evidence is saved at `/private/tmp/skybound-ground-school-v6.png` and
+  `/private/tmp/skybound-ground-impact-v6.png`.
+
+| Loop 6 gate | Score | Decision |
+| --- | ---: | --- |
+| Grounded beginner-world readability | 8/10 | Live field pass clearly reads as ground school |
+| Ground-contact authority | 9/10 | First contact terminates before finish and scores correctly |
+| Rank-by-rank curriculum | 8/10 | Pure progression contract passes for all 20 lessons |
+| Beginner upgrade motivation | 7/10 | Failure banks bounded salvage toward the first wing |
+| Promoted-rank visual proof | 3/10 | Four later worlds still need live curriculum replay |
+
+**Gauntlet decision: pass Ground School, continue toward 10/10.** The opening
+fantasy and failure rule now match the intended game. The next fidelity loop
+should add a development-only rank/assembly preview, visually replay every
+world, and tune each altitude band, ground approach, and aircraft control
+response from real motion rather than static contracts alone.
