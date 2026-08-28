@@ -6,6 +6,7 @@ import {
 } from '../../level-worlds/services/skyboundExpeditionFlight';
 import type { SkyboundAircraftId } from '../../level-worlds/services/skyboundPilotAcademy';
 import type { SkyboundAimView } from './skyboundExpeditionRenderer';
+import { getSkyboundLaunchFacility, type SkyboundLaunchFacilityPresentation } from './skyboundLaunchFacilities';
 import { getSkyboundWorldPresentation, type SkyboundWorldLandmark, type SkyboundWorldPresentation } from './skyboundWorldPresentation';
 
 type SoftwarePhase = 'aiming' | 'flying' | 'result';
@@ -389,12 +390,53 @@ function drawSoftwareAircraft3d(
   }
 }
 
+function drawLaunchFacility(
+  context:CanvasRenderingContext2D,
+  width:number,
+  height:number,
+  facility:SkyboundLaunchFacilityPresentation,
+  aim:SkyboundAimView,
+  planeX:number,
+  planeY:number,
+  time:number,
+) {
+  const launchY=height*.82;
+  context.save();
+  const deck=context.createLinearGradient(0,height*.5,0,height);
+  deck.addColorStop(0,facility.deckColor);deck.addColorStop(1,'#101927');
+  context.fillStyle=deck;context.beginPath();context.moveTo(width*.41,height*.51);context.lineTo(width*.59,height*.51);context.lineTo(width*.86,height);context.lineTo(width*.14,height);context.closePath();context.fill();
+  context.strokeStyle=facility.edgeColor;context.lineWidth=3;context.beginPath();context.moveTo(width*.42,height*.52);context.lineTo(width*.2,height);context.moveTo(width*.58,height*.52);context.lineTo(width*.8,height);context.stroke();
+  context.fillStyle='rgba(7,20,34,.76)';roundedRect(context,width*.29,height*.505,width*.42,23,8);context.fill();context.fillStyle=facility.edgeColor;context.font='900 9px system-ui';context.textAlign='center';context.fillText(facility.name,width*.5,height*.505+15);
+
+  if(facility.kind==='slingshot'){
+    const wood=context.createLinearGradient(0,launchY-120,0,launchY+80);wood.addColorStop(0,'#b87938');wood.addColorStop(.45,'#6c381e');wood.addColorStop(1,'#2e1d21');
+    context.strokeStyle=wood;context.lineWidth=clamp(width*.035,13,25);context.lineCap='round';context.beginPath();context.moveTo(width*.34,launchY+70);context.lineTo(width*.4,launchY-88);context.moveTo(width*.66,launchY+70);context.lineTo(width*.6,launchY-88);context.stroke();
+    context.strokeStyle=facility.energyColor;context.lineWidth=5+aim.power*2.5;context.shadowBlur=12+aim.power*18;context.shadowColor=facility.energyColor;context.beginPath();context.moveTo(width*.4,launchY-88);context.lineTo(planeX-8,planeY+24);context.moveTo(width*.6,launchY-88);context.lineTo(planeX+8,planeY+24);context.stroke();context.shadowBlur=0;
+  }else{
+    context.strokeStyle=facility.kind==='runway'?'rgba(255,255,255,.86)':facility.energyColor;context.lineWidth=facility.kind==='runway'?3:5;context.setLineDash(facility.kind==='runway'?[12,12]:[]);context.beginPath();context.moveTo(width*.5,height*.54);context.lineTo(width*.5,height);context.stroke();context.setLineDash([]);
+    const pulse=.55+aim.power*.45+Math.sin(time*.012)*.08;context.fillStyle=facility.energyColor;context.shadowColor=facility.energyColor;context.shadowBlur=8+aim.power*18;
+    for(const side of [-1,1]){for(let lamp=0;lamp<7;lamp+=1){const t=lamp/6;const x=width*.5+side*(width*(.085+t*.235));const y=height*(.56+t*.39);context.globalAlpha=.42+pulse*.5;context.beginPath();context.arc(x,y,2+t*2.2,0,Math.PI*2);context.fill();}}context.globalAlpha=1;context.shadowBlur=0;
+    if(facility.kind==='runway'){
+      context.strokeStyle='#eef6f7';context.lineWidth=7;context.beginPath();context.arc(width*.28,height*.61,width*.105,Math.PI,0);context.stroke();context.fillStyle='#ff7550';context.fillRect(width*.73,height*.55,20,7);context.strokeStyle='#e9eef1';context.lineWidth=2;context.beginPath();context.moveTo(width*.73,height*.55);context.lineTo(width*.73,height*.64);context.stroke();
+    }else if(facility.kind==='boost_runway'){
+      context.fillStyle='#a95c33';for(const side of [-1,1]){context.save();context.translate(width*.5+side*width*.19,height*.66);context.rotate(side*.14);context.fillRect(-24,-7,48,25);context.restore();}context.strokeStyle=facility.energyColor;context.lineWidth=4;for(const side of [-1,1]){context.beginPath();context.moveTo(width*.5+side*width*.1,height*.58);context.lineTo(width*.5+side*width*.17,height*.92);context.stroke();}
+    }else if(facility.kind==='storm_catapult'){
+      context.fillStyle='rgba(190,151,255,.72)';roundedRect(context,width*.41,height*.71,width*.18,42,8);context.fill();context.strokeStyle=facility.energyColor;context.lineWidth=4;for(const side of [-1,1]){for(let coil=0;coil<3;coil+=1){context.beginPath();context.ellipse(width*.5+side*width*.27,height*(.61+coil*.095),12+coil*3,20+coil*2,0,0,Math.PI*2);context.stroke();}}
+    }else{
+      context.strokeStyle=facility.energyColor;context.lineWidth=4;context.shadowColor=facility.energyColor;context.shadowBlur=14+aim.power*20;for(let arch=0;arch<4;arch+=1){const y=height*(.55+arch*.075);const radius=width*(.12+arch*.045);context.beginPath();context.arc(width*.5,y,radius,Math.PI,0);context.stroke();}context.shadowBlur=0;
+    }
+  }
+  if(aim.power>.03){context.strokeStyle=`${facility.energyColor}${Math.round((.2+aim.power*.65)*255).toString(16).padStart(2,'0')}`;context.lineWidth=3;context.beginPath();context.ellipse(planeX,planeY,75+aim.power*14,42+aim.power*9,time*.001,0,Math.PI*2);context.stroke();}
+  context.restore();
+}
+
 export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInput) {
   const {canvas}=input;
   const context=canvas.getContext('2d');
   if(!context)return()=>undefined;
   const level=getSkyboundLevel(input.levelId);
   const world=getSkyboundWorldPresentation(input.levelId);
+  const launchFacility=getSkyboundLaunchFacility(input.aircraftId);
   const course=getSkyboundCourseObjects(input.levelId,input.goalDistance);
   const islands=createFloatingIslands(input.goalDistance);
   let width=1;
@@ -507,13 +549,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     const aimingPlaneX=width/2+clamp(aim.pullX/110,-1,1)*34;
     const aimingPlaneY=height*.66+aim.power*height*.095;
     if(phase==='aiming') {
-      const launchY=height*.75;
-      const wood=context.createLinearGradient(0,launchY-120,0,launchY+80);wood.addColorStop(0,'#a8672c');wood.addColorStop(.45,'#6c381e');wood.addColorStop(1,'#2e1d21');
-      context.strokeStyle=wood;context.lineWidth=clamp(width*.035,13,25);context.lineCap='round';
-      context.beginPath();context.moveTo(width*.34,launchY+80);context.lineTo(width*.4,launchY-78);context.moveTo(width*.66,launchY+80);context.lineTo(width*.6,launchY-78);context.stroke();
-      context.strokeStyle='#4deaff';context.lineWidth=5+aim.power*2.5;context.shadowBlur=12+aim.power*18;context.shadowColor='#4deaff';
-      context.beginPath();context.moveTo(width*.4,launchY-78);context.lineTo(aimingPlaneX-8,aimingPlaneY+24);context.moveTo(width*.6,launchY-78);context.lineTo(aimingPlaneX+8,aimingPlaneY+24);context.stroke();context.shadowBlur=0;
-      if(aim.power>.03){context.strokeStyle=`rgba(105,247,255,${.18+aim.power*.55})`;context.lineWidth=3;context.beginPath();context.ellipse(aimingPlaneX,aimingPlaneY,75+aim.power*14,42+aim.power*9,time*.001,0,Math.PI*2);context.stroke();}
+      drawLaunchFacility(context,width,height,launchFacility,aim,aimingPlaneX,aimingPlaneY,time);
     }
 
     if(speedEnergy>.08||input.isBoosting()) {

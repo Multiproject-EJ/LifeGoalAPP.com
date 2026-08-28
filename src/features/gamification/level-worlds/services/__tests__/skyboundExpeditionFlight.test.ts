@@ -12,6 +12,8 @@ import {
   type SkyboundUpgrades,
 } from '../skyboundExpeditionFlight';
 import { getSkyboundFlightStickControl, getSkyboundFlightTelemetry } from '../skyboundFlightFeel';
+import { SKYBOUND_AIRCRAFT_RANKS } from '../skyboundPilotAcademy';
+import { getSkyboundLaunchFacility } from '../../../games/skybound-expedition/skyboundLaunchFacilities';
 import { getSkyboundWorldPresentation } from '../../../games/skybound-expedition/skyboundWorldPresentation';
 
 type TestCase = { name: string; run: () => void };
@@ -143,6 +145,16 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
         return presentation.signature;
       });
       assert(new Set(signatures).size === SKYBOUND_LEVELS.length, 'each level should have a unique world signature');
+    },
+  },
+  {
+    name: 'gives every aircraft rank a distinct authored launch facility',
+    run: () => {
+      const facilities=SKYBOUND_AIRCRAFT_RANKS.map((rank)=>getSkyboundLaunchFacility(rank.aircraftId));
+      assert(new Set(facilities.map((facility)=>facility.id)).size===facilities.length,'every rank should launch from a unique facility');
+      assert(new Set(facilities.map((facility)=>facility.kind)).size===facilities.length,'every facility should teach a distinct launch method');
+      assert(facilities.every((facility)=>facility.visualCues.length===3),'every facility should declare three recognizable visual cues');
+      assert(facilities.every((facility,index)=>index===0||facility.deckLength>facilities[index-1].deckLength),'launch decks should visibly grow with pilot rank');
     },
   },
   {

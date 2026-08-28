@@ -560,3 +560,61 @@ missing-body-to-complete-plane economy and Flow contract now exist generically
 for every rank. Remaining quality work is authored launch-facility animation per
 rank, live WebGL multi-angle proof for all five completed/incomplete aircraft,
 and human control tuning of the Flow corridor on a real device.
+
+## Launch-facility and feedback Gauntlet loop 5 — 2026-08-28
+
+The next fidelity gap was that every aircraft still appeared to leave from the
+same generic sling deck and the important flight-state changes were mostly
+numbers. This loop gives each school rank its own launch technology and makes
+Flow, impact, and terminal outcomes readable without studying the telemetry.
+
+### Facility and feedback contract
+
+- One shared deterministic facility map now binds all five aircraft to distinct
+  launch hardware: Cadet Sling Yard, Coastal Short Field, Vortex Boost Strip,
+  Tempest Carrier Deck, and Goldwing Magnetic Vault. Deck size, energy, colour,
+  instruction, and three identifying visual cues progress with rank.
+- WebGL and compatibility renderers consume the same map. The WebGL path adds
+  physical sling arms and bands, hangar/runway equipment, boost rails, carrier
+  catapult coils, or magnetic arches; powered hardware reacts to launch charge.
+- Entering Flow Lock now produces a dedicated gold stage treatment, a short
+  callout, and reward audio. Impacts report remaining integrity, while terminal
+  crashes identify terrain, hard-impact, or integrity failure instead of ending
+  without explanation. WebGL impacts add bounded sparks and smoke.
+- Terminal result cards now distinguish a completed course from a crash and
+  retain the existing canonical settlement breakdown. Ticket, salvage, XP,
+  progression, and reward-bar ownership are unchanged.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,886 tests, 0 failures. The added
+  regression requires five unique facility identities and kinds, exactly three
+  authored cues per facility, and increasingly capable deck lengths.
+- Production Vite build passed with existing chunk/import warnings only.
+  Architecture guard passed with 0 violations and the same 3 allowlisted legacy
+  warnings.
+- A browser-controlled Cadet replay spent exactly one ticket, responded to a
+  deliberately excessive climb and subsequent dive, continued to the full
+  360/360m exam gate, banked 416 salvage and 55 XP, and rendered the terminal
+  breakdown. The browser console produced no warnings or errors. Evidence is
+  saved at `/private/tmp/skybound-cadet-sling-yard-v5.png`,
+  `/private/tmp/skybound-live-flight-v5.png`, and
+  `/private/tmp/skybound-lesson-result-v5.png`.
+- The Cadet Sling Yard was live-reviewed in motion. The four promoted facilities
+  are implemented in both renderers and covered by pure contracts, but have not
+  yet passed promoted-rank visual replay or real-device WebGL orbit review.
+
+| Loop 5 gate | Score | Decision |
+| --- | ---: | --- |
+| Cadet launch anticipation | 7/10 | Facility reads clearly; charged-band motion still needs a slower manual pull replay |
+| Full-course pacing and terminal result | 8/10 | Live 360m replay passed without abrupt termination |
+| Flow/impact/crash explanation | 7/10 | Implemented; edge-state live capture remains incomplete |
+| Five-rank launch evolution | 6/10 | Shared code and tests passed; four visual replays remain |
+| WebGL aircraft and real-device proof | 3/10 | Still the blocking visual gate |
+
+**Gauntlet decision: pass this facility slice, continue visual proof.** The game
+now communicates an escalating pilot-school launch programme and a complete
+sortie has a readable beginning, flight state, and result. The next loop must
+expose a safe promoted-rank preview or fixture, replay all five facilities in
+motion, and tune the manual pull/Flow corridor on an actual touch device before
+raising the overall visual score beyond the current mid-build range.
