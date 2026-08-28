@@ -1160,3 +1160,60 @@ for approval.** The branch is ready for a deliberate reconciliation with
 `main`. After that merge is verified, the safe sequence is PWA production
 build, Capacitor iOS sync, simulator launch, physical-device audio/WebGL/touch
 flight pass, and only then a separate deployment/publication decision.
+
+## Main reconciliation and native sync Gauntlet loop 14 — 2026-08-28
+
+This loop reconciled the Skybound branch with current remote `main`, rebuilt
+the complete app, copied the verified production bundle into Capacitor, and
+proved the native shell on an iPhone simulator. It did not push, deploy the
+PWA, sign an archive, or publish an App Store build.
+
+### Additive main reconciliation
+
+- Remote `main` at `40b7f7aa` was merged into the feature branch in merge
+  commit `2352d749`. The only conflicted file was the Island Run runtime-state
+  store identified in loop 13.
+- Both persistence systems were retained: Vault Rush claim state and Skybound
+  Academy progress are imported, sanitized, merged, selected from Supabase,
+  and written back independently. No conflict markers remain.
+- Full repository TypeScript passed. The Island Run suite passed 1,950 tests
+  with 0 failures, the architecture guard passed with 0 violations and the
+  same 3 allowlisted legacy warnings, and the Vault lab/model contract checks
+  passed.
+- The post-merge production build passed with 1,379 transformed modules.
+  Skybound remains a separate 101.99 kB minified chunk; the repository's
+  existing mixed-import and large-chunk warnings remain informational.
+
+### Capacitor and simulator evidence
+
+- Capacitor copied the current `dist` into `ios/App/App/public`, regenerated
+  native configuration, and resolved seven plugins: App, Browser, Dialog,
+  Haptics, Local Notifications, Network, and Preferences.
+- The production and native `index.html` files have the same SHA-256 digest:
+  `f3240feeb81435593bc185fea8f15bec79ecac20d3de3f11d9605946d288727c`.
+- Capacitor attempted to rewrite plugin paths through this machine's linked
+  dependency store. Those paths were restored to the repository-portable
+  `../../../node_modules/...` form before the final native gate.
+- Xcode 26.6 built the checked-in portable configuration for a generic iOS
+  Simulator target with code signing disabled. The final quiet repeat build
+  exited 0.
+- The resulting `HabitGame` app (`com.lifegoalapp.habitgame`) was installed and
+  launched on an iPhone 17 Pro running iOS 26.5. A clean relaunch displayed
+  the bundled HabitGame landing experience, proving that the Capacitor web
+  assets load instead of a blank or missing-file shell.
+- A physical iPhone remains the authoritative release gate for WebGL flight,
+  slingshot touch handling, haptics, audio autoplay/mix, thermal behaviour,
+  safe-area layout, signing, and distribution packaging.
+
+| Loop 14 gate | Score | Decision |
+| --- | ---: | --- |
+| Main reconciliation | 10/10 | Current remote main merged with both event states preserved |
+| Shared regression suite | 10/10 | TypeScript, 1,950 tests, architecture, and Vault gates pass |
+| Capacitor bundle parity | 10/10 | Native shell contains the exact verified production index |
+| iOS simulator startup | 9/10 | Native build installs and visibly launches on iPhone 17 Pro |
+| Physical-device readiness | 7/10 | Real-device flight, sound, touch, signing, and archive remain |
+
+**Gauntlet decision: pass reconciliation, production-bundle sync, native
+compile, install, and simulator startup.** The next release slice is a
+physical-device Skybound flight replay, followed by an explicit decision to
+push/deploy and create a signed iOS archive.
