@@ -104,6 +104,11 @@ import {
   type DormantDoorRewardLevel,
   type DormantDoorRewardTier,
 } from '../services/islandRunDormantDoorMinigame';
+import {
+  getVaultRushClaimCount,
+  isVaultRushUnlocked,
+  VAULT_RUSH_MAX_CLAIMS_PER_ISLAND,
+} from '../services/islandRunVaultRush';
 import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
@@ -232,6 +237,7 @@ import {
   applyRewardBarState,
   applyRollResult,
   applyTrafficLightCoinFlipReward,
+  claimVaultRushReward,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   applyTechCollectionState,
@@ -2902,7 +2908,10 @@ export function IslandRunBoardPrototype({
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
   const [isMultiplierMaxJumping, setIsMultiplierMaxJumping] = useState(false);
+  const [multiplierMaxBursts, setMultiplierMaxBursts] = useState<Array<{ id: number; lane: number }>>([]);
   const multiplierMaxJumpLockRef = useRef(false);
+  const multiplierMaxBurstIdRef = useRef(0);
+  const multiplierMaxBurstTimersRef = useRef<Set<number>>(new Set());
   const firstMaxMultiplierThrowPendingRef = useRef(false);
   const consecutiveMaxMultiplierRollsRef = useRef(0);
 
@@ -2931,16 +2940,42 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timeoutId);
   }, [isMultiplierMaxJumping]);
 
+  useEffect(() => () => {
+    multiplierMaxBurstTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    multiplierMaxBurstTimersRef.current.clear();
+  }, []);
+
+  const emitMultiplierMaxBurst = useCallback(() => {
+    const id = multiplierMaxBurstIdRef.current + 1;
+    multiplierMaxBurstIdRef.current = id;
+    setMultiplierMaxBursts((current) => [
+      ...current.slice(-5),
+      { id, lane: id % 3 },
+    ]);
+    const timerId = window.setTimeout(() => {
+      multiplierMaxBurstTimersRef.current.delete(timerId);
+      setMultiplierMaxBursts((current) => current.filter((burst) => burst.id !== id));
+    }, 760);
+    multiplierMaxBurstTimersRef.current.add(timerId);
+  }, []);
+
   const handleMultiplierPillClick = useCallback(() => {
     // The max-tier hop is a deliberate beat: taps during it must not wrap the
     // pill to x1 before the player sees the max state land.
-    if (multiplierMaxJumpLockRef.current || unlockedMultipliers.length <= 1) return;
+    if (unlockedMultipliers.length <= 1) return;
+    if (isAtMaxAvailableMultiplier && multiplierMaxJumpLockRef.current) {
+      emitMultiplierMaxBurst();
+      playIslandRunSound('multiplier_max');
+      return;
+    }
+    if (multiplierMaxJumpLockRef.current) return;
 
     const step = resolveNextMultiplierCycleStep(effectiveMultiplier, unlockedMultipliers);
     playIslandRunSound(step.reachedMax ? 'multiplier_max' : 'multiplier_cycle');
     setDiceMultiplier(step.nextMultiplier);
 
     if (step.reachedMax) {
+      emitMultiplierMaxBurst();
       firstMaxMultiplierThrowPendingRef.current = true;
       consecutiveMaxMultiplierRollsRef.current = 0;
       multiplierMaxJumpLockRef.current = true;
@@ -2949,7 +2984,7 @@ export function IslandRunBoardPrototype({
       firstMaxMultiplierThrowPendingRef.current = false;
       consecutiveMaxMultiplierRollsRef.current = 0;
     }
-  }, [effectiveMultiplier, unlockedMultipliers]);
+  }, [effectiveMultiplier, emitMultiplierMaxBurst, isAtMaxAvailableMultiplier, playIslandRunSound, unlockedMultipliers]);
 
   // ── Dice regen countdown (Monopoly GO style: "Next dice in MM:SS") ───────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
@@ -5912,6 +5947,20 @@ export function IslandRunBoardPrototype({
       return;
     }
 
+    const vaultRushCompletedStops = runtimeStateRef.current.completedStopsByIsland?.[String(islandNumber)] ?? [];
+    if (!isVaultRushUnlocked(vaultRushCompletedStops)) {
+      setLandingText('🔒 Vault Rush unlocks after your first landmark submission.');
+      return;
+    }
+    const vaultRushClaimCount = getVaultRushClaimCount(
+      runtimeStateRef.current.vaultRushClaimsByIsland,
+      effectiveIslandNumber,
+    );
+    if (vaultRushClaimCount >= VAULT_RUSH_MAX_CLAIMS_PER_ISLAND) {
+      setLandingText(`🔒 Island vault limit reached — ${vaultRushClaimCount}/${VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} claimed.`);
+      return;
+    }
+
     const miniGame = buildDormantDoorMiniGame({
       islandNumber: effectiveIslandNumber,
       tileIndex,
@@ -5929,7 +5978,7 @@ export function IslandRunBoardPrototype({
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
     setLandingText('🚪 Dormant door challenge: reveal doors until 3 matching prizes appear.');
-  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
+  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandNumber, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
 
   const handlePrepayStopTicket = useCallback(async (stopId: string) => {
     const stopIndex = stopIndexByStopId.get(stopId);
@@ -6029,6 +6078,11 @@ export function IslandRunBoardPrototype({
     setTrafficLightPassPulse(false);
   }, [islandNumber]);
 
+  const vaultRushClaimCount = getVaultRushClaimCount(
+    runtimeState.vaultRushClaimsByIsland,
+    effectiveIslandNumber,
+  );
+
   const handleDormantDoorSelect = useCallback((doorIndex: number) => {
     if (!dormantDoorMiniGame || dormantDoorReward) return;
     if (dormantDoorSelectedIndices.includes(doorIndex)) return;
@@ -6051,19 +6105,25 @@ export function IslandRunBoardPrototype({
   const handleClaimDormantDoorReward = useCallback(() => {
     if (!dormantDoorMiniGame || !dormantDoorReward || isDormantDoorRewardClaiming) return;
     setIsDormantDoorRewardClaiming(true);
-    const record = applyTokenHopRewards({
+    const result = claimVaultRushReward({
       session,
       client,
-      deltas: {
-        essence: dormantDoorReward.essence,
-        dicePool: 0,
-      },
+      effectiveIslandNumber,
+      essenceReward: dormantDoorReward.essence,
       triggerSource: 'dormant_landmark_door_minigame',
     });
-    setRuntimeState(record);
-    setLandingText(`🗝️ Vault cracked — ${DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]}: +${dormantDoorReward.essence} money.`);
+    if (result.status !== 'claimed') {
+      setLandingText(result.status === 'locked'
+        ? '🔒 Vault Rush unlocks after your first landmark submission.'
+        : `🔒 Island vault limit reached — ${result.claimCount}/${VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} claimed.`);
+      handleCloseDormantDoorMiniGame();
+      return;
+    }
+    runtimeStateRef.current = result.record;
+    setRuntimeState(result.record);
+    setLandingText(`🗝️ Vault cracked — ${DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]}: +${dormantDoorReward.essence} money · ${result.claimCount}/${VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} claimed.`);
     handleCloseDormantDoorMiniGame();
-  }, [client, dormantDoorMiniGame, dormantDoorReward, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
+  }, [client, dormantDoorMiniGame, dormantDoorReward, effectiveIslandNumber, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
 
   useEffect(() => {
     if (trafficLightCoinFlip?.phase !== 'ready') {
@@ -15229,7 +15289,11 @@ export function IslandRunBoardPrototype({
             {isShooterControllerActive ? (
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
-              <div className="island-run-prototype__footer-controller-shell" aria-label="Island Run controller layout">
+              <div
+                className={`island-run-prototype__footer-controller-shell${isAutoRolling ? ' island-run-prototype__footer-controller-shell--auto-rolling' : ''}`}
+                aria-label="Island Run controller layout"
+                data-auto-rolling={isAutoRolling ? 'true' : undefined}
+              >
                 <button
                   type="button"
                   className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-story"
@@ -15268,6 +15332,7 @@ export function IslandRunBoardPrototype({
                       vectorEffect="non-scaling-stroke"
                     />
                   </svg>
+                  <span className="island-run-prototype__footer-handle-jet island-run-prototype__footer-handle-jet--left" aria-hidden="true" />
                   <span className="island-run-prototype__footer-handle-btn-label">🐾 Creatures</span>
                 </button>
                 <button
@@ -15298,6 +15363,7 @@ export function IslandRunBoardPrototype({
                       vectorEffect="non-scaling-stroke"
                     />
                   </svg>
+                  <span className="island-run-prototype__footer-handle-jet island-run-prototype__footer-handle-jet--right" aria-hidden="true" />
                   <span className="island-run-prototype__footer-handle-btn-label">🛍️ Market</span>
                 </button>
                 <button
@@ -15327,6 +15393,17 @@ export function IslandRunBoardPrototype({
                   onClick={handleMultiplierPillClick}
                   title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
                 >
+                  <span className="island-run-prototype__footer-multiplier-max-bursts" aria-hidden="true">
+                    {multiplierMaxBursts.map((burst) => (
+                      <span
+                        key={burst.id}
+                        className="island-run-prototype__footer-multiplier-max-burst"
+                        style={{ '--max-burst-lane': burst.lane } as CSSProperties}
+                      >
+                        MAX!
+                      </span>
+                    ))}
+                  </span>
                   ×{effectiveMultiplier}
                   {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
                 </button>
@@ -16345,6 +16422,9 @@ export function IslandRunBoardPrototype({
             {dormantDoorReward && <ConfettiBurst active variant="standard" />}
             <header className="island-vault-rush__header">
               <span className="island-vault-rush__eyebrow">Secret found behind a dormant door</span>
+              <span className="island-vault-rush__claim-limit" role="status">
+                {vaultRushClaimCount}/{VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} claimed on this island
+              </span>
               <h3 className="island-stop-modal__title island-vault-rush__title" aria-label="Vault Rush">
                 <span>Vault</span>
                 <span>Rush</span>

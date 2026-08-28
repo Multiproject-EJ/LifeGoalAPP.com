@@ -86,6 +86,7 @@ import {
   applySpaceExcavatorDig,
   applyTimedEventTicketSpend,
   claimArenaFirstTicketBoost,
+  claimVaultRushReward,
   ARENA_FIRST_TICKET_BOOST_AMOUNT,
   claimSpaceExcavatorMilestoneReward,
   initSpaceExcavatorProgressForEvent,
@@ -1975,6 +1976,85 @@ export const islandRunStateActionsTests: TestCase[] = [
         4,
         'spend deltas should not decrement event tickets in dual-write phase',
       );
+    },
+  },
+  {
+    name: 'claimVaultRushReward stays locked until a non-Hatchery submission completes',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 4,
+        currentIslandNumber: 3,
+        cycleIndex: 0,
+        essence: 20,
+        completedStopsByIsland: { '3': ['hatchery'] },
+      });
+
+      const result = claimVaultRushReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 3,
+        essenceReward: 9,
+      });
+
+      assertEqual(result.status, 'locked', 'Hatchery alone must not unlock Vault Rush');
+      assertEqual(result.record.essence, 20, 'A locked vault must not pay a reward');
+      assertEqual(result.record.vaultRushClaimsByIsland['3'] ?? 0, 0, 'A locked vault must not consume a claim');
+    },
+  },
+  {
+    name: 'claimVaultRushReward awards Essence and consumes one effective-island claim together',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 4,
+        currentIslandNumber: 3,
+        cycleIndex: 1,
+        essence: 20,
+        completedStopsByIsland: { '3': ['hatchery', 'habit'] },
+        vaultRushClaimsByIsland: { '123': 2 },
+      });
+
+      const result = claimVaultRushReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 123,
+        essenceReward: 9,
+      });
+
+      assertEqual(result.status, 'claimed', 'An unlocked vault should pay');
+      assertEqual(result.record.essence, 29, 'The vault reward should be credited');
+      assertEqual(result.claimCount, 3, 'The effective-island claim count should advance');
+      assertEqual(result.record.vaultRushClaimsByIsland['123'], 3, 'The claim ledger should commit with the reward');
+      assertEqual(result.record.runtimeVersion, 5, 'A successful claim should make one new state version');
+    },
+  },
+  {
+    name: 'claimVaultRushReward rejects a sixth claim without paying again',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 8,
+        currentIslandNumber: 3,
+        essence: 50,
+        completedStopsByIsland: { '3': ['hatchery', 'habit'] },
+        vaultRushClaimsByIsland: { '3': 5 },
+      });
+
+      const result = claimVaultRushReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 3,
+        essenceReward: 99,
+      });
+
+      assertEqual(result.status, 'cap_reached', 'The sixth claim should be rejected');
+      assertEqual(result.record.essence, 50, 'The capped vault must not pay a reward');
+      assertEqual(result.claimCount, 5, 'The claim count should remain capped at five');
+      assertEqual(result.record.runtimeVersion, 8, 'A rejected claim must not commit a new version');
     },
   },
   {

@@ -59,4 +59,59 @@ export const islandRunControllerVisualContractTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'auto-roll drives one reduced-motion-safe jet behind each lower handle',
+    run: () => {
+      const boardSource = readFileSync(
+        'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
+        'utf8',
+      );
+      const islandCss = readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+
+      assert(
+        boardSource.includes("isAutoRolling ? ' island-run-prototype__footer-controller-shell--auto-rolling' : ''"),
+        'The controller shell must expose the live auto-roll presentation state',
+      );
+      assert(
+        boardSource.includes('island-run-prototype__footer-handle-jet--left')
+          && boardSource.includes('island-run-prototype__footer-handle-jet--right'),
+        'Both lower handles must render an exhaust jet',
+      );
+      assert(
+        islandCss.includes('.island-run-prototype__footer-controller-shell--auto-rolling .island-run-prototype__footer-handle-jet'),
+        'Jets must activate only from the controller auto-roll state',
+      );
+      assert(
+        islandCss.includes('@media (prefers-reduced-motion: reduce)')
+          && islandCss.includes('animation: none;\n    opacity: 0.82;'),
+        'Auto-roll jets must have a steady reduced-motion fallback',
+      );
+    },
+  },
+  {
+    name: 'yellow max lock emits one independently keyed MAX burst per click',
+    run: () => {
+      const boardSource = readFileSync(
+        'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
+        'utf8',
+      );
+      const islandCss = readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+
+      assert(
+        boardSource.includes('if (isAtMaxAvailableMultiplier && multiplierMaxJumpLockRef.current)')
+          && boardSource.includes('emitMultiplierMaxBurst();'),
+        'Clicks during the yellow max lock must emit feedback without wrapping',
+      );
+      assert(
+        boardSource.includes('multiplierMaxBursts.map((burst)')
+          && boardSource.includes('key={burst.id}')
+          && boardSource.includes('MAX!'),
+        'Each max click must render as its own keyed burst so rapid clicks stack',
+      );
+      assert(
+        islandCss.includes('@keyframes island-run-multiplier-max-burst'),
+        'The MAX burst must have its own short pop animation',
+      );
+    },
+  },
 ];

@@ -71,6 +71,10 @@ export function buildCurrentIslandMissionResetRecord(
       ...current.completedStopsByIsland,
       [islandKey]: [],
     },
+    vaultRushClaimsByIsland: {
+      ...current.vaultRushClaimsByIsland,
+      [String(getEffectiveIslandNumber(islandNumber, cycleIndex))]: 0,
+    },
     stopTicketsPaidByIsland: {
       ...current.stopTicketsPaidByIsland,
       [islandKey]: [],
