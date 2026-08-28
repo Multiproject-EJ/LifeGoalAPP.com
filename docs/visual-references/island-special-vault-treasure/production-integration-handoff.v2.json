@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "created": "2026-08-28",
+  "status": "production-collection-integrated-and-quality-gated",
+  "baseCommit": "29ecd586",
+  "branch": "codex/vault-island-production-integration-20260828",
+  "collectionAuthority": {
+    "source": "canonical vaultRushClaimsByIsland ledger",
+    "resolver": "src/features/gamification/level-worlds/services/islandRunVaultCollection.ts",
+    "rule": "One distinct island with at least one successful Vault Rush claim unlocks one relic in canonical collection order.",
+    "repeatClaims": "Existing Vault Rush economy only; no duplicate museum relic.",
+    "writesFromPresentation": false,
+    "newRelicCeremony": "After the canonical claim commits, a before/after projection opens directly on the newly unlocked relic."
+  },
+  "productionSurface": {
+    "entry": "Island Run Board menu",
+    "label": "Vault Island collection",
+    "modal": "src/features/gamification/level-worlds/components/VaultIslandCollectionModal.tsx",
+    "viewportPortal": true,
+    "escapeClose": true,
+    "scrollLock": ["body", "documentElement", "root"],
+    "pausesBoardAttention": true,
+    "lazyChunk": true
+  },
+  "museumStates": {
+    "empty": "Eight authored plinths and glass cases with gold-and-jewel locks; no selectable relics.",
+    "partial": "Owned relics remain selectable, animated, revealable, and valued; locked cases remain architectural.",
+    "complete": "All eight premium PBR relics are interactive with central inspection, reveal rings, light, spin, and sparkles."
+  },
+  "devRoutes": {
+    "islandLab": "/dev/vault-island-lab",
+    "atriumLab": "/dev/vault-island-lab?view=atrium",
+    "museumLab": "/dev/vault-island-lab?view=vault",
+    "treasureLab": "/dev/vault-treasure-lab",
+    "productionOwnershipPreview": "/dev/vault-island-collection-preview?owned=3"
+  },
+  "verification": {
+    "islandRunTests": "1894 passed, 0 failed",
+    "modelRuntime": "passed; 1652 exterior meshes, 10 interior sockets, 8 treasures",
+    "labContract": "passed",
+    "viteBuild": "passed; VaultIslandCollectionModal emitted as a lazy 159.71 kB chunk",
+    "browserManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v077-new-relic-ceremony/capture-manifest.v1.json",
+    "browserCaptures": 22,
+    "browserDiagnostics": 0,
+    "repoTypecheck": "blocked only by pre-existing unrelated Supabase generated-type errors in goals/actions/projects/routines/todos services; no Vault Island errors"
+  },
+  "qualityReview": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/reviews/v076-production-integration-quality-lord.md"
+}

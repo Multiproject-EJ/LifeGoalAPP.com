@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "gate": "post-acceptance-palatial-finish-and-runtime-stability",
+  "status": "approved-production-candidate",
+  "reviewed": "2026-08-28",
+  "priorAcceptedEvidence": "../raw/browser-captures-v069-final-interior-treasure-gate",
+  "evidenceRoot": "../raw/browser-captures-v073-subtle-material-final",
+  "requiredViews": [
+    "atrium-390x844.png",
+    "vault-initial-390x844.png",
+    "vault-after-discovery-1-390x844.png",
+    "vault-after-reveal-390x844.png",
+    "treasure-lab-initial-390x844.png",
+    "treasure-lab-after-reveal-390x844.png",
+    "treasure-lab-inspect-390x844.png",
+    "treasure-lab-pointer-inspect-390x844.png",
+    "treasure-lab-obelisk-390x844.png",
+    "treasure-lab-egg-390x844.png",
+    "treasure-lab-hourglass-390x844.png",
+    "treasure-lab-key-390x844.png",
+    "treasure-lab-medallion-390x844.png",
+    "treasure-lab-chalice-390x844.png"
+  ],
+  "scores": {
+    "twoLevelAtriumHierarchy": 0.9,
+    "grandDescentStructure": 0.92,
+    "domeAndInteriorContinuity": 0.9,
+    "royalEntryAndGardenWayfinding": 0.89,
+    "vaultMuseumComposition": 0.9,
+    "displayIdentityAndMaterialResponse": 0.89,
+    "eightTreasureIdentityAndMaterials": 0.88,
+    "revealAndInspectionCeremony": 0.91,
+    "phoneReadabilityAndNoClipping": 0.89,
+    "runtimeJourneyCompleteness": 0.95
+  },
+  "worstScore": 0.88,
+  "hardVetoes": [],
+  "corrections": [
+    "The v070 journey exposed synchronous first-frame shader compilation during a React transition; rendering now begins on the next animation frame and the full journey passes.",
+    "The v072 marble color modulation read as striping at phone scale; v073 retains tactile bump response while restoring clean ivory base color."
+  ],
+  "decision": "The v073 finish pass improves depth, entry hierarchy, display identity, material response, and runtime stability without changing the approved room volumes, camera contract, sockets, or treasure interactions.",
+  "residualRisk": "The repository-wide TypeScript build has unrelated pre-existing generated-data and service typing failures; the Vite production bundle and all Vault-specific checks pass.",
+  "action": "approve"
+}

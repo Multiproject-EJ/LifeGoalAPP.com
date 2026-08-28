@@ -233,7 +233,9 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     name: 'board lets Concord fragments collect before special tile routing can steal the landing',
     run: () => {
       includes(boardSource, 'const concordPickup = rollResult.concordFragmentPickup;');
-      includes(boardSource, 'if (maybeCollectTechItem(');
+      includes(boardSource, 'const collectedConcordFragment = maybeCollectTechItem(');
+      includes(boardSource, 'if (collectedConcordFragment) {');
+      includes(boardSource, "setQueuedSignatureMissionPresentation('first_light_assembly')");
       includes(boardSource, 'concordPickup?.reason,');
       includes(boardSource, "} else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId)");
       includes(boardSource, 'const maybeCollectTechItem = useCallback((');
@@ -242,11 +244,12 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     },
   },
   {
-    name: 'board gates Island 1 departure behind The Concord unless dev clear is used',
+    name: 'board accepts the Assembly finale as Island 1 departure authority alongside legacy Concord completion',
     run: () => {
       includes(boardSource, "getIslandTechnologyAccess(runtimeState, 'the-concord').active");
+      includes(boardSource, 'latestAssembly.completedAtMs === null');
       includes(boardSource, "source !== 'dev_clear_island'");
-      includes(boardSource, 'Build The Concord from all 9 Island 1 fragments before finishing Island 1.');
+      includes(boardSource, 'Complete the twenty-charge Assembly Crater mission before finishing Island 1.');
     },
   },
 

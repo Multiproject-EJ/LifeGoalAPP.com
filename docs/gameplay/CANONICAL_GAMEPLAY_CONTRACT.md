@@ -421,7 +421,7 @@ Invariants:
 
 ### 5F) Encounter tile placement
 
-- Normal islands (rarity `normal`): **1** encounter tile, placed at fractional position `0.15` of the ring. **Day-gated**: on a normal island the encounter only materialises once `dayIndex >= 2`; on day 0 or day 1 the fractional slot falls back to a deterministic pool tile. This protects brand-new players from hitting a modal inside the first two sessions.
+- Normal islands (rarity `normal`): **1** encounter tile, placed at fractional position `34 / 36` of the ring (the end-of-lap caretaker sector on the production profile). **Day-gated**: on a normal island the encounter only materialises once `dayIndex >= 2`; on day 0 or day 1 the fractional slot falls back to a deterministic pool tile. This protects brand-new players from hitting a modal inside the first two sessions. The older `0.15` slot resolved to the Habit landmark door and was therefore never playable.
 - Seasonal islands (every 5th that is not also a 10th): **2** encounter tiles at fractions `0.275` and `0.775`. No day-gate.
 - Rare islands (every 10th): **2** encounter tiles at the same fractions. No day-gate.
 
@@ -439,6 +439,16 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 - The ninth fragment is a capability unlock, not only a collection reward: the completion sequence assembles and activates **The Concord**, then offers immediate entry to its channel console.
 - The active Concord is the island communication hub. It provides the **Creature Channel**, **Caretaker Channel**, and **Story Mode**; channel-specific eligibility (for example, an owned active companion) remains authoritative in the corresponding communication access service.
 - The Concord remains available from the controller after activation, while unread mandatory story may temporarily take priority on the same controller affordance. Island 1 cannot be cleared until the canonical Concord technology unlock is active.
+
+## 5H) Signature mission route objects
+
+- Signature mission objects are additive metadata on an underlying ordinary tile. A successful mission pickup never replaces that tile's canonical economy reward.
+- Authored pickup positions resolve from route fractions through the shared reservation service. Landmark entrance clusters, Traffic Light, Build Discount, Living Ticket, card, and every possible encounter slot have higher placement priority.
+- A mission object is finite and claim-once unless its mission explicitly documents a repeatable interaction (for example a fishing spot or Frostwell drill station).
+- An exact landing collects the object first. Missions with route pity may instead secure the first unclaimed object crossed during an accepted roll; at most one pity object is collected per roll and token movement is never changed.
+- Collection and stage activation are canonical service actions persisted in `signatureMissionProgressByIsland`. React and Three.js only present committed results.
+- Mission completion is optional to ordinary island travel unless an island-specific contract explicitly declares it as a canonical stop substitute (Island 001 is the current exception).
+- Islands 004, 006, 007, 008, and 009 share the staged-restoration state machine but keep authored descriptors and bespoke 3D transformations. Each spend reveals exactly one durable world stage; the final spend triggers the island finale.
 
 ## 5C) Reward amplification and session dynamics
 

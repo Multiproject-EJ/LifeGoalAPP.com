@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-28",
+  "capture_profile": {
+    "browser": "Chrome WebGL diagnostic route",
+    "css_viewport": "900x1100",
+    "capture_pixels": "1406x1719",
+    "route": "island-016-fishing-interaction-lab.html",
+    "quality": "medium",
+    "hud": "hidden for landmark and overview studies; mission HUD retained where gameplay evidence required"
+  },
+  "goal_authority": {
+    "exact_village": {
+      "path": "goals/exact/016-fishermans-village-approved-v004.png",
+      "dimensions": "1024x1536",
+      "sha256": "a631297b2d2c11fcb3939de8ccc5bcdd69c52ab3bd12d40597859fbb6019ae65"
+    },
+    "secondary_dragon": {
+      "path": "goals/secondary-inferred/water-dragon-four-view-v001.png",
+      "dimensions": "1254x1254",
+      "sha256": "051c1577841f4479f3fceaf1d4a53d3a68dd6c68ca5434eb717228e1fc86c642"
+    }
+  },
+  "matched_captures": [
+    {"view": "overview", "path": "baseline/current-v001/overview.jpg", "sha256": "12bb6de377ad7635d793ae4de3d2e6297c2e17d957b970aec758433b49aa43db"},
+    {"view": "guild-hall", "path": "baseline/current-v001/boss.jpg", "sha256": "816221ed9b22f13c4543e0e56c381110648880fb5e7b1f95702045856f5115cc"},
+    {"view": "net-house-hatchery", "path": "baseline/current-v001/hatchery.jpg", "sha256": "bfde99b3dd3e961df40ea0c40c6ff19f6de67a6380b9b6660da0fb55d561a7d7"},
+    {"view": "boatwright-yard", "path": "baseline/current-v001/habit.jpg", "sha256": "281ed08488214da9113e6264f36a3ef5021d9fd8482fd485daca27d433a2a6b1"},
+    {"view": "lighthouse-library", "path": "baseline/current-v001/wisdom.jpg", "sha256": "1ff60b7136101a3fe376dd18014de760f5579dfce6e1fd0aefd5ddf30fc19f6b"},
+    {"view": "round-lantern-tavern", "path": "baseline/current-v001/event.jpg", "sha256": "bccf160ba35269bdf1b2e1a587ae2fcb33228ebde2bd995b327d2dafcdd21f57"},
+    {"view": "fish-market-dock", "path": "baseline/current-v001/market.jpg", "sha256": "753d11e305042b78cf35e75501cdfb413333cd6731572c61039a0b697f1cab93"},
+    {"view": "fishing-countdown", "path": "baseline/current-v001/fish-countdown.jpg", "sha256": "8e7c4d8bb860894d75eae215184636d24c3b7255286c8296c4343e56e07f8c61"},
+    {"view": "fishing-reeling", "path": "baseline/current-v001/fish-reeling.jpg", "sha256": "28a83c4fc71bf041e520617f3fafd14f4a287adaa0e955ed37fb1bb7716b905c"},
+    {"view": "fishing-caught", "path": "baseline/current-v001/fish-caught.jpg", "sha256": "8d03b39616c9c8f4a4636c580c8bf4258a87a948c7ed446d402b818c3bb29695"},
+    {"view": "dragon-eruption", "path": "baseline/current-v001/dragon-eruption.jpg", "sha256": "d79b8ccaa91d875f1c50ccb7dfaf9d35b1671d3667c655ebb9d7730f1efea658"},
+    {"view": "dragon-flight", "path": "baseline/current-v001/dragon-flight.jpg", "sha256": "3ae2391ec02d02d5424026237d8aa76d758f8ff044b704abcb0a0a643bf123c3"},
+    {"view": "dragon-dive", "path": "baseline/current-v001/dragon-dive.jpg", "sha256": "09a33e8f020b9d6fd383a692c408c774996cd9ccf5da3165ae7fb8489a442d8c"}
+  ],
+  "honest_baseline_score": 0.6,
+  "strongest_preserved_features": [
+    "correct complete-island geography and central circular pond",
+    "playable in-world fishing zoom, line, reeling and catch feedback",
+    "five landmark slots plus market, boats, fishermen and warm lantern language",
+    "pond-width colossus scale and a complete eruption-to-dive state machine"
+  ],
+  "largest_mismatches": [
+    "landmarks and cottages share blocky primitives and insufficiently distinct silhouettes",
+    "roof planes, openings and structural trim read as stacked slabs rather than crafted coastal architecture",
+    "rock terraces, docks, boats, nets, market clutter and occupied-life storytelling are sparse versus the source",
+    "materials are flat and same-valued, while sky and ocean lack depth, foam and atmosphere",
+    "the catch fish is readable and joyful but has toy-simple anatomy and surface detail",
+    "the dragon's head, continuous body, folded-wing behavior, scales and water interaction are far below the accepted identity sheet",
+    "eruption framing clips anatomical information and the dive does not yet sell wing wrapping, head-first entry or consequential island impact"
+  ],
+  "salvage_decision": {
+    "decision": "salvage-runtime-rebuild-visual-families",
+    "retain": ["board topology", "mission state machine", "camera hook points", "quality tiers", "single renderer", "working fish interaction timing", "aperture scale contract"],
+    "replace_or_materially_refine": ["landmark construction families", "village/scenery dressing", "materials/lighting", "fish model family", "dragon model family", "dragon presentation choreography"]
+  }
+}

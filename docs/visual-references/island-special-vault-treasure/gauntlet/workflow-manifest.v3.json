@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "subject": "vault-island-interior-10-of-10-rebuild",
+  "status": "complete-production-candidate",
+  "created": "2026-08-28",
+  "baseline": "baseline.v3.json",
+  "inventory": "part-inventory.v3.json",
+  "renderProfile": {
+    "runtime": "threejs-webgl",
+    "primaryViewport": [390, 844],
+    "requiredAtriumViews": ["front", "left-three-quarter", "right-three-quarter", "top-oblique", "underside-sanity", "phone-proof"],
+    "requiredVaultViews": ["front", "left-three-quarter", "right-three-quarter", "top-oblique", "rear-sanity", "phone-proof"],
+    "semanticPass": "ivory-clay-with-owned-system-colors",
+    "finishPass": "premium-marble-gold-enamel-glass"
+  },
+  "gates": {
+    "criticalMinimum": 0.85,
+    "worstViewGoverns": true,
+    "representativeSlice": ["atrium-rotunda-shell", "atrium-dome-oculus", "atrium-split-grand-stair"],
+    "hardVetoes": ["floating stairs", "toy-block masonry", "rail-only gallery floors", "flat dome ceiling", "treasure display pile-up", "camera-dependent room shape", "phone clipping"]
+  },
+  "authority": {
+    "root": "Codex current task",
+    "userDirection": "Continue building the interior; current result is very far from the target.",
+    "productionApproval": "Eivind approved continuation through the whole interiors and their treasures on 2026-08-28",
+    "gameplayWrites": false
+  },
+  "preserve": [
+    "VaultIslandLab journey controls and QA hooks",
+    "eight treasure definitions and inspect/reveal behavior",
+    "placement socket contract",
+    "premium material helper patterns",
+    "production Board modal integration"
+  ],
+  "atriumRepresentativeSlice": {
+    "family001": "retired-hard-veto-v060",
+    "family002": "retired-post-correction-below-floor-v062",
+    "approvedRoute": "Blender-authored architectural GLB assembled under the existing Three.js interaction layer",
+    "approvedGate": "qa/reviews/v065-blender-atrium-correction-quality-lord.json"
+  },
+  "vaultMuseumGate": "qa/reviews/v066-blender-vault-correction-quality-lord.json",
+  "finalAssemblyGate": "qa/reviews/v073-post-acceptance-palatial-finish-quality-lord.json",
+  "assembly": "assembly-manifest.v3.json"
+}

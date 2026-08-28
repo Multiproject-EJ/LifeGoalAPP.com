@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-08-28",
+  "surface": "Island Run Board menu to Vault Island collection modal",
+  "browser": "Codex in-app browser",
+  "checks": {
+    "boardMenuEntryVisible": true,
+    "topLevelDialogPortalVisible": true,
+    "closeControlVisible": true,
+    "viewportFill": true,
+    "documentScrollLocked": true,
+    "closeReturnsToBoard": true,
+    "escapeReturnsToBoard": true,
+    "webglUnavailableFallbackVisible": true,
+    "gameplayWrites": false
+  },
+  "viewportEvidence": {
+    "modalCssBounds": {
+      "x": 0,
+      "y": 0,
+      "width": 433.3333435058594,
+      "height": 937.77783203125
+    },
+    "windowCssBounds": {
+      "width": 433,
+      "height": 938
+    },
+    "devicePixelRatio": 0.8999999761581421
+  },
+  "capture": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/production-integration-v059/vault-island-board-modal-webgl-fallback.jpg",
+  "interactive3dEvidence": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v058-material-lighting/capture-manifest.v1.json",
+  "notes": "The in-app browser intentionally exposed a disabled-WebGL path. The Vault modal remained mounted and showed approved static concept artwork; the v058 Chrome journey remains the interactive WebGL evidence."
+}

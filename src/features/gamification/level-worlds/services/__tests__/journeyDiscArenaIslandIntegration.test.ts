@@ -8,7 +8,7 @@ import { assertEqual, type TestCase } from './testHarness';
 
 export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
   {
-    name: 'chapter exhibition owns the locked Island 006 centre landmark',
+    name: 'chapter exhibition stays in the right rail on locked Island 006',
     run: () => {
       const presentation = resolveJourneyDiscCenterLandmarkPresentation({
         featureEnabled: true,
@@ -17,13 +17,13 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
         eventTickets: 4,
         bossStopStatus: 'locked',
       });
-      assertEqual(presentation.owner, 'journey_disc_arena', 'Journey Disc owns the centre on Island 006');
-      assertEqual(presentation.canEnter, true, 'an event ticket can become a deployed weapon disc');
-      assertEqual(presentation.reason, 'event_ready', 'the landmark reports an enterable exhibition');
+      assertEqual(presentation.owner, 'canonical_boss', 'Journey Disc never replaces the centre on Island 006');
+      assertEqual(presentation.canEnter, false, 'the centre landmark is not an event entry point');
+      assertEqual(presentation.reason, 'right_rail_only', 'the resolver records the single right-rail launcher rule');
     },
   },
   {
-    name: 'live exhibition stays visible without tickets but cannot start a round',
+    name: 'ticket count never creates a second centre launcher',
     run: () => {
       const presentation = resolveJourneyDiscCenterLandmarkPresentation({
         featureEnabled: true,
@@ -32,9 +32,9 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
         eventTickets: 0,
         bossStopStatus: 'locked',
       });
-      assertEqual(presentation.owner, 'journey_disc_arena', 'the timed landmark remains visible');
-      assertEqual(presentation.canEnter, false, 'zero tickets cannot deploy a disc');
-      assertEqual(presentation.reason, 'tickets_required', 'the invitation can explain how to unlock entry');
+      assertEqual(presentation.owner, 'canonical_boss', 'the canonical centre remains untouched');
+      assertEqual(presentation.canEnter, false, 'centre entry stays disabled regardless of tickets');
+      assertEqual(presentation.reason, 'right_rail_only', 'Journey Disc remains in the normal event column');
     },
   },
   {
@@ -146,6 +146,19 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
         'Journey Disc remains discoverable as a chapter-gated exhibition',
       );
       assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the expanded grid remains available');
+    },
+  },
+  {
+    name: 'board exposes Journey Disc only through the ordinary event surface',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assertEqual(boardSource.includes('island-run-board__journey-disc-beacon'), false, 'no duplicate centre-screen beacon is rendered');
+      assertEqual(boardSource.includes('journeyDiscArenaCenterActive='), false, 'the board cannot request a centre landmark takeover');
+      assertEqual(pilotSource.includes('journeyDiscArenaCenterActive?:'), false, 'the 3D renderer no longer accepts a centre takeover prop');
+      assertEqual(boardSource.includes('shouldJourneyDiscReplaceTimedEventSurface'), true, 'the right-rail timed-event replacement remains wired');
     },
   },
 ];

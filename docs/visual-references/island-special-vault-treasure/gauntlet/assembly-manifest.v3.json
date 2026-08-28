@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "subject": "vault-island-complete-interior-and-treasure-assembly",
+  "status": "production-candidate",
+  "assembled": "2026-08-28",
+  "assets": [
+    {
+      "id": "vault-atrium",
+      "file": "../../../../../public/assets/islands/special/vault-island/vault-atrium.glb",
+      "sha256": "cd341b901a6a706dbd2b2496ba7dcb80474c3cd163a295ce45dbfc60a3c24300",
+      "bytes": 5735240,
+      "objects": 398
+    },
+    {
+      "id": "vault-museum",
+      "file": "../../../../../public/assets/islands/special/vault-island/vault-museum.glb",
+      "sha256": "232a9b81136901bf44a9170777792aa8b1c4a2f33e331c19a1b3aa6cfe71fc8b",
+      "bytes": 3347044,
+      "objects": 247
+    },
+    {
+      "id": "vault-palace-exterior",
+      "file": "../../../../../public/assets/islands/special/vault-island/vault-palace.glb",
+      "sha256": "89c24bd307f0fab3eea739f367213548c290e277e465a3fb730a850b26549bca"
+    }
+  ],
+  "runtimeSources": [
+    {
+      "file": "../../../../../scripts/blender/build_vault_interiors.py",
+      "sha256": "d149c9babfa98509f4de6739fa72de8582e387e1ce0a7ce62cf000d71d1db78d"
+    },
+    {
+      "file": "../../../../../src/features/gamification/level-worlds/dev/VaultTreasureVaultInteriorModel.ts",
+      "sha256": "116f3913d743523d8a64e711ceee70fbc83f702781cf56a3e2f161d8200afaa4"
+    },
+    {
+      "file": "../../../../../src/features/gamification/level-worlds/dev/VaultTreasureModels.ts",
+      "sha256": "cfbbe8dd59779f0a9feafad9a9330e78d89cda38705a5c93728404c0fae50cbf"
+    },
+    {
+      "file": "../../../../../src/dev/VaultIslandLab.tsx",
+      "sha256": "a2980e801324610ed2e58e18ed6b2e0affe1a67a9a7048822f52d7dd76d61951"
+    },
+    {
+      "file": "../../../../../src/dev/VaultTreasureLab.tsx",
+      "sha256": "8f0a7bae4018a2e3ad4c718b9a93f681fca5cacee00234bd41af8fc5ffc10791"
+    }
+  ],
+  "preservedContracts": {
+    "treasures": ["crown", "compass", "obelisk", "egg", "hourglass", "key", "medallion", "chalice"],
+    "placementSockets": 10,
+    "gameplayWrites": false,
+    "productionEntry": "Vault Island collection",
+    "modalPortal": true
+  },
+  "evidence": {
+    "browserCapture": "qa/raw/browser-captures-v073-subtle-material-final/capture-manifest.v1.json",
+    "browserCaptureSha256": "1ffabe2a88c83e7c63e95765ca33a7ae4cee5665f492941bb559fc2fd7f89882",
+    "runtimeCheck": "passed",
+    "labContractCheck": "passed",
+    "viteProductionBundle": "passed-1231-modules",
+    "fullTypeScriptBuild": "blocked-by-pre-existing-errors-outside-vault-island-scope"
+  }
+}

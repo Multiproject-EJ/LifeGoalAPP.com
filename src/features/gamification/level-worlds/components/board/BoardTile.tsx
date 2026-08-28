@@ -192,6 +192,9 @@ export interface BoardTileProps {
   /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
    *  match the ring geometry regardless of viewport dimensions. */
   uniformScale: number;
+  onInspect?: () => void;
+  isInfoOpen?: boolean;
+  accessibilityLabel?: string;
 }
 
 export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
@@ -218,6 +221,9 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isDormant = false,
     livingTicketGrowthProgress = 1,
     uniformScale,
+    onInspect,
+    isInfoOpen = false,
+    accessibilityLabel,
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
@@ -234,10 +240,24 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '⛏';
   } else if (signatureMissionKind === 'rootheart_power_component') {
     iconContent = '⚙';
+  } else if (signatureMissionKind === 'first_light_dynamite') {
+    iconContent = '🧨';
   } else if (signatureMissionKind === 'cactus_canyon_dynamite') {
     iconContent = signatureMissionAmount >= 3 ? '🧨³' : '🧨';
   } else if (signatureMissionKind === 'great_honeyfall_nectar') {
     iconContent = '🍯';
+  } else if (signatureMissionKind === 'fishermans_rod') {
+    iconContent = '🎣';
+  } else if (signatureMissionKind === 'causeway_masonry') {
+    iconContent = '🧱';
+  } else if (signatureMissionKind === 'moon_mirror_lens') {
+    iconContent = '🌙';
+  } else if (signatureMissionKind === 'breathline_pressure_pearl') {
+    iconContent = '🫧';
+  } else if (signatureMissionKind === 'pollination_pollen_light') {
+    iconContent = '✿';
+  } else if (signatureMissionKind === 'ignition_core') {
+    iconContent = '🔥';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
@@ -265,7 +285,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   }
 
   return (
-    <div
+    <button
+      type="button"
       className={[
         'island-tile',
         `island-tile--${anchor.zBand}`,
@@ -278,8 +299,14 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         signatureMissionKind === 'frostwell_drill' ? 'island-tile--frostwell-drill' : '',
         signatureMissionKind === 'rootheart_power_component' ? 'island-tile--rootheart-power-component' : '',
+        signatureMissionKind === 'first_light_dynamite' ? 'island-tile--first-light-dynamite' : '',
         signatureMissionKind === 'cactus_canyon_dynamite' ? 'island-tile--cactus-canyon-dynamite' : '',
         signatureMissionKind === 'great_honeyfall_nectar' ? 'island-tile--great-honeyfall-nectar' : '',
+        signatureMissionKind === 'fishermans_rod' ? 'island-tile--fishermans-rod' : '',
+        signatureMissionKind?.includes('causeway_') || signatureMissionKind?.includes('moon_mirror_')
+          || signatureMissionKind?.includes('breathline_') || signatureMissionKind?.includes('pollination_')
+          || signatureMissionKind === 'ignition_core'
+          ? 'island-tile--staged-restoration-pickup' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -287,21 +314,39 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         technologyFragment ? 'island-tile--technology-fragment' : '',
         isDormant ? 'island-tile--dormant' : '',
         isLivingTicketRegrowing ? 'island-tile--living-ticket-regrowing' : '',
+        isInfoOpen ? 'island-tile--info-open' : '',
       ].filter(Boolean).join(' ')}
-      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`
+      aria-label={accessibilityLabel ?? (technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`
         : signatureMissionKind === 'frostwell_drill'
           ? `Tile ${index + 1}. Frostwell drill spin`
           : signatureMissionKind === 'rootheart_power_component'
             ? `Tile ${index + 1}. Rootheart Powerworks component`
+            : signatureMissionKind === 'first_light_dynamite'
+              ? `Tile ${index + 1}. Assembly Crater dynamite, one finite stick`
             : signatureMissionKind === 'cactus_canyon_dynamite'
               ? `Tile ${index + 1}. Cactus Canyon dynamite cache, ${signatureMissionAmount} stick${signatureMissionAmount === 1 ? '' : 's'}`
             : signatureMissionKind === 'great_honeyfall_nectar'
               ? `Tile ${index + 1}. Royal nectar for the Great Honeyfall`
+            : signatureMissionKind === 'fishermans_rod'
+              ? `Tile ${index + 1}. Fishing rod station. Landing starts a pond cast`
+            : signatureMissionKind === 'causeway_masonry'
+              ? `Tile ${index + 1}. Masonry Spark for the Broken Causeway`
+            : signatureMissionKind === 'moon_mirror_lens'
+              ? `Tile ${index + 1}. Moon Lens for the mirror circuit`
+            : signatureMissionKind === 'breathline_pressure_pearl'
+              ? `Tile ${index + 1}. Pressure Pearl for the Breathline`
+            : signatureMissionKind === 'pollination_pollen_light'
+              ? `Tile ${index + 1}. Pollen Light for the Great Pollination`
+            : signatureMissionKind === 'ignition_core'
+              ? `Tile ${index + 1}. Ignition Core for the forge chain`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing
                 ? `Tile ${index + 1}. Event ticket regrowing`
-              : undefined}
+              : undefined)}
+      aria-expanded={isInfoOpen}
+      aria-controls={isInfoOpen ? `island-tile-info-${index}` : undefined}
+      onClick={onInspect}
       style={{
         left: position.x,
         top: position.y,
@@ -334,6 +379,6 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
       </span>
 
-    </div>
+    </button>
   );
 });

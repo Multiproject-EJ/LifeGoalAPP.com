@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createIsland22IconicWaterDragonParts } from './Island22IconicWaterDragonParts';
 
 export const ISLAND_22_FISH_TARGET_KG = 100;
 export const ISLAND_22_FISH_TARGET_LB = 220.5;
@@ -12,6 +13,9 @@ export const ISLAND_22_DRAGON_FOLDED_BODY_LENGTH = 24;
 export const ISLAND_22_DRAGON_FULL_LAUNCH_ROOT_Y = 33.4;
 export const ISLAND_22_DRAGON_FULL_LAUNCH_TAIL_Y = ISLAND_22_DRAGON_FULL_LAUNCH_ROOT_Y - ISLAND_22_DRAGON_FOLDED_BODY_LENGTH;
 export const ISLAND_22_DRAGON_ERUPTION_CENTER_OFFSET_XZ = 0;
+const ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS = 21.45;
+const ISLAND_22_DRAGON_DIVE_SUBMERGED_SECONDS = 22.68;
+const ISLAND_22_DRAGON_RENDER_CUTOFF_SECONDS = 22.6;
 
 export type Island22WaterDragonPhase =
   | 'fishing'
@@ -35,6 +39,7 @@ export interface Island22WaterDragonCameraPose {
   position: THREE.Vector3;
   target: THREE.Vector3;
   shake: number;
+  fov: number;
 }
 
 export interface Island22WaterDragonMissionRuntime {
@@ -73,7 +78,7 @@ export function resolveIsland22WaterDragonPhase(seconds: number): Island22WaterD
   if (seconds < 10.2) return 'eruption';
   if (seconds < 13.4) return 'unfurl';
   if (seconds < 19.2) return 'flight';
-  if (seconds < 22.5) return 'dive';
+  if (seconds < ISLAND_22_DRAGON_DIVE_SUBMERGED_SECONDS) return 'dive';
   return 'repair-mission';
 }
 
@@ -110,6 +115,24 @@ function wingGeometry(side: -1 | 1) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
   return geometry;
+}
+
+function wrappedWingSheetGeometry() {
+  const geometry = new THREE.BufferGeometry();
+  // Eight vertices give the folded membrane a shouldered, scalloped silhouette
+  // instead of reading like a rectangular armour strip in the dive camera.
+  const position = new THREE.BufferAttribute(new Float32Array(24), 3);
+  position.setUsage(THREE.DynamicDrawUsage);
+  geometry.setAttribute('position', position);
+  geometry.setIndex([
+    0, 1, 2,
+    0, 2, 7,
+    7, 2, 3,
+    7, 3, 4,
+    7, 4, 6,
+    6, 4, 5,
+  ]);
+  return { geometry, position };
 }
 
 function tailFinGeometry() {
@@ -225,7 +248,18 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
   const ivory = new THREE.MeshStandardMaterial({ color: 0xfff0bf, roughness: 0.48 });
   const amber = new THREE.MeshPhysicalMaterial({ color: 0xf6a51d, emissive: 0x7a2600, emissiveIntensity: 0.9, roughness: 0.08, clearcoat: 1 });
   const membrane = new THREE.MeshPhysicalMaterial({ color: 0x21aeb4, roughness: 0.3, transparent: false, side: THREE.DoubleSide, depthWrite: true, clearcoat: 0.52, clearcoatRoughness: 0.16, emissive: 0x075d6c, emissiveIntensity: 0.48 });
+  const wrappedMembrane = membrane.clone();
+  wrappedMembrane.color.setHex(0x0b7083);
+  wrappedMembrane.emissive.setHex(0x063d49);
+  wrappedMembrane.emissiveIntensity = 0.34;
+  wrappedMembrane.transparent = true;
+  wrappedMembrane.opacity = 0.8;
+  wrappedMembrane.depthTest = true;
+  wrappedMembrane.depthWrite = false;
   const mouthMaterial = new THREE.MeshStandardMaterial({ color: 0x4a1723, roughness: 0.6 });
+  [teal, tealSolid, tealDark, belly, ivory, amber, membrane, wrappedMembrane, mouthMaterial].forEach((material) => {
+    material.fog = false;
+  });
   const scaleAccent = new THREE.MeshPhysicalMaterial({ color: 0x4dc8c5, roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.16 });
   const glowAccent = new THREE.MeshPhysicalMaterial({ color: 0xc7fff0, emissive: 0x30cbd1, emissiveIntensity: 1.4, roughness: 0.16, clearcoat: 0.8 });
 
@@ -336,6 +370,11 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
   head.add(crownCrest);
   head.add(skull, muzzle, mouth, jaw);
   root.add(head);
+  head.visible = false;
+  head.name = 'ISLAND_22_LEGACY_DRAGON_HEAD_RIG';
+  const iconicDragon = createIsland22IconicWaterDragonParts({ quality: 'medium' });
+  iconicDragon.root.name = 'ISLAND_22_DRAGON_HEAD_RIG';
+  root.add(iconicDragon.root);
 
   const wingGroups: THREE.Group[] = [];
   ([-1, 1] as const).forEach((side) => {
@@ -358,6 +397,36 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     root.add(wing);
     wingGroups.push(wing);
   });
+  const wrappedWingSheets = ([-1, 1] as const).map((side) => {
+    const sheetGeometry = wrappedWingSheetGeometry();
+    const sheet = new THREE.Mesh(sheetGeometry.geometry, wrappedMembrane);
+    sheet.name = side < 0 ? 'ISLAND_22_DRAGON_WRAPPED_WING_LEFT' : 'ISLAND_22_DRAGON_WRAPPED_WING_RIGHT';
+    sheet.visible = false;
+    sheet.castShadow = true;
+    sheet.frustumCulled = false;
+    sheet.renderOrder = 30;
+    root.add(sheet);
+    return { sheet, position: sheetGeometry.position, side };
+  });
+  const wrappedWingSeams = ([-1, 1] as const).map((side) => {
+    const seam = beam(scaleAccent, 0.085);
+    seam.name = side < 0
+      ? 'ISLAND_22_DRAGON_WRAPPED_WING_LEFT_LEADING_EDGE'
+      : 'ISLAND_22_DRAGON_WRAPPED_WING_RIGHT_LEADING_EDGE';
+    seam.visible = false;
+    root.add(seam);
+    return { seam, side };
+  });
+  const wrappedWingRibs = ([-1, 1] as const).flatMap((side) => [0, 1, 2].map((ribIndex) => {
+    const rib = beam(scaleAccent, 0.055);
+    rib.name = `ISLAND_22_DRAGON_WRAPPED_WING_${side < 0 ? 'LEFT' : 'RIGHT'}_RIB_${ribIndex + 1}`;
+    rib.visible = false;
+    rib.renderOrder = 31;
+    (rib.material as THREE.Material).depthTest = false;
+    (rib.material as THREE.Material).depthWrite = false;
+    root.add(rib);
+    return { rib, ribIndex, side };
+  }));
 
   const limbs: Array<{ group: THREE.Group; side: -1 | 1; rear: boolean }> = [];
   ([-1, 1] as const).forEach((side) => [0, 1].forEach((rear) => {
@@ -562,7 +631,7 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     emissive: 0x168fa7,
     emissiveIntensity: 0.62,
     transparent: true,
-    opacity: 0.68,
+    opacity: 0.4,
     depthWrite: false,
     roughness: 0.2,
   });
@@ -623,6 +692,49 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
   washedFisher.visible = false;
   options.parent.add(washedFisher);
 
+  // The world ocean is translucent and therefore cannot provide reliable
+  // depth occlusion for the passed-through dragon. Add a mission-local world
+  // water-plane discard to every dragon material so contact becomes a true
+  // progressive submergence: head first, torso next, tail last. This keeps the
+  // existing trajectory and avoids introducing a visible opaque ocean patch.
+  const dragonWaterClipActive = { value: 0 };
+  const dragonWaterClipY = { value: diveSplash.position.y - 0.02 };
+  const clipMaterials = new Set<THREE.Material>();
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    materials.forEach((material) => clipMaterials.add(material));
+  });
+  clipMaterials.forEach((material) => {
+    const priorCompile = material.onBeforeCompile;
+    material.onBeforeCompile = (shader, renderer) => {
+      priorCompile.call(material, shader, renderer);
+      shader.uniforms.uDragonWaterClipActive = dragonWaterClipActive;
+      shader.uniforms.uDragonWaterClipY = dragonWaterClipY;
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          'void main() {',
+          'varying vec3 vDragonWorldPosition;\nvoid main() {',
+        )
+        .replace(
+          '#include <worldpos_vertex>',
+          '#include <worldpos_vertex>\n  vDragonWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;',
+        );
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          'void main() {',
+          'uniform float uDragonWaterClipActive;\nuniform float uDragonWaterClipY;\nvarying vec3 vDragonWorldPosition;\nvoid main() {',
+        )
+        .replace(
+          '#include <clipping_planes_fragment>',
+          '#include <clipping_planes_fragment>\n  if (uDragonWaterClipActive > 0.5 && vDragonWorldPosition.y < uDragonWaterClipY) discard;',
+        );
+    };
+    const priorProgramKey = material.customProgramCacheKey.bind(material);
+    material.customProgramCacheKey = () => `${priorProgramKey()}|island22-dragon-water-clip-v1`;
+    material.needsUpdate = true;
+  });
+
   const initialBoats = options.boats.map((boat) => boat.position.clone());
   const initialSkiffs = options.pondSkiffs.map((boat) => boat.position.clone());
   const boatDirections = initialBoats.map((position) => position.clone().setY(0).normalize());
@@ -630,15 +742,19 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     const angle = index / Math.max(1, initialSkiffs.length) * Math.PI * 2;
     return new THREE.Vector3(Math.cos(angle) * 10, -0.55, Math.sin(angle) * 10);
   });
-  const cameraPose: Island22WaterDragonCameraPose = { position: new THREE.Vector3(11, 9, 13), target: new THREE.Vector3(0, 2, 0), shake: 0 };
+  const cameraPose: Island22WaterDragonCameraPose = { position: new THREE.Vector3(11, 9, 13), target: new THREE.Vector3(0, 2, 0), shake: 0, fov: 42 };
   let phase: Island22WaterDragonPhase = 'fishing';
   const foldedPoint = new THREE.Vector3();
   const extendedPoint = new THREE.Vector3();
   const bodyTangent = new THREE.Vector3();
   const headForward = new THREE.Vector3();
+  const iconicHeadPosition = new THREE.Vector3();
+  const iconicHeadWorld = new THREE.Vector3();
+  const iconicFacing = new THREE.Vector3();
+  const eruptionFacing = new THREE.Vector3(0.62, 0.6, 0.5).normalize();
+  const dragonBodyMidpointWorld = new THREE.Vector3();
   const localHeadForward = new THREE.Vector3(0, 0, 1);
   const localBodyForward = new THREE.Vector3(1, 0, 0);
-  const cameraLookOffset = new THREE.Vector3(-1.5, -1.8, 0);
   const sprayMatrix = new THREE.Matrix4();
   const sprayPosition = new THREE.Vector3();
   const sprayScale = new THREE.Vector3();
@@ -649,28 +765,55 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
   const cameraTo = new THREE.Vector3();
   const targetFrom = new THREE.Vector3();
   const targetTo = new THREE.Vector3();
+  const eruptionMidpoint = new THREE.Vector3();
+  const electricStreamDirection = new THREE.Vector3(0, -0.16, 1).normalize();
   const islandBasePosition = options.parent.position.clone();
   const islandBaseRotation = options.parent.rotation.clone();
   const impactBuildingBasePosition = impactBuilding.position.clone();
+  const predictedHeadWorld = new THREE.Vector3();
+  const predictedTailWorld = new THREE.Vector3();
+  const diveHeadTarget = new THREE.Vector3();
+  const diveArcOffset = new THREE.Vector3();
+  const diveContactRoot = new THREE.Vector3();
+  const diveTerminalRoot = new THREE.Vector3();
+  const diveTailTarget = new THREE.Vector3();
+  const wingDiveQuaternion = new THREE.Quaternion();
+  const wingFoldQuaternion = new THREE.Quaternion();
+  const wrappedWingStart = new THREE.Vector3();
+  const wrappedWingEnd = new THREE.Vector3();
+  const wrappedWingInnerStart = new THREE.Vector3();
+  const wrappedWingOuterStart = new THREE.Vector3();
+  const wrappedWingOuterMid = new THREE.Vector3();
+  const wrappedWingOuterEnd = new THREE.Vector3();
+  const wrappedWingInnerEnd = new THREE.Vector3();
+  const wrappedWingInnerMid = new THREE.Vector3();
+  const wrappedWingShoulder = new THREE.Vector3();
+  const wrappedWingRear = new THREE.Vector3();
+  const wrappedWingRibStart = new THREE.Vector3();
+  const wrappedWingRibEnd = new THREE.Vector3();
 
   const updateDragon = (seconds: number, reducedMotion: boolean) => {
     const erupt = smooth((seconds - 7.2) / 0.72);
     const skyLaunch = smooth((seconds - 7.75) / 1.85);
     const unfold = smooth((seconds - 10.05) / 3.15);
     const flight = smooth((seconds - 13.2) / 6);
-    const dive = smooth((seconds - 19.2) / 3);
+    const dive = smooth((seconds - 19.2) / (ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS - 19.2));
+    const submerged = smooth((seconds - ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS) / (ISLAND_22_DRAGON_DIVE_SUBMERGED_SECONDS - ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS));
     const diveFold = smooth((seconds - 19.15) / 0.95);
-    root.visible = seconds >= 7.18 && seconds < 21.72;
+    // At this render cutoff the full hierarchy is already below the splash
+    // plane. The mission phase continues to 22.68s, but no cyan geometry leaks
+    // through the water into the building-damage shot.
+    root.visible = seconds >= 7.18 && seconds < ISLAND_22_DRAGON_RENDER_CUTOFF_SECONDS;
     const travelAngle = flight * Math.PI * 1.2;
     root.position.set(
-      Math.cos(travelAngle) * flight * 18 + dive * 10.8,
-      -6.4 + erupt * 17.8 + skyLaunch * 22 - flight * 8 + Math.sin(flight * Math.PI) * 4.2 - dive * 32,
-      Math.sin(travelAngle) * flight * 16 + dive * 19.2,
+      Math.cos(travelAngle) * flight * 18,
+      -6.4 + erupt * 17.8 + skyLaunch * 22 - flight * 8 + Math.sin(flight * Math.PI) * 4.2,
+      Math.sin(travelAngle) * flight * 16,
     );
     root.rotation.y = 0.45 + travelAngle * 0.18;
     root.rotation.x = reducedMotion ? 0 : Math.sin(flight * Math.PI * 2) * 0.1 * (1 - dive);
     const flightBank = reducedMotion ? 0 : Math.sin(flight * Math.PI * 2.15) * 0.22 * flight;
-    root.rotation.z = THREE.MathUtils.lerp(flightBank, -1.3, dive);
+    root.rotation.z = THREE.MathUtils.lerp(flightBank, -Math.PI / 2, dive);
     for (let index = 0; index < points.length; index += 1) {
       const t = index / (points.length - 1);
       foldedPoint.set(
@@ -719,7 +862,38 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     head.quaternion.setFromUnitVectors(localHeadForward, headForward);
     head.scale.setScalar(5.8 + erupt * 0.7);
     jaw.rotation.x = -Math.sin(clamp01((seconds - 8.4) / 1.2) * Math.PI) * 0.28;
+    const iconicScaleXY = 3.55 + erupt * 0.24;
+    const iconicScaleZ = 2.35 + erupt * 0.18;
+    const faceReveal = (1 - unfold) * smooth((seconds - 7.58) / 0.72);
+    iconicFacing.copy(headForward).lerp(eruptionFacing, faceReveal * 0.72).normalize();
+    iconicHeadPosition.copy(points[0]).addScaledVector(iconicFacing, 3.72 * iconicScaleZ * 0.96);
+    iconicDragon.root.position.copy(iconicHeadPosition);
+    iconicDragon.root.quaternion.setFromUnitVectors(localHeadForward, iconicFacing);
+    iconicDragon.root.scale.set(iconicScaleXY, iconicScaleXY, iconicScaleZ);
+    const eruptionJaw = Math.sin(clamp01((seconds - 8.35) / 1.3) * Math.PI);
+    const attackCharge = smooth((seconds - 15.15) / 2.15) * (1 - smooth((seconds - 18.45) / 0.5));
+    const residualDiveCharge = smooth((seconds - 19.2) / 0.4)
+      * (1 - smooth((seconds - 21.35) / 0.35))
+      * 0.75;
+    const charge = Math.max(attackCharge, residualDiveCharge);
+    const flightRelease = smooth((seconds - 18.12) / 0.34) * (1 - smooth((seconds - 19.05) / 0.22));
+    const diveWaterLance = smooth((seconds - 20.05) / 0.24)
+      * (1 - smooth((seconds - 21.12) / 0.3))
+      * 0.78;
+    const release = Math.max(flightRelease, diveWaterLance);
+    iconicDragon.updateAttack({
+      elapsedSeconds: Math.max(0, seconds),
+      charge01: charge,
+      release01: release,
+      streamDirection: electricStreamDirection,
+      reducedMotion,
+    });
+    // Keep the interlocking shark teeth visible through flight and dive; a
+    // nearly closed resting jaw erased the creature's most iconic face cue at
+    // phone scale even though the geometry was present.
+    iconicDragon.setJawOpen(Math.max(0.44, eruptionJaw, release));
     wingGroups.forEach((wing, index) => {
+      wing.visible = true;
       wing.position.copy(points[6]);
       const side = index === 0 ? -1 : 1;
       const flap = reducedMotion ? 0 : Math.sin(seconds * 3.35) * 0.23 * flight * (1 - diveFold);
@@ -727,12 +901,88 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
       wing.rotation.x = THREE.MathUtils.lerp(openRotationX, side * 1.43, diveFold);
       wing.rotation.y = THREE.MathUtils.lerp(THREE.MathUtils.lerp(side * 0.34, 0, unfold), side * 0.72, diveFold);
       wing.rotation.z = THREE.MathUtils.lerp(0, side * 0.2, diveFold);
+      if (diveFold > 0.001) {
+        bodyTangent.subVectors(points[8], points[4]).normalize();
+        wingDiveQuaternion.setFromUnitVectors(localBodyForward, bodyTangent);
+        wingFoldQuaternion.setFromAxisAngle(localBodyForward, side * 1.24);
+        wingDiveQuaternion.multiply(wingFoldQuaternion);
+        wing.quaternion.slerp(wingDiveQuaternion, diveFold);
+      }
       const wingScale = 0.22 + unfold * 3.25;
       wing.scale.set(
-        wingScale * (1 + diveFold * 0.08),
-        wingScale * (1 - diveFold * 0.12),
-        wingScale * (1 - diveFold * 0.68),
+        wingScale * (1 - diveFold * 0.05),
+        wingScale * (1 - diveFold * 0.18),
+        wingScale * (1 - diveFold * 0.8),
       );
+    });
+    wrappedWingSheets.forEach(({ sheet, position, side }) => {
+      sheet.visible = diveFold > 0.08;
+      if (!sheet.visible) return;
+      const startRadius = dragonRadiusAt(5, points.length);
+      const midRadius = dragonRadiusAt(11, points.length);
+      const endRadius = dragonRadiusAt(18, points.length);
+      const foldWidth = smooth((diveFold - 0.08) / 0.92);
+      wrappedWingInnerStart.copy(points[5]);
+      wrappedWingInnerStart.z += side * startRadius * 0.46;
+      wrappedWingInnerStart.y += startRadius * 0.14;
+      wrappedWingOuterStart.copy(points[5]);
+      wrappedWingOuterStart.z += side * startRadius * (0.5 + foldWidth * 0.18);
+      wrappedWingOuterStart.y += side * startRadius * (0.16 + foldWidth * 0.32);
+      wrappedWingShoulder.copy(points[8]);
+      wrappedWingShoulder.z += side * dragonRadiusAt(8, points.length) * (0.6 + foldWidth * 0.38);
+      wrappedWingShoulder.y += side * dragonRadiusAt(8, points.length) * (0.24 + foldWidth * 1.08);
+      wrappedWingOuterMid.copy(points[11]);
+      wrappedWingOuterMid.z += side * midRadius * (0.5 + foldWidth * 0.28);
+      wrappedWingOuterMid.y += side * midRadius * (0.18 + foldWidth * 0.92);
+      wrappedWingRear.copy(points[15]);
+      wrappedWingRear.z += side * dragonRadiusAt(15, points.length) * (0.55 + foldWidth * 0.34);
+      wrappedWingRear.y += side * dragonRadiusAt(15, points.length) * (0.22 + foldWidth * 0.86);
+      wrappedWingOuterEnd.copy(points[18]);
+      wrappedWingOuterEnd.z += side * endRadius * (0.48 + foldWidth * 0.14);
+      wrappedWingOuterEnd.y += side * endRadius * (0.12 + foldWidth * 0.28);
+      wrappedWingInnerEnd.copy(points[18]);
+      wrappedWingInnerEnd.z += side * endRadius * 0.42;
+      wrappedWingInnerEnd.y += endRadius * 0.1;
+      wrappedWingInnerMid.copy(points[11]);
+      wrappedWingInnerMid.z += side * midRadius * 0.43;
+      wrappedWingInnerMid.y += midRadius * 0.12;
+      position.setXYZ(0, wrappedWingInnerStart.x, wrappedWingInnerStart.y, wrappedWingInnerStart.z);
+      position.setXYZ(1, wrappedWingOuterStart.x, wrappedWingOuterStart.y, wrappedWingOuterStart.z);
+      position.setXYZ(2, wrappedWingShoulder.x, wrappedWingShoulder.y, wrappedWingShoulder.z);
+      position.setXYZ(3, wrappedWingOuterMid.x, wrappedWingOuterMid.y, wrappedWingOuterMid.z);
+      position.setXYZ(4, wrappedWingRear.x, wrappedWingRear.y, wrappedWingRear.z);
+      position.setXYZ(5, wrappedWingOuterEnd.x, wrappedWingOuterEnd.y, wrappedWingOuterEnd.z);
+      position.setXYZ(6, wrappedWingInnerEnd.x, wrappedWingInnerEnd.y, wrappedWingInnerEnd.z);
+      position.setXYZ(7, wrappedWingInnerMid.x, wrappedWingInnerMid.y, wrappedWingInnerMid.z);
+      position.needsUpdate = true;
+      sheet.geometry.computeVertexNormals();
+      sheet.geometry.computeBoundingSphere();
+    });
+    wrappedWingSeams.forEach(({ seam, side }) => {
+      seam.visible = diveFold > 0.08;
+      if (!seam.visible) return;
+      const startRadius = dragonRadiusAt(5, points.length);
+      const endRadius = dragonRadiusAt(18, points.length);
+      wrappedWingStart.copy(points[5]);
+      wrappedWingStart.z += side * startRadius * 0.82;
+      wrappedWingEnd.copy(points[18]);
+      wrappedWingEnd.z += side * endRadius * 0.76;
+      placeBeam(seam, wrappedWingStart, wrappedWingEnd, 0.72 + diveFold * 0.45);
+    });
+    wrappedWingRibs.forEach(({ rib, ribIndex, side }) => {
+      rib.visible = diveFold > 0.08;
+      if (!rib.visible) return;
+      const innerIndex = 7 + ribIndex * 3;
+      const outerIndex = 8 + ribIndex * 3;
+      const innerRadius = dragonRadiusAt(innerIndex, points.length);
+      const outerRadius = dragonRadiusAt(outerIndex, points.length);
+      wrappedWingRibStart.copy(points[innerIndex]);
+      wrappedWingRibStart.z += side * innerRadius * 0.44;
+      wrappedWingRibStart.y += innerRadius * 0.12;
+      wrappedWingRibEnd.copy(points[outerIndex]);
+      wrappedWingRibEnd.z += side * outerRadius * (0.72 + diveFold * 0.16);
+      wrappedWingRibEnd.y += side * outerRadius * (0.38 + diveFold * 0.58);
+      placeBeam(rib, wrappedWingRibStart, wrappedWingRibEnd, 0.64 + diveFold * 0.35);
     });
     limbs.forEach(({ group, side, rear }) => {
       group.position.copy(points[rear ? 16 : 8]);
@@ -751,6 +1001,30 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     bodyTangent.subVectors(points[points.length - 1], points[points.length - 2]).normalize();
     tailFin.quaternion.setFromUnitVectors(localBodyForward, bodyTangent);
     tailFin.scale.setScalar(0.3 + unfold * 2.7);
+    if (dive > 0) {
+      predictedHeadWorld.copy(iconicHeadPosition).applyEuler(root.rotation).add(root.position);
+      diveHeadTarget.copy(predictedHeadWorld).lerp(diveSplash.position, dive);
+      diveArcOffset.set(
+        Math.sin(dive * Math.PI) * 2.4,
+        Math.sin(dive * Math.PI) * 8.5,
+        Math.sin(dive * Math.PI) * 4.2,
+      );
+      diveHeadTarget.add(diveArcOffset);
+      predictedHeadWorld.copy(iconicHeadPosition).applyEuler(root.rotation);
+      diveContactRoot.copy(diveHeadTarget).sub(predictedHeadWorld);
+      if (submerged > 0) {
+        // Solve the terminal pose from the actual tail socket, not an arbitrary
+        // head plunge. At the hide boundary the final tail is below the impact
+        // plane and centred on the same water aperture, so the body can finish
+        // travelling through the splash instead of popping away above it.
+        predictedTailWorld.copy(points[points.length - 1]).applyEuler(root.rotation);
+        diveTailTarget.copy(diveSplash.position).addScaledVector(localUp, -1.2);
+        diveTerminalRoot.copy(diveTailTarget).sub(predictedTailWorld);
+        root.position.copy(diveContactRoot).lerp(diveTerminalRoot, submerged);
+      } else {
+        root.position.copy(diveContactRoot);
+      }
+    }
   };
 
   const update = (_elapsed: number, presentation: Island22WaterDragonPresentation) => {
@@ -800,29 +1074,37 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     }
     spray.instanceMatrix.needsUpdate = true;
     (spray.material as THREE.MeshPhysicalMaterial).opacity = 0.82 * burstFade;
-    const splashProgress = smooth((seconds - 21.22) / 0.62);
-    const splashFade = 1 - smooth((seconds - 22.05) / 1.18);
-    diveSplash.visible = active && seconds >= 21.22 && seconds < 23.35;
+    const splashProgress = smooth((seconds - ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS) / 0.38);
+    // Let the initial impact read strongly, then clear the spray before the
+    // 22.5s damage-camera handoff so the destroyed building is the payoff—not
+    // a screen of translucent water columns.
+    const splashFade = 1 - smooth((seconds - (ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS + 0.44)) / 1);
+    diveSplash.visible = active && seconds >= ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS && seconds < 23.35;
+    dragonWaterClipActive.value = active
+      && seconds >= ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS
+      && seconds < ISLAND_22_DRAGON_RENDER_CUTOFF_SECONDS
+      ? 1
+      : 0;
     diveSplashRings.forEach((ring, index) => {
-      ring.scale.setScalar(0.18 + splashProgress * (5.4 + index * 2.4));
+      ring.scale.setScalar(0.3 + splashProgress * (4.8 + index * 1.65));
       (ring.material as THREE.MeshPhysicalMaterial).opacity = splashFade * (0.9 - index * 0.16);
     });
     for (let index = 0; index < diveSplashCount; index += 1) {
       const angle = index / diveSplashCount * Math.PI * 2 + (index % 3) * 0.12;
-      const radius = 0.7 + (index % 4) * 0.22 + splashProgress * 2.2;
-      const height = 0.6 + (index % 6) * 0.19;
-      sprayPosition.set(Math.cos(angle) * radius, splashProgress * (2.2 + height * 2.8), Math.sin(angle) * radius);
+      const radius = 1.1 + (index % 4) * 0.32 + splashProgress * 3.6;
+      const height = 0.9 + (index % 6) * 0.3;
+      sprayPosition.set(Math.cos(angle) * radius, splashProgress * (3.2 + height * 3.4), Math.sin(angle) * radius);
       sprayDirection.set(Math.cos(angle) * 0.34, 1, Math.sin(angle) * 0.34).normalize();
       sprayQuaternion.setFromUnitVectors(localUp, sprayDirection);
-      sprayScale.set(0.45 + splashProgress * 0.8, Math.max(0.02, splashProgress * height), 0.45 + splashProgress * 0.8);
+      sprayScale.set(0.72 + splashProgress * 1.18, Math.max(0.02, splashProgress * height), 0.72 + splashProgress * 1.18);
       sprayMatrix.compose(sprayPosition, sprayQuaternion, sprayScale);
       diveSplashSpray.setMatrixAt(index, sprayMatrix);
     }
     diveSplashSpray.instanceMatrix.needsUpdate = true;
     (diveSplashSpray.material as THREE.MeshPhysicalMaterial).opacity = splashFade * 0.92;
-    const impactProgress = smooth((seconds - 21.22) / 0.72);
-    const impactAge = Math.max(0, seconds - 21.22);
-    const damageVisible = active && seconds >= 21.22 && repairProgress < 1;
+    const impactProgress = smooth((seconds - ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS) / 0.72);
+    const impactAge = Math.max(0, seconds - ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS);
+    const damageVisible = active && seconds >= ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS && repairProgress < 1;
     const damageAmount = damageVisible ? 1 - repairProgress : 0;
     impactBuilding.position.copy(impactBuildingBasePosition);
     impactBuilding.position.y += damageVisible ? Math.sin(impactAge * 13) * 0.08 * damageAmount - 0.24 * damageAmount : 0;
@@ -847,15 +1129,15 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
       piece.rotation.set(impactAge * (1.2 + index % 3), impactAge * (0.8 + index % 4), index * 0.31);
       piece.scale.setScalar(Math.max(0.05, damageAmount));
     });
-    impactWaves.visible = active && seconds >= 21.22 && seconds < 23.45;
+    impactWaves.visible = active && seconds >= ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS && seconds < 23.45;
     impactWaveRings.forEach((ring, index) => {
-      const waveProgress = smooth((seconds - 21.22 - index * 0.14) / 1.45);
-      ring.scale.setScalar(0.25 + waveProgress * (7.2 + index * 1.45));
+      const waveProgress = smooth((seconds - ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS - index * 0.14) / 1.45);
+      ring.scale.setScalar(0.25 + waveProgress * (4.5 + index * 0.8));
       ring.position.y = 0.12 + index * 0.055 + Math.sin(waveProgress * Math.PI) * 0.48;
-      (ring.material as THREE.MeshPhysicalMaterial).opacity = (1 - smooth((waveProgress - 0.5) / 0.5)) * (0.7 - index * 0.08);
+      (ring.material as THREE.MeshPhysicalMaterial).opacity = (1 - smooth((waveProgress - 0.5) / 0.5)) * (0.34 - index * 0.035);
     });
-    const fisherWash = smooth((seconds - 21.38) / 1.42);
-    washedFisher.visible = active && seconds >= 21.34 && seconds < 22.92;
+    const fisherWash = smooth((seconds - (ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS + 0.16)) / 1.42);
+    washedFisher.visible = active && seconds >= ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS + 0.12 && seconds < 23.12;
     washedFisher.position.set(-4.2, 1.05, 7.1).lerp(targetTo.set(0, -1.2, 0), fisherWash);
     washedFisher.rotation.set(fisherWash * Math.PI * 4.2, fisherWash * Math.PI * 2.4, fisherWash * Math.PI * 3.2);
     washedFisher.scale.setScalar(1 - smooth((fisherWash - 0.78) / 0.22) * 0.88);
@@ -879,9 +1161,27 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
       boat.position.copy(initialSkiffs[index]).lerp(skiffEscapeTargets[index], progress);
     });
     updateDragon(seconds, Boolean(presentation.reducedMotion));
+    const portraitFraming = typeof window !== 'undefined'
+      && window.innerHeight > window.innerWidth * 1.2;
+    iconicHeadWorld.copy(iconicHeadPosition).applyEuler(root.rotation).add(root.position);
+    dragonBodyMidpointWorld.copy(points[Math.floor(points.length * 0.44)]).applyEuler(root.rotation).add(root.position);
+    eruptionMidpoint.set(0, -0.6, 0).lerp(iconicHeadWorld, 0.46);
     const eruptionShock = 1 - smooth((seconds - 7.2) / 0.9);
     cameraPose.shake = presentation.reducedMotion ? 0 : phase === 'ground-shake' ? 0.22 : phase === 'eruption' ? 0.48 * eruptionShock : 0;
-    if (seconds >= 22.5) cameraPose.position.set(10.5, 9, 12.5), cameraPose.target.set(0, 0.35, 0);
+    cameraPose.fov = seconds >= 7.18 && seconds < 10.2
+      ? 62
+      : seconds >= 19.2 && seconds < ISLAND_22_DRAGON_DIVE_SUBMERGED_SECONDS
+        ? 68
+        : seconds >= 13.4 && seconds < 19.2
+          ? 62
+          : seconds >= 10.2 && seconds < 13.4
+            ? portraitFraming ? 62 : 52
+          : seconds < ISLAND_22_DRAGON_DIVE_SUBMERGED_SECONDS ? 48 : 42;
+    if (seconds >= 22.5 && repairProgress < 1) {
+      cameraPose.position.copy(impactBuilding.position).add(cameraFrom.set(6.8, 4.8, 8.6));
+      cameraPose.target.copy(impactBuilding.position).add(cameraTo.set(0, 0.72, 0));
+      cameraPose.fov = 44;
+    } else if (seconds >= 22.5) cameraPose.position.set(10.5, 9, 12.5), cameraPose.target.set(0, 0.35, 0);
     else if (seconds < 5.2) cameraPose.position.set(9.5, 8.2, 11.5), cameraPose.target.set(0, 0.5, 0);
     else if (seconds < 6.55) {
       const peek = smooth((seconds - 5.2) / 1.35);
@@ -894,27 +1194,35 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
       cameraPose.target.set(0, -5.2, 0);
     } else if (seconds < 8.15) {
       const recoil = smooth((seconds - 7.18) / 0.97);
-      cameraFrom.set(3.1, 4.6, 3.4); cameraTo.set(21, 18, 25);
-      targetFrom.set(0, -2.2, 0); targetTo.copy(root.position); targetTo.y -= 9;
+      cameraFrom.set(18, 38, 12); cameraTo.set(31, 55, 20);
+      targetFrom.set(0, -1.8, 0).lerp(iconicHeadWorld, 0.35);
+      targetTo.copy(eruptionMidpoint);
       cameraPose.position.copy(cameraFrom).lerp(cameraTo, recoil);
       cameraPose.target.copy(targetFrom).lerp(targetTo, recoil);
     } else if (seconds < 10.2) {
       const reveal = smooth((seconds - 8.15) / 2.05);
-      cameraFrom.set(21, 18, 25); cameraTo.set(42, 46, 54);
+      cameraFrom.set(31, 55, 20); cameraTo.set(52, 73, 36);
       cameraPose.position.copy(cameraFrom).lerp(cameraTo, reveal);
-      cameraPose.target.copy(root.position); cameraPose.target.y -= 12;
+      cameraPose.target.copy(eruptionMidpoint);
     } else if (seconds < 13.4) {
-      cameraPose.position.set(42, 43, 54);
-      cameraPose.target.copy(root.position); cameraPose.target.y -= 7;
+      // The unfurl is a required full-body transformation beat. Frame the
+      // complete changing spline and both wing roots instead of holding a head
+      // close-up that makes the tail and opposite wing disappear.
+      cameraPose.target.copy(iconicHeadWorld).lerp(dragonBodyMidpointWorld, 0.62);
+      cameraPose.position.copy(cameraPose.target).add(
+        portraitFraming ? cameraTo.set(42, 34, 70) : cameraTo.set(24, 20, 38),
+      );
     } else if (seconds < 19.2) {
-      cameraPose.position.copy(root.position).add(cameraTo.set(34, 24, 38));
-      cameraPose.target.copy(root.position).addScaledVector(cameraLookOffset, 1.4);
-    } else if (seconds < 21.25) {
-      cameraPose.position.set(21, 16, 35);
-      cameraPose.target.copy(root.position);
+      // A full-creature pursuit shot preserves the torso, tail and both wings
+      // through the wide flight and bank instead of tracking only the head.
+      cameraPose.target.copy(iconicHeadWorld).lerp(dragonBodyMidpointWorld, 0.68);
+      cameraPose.position.copy(cameraPose.target).add(cameraTo.set(48, 38, 80));
+    } else if (seconds < ISLAND_22_DRAGON_DIVE_CONTACT_SECONDS) {
+      cameraPose.target.copy(iconicHeadWorld).lerp(dragonBodyMidpointWorld, 0.48);
+      cameraPose.position.copy(cameraPose.target).add(cameraTo.set(10, 24, 84));
     } else {
-      cameraPose.position.set(17, 12, 27);
-      cameraPose.target.copy(diveSplash.position);
+      cameraPose.position.set(35, 28, 55);
+      cameraPose.target.copy(diveSplash.position).add(cameraTo.set(0, 2.2, 0));
     }
   };
 
@@ -924,7 +1232,7 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
     explodable: true,
     partIds: [
       body.mesh.name,
-      head.name,
+      iconicDragon.root.name,
       ...ventralPlates.map((plate) => plate.name),
       ...lateralScales.map(({ mesh }) => mesh.name),
       ...bodyArmorBands.map((band) => band.name),
@@ -934,7 +1242,7 @@ export function createIsland22WaterDragonMission(options: MissionOptions): Islan
       tailFin.name,
     ],
     pivots: {
-      head: head.name,
+      head: iconicDragon.root.name,
       leftWing: wingGroups[0].name,
       rightWing: wingGroups[1].name,
       tailFin: tailFin.name,

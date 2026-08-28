@@ -341,8 +341,8 @@ rule. Approved source SHA-256:
   physical phone performance is still unverified; production routing remains
   unchanged.
 - Eivind then approved a complete development mission slice around the refined
-  dragon. The deterministic progression collects a fishing rod on board tile 2,
-  casts toward individually glowing fish tiles, and uses repeated pull inputs
+  dragon. The deterministic progression originally collected one fishing rod
+  and cast toward individually glowing fish tiles, using repeated pull inputs
   for catches of different sizes. Four catches total `46 kg`; the next scripted
   ten-pull monster catch weighs `32 kg`, bringing the meter to exactly `78 kg /
   172.0 lb` and locking all fishing input during the dragon event. The dragon's
@@ -368,6 +368,85 @@ rule. Approved source SHA-256:
   slice, not production admission: final hero-creature detail, an apples-to-
   apples isolated reference diagnostic and physical iPhone PWA profiling remain
   open gates.
+- The 2026-08-27 live-play correction removes that hard-to-hit two-step route.
+  Runtime Island 016 now has six reusable fishing-rod stations spread around
+  the ring and clear of every expandable landmark-door cluster. Every rod
+  landing equips the rod if necessary and immediately starts the reel sequence;
+  there are no separate fish-icon tiles. Successful catches briefly present a
+  foreground catch-and-goal celebration, then retain only a compact progress
+  strip below the canonical reward bar. The strip remains absent before the
+  first successful catch, so it cannot hide behind or compete with the top HUD.
+- The 2026-08-28 in-world fishing and material pass retires the remaining flat
+  fishing-modal selectors and modal semantics. Casting, the circling fish
+  shadow, bite, water break, reeling, caught fish and celebration are authored
+  in the existing Three.js pond scene; the portal now carries only transparent
+  phase, goal, tension and pull controls and no longer locks page scroll. The
+  fisherman gains an articulated two-segment arm rig, brows, cheeks, smile,
+  scarf and hat feather. A bounded environment pass adds one gradient sky draw,
+  one instanced cloud bank, richer physically separated harbour materials,
+  planters/steps/dormers and four secondary-landmark detail systems including
+  lighthouse masonry/railings, tavern ribs/barrels, shipyard hoist/keel and net
+  house floats/lines. WebGL proof at countdown, reeling and caught lives under
+  `artifacts/fishing-016/world-polish-v2/`. This is local visual evidence, not a
+  deployment or production-completion claim; physical iPhone PWA performance
+  and the broader four-view island fidelity gate remain open.
+- The follow-on 2026-08-28 V3 construction pass replaces the literal single-box
+  pond pads with eleven slatted octagonal rafts, each carrying a dark structural
+  base, rope edge, mooring posts and a loose coil while retaining the canonical
+  `ISLAND_22_POND_FISHING_PLATFORMS` integration address. The background crowd
+  that previously read as cone-capped lamp posts now has skin-toned heads,
+  coloured coats, brim-and-crown fishing hats, two arms and grounded boots, all
+  batched as instanced families. A separate hand-laid masonry face breaks the
+  smooth outer terrace disc; village lamps become hanging caged fixtures; a
+  small instanced gull flock adds sky depth. The caught fish receives a curved
+  two-lobe tail and the trophy camera now frames the detailed hero and the
+  `78 kg / 172.0 lb` fish together instead of allowing the fish to swallow the
+  entire phone view. Matched 500x792 runtime frames for countdown, reeling and
+  caught are preserved under `artifacts/fishing-016/world-polish-v3/`.
+  Architecture guards pass with zero violations and three existing allowlisted
+  warnings; the complete Island Run regression suite passes `1881 / 1881`.
+  This remains a local visual slice with no commit, push or deployment, and
+  physical iPhone PWA profiling remains open.
+- The follow-on 2026-08-28 V4 village-character pass replaces the remaining
+  open-frame cottage ends with inhabited plaster gables, round gable windows,
+  stone footings, jettied upper storeys, corbels and framed windows on all four
+  sides. The fish-market landmark gains an occupied loading gallery, rails,
+  loading beam and hanging fish sign; bounded cobbles, shrubs, flowers and
+  drying racks add harbour ground life without entering the protected route.
+  The caught camera moves closer to the fisherman while a caught-only trophy
+  scale keeps the full `78 kg / 172.0 lb` fish legible; the reeling fish retains
+  its massive world scale. Matched 500x792 WebGL frames for countdown, reeling
+  and caught are preserved under `artifacts/fishing-016/world-polish-v4/`.
+  Architecture guards remain at zero violations with three existing allowlisted
+  warnings, and the complete Island Run regression suite passes `1881 / 1881`.
+  This is still a local visual slice with no commit, push or deployment;
+  physical iPhone PWA profiling and final full-island fidelity review remain
+  open gates.
+- The 2026-08-28 V5 weakest-part Gauntlet ranks the flat teal pond/painted-hole
+  read first, the smooth capsule-like trophy fish second, cloned raft/crowd
+  cadence third, flattened dark roof bands fourth and atmospheric depth fifth.
+  The representative correction is deliberately limited to the first three:
+  a visible cylindrical well wall, stone rim and masonry courses establish real
+  depth; moving current arcs and sun glints give the pond surface direction;
+  deterministic irregular raft placement, varied fisher proportions/hat colour
+  and baskets/nets break the circular clone pattern. The colossal catch gains a
+  clear-coated layered body and belly, caudal peduncle, dimensional tail and
+  fins, two-sided gills, scale field and restrained wet highlights. Its line now
+  preserves bobber-to-hook continuity while reeling and terminates directly at
+  the mouth when caught.
+- The first V5 caught review accepted the new pond/shaft and crowd silhouette
+  but rejected a dorsal-looking line attachment and pale spotty surface marks.
+  The single bounded correction rerouted the caught cable to the mouth, hid the
+  caught bobber and reduced/darkened the scale field. Countdown, reeling and
+  caught phone-aspect WebGL evidence is preserved under
+  `artifacts/fishing-016/world-polish-v5/`. Architecture guards pass with zero
+  violations and three existing allowlisted warnings; the scoped Island Run
+  suite passes `1881 / 1881`. Full-repository TypeScript still reports unrelated
+  pre-existing Goals/Supabase and Journey Disc errors, while this island file
+  emits no TypeScript error. The dark upper roof bands and limited atmospheric
+  separation are explicitly deferred as the next ranked construction family;
+  physical iPhone PWA profiling remains an open production gate. This pass is
+  local only, with no commit, push or deployment.
 
 ## Deferred story threads preserved from this request
 

@@ -46,6 +46,7 @@ import {
   writeIslandRunGameStateRecord,
   type IslandRunGameStateHydrationSource,
   type IslandRunGameStateRecord,
+  type IslandRunRuntimeConflictMode,
 } from './islandRunGameStateStore';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
@@ -140,6 +141,12 @@ export interface CommitIslandRunStateOptions {
    * writer via its `triggerSource` parameter.
    */
   triggerSource?: string;
+  /**
+   * Destructive developer/settings operations may intentionally replace
+   * monotonic progress during conflict recovery. Ordinary gameplay must keep
+   * the default `merge` mode.
+   */
+  conflictMode?: IslandRunRuntimeConflictMode;
 }
 
 export type CommitIslandRunStateResult =
@@ -167,7 +174,7 @@ export type CommitIslandRunStateResult =
 export async function commitIslandRunState(
   options: CommitIslandRunStateOptions,
 ): Promise<CommitIslandRunStateResult> {
-  const { session, client, record, triggerSource } = options;
+  const { session, client, record, triggerSource, conflictMode } = options;
   const slot = getSlot(session);
 
   // 1. Update the in-memory mirror before awaiting the remote write so
@@ -183,6 +190,7 @@ export async function commitIslandRunState(
     client,
     record,
     triggerSource: triggerSource ?? 'state_store_commit',
+    conflictMode,
   });
 }
 

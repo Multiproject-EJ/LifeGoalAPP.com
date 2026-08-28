@@ -52,6 +52,8 @@ import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test
 import { islandRunDormantDoorMinigameTests } from './islandRunDormantDoorMinigame.test';
 import { islandRunTrafficLightTileTests } from './islandRunTrafficLightTile.test';
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
+import { islandRunStopTicketActionTests } from './islandRunStopTicketAction.test';
+import { islandBoardTileInfoTests } from './islandBoardTileInfo.test';
 import { islandRunLifeIntakeServiceTests } from './islandRunLifeIntakeService.test';
 import { islandRunHabitSuggestionEngineTests } from './islandRunHabitSuggestionEngine.test';
 import { islandRunAdaptiveAreasTests } from './islandRunAdaptiveAreas.test';
@@ -151,6 +153,7 @@ import { islandNarrativeValidationTests, islandStoryManifestValidationTests } fr
 import { landmarkWhispersTests } from '../../narrative/__tests__/landmarkWhispers.test';
 import { islandRunModalTextColorGuardTests } from './islandRunModalTextColorGuards.test';
 import { islandRunTechCollectionTests } from './islandRunTechCollection.test';
+import { islandRunVaultCollectionTests } from './islandRunVaultCollection.test';
 import { islandRunTechnologyFragmentRenderingGuardTests } from './islandRunTechnologyFragmentRenderingGuards.test';
 import { islandRunBoardPerformanceGuardTests } from './islandRunBoardPerformanceGuards.test';
 import { islandRunDiscoveryFogTests } from './islandRunDiscoveryFog.test';
@@ -158,6 +161,8 @@ import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollecti
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.test';
 import { islandRunSignatureMissionTests } from './islandRunSignatureMissions.test';
+import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
+import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
 import { islandRunConcordHubEntryTests } from './islandRunConcordHubEntry.test';
 import { islandRunConcordRollProtectionTests } from './islandRunConcordRollProtection.test';
 import { islandCommunicationAccessTests } from './islandCommunicationAccess.test';
@@ -298,6 +303,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunDormantDoorMinigame', tests: islandRunDormantDoorMinigameTests },
   { label: 'islandRunTrafficLightTile', tests: islandRunTrafficLightTileTests },
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
+  { label: 'islandRunStopTicketAction', tests: islandRunStopTicketActionTests },
+  { label: 'islandBoardTileInfo', tests: islandBoardTileInfoTests },
   { label: 'islandRunLifeIntakeService', tests: islandRunLifeIntakeServiceTests },
   { label: 'islandRunHabitSuggestionEngine', tests: islandRunHabitSuggestionEngineTests },
   { label: 'islandRunHabitLandmarkAction', tests: islandRunHabitLandmarkActionTests },
@@ -369,6 +376,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'combinedJourneyRewardClaimsRead', tests: combinedJourneyRewardClaimsReadTests },
   { label: 'combinedJourneyRewardBaseline', tests: combinedJourneyRewardBaselineTests },
   { label: 'islandRunTechCollection', tests: islandRunTechCollectionTests },
+  { label: 'islandRunVaultCollection', tests: islandRunVaultCollectionTests },
   { label: 'islandRunTechnologyFragmentRenderingGuards', tests: islandRunTechnologyFragmentRenderingGuardTests },
   { label: 'islandRunBoardPerformanceGuards', tests: islandRunBoardPerformanceGuardTests },
   { label: 'islandRunDiscoveryFog', tests: islandRunDiscoveryFogTests },
@@ -376,6 +384,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
   { label: 'islandRunTechnologyUnlocks', tests: islandRunTechnologyUnlockTests },
   { label: 'islandRunSignatureMissions', tests: islandRunSignatureMissionTests },
+  { label: 'islandRunMissionTracker', tests: islandRunMissionTrackerTests },
+  { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
   { label: 'islandRunConcordHubEntry', tests: islandRunConcordHubEntryTests },
   { label: 'islandRunConcordRollProtection', tests: islandRunConcordRollProtectionTests },
   { label: 'islandCommunicationAccess', tests: islandCommunicationAccessTests },

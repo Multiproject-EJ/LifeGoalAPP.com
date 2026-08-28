@@ -250,6 +250,17 @@ moving system, define its complete player loop before adding final scenery:
   developer preview;
 - completion beat and safe compatibility for saves created before the mission.
 
+The mission must also expose one complete **anticipation curve**, not merely a
+persisted counter. Every earned pickup needs an immediate board response and a
+queued full-attention handoff when another pickup modal already owns the
+screen. The compact mission phone must show live canonical progress and the
+next available action. The visible 3D infrastructure needs a generous authored
+hit target that opens that controller. Intermediate spends must accumulate in
+the world rather than resetting its perceived progress; the final spend must
+release a clearly larger, unobstructed payoff before any completion dialog
+appears. Reduced motion snaps to the same finished construction without
+flashing or moving particles.
+
 Commit gameplay through the canonical action service before starting the
 cinematic. The cinematic may read the committed before/after state, but must not
 own or duplicate inventory, reward or completion authority. It must also be

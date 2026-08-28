@@ -16,7 +16,7 @@ export interface LandmarkTicketModalProps {
   savings?: number;
   prerequisiteTitle?: string | null;
   onClose: () => void;
-  onPurchase: () => void;
+  onPurchase: () => void | Promise<void>;
   onExplore: () => void;
 }
 
@@ -44,6 +44,7 @@ export function LandmarkTicketModal({
   const { canAfford, shortfall } = resolveShopItemAffordability({ cost, balance });
   const [isAdmitting, setIsAdmitting] = useState(false);
   const purchaseTimerRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
   const displayTitle = cleanLandmarkTitle(landmarkTitle) || 'Landmark';
   const isEarlyOffer = mode === 'early';
   const titleId = `landmark-ticket-${isEarlyOffer ? 'early' : 'standard'}-title`;
@@ -54,10 +55,12 @@ export function LandmarkTicketModal({
     boss: '/assets/island-run/tickets/boss-pass-emblem.webp',
   }[landmarkId];
 
-  useEffect(() => () => {
-    if (purchaseTimerRef.current !== null) {
-      window.clearTimeout(purchaseTimerRef.current);
-    }
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (purchaseTimerRef.current !== null) window.clearTimeout(purchaseTimerRef.current);
+    };
   }, []);
 
   const handlePrimaryAction = () => {
@@ -69,7 +72,12 @@ export function LandmarkTicketModal({
     setIsAdmitting(true);
     purchaseTimerRef.current = window.setTimeout(() => {
       purchaseTimerRef.current = null;
-      onPurchase();
+      void Promise.resolve()
+        .then(onPurchase)
+        .catch((error) => console.warn('[Island Run] Landmark pass action failed', error))
+        .finally(() => {
+          if (isMountedRef.current) setIsAdmitting(false);
+        });
     }, 520);
   };
 
@@ -84,6 +92,7 @@ export function LandmarkTicketModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-busy={isAdmitting}
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -91,7 +100,6 @@ export function LandmarkTicketModal({
           className="landmark-ticket-modal__close"
           aria-label="Close landmark pass"
           onClick={onClose}
-          disabled={isAdmitting}
         >
           ×
         </button>
@@ -189,7 +197,6 @@ export function LandmarkTicketModal({
             type="button"
             className="landmark-ticket-modal__button landmark-ticket-modal__button--secondary"
             onClick={onClose}
-            disabled={isAdmitting}
           >
             Not yet
           </button>

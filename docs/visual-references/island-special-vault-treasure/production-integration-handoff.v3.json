@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 3,
+  "created": "2026-08-28",
+  "status": "production-collection-integrated-with-live-reserve",
+  "baseCommit": "29ecd586",
+  "branch": "codex/vault-island-production-integration-20260828",
+  "collectionAuthority": {
+    "source": "canonical vaultRushClaimsByIsland ledger",
+    "resolver": "src/features/gamification/level-worlds/services/islandRunVaultCollection.ts",
+    "rule": "One distinct island with at least one successful Vault Rush claim unlocks one relic in canonical collection order.",
+    "newRelicCeremony": "After the canonical claim commits, a before/after projection opens directly on the newly unlocked relic.",
+    "writesFromPresentation": false
+  },
+  "reserveAuthority": {
+    "source": "canonical runtimeState.essence balance",
+    "presentationInput": "holdingsValue",
+    "tiers": ["empty", "starter", "growing", "abundant", "legendary"],
+    "legendaryCaps": {
+      "ingots": 56,
+      "coins": 64,
+      "gems": 26
+    },
+    "zeroBalance": "Two empty treasury trays; zero ingots, coins, or gems.",
+    "writesFromPresentation": false
+  },
+  "productionSurface": {
+    "entry": "Island Run Board menu",
+    "label": "Vault Island collection",
+    "modal": "src/features/gamification/level-worlds/components/VaultIslandCollectionModal.tsx",
+    "viewportPortal": true,
+    "escapeClose": true,
+    "scrollLock": ["body", "documentElement", "root"],
+    "pausesBoardAttention": true,
+    "lazyChunk": true
+  },
+  "devRoutes": {
+    "islandLab": "/dev/vault-island-lab",
+    "atriumLab": "/dev/vault-island-lab?view=atrium",
+    "museumLab": "/dev/vault-island-lab?view=vault",
+    "treasureLab": "/dev/vault-treasure-lab",
+    "productionOwnershipPreview": "/dev/vault-island-collection-preview?owned=3&holdings=6500",
+    "emptyReservePreview": "/dev/vault-island-collection-preview?owned=3&featured=1&island=7&holdings=0",
+    "legendaryReservePreview": "/dev/vault-island-collection-preview?owned=3&featured=1&island=7&holdings=25000"
+  },
+  "verification": {
+    "islandRunTests": "1895 passed, 0 failed",
+    "modelRuntime": "passed; empty and legendary reserve geometry counts asserted",
+    "labContract": "passed",
+    "viteBuild": "passed after final reserve framing; VaultIslandCollectionModal emitted as a lazy 160.70 kB chunk",
+    "browserManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v079-wealth-reserve-framing/capture-manifest.v1.json",
+    "browserCaptures": 24,
+    "browserDiagnostics": 0,
+    "repoTypecheck": "pre-existing unrelated generated Supabase type errors remain; no Vault Island error after replacing Array.at compatibility usage"
+  },
+  "qualityReview": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/reviews/v080-wealth-reserve-quality-lord.md"
+}

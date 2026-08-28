@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 12 | 13 | 14 | 22;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 22;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -25,6 +25,10 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 8, worldSourceNumber: 8, role: 'ordinary' },
   { runtimeIslandNumber: 9, worldSourceNumber: 9, role: 'ordinary' },
   { runtimeIslandNumber: 10, worldSourceNumber: 10, role: 'arena' },
+  // Island 011 intentionally preserves the pre-Assembly-Crater First Light
+  // world. Source 011 is a dependency-based variant of source 001 rather than
+  // a duplicate binary asset pack; the renderer keeps its original Sun Court.
+  { runtimeIslandNumber: 11, worldSourceNumber: 11, role: 'ordinary' },
   { runtimeIslandNumber: 12, worldSourceNumber: 12, role: 'ordinary' },
   { runtimeIslandNumber: 13, worldSourceNumber: 13, role: 'ordinary' },
   { runtimeIslandNumber: 14, worldSourceNumber: 14, role: 'ordinary' },

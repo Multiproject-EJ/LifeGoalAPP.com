@@ -88,15 +88,21 @@ import {
 } from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 import {
+  advanceCelestialRedockingForRoll,
   advanceSunkenSandsTreasureForRoll,
   collectCactusCanyonDynamiteForLanding,
+  collectFishermansVillageLanding,
+  collectFirstLightAssemblyDynamiteForRoute,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
+  collectStagedRestorationPickupForRoute,
   grantFrostwellDrillSpinForLanding,
   isRootheartPowerworksCollectionComplete,
   resolveRootheartPowerworksProgress,
   startCactusCanyonSpiralMission,
+  type FishermansVillagePendingCatch,
   type RootheartPowerComponentId,
+  type StagedRestorationPickupKind,
 } from './islandRunSignatureMissions';
 import {
   getIslandMissionBriefingBeatId,
@@ -246,10 +252,24 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
+  /** One finite Island 001 Assembly Crater stick collected by this route. */
+  firstLightAssemblyDynamiteCollected?: number;
+  /** Whether the Assembly cache was on the final tile or reached during movement. */
+  firstLightAssemblyDynamiteCollectionKind?: 'landing' | 'route_pass' | null;
   /** Canonical number of dynamite sticks collected on this Island 013 landing. */
   cactusCanyonDynamiteCollected?: number;
   /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
   greatHoneyfallNectarCollected?: number;
+  /** Collision-safe staged-restoration object secured on Islands 004/006–009. */
+  stagedRestorationPickup?: {
+    kind: StagedRestorationPickupKind;
+    tileIndex: number;
+    collectionKind: 'landing' | 'route_pass';
+  } | null;
+  /** True only on the first Island 016 rod landing that equips the reusable rod. */
+  fishermansVillageRodCollected?: boolean;
+  /** Canonical catch waiting for the player's reel interaction. */
+  fishermansVillagePendingCatch?: FishermansVillagePendingCatch | null;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
   rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
   /**
@@ -262,6 +282,12 @@ export interface IslandRunRollActionResult {
   sunkenSandsTreasureRollsCompleted?: number;
   /** True only for the twentieth roll that makes the first treasure claimable. */
   sunkenSandsTreasureBecameReady?: boolean;
+  /** Canonical Island 002 roll count after this accepted roll. */
+  celestialRedockingRollsCompleted?: number;
+  /** Zero-based platform index locked on this exact 5/10/15/20-roll milestone. */
+  celestialRedockingDockedPlatformIndex?: number | null;
+  /** True only for the twentieth accepted roll that locks the fourth platform. */
+  celestialRedockingBecameComplete?: boolean;
   /**
    * Cycle-scoped first-lap briefing beat crossed by this roll. Presentation
    * opens only after the authoritative hop animation and any higher-priority
@@ -435,15 +461,30 @@ async function performRollAction(options: {
         islandNumber: state.currentIslandNumber,
       })
     : null;
+  const firstLightAssemblyLanding = ordinaryTileGameplayActive
+    ? collectFirstLightAssemblyDynamiteForRoute({
+        ledger: state.signatureMissionProgressByIsland,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        landingTileIndex: newTokenIndex,
+        routeTileIndices: hopSequence,
+        nowMs,
+      })
+    : {
+        ledger: state.signatureMissionProgressByIsland,
+        dynamiteCollected: 0,
+        collectedTileIndex: null,
+        collectionKind: null,
+      };
   const frostwellLanding = ordinaryTileGameplayActive
     ? grantFrostwellDrillSpinForLanding({
-        ledger: state.signatureMissionProgressByIsland,
+        ledger: firstLightAssemblyLanding.ledger,
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,
         tileIndex: newTokenIndex,
         nowMs,
       })
-    : { ledger: state.signatureMissionProgressByIsland, granted: false };
+    : { ledger: firstLightAssemblyLanding.ledger, granted: false };
   const rootheartLanding = ordinaryTileGameplayActive
     ? collectRootheartPowerComponentForLanding({
         ledger: frostwellLanding.ledger,
@@ -500,8 +541,41 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: cactusCanyonLanding.ledger, nectarCollected: 0 };
+  const stagedRestorationLanding = ordinaryTileGameplayActive
+    ? collectStagedRestorationPickupForRoute({
+        ledger: greatHoneyfallLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        landingTileIndex: newTokenIndex,
+        routeTileIndices: hopSequence,
+        tileCount: boardProfile.tileCount,
+        nowMs,
+      })
+    : {
+        ledger: greatHoneyfallLanding.ledger,
+        pickupCollected: 0,
+        collectedTileIndex: null,
+        collectionKind: null,
+        pickupKind: null,
+      };
+  const fishermansVillageLanding = ordinaryTileGameplayActive
+    ? collectFishermansVillageLanding({
+        ledger: stagedRestorationLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        nowMs,
+        randomValue: Math.random(),
+      })
+    : { ledger: greatHoneyfallLanding.ledger, rodCollected: false, pendingCatch: null };
+  const celestialRedockingRoll = advanceCelestialRedockingForRoll({
+    ledger: fishermansVillageLanding.ledger,
+    islandNumber: state.currentIslandNumber,
+    cycleIndex: state.cycleIndex,
+    nowMs,
+  });
   const sunkenSandsTreasureRoll = advanceSunkenSandsTreasureForRoll({
-    ledger: greatHoneyfallLanding.ledger,
+    ledger: celestialRedockingRoll.ledger,
     islandNumber: state.currentIslandNumber,
     cycleIndex: state.cycleIndex,
     nowMs,
@@ -555,7 +629,7 @@ async function performRollAction(options: {
       record: nextState,
       triggerSource: 'roll_action',
     });
-    if (!persistResult.ok) {
+    if (persistResult.ok === false) {
       throw new Error(persistResult.errorMessage);
     }
   } catch (err) {
@@ -580,12 +654,29 @@ async function performRollAction(options: {
     ordinaryTileGameplayActive,
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
+    firstLightAssemblyDynamiteCollected: firstLightAssemblyLanding.dynamiteCollected,
+    firstLightAssemblyDynamiteCollectionKind: firstLightAssemblyLanding.collectionKind,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,
     greatHoneyfallNectarCollected: greatHoneyfallLanding.nectarCollected,
+    stagedRestorationPickup: stagedRestorationLanding.pickupCollected > 0
+      && stagedRestorationLanding.pickupKind
+      && stagedRestorationLanding.collectedTileIndex !== null
+      && stagedRestorationLanding.collectionKind
+      ? {
+          kind: stagedRestorationLanding.pickupKind,
+          tileIndex: stagedRestorationLanding.collectedTileIndex,
+          collectionKind: stagedRestorationLanding.collectionKind,
+        }
+      : null,
+    fishermansVillageRodCollected: fishermansVillageLanding.rodCollected,
+    fishermansVillagePendingCatch: fishermansVillageLanding.pendingCatch,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
     rootheartPowerworksUnlocked,
     sunkenSandsTreasureRollsCompleted: sunkenSandsTreasureRoll.rollsCompleted,
     sunkenSandsTreasureBecameReady: sunkenSandsTreasureRoll.becameReady,
+    celestialRedockingRollsCompleted: celestialRedockingRoll.rollsCompleted,
+    celestialRedockingDockedPlatformIndex: celestialRedockingRoll.dockedPlatformIndex,
+    celestialRedockingBecameComplete: celestialRedockingRoll.becameComplete,
     missionBriefingTrigger,
     livingTicketPickup: livingTicketLanding.pickup,
   };

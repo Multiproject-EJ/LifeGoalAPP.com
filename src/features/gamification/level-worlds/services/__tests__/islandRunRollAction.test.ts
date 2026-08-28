@@ -15,12 +15,18 @@ import {
 } from '../islandRunStateStore';
 import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import {
+  CELESTIAL_REDOCKING_ROLL_TARGET,
   FROSTWELL_DRILL_TILE_INDICES,
+  FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
+  FISHERMANS_VILLAGE_ROD_TILE_INDICES,
   ROOTHEART_POWER_COMPONENTS,
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   getIslandRunSignatureMissionKey,
   resolveFrostwellIceworksProgress,
+  resolveFirstLightAssemblyCraterProgress,
+  resolveFishermansVillageFishingProgress,
   resolveCactusCanyonSpiralProgress,
+  resolveCelestialRedockingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
 } from '../islandRunSignatureMissions';
@@ -78,6 +84,108 @@ async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Pro
 }
 
 export const islandRunRollActionTests: TestCase[] = [
+  {
+    name: 'Island 001 landing collects one finite Assembly Crater charge in the canonical roll commit',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 34,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+      });
+      assertEqual(FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES[0], 0, 'fixture lands on the first authored cache');
+      const first = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(first.newTokenIndex, 0, 'two steps wrap onto the first dynamite tile');
+      assertEqual(first.firstLightAssemblyDynamiteCollected, 1, 'landing surfaces one collected charge');
+      const firstProgress = resolveFirstLightAssemblyCraterProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 1,
+        cycleIndex: 0,
+      });
+      assertEqual(firstProgress.claimedDynamiteTileIndices.length, 1, 'pickup persists atomically with movement');
+
+      seedState({ tokenIndex: 34, dicePool: 30 });
+      const duplicate = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(duplicate.firstLightAssemblyDynamiteCollected, 0, 'revisiting the emptied cache cannot pay twice');
+    },
+  },
+  {
+    name: 'Island 001 first replay roll secures one crossed Assembly cache when the final tile is not dynamite',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 0,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+      });
+      const result = await withMockedRandom([0.2, 0.2], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.newTokenIndex, 4, 'two twos finish on the non-cache tile 4');
+      assertEqual(result.firstLightAssemblyDynamiteCollected, 1, 'the first roll secures one reached route cache');
+      assertEqual(result.firstLightAssemblyDynamiteCollectionKind, 'route_pass', 'the renderer can explain the en-route pickup');
+      const progress = resolveFirstLightAssemblyCraterProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 1,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.claimedDynamiteTileIndices.length, 1, 'the route pickup commits atomically with movement');
+      assertEqual(progress.claimedDynamiteTileIndices[0], 1, 'only the first crossed cache is consumed');
+    },
+  },
+  {
+    name: 'Island 002 roll action persists the twentieth re-docking turn and emits the fourth lock once',
+    run: async () => {
+      resetEnvironment();
+      const key = getIslandRunSignatureMissionKey(0, 2);
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 0,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        signatureMissionProgressByIsland: {
+          [key]: {
+            missionId: 'celestial-great-redocking',
+            version: 1,
+            rollsCompleted: 19,
+            completedAtMs: null,
+            updatedAtMs: 1,
+          },
+        },
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.status, 'ok', 'roll succeeds');
+      assertEqual(result.celestialRedockingRollsCompleted, CELESTIAL_REDOCKING_ROLL_TARGET, 'twentieth turn is returned');
+      assertEqual(result.celestialRedockingDockedPlatformIndex, 3, 'fourth platform lock edge is returned');
+      assertEqual(result.celestialRedockingBecameComplete, true, 'twentieth turn completes the mission');
+      const progress = resolveCelestialRedockingProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 2,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.rollsCompleted, CELESTIAL_REDOCKING_ROLL_TARGET, 'mission persists inside the canonical roll commit');
+
+      seedState({ tokenIndex: 2, dicePool: 30 });
+      const repeat = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(repeat.celestialRedockingDockedPlatformIndex, null, 'later rolls cannot replay a docking lock');
+      assertEqual(repeat.celestialRedockingBecameComplete, false, 'completion edge is idempotent');
+    },
+  },
   {
     name: 'Island 012 successful rolls advance the hinged treasure chamber exactly once',
     run: async () => {
@@ -319,6 +427,29 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
+    name: 'Island 016 rod landing equips the rod and persists a hooked catch in the same roll',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0] - 2,
+        currentIslandNumber: 16,
+        cycleIndex: 0,
+      });
+      const rod = await withMockedRandom([0, 0, 0.7], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(rod.fishermansVillageRodCollected, true, 'roll result surfaces the rod pickup');
+      assertEqual(rod.fishermansVillagePendingCatch?.kind, 'medium', 'the same landing starts the fishing sequence');
+      const afterRod = readIslandRunGameStateRecord(makeSession());
+      const rodProgress = resolveFishermansVillageFishingProgress({ ledger: afterRod.signatureMissionProgressByIsland, cycleIndex: 0 });
+      assert(rodProgress.rodCollectedAtMs !== null, 'rod pickup persists with movement');
+      assertEqual(rodProgress.pendingCatch?.kind, 'medium', 'hooked catch survives reload until the player reels');
+      assertEqual(rodProgress.fishCaughtKg, 0, 'landing alone cannot award kilograms');
+    },
+  },
+  {
     name: 'Island 013 mission briefing unlocks and collects canonical Canyon Spiral dynamite',
     run: async () => {
       resetEnvironment();
@@ -329,10 +460,10 @@ export const islandRunRollActionTests: TestCase[] = [
         currentIslandNumber: 13,
         cycleIndex: 0,
       });
-      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+      const result = await withMockedRandom([0, 0.2], () => executeIslandRunRollAction({
         session: makeSession(), client: null, diceMultiplier: 1,
       }));
-      assertEqual(result.newTokenIndex, 19, 'roll crosses the briefing trigger and lands on a dynamite cache');
+      assertEqual(result.newTokenIndex, 20, 'roll crosses the briefing trigger and lands on the collision-free dynamite cache');
       assertEqual(result.cactusCanyonDynamiteCollected, 1, 'landing emits the exact dynamite pickup quantity');
       const progress = resolveCactusCanyonSpiralProgress({
         ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
@@ -350,7 +481,7 @@ export const islandRunRollActionTests: TestCase[] = [
       seedState({
         runtimeVersion: 0,
         dicePool: 30,
-        tokenIndex: 17,
+        tokenIndex: 18,
         currentIslandNumber: 13,
         cycleIndex: 0,
         narrativeSeenState: { episodes: {}, beats: { 'MISSION-BRIEFING-C0-I013': 1 } },

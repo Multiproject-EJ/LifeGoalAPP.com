@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "island-special-vault-treasure",
+  "status": "production-collection-integrated",
+  "created": "2026-08-27",
+  "runtimeIslandNumber": null,
+  "source": {
+    "file": "treasure-island-source.png",
+    "oneDrivePath": "/Users/ejmac/Library/CloudStorage/OneDrive-Personal/Projects - sites LEVELup/Habit game UI/011-120 islands HERE/treasure island.png",
+    "sha256": "5f2841dcf97303c7e8cf8091d0c02a0c22f24904eeea41044df68ab4a583fa57",
+    "width": 853,
+    "height": 1844,
+    "authority": "user-confirmed-source",
+    "role": "visual-goal"
+  },
+  "servedLabAsset": {
+    "file": "../../../public/assets/dev/vault-island-lab/treasure-island-source.png",
+    "sha256": "5f2841dcf97303c7e8cf8091d0c02a0c22f24904eeea41044df68ab4a583fa57"
+  },
+  "runtimeInteriorAssets": [
+    {
+      "file": "../../../public/assets/islands/special/vault-island/vault-atrium.glb",
+      "sha256": "cd341b901a6a706dbd2b2496ba7dcb80474c3cd163a295ce45dbfc60a3c24300",
+      "role": "two-level palace atrium and grand descent"
+    },
+    {
+      "file": "../../../public/assets/islands/special/vault-island/vault-museum.glb",
+      "sha256": "232a9b81136901bf44a9170777792aa8b1c4a2f33e331c19a1b3aa6cfe71fc8b",
+      "role": "underground radial vault museum"
+    }
+  ],
+  "identityFeatures": [
+    "round white stone island base in open ocean",
+    "gold-and-white charm bracelet ring around the top perimeter",
+    "central white palace with dark blue domes and gold finials",
+    "front-facing vault door and jewel display galleries",
+    "formal gold gate and small boats at the lower edge",
+    "distant island archipelago and warm sky"
+  ],
+  "knownLimits": [
+    "single source view only",
+    "rear and underside geometry are inferred",
+    "UI baked into source is not part of the 3D model",
+    "hidden architecture remains inferred from the single supplied exterior source"
+  ],
+  "acceptedRuntimeEvidence": {
+    "browserManifest": "gauntlet/qa/raw/browser-captures-v079-wealth-reserve-framing/capture-manifest.v1.json",
+    "qualityReview": "gauntlet/qa/reviews/v080-wealth-reserve-quality-lord.md",
+    "phoneViewport": "390x844",
+    "diagnostics": 0,
+    "reserveStates": ["empty", "legendary"]
+  },
+  "secondaryInferredReferences": [
+    {
+      "file": "secondary-inferred/vault-island-exterior-interior-reference-sheet-v001.png",
+      "sidecar": "secondary-inferred/vault-island-exterior-interior-reference-sheet-v001.md",
+      "sha256": "726cbe7e762a09edfef450d4680a084de7399f2f484b80f5f051056ae964e124",
+      "width": 1536,
+      "height": 1024,
+      "authority": "secondary-inferred",
+      "purpose": "Exterior turnaround, cutaway, and interior museum exploration"
+    },
+    {
+      "file": "secondary-inferred/treasure-object-family-reference-sheet-v001.png",
+      "sidecar": "secondary-inferred/treasure-object-family-reference-sheet-v001.md",
+      "sha256": "aa4aedb04d82e6a34c24c14131476feab41eea10db32ca4f73401dc3a3eb9436",
+      "width": 1205,
+      "height": 1305,
+      "authority": "secondary-inferred",
+      "purpose": "Starter object families for the reusable treasure lab"
+    },
+    {
+      "file": "secondary-inferred/derived-crops/interior-vault-hall-v001.png",
+      "sidecar": "secondary-inferred/derived-crops/interior-vault-hall-v001.md",
+      "sha256": "2602d1d45cc516cc585b51f00cdd936e563baed565b6fdcbe47409fe6c47ca0e",
+      "width": 768,
+      "height": 512,
+      "authority": "secondary-inferred",
+      "purpose": "Deterministic interior museum crop for the Vault Island interior rebuild"
+    },
+    {
+      "file": "secondary-inferred/interior-atrium-concepts/atrium-grand-descent-concept-v001.png",
+      "sidecar": "secondary-inferred/interior-atrium-concepts/atrium-grand-descent-concept-v001.md",
+      "sha256": "dd009c537800eefab6c934ca1c0b8c7f10309dbf342b8ed72fcb6ba52dcf4865",
+      "width": 941,
+      "height": 1672,
+      "authority": "secondary-inferred",
+      "purpose": "Approved construction direction for the monumental atrium macro family"
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+.vault-treasure-lab {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 235, 169, 0.38), transparent 36%),
+    linear-gradient(180deg, #19233a 0%, #0b1425 100%);
+  color: #fff8df;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.vault-treasure-lab__phone {
+  position: relative;
+  width: min(390px, calc(100vw - 24px));
+  aspect-ratio: 390 / 844;
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 34px;
+  background: #eef4f2;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.44);
+}
+
+.vault-treasure-lab__stage,
+.vault-treasure-lab__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.vault-treasure-lab__top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  background: rgba(9, 21, 39, 0.74);
+  backdrop-filter: blur(16px);
+}
+
+.vault-treasure-lab__top span,
+.vault-treasure-lab__top strong {
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-treasure-lab__top strong {
+  color: #ffe38e;
+}
+
+.vault-treasure-lab__card {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 86px;
+  z-index: 2;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(10, 21, 38, 0.86), rgba(11, 23, 40, 0.72));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+  transition: bottom 180ms ease;
+}
+
+.vault-treasure-lab__card p,
+.vault-treasure-lab__card h1,
+.vault-treasure-lab__card small {
+  margin: 0;
+}
+
+.vault-treasure-lab__card p {
+  color: #8fd8ff;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-treasure-lab__card h1 {
+  margin-top: 3px;
+  font-size: 1.35rem;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.vault-treasure-lab__card small {
+  display: block;
+  margin-top: 10px;
+  color: rgba(255, 250, 229, 0.76);
+  line-height: 1.35;
+}
+
+.vault-treasure-lab__value {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.vault-treasure-lab__value span {
+  color: rgba(255, 250, 229, 0.68);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-treasure-lab__value strong {
+  color: #ffe38e;
+  font-size: 1.35rem;
+}
+
+.vault-treasure-lab__dock {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 22px;
+  z-index: 3;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 84px;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 4px 5px;
+  scroll-padding-inline: 8px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.vault-treasure-lab__dock::-webkit-scrollbar {
+  display: none;
+}
+
+.vault-treasure-lab__dock button,
+.vault-treasure-lab__reveal,
+.vault-treasure-lab__inspect,
+.vault-treasure-lab__island-link {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(10, 24, 42, 0.82);
+  color: #fff8df;
+  font-size: 0.74rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.vault-treasure-lab__dock button.is-active {
+  background: #f4c44f;
+  color: #17233b;
+}
+
+.vault-treasure-lab__dock button {
+  min-width: 0;
+  padding-inline: 8px;
+  overflow-wrap: anywhere;
+  scroll-snap-align: center;
+}
+
+.vault-treasure-lab__reveal {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  z-index: 3;
+  min-height: 34px;
+  padding: 0 12px;
+  background: rgba(244, 196, 79, 0.94);
+  color: #17233b;
+}
+
+.vault-treasure-lab__island-link {
+  position: absolute;
+  top: 72px;
+  left: 16px;
+  z-index: 3;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.vault-treasure-lab__inspect {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  z-index: 3;
+  min-height: 34px;
+  padding: 0 12px;
+  transform: translateX(-50%);
+  background: rgba(10, 24, 42, 0.82);
+}
+
+.vault-treasure-lab__phone.is-inspecting .vault-treasure-lab__dock {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+}
+
+.vault-treasure-lab__phone.is-inspecting .vault-treasure-lab__card {
+  bottom: 22px;
+}
+
+@media (max-width: 760px) {
+  .vault-treasure-lab {
+    padding: 0;
+  }
+
+  .vault-treasure-lab__phone {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

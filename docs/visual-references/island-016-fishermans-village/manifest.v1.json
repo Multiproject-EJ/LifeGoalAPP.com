@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "island": {
+    "runtimeNumber": 16,
+    "sourcePackNumber": 22,
+    "slug": "fishermans-village",
+    "title": "Fisherman's Village"
+  },
+  "updated": "2026-08-28",
+  "status": "quality-certified-release-candidate-ready",
+  "authorityOrder": [
+    "exact-source",
+    "secondary-inferred",
+    "generated-construction-aid"
+  ],
+  "assets": [
+    {
+      "id": "island-016-approved-v004",
+      "path": "docs/visual-references/island-016-fishermans-village/goals/exact/016-fishermans-village-approved-v004.png",
+      "sha256": "a631297b2d2c11fcb3939de8ccc5bcdd69c52ab3bd12d40597859fbb6019ae65",
+      "authority": "exact-source",
+      "purpose": "Immutable whole-island composition, landmark and environment authority",
+      "status": "active"
+    },
+    {
+      "id": "water-dragon-four-view-v001",
+      "path": "docs/visual-references/island-016-fishermans-village/goals/secondary-inferred/water-dragon-four-view-v001.png",
+      "sha256": "051c1577841f4479f3fceaf1d4a53d3a68dd6c68ca5434eb717228e1fc86c642",
+      "authority": "secondary-inferred",
+      "purpose": "Water-dragon face, gill, tooth, shell and silhouette construction authority where the exact island source is silent",
+      "status": "active-with-limits"
+    },
+    {
+      "id": "fishermans-village-ocean-sky-v1",
+      "path": "public/assets/islands/island-016/background/fishermans-village-ocean-sky-v1.png",
+      "sha256": "be4bc7d05cfd1b0ecf1859e275a039b49fe85ea9451f1b5395dfeb7e9c88abe1",
+      "authority": "generated-construction-aid",
+      "derivedFrom": "island-016-approved-v004",
+      "purpose": "Superseded ocean and sky construction plate retained for provenance; it may not override the exact island composition",
+      "status": "superseded"
+    },
+    {
+      "id": "fishermans-village-ocean-sky-v2",
+      "path": "public/assets/islands/island-016/background/fishermans-village-ocean-sky-v2.png",
+      "sha256": "258bcf916b0384330b606df300d10c991a23482aa92e6fb00fa55b7d8805fcb8",
+      "authority": "generated-construction-aid",
+      "derivedFrom": "island-016-approved-v004",
+      "purpose": "Active runtime ocean and sky plate, regenerated in the island's low-poly rendering language; it may not override exact island composition",
+      "status": "active-with-limits"
+    }
+  ],
+  "productionPointers": {
+    "workflowManifest": "docs/visual-references/island-016-fishermans-village/workflow-manifest.v1.json",
+    "gauntlet": "docs/gauntlets/2026-08-28-island-016-fishermans-village-10-of-10.md",
+    "qualityVerdict": "docs/gauntlets/2026-08-28-island-016-quality-lord-final.md",
+    "stateRoot": ".img2threejs/island-016-fishermans-village/",
+    "runtimeFactory": "src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts",
+    "missionRuntime": "src/features/gamification/level-worlds/dev/Island22WaterDragonMission.ts",
+    "runtimeAssetRoot": "public/assets/islands/island-016/"
+  },
+  "rules": {
+    "referencePacketIsRuntimePayload": false,
+    "generatedReferencesMayOverrideVisibleSource": false,
+    "runtimeNumberOverridesSourcePackNumber": true,
+    "deploymentRequiresIndependentQualityGate": true
+  }
+}

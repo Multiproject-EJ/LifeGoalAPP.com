@@ -164,6 +164,11 @@ import {
   type MomentumMatrixPlacementResult,
   type MomentumMatrixProgressEntry,
 } from './momentumMatrixGame';
+import {
+  getVaultRushClaimCount,
+  isVaultRushUnlocked,
+  VAULT_RUSH_MAX_CLAIMS_PER_ISLAND,
+} from './islandRunVaultRush';
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
@@ -1525,6 +1530,60 @@ export function applyTokenHopRewards(options: {
     triggerSource: triggerSource ?? 'apply_token_hop_rewards',
   });
   return next;
+}
+
+export type ClaimVaultRushRewardStatus = 'claimed' | 'locked' | 'cap_reached';
+
+export interface ClaimVaultRushRewardResult {
+  status: ClaimVaultRushRewardStatus;
+  record: IslandRunGameStateRecord;
+  claimCount: number;
+}
+
+/** Atomically awards one Vault Rush prize and consumes one per-island claim. */
+export function claimVaultRushReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  effectiveIslandNumber: number;
+  essenceReward: number;
+  triggerSource?: string;
+}): ClaimVaultRushRewardResult {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const completedStops = current.completedStopsByIsland?.[String(current.currentIslandNumber)] ?? [];
+  const effectiveIslandNumber = Math.max(1, Math.floor(options.effectiveIslandNumber));
+  const currentClaimCount = getVaultRushClaimCount(
+    current.vaultRushClaimsByIsland,
+    effectiveIslandNumber,
+  );
+
+  if (!isVaultRushUnlocked(completedStops)) {
+    return { status: 'locked', record: current, claimCount: currentClaimCount };
+  }
+  if (currentClaimCount >= VAULT_RUSH_MAX_CLAIMS_PER_ISLAND) {
+    return { status: 'cap_reached', record: current, claimCount: currentClaimCount };
+  }
+
+  const islandKey = String(effectiveIslandNumber);
+  const reward = Math.max(0, Math.floor(options.essenceReward));
+  const claimCount = currentClaimCount + 1;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    essence: current.essence + reward,
+    vaultRushClaimsByIsland: {
+      ...current.vaultRushClaimsByIsland,
+      [islandKey]: claimCount,
+    },
+  };
+
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'claim_vault_rush_reward',
+  });
+  return { status: 'claimed', record: next, claimCount };
 }
 
 export type IslandRunTechnologyBuildReason = 'built' | 'already-built' | 'requirements-not-met' | 'unsupported-technology';

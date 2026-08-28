@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "subject": "HabitGame Island 016 — Fisherman's Village 6/10 to 10/10 visual production",
+  "created_at": "2026-08-28",
+  "status": "quality-gates-passed-release-candidate-ready",
+  "goal_authority": [
+    {
+      "rank": 1,
+      "path": "goals/exact/016-fishermans-village-approved-v004.png",
+      "sha256": "a631297b2d2c11fcb3939de8ccc5bcdd69c52ab3bd12d40597859fbb6019ae65",
+      "role": "exact-village-and-environment-authority"
+    },
+    {
+      "rank": 2,
+      "path": "goals/secondary-inferred/water-dragon-four-view-v001.png",
+      "sha256": "051c1577841f4479f3fceaf1d4a53d3a68dd6c68ca5434eb717228e1fc86c642",
+      "role": "secondary-inferred-water-dragon-identity"
+    },
+    {
+      "rank": 3,
+      "path": "generated-hypotheses/manifest.v1.json",
+      "role": "hashed secondary generated production hypotheses; never override ranks 1-2 or explicit user decisions"
+    }
+  ],
+  "render_profile": {
+    "runtime": "procedural Three.js in the existing Island Run renderer",
+    "target": "premium source-faithful stylized 3D miniature",
+    "device_gate": "portrait phone PWA and local Capacitor iOS development app",
+    "performance_rule": "retain current quality-tier and single-renderer architecture; prove phone performance after desktop macro approval"
+  },
+  "required_cameras": [
+    "portrait-overview-matched",
+    "fixed-orbit-left",
+    "fixed-orbit-right",
+    "least-flattering-opposite-side",
+    "landmark-attachment-closeup",
+    "pond-fishing-gameplay",
+    "dragon-aperture-eruption",
+    "dragon-wide-flight",
+    "dragon-head-first-dive-and-impact"
+  ],
+  "quality_gates": {
+    "naked_macro_minimum": 0.85,
+    "source_critical_view_minimum": 0.85,
+    "worst_required_view_governs": true,
+    "one_blockout_and_one_bounded_correction_per_family": true,
+    "no_detail_before_macro_gate": true,
+    "explicit_user_approval_before_generation": true
+  },
+  "roles": {
+    "creative_authority": "Eivind",
+    "router_and_implementer": "Codex using EJ-Jarvis and the 3D Asset Gauntlet",
+    "quality_lord": "independent visual review pass against locked hashes and matched views"
+  },
+  "budgets": {
+    "part_count": 32,
+    "representative_first_slice": ["p12-guild-hall-macro", "p13-guild-hall-detail-system"],
+    "geometry_policy": "continuous macro masses stay continuous; repeated small props may be instanced",
+    "detail_firewall": "no texture, trim, scales, facial polish, particles or animation polish before the owning macro silhouette and attachment gates pass"
+  },
+  "non_negotiables": [
+    "Do not overwrite the exact approved v004 village image or the accepted dragon identity sheet.",
+    "Do not use current baseline geometry as identity authority.",
+    "Preserve the perfect 36-tile circular board and canonical mission state/actions.",
+    "Keep the Guild Hall upper-right and the fish-market loading dock upper-left behind the lighthouse lantern.",
+    "The dragon must emerge through the pond aperture, fill its circumference, clear the shaft with its full tail, fly farther, fold rather than lose its wings, dive head-first off-island, and produce a consequential impact beat.",
+    "No Blender route; production remains code-native Three.js.",
+    "No deployment, main push or Capacitor sync is part of this visual-planning checkpoint."
+  ]
+}

@@ -18,8 +18,12 @@ import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
 import {
   getCactusCanyonDynamiteQuantityForTile,
   getGreatHoneyfallNectarQuantityForTile,
+  isFishermansVillageRodTile,
+  isFirstLightAssemblyDynamiteTile,
   isFrostwellDrillTile,
   isRootheartPowerComponentTile,
+  getStagedRestorationPickupForTile,
+  type StagedRestorationPickupKind,
 } from './islandRunSignatureMissions';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
@@ -36,7 +40,7 @@ export type IslandTileMapEntry = {
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
   /** Presentation marker for a canonical island-specific mission landing. */
-  signatureMissionKind?: 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar';
+  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod' | StagedRestorationPickupKind;
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
 };
@@ -111,12 +115,16 @@ export function resolveAllLandmarkDoorsRouteToBoss(input: {
 }
 
 // Encounter tile placement relative to the board's tileCount.
-// Normal islands: 1 encounter (gated by dayIndex).
+// Normal islands: 1 encounter (gated by dayIndex). The normal position sits
+// just before the start/caretaker sector and deliberately clears every
+// possible three-tile landmark-door cluster on the production ring. The old
+// 0.15 position resolved to tile 5, so the Habit door always replaced the
+// encounter before the player could see or use it.
 // Seasonal / rare islands: 2 encounters, always active.
 // Positions are chosen as fractions of the ring so they spread evenly on any
 // tile count (profile-driven, per the canonical contract — no fixed indices).
 const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
-  normal: [0.15],
+  normal: [34 / 36],
   seasonal: [0.275, 0.775],
   rare: [0.275, 0.775],
 };
@@ -311,6 +319,20 @@ export function generateTileMap(
   }
 
   return tiles.map((entry) => {
+    const stagedRestorationPickup = getStagedRestorationPickupForTile(islandNumber, entry.index, tileCount);
+    if (stagedRestorationPickup) {
+      return {
+        ...entry,
+        signatureMissionKind: stagedRestorationPickup.kind,
+        signatureMissionAmount: stagedRestorationPickup.amount,
+      };
+    }
+    if (isFishermansVillageRodTile(islandNumber, entry.index)) {
+      return { ...entry, signatureMissionKind: 'fishermans_rod' };
+    }
+    if (isFirstLightAssemblyDynamiteTile(islandNumber, entry.index)) {
+      return { ...entry, signatureMissionKind: 'first_light_dynamite', signatureMissionAmount: 1 };
+    }
     if (isFrostwellDrillTile(islandNumber, entry.index)) {
       return { ...entry, signatureMissionKind: 'frostwell_drill' };
     }

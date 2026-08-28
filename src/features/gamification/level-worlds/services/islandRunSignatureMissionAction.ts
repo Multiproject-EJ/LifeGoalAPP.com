@@ -1,6 +1,8 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
+import { MAX_BUILD_LEVEL } from './islandRunContractV2EssenceBuild';
+import { getIslandRunBossReward } from './islandRunBossReward';
 import {
   ISLAND_RUN_ECONOMY_SOURCES,
   recordIslandRunDiceInflow,
@@ -8,10 +10,15 @@ import {
 import {
   CACTUS_CANYON_ISLAND_NUMBER,
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
+  FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+  FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
   GREAT_HONEYFALL_MAX_STAGE,
   HONEYCOMB_KINGDOM_ISLAND_NUMBER,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
+  FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG,
+  FISHERMANS_VILLAGE_FISH_TARGET_KG,
+  FISHERMANS_VILLAGE_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
   ROOTHEART_POWERWORKS_MAX_STAGE,
   SUNKEN_SANDS_FIRST_TREASURE_DICE,
@@ -19,20 +26,336 @@ import {
   SUNKEN_SANDS_ISLAND_NUMBER,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCactusCanyonAvailableDynamite,
+  getFirstLightAssemblyAvailableDynamite,
   getGreatHoneyfallAvailableNectar,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   getRootheartPowerworksStageCost,
+  getStagedRestorationAvailableCharges,
+  getStagedRestorationMissionDescriptor,
   getSunkenSandsTreasureEssenceReward,
   isRootheartPowerworksCollectionComplete,
   resolveCactusCanyonSpiralProgress,
+  resolveFirstLightAssemblyCraterProgress,
   resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
+  resolveFishermansVillageFishingProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
+  resolveStagedRestorationMissionProgress,
 } from './islandRunSignatureMissions';
+
+export type ActivateStagedRestorationMissionResult =
+  | {
+      status: 'ok';
+      missionId: string;
+      activatedStages: number;
+      chargesRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_charges' | 'already_complete' | 'unsupported_island' };
+
+/** Canonical spend action shared by the five staged restoration missions. */
+export function activateStagedRestorationMissionStage(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ActivateStagedRestorationMissionResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    const descriptor = getStagedRestorationMissionDescriptor(state.currentIslandNumber);
+    if (!descriptor) return { status: 'unsupported_island' };
+    const progress = resolveStagedRestorationMissionProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (!progress) return { status: 'wrong_island' };
+    if (progress.completedAtMs !== null || progress.activatedStages >= descriptor.stageCount) {
+      return { status: 'already_complete' };
+    }
+    if (getStagedRestorationAvailableCharges(progress) < descriptor.chargeCostPerStage) {
+      return { status: 'no_charges' };
+    }
+
+    const nowMs = Date.now();
+    const activatedStages = Math.min(descriptor.stageCount, progress.activatedStages + 1);
+    const completedAtMs = activatedStages >= descriptor.stageCount
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const nextProgress = {
+      ...progress,
+      chargesSpent: progress.chargesSpent + descriptor.chargeCostPerStage,
+      activatedStages,
+      lastActivatedStage: activatedStages,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: `activate_${descriptor.missionId.replace(/-/g, '_')}_stage`,
+    });
+    return {
+      status: 'ok',
+      missionId: descriptor.missionId,
+      activatedStages,
+      chargesRemaining: getStagedRestorationAvailableCharges(nextProgress),
+      completedAtMs,
+    };
+  });
+}
+
+export type ReelFishermansVillageCatchResult =
+  | {
+      status: 'ok';
+      catchId: number;
+      kind: 'nothing' | 'small' | 'medium' | 'large' | 'colossal';
+      kilograms: number;
+      fishCaughtKg: number;
+      dragonTriggered: boolean;
+    }
+  | { status: 'wrong_island' | 'nothing_hooked' };
+
+export function reelFishermansVillageCatch(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<ReelFishermansVillageCatchResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFishermansVillageFishingProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    const pending = progress.pendingCatch;
+    if (!pending) return { status: 'nothing_hooked' };
+
+    const nowMs = Date.now();
+    const fishCaughtKg = Math.min(FISHERMANS_VILLAGE_FISH_TARGET_KG, progress.fishCaughtKg + pending.kilograms);
+    const dragonTriggered = progress.dragonTriggeredAtMs === null
+      && fishCaughtKg >= FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG;
+    const completedAtMs = fishCaughtKg >= FISHERMANS_VILLAGE_FISH_TARGET_KG
+      ? progress.completedAtMs ?? nowMs
+      : progress.completedAtMs;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: {
+            ...progress,
+            successfulCatches: progress.successfulCatches + (pending.kilograms > 0 ? 1 : 0),
+            fishCaughtKg,
+            pendingCatch: null,
+            dragonTriggeredAtMs: dragonTriggered ? nowMs : progress.dragonTriggeredAtMs,
+            completedAtMs,
+            updatedAtMs: nowMs,
+          },
+        },
+      },
+      triggerSource: 'reel_fishermans_village_catch',
+    });
+    return {
+      status: 'ok',
+      catchId: pending.catchId,
+      kind: pending.kind,
+      kilograms: pending.kilograms,
+      fishCaughtKg,
+      dragonTriggered,
+    };
+  });
+}
+
+export type ReleaseFishermansVillageCatchResult =
+  | { status: 'ok'; catchId: number; kind: 'nothing' | 'small' | 'medium' | 'large' | 'colossal' }
+  | { status: 'wrong_island' | 'nothing_hooked' };
+
+/**
+ * Canonically clears a cast that returned empty or escaped. Reeling remains a
+ * presentation interaction, but its outcome must not leave a stale pending
+ * catch that reopens after reload.
+ */
+export function releaseFishermansVillageCatch(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  reason: 'empty' | 'escaped';
+}): Promise<ReleaseFishermansVillageCatchResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFishermansVillageFishingProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    const pending = progress.pendingCatch;
+    if (!pending) return { status: 'nothing_hooked' };
+    const nowMs = Date.now();
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: { ...progress, pendingCatch: null, updatedAtMs: nowMs },
+        },
+      },
+      triggerSource: `release_fishermans_village_catch_${options.reason}`,
+    });
+    return { status: 'ok', catchId: pending.catchId, kind: pending.kind };
+  });
+}
+
+export type DetonateFirstLightAssemblyChargeResult =
+  | {
+      status: 'ok';
+      sectorBefore: number;
+      sectorAfter: number;
+      dynamiteRemaining: number;
+      completedAtMs: number | null;
+    }
+  | { status: 'wrong_island' | 'no_dynamite' | 'already_complete' };
+
+export function detonateFirstLightAssemblyCharge(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<DetonateFirstLightAssemblyChargeResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFirstLightAssemblyCraterProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    if (progress.completedAtMs !== null || progress.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET) {
+      return { status: 'already_complete' };
+    }
+    if (getFirstLightAssemblyAvailableDynamite(progress) <= 0) return { status: 'no_dynamite' };
+
+    const sectorBefore = progress.chargesDetonated;
+    const sectorAfter = Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, sectorBefore + 1);
+    const nowMs = Date.now();
+    const completedAtMs = sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+      ? progress.completedAtMs ?? nowMs
+      : null;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    const nextProgress = {
+      ...progress,
+      chargesDetonated: sectorAfter,
+      lastDetonatedSector: sectorBefore,
+      completedAtMs,
+      updatedAtMs: nowMs,
+    };
+    const completesMission = completedAtMs !== null;
+    const finaleReward = completesMission && state.bossTrialResolvedIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
+      ? getIslandRunBossReward(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)
+      : null;
+    // Island 001 has no separate Boss landmark. Completing the Assembly mission
+    // fulfils the canonical fifth-stop compatibility slot so every downstream
+    // island-clear/travel reader still sees one authoritative progression
+    // record. Only the four real outer landmarks must be funded by the player.
+    const stopStatesByIndex = completesMission
+      ? state.stopStatesByIndex.map((entry, index) => index === 4
+        ? {
+            ...entry,
+            objectiveComplete: true,
+            buildComplete: true,
+            accessUnlocked: true,
+            postponedAtMs: null,
+            completedAtMs: entry.completedAtMs ?? nowMs,
+          }
+        : entry)
+      : state.stopStatesByIndex;
+    const stopBuildStateByIndex = completesMission
+      ? state.stopBuildStateByIndex.map((entry, index) => index === 4 && entry
+        ? {
+            ...entry,
+            buildLevel: MAX_BUILD_LEVEL,
+            spentEssence: Math.max(entry.spentEssence, entry.requiredEssence),
+          }
+        : entry)
+      : state.stopBuildStateByIndex;
+    const completedStopsByIsland = completesMission
+      ? {
+          ...state.completedStopsByIsland,
+          [String(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)]: Array.from(new Set([
+            ...(state.completedStopsByIsland[String(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)] ?? []),
+            'boss',
+          ])),
+        }
+      : state.completedStopsByIsland;
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        bossTrialResolvedIslandNumber: completesMission
+          ? FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
+          : state.bossTrialResolvedIslandNumber,
+        bossState: completesMission
+          ? {
+              ...state.bossState,
+              unlocked: true,
+              objectiveComplete: true,
+              buildComplete: true,
+            }
+          : state.bossState,
+        stopStatesByIndex,
+        stopBuildStateByIndex,
+        completedStopsByIsland,
+        dicePool: state.dicePool + (finaleReward?.dice ?? 0),
+        essence: state.essence + (finaleReward?.essence ?? 0),
+        essenceLifetimeEarned: state.essenceLifetimeEarned + (finaleReward?.essence ?? 0),
+        spinTokens: state.spinTokens + (finaleReward?.spinTokens ?? 0),
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: nextProgress,
+        },
+      },
+      triggerSource: 'detonate_first_light_assembly_charge',
+    });
+    if (finaleReward && finaleReward.dice > 0) {
+      recordIslandRunDiceInflow({
+        source: ISLAND_RUN_ECONOMY_SOURCES.signatureMissionFinaleDice,
+        amount: finaleReward.dice,
+        sessionId: options.session.user.id,
+        atMs: nowMs,
+        metadata: {
+          islandNumber: FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
+          missionId: nextProgress.missionId,
+        },
+      });
+    }
+    return {
+      status: 'ok',
+      sectorBefore,
+      sectorAfter,
+      dynamiteRemaining: getFirstLightAssemblyAvailableDynamite(nextProgress),
+      completedAtMs,
+    };
+  });
+}
 
 export type ActivateGreatHoneyfallReservoirResult =
   | {

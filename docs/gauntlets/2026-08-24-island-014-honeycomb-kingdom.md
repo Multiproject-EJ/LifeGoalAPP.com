@@ -315,6 +315,74 @@ three-robot choreography and finish-pop evidence.
   production-build and Capacitor synchronization gates. This authorization is
   not evidence of App Store review approval or physical-device performance.
 
+## Mission playability and reservoir climax — 2026-08-27
+
+### Observable player outcome
+
+The Great Honeyfall is a complete four-beat mission rather than a hidden state
+mechanic. A player can discover the mission through the shared expedition
+phone or by tapping the palace reservoir, recognize the four glowing royal
+nectar pickups, see each pickup acknowledged, explicitly pour it into the
+palace, and watch one persistent central reservoir fill in real time. The
+fourth pour builds pressure, bulges and breaks a wax seal, releases the Great
+Honeyfall across the cliff, and only then presents mission completion.
+
+### Non-negotiables
+
+- Canonical roll/action services remain the only writers of nectar inventory,
+  activated stages and completion time.
+- React owns only modal/queue/camera presentation. The Three.js world consumes
+  committed state and never writes gameplay.
+- A royal-nectar pickup queues its mission presentation behind any Concord or
+  other full-attention pickup instead of being silently lost or stacked.
+- The shared mission phone shows `0–4` reservoir stages, whether nectar is
+  ready, and one clear pour/replay action. No legacy in-world pill is restored.
+- The palace reservoir exposes a real 3D hit target. Tapping it opens mission
+  control; it never spends nectar by surprise.
+- Stages 1–3 raise the same large reservoir liquid line and keep earlier work
+  visible. Stage 4 adds the larger pressure/wax-burst/cascade payoff.
+- Honey Egg Comb couriers remain an intentional bee-brood civilization motif
+  and visibly orbit/work around the reservoir.
+- The completion surface waits until the unobstructed 3D climax has played.
+- Reduced motion removes oscillation, moving particles and seal debris while
+  retaining the full reservoir and completed Honeyfall.
+
+### Evidence and gates
+
+- Mission-registry/tracker tests prove Island 014 has authored copy and reads
+  canonical live progress, including unspent nectar.
+- Roll-source contracts prove the UI handles and queues
+  `greatHoneyfallNectarCollected`.
+- Three.js contracts prove the large reservoir, rising liquid, wax burst,
+  Honey Egg couriers and mission hit target exist and that stages accumulate.
+- Visual play-test evidence must cover stages 0, 1, 2, 3 and 4, the final
+  pressure release, the phone action, and reduced motion at a phone viewport.
+- Architecture guard, focused Island Run tests, production build and normal
+  Capacitor sync/install must pass before handoff.
+
+### Verified handoff — 2026-08-27
+
+- The exact production-world evidence generator is
+  `scripts/render-island014-honeyfall-world-orbit.mjs`. Its current immutable
+  local packet is
+  `work/island-visual-library/island-014-honeycomb-kingdom/evidence/honeyfall-reservoir-mission-v004-r12/`
+  with source hash
+  `3c1dfccaf52ee596a6488e844d53b51414693d6dbd400513ee52fa06132a580e`
+  and runtime hash
+  `8b803e959f90af6616c77b9b6c66dda4a9e2391b8f58674af15dd71789b8dfb4`.
+  The generated packet is intentionally excluded from the shipped app; the
+  generator, runtime and immutable source are sufficient to reproduce it.
+- All 1,874 Island Run service/contract tests pass. The Island Run architecture
+  guard reports zero violations, and camera/template, visual-production,
+  robot-family and island-art wiring checks pass.
+- The optimized Vite production build and normal Capacitor iOS synchronization
+  pass. A signed Debug build was installed on Eivind's paired iPhone 16 Pro as
+  `com.lifegoalapp.habitgame`; automatic launch was blocked only because the
+  phone was locked.
+
+Publishing or another `main` deployment is not implied by this refinement;
+that remains a separate explicit release decision.
+
 ## Stop conditions
 
 Stop and request direction if the source hash changes, a hidden-side decision

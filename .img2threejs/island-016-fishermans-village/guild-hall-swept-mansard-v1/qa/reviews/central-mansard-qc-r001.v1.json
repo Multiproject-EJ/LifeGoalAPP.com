@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "independent-read-only-quality-lord-landmark-families",
+  "scope": "central-mansard-only macro gate",
+  "goalHash": "5769eb51eb8fcda6c564379d42d9190c9dcae05b3c37fb8384666d8be09d9d20",
+  "captureRoot": ".img2threejs/island-016-fishermans-village/guild-hall-swept-mansard-v1/evidence/blockout/orbit-v003",
+  "excludedFrozenSystems": [
+    "portal and front gable",
+    "facade windows",
+    "props",
+    "surface finish"
+  ],
+  "scores": {
+    "clay-front": { "silhouetteVolume": 0.90, "identity": 0.88, "crossView": 0.91, "assembly": 0.90, "phoneReadability": 0.86 },
+    "front": { "silhouetteVolume": 0.91, "identity": 0.89, "crossView": 0.92, "assembly": 0.90, "phoneReadability": 0.87 },
+    "left-45": { "silhouetteVolume": 0.88, "identity": 0.87, "crossView": 0.91, "assembly": 0.88, "phoneReadability": 0.85 },
+    "profile-90": { "silhouetteVolume": 0.86, "identity": 0.86, "crossView": 0.90, "assembly": 0.87, "phoneReadability": 0.85 },
+    "rear-180": { "silhouetteVolume": 0.87, "identity": 0.86, "crossView": 0.90, "assembly": 0.87, "phoneReadability": 0.85 },
+    "right-45": { "silhouetteVolume": 0.90, "identity": 0.88, "crossView": 0.91, "assembly": 0.89, "phoneReadability": 0.86 }
+  },
+  "worstRequiredScore": 0.85,
+  "vetoes": {
+    "flatPlaneCollapse": false,
+    "stackedShelfProfile": false,
+    "visiblePanelSeams": false,
+    "cameraDependentSilhouette": false
+  },
+  "largestMismatch": "Frozen monumental portal/gable remains less dominant than the exact goal; excluded from this roof-only gate and requires a new user checkpoint before modification.",
+  "action": "approve"
+}
