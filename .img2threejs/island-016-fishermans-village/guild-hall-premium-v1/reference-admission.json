@@ -1,0 +1,16 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "front-three-quarter",
+    "sourcePath": "docs/visual-references/island-016-fishermans-village/derived/crops/guild-hall-front-three-quarter-v005.png",
+    "sha256": "5769eb51eb8fcda6c564379d42d9190c9dcae05b3c37fb8384666d8be09d9d20",
+    "width": 560,
+    "height": 740,
+    "foregroundCoverage": 0.5016,
+    "largestComponentFraction": 0.9971,
+    "pHash": "16928673359953176706",
+    "duplicateOfHash": null
+  },
+  "rejected_sheet_note": "The uncropped four-view sheet was correctly rejected as one ground-truth image because its four isolated buildings form disconnected foreground components. It remains useful hypothesis context, while this coherent single-view crop is the admitted fixed-view reference."
+}

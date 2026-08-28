@@ -48,6 +48,7 @@ import {
   detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
+  releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
   blastCactusCanyonSpiralSection,
   spinFrostwellDrillWheel,
@@ -832,14 +833,51 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const fsMod = await import('fs');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts', 'utf8');
       assert(boardSource.includes('className="fishermans-catch-celebration"'), 'successful catches render a foreground celebration');
       assert(boardSource.includes('className={`fishermans-fishing-mini'), 'caught progress renders as a compact reward-bar companion');
       assert(boardSource.includes('fishermansFishingProgress.fishCaughtKg > 0'), 'mini progress stays hidden until the player catches fish');
       assert(boardSource.includes("? '🎣 Rod ready—your first cast is already on the line!'"), 'the first rod landing opens the catch flow instead of stopping at a pickup message');
       assert(!boardSource.includes('four fish-marked shore tiles'), 'stale fish-tile guidance is removed');
       assert(!boardSource.includes('className="fishermans-fishing-meter"'), 'the old permanent board-overlay meter is removed');
+      assert(!boardSource.includes('className="fishermans-fishing-modal__scene"'), 'the retired flat fishing scene cannot cover the 3D pond');
+      assert(boardSource.includes('fishingInteraction: {'), 'the board publishes presentation-only fishing phases to the 3D runtime');
+      assert(worldSource.includes('ISLAND_22_HERO_FISHERMAN') && worldSource.includes('ISLAND_22_HERO_CAUGHT_FISH'), 'the fisherman and caught fish are real world objects');
+      assert(
+        /\.fishermans-fishing-hud__layer\s*\{[\s\S]*?background:\s*transparent;/.test(cssSource),
+        'the reel HUD preserves the live pond behind it',
+      );
       assert(cssSource.includes('top: calc(100% + 7px)'), 'mini progress sits below the existing reward bar');
       assert(cssSource.includes('z-index: calc(var(--island-run-mission-overlay-z, 22000) + 20)'), 'catch celebration renders above modal and HUD layers');
+    },
+  },
+  {
+    name: 'Fisherman’s Village canonically clears an escaped fish without awarding kilograms',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const prepared = collectFishermansVillageLanding({
+        ledger: {}, islandNumber: 16, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.95,
+      });
+      await writeIslandRunGameStateRecord({
+        session, client: null,
+        record: { ...base, currentIslandNumber: 16, signatureMissionProgressByIsland: prepared.ledger },
+      });
+      refreshIslandRunStateFromLocal(session);
+      const result = await releaseFishermansVillageCatch({ session, client: null, reason: 'escaped' });
+      assertEqual(result.status, 'ok', 'escape is committed through the mission action boundary');
+      const progress = resolveFishermansVillageFishingProgress({
+        ledger: readIslandRunGameStateRecord(session).signatureMissionProgressByIsland,
+        islandNumber: 16,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.pendingCatch, null, 'an escaped fish cannot reopen after reload');
+      assertEqual(progress.fishCaughtKg, 0, 'escape awards no fish weight');
     },
   },
   {
@@ -866,6 +904,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       });
       assertEqual(prepared.pendingCatch?.kind, 'colossal', 'fifth successful catch is the authored shock catch');
       assertEqual(prepared.pendingCatch?.kilograms, 32, 'colossal catch fills 46 to 78 exactly');
+      assertEqual(prepared.pendingCatch?.pullsRequired, 10, 'the monster catch gets a full ten-pull tension sequence');
       await writeIslandRunGameStateRecord({
         session, client: null,
         record: { ...base, currentIslandNumber: 16, signatureMissionProgressByIsland: prepared.ledger },

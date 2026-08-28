@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "subject": "island-016-fisherfolk-guild-hall-central-mansard",
+  "constructionFamily": "continuous-four-panel-swept-mansard-v1",
+  "gate": "central-mansard-macro-silhouette",
+  "familyOrdinal": 2,
+  "familyLimit": 2,
+  "goal": {
+    "path": "docs/visual-references/island-016-fishermans-village/derived/crops/guild-hall-front-three-quarter-v005.png",
+    "sha256": "5769eb51eb8fcda6c564379d42d9190c9dcae05b3c37fb8384666d8be09d9d20",
+    "authority": "exact-goal-pixels"
+  },
+  "retiredFamilyEvidence": {
+    "path": ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/evidence/blockout/orbit-v004/front.png",
+    "sha256": "191af8a74658f796cde09b509a6963e6e249c0d0927ba0e7ca0e253909f4a36b",
+    "dominantDefect": "profile and opposite-side views read as stacked shelves around a blank slab"
+  },
+  "allowlist": [
+    "central-mansard mature roof shell geometry"
+  ],
+  "frozen": [
+    "level-1 roof",
+    "portal",
+    "crown",
+    "props",
+    "side and rear structures",
+    "materials",
+    "camera contracts",
+    "gameplay controllers",
+    "animation sockets"
+  ],
+  "requiredViews": [
+    "front",
+    "left-three-quarter",
+    "right-three-quarter",
+    "profile",
+    "rear",
+    "naked-clay"
+  ],
+  "acceptance": {
+    "minimumPerViewCategoryScore": 0.85,
+    "worstViewGoverns": true,
+    "hardVetoes": [
+      "flat-plane collapse",
+      "stacked-shelf profile",
+      "visible panel separation",
+      "camera-dependent silhouette"
+    ]
+  },
+  "status": "central-mansard-macro-approved-detail-attached"
+}

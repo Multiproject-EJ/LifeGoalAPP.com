@@ -11,6 +11,7 @@ export interface JourneyDiscCenterLandmarkPresentation {
     | 'feature_disabled'
     | 'ineligible_island'
     | 'no_timed_event'
+    | 'right_rail_only'
     | 'boss_finale_priority'
     | 'tickets_required'
     | 'event_ready';
@@ -100,12 +101,9 @@ export function resolveIslandEventGridSlots(options: {
 }
 
 /**
- * Pure presentation resolver for the chapter-opening Journey Disc exhibition.
- *
- * The arena may temporarily transform the centre landmark only while the
- * canonical Boss stop is still locked. As soon as the Boss stop becomes an
- * actual objective, the canonical Moon Gate regains priority so an event can
- * never deadlock Island Run progression.
+ * Legacy compatibility resolver. Journey Disc now lives exclusively in the
+ * normal timed-event launcher on the right rail; it never transforms or adds
+ * an icon to the island centre.
  */
 export function resolveJourneyDiscCenterLandmarkPresentation(options: {
   featureEnabled: boolean;
@@ -133,11 +131,5 @@ export function resolveJourneyDiscCenterLandmarkPresentation(options: {
     return { owner: 'canonical_boss', active: false, canEnter: false, reason: 'boss_finale_priority' };
   }
 
-  const canEnter = Math.max(0, Math.floor(options.eventTickets)) > 0;
-  return {
-    owner: 'journey_disc_arena',
-    active: true,
-    canEnter,
-    reason: canEnter ? 'event_ready' : 'tickets_required',
-  };
+  return { owner: 'canonical_boss', active: false, canEnter: false, reason: 'right_rail_only' };
 }

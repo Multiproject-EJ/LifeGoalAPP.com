@@ -640,7 +640,7 @@ export function resolveFishermansVillageCatch(
       catchId,
       kind: 'colossal',
       kilograms: Math.max(1, FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG - progress.fishCaughtKg),
-      pullsRequired: 7,
+      pullsRequired: 10,
       tileIndex,
     };
   }
@@ -655,7 +655,7 @@ export function resolveFishermansVillageCatch(
   } else if (normalized < 0.86) {
     kind = 'medium'; kilograms = 8 + Math.floor((normalized - 0.56) / 0.3 * 6); pullsRequired = 3;
   } else {
-    kind = 'large'; kilograms = 15 + Math.floor((normalized - 0.86) / 0.14 * 8); pullsRequired = 5;
+    kind = 'large'; kilograms = 15 + Math.floor((normalized - 0.86) / 0.14 * 8); pullsRequired = 6;
   }
   kilograms = Math.min(kilograms, Math.max(0, FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG - progress.fishCaughtKg));
   if (kilograms <= 0) kind = 'nothing';
