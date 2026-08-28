@@ -53,6 +53,9 @@ const EGG_HATCH_THREE_LAB_PATH = '/dev/egg-hatch-3d';
 const ROBOT_FAMILY_THREE_LAB_PATH = '/dev/robot-family-3d';
 const EXPEDITION_SHIP_THREE_LAB_PATH = '/dev/expedition-ship-3d';
 const EXPEDITION_SHIP_GARAGE_PREVIEW_PATH = '/dev/expedition-ship-garage';
+const VAULT_ISLAND_LAB_PATH = '/dev/vault-island-lab';
+const VAULT_TREASURE_LAB_PATH = '/dev/vault-treasure-lab';
+const VAULT_ISLAND_COLLECTION_PREVIEW_PATH = '/dev/vault-island-collection-preview';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const COMPASS_BOOK_PROFILER_BUILD_ENABLED = import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true';
 const COMPASS_BOOK_PROFILER_PATH = '/dev/compass-book-profiler';
@@ -354,6 +357,48 @@ function ExpeditionShipGaragePreviewRoute() {
   ) : null;
 }
 
+function VaultIslandLabRoute() {
+  const [VaultIslandLab, setVaultIslandLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/VaultIslandLab').then((module) => {
+      if (isMounted) setVaultIslandLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return VaultIslandLab ? <VaultIslandLab /> : null;
+}
+
+function VaultTreasureLabRoute() {
+  const [VaultTreasureLab, setVaultTreasureLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/VaultTreasureLab').then((module) => {
+      if (isMounted) setVaultTreasureLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return VaultTreasureLab ? <VaultTreasureLab /> : null;
+}
+
+function VaultIslandCollectionPreviewRoute() {
+  const [VaultIslandCollectionPreview, setVaultIslandCollectionPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/VaultIslandCollectionPreview').then((module) => {
+      if (isMounted) setVaultIslandCollectionPreview(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return VaultIslandCollectionPreview ? <VaultIslandCollectionPreview /> : null;
+}
+
 function Island001StoryPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
 
@@ -469,6 +514,18 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === EXPEDITION_SHIP_GARAGE_PREVIEW_PATH;
+  const isVaultIslandLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === VAULT_ISLAND_LAB_PATH;
+  const isVaultTreasureLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === VAULT_TREASURE_LAB_PATH;
+  const isVaultIslandCollectionPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === VAULT_ISLAND_COLLECTION_PREVIEW_PATH;
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -644,6 +701,18 @@ function Root() {
 
   if (isExpeditionShipGaragePreviewRoute) {
     return <ExpeditionShipGaragePreviewRoute />;
+  }
+
+  if (isVaultIslandLabRoute) {
+    return <VaultIslandLabRoute />;
+  }
+
+  if (isVaultTreasureLabRoute) {
+    return <VaultTreasureLabRoute />;
+  }
+
+  if (isVaultIslandCollectionPreviewRoute) {
+    return <VaultIslandCollectionPreviewRoute />;
   }
 
   if (

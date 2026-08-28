@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-08-28",
+  "subject": "special-vault-treasure-island-phone-lab",
+  "objective": "Build and quality-gate the complete phone-scale 3D Vault Treasure Island lab for HabitGame, including a monumental multi-floor exterior palace, interior vault journey, and reusable desirable treasure collection.",
+  "overallStatus": "achieved-for-phone-lab",
+  "requirements": [
+    {
+      "id": "source-led-special-island-exterior",
+      "status": "proven",
+      "evidence": [
+        "docs/visual-references/island-special-vault-treasure/treasure-island-source.png",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/exterior-390x844.png",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/comparisons/v022-exterior-source-detail/source-vs-v022.png",
+        "src/features/gamification/level-worlds/dev/VaultTreasureIslandModel.ts"
+      ],
+      "finding": "The phone exterior preserves the circular white-stone island, two occupied cliff-vault rows, raised garden, jeweled bracelet perimeter, blue-and-gold palace crown, front vault facade, marina, and ocean context. Rear architecture remains explicitly inferred from the single source view."
+    },
+    {
+      "id": "monumental-two-floor-palace",
+      "status": "proven",
+      "evidence": [
+        "vault-palace-continuous-stepped-shell",
+        "vault-palace-lower-arched-window",
+        "vault-palace-upper-arched-window",
+        "vault-palace-floor-separation-cornice",
+        "vault-palace-main-dome-lantern",
+        "vault-palace-grand-stair-to-garden",
+        "scripts/check-vault-island-model-runtime.mjs"
+      ],
+      "finding": "The exterior palace has two tall facade zones, floor cornices, a deep two-storey entry, four attached towers, six crown turrets, taller ribbed main dome, lantern and spire, and a visible garden stair."
+    },
+    {
+      "id": "empty-palace-atrium-and-split-descent",
+      "status": "proven",
+      "evidence": [
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/atrium-390x844.png",
+        "vault-palace-atrium-monumental-two-floor-shell",
+        "vault-palace-atrium-first-tall-floor-gallery",
+        "vault-palace-atrium-second-tall-floor-gallery",
+        "vault-palace-atrium-central-vault-descent-void",
+        "vault-palace-atrium-visible-main-dome-underside",
+        "vault-palace-atrium-left-garden-door",
+        "vault-palace-atrium-right-garden-door"
+      ],
+      "finding": "The palace journey includes an empty monumental atrium, two very tall galleries, visible dome underside, more than thirty split-descent steps, a central vault void, and doors back to the gardens."
+    },
+    {
+      "id": "enterable-vault-collection-room",
+      "status": "proven",
+      "evidence": [
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/vault-initial-390x844.png",
+        "vault-interior-chamber-shell",
+        "vault-interior-grand-round-door",
+        "vault-interior-main-treasure-displays",
+        "vault-interior-essence-ingot-stack",
+        "vault-interior-loose-treasure-overflow",
+        "vault-interior-sticker-relic-wall"
+      ],
+      "finding": "The vault contains the round door, two gallery levels, split stair, chandelier, eight glass-cased relic sockets, a charm/relic wall, safe-deposit boxes, coin and gem overflow, and mirrored wealth stacks."
+    },
+    {
+      "id": "premium-materials-brick-and-tile",
+      "status": "proven",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/VaultPremiumLookdev.ts",
+        "src/features/gamification/level-worlds/dev/VaultTreasureModels.ts",
+        "vault-interior-individual-beveled-ashlar-block",
+        "vault-interior-polished-marble-radial-tile",
+        "vault-interior-midnight-enamel-radial-tile",
+        "vault-cliff-ashlar-staggered-joint"
+      ],
+      "finding": "RoomEnvironment PMREM, ACES tone mapping, physical gold/silver, clearcoat enamel, transmissive gems and glass, patterned metal/marble maps, rounded interior ashlar, exterior masonry joints, and glazed radial floor tiles are all implemented and phone-rendered."
+    },
+    {
+      "id": "reusable-desirable-treasure-factory",
+      "status": "proven",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/VaultTreasureModels.ts",
+        "scripts/check-vault-island-model-runtime.mjs",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/treasure-lab-hourglass-390x844.png",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/treasure-lab-key-390x844.png",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/treasure-lab-medallion-390x844.png",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/treasure-lab-chalice-390x844.png"
+      ],
+      "finding": "One data-driven factory builds eight named, clickable, pedestal-ready relics: crown, astrolabe, crystal, egg, hourglass, key, medallion, and chalice. Every model passes runtime identity, clickability, pedestal, and minimum-detail checks."
+    },
+    {
+      "id": "museum-inspection-value-placement-spin-and-celebration",
+      "status": "proven",
+      "evidence": [
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/capture-manifest.v1.json",
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/comparisons/v025-museum-inspection/v022-vs-v025-museum-and-inspect.png",
+        "treasure-lab-inspect-ready",
+        "treasure-lab-pointer-inspect-ready",
+        "click-treasure-lab-canvas-selected",
+        "vault-room-luxury-reveal-rings",
+        "treasure-lab-luxury-reveal-rings"
+      ],
+      "finding": "Selected vault relics animate from socket to central inspection and previous relics return. Treasure Lab supports command and direct 3D click-to-zoom, close-up turntable spin, Gallery return, museum rarity/value/material plaque, gemstone sparkles, saturated-gold reveal rings, and restrained warm reveal light."
+    },
+    {
+      "id": "holdings-and-charms-demonstration",
+      "status": "proven-for-lab",
+      "evidence": [
+        "vault-interior-essence-ingot-stack",
+        "vault-interior-loose-treasure-overflow",
+        "vault-interior-sticker-relic-wall",
+        "vault-hanging-gem-charm",
+        "representativeMuseumValue: 89200",
+        "representativeCollectedRelics: 8"
+      ],
+      "finding": "The vault visually demonstrates holdings through ingots, coins, premium gems, and an eight-relic 89,200 definition-derived total. Charms appear on the exterior bracelet and in the interior relic wall. Live player holdings remain intentionally outside the lab."
+    },
+    {
+      "id": "discovery-variety-and-120-island-cadence",
+      "status": "proven-as-contract-and-lab-simulator",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/VaultIslandLabContract.ts",
+        "scripts/check-vault-island-lab-contract.mjs",
+        "majorTreasureEveryApproxIslands: 4",
+        "estimatedMajorTreasuresAcross120Islands: 30",
+        "roll-search",
+        "hotspot",
+        "riddle",
+        "mission",
+        "boss-relic"
+      ],
+      "finding": "The lab simulates eight discovery rules across roll search, special hotspots, riddles, missions, and boss relics, with the agreed rough cadence of one major treasure every four islands and a separate charm track."
+    },
+    {
+      "id": "phone-runtime-and-interaction-quality-gate",
+      "status": "proven",
+      "evidence": [
+        "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v025/capture-manifest.v1.json",
+        "13 captures at 390x844",
+        "16 successful interactions",
+        "0 failed interactions",
+        "8 clickable vault displays",
+        "nonblank pixel variation in exterior, atrium, and vault"
+      ],
+      "finding": "One deterministic WebGL run traversed exterior to atrium to vault, exercised discovery and reveal, opened and closed inspect by command, opened inspect by direct canvas raycast, returned to gallery, and rendered all newly authored treasures."
+    },
+    {
+      "id": "architecture-and-gameplay-boundary",
+      "status": "proven",
+      "evidence": [
+        "docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md",
+        "docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md",
+        "docs/gameplay/ISLAND_RUN_GUARDRAILS_AND_CONFLICT_MATRIX_2026-04-24.md",
+        "scripts/check-vault-island-lab-contract.mjs"
+      ],
+      "finding": "The implementation is dev-lab visual/runtime code only. Contract checks forbid legacy runtime-state patch APIs and fixed tile-index coupling; future awards remain assigned to canonical Island Run action services."
+    },
+    {
+      "id": "build-and-static-verification",
+      "status": "proven",
+      "evidence": [
+        "targeted TypeScript check passed",
+        "node scripts/check-vault-island-model-runtime.mjs passed",
+        "node scripts/check-vault-island-lab-contract.mjs passed",
+        "tsc -b passed",
+        "vite build passed",
+        "JSON validation and git diff whitespace checks passed"
+      ],
+      "finding": "The complete phone lab compiles in isolation and in the repository production build."
+    }
+  ],
+  "explicitlyDeferredBeyondPhoneLab": [
+    "Wire treasure awards and player holdings through canonical Island Run action services.",
+    "Place the accepted special island inside the live Island Run board and production HUD.",
+    "Obtain rear or turnaround authority before claiming all-angle source fidelity.",
+    "Optionally add offline-render ornament density or gemstone caustics if the runtime target changes."
+  ]
+}

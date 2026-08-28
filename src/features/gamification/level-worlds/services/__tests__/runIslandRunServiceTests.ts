@@ -148,6 +148,7 @@ import { islandNarrativeValidationTests, islandStoryManifestValidationTests } fr
 import { landmarkWhispersTests } from '../../narrative/__tests__/landmarkWhispers.test';
 import { islandRunModalTextColorGuardTests } from './islandRunModalTextColorGuards.test';
 import { islandRunTechCollectionTests } from './islandRunTechCollection.test';
+import { islandRunVaultCollectionTests } from './islandRunVaultCollection.test';
 import { islandRunTechnologyFragmentRenderingGuardTests } from './islandRunTechnologyFragmentRenderingGuards.test';
 import { islandRunBoardPerformanceGuardTests } from './islandRunBoardPerformanceGuards.test';
 import { islandRunDiscoveryFogTests } from './islandRunDiscoveryFog.test';
@@ -365,6 +366,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'combinedJourneyRewardClaimsRead', tests: combinedJourneyRewardClaimsReadTests },
   { label: 'combinedJourneyRewardBaseline', tests: combinedJourneyRewardBaselineTests },
   { label: 'islandRunTechCollection', tests: islandRunTechCollectionTests },
+  { label: 'islandRunVaultCollection', tests: islandRunVaultCollectionTests },
   { label: 'islandRunTechnologyFragmentRenderingGuards', tests: islandRunTechnologyFragmentRenderingGuardTests },
   { label: 'islandRunBoardPerformanceGuards', tests: islandRunBoardPerformanceGuardTests },
   { label: 'islandRunDiscoveryFog', tests: islandRunDiscoveryFogTests },

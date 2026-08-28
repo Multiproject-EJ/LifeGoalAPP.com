@@ -1,0 +1,10 @@
+.vault-island-collection-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #102b3c;
+  isolation: isolate;
+}

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "subject": "vault-island-interior-v3",
+  "status": "approved-for-serialized-production",
+  "created": "2026-08-28",
+  "reviewUnitCount": 18,
+  "representativeFirstSlice": [
+    "atrium-rotunda-shell",
+    "atrium-dome-oculus",
+    "atrium-split-grand-stair"
+  ],
+  "productionOrder": [
+    "atrium-macro-family",
+    "vault-macro-family",
+    "museum-display-family",
+    "architectural-finish-family",
+    "lighting-and-phone-composition"
+  ],
+  "ambiguities": [
+    "The source has no exact interior pixels; all hidden architecture is inferred under the explicit journey decisions.",
+    "The atrium should feel mostly empty, so richness must come from architecture and light rather than prop density.",
+    "The exact vertical transition between atrium descent and underground vault is not visible and will use a compressed ceremonial passage.",
+    "Garden portals are required narratively but their exterior landing geometry is outside this interior slice."
+  ],
+  "sharedSockets": [
+    {"id":"exterior-palace-entry","owner":"atrium-entry-portal","consumers":["atrium-split-grand-stair"]},
+    {"id":"atrium-vault-descent","owner":"atrium-split-grand-stair","consumers":["vault-threshold-and-door"]},
+    {"id":"atrium-left-garden","owner":"atrium-garden-portals","consumers":[]},
+    {"id":"atrium-right-garden","owner":"atrium-garden-portals","consumers":[]},
+    {"id":"vault-central-dais","owner":"vault-central-crystal-dais","consumers":["vault-floor-compass"]},
+    {"id":"vault-display-ring","owner":"vault-museum-display-ring","consumers":["vault-display-cases"]}
+  ],
+  "reviewUnits": [
+    {"id":"atrium-rotunda-shell","parent":null,"dependencies":[],"symmetry":"radial-with-open-camera-side","ownedSurfaces":["continuous ivory rotunda mass","two tall wall levels","structural arches","upper drum"],"exclusions":["dome","stairs","finish carving"],"views":["atrium-front","left-three-quarter","right-three-quarter","top-oblique","phone-proof"],"confidence":"medium","acceptanceCues":["one continuous monumental room","two tall floors read without labels","no exposed toy-block wall"]},
+    {"id":"atrium-dome-oculus","parent":"atrium-rotunda-shell","dependencies":["atrium-rotunda-shell"],"symmetry":"radial","ownedSurfaces":["visible blue dome underside","gold ribs","oculus","lantern glow"],"exclusions":["wall drum"],"views":["atrium-front","top-oblique","phone-proof"],"confidence":"high","acceptanceCues":["dome dominates upper third","source blue-and-gold identity visible inside"]},
+    {"id":"atrium-entry-portal","parent":"atrium-rotunda-shell","dependencies":["atrium-rotunda-shell"],"symmetry":"bilateral","ownedSurfaces":["massive entry arch","upper arrival landing","door reveal","threshold"],"exclusions":["descent stairs"],"views":["atrium-front","rear-sanity","phone-proof"],"confidence":"medium","acceptanceCues":["arrival feels palace-scale","landing has believable depth"]},
+    {"id":"atrium-split-grand-stair","parent":"atrium-entry-portal","dependencies":["atrium-rotunda-shell","atrium-entry-portal"],"symmetry":"bilateral","ownedSurfaces":["two descending stair flights","central bifurcation","stringers","landings","undersides"],"exclusions":["balustrade ornament","vault door"],"views":["atrium-front","left-three-quarter","right-three-quarter","underside-sanity","phone-proof"],"confidence":"high","acceptanceCues":["stairs read as massive construction","clear split descent","no floating-step failure"]},
+    {"id":"atrium-stair-balustrades","parent":"atrium-split-grand-stair","dependencies":["atrium-split-grand-stair"],"symmetry":"bilateral","ownedSurfaces":["continuous rails","newel posts","balusters","landing guards"],"exclusions":["stair structure"],"views":["atrium-front","three-quarter","attachment-close-up"],"confidence":"high","acceptanceCues":["continuous handrail path","premium gold rhythm without visual wire clutter"]},
+    {"id":"atrium-gallery-arcades","parent":"atrium-rotunda-shell","dependencies":["atrium-rotunda-shell"],"symmetry":"radial","ownedSurfaces":["lower arcade","upper arcade","walkable balcony slabs","arched niches"],"exclusions":["columns","banners"],"views":["atrium-front","three-quarter","phone-proof"],"confidence":"medium","acceptanceCues":["two inhabited architectural levels","balconies have mass and shadow"]},
+    {"id":"atrium-columns-cornices","parent":"atrium-gallery-arcades","dependencies":["atrium-gallery-arcades"],"symmetry":"radial","ownedSurfaces":["marble columns","pilasters","capitals","entablatures","floor cornices"],"exclusions":["wall carving motifs"],"views":["atrium-front","three-quarter","phone-proof"],"confidence":"high","acceptanceCues":["vertical rhythm supports tall floors","gold is trim rather than a wire cage"]},
+    {"id":"atrium-garden-portals","parent":"atrium-rotunda-shell","dependencies":["atrium-rotunda-shell","atrium-gallery-arcades"],"symmetry":"bilateral","ownedSurfaces":["left garden arch","right garden arch","warm exterior glimpses","side thresholds"],"exclusions":["exterior garden stairs"],"views":["atrium-front","left-three-quarter","right-three-quarter"],"confidence":"medium","acceptanceCues":["two side exits are unmistakable","warm garden light balances blue vault glow"]},
+    {"id":"atrium-floor-compass","parent":"atrium-rotunda-shell","dependencies":["atrium-split-grand-stair"],"symmetry":"radial","ownedSurfaces":["marble field","blue enamel rays","gold inlay","descent rim"],"exclusions":["vault central dais"],"views":["atrium-front","top-oblique","phone-proof"],"confidence":"high","acceptanceCues":["polished floor leads eye to descent","tile scale feels architectural"]},
+    {"id":"vault-hall-shell","parent":null,"dependencies":["atrium-split-grand-stair"],"symmetry":"radial-with-open-camera-side","ownedSurfaces":["underground rotunda mass","ceiling vaults","wall thickness","floor platform"],"exclusions":["wall bays","display cases","floor inlay"],"views":["vault-front","left-three-quarter","right-three-quarter","top-oblique","phone-proof"],"confidence":"medium","acceptanceCues":["luxury museum room rather than crypt blockout","clear generous circulation ring"]},
+    {"id":"vault-wall-arcade-bays","parent":"vault-hall-shell","dependencies":["vault-hall-shell"],"symmetry":"radial","ownedSurfaces":["double-height pointed arches","inset blue panels","pilasters","coved cornice"],"exclusions":["banners","cases"],"views":["vault-front","three-quarter","phone-proof"],"confidence":"high","acceptanceCues":["dense but ordered palace architecture","depth from layered reveals and niches"]},
+    {"id":"vault-threshold-and-door","parent":"vault-hall-shell","dependencies":["vault-hall-shell","atrium-split-grand-stair"],"symmetry":"bilateral","ownedSurfaces":["round security door","descent threshold","door machinery","arrival reveal"],"exclusions":["atrium stairs"],"views":["vault-front","rear-sanity","attachment-close-up"],"confidence":"medium","acceptanceCues":["journey continuity from palace descent","door has mass and working-depth cues"]},
+    {"id":"vault-floor-compass","parent":"vault-hall-shell","dependencies":["vault-hall-shell"],"symmetry":"radial","ownedSurfaces":["large marble compass","midnight enamel wedges","gold rings","case anchoring grid"],"exclusions":["central dais"],"views":["vault-front","top-oblique","phone-proof"],"confidence":"high","acceptanceCues":["matches museum target hierarchy","highlights do not wash out treasure silhouettes"]},
+    {"id":"vault-central-crystal-dais","parent":"vault-floor-compass","dependencies":["vault-floor-compass"],"symmetry":"radial","ownedSurfaces":["stepped dark-blue plinth","gold collars","central crystal socket","subtle floor glow"],"exclusions":["treasure object geometry","reveal particles"],"views":["vault-front","three-quarter","phone-proof"],"confidence":"high","acceptanceCues":["single strong focal object","does not occlude rear museum displays"]},
+    {"id":"vault-museum-display-ring","parent":"vault-floor-compass","dependencies":["vault-hall-shell","vault-floor-compass","vault-wall-arcade-bays"],"symmetry":"radial","ownedSurfaces":["display placement arc","circulation clearances","case sockets","visual hierarchy"],"exclusions":["case construction","treasure geometry"],"views":["vault-front","left-three-quarter","right-three-quarter","top-oblique","phone-proof"],"confidence":"high","acceptanceCues":["eight displays read individually","central aisle remains clear","no treasure pile-up"]},
+    {"id":"vault-display-cases","parent":"vault-museum-display-ring","dependencies":["vault-museum-display-ring"],"symmetry":"repeated-family","ownedSurfaces":["dark enamel bases","gold frames","glass volumes","case lighting","museum plaques"],"exclusions":["treasure geometry","placement authority"],"views":["vault-front","three-quarter","case-close-up","phone-proof"],"confidence":"high","acceptanceCues":["premium museum-case family","glass remains legible without milky opacity"]},
+    {"id":"vault-collection-wings","parent":"vault-wall-arcade-bays","dependencies":["vault-wall-arcade-bays","vault-museum-display-ring"],"symmetry":"bilateral","ownedSurfaces":["wealth ingot alcove","charm and sticker gallery","safe-deposit wall","overflow containment"],"exclusions":["main eight cases"],"views":["vault-front","left-three-quarter","right-three-quarter"],"confidence":"medium","acceptanceCues":["holdings feel abundant but curated","side content supports rather than competes with focal treasure"]},
+    {"id":"interior-lighting-and-ceremony","parent":null,"dependencies":["atrium-dome-oculus","atrium-gallery-arcades","vault-wall-arcade-bays","vault-display-cases","vault-central-crystal-dais"],"symmetry":"architectural","ownedSurfaces":["warm cove lights","wall sconces","case lights","blue focal glow","reveal light and restrained sparkle","phone exposure"],"exclusions":["geometry ownership","gameplay state"],"views":["all","phone-proof","reduced-motion"],"confidence":"high","acceptanceCues":["warm gold-white room with controlled blue focus","deep contact shadows","no broad flat wash","treasures remain desirable at 390x844"]}
+  ]
+}

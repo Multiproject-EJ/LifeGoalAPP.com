@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 4,
+  "created": "2026-08-28",
+  "status": "production-collection-gift-gated",
+  "baseCommit": "29ecd586",
+  "branch": "codex/vault-island-production-integration-20260828",
+  "unlockAuthority": {
+    "source": "canonical signatureMissionProgressByIsland ledger",
+    "missionIsland": 4,
+    "missionId": "broken-causeway",
+    "condition": "A matching mission entry has a non-null completedAtMs.",
+    "persistsAcrossCycles": true,
+    "preUnlockSurfaces": [],
+    "gatedSurfaces": [
+      "floating toolbar launcher",
+      "board menu entry",
+      "fullscreen modal tree",
+      "automatic new-relic ceremony"
+    ]
+  },
+  "giftPresentation": {
+    "landingCopy": "Mission complete — Vault Island is now yours.",
+    "celebrationReward": "Special island gift · VAULT ISLAND",
+    "launcherAsset": "public/assets/icons/vault-island-medallion-v001.png",
+    "launcherDisplaySize": "38x38 inside a 46x46 circular button",
+    "launcherPlacement": "Above the Compass and island-overview magnifier"
+  },
+  "collectionAuthority": {
+    "source": "canonical vaultRushClaimsByIsland ledger",
+    "resolver": "src/features/gamification/level-worlds/services/islandRunVaultCollection.ts",
+    "rule": "One distinct island with at least one successful Vault Rush claim unlocks one relic in canonical collection order.",
+    "writesFromPresentation": false
+  },
+  "reserveAuthority": {
+    "source": "canonical runtimeState.essence balance",
+    "tiers": ["empty", "starter", "growing", "abundant", "legendary"],
+    "writesFromPresentation": false
+  },
+  "verification": {
+    "islandRunTests": "1896 passed, 0 failed",
+    "viteBuild": "passed",
+    "architectureGuard": "passed with zero violations",
+    "icon": "128x128 RGBA, 26 KiB; inspected at actual 38px content size",
+    "browserManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v079-wealth-reserve-framing/capture-manifest.v1.json",
+    "browserDiagnostics": 0
+  },
+  "qualityReview": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/reviews/v081-island-004-gift-launcher.md"
+}

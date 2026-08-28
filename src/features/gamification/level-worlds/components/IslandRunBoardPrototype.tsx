@@ -1,4 +1,4 @@
-import { lockPageScroll } from '../../../../utils/scrollLock';
+import { lockFullscreenPageScroll, lockPageScroll } from '../../../../utils/scrollLock';
 import { triggerImpactHaptic } from '../../../../utils/completionHaptics';
 /**
  * ISLAND RUN ARCHITECTURE WARNING
@@ -109,6 +109,12 @@ import {
   isVaultRushUnlocked,
   VAULT_RUSH_MAX_CLAIMS_PER_ISLAND,
 } from '../services/islandRunVaultRush';
+import {
+  findNewVaultIslandCollectionEntry,
+  isVaultIslandCollectionUnlocked,
+  resolveVaultIslandCollection,
+  type VaultIslandCollectionEntry,
+} from '../services/islandRunVaultCollection';
 import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
@@ -664,6 +670,7 @@ import {
 import { deriveIslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
+import { VaultIslandGiftUnlockModal } from './VaultIslandGiftUnlockModal';
 import '../../../../styles/demo-waitlist-modal.css';
 import {
   ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS,
@@ -674,6 +681,7 @@ import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } 
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
+const VaultIslandCollectionModal = lazy(() => import('./VaultIslandCollectionModal'));
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1895,6 +1903,9 @@ export function IslandRunBoardPrototype({
   const suppressNextControllerTuckClickRef = useRef(false);
   const controllerMainRef = useRef<HTMLDivElement | null>(null);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [showVaultIslandCollection, setShowVaultIslandCollection] = useState(false);
+  const [showVaultIslandGiftUnlock, setShowVaultIslandGiftUnlock] = useState(false);
+  const [vaultIslandFeaturedTreasure, setVaultIslandFeaturedTreasure] = useState<VaultIslandCollectionEntry | null>(null);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
   useEffect(() => {
     if (isIslandVisualPreview && isCaretakerThreeEncounterPreviewRequested) {
@@ -3023,6 +3034,12 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic('reward_claim');
   }, [showWinCelebrationModal]);
 
+  useEffect(() => {
+    if (!showVaultIslandGiftUnlock) return;
+    playIslandRunSound('boss_island_clear');
+    triggerIslandRunHaptic('reward_claim');
+  }, [playIslandRunSound, showVaultIslandGiftUnlock, triggerIslandRunHaptic]);
+
   const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
     if (rewards.length === 0) return;
     setWinCelebrationRewards(rewards);
@@ -3102,6 +3119,7 @@ export function IslandRunBoardPrototype({
     showCreatureChannelModal ||
     showConcordHubModal ||
     showBoardSymbolLegend ||
+    showVaultIslandGiftUnlock ||
     showMissionPhoneBriefing ||
     Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
@@ -3162,6 +3180,25 @@ export function IslandRunBoardPrototype({
   } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const vaultIslandCollection = useMemo(
+    () => resolveVaultIslandCollection(runtimeState.vaultRushClaimsByIsland),
+    [runtimeState.vaultRushClaimsByIsland],
+  );
+  const isVaultIslandUnlocked = useMemo(
+    () => isVaultIslandCollectionUnlocked(runtimeState.signatureMissionProgressByIsland),
+    [runtimeState.signatureMissionProgressByIsland],
+  );
+  useEffect(() => {
+    if (isVaultIslandUnlocked) return;
+    if (showVaultIslandGiftUnlock) setShowVaultIslandGiftUnlock(false);
+    if (!showVaultIslandCollection) return;
+    setShowVaultIslandCollection(false);
+    setVaultIslandFeaturedTreasure(null);
+  }, [isVaultIslandUnlocked, showVaultIslandCollection, showVaultIslandGiftUnlock]);
+  useEffect(() => {
+    if (!showVaultIslandCollection) return undefined;
+    return lockFullscreenPageScroll({ root: true });
+  }, [showVaultIslandCollection]);
   // The Concord caretaker content resolves per island: Island 1 keeps the
   // canonical Luma acquisition story, islands 2+ use authored/fallback entries.
   const caretakerConcordContent = useMemo(
@@ -6142,6 +6179,7 @@ export function IslandRunBoardPrototype({
   const handleClaimDormantDoorReward = useCallback(() => {
     if (!dormantDoorMiniGame || !dormantDoorReward || isDormantDoorRewardClaiming) return;
     setIsDormantDoorRewardClaiming(true);
+    const previousVaultRushClaims = runtimeStateRef.current.vaultRushClaimsByIsland;
     const result = claimVaultRushReward({
       session,
       client,
@@ -6158,8 +6196,19 @@ export function IslandRunBoardPrototype({
     }
     runtimeStateRef.current = result.record;
     setRuntimeState(result.record);
+    const newlyUnlockedTreasure = findNewVaultIslandCollectionEntry(
+      previousVaultRushClaims,
+      result.record.vaultRushClaimsByIsland,
+    );
     setLandingText(`🗝️ Vault cracked — ${DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]}: +${dormantDoorReward.essence} money · ${result.claimCount}/${VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} claimed.`);
     handleCloseDormantDoorMiniGame();
+    if (
+      newlyUnlockedTreasure
+      && isVaultIslandCollectionUnlocked(result.record.signatureMissionProgressByIsland)
+    ) {
+      setVaultIslandFeaturedTreasure(newlyUnlockedTreasure);
+      setShowVaultIslandCollection(true);
+    }
   }, [client, dormantDoorMiniGame, dormantDoorReward, effectiveIslandNumber, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
 
   useEffect(() => {
@@ -12930,6 +12979,8 @@ export function IslandRunBoardPrototype({
       showCreatureChannelModal ||
       showConcordHubModal ||
       showBoardSymbolLegend ||
+      showVaultIslandGiftUnlock ||
+      showVaultIslandCollection ||
       showMissionPhoneBriefing ||
       Boolean(activeMissionBriefing) ||
       showFrostwellMission ||
@@ -13399,17 +13450,25 @@ export function IslandRunBoardPrototype({
       setStagedRestorationConstructionSequence((value) => value + 1);
       setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
       const completed = result.completedAtMs !== null;
+      const unlockedVaultIsland = completed && stagedRestorationDescriptor.islandNumber === 4;
       setLandingText(completed
-        ? `✨ ${currentMissionTracker.briefing.headline} complete — the whole island transformation is alive!`
+        ? unlockedVaultIsland
+          ? `✨ ${currentMissionTracker.briefing.headline} complete — Vault Island is now yours!`
+          : `✨ ${currentMissionTracker.briefing.headline} complete — the whole island transformation is alive!`
         : `✨ ${stagedRestorationDescriptor.stageLabel} ${result.activatedStages}/${stagedRestorationDescriptor.stageCount}.`);
       playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
       if (completed) {
+        const completionRewards = [
+          { icon: '✨', label: stagedRestorationDescriptor.stageLabel, value: 'COMPLETE' },
+          { icon: '🏝️', label: currentMissionTracker.briefing.islandName, value: 'TRANSFORMED' },
+        ];
         window.setTimeout(() => {
-          openWinCelebrationModal([
-            { icon: '✨', label: stagedRestorationDescriptor.stageLabel, value: 'COMPLETE' },
-            { icon: '🏝️', label: currentMissionTracker.briefing.islandName, value: 'TRANSFORMED' },
-          ], `Mission complete — ${currentMissionTracker.briefing.headline}`);
+          if (unlockedVaultIsland) {
+            setShowVaultIslandGiftUnlock(true);
+            return;
+          }
+          openWinCelebrationModal(completionRewards, `Mission complete — ${currentMissionTracker.briefing.headline}`);
         }, 5_200);
       }
     } finally {
@@ -14611,6 +14670,20 @@ export function IslandRunBoardPrototype({
               >
                 ◈ Board symbol guide
               </button>
+              {isVaultIslandUnlocked ? (
+                <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setShowTopbarMenu(false);
+                  setShowAudioMenu(false);
+                  setVaultIslandFeaturedTreasure(null);
+                  setShowVaultIslandCollection(true);
+                }}
+              >
+                Vault Island collection · {vaultIslandCollection.unlockedCount}/{vaultIslandCollection.collectionSize} relics
+                </button>
+              ) : null}
               {isDevModeEnabled && shouldRenderIsland5Three ? (
                 <label className="island-run-board__dev-three-quality">
                   <span>3D quality</span>
@@ -15445,6 +15518,21 @@ export function IslandRunBoardPrototype({
       >
         🔎
       </button>
+
+      {isVaultIslandUnlocked ? (
+        <button
+          type="button"
+          className="island-run-prototype__vault-island-floating"
+          aria-label="Open Vault Island collection"
+          title="Vault Island"
+          onClick={() => {
+            setVaultIslandFeaturedTreasure(null);
+            setShowVaultIslandCollection(true);
+          }}
+        >
+          <img src="/assets/icons/vault-island-medallion-v001.png" alt="" aria-hidden="true" />
+        </button>
+      ) : null}
 
       <button
         type="button"
@@ -20029,6 +20117,51 @@ export function IslandRunBoardPrototype({
           </section>
         </div>
       ), document.body) : null}
+
+      {showVaultIslandCollection && isVaultIslandUnlocked ? (
+        <Suspense
+          fallback={(
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 10020,
+                display: 'grid',
+                placeItems: 'center',
+                background: '#102b3c',
+                color: '#fff4cf',
+                fontWeight: 800,
+              }}
+            >
+              Opening Vault Island
+            </div>
+          )}
+        >
+          <VaultIslandCollectionModal
+            unlockedTreasureIds={vaultIslandCollection.unlockedTreasureIds}
+            holdingsValue={runtimeState.essence}
+            initialView={vaultIslandFeaturedTreasure ? 'vault' : undefined}
+            featuredTreasure={vaultIslandFeaturedTreasure}
+            onClose={() => {
+              setShowVaultIslandCollection(false);
+              setVaultIslandFeaturedTreasure(null);
+            }}
+          />
+        </Suspense>
+      ) : null}
+
+      {showVaultIslandGiftUnlock && isVaultIslandUnlocked ? (
+        <VaultIslandGiftUnlockModal
+          onClose={() => setShowVaultIslandGiftUnlock(false)}
+          onGoToVault={() => {
+            setShowVaultIslandGiftUnlock(false);
+            setVaultIslandFeaturedTreasure(null);
+            setShowVaultIslandCollection(true);
+          }}
+        />
+      ) : null}
 
       {/* ── Debug Panel ───────────────────────────────────────────────── */}
       {showDebugPanel && (

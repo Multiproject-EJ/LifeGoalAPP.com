@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "subject": "vault-island-interior-rebuild",
+  "status": "locked-awaiting-decomposition-approval",
+  "created": "2026-08-28",
+  "goalAuthority": {
+    "exactExteriorStyleSource": {
+      "file": "../treasure-island-source.png",
+      "sha256": "5f2841dcf97303c7e8cf8091d0c02a0c22f24904eeea41044df68ab4a583fa57",
+      "authority": "exact-user-confirmed-goal-pixels",
+      "interiorCoverage": "none"
+    },
+    "explicitJourneyDecisions": [
+      "The palace entry is a massive, mostly empty ceremonial atrium.",
+      "The atrium has at least two very tall architectural floors.",
+      "A monumental staircase splits in two and descends toward the vault.",
+      "The palace dome must be legible from inside.",
+      "Separate side stairs or portals connect the atrium to the gardens.",
+      "The underground destination is a luxurious museum vault for inspectable treasures."
+    ],
+    "secondaryInteriorHypothesis": {
+      "file": "../secondary-inferred/derived-crops/interior-vault-hall-v001.png",
+      "sha256": "2602d1d45cc516cc585b51f00cdd936e563baed565b6fdcbe47409fe6c47ca0e",
+      "authority": "secondary-inferred",
+      "allowedUse": "architectural hierarchy, spacing, materials, and lighting only"
+    }
+  },
+  "currentResult": {
+    "atrium": {
+      "file": "qa/raw/browser-captures-v058-material-lighting/atrium-390x844.png",
+      "sha256": "f19b2c83ee0b61bf1bbe67f2a67c376b03353b691bd70537431f1edd505de6c8",
+      "width": 390,
+      "height": 844
+    },
+    "vault": {
+      "file": "qa/raw/browser-captures-v058-material-lighting/vault-after-reveal-390x844.png",
+      "sha256": "05bd6c45040a6b72181c79ea88bebaccf1c7fcaf6dccb75351812ddcf2ad57bb",
+      "width": 390,
+      "height": 844
+    },
+    "userAssessment": "very far from where it should be",
+    "salvageDecision": "preserve-interactions-treasures-contracts-and-material-helpers-replace-interior-architecture"
+  },
+  "dominantFailures": [
+    "atrium reads as exposed blockout rings and floating steps rather than a monumental palace interior",
+    "wall courses are oversized dark blocks with no carved arcade, cornice, niche, or panel hierarchy",
+    "split stair has insufficient mass, stringers, landings, balustrade continuity, and believable support",
+    "two tall floors are represented by rails rather than inhabited architectural galleries",
+    "dome underside and oculus do not dominate the upper interior composition",
+    "vault room is visually congested at the center while its surrounding museum architecture remains sparse",
+    "treasure displays lack the disciplined radial spacing and premium glass-case rhythm of the interior target",
+    "lighting is broad and flat instead of layered warm coves, case lights, and a controlled blue focal glow"
+  ],
+  "detailFirewall": [
+    "no extra treasure ornament before atrium shell and stair silhouette pass",
+    "no sparkle or animation polish before museum spacing and wall bays pass",
+    "no micro-carving before the two-floor hierarchy reads at 390x844",
+    "no gameplay or collection-state changes in this visual rebuild"
+  ]
+}
