@@ -182,6 +182,49 @@ export function reelFishermansVillageCatch(options: {
   });
 }
 
+export type ReleaseFishermansVillageCatchResult =
+  | { status: 'ok'; catchId: number; kind: 'nothing' | 'small' | 'medium' | 'large' | 'colossal' }
+  | { status: 'wrong_island' | 'nothing_hooked' };
+
+/**
+ * Canonically clears a cast that returned empty or escaped. Reeling remains a
+ * presentation interaction, but its outcome must not leave a stale pending
+ * catch that reopens after reload.
+ */
+export function releaseFishermansVillageCatch(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  reason: 'empty' | 'escaped';
+}): Promise<ReleaseFishermansVillageCatchResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFishermansVillageFishingProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    });
+    const pending = progress.pendingCatch;
+    if (!pending) return { status: 'nothing_hooked' };
+    const nowMs = Date.now();
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: { ...progress, pendingCatch: null, updatedAtMs: nowMs },
+        },
+      },
+      triggerSource: `release_fishermans_village_catch_${options.reason}`,
+    });
+    return { status: 'ok', catchId: pending.catchId, kind: pending.kind };
+  });
+}
+
 export type DetonateFirstLightAssemblyChargeResult =
   | {
       status: 'ok';

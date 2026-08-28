@@ -195,6 +195,7 @@ import {
   createIsland22FishermansVillageMaterials,
   ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
   ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME,
+  type Island22FishingInteractionPresentation,
 } from './Island22FishermansVillageThreeWorld';
 import type { Island22WaterDragonPresentation } from './Island22WaterDragonMission';
 import {
@@ -256,8 +257,6 @@ interface Island5ThreePilotProps {
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number, origin?: { viewportX: number; viewportY: number }) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
-  /** Visual-only centre transformation for the chapter-opening disc exhibition. */
-  journeyDiscArenaCenterActive?: boolean;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   celestialRedockingPresentation?: Island2CelestialRedockingPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
@@ -266,7 +265,9 @@ interface Island5ThreePilotProps {
   firstLightAssemblyCraterPresentation?: Island1AssemblyCraterPresentation;
   greatHoneyfallPresentation?: Island14GreatHoneyfallPresentation;
   stagedRestorationPresentation?: IslandStagedRestorationPresentation;
-  fishermansFishingPresentation?: Island22WaterDragonPresentation;
+  fishermansFishingPresentation?: Island22WaterDragonPresentation & {
+    fishingInteraction?: Island22FishingInteractionPresentation;
+  };
   onSignatureMissionClick?: () => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
@@ -2310,7 +2311,14 @@ interface Island5AmbienceRuntime {
   updateSpiralRail?: (presentation: Island13CactusCanyonSpiralPresentation) => void;
   setGreatHoneyfallStage?: (stage: number, replay?: boolean) => void;
   updateWaterDragonMission?: (presentation: Island22WaterDragonPresentation) => void;
-  getWaterDragonMissionCameraPose?: () => { position: THREE.Vector3; target: THREE.Vector3; shake: number };
+  updateFishingInteraction?: (presentation: Island22FishingInteractionPresentation) => void;
+  getFishingInteractionCameraPose?: () => { position: THREE.Vector3; target: THREE.Vector3; shake: number };
+  getWaterDragonMissionCameraPose?: () => {
+    position: THREE.Vector3;
+    target: THREE.Vector3;
+    shake: number;
+    fov: number;
+  };
   getTrainRidePose?: (
     view: Island13TrainRideView,
   ) => { position: THREE.Vector3; target: THREE.Vector3 } | null;
@@ -3351,7 +3359,6 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   onLandmarkClick,
-  journeyDiscArenaCenterActive = false,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   celestialRedockingPresentation = { completedRolls: 20, targetRolls: 20, dockedPlatformCount: 4 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
@@ -3360,7 +3367,19 @@ export default function Island5ThreePilot({
   firstLightAssemblyCraterPresentation = { chargesDetonated: 0, targetCharges: 20, completed: false },
   greatHoneyfallPresentation = readInitialGreatHoneyfallPresentation(),
   stagedRestorationPresentation,
-  fishermansFishingPresentation = { fishCaughtKg: 0, previewElapsedSeconds: 0 },
+  fishermansFishingPresentation = {
+    fishCaughtKg: 0,
+    previewElapsedSeconds: 0,
+    fishingInteraction: {
+      active: false,
+      phase: 'off',
+      catchKind: 'nothing',
+      countdown: null,
+      pullProgress: 0,
+      tension: 0,
+      reelPulse: 0,
+    },
+  },
   onSignatureMissionClick,
   caretakerEncounterOpen = false,
   onCaretakerClick,
@@ -3869,11 +3888,13 @@ export default function Island5ThreePilot({
       target: [0, 0.78, -0.35] as const,
     };
     const fishermansVillageInitialOverview = {
-      // Island 022's source is a portrait miniature that fills the frame. Keep
-      // the broad working waterfront, but aim above the terrain centre so the
-      // island does not collapse into the upper half over empty foreground sea.
-      position: [0, 14.6, 24.5] as const,
-      target: [0, 0.65, 0] as const,
+      // The fisherman island is wider than the generic board. Preserve the
+      // complete left/right shoreline landmark families (especially the raised
+      // northern Guild) in portrait instead of cropping them off-screen.
+      position: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75
+        ? [0, 21.5, 36.5] as const
+        : [0, 19.5, 33] as const,
+      target: [0, 0.25, 0] as const,
     };
     const honeycombInitialOverview = {
       // Honeycomb Kingdom is a tall central hive city on a floating honey-rock
@@ -3933,6 +3954,8 @@ export default function Island5ThreePilot({
                         ? 1.02
                         : isCactusCanyon
                           ? 1.08
+                        : isFishermansVillage
+                          ? 0.94
                         : isHoneycombKingdom
                           ? 0.98
               : 1.06;
@@ -3983,6 +4006,7 @@ export default function Island5ThreePilot({
       renderer.toneMappingExposure = 1;
     }
     let archiveLookdevEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
+    let fishermansVillageEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let honeycombEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     if (isArchiveEnvironmentLookdev || isArchiveBacklightLookdev) {
       const roomEnvironment = new RoomEnvironment();
@@ -4000,6 +4024,15 @@ export default function Island5ThreePilot({
       honeycombEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.06);
       scene.environment = honeycombEnvironmentTarget.texture;
       scene.environmentIntensity = 0.42;
+      roomEnvironment.dispose();
+      pmremGenerator.dispose();
+    }
+    if (isFishermansVillage) {
+      const roomEnvironment = new RoomEnvironment();
+      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+      fishermansVillageEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.08);
+      scene.environment = fishermansVillageEnvironmentTarget.texture;
+      scene.environmentIntensity = 0.34;
       roomEnvironment.dispose();
       pmremGenerator.dispose();
     }
@@ -4033,6 +4066,8 @@ export default function Island5ThreePilot({
                         ? 0x6e4b2f
                         : isCactusCanyon
                           ? 0x4b241b
+                        : isFishermansVillage
+                          ? 0x3e514c
                         : isHoneycombKingdom
                           ? 0x91531d
               : 0x28566a;
@@ -4066,6 +4101,8 @@ export default function Island5ThreePilot({
                         ? 1.52
                         : isCactusCanyon
                           ? 1.78
+                        : isFishermansVillage
+                          ? 1.48
                         : isHoneycombKingdom
                           ? 1.7
               : 2.25;
@@ -4078,7 +4115,7 @@ export default function Island5ThreePilot({
             ? 0xd9eaff
             : isArchiveBacklightLookdev
               ? 0x7d9bc2
-          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isHoneycombKingdom ? 0xd7f5ff : 0xeefcff,
+          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : 0xeefcff,
       hemisphereGroundColor,
       hemisphereIntensity,
     );
@@ -4113,6 +4150,8 @@ export default function Island5ThreePilot({
                         ? 3.9
                         : isCactusCanyon
                           ? 4.15
+                        : isFishermansVillage
+                          ? 3.35
                         : isHoneycombKingdom
                           ? 3.45
               : 4.2;
@@ -4125,13 +4164,13 @@ export default function Island5ThreePilot({
             ? 0xe8f2ff
             : isArchiveBacklightLookdev
               ? 0x83c7ff
-          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isHoneycombKingdom ? 0xffc052 : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
+          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     sunlight.position.set(
-      isArchiveGrazingLookdev ? -14 : isArchiveEnvironmentLookdev ? -6 : isArchiveBacklightLookdev ? 5 : isSunkenSands ? 6 : isCactusCanyon ? 8 : isHoneycombKingdom ? -10 : -9,
-      isArchiveGrazingLookdev ? 3.4 : isArchiveEnvironmentLookdev ? 10 : isArchiveBacklightLookdev ? 6 : isSunkenSands ? 16 : isCactusCanyon ? 18 : isHoneycombKingdom ? 17 : 15,
-      isArchiveGrazingLookdev ? 8 : isArchiveEnvironmentLookdev ? 7 : isArchiveBacklightLookdev ? -14 : isSunkenSands ? -12 : isCactusCanyon ? -14 : isHoneycombKingdom ? 11 : 10,
+      isArchiveGrazingLookdev ? -14 : isArchiveEnvironmentLookdev ? -6 : isArchiveBacklightLookdev ? 5 : isSunkenSands ? 6 : isCactusCanyon ? 8 : isFishermansVillage ? -12 : isHoneycombKingdom ? -10 : -9,
+      isArchiveGrazingLookdev ? 3.4 : isArchiveEnvironmentLookdev ? 10 : isArchiveBacklightLookdev ? 6 : isSunkenSands ? 16 : isCactusCanyon ? 18 : isFishermansVillage ? 11 : isHoneycombKingdom ? 17 : 15,
+      isArchiveGrazingLookdev ? 8 : isArchiveEnvironmentLookdev ? 7 : isArchiveBacklightLookdev ? -14 : isSunkenSands ? -12 : isCactusCanyon ? -14 : isFishermansVillage ? -8 : isHoneycombKingdom ? 11 : 10,
     );
     sunlight.castShadow = sceneUsesRealtimeShadows;
     sunlight.shadow.mapSize.set(qualityProfile.shadowMapSize, qualityProfile.shadowMapSize);
@@ -4199,6 +4238,7 @@ export default function Island5ThreePilot({
     let cactusCanyonBlastStartedAtMs = Number.NEGATIVE_INFINITY;
     let cactusCanyonBlastCameraWasActive = false;
     let waterDragonCameraWasActive = false;
+    let fishingCameraWasActive = false;
     let firstLightAssemblyPresentationKey = '';
     let honeyfallLastConstructionSequence = Math.max(
       0,
@@ -4403,6 +4443,8 @@ export default function Island5ThreePilot({
     }
     if (isFishermansVillage) {
       livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
+      const fishing = fishermansFishingPresentationRef.current.fishingInteraction;
+      if (fishing) livingAmbience.updateFishingInteraction?.(fishing);
     }
     const stagedRestorationInitial = stagedRestorationPresentationRef.current;
     const stagedRestorationRuntime = stagedRestorationInitial
@@ -4892,7 +4934,7 @@ export default function Island5ThreePilot({
                     resolvedBuildLevel,
                     qualityProfile.id,
                     island6MoonveilMaterials,
-                    journeyDiscArenaCenterActive,
+                  false,
                     { constructionPreview },
                   )
               : isAbyssalPearlKingdom && island7UnderwaterMaterials
@@ -5969,7 +6011,9 @@ export default function Island5ThreePilot({
         position: readonly [number, number, number];
         target: readonly [number, number, number];
       }>> = {
-        overview: { position: [0, 14.6, 24.5], target: [0, 0.65, 0] },
+        overview: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75
+          ? { position: [0, 21.5, 36.5], target: [0, 0.25, 0] }
+          : { position: [0, 19.5, 33], target: [0, 0.25, 0] },
         survey: { position: [0, 21.5, 31], target: [0, 0.2, 0] },
         'orbit-left': { position: [-18.5, 14.2, 21.8], target: [0, 0.35, 0] },
         'orbit-right': { position: [18.5, 14.2, 21.8], target: [0, 0.35, 0] },
@@ -6683,6 +6727,8 @@ export default function Island5ThreePilot({
         }
         if (isFishermansVillage) {
           livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
+          const fishing = fishermansFishingPresentationRef.current.fishingInteraction;
+          if (fishing) livingAmbience.updateFishingInteraction?.(fishing);
         }
         livingAmbience.animate(elapsed);
         firstLightAssemblyCrater?.animate(elapsed);
@@ -6735,6 +6781,9 @@ export default function Island5ThreePilot({
             ...fishermansFishingPresentationRef.current,
             reducedMotion: true,
           });
+          const fishing = fishermansFishingPresentationRef.current.fishingInteraction;
+          if (fishing) livingAmbience.updateFishingInteraction?.(fishing);
+          livingAmbience.animate(0);
         }
       }
 
@@ -7241,16 +7290,41 @@ export default function Island5ThreePilot({
         }
       }
       const waterDragonPresentation = fishermansFishingPresentationRef.current;
+      const fishingInteraction = waterDragonPresentation.fishingInteraction;
+      const fishingCameraActive = isFishermansVillage && Boolean(fishingInteraction?.active);
       const waterDragonElapsed = Math.max(0, waterDragonPresentation.previewElapsedSeconds ?? 0);
       const waterDragonCameraActive = isFishermansVillage
+        && !fishingCameraActive
         && waterDragonPresentation.fishCaughtKg >= 78
         && waterDragonElapsed < 23.5;
-      if (waterDragonCameraActive) {
+      if (fishingCameraActive) {
+        const pose = livingAmbience.getFishingInteractionCameraPose?.();
+        if (pose) {
+          fishingCameraWasActive = true;
+          transition = null;
+          controls.enabled = false;
+          camera.position.lerp(pose.position, 0.09);
+          controls.target.lerp(pose.target, 0.105);
+          if (!isReducedMotion && pose.shake > 0) {
+            camera.position.x += Math.sin(elapsed * 68) * pose.shake;
+            camera.position.y += Math.cos(elapsed * 74) * pose.shake * 0.6;
+          }
+          camera.lookAt(controls.target);
+        }
+      } else if (fishingCameraWasActive) {
+        fishingCameraWasActive = false;
+        controls.enabled = true;
+        applyPreset('overview', 0.78);
+      } else if (waterDragonCameraActive) {
         const pose = livingAmbience.getWaterDragonMissionCameraPose?.();
         if (pose) {
           waterDragonCameraWasActive = true;
           transition = null;
           controls.enabled = false;
+          if (Math.abs(camera.fov - pose.fov) > 0.01) {
+            camera.fov = pose.fov;
+            camera.updateProjectionMatrix();
+          }
           camera.position.copy(pose.position);
           if (!isReducedMotion && pose.shake > 0) {
             camera.position.x += Math.sin(elapsed * 79) * pose.shake;
@@ -7262,6 +7336,8 @@ export default function Island5ThreePilot({
       } else if (waterDragonCameraWasActive) {
         waterDragonCameraWasActive = false;
         controls.enabled = true;
+        camera.fov = 42;
+        camera.updateProjectionMatrix();
         applyPreset('overview', 0.72);
       }
       if (
@@ -7539,6 +7615,10 @@ export default function Island5ThreePilot({
         scene.environment = null;
         honeycombEnvironmentTarget.dispose();
       }
+      if (fishermansVillageEnvironmentTarget) {
+        scene.environment = null;
+        fishermansVillageEnvironmentTarget.dispose();
+      }
       disposeScene(scene);
       if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
       if (rootheartNightBackdrop && rootheartNightBackdrop !== disposedSceneBackground) rootheartNightBackdrop.dispose();
@@ -7569,7 +7649,7 @@ export default function Island5ThreePilot({
       if (activeTrainRide) setTrainRidePhase('idle');
       setCameraAuthoringModeRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }

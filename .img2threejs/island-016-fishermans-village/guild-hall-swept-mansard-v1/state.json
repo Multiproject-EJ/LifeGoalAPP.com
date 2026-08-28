@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "status": "active",
+  "profile": "generic",
+  "currentStep": "pass-gate-check",
+  "currentPass": "",
+  "checklist": [
+    {
+      "id": "image-analysis",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Exact goal pixels, intake analysis, and immutable authority are unchanged; this approved family replaces only the failed central roof representation.",
+      "command": "Read grimoire/intake/image_analysis.md and analyze {reference}"
+    },
+    {
+      "id": "reference-suitability",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Exact goal pixels, intake analysis, and immutable authority are unchanged; this approved family replaces only the failed central roof representation.",
+      "command": "Read grimoire/intake/validation_rubric.md and record a pass, conditional, or reject verdict for {reference}"
+    },
+    {
+      "id": "reference-admission",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Exact goal pixels, intake analysis, and immutable authority are unchanged; this approved family replaces only the failed central roof representation.",
+      "command": "python3 forge/stage1_intake/check_reference_admission.py {reference}"
+    },
+    {
+      "id": "local-spec-search",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Exact goal pixels, intake analysis, and immutable authority are unchanged; this approved family replaces only the failed central roof representation.",
+      "command": "Run the local evidence search before authoring the assessment"
+    },
+    {
+      "id": "pre-spec-assessment",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Exact goal pixels, intake analysis, and immutable authority are unchanged; this approved family replaces only the failed central roof representation.",
+      "command": "python3 forge/stage2_spec/new_pre_spec_assessment.py \"<name>\" --image {reference} --out assessment.json"
+    },
+    {
+      "id": "detail-inventory",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Exact goal pixels, intake analysis, and immutable authority are unchanged; this approved family replaces only the failed central roof representation.",
+      "command": "python3 forge/stage1_intake/build_detail_inventory.py {reference} --mode grid-3x3 --out-dir detail-inventory --out di.json"
+    },
+    {
+      "id": "projection-route",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "Procedural solid architectural materials and live relighting remain frozen; this is a geometry-only macro correction.",
+      "command": "Record whether projection is required; if required run solve_camera_pose.py, delight_albedo.py, and bake_projected_texture.py, otherwise skip with a reason"
+    },
+    {
+      "id": "spec-authoring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-swept-mansard-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Fresh family spec derivative preserves the global quality contract but resets family-local reviews.",
+      "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
+    },
+    {
+      "id": "material-evidence",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "Materials are frozen and no new exact PBR inference is admitted for the geometry-only family.",
+      "command": "python3 forge/stage1_intake/material_region_analysis.py --manifest material-regions.json --out-dir material-evidence --out material-analysis.json (single-crop route: analyze_texture.py + extract_pbr_evidence.py per verified crop; otherwise skip with a reason)"
+    },
+    {
+      "id": "material-spec-wiring",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "Materials are frozen and no new exact PBR inference is admitted for the geometry-only family.",
+      "command": "python3 forge/stage2_spec/apply_material_analysis.py {spec} material-analysis.json --in-place"
+    },
+    {
+      "id": "strict-validation",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-premium-v1/object-sculpt-spec.json"
+      ],
+      "reason": "The source spec previously passed strict-quality with 31 components, eight material layers, five repetition systems, and 18 mapped details; this derivative changes review history and family identity only.",
+      "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
+    },
+    {
+      "id": "build-current-pass",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts"
+      ],
+      "reason": "Implemented the approved second-family shell as four parametric swept panels with shared seam positions, then attached surface-sampled slate courses and Catmull-Rom corner ribs after macro approval.",
+      "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+    },
+    {
+      "id": "render-capture",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-swept-mansard-v1/evidence/detail/orbit-v001"
+      ],
+      "reason": "Captured matched portrait front, both three-quarters, profile, rear, and clay views from the actual browser runtime.",
+      "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+    },
+    {
+      "id": "review-contract-read",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+      ],
+      "reason": "Read gates_reference.md and self_correction.md completely before the continue decision.",
+      "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+    },
+    {
+      "id": "tier1-diagnostics",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-swept-mansard-v1/object-sculpt-spec.json"
+      ],
+      "reason": "Tier-1 was executed and recorded. It failed global photo/render IoU, aspect and scale because the current segmenter treated the stylized browser frame as non-isolated; this is recorded as a blocking diagnostic, not overclaimed as fidelity failure or pass.",
+      "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+    },
+    {
+      "id": "multi-angle-review",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-016-fishermans-village/guild-hall-swept-mansard-v1/evidence/detail/orbit-v001"
+      ],
+      "reason": "The deterministic orbit did not flag degenerate collapse, but its areaFraction=1.0 exposes an uninformative whole-frame mask; independent locked-view Quality Lord evidence governs the roof-only visual gate.",
+      "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+    },
+    {
+      "id": "pass-gate-check",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+    },
+    {
+      "id": "ai-review-recorded",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+    },
+    {
+      "id": "pipeline-sync",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+    },
+    {
+      "id": "part-coverage",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
+    },
+    {
+      "id": "action-ready",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
+    }
+  ],
+  "loops": {
+    "perPass": {},
+    "total": 0,
+    "maxPerPass": 1,
+    "maxTotal": 1
+  },
+  "artifacts": {
+    "reference": "/Users/ejmac/Documents/Codex/2026-08-27/habitgame-island016-fishing/docs/visual-references/island-016-fishermans-village/derived/crops/guild-hall-front-three-quarter-v005.png",
+    "spec": "/Users/ejmac/Documents/Codex/2026-08-27/habitgame-island016-fishermans-village/.img2threejs/island-016-fishermans-village/guild-hall-swept-mansard-v1/object-sculpt-spec.json"
+  },
+  "passHistory": [],
+  "reviewCursor": 0,
+  "iterationAction": "initial",
+  "stopReason": ""
+}

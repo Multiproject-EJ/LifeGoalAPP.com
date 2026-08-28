@@ -405,7 +405,6 @@ import { isArenaPuzzleGameId } from '../services/islandRunArenaCatalog';
 import { isJourneyDiscArenaIsland } from '../services/journeyDiscArmory';
 import {
   resolveIslandEventGridSlots,
-  resolveJourneyDiscCenterLandmarkPresentation,
   shouldJourneyDiscReplaceTimedEventSurface,
 } from '../services/journeyDiscArenaIslandIntegration';
 import {
@@ -482,6 +481,7 @@ import {
   detonateFirstLightAssemblyCharge,
   fundFrostwellIceworks,
   fundRootheartPowerworksStage,
+  releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
   spinFrostwellDrillWheel,
 } from '../services/islandRunSignatureMissionAction';
@@ -1825,7 +1825,6 @@ export function IslandRunBoardPrototype({
         : 'operating',
       isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
       isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
-      journeyDiscArenaCenterPreview: import.meta.env.DEV && params.get('journeyDiscArenaCenterPreview') === '1',
       journeyDiscArenaInvitationPreview: import.meta.env.DEV && params.get('journeyDiscArenaInvitationPreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
       island5ThreePreviewLevel: Math.round(readNumericParam(params, 'island3dLevel', 3, 0, 3)) as 0 | 1 | 2 | 3,
@@ -1850,7 +1849,6 @@ export function IslandRunBoardPrototype({
     frostwellMissionState,
     isIsland5ThreePreviewRequested,
     isArenaBattlePreviewRequested,
-    journeyDiscArenaCenterPreview,
     journeyDiscArenaInvitationPreview,
     isCaretakerThreeEncounterPreviewRequested,
     island5ThreePreviewLevel,
@@ -1982,6 +1980,9 @@ export function IslandRunBoardPrototype({
   const [pendingRootheartPowerworksAutoOpen, setPendingRootheartPowerworksAutoOpen] = useState(false);
   const [rootheartCompletionCelebrationId, setRootheartCompletionCelebrationId] = useState<number | null>(null);
   const [showFishermansFishing, setShowFishermansFishing] = useState(false);
+  const [fishingPhase, setFishingPhase] = useState<'off' | 'approach' | 'casting' | 'waiting' | 'countdown' | 'bite' | 'reeling' | 'caught' | 'escaped'>('off');
+  const [fishingCountdown, setFishingCountdown] = useState<number | null>(null);
+  const [fishingTension, setFishingTension] = useState(0);
   const [fishingPullsRemaining, setFishingPullsRemaining] = useState(0);
   const [isReelingFishingCatch, setIsReelingFishingCatch] = useState(false);
   const [fishingReelPulse, setFishingReelPulse] = useState(0);
@@ -1994,6 +1995,8 @@ export function IslandRunBoardPrototype({
   } | null>(null);
   const [dragonCinematicStartedAtMs, setDragonCinematicStartedAtMs] = useState<number | null>(null);
   const [dragonCinematicElapsedSeconds, setDragonCinematicElapsedSeconds] = useState(0);
+  const fishingLastPullAtRef = useRef(0);
+  const fishingEscapeInFlightRef = useRef(false);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -5692,12 +5695,12 @@ export function IslandRunBoardPrototype({
         allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
         expandedActiveStopId: expandedActiveLandmarkDoorStopId,
       });
-      if (islandNumber !== 16 || fishermansFishingProgress.rodCollectedAtMs === null) return applied;
+      if (islandNumber !== 16 || fishermansFishingProgress.completedAtMs === null) return applied;
       return applied.map((entry) => entry.signatureMissionKind === 'fishermans_rod'
         ? { ...entry, signatureMissionKind: undefined }
         : entry);
     },
-    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.rodCollectedAtMs, islandNumber, tileMap],
+    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, islandNumber, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(__storeState.bonusTileChargeByIsland, islandNumber);
   // Show the optimistic mid-hop charge while a roll is animating so the lights
@@ -7187,51 +7190,13 @@ export function IslandRunBoardPrototype({
     activeEventType: effectiveActiveTimedEvent?.eventType ?? null,
     journeyDiscReplacesTimedEvent: journeyDiscReplacesTimedEventSurface,
   }), [effectiveActiveTimedEvent?.eventType, journeyDiscReplacesTimedEventSurface]);
-  const journeyDiscCenterLandmark = useMemo(() => (
-    resolveJourneyDiscCenterLandmarkPresentation({
-      featureEnabled: isIslandRunFeatureEnabled('journeyDiscArenaEnabled'),
-      islandNumber,
-      hasActiveTimedEvent: Boolean(effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType)),
-      eventTickets: activeEventTickets,
-      bossStopStatus,
-      bossTrialActive: bossTrialPhase === 'in_progress',
-      bossDefeated: bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber,
-    })
-  ), [activeEventTickets, bossStopStatus, bossTrialPhase, bossTrialResolved, effectiveActiveTimedEvent, islandNumber, runtimeState.bossTrialResolvedIslandNumber]);
-  const journeyDiscCenterActive = journeyDiscCenterLandmark.owner === 'journey_disc_arena'
-    || (isIslandVisualPreview && journeyDiscArenaCenterPreview);
   const handleLandmarkOpenRequest = useCallback((stopId: string) => {
     if (stopId === 'boss' && islandNumber === 1) {
       openFirstLightAssemblyCrater();
       return;
     }
-    if (stopId !== 'boss' || !journeyDiscCenterActive) {
-      handleStopOpenRequest(stopId);
-      return;
-    }
-    if (!canOpenIslandRunOverlayWhileRollingState({
-      isRolling,
-      isAnimatingRoll: isAnimatingRollRef.current,
-      isRollSyncPending: isRollSyncPendingRef.current,
-    })) {
-      setLandingText('Journey Disc Arena is ready. Finish this roll, then tap the transformed Moon Gate.');
-      return;
-    }
-    setActiveStopId(null);
-    setLockedStopInfoStopId(null);
-    setTicketPromptStopId(null);
-    setPrepayTicketPromptStopId(null);
-    setShowJourneyDiscConcourseInvitation(true);
-    setIsTopbarMenuPrimed(false);
-    setFocusedStopId('boss');
-    setCameraMode('stop_focus');
-    playIslandRunSound('minigame_open');
-    triggerIslandRunHaptic('stop_land');
-  }, [handleStopOpenRequest, islandNumber, isRolling, journeyDiscCenterActive, openFirstLightAssemblyCrater]);
-  useEffect(() => {
-    if (!showJourneyDiscConcourseInvitation || journeyDiscCenterActive) return;
-    setShowJourneyDiscConcourseInvitation(false);
-  }, [journeyDiscCenterActive, showJourneyDiscConcourseInvitation]);
+    handleStopOpenRequest(stopId);
+  }, [handleStopOpenRequest, islandNumber, openFirstLightAssemblyCrater]);
   useEffect(() => {
     if (!showJourneyDiscConcourseInvitation || typeof document === 'undefined') return undefined;
     return lockPageScroll();
@@ -13003,16 +12968,29 @@ export function IslandRunBoardPrototype({
     ) return undefined;
     const timer = window.setTimeout(() => {
       setFishingPullsRemaining(fishermansFishingProgress.pendingCatch?.pullsRequired ?? 1);
+      setFishingPhase('approach');
+      setFishingCountdown(null);
+      setFishingTension(0);
+      fishingEscapeInFlightRef.current = false;
       setFishingCatchMessage(null);
       setShowFishermansFishing(true);
     }, 260);
     return () => window.clearTimeout(timer);
   }, [doesModalOwnAttention, fishermansFishingProgress.pendingCatch, islandNumber, showFishermansFishing]);
   useEffect(() => {
-    if (islandNumber !== 16 || fishermansFishingProgress.dragonTriggeredAtMs === null) return;
-    setShowFishermansFishing(false);
-    setDragonCinematicStartedAtMs((current) => current ?? Date.now());
-  }, [fishermansFishingProgress.dragonTriggeredAtMs, islandNumber]);
+    if (islandNumber !== 16 || fishermansFishingProgress.dragonTriggeredAtMs === null) return undefined;
+    const startDragon = () => {
+      setShowFishermansFishing(false);
+      setFishingPhase('off');
+      setDragonCinematicStartedAtMs((current) => current ?? Date.now());
+    };
+    if (fishingPhase !== 'caught') {
+      startDragon();
+      return undefined;
+    }
+    const timer = window.setTimeout(startDragon, 1_850);
+    return () => window.clearTimeout(timer);
+  }, [fishermansFishingProgress.dragonTriggeredAtMs, fishingPhase, islandNumber]);
   useEffect(() => {
     if (dragonCinematicStartedAtMs === null) return undefined;
     const updateElapsed = () => setDragonCinematicElapsedSeconds(
@@ -13067,10 +13045,6 @@ export function IslandRunBoardPrototype({
     return lockPageScroll();
   }, [showFrostwellMission]);
   useEffect(() => {
-    if (!showFishermansFishing || typeof document === 'undefined') return undefined;
-    return lockPageScroll();
-  }, [showFishermansFishing]);
-  useEffect(() => {
     if (!showFirstLightAssemblyCrater || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showFirstLightAssemblyCrater]);
@@ -13083,8 +13057,47 @@ export function IslandRunBoardPrototype({
     return lockPageScroll();
   }, [showRootheartPowerworks]);
 
+  const refreshFishermansVillageState = useCallback((trace: string) => {
+    refreshIslandRunStateFromLocal(session);
+    const fresh = getIslandRunStateSnapshot(session);
+    setRuntimeStateWithTrace(trace, fresh);
+  }, [session, setRuntimeStateWithTrace]);
+
+  const handleReleaseFishermansCatch = useCallback(async (reason: 'empty' | 'escaped') => {
+    if (!fishermansFishingProgress.pendingCatch || fishingEscapeInFlightRef.current) return;
+    fishingEscapeInFlightRef.current = true;
+    setIsReelingFishingCatch(true);
+    try {
+      const result = await releaseFishermansVillageCatch({ session, client, reason });
+      if (result.status !== 'ok') return;
+      refreshFishermansVillageState(`release_fishermans_village_catch_${reason}`);
+      const message = reason === 'empty'
+        ? 'Just bubbles this time. Cast again from another rod tile!'
+        : 'The fish snapped free! Keep tapping before the tension falls next time.';
+      setFishingPhase('escaped');
+      setFishingCatchMessage(message);
+      setLandingText(reason === 'empty'
+        ? '🎣 The hook came back empty. Find another fishing-rod tile.'
+        : '🎣 The fish escaped when the line lost tension.');
+      playIslandRunSound('stop_land');
+      window.setTimeout(() => {
+        setShowFishermansFishing(false);
+        setFishingPhase('off');
+      }, 1_750);
+    } finally {
+      setIsReelingFishingCatch(false);
+    }
+  }, [client, fishermansFishingProgress.pendingCatch, playIslandRunSound, refreshFishermansVillageState, session]);
+
   const handlePullFishermansCatch = useCallback(async () => {
-    if (isReelingFishingCatch || !fishermansFishingProgress.pendingCatch) return;
+    if (
+      isReelingFishingCatch
+      || !fishermansFishingProgress.pendingCatch
+      || (fishingPhase !== 'bite' && fishingPhase !== 'reeling')
+    ) return;
+    setFishingPhase('reeling');
+    fishingLastPullAtRef.current = Date.now();
+    setFishingTension((value) => Math.min(1, value + 0.38));
     setFishingReelPulse((value) => value + 1);
     playIslandRunSound('stop_land');
     triggerIslandRunHaptic('stop_land');
@@ -13096,13 +13109,13 @@ export function IslandRunBoardPrototype({
     try {
       const result = await reelFishermansVillageCatch({ session, client });
       if (result.status !== 'ok') return;
-      refreshIslandRunStateFromLocal(session);
-      const fresh = getIslandRunStateSnapshot(session);
-      setRuntimeStateWithTrace('reel_fishermans_village_catch', fresh);
+      refreshFishermansVillageState('reel_fishermans_village_catch');
       const catchLabel = result.kilograms <= 0
         ? 'The hook came back empty.'
         : `${result.kind === 'colossal' ? 'COLOSSAL CATCH' : `${result.kind.toUpperCase()} FISH`} · +${result.kilograms} kg / ${(result.kilograms * 2.2046226218).toFixed(1)} lb`;
       setFishingCatchMessage(catchLabel);
+      setFishingPhase('caught');
+      setFishingTension(1);
       if (result.kilograms > 0) {
         setFishingCatchCelebration({
           catchId: result.catchId,
@@ -13116,9 +13129,11 @@ export function IslandRunBoardPrototype({
         : `🎣 ${catchLabel} · ${result.fishCaughtKg}/${FISHERMANS_VILLAGE_FISH_TARGET_KG} kg`);
       if (result.dragonTriggered) {
         setDragonCinematicStartedAtMs(Date.now());
-        window.setTimeout(() => setShowFishermansFishing(false), 900);
       } else {
-        window.setTimeout(() => setShowFishermansFishing(false), 1_250);
+        window.setTimeout(() => {
+          setShowFishermansFishing(false);
+          setFishingPhase('off');
+        }, 2_450);
       }
     } finally {
       setIsReelingFishingCatch(false);
@@ -13126,13 +13141,69 @@ export function IslandRunBoardPrototype({
   }, [
     client,
     fishermansFishingProgress.pendingCatch,
+    fishingPhase,
     fishingPullsRemaining,
     isReelingFishingCatch,
     playIslandRunSound,
+    refreshFishermansVillageState,
     session,
-    setRuntimeStateWithTrace,
     triggerIslandRunHaptic,
   ]);
+
+  useEffect(() => {
+    if (!showFishermansFishing) return undefined;
+    const advance = (next: typeof fishingPhase, delayMs: number) => {
+      const timer = window.setTimeout(() => setFishingPhase(next), delayMs);
+      return () => window.clearTimeout(timer);
+    };
+    if (fishingPhase === 'approach') return advance('casting', 760);
+    if (fishingPhase === 'casting') return advance('waiting', 1_150);
+    if (fishingPhase === 'waiting') return advance('countdown', 1_550);
+    return undefined;
+  }, [fishingPhase, showFishermansFishing]);
+
+  useEffect(() => {
+    if (!showFishermansFishing || fishingPhase !== 'countdown') return undefined;
+    const startedAt = Date.now();
+    setFishingCountdown(3);
+    const interval = window.setInterval(() => {
+      const next = Math.max(1, 3 - Math.floor((Date.now() - startedAt) / 760));
+      setFishingCountdown(next);
+    }, 80);
+    const finish = window.setTimeout(() => {
+      window.clearInterval(interval);
+      setFishingCountdown(null);
+      if (fishermansFishingProgress.pendingCatch?.kind === 'nothing') {
+        void handleReleaseFishermansCatch('empty');
+      } else {
+        setFishingPhase('bite');
+        setFishingTension(0.62);
+        fishingLastPullAtRef.current = Date.now();
+        playIslandRunSound('stop_land');
+        triggerIslandRunHaptic('stop_land');
+      }
+    }, 2_280);
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(finish);
+    };
+  }, [fishermansFishingProgress.pendingCatch?.kind, fishingPhase, handleReleaseFishermansCatch, playIslandRunSound, showFishermansFishing, triggerIslandRunHaptic]);
+
+  useEffect(() => {
+    const pending = fishermansFishingProgress.pendingCatch;
+    if (!showFishermansFishing || (fishingPhase !== 'bite' && fishingPhase !== 'reeling') || !pending) return undefined;
+    const canEscape = pending.kind === 'large' || pending.kind === 'colossal';
+    if (!canEscape) return undefined;
+    const graceMs = pending.kind === 'colossal' ? 1_050 : 1_350;
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - fishingLastPullAtRef.current;
+      setFishingTension(Math.max(0, 1 - elapsed / graceMs));
+      if (elapsed > graceMs && !fishingEscapeInFlightRef.current) {
+        void handleReleaseFishermansCatch('escaped');
+      }
+    }, 70);
+    return () => window.clearInterval(interval);
+  }, [fishermansFishingProgress.pendingCatch, fishingPhase, handleReleaseFishermansCatch, showFishermansFishing]);
 
   const handleSpinFrostwell = useCallback(async () => {
     if (isSpinningFrostwell) return;
@@ -15031,7 +15102,6 @@ export function IslandRunBoardPrototype({
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
                 interactionPaused={doesModalOwnAttention}
                 constructionPresentation={constructionPresentation}
-                journeyDiscArenaCenterActive={journeyDiscCenterActive}
                 arenaBattlePresentation={arenaBattlePresentation}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
@@ -15140,6 +15210,17 @@ export function IslandRunBoardPrototype({
                     ? 8.4
                     : dragonCinematicElapsedSeconds,
                   impactRepairProgress: fishermansFishingProgress.repairCompletedAtMs === null ? 0 : 1,
+                  fishingInteraction: {
+                    active: showFishermansFishing && Boolean(fishermansFishingProgress.pendingCatch),
+                    phase: fishingPhase,
+                    catchKind: fishermansFishingProgress.pendingCatch?.kind ?? 'nothing',
+                    countdown: fishingCountdown,
+                    pullProgress: fishermansFishingProgress.pendingCatch
+                      ? Math.max(0, Math.min(1, 1 - fishingPullsRemaining / fishermansFishingProgress.pendingCatch.pullsRequired))
+                      : 0,
+                    tension: fishingTension,
+                    reelPulse: fishingReelPulse,
+                  },
                 }}
                 onSignatureMissionClick={getStagedRestorationMissionDescriptor(islandArtPreviewNumber)
                   ? isIslandVisualPreview ? undefined : () => setShowMissionPhoneBriefing(true)
@@ -15274,18 +15355,6 @@ export function IslandRunBoardPrototype({
                 <strong>Heartlight network online</strong>
                 <small>Water becomes motion. Motion becomes light.</small>
               </div>
-            ) : null}
-            {journeyDiscCenterActive ? (
-              <button
-                type="button"
-                className="island-run-board__journey-disc-beacon"
-                onClick={() => handleLandmarkOpenRequest('boss')}
-                aria-label={`Open Journey Disc Arena. ${activeEventTickets} event ticket${activeEventTickets === 1 ? '' : 's'} available.`}
-              >
-                <span aria-hidden="true">◉</span>
-                <strong>Journey Disc</strong>
-                <small>{activeEventTickets}</small>
-              </button>
             ) : null}
           </div>
         ) : null}
@@ -18849,13 +18918,13 @@ export function IslandRunBoardPrototype({
             <button
               type="button"
               className="journey-disc-concourse-invitation__enter"
-              disabled={!journeyDiscCenterLandmark.canEnter}
+              disabled={activeEventTickets < 1}
               onClick={() => {
                 setShowJourneyDiscConcourseInvitation(false);
                 handleLaunchArenaGame('journey_disc_arena');
               }}
             >
-              {journeyDiscCenterLandmark.canEnter
+              {activeEventTickets >= 1
                 ? 'Enter arena · choose 1–4 discs'
                 : 'Earn 1 event ticket to deploy a disc'}
             </button>
@@ -19476,47 +19545,49 @@ export function IslandRunBoardPrototype({
       })(), document.body) : null}
 
       {showFishermansFishing && fishermansFishingProgress.pendingCatch && typeof document !== 'undefined' ? createPortal((
-        <div className="island-run-signature-mission-overlay fishermans-fishing-modal__backdrop" role="presentation">
+        <div className="fishermans-fishing-hud__layer">
           <section
-            className={`fishermans-fishing-modal${fishingReelPulse > 0
-              ? ` fishermans-fishing-modal--pull-${fishingReelPulse % 2 === 0 ? 'a' : 'b'}`
-              : ''}`}
-            role="dialog"
-            aria-modal="true"
+            className={`fishermans-fishing-hud fishermans-fishing-hud--${fishingPhase}`}
+            role="group"
             aria-labelledby="fishermans-fishing-title"
           >
             <header>
-              <p>Island 016 · Central pond</p>
-              <h2 id="fishermans-fishing-title">Something is on the line!</h2>
-              <span>Keep the tension steady and pull it toward shore.</span>
+              <h2 id="fishermans-fishing-title" aria-live="polite">
+                {fishingPhase === 'approach' ? 'Get close to the water…'
+                  : fishingPhase === 'casting' ? 'Cast!'
+                    : fishingPhase === 'waiting' ? 'Watch the bobber…'
+                      : fishingPhase === 'countdown' ? 'Something is circling!'
+                        : fishingPhase === 'bite' ? 'BITE! Set the hook!'
+                          : fishingPhase === 'reeling' ? 'Keep the line tight!'
+                            : fishingPhase === 'caught' ? 'What a catch!'
+                              : 'It got away!'}
+              </h2>
             </header>
-            <div className="fishermans-fishing-modal__scene" aria-hidden="true">
-              <div className="fishermans-fishing-modal__water">
-                <i /><i /><i />
-              </div>
-              <div className="fishermans-fishing-modal__fisher">🧑‍🌾<b>🎣</b></div>
-              <div className="fishermans-fishing-modal__line" />
-              <div className={`fishermans-fishing-modal__catch fishermans-fishing-modal__catch--${fishermansFishingProgress.pendingCatch.kind}`}>
-                {fishermansFishingProgress.pendingCatch.kind === 'nothing' ? '🫧' : '🐟'}
-              </div>
-            </div>
-            <div className="fishermans-fishing-modal__meter">
+            {fishingCountdown !== null ? (
+              <div className="fishermans-fishing-hud__countdown" aria-live="assertive">{fishingCountdown}</div>
+            ) : null}
+            <div className="fishermans-fishing-hud__meter">
               <div><strong>{fishermansFishingProgress.fishCaughtKg} kg</strong><span>/ {FISHERMANS_VILLAGE_FISH_TARGET_KG} kg</span><b>{(fishermansFishingProgress.fishCaughtKg * 2.2046226218).toFixed(1)} / 220.5 lb</b></div>
-              <div className="fishermans-fishing-modal__track"><span style={{ width: `${fishermansFishingProgress.fishCaughtKg}%` }} /></div>
+              <div className="fishermans-fishing-hud__track"><span style={{ width: `${fishermansFishingProgress.fishCaughtKg}%` }} /></div>
             </div>
             {fishingCatchMessage ? (
-              <div className="fishermans-fishing-modal__result" role="status">{fishingCatchMessage}</div>
-            ) : (
-              <button
-                type="button"
-                className="fishermans-fishing-modal__pull"
-                onClick={() => void handlePullFishermansCatch()}
-                disabled={isReelingFishingCatch}
-              >
-                <span>REEL &amp; PULL</span>
-                <small>{fishingPullsRemaining} pull{fishingPullsRemaining === 1 ? '' : 's'} remaining</small>
-              </button>
-            )}
+              <div className="fishermans-fishing-hud__result" role="status">{fishingCatchMessage}</div>
+            ) : fishingPhase === 'bite' || fishingPhase === 'reeling' ? (
+              <>
+                <div className="fishermans-fishing-hud__tension" aria-label={`Line tension ${Math.round(fishingTension * 100)} percent`}>
+                  <span style={{ width: `${Math.round(fishingTension * 100)}%` }} />
+                </div>
+                <button
+                  type="button"
+                  className="fishermans-fishing-hud__pull"
+                  onClick={() => void handlePullFishermansCatch()}
+                  disabled={isReelingFishingCatch}
+                >
+                  <span>{fishingPhase === 'bite' ? 'SET HOOK!' : 'PULL! PULL!'}</span>
+                  <small>{fishingPullsRemaining} pull{fishingPullsRemaining === 1 ? '' : 's'} · don’t lose tension</small>
+                </button>
+              </>
+            ) : null}
           </section>
         </div>
       ), document.body) : null}

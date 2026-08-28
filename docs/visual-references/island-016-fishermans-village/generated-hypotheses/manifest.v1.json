@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "subject": "HabitGame Island 016 Fisherman's Village generated visual hypotheses",
+  "created_at": "2026-08-28",
+  "authority_rule": "These images are secondary production hypotheses. They guide hidden views, readable detail, and animation staging, but never override the exact approved village reference or explicit user decisions.",
+  "items": [
+    {
+      "path": "guild-hall-multiview-v001.png",
+      "sha256": "83e71c8edd0a8c09ad9e73f96de9b3a25ee81fc12b192746653e36e28352a709",
+      "role": "representative Guild Hall form, roof, entrance, and material hypothesis",
+      "authority": "secondary-generated"
+    },
+    {
+      "path": "full-island-environment-goal-v001.png",
+      "sha256": "3e31e6642546580831fb9a729d1571468168a86290f84ff69270a5178fb1f78c",
+      "role": "island-wide atmosphere, water, terrain, harbour, and composition hypothesis",
+      "authority": "secondary-generated"
+    },
+    {
+      "path": "fishing-character-rig-catch-family-v001.png",
+      "sha256": "37ef7edb1c106a6e4407adce5a936dd395d8e7b885d55200814497e2975552ae",
+      "role": "in-world fisherman, rod, line, bobber, reeling poses, and catch-scale hypothesis",
+      "authority": "secondary-generated"
+    },
+    {
+      "path": "landmark-family-lineup-v001.png",
+      "sha256": "8262bfbb0fbccece4243bd1bef272e36b2b9e5e91fb95536da6c273e91df1d15",
+      "role": "five landmark family silhouette and material-language hypothesis",
+      "authority": "secondary-generated"
+    },
+    {
+      "path": "water-dragon-iconic-face-multiview-v001.png",
+      "sha256": "dd90cb83258f475341c709f3267f83a215a95bee9fd6b281ec4cac9db4277a3e",
+      "role": "iconic face identity, crown, eyes, whiskers, gills, and readable expression hypothesis",
+      "authority": "secondary-generated"
+    },
+    {
+      "path": "water-dragon-mission-motion-goal-v001.png",
+      "sha256": "2b685732c586f922f2067adef6e2c31a0af763c8597d129346a0a23043590883",
+      "role": "eruption, full-body sky clearance, turn, wing-wrap dive, and splash staging hypothesis",
+      "authority": "secondary-generated"
+    },
+    {
+      "path": "water-dragon-iconic-weapons-multiview-v002.png",
+      "sha256": "e378df611177ac6dad2eb8312f421a5de0b300164dc409e54f06dcead9213b71",
+      "role": "latest dragon identity extension: shark teeth, paired gills, neck/belly ram shield, electric-eel charge and directed water-stream attack",
+      "authority": "secondary-generated-latest-dragon-extension"
+    }
+  ]
+}
