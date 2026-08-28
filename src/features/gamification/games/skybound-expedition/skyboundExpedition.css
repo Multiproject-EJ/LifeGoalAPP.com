@@ -1214,6 +1214,133 @@
   background: linear-gradient(155deg, rgba(61, 23, 29, 0.96), rgba(9, 25, 42, 0.97));
 }
 
+.skybound__result.is-touchdown {
+  width: min(88%, 340px);
+  max-height: calc(100% - 18px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-color: rgba(123, 241, 255, 0.58);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(88, 220, 255, 0.24), transparent 42%),
+    linear-gradient(155deg, rgba(8, 51, 78, 0.97), rgba(6, 22, 40, 0.98));
+}
+
+.skybound__result.is-touchdown.is-gold {
+  border-color: rgba(255, 221, 97, 0.86);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.46), 0 0 32px rgba(255, 205, 67, 0.25);
+}
+
+.skybound__touchdown-card {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  padding: 10px 8px 8px;
+  border: 1px solid rgba(126, 231, 255, 0.42);
+  border-radius: 13px;
+  color: #eafcff;
+  background: linear-gradient(145deg, rgba(25, 122, 156, 0.42), rgba(30, 57, 111, 0.48));
+  animation: skybound-touchdown-award 620ms 120ms cubic-bezier(0.16, 0.9, 0.24, 1.2) both;
+}
+
+.skybound__touchdown-card.is-gold {
+  border-color: rgba(255, 220, 92, 0.64);
+  background: linear-gradient(145deg, rgba(145, 100, 17, 0.5), rgba(27, 67, 118, 0.5));
+}
+
+.skybound__touchdown-card.is-silver {
+  border-color: rgba(207, 235, 247, 0.58);
+}
+
+.skybound__touchdown-wings {
+  color: #ffe47d;
+  font-size: 17px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 12px rgba(255, 216, 92, 0.62);
+}
+
+.skybound__touchdown-card > strong {
+  color: #fff7c8;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.skybound__touchdown-card > p {
+  margin: 0;
+  color: rgba(232, 248, 252, 0.76);
+  font-size: 8px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.skybound__touchdown-card > div:not(.skybound__touchdown-confetti) {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.skybound__touchdown-card > div:not(.skybound__touchdown-confetti) span {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 2px;
+  border-radius: 6px;
+  color: rgba(229, 247, 252, 0.58);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 6px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.skybound__touchdown-card > div:not(.skybound__touchdown-confetti) b {
+  color: #ffffff;
+  font-size: 10px;
+}
+
+.skybound__touchdown-card > small {
+  color: #ffe479;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+}
+
+.skybound__touchdown-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.skybound__touchdown-confetti i {
+  position: absolute;
+  top: -8px;
+  left: 7%;
+  width: 4px;
+  height: 8px;
+  border-radius: 2px;
+  background: #ffe46c;
+  animation: skybound-touchdown-confetti 1.4s ease-out both;
+}
+
+.skybound__touchdown-confetti i:nth-child(2n) { background: #79efff; transform: rotate(32deg); }
+.skybound__touchdown-confetti i:nth-child(3n) { background: #ffffff; transform: rotate(-22deg); }
+.skybound__touchdown-confetti i:nth-child(1) { left: 7%; animation-delay: 90ms; }
+.skybound__touchdown-confetti i:nth-child(2) { left: 15%; animation-delay: 180ms; }
+.skybound__touchdown-confetti i:nth-child(3) { left: 23%; animation-delay: 40ms; }
+.skybound__touchdown-confetti i:nth-child(4) { left: 31%; animation-delay: 230ms; }
+.skybound__touchdown-confetti i:nth-child(5) { left: 39%; animation-delay: 110ms; }
+.skybound__touchdown-confetti i:nth-child(6) { left: 47%; animation-delay: 280ms; }
+.skybound__touchdown-confetti i:nth-child(7) { left: 55%; animation-delay: 60ms; }
+.skybound__touchdown-confetti i:nth-child(8) { left: 63%; animation-delay: 210ms; }
+.skybound__touchdown-confetti i:nth-child(9) { left: 71%; animation-delay: 130ms; }
+.skybound__touchdown-confetti i:nth-child(10) { left: 79%; animation-delay: 260ms; }
+.skybound__touchdown-confetti i:nth-child(11) { left: 87%; animation-delay: 30ms; }
+.skybound__touchdown-confetti i:nth-child(12) { left: 94%; animation-delay: 170ms; }
+
 .skybound__terminal-summary {
   margin: -1px 0 2px;
   color: rgba(237, 247, 250, 0.72);
@@ -1503,6 +1630,17 @@
 @keyframes skybound-result-in {
   from { opacity: 0; transform: translate(-50%, -44%) scale(0.9); }
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes skybound-touchdown-award {
+  from { opacity: 0; transform: translateY(12px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes skybound-touchdown-confetti {
+  0% { opacity: 0; translate: 0 -4px; }
+  16% { opacity: 1; }
+  100% { opacity: 0; translate: 0 82px; rotate: 260deg; }
 }
 
 @keyframes skybound-impact-vignette {

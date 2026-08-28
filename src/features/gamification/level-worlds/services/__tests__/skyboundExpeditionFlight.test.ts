@@ -5,7 +5,9 @@ import {
   createSkyboundFlight,
   getSkyboundFlowTargetSpeedKmh,
   getSkyboundCourseObjects,
+  getSkyboundGroundHeight,
   getSkyboundLandingZone,
+  getSkyboundTouchdownResult,
   getSkyboundUpgradeCost,
   scoreSkyboundFlight,
   stepSkyboundFlight,
@@ -392,6 +394,28 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(noseHit.status === 'crashed' && noseHit.terminalReason === 'hard_impact', 'poor attitude should turn even a slow contact into a crash');
       const fastHit = stepSkyboundFlight({ ...base, vx: 26, vy: -10, pitchRad: .2 }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(fastHit.status === 'crashed' && fastHit.terminalReason === 'hard_impact', 'excessive ground speed should crash on first contact');
+    },
+  },
+  {
+    name: 'records contact telemetry and grades safe touchdowns without changing the pass boundary',
+    run: () => {
+      const groundState={
+        ...createSkyboundFlight({power:.72,angleDeg:14,upgrades:SKYBOUND_STARTER_UPGRADES,levelId:'coast',goalDistance:580,aircraftId:'prop_trainer',courseProfile:'landing'}),
+        x:530,
+        y:3.4,
+        elapsedMs:8_000,
+        airborneMs:7_000,
+      };
+      const land=(vx:number,vy:number,pitchRad:number,lateralX:number)=>stepSkyboundFlight({...groundState,vx,vy,pitchRad,lateralX,y:getSkyboundGroundHeight('coast',530)+1.3},{pitch:0,boost:false},SKYBOUND_STARTER_UPGRADES,64);
+      const gold=land(8,-2,.06,1);
+      const silver=land(12,-3.4,.16,5);
+      const bronze=land(13,-5,.22,12);
+      assert(gold.status==='landed'&&silver.status==='landed'&&bronze.status==='landed','every graded example should remain inside the controlled-touchdown boundary');
+      assert(getSkyboundTouchdownResult(gold)?.grade==='gold','soft centred contact should earn a gold touchdown');
+      assert(getSkyboundTouchdownResult(silver)?.grade==='silver','a stable minor-offset contact should earn silver');
+      assert(getSkyboundTouchdownResult(bronze)?.grade==='bronze','a safe but rough contact should earn bronze');
+      assert((gold.touchdownSpeedKmh??0)>0&&gold.vx===0,'contact speed should be recorded before the settled aircraft stops');
+      assert(scoreSkyboundFlight(gold)>scoreSkyboundFlight(silver)&&scoreSkyboundFlight(silver)>scoreSkyboundFlight(bronze),'touchdown quality should improve the flight score');
     },
   },
   {

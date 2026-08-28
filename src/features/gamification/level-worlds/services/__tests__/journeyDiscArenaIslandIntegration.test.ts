@@ -90,6 +90,10 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
       });
       const slots = resolveIslandEventGridSlots({
         templates,
+        exhibitions: [
+          { gameId: 'journey_disc_arena', displayName: 'Journey Disc Arena', icon: '◉' },
+          { gameId: 'lexicon_relay', displayName: 'Lexicon Relay', icon: 'A↗' },
+        ],
         activeEventType: 'lucky_spin',
         journeyDiscReplacesTimedEvent: replacesTimedEvent,
       });
@@ -97,7 +101,8 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
       assertEqual(replacesTimedEvent, true, 'the chapter exhibition owns the visible event surface');
       assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the grid has three complete rows of four');
       assertEqual(slots[1]?.kind, 'journey_disc', 'Journey Disc occupies the active timed-game slot');
-      assertEqual(slots.filter((slot) => slot.kind === 'empty').length, 8, 'two new rows remain empty');
+      assertEqual(slots.filter((slot) => slot.kind === 'exhibition').length, 1, 'word exhibition is appended without duplicating Journey Disc');
+      assertEqual(slots.filter((slot) => slot.kind === 'empty').length, 7, 'remaining future slots stay visibly reserved');
       assertEqual(
         slots.some((slot) => slot.kind === 'event' && slot.eventId === 'lucky_spin'),
         false,
@@ -120,6 +125,10 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
           { eventId: 'space_excavator', displayName: 'Space Excavator', icon: '🚀' },
           { eventId: 'companion_feast', displayName: 'Companion Feast', icon: '🐾' },
         ],
+        exhibitions: [
+          { gameId: 'journey_disc_arena', displayName: 'Journey Disc Arena', icon: '◉' },
+          { gameId: 'lexicon_relay', displayName: 'Lexicon Relay', icon: 'A↗' },
+        ],
         activeEventType: 'lucky_spin',
         journeyDiscReplacesTimedEvent: replacesTimedEvent,
       });
@@ -130,7 +139,12 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
         true,
         'Lucky Spin resumes as the active tile without resetting its event',
       );
-      assertEqual(slots.some((slot) => slot.kind === 'journey_disc'), false, 'Journey Disc leaves the grid');
+      assertEqual(slots.some((slot) => slot.kind === 'journey_disc'), false, 'Journey Disc no longer replaces the active timed tile');
+      assertEqual(
+        slots.some((slot) => slot.kind === 'exhibition' && slot.gameId === 'journey_disc_arena'),
+        true,
+        'Journey Disc remains discoverable as a chapter-gated exhibition',
+      );
       assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the expanded grid remains available');
     },
   },

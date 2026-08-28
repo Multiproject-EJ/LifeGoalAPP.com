@@ -949,3 +949,78 @@ pass the lesson.
 10/10.** Landing Pattern is now a real lesson rather than ordinary free flight
 with a landing label. The next loop should add rank-specific sound, touchdown
 grade feedback, and authored formations for the advanced jet exams.
+
+## Touchdown award and event-catalogue Gauntlet loop 11 — 2026-08-28
+
+This loop closed two different presentation gaps: a safe return now reports
+how well the pilot actually landed, and the shared reward modal now exposes the
+complete mini-game catalogue instead of hiding valid exhibition games.
+
+### Touchdown scoring and ceremony
+
+- A controlled landing records its contact speed, sink rate, absolute pitch,
+  and centreline offset before the settled aircraft is stopped. Those values
+  are part of the deterministic flight result, not React-owned gameplay state.
+- Safe landings receive one of three grades: A+ Golden Touchdown, A Precision
+  Touchdown, or B Controlled Touchdown. Their 120/90/65-point landing bonuses
+  reward a soft, level, centred flare without moving the existing safe-versus-
+  crash boundary.
+- The result card presents the four contact measurements, precision bonus,
+  gold/silver/bronze treatment, wing badge, and a bounded confetti ceremony.
+  Crash results retain their separate breakup and impact debrief.
+
+### Shared icon and mini-game catalogue contract
+
+- Skybound Academy now has a permanent original 512px pilot-school badge at
+  `public/assets/event-games/skybound-academy/skybound-academy-icon-v1.png`.
+  The catalogue is the single source for its icon and the existing Space
+  Excavator artwork.
+- The right-side event quick action, reward-bar banner, modal header, and
+  four-column grid all constrain image dimensions, overflow, and object fit.
+  Space Excavator can no longer expand to its natural bitmap size.
+- The reward modal keeps five canonical timed-event tiles, of which only the
+  one active timed event is directly playable. It now also links all six
+  exhibitions: Journey Disc Arena, Momentum Matrix, Concord Categories,
+  Lexicon Relay, Signal Path, and Twin Sigils. One twelfth slot remains visibly
+  reserved for a future game.
+- Journey Disc remains discoverable on ordinary islands and explains its
+  chapter-island gate when selected. On eligible chapter islands it still
+  replaces only the active timed-event surface and is not duplicated.
+- Exhibition launches continue to borrow the active event ticket/reward
+  channel. Browser verification launched Lexicon Relay from the grid and
+  observed the canonical ticket balance change from 20 to 19.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,896 tests, 0 failures. New coverage
+  proves contact telemetry capture, A+/A/B thresholds, score ordering, the
+  unchanged safe-touchdown boundary, exhibition appending, and Journey Disc
+  de-duplication.
+- Focused Island Run TypeScript passed. Architecture guard passed with 0
+  violations and the existing 3 allowlisted legacy warnings. Production Vite
+  build passed with the repository's existing mixed-import and large-chunk
+  warnings. The repository-wide `tsc -b` remains blocked by pre-existing
+  Supabase/PostgREST generated-type incompatibilities outside this slice.
+- Fresh-browser verification showed eleven populated tiles in the complete
+  three-row grid. Space Excavator and Skybound both measured 27.2 × 27.2px in
+  their 27.2px bounded containers; no icon overflow occurred. The board's 3D
+  renderer fell back because this sandbox disables WebGL, while the event modal
+  and linked exhibition remained functional.
+- Live Skybound replay confirmed stable launch, control response, ground-impact
+  breakup, abrupt-ground-contact termination, crash debrief, and no Skybound
+  console warnings or errors. Deterministic service coverage provides the safe
+  touchdown-grade gate; the next physical-device pass should capture all three
+  award ceremonies with unthrottled touch input.
+
+| Loop 11 gate | Score | Decision |
+| --- | ---: | --- |
+| Touchdown feedback | 9/10 | Contact quality is measurable, scored, and celebrated |
+| Event discoverability | 9/10 | All shipped timed and exhibition games occupy one honest grid |
+| Icon consistency | 9/10 | Skybound has bespoke art and bitmap sizing is bounded everywhere |
+| Ticket/reward integrity | 10/10 | Exhibitions spend the existing active-event ticket channel |
+| Final audiovisual polish | 7/10 | Rank-specific engine audio and physical-device ceremony capture remain |
+
+**Gauntlet decision: pass touchdown feedback and shared catalogue integration,
+continue toward 10/10.** The next loop should add rank-specific prop/jet sound,
+advanced authored formations, and a phone-calibrated safe-landing replay for
+gold, silver, and bronze ceremonies.

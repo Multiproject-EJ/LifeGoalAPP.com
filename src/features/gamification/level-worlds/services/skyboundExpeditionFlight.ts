@@ -6,6 +6,19 @@ export type SkyboundTerminalReason = 'goal' | 'touchdown' | 'hard_impact' | 'int
 export type SkyboundUpgradeKind = 'launcher' | 'airframe' | 'engine';
 export type SkyboundCourseObjectKind = 'salvage' | 'wind_ring' | 'hazard';
 export type SkyboundCourseProfile = 'standard' | 'landing';
+export type SkyboundTouchdownGrade = 'gold' | 'silver' | 'bronze';
+
+export interface SkyboundTouchdownResult {
+  grade: SkyboundTouchdownGrade;
+  mark: 'A+' | 'A' | 'B';
+  label: string;
+  detail: string;
+  score: number;
+  speedKmh: number;
+  sinkRateMps: number;
+  pitchDeg: number;
+  offsetM: number;
+}
 
 export interface SkyboundUpgrades {
   launcher: number;
@@ -94,6 +107,10 @@ export interface SkyboundFlightState {
   stallMs: number;
   terrainImpacts: number;
   terminalReason: SkyboundTerminalReason;
+  touchdownSpeedKmh: number | null;
+  touchdownSinkRateMps: number | null;
+  touchdownPitchDeg: number | null;
+  touchdownOffsetM: number | null;
 }
 
 export interface SkyboundFlightControl {
@@ -411,6 +428,10 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     stallMs: 0,
     terrainImpacts: 0,
     terminalReason: null,
+    touchdownSpeedKmh: null,
+    touchdownSinkRateMps: null,
+    touchdownPitchDeg: null,
+    touchdownOffsetM: null,
   };
 }
 
@@ -570,6 +591,10 @@ export function stepSkyboundFlight(
   let bestStreak = state.bestStreak;
   let terrainImpacts = state.terrainImpacts;
   let terminalReason: SkyboundTerminalReason = null;
+  let touchdownSpeedKmh=state.touchdownSpeedKmh??null;
+  let touchdownSinkRateMps=state.touchdownSinkRateMps??null;
+  let touchdownPitchDeg=state.touchdownPitchDeg??null;
+  let touchdownOffsetM=state.touchdownOffsetM??null;
 
   for (const object of getSkyboundCourseObjects(level.id, state.goalDistance, state.courseProfile??'standard')) {
     if (resolvedObjectIds.includes(object.id)) continue;
@@ -638,6 +663,10 @@ export function stepSkyboundFlight(
     if (controlledTouchdown) {
       status = 'landed';
       terminalReason = 'touchdown';
+      touchdownSpeedKmh=Math.hypot(vx,vy)*3.6;
+      touchdownSinkRateMps=Math.max(0,-vy);
+      touchdownPitchDeg=Math.abs(pitchRad)*180/Math.PI;
+      touchdownOffsetM=Math.abs(lateralX);
       vx = 0;
       vy = 0;
     } else {
@@ -699,14 +728,25 @@ export function stepSkyboundFlight(
     stallMs: state.stallMs + (isStalled ? safeDtMs : 0),
     terrainImpacts,
     terminalReason,
+    touchdownSpeedKmh,
+    touchdownSinkRateMps,
+    touchdownPitchDeg,
+    touchdownOffsetM,
   };
 }
 
 export interface SkyboundFlightScoreBreakdown { distance:number;flow:number;course:number;finish:number;landing:number;altitude:number;collisionPenalty:number;total:number; }
+export function getSkyboundTouchdownResult(state:SkyboundFlightState):SkyboundTouchdownResult|null {
+  if(state.status!=='landed'||state.touchdownSpeedKmh===null||state.touchdownSinkRateMps===null||state.touchdownPitchDeg===null||state.touchdownOffsetM===null)return null;
+  const metrics={speedKmh:state.touchdownSpeedKmh,sinkRateMps:state.touchdownSinkRateMps,pitchDeg:state.touchdownPitchDeg,offsetM:state.touchdownOffsetM};
+  if(metrics.speedKmh<=40&&metrics.sinkRateMps<=2.6&&metrics.pitchDeg<=7&&metrics.offsetM<=3.5)return{grade:'gold',mark:'A+',label:'GOLDEN TOUCHDOWN',detail:'Centreline, soft mains contact, and a disciplined flare.',score:120,...metrics};
+  if(metrics.speedKmh<=50&&metrics.sinkRateMps<=4.5&&metrics.pitchDeg<=13&&metrics.offsetM<=8)return{grade:'silver',mark:'A',label:'PRECISION TOUCHDOWN',detail:'A stable return with only a small correction left to make.',score:90,...metrics};
+  return{grade:'bronze',mark:'B',label:'CONTROLLED TOUCHDOWN',detail:'Aircraft recovered safely. Refine speed, flare, and centreline.',score:65,...metrics};
+}
 export function getSkyboundFlightScoreBreakdown(state:SkyboundFlightState):SkyboundFlightScoreBreakdown {
   const distance=Math.round(Math.min(state.x,state.goalDistance)*.55);
   const finish=state.status==='finished'?Math.round(140+state.goalDistance*.06):0;
-  const landing=state.status==='landed'?55:0;
+  const landing=state.status==='landed'?(getSkyboundTouchdownResult(state)?.score??55):0;
   const course=(state.salvageCollected*18)+(state.ringsCleared*45)+(state.nearMisses*25)+(state.bestStreak*4);
   const flow=Math.min(160,Math.round(state.smoothFlightMs/420));
   const altitude=Math.round(state.maxAltitude*.55);

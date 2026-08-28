@@ -393,7 +393,11 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
-import { isArenaPuzzleGameId } from '../services/islandRunArenaCatalog';
+import {
+  ARENA_GAME_CATALOG,
+  getArenaGameDefinition,
+  isArenaPuzzleGameId,
+} from '../services/islandRunArenaCatalog';
 import { isJourneyDiscArenaIsland } from '../services/journeyDiscArmory';
 import {
   resolveIslandEventGridSlots,
@@ -752,7 +756,6 @@ const TRAFFIC_LIGHT_REWARD_TAP_TWO_MS = 560;
 const TRAFFIC_LIGHT_REWARD_OPEN_MS = 560;
 const TRAFFIC_LIGHT_COIN_IDLE_HINT_DELAY_MS = 3_000;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
-const SPACE_EXCAVATOR_EVENT_ICON_SRC = '/assets/icons/Eventgame_excavator.webp';
 const TRAFFIC_LIGHT_MODAL_IMAGE_SRC = '/assets/traffic_light/Traffic_img.webp';
 const TRAFFIC_LIGHT_BOX_IMAGE_SRC = '/assets/traffic_light/IMG_box.webp';
 const TRAFFIC_LIGHT_GIFT_IMAGE_SRC = '/assets/traffic_light/IMG_gift.webp';
@@ -6937,7 +6940,17 @@ export function IslandRunBoardPrototype({
     : activeEventMeta;
   const eventSurfaceTicketIcon = journeyDiscReplacesTimedEventSurface ? '◉' : timedEventTokenIcon;
   const eventGridSlots = useMemo(() => resolveIslandEventGridSlots({
-    templates: getEventRotationTemplates(),
+    templates: getEventRotationTemplates().map((template) => {
+      const game = getArenaGameDefinition(template.eventId);
+      return { ...template, icon: game.iconSrc ?? template.icon };
+    }),
+    exhibitions: ARENA_GAME_CATALOG
+      .filter((game) => game.availability === 'exhibition')
+      .map((game) => ({
+        gameId: game.id,
+        displayName: game.displayName,
+        icon: game.iconSrc ?? game.icon,
+      })),
     activeEventType: effectiveActiveTimedEvent?.eventType ?? null,
     journeyDiscReplacesTimedEvent: journeyDiscReplacesTimedEventSurface,
   }), [effectiveActiveTimedEvent?.eventType, journeyDiscReplacesTimedEventSurface]);
@@ -7025,8 +7038,8 @@ export function IslandRunBoardPrototype({
   }, [activeEventSurfaceMeta?.displayName, activeEventSurfaceMeta?.icon, trafficLightCoinFlip?.reward]);
   const activeEventIcon = journeyDiscReplacesTimedEventSurface
     ? '◉'
-    : effectiveActiveTimedEvent?.eventType === 'space_excavator'
-      ? SPACE_EXCAVATOR_EVENT_ICON_SRC
+    : effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType)
+      ? (getArenaGameDefinition(effectiveActiveTimedEvent.eventType).iconSrc ?? activeEventMeta?.icon ?? '')
       : activeEventMeta?.icon ?? '';
   const renderEventIcon = (className: string) => activeEventIcon.startsWith('/')
     ? <img className={`${className} ${className}--image`} src={activeEventIcon} alt="" aria-hidden="true" loading="lazy" />
@@ -16368,26 +16381,26 @@ export function IslandRunBoardPrototype({
               </button>
             </header>
 
-            <div className="island-event-modal__grid" role="list" aria-label="Event mini-games">
+            <div className="island-event-modal__grid" role="group" aria-label="Event mini-games">
               {eventGridSlots.map((slot) => {
                 if (slot.kind === 'empty') {
                   return (
                     <span
                       key={slot.id}
-                      role="listitem"
                       className="island-event-modal__grid-item island-event-modal__grid-item--empty"
                       aria-label="Empty future game slot"
                     />
                   );
                 }
                 const isJourneyDisc = slot.kind === 'journey_disc';
+                const isExhibition = slot.kind === 'exhibition';
+                const canPlayNow = isJourneyDisc || isExhibition || slot.active;
                 const isSelected = slot.kind === 'event' && selectedEventInfoEventId === slot.eventId;
                 return (
                   <button
                     key={slot.id}
                     type="button"
-                    role="listitem"
-                    className={`island-event-modal__grid-item${slot.active ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}${isJourneyDisc ? ' island-event-modal__grid-item--journey-disc' : ''}`}
+                    className={`island-event-modal__grid-item${slot.active ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}${isJourneyDisc ? ' island-event-modal__grid-item--journey-disc' : ''}${isExhibition ? ' island-event-modal__grid-item--exhibition' : ''}`}
                     onClick={() => {
                       if (slot.kind === 'journey_disc') {
                         setSelectedEventInfoEventId(null);
@@ -16395,13 +16408,29 @@ export function IslandRunBoardPrototype({
                         handleLaunchArenaGame('journey_disc_arena');
                         return;
                       }
+                      if (slot.kind === 'exhibition') {
+                        setSelectedEventInfoEventId(null);
+                        setShowRewardDetailsModal(false);
+                        handleLaunchArenaGame(slot.gameId);
+                        return;
+                      }
+                      if (slot.active) {
+                        setSelectedEventInfoEventId(null);
+                        setShowRewardDetailsModal(false);
+                        handleLaunchEventSurface();
+                        return;
+                      }
                       setSelectedEventInfoEventId(slot.eventId as EventId);
                     }}
-                    aria-label={`${isJourneyDisc ? 'Play ' : ''}${slot.displayName}${slot.active ? ' (active now)' : ''}`}
+                    aria-label={`${canPlayNow ? 'Play' : 'View'} ${slot.displayName}${slot.active ? ' (active now)' : ''}`}
                   >
-                    <span aria-hidden="true" className="island-event-modal__grid-icon">{slot.icon}</span>
+                    <span aria-hidden="true" className="island-event-modal__grid-icon">
+                      {slot.icon.startsWith('/')
+                        ? <img className="island-event-modal__grid-icon-image" src={slot.icon} alt="" loading="lazy" />
+                        : slot.icon}
+                    </span>
                     <span className="island-event-modal__grid-label">{slot.displayName}</span>
-                    {isJourneyDisc && <span className="island-event-modal__grid-play-label">PLAY</span>}
+                    {canPlayNow && <span className="island-event-modal__grid-play-label">PLAY</span>}
                     {slot.active && <span className="island-event-modal__grid-active-dot" aria-hidden="true" />}
                   </button>
                 );

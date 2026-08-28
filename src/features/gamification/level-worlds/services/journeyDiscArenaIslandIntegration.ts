@@ -1,4 +1,5 @@
 import { isJourneyDiscArenaIsland } from './journeyDiscArmory';
+import type { ArenaGameId } from './islandRunArenaCatalog';
 import type { IslandRunContractV2StopStatus } from './islandRunContractV2StopResolver';
 
 export type JourneyDiscCenterLandmarkOwner = 'canonical_boss' | 'journey_disc_arena';
@@ -24,6 +25,12 @@ export interface IslandEventGridTemplate {
   icon: string;
 }
 
+export interface IslandEventGridExhibition {
+  gameId: ArenaGameId;
+  displayName: string;
+  icon: string;
+}
+
 export type IslandEventGridSlot =
   | {
       kind: 'event';
@@ -39,6 +46,14 @@ export type IslandEventGridSlot =
       displayName: 'Journey Disc Arena';
       icon: '◉';
       active: true;
+    }
+  | {
+      kind: 'exhibition';
+      id: string;
+      gameId: ArenaGameId;
+      displayName: string;
+      icon: string;
+      active: false;
     }
   | {
       kind: 'empty';
@@ -64,12 +79,16 @@ export function shouldJourneyDiscReplaceTimedEventSurface(options: {
 /** Builds the three-row event launcher grid without introducing event state. */
 export function resolveIslandEventGridSlots(options: {
   templates: readonly IslandEventGridTemplate[];
+  exhibitions?: readonly IslandEventGridExhibition[];
   activeEventType: string | null;
   journeyDiscReplacesTimedEvent: boolean;
   slotCount?: number;
 }): IslandEventGridSlot[] {
+  const visibleExhibitions = (options.exhibitions ?? []).filter((exhibition) => (
+    !options.journeyDiscReplacesTimedEvent || exhibition.gameId !== 'journey_disc_arena'
+  ));
   const requestedSlotCount = Math.max(
-    options.templates.length,
+    options.templates.length + visibleExhibitions.length,
     Math.floor(options.slotCount ?? ISLAND_EVENT_GRID_SLOT_COUNT),
   );
   const slots: IslandEventGridSlot[] = options.templates.map((template) => {
@@ -91,6 +110,17 @@ export function resolveIslandEventGridSlots(options: {
       icon: template.icon,
       active: !options.journeyDiscReplacesTimedEvent && isActiveTemplate,
     };
+  });
+
+  visibleExhibitions.forEach((exhibition) => {
+    slots.push({
+      kind: 'exhibition',
+      id: `exhibition-${exhibition.gameId}`,
+      gameId: exhibition.gameId,
+      displayName: exhibition.displayName,
+      icon: exhibition.icon,
+      active: false,
+    });
   });
 
   while (slots.length < requestedSlotCount) {

@@ -24,6 +24,7 @@ export interface ArenaGameDefinition {
   description: string;
   availability: ArenaGameAvailability;
   estimatedSeconds: readonly [number, number];
+  iconSrc?: string;
   artSrc: string | null;
   accent: string;
   isNew?: boolean;
@@ -80,6 +81,7 @@ export const ARENA_GAME_CATALOG: readonly ArenaGameDefinition[] = Object.freeze(
     description: 'Use clues to uncover relics without wasting your dig sites.',
     availability: 'active_event',
     estimatedSeconds: [60, 180],
+    iconSrc: '/assets/icons/Eventgame_excavator.webp',
     artSrc: null,
     accent: '#59c9ff',
   },
@@ -106,6 +108,7 @@ export const ARENA_GAME_CATALOG: readonly ArenaGameDefinition[] = Object.freeze(
     description: 'Launch, steer and upgrade five aircraft through Pilot Academy checkrides.',
     availability: 'active_event',
     estimatedSeconds: [45, 180],
+    iconSrc: '/assets/event-games/skybound-academy/skybound-academy-icon-v1.png',
     artSrc: null,
     accent: '#65ddff',
     isNew: true,
