@@ -1,4 +1,4 @@
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import { PostgrestError, type SupabaseClient } from '@supabase/supabase-js';
 import { canUseSupabaseData, getActiveSupabaseSession, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import type {
@@ -58,13 +58,12 @@ const DEMO_ROUTINE_STEPS_KEY = 'lifegoal-demo-routine-steps-v1';
 const DEMO_ROUTINE_LOGS_KEY = 'lifegoal-demo-routine-logs-v1';
 
 function buildMockPostgrestError(message: string): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     message,
     details: '',
     hint: '',
     code: 'PGRST000',
-  };
+  });
 }
 
 function readLocal<T>(key: string): T[] {

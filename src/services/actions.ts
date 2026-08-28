@@ -1,12 +1,13 @@
 // Actions Service - CRUD operations for Actions feature
 // Reference: ACTIONS_FEATURE_DEV_PLAN.md
 
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import {
   canUseSupabaseData,
   canUseSupabaseDataForUser,
   getSupabaseClient,
 } from '../lib/supabaseClient';
+import type { Database } from '../lib/database.types';
 import type {
   Action,
   ActionCategory,
@@ -28,14 +29,15 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+type ActionUpdate = Database['public']['Tables']['actions']['Update'];
+
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to access actions.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 function canUseCloudActionData(userId?: string): boolean {
@@ -204,7 +206,7 @@ export async function updateAction(
   const supabase = getSupabaseClient();
   
   // If completing the action, set completed_at
-  const updatePayload: Record<string, unknown> = { ...input };
+  const updatePayload: ActionUpdate = { ...input };
   if (input.completed === true) {
     updatePayload.completed_at = new Date().toISOString();
   } else if (input.completed === false) {

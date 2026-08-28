@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
 
@@ -12,13 +12,12 @@ type ServiceResponse<T> = {
 };
 
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to manage notification preferences.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 export type NotificationPreferencePayload = {

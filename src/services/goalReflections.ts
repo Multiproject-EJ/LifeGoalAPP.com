@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import {
   type GoalReflectionInsert,
@@ -14,13 +14,12 @@ type ServiceResponse<T> = {
 };
 
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to manage goal reflections.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 export async function fetchGoalReflections(

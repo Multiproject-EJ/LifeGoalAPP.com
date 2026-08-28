@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { guardedCloudCall } from './service-health';
@@ -11,6 +11,7 @@ import {
 } from './offlineWriteThrough';
 
 export type TodayTodo = Database['public']['Tables']['today_todos']['Row'];
+type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -18,13 +19,12 @@ type ServiceResponse<T> = {
 };
 
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to access today todos.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 // ── Offline fallback cache ───────────────────────────────────────────────────
@@ -166,7 +166,7 @@ export async function updateTodayTodo(
 ): Promise<ServiceResponse<TodayTodo>> {
   if (!canUseSupabaseData()) return { data: null, error: authRequiredError() };
   const supabase = getSupabaseClient();
-  const payload: Record<string, unknown> = { ...patch };
+  const payload: TodayTodoUpdate = { ...patch };
   if (patch.completed === true) payload.completed_at = new Date().toISOString();
   if (patch.completed === false) payload.completed_at = null;
 

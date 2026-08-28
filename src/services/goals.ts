@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { guardedCloudCall } from './service-health';
@@ -45,13 +45,12 @@ type ServiceResponse<T> = {
 };
 
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to manage goals.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 const LOCAL_GOAL_PREFIX = 'local-goal-';
@@ -101,6 +100,7 @@ function makeLocalGoalFromInsert(payload: GoalInsert, localId: string): GoalRow 
     environment_context: draft.environment_context ?? null,
     environment_score: draft.environment_score ?? null,
     environment_last_audited_at: draft.environment_last_audited_at ?? null,
+    goal_strategy_type: draft.goal_strategy_type ?? 'standard',
   } as GoalRow;
 }
 

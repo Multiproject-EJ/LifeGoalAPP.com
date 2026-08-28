@@ -1,12 +1,13 @@
 // Projects Service - CRUD operations for Projects feature
 // Reference: ACTIONS_FEATURE_DEV_PLAN.md
 
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import {
   canUseSupabaseData,
   canUseSupabaseDataForUser,
   getSupabaseClient,
 } from '../lib/supabaseClient';
+import type { Database } from '../lib/database.types';
 import type {
   Project,
   ProjectStatus,
@@ -36,14 +37,16 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
+type ProjectTaskUpdate = Database['public']['Tables']['project_tasks']['Update'];
+
 function authRequiredError(): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: 'AUTH_REQUIRED',
     details: 'No active authenticated Supabase session.',
     hint: 'Sign in to access projects.',
     message: 'Authentication required.',
-  };
+  });
 }
 
 function canUseCloudProjectData(userId?: string): boolean {
@@ -201,7 +204,7 @@ export async function updateProject(
   const supabase = getSupabaseClient();
   
   // Handle status transitions
-  const updatePayload: Record<string, unknown> = { ...input };
+  const updatePayload: ProjectUpdate = { ...input };
   if (input.status === 'completed') {
     updatePayload.completed_at = new Date().toISOString();
   } else if (input.status === 'archived') {
@@ -317,13 +320,12 @@ export async function insertProjectTask(
   if (!input.project_id) {
     return { 
       data: null, 
-      error: { 
-        name: 'PostgrestError',
+      error: new PostgrestError({
         message: 'project_id is required',
         details: '',
         hint: '',
         code: 'PGRST000'
-      }
+      })
     };
   }
 
@@ -372,7 +374,7 @@ export async function updateProjectTask(
   const supabase = getSupabaseClient();
   
   // Handle completion
-  const updatePayload: Record<string, unknown> = { ...input };
+  const updatePayload: ProjectTaskUpdate = { ...input };
   if (input.completed === true || input.status === 'done') {
     updatePayload.completed = true;
     updatePayload.completed_at = new Date().toISOString();
