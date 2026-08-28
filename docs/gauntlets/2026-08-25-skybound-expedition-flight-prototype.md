@@ -882,3 +882,70 @@ Academy now has twenty real progression steps rather than five environments
 with repeated scoring labels. The next loop should give the landing zone a
 strong physical runway marker, author rank-specific course formations, and add
 mission audio/impact/Flow sound feedback before final mobile handling polish.
+
+## Physical landing mission Gauntlet loop 10 — 2026-08-28
+
+This loop turned Trainee Landing Pattern from a result-screen requirement into
+an authored course. The runway is now a destination in the world, the approach
+teaches an actual energy transition, and an early safe landing can no longer
+pass the lesson.
+
+### Runway and approach contract
+
+- Landing Pattern owns a dedicated 520–580m touchdown zone. The last 60m are
+  cleared of ordinary salvage and hazards, so the player is never asked to
+  dodge an object while flaring.
+- Three centreline approach gates descend from 30m to 8m above local terrain.
+  The final gate sits below the cruise corridor and trims the aircraft into the
+  safe touchdown-speed envelope instead of applying the usual ring boost.
+- The runway is segmented over the real Coast terrain with dark pavement,
+  edge lights, threshold bars, centreline markings, and cyan approach lamps.
+  The WebGL and compatibility renderers use the same physical zone and course
+  profile.
+- The final airborne exam gate is removed from Landing Pattern. The ground is
+  the finish: reach the zone, touch down under 58 km/h with level wings, and do
+  it before 580m.
+
+### Handling and instruction corrections
+
+- Live approach coaching appears from 170m out, counts down to the runway, and
+  switches to `TOUCHDOWN ZONE` with an explicit 58 km/h speed cue.
+- The one-tap instructor launch now uses a shallow 14-degree, 72%-thrust
+  departure for this lesson. Manual launch aiming also exposes a lower
+  10–32-degree range. Other lessons retain their existing launch calibration.
+- A landing-profile dive gets additional elevator recovery authority when the
+  pilot pulls up. This preserves the sensitive right/wrong steering model but
+  removes the unrecoverable delay found during browser play-testing.
+- Lesson evaluation requires both the 520m distance standard and a controlled
+  touchdown. An early soft landing and a fly-through now both fail.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,895 tests, 0 failures. New coverage
+  verifies an unobstructed runway, three descending centreline gates, flare-gate
+  speed reduction, recoverable pull-up authority, and early/fly-through/valid
+  landing evaluation cases.
+- Architecture guard passed with 0 violations and the same 3 allowlisted legacy
+  warnings. Production Vite build passed with the repository's existing
+  mixed-import and large-chunk warnings only; Skybound remains separately
+  emitted.
+- Live browser play reached the authored approach at roughly 360m and exposed
+  two real calibration faults before they were fixed: excessive Pattern launch
+  energy and insufficient dive-recovery authority. The replay confirmed the
+  aligned approach geometry, continuous airfield, moving 3D aircraft, impact
+  breakup, and immediate ground-contact ending. Browser console produced no
+  warnings or errors. Evidence is saved at
+  `/private/tmp/skybound-landing-approach-v10.png`.
+
+| Loop 10 gate | Score | Decision |
+| --- | ---: | --- |
+| Landing objective integrity | 9/10 | Zone plus touchdown are both mandatory |
+| Physical approach readability | 8/10 | Runway, lights, gates, and speed cue form one path |
+| Handling recoverability | 8/10 | Sensitive flight remains, but a committed recovery can work |
+| Renderer parity | 9/10 | WebGL and compatibility modes share the authored landing contract |
+| Final audiovisual polish | 7/10 | Bespoke aircraft audio and richer touchdown ceremony remain |
+
+**Gauntlet decision: pass the physical landing mission, continue toward
+10/10.** Landing Pattern is now a real lesson rather than ordinary free flight
+with a landing label. The next loop should add rank-specific sound, touchdown
+grade feedback, and authored formations for the advanced jet exams.

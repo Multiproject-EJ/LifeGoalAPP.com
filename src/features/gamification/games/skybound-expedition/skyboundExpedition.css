@@ -1031,6 +1031,52 @@
   color: #a9ffbd;
 }
 
+.skybound__landing-coach {
+  position: absolute;
+  bottom: 94px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  min-width: 190px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 16px;
+  border: 1px solid rgba(126, 239, 250, 0.64);
+  border-radius: 999px;
+  color: #ecfdff;
+  background: rgba(5, 30, 46, 0.84);
+  box-shadow: 0 0 24px rgba(67, 229, 244, 0.2);
+  transform: translateX(-50%);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  animation: skybound-coach-in 220ms ease-out both;
+}
+
+.skybound__landing-coach strong {
+  color: #8cf5ff;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+}
+
+.skybound__landing-coach span {
+  color: rgba(232, 247, 250, 0.72);
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.skybound__landing-coach.is-zone {
+  border-color: rgba(255, 223, 99, 0.76);
+  background: rgba(59, 46, 10, 0.86);
+  box-shadow: 0 0 28px rgba(255, 219, 80, 0.24);
+}
+
+.skybound__landing-coach.is-zone strong {
+  color: #ffe77f;
+}
+
 .skybound__fuel {
   width: 120px;
   padding: 7px 9px;

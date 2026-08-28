@@ -3,7 +3,9 @@ import * as THREE from 'three';
 import {
   getSkyboundCourseObjects,
   getSkyboundGroundHeight,
+  getSkyboundLandingZone,
   getSkyboundLevel,
+  type SkyboundCourseProfile,
   type SkyboundFlightState,
   type SkyboundLevelId,
 } from '../../level-worlds/services/skyboundExpeditionFlight';
@@ -21,6 +23,7 @@ interface Props {
   phase: StagePhase;
   levelId: SkyboundLevelId;
   goalDistance: number;
+  courseProfile: SkyboundCourseProfile;
   flight: SkyboundFlightState | null;
   aim: SkyboundAimView;
   sortieKey: number;
@@ -69,7 +72,7 @@ function makeCloud() {
   return group;
 }
 
-function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: number, aircraftId: SkyboundAircraftId) {
+function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: number, aircraftId: SkyboundAircraftId, courseProfile:SkyboundCourseProfile) {
   const level = getSkyboundLevel(levelId);
   const world = getSkyboundWorldPresentation(levelId);
   const facility = getSkyboundLaunchFacility(aircraftId);
@@ -355,7 +358,27 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
   world.landmarks.forEach(addLandmark);
 
   const objectMeshes = new Map<string, THREE.Object3D>();
-  for (const object of getSkyboundCourseObjects(levelId, goalDistance)) {
+  if(courseProfile==='landing'){
+    const zone=getSkyboundLandingZone(goalDistance);
+    const runwayMaterial=new THREE.MeshStandardMaterial({color:0x27333a,roughness:.9,metalness:.04});
+    const edgeMaterial=new THREE.MeshBasicMaterial({color:0xf6f0c5});
+    const thresholdMaterial=new THREE.MeshBasicMaterial({color:0xffdf67});
+    const segmentCount=8;
+    for(let segment=0;segment<segmentCount;segment+=1){
+      const startX=zone.startX+((zone.endX-zone.startX)*segment/segmentCount);
+      const endX=zone.startX+((zone.endX-zone.startX)*(segment+1)/segmentCount);
+      const centerX=(startX+endX)/2;const startY=getSkyboundGroundHeight(levelId,startX);const endY=getSkyboundGroundHeight(levelId,endX);
+      const runwaySegment=new THREE.Mesh(new THREE.BoxGeometry(zone.width,.12,endX-startX-.12),runwayMaterial);
+      runwaySegment.position.set(0,(startY+endY)/2+.08,centerX);runwaySegment.rotation.x=-Math.atan2(endY-startY,endX-startX);runwaySegment.receiveShadow=true;scene.add(runwaySegment);
+      for(const side of [-1,1]){const edge=new THREE.Mesh(new THREE.BoxGeometry(.22,.035,endX-startX-.18),edgeMaterial);edge.position.set(side*(zone.width/2-1),.08,0);runwaySegment.add(edge);}
+      if(segment%2===0){const centerline=new THREE.Mesh(new THREE.BoxGeometry(.34,.04,Math.max(1.2,(endX-startX)*.48)),edgeMaterial);centerline.position.y=.08;runwaySegment.add(centerline);}
+      if(segment===0){for(const side of [-1,1])for(let stripe=0;stripe<4;stripe+=1){const threshold=new THREE.Mesh(new THREE.BoxGeometry(1.7,.045,1.05),thresholdMaterial);threshold.position.set(side*(2.1+stripe*2.05),.085,-(endX-startX)*.27);runwaySegment.add(threshold);}}
+    }
+    const lampMaterial=new THREE.MeshStandardMaterial({color:0x9df7ff,emissive:0x29dff2,emissiveIntensity:2.2,roughness:.2});
+    for(let marker=zone.startX-90;marker<zone.startX;marker+=15){for(const side of [-1,1]){const lamp=new THREE.Mesh(new THREE.SphereGeometry(.2,8,6),lampMaterial);lamp.position.set(side*(zone.width/2+1.5),getSkyboundGroundHeight(levelId,marker)+.45,marker);scene.add(lamp);}}
+  }
+
+  for (const object of getSkyboundCourseObjects(levelId, goalDistance, courseProfile)) {
     let mesh: THREE.Object3D;
     if (object.kind === 'wind_ring') {
       const ring = new THREE.Mesh(
@@ -392,21 +415,23 @@ function addWorld(scene: THREE.Scene, levelId: SkyboundLevelId, goalDistance: nu
     objectMeshes.set(object.id, mesh);
   }
 
-  const gate = new THREE.Group();
-  const gateMaterial = new THREE.MeshStandardMaterial({ color: 0xf3ba4c, emissive: 0x704000, emissiveIntensity: 1.4, metalness: 0.35, roughness: 0.3 });
-  for (const side of [-1, 1]) {
-    const pylon = new THREE.Mesh(new THREE.BoxGeometry(1, 14, 1), gateMaterial);
-    pylon.position.set(side * 7, 7, 0);
-    gate.add(pylon);
+  if(courseProfile!=='landing'){
+    const gate = new THREE.Group();
+    const gateMaterial = new THREE.MeshStandardMaterial({ color: 0xf3ba4c, emissive: 0x704000, emissiveIntensity: 1.4, metalness: 0.35, roughness: 0.3 });
+    for (const side of [-1, 1]) {
+      const pylon = new THREE.Mesh(new THREE.BoxGeometry(1, 14, 1), gateMaterial);
+      pylon.position.set(side * 7, 7, 0);
+      gate.add(pylon);
+    }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(15, 1, 1), gateMaterial);
+    top.position.y = 14;
+    gate.add(top);
+    gate.position.z = goalDistance;
+    gate.position.y = world.groundedTrainingField
+      ? getSkyboundGroundHeight(levelId, goalDistance)
+      : level.finishAltitude - 7;
+    scene.add(gate);
   }
-  const top = new THREE.Mesh(new THREE.BoxGeometry(15, 1, 1), gateMaterial);
-  top.position.y = 14;
-  gate.add(top);
-  gate.position.z = goalDistance;
-  gate.position.y = world.groundedTrainingField
-    ? getSkyboundGroundHeight(levelId, goalDistance)
-    : level.finishAltitude - 7;
-  scene.add(gate);
 
   for (let index = 0; index < world.cloudCount; index += 1) {
     const cloud = makeCloud();
@@ -431,7 +456,7 @@ function startSoftwareFlightRenderer(
   const context=canvas.getContext('2d');
   if(!context)return()=>undefined;
   const level=getSkyboundLevel(props.levelId);
-  const course=getSkyboundCourseObjects(props.levelId,props.goalDistance);
+  const course=getSkyboundCourseObjects(props.levelId,props.goalDistance,props.courseProfile);
   let width=1;let height=1;let frame=0;
   const resize=()=>{const rect=canvas.getBoundingClientRect();const ratio=Math.min(window.devicePixelRatio||1,1.5);width=Math.max(1,rect.width);height=Math.max(1,rect.height);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);context.setTransform(ratio,0,0,ratio,0,0);};
   const observer=new ResizeObserver(resize);observer.observe(canvas);resize();
@@ -462,7 +487,7 @@ function startSoftwareFlightRenderer(
     }
     const resolved=new Set(flight?.resolvedObjectIds??[]);const visible=course.filter((object)=>!resolved.has(object.id)&&object.x>distance-8&&object.x<distance+520).sort((a,b)=>b.x-a.x);
     for(const object of visible){const p=project(object.lateralX??0,object.y,object.x);if(p.y<-100||p.y>height+120)continue;const size=Math.max(2,object.radius*p.scale*.34);if(object.kind==='wind_ring'){context.strokeStyle='#63f4ff';context.lineWidth=Math.max(2,p.scale*.22);context.shadowBlur=12;context.shadowColor='#4beeff';context.beginPath();context.ellipse(p.x,p.y,size,size,0,0,Math.PI*2);context.stroke();context.shadowBlur=0;}else if(object.kind==='salvage'){context.fillStyle='#ffe064';context.save();context.translate(p.x,p.y);context.rotate(time*.002+object.x);context.fillRect(-size*.5,-size*.5,size,size);context.restore();}else{context.fillStyle='#a83248';for(let spike=-1;spike<=1;spike+=1){context.beginPath();context.moveTo(p.x+spike*size*.45,p.y-size);context.lineTo(p.x+(spike-.45)*size*.5,p.y+size*.8);context.lineTo(p.x+(spike+.45)*size*.5,p.y+size*.8);context.fill();}}}
-    const gate=project(0,14,props.goalDistance);if(gate.depth<520){const gateSize=Math.max(7,7*gate.scale);context.strokeStyle='#ffe16d';context.lineWidth=Math.max(2,gate.scale*.28);context.strokeRect(gate.x-gateSize,gate.y-gateSize,gateSize*2,gateSize*1.4);}
+    const gate=project(0,14,props.goalDistance);if(props.courseProfile!=='landing'&&gate.depth<520){const gateSize=Math.max(7,7*gate.scale);context.strokeStyle='#ffe16d';context.lineWidth=Math.max(2,gate.scale*.28);context.strokeRect(gate.x-gateSize,gate.y-gateSize,gateSize*2,gateSize*1.4);}
     if(isBoosting()){context.strokeStyle='rgba(190,248,255,.45)';context.lineWidth=2;for(let index=0;index<12;index+=1){const x=(index*97+time*.4)%width;context.beginPath();context.moveTo(x,horizon);context.lineTo(x+(x-width/2)*.18,height);context.stroke();}}
     const planeX=width/2+(flight?.bankRad??0)*26;const planeY=height*(phase==='aiming'?.67:.72)-(flight?.pitchRad??aim.angleDeg*Math.PI/180)*12;drawAircraft(planeX,planeY,flight?.bankRad??0,flight?.pitchRad??0,Math.max(.65,Math.min(1.08,width/650)),flight?.detachedPartIds??[]);
     for(let index=0;index<(flight?.detachedPartIds.length??0);index+=1){const age=(time*.002+index*.8)%4;context.save();context.translate(planeX+(index%2?-1:1)*age*28,planeY+age*age*10);context.rotate(age*2.4);context.fillStyle=aircraftColors[props.aircraftId][index%3];context.fillRect(-9,-3,18,6);context.restore();}
@@ -493,6 +518,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       canvas,
       levelId: props.levelId,
       goalDistance: props.goalDistance,
+      courseProfile: props.courseProfile,
       aircraftId: props.aircraftId,
       assemblyLevel: props.assemblyLevel,
       getFlight: () => flightRef.current,
@@ -533,7 +559,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
       airRush.add(streak);
     }
     camera.add(airRush);
-    const { objectMeshes, worldMotion, launchMotion, launchElevation } = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId);
+    const { objectMeshes, worldMotion, launchMotion, launchElevation } = addWorld(scene, props.levelId, props.goalDistance, props.aircraftId, props.courseProfile);
     const plane = applySkyboundAircraftAssembly(createSkyboundAircraftModel(props.aircraftId),props.assemblyLevel);
     plane.scale.setScalar(props.aircraftId === 'toy_glider' ? 1.02 : props.aircraftId === 'prop_trainer' ? 1.04 : 1.08);
     scene.add(plane);
@@ -822,7 +848,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
         }
       });
     };
-  }, [props.aircraftId, props.assemblyLevel, props.goalDistance, props.levelId, props.sortieKey]);
+  }, [props.aircraftId, props.assemblyLevel, props.courseProfile, props.goalDistance, props.levelId, props.sortieKey]);
 
   return (<>
     <canvas

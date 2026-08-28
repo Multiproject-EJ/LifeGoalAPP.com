@@ -5,6 +5,7 @@ export type SkyboundFlightStatus = 'flying' | 'landed' | 'crashed' | 'finished';
 export type SkyboundTerminalReason = 'goal' | 'touchdown' | 'hard_impact' | 'integrity_failure' | null;
 export type SkyboundUpgradeKind = 'launcher' | 'airframe' | 'engine';
 export type SkyboundCourseObjectKind = 'salvage' | 'wind_ring' | 'hazard';
+export type SkyboundCourseProfile = 'standard' | 'landing';
 
 export interface SkyboundUpgrades {
   launcher: number;
@@ -42,6 +43,7 @@ export interface SkyboundLaunchInput {
   goalDistance?: number;
   aircraftId?: SkyboundAircraftId;
   assemblyLevel?: number;
+  courseProfile?: SkyboundCourseProfile;
 }
 
 export interface SkyboundCourseObject {
@@ -58,6 +60,7 @@ export interface SkyboundFlightState {
   levelId: SkyboundLevelId;
   aircraftId: SkyboundAircraftId;
   assemblyLevel: number;
+  courseProfile: SkyboundCourseProfile;
   x: number;
   y: number;
   lateralX: number;
@@ -291,7 +294,12 @@ export function getSkyboundFlowTargetSpeedKmh(aircraftId:SkyboundAircraftId,upgr
   return FLOW_SPEED_KMH[aircraftId]+(clamp(upgrades.launcher,0,5)*3)+(clamp(upgrades.engine,0,5)*4);
 }
 
-export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance = getSkyboundLevel(levelId).goalDistance): readonly SkyboundCourseObject[] {
+export function getSkyboundLandingZone(goalDistance:number) {
+  const endX=Math.max(100,goalDistance);
+  return{startX:Math.max(40,endX-60),endX,width:24};
+}
+
+export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance = getSkyboundLevel(levelId).goalDistance, courseProfile:SkyboundCourseProfile='standard'): readonly SkyboundCourseObject[] {
   const level = getSkyboundLevel(levelId);
   const authored = SKYBOUND_COURSE_OBJECTS[levelId].filter((object) => object.x <= goalDistance + 20);
   const objects = [...authored];
@@ -305,13 +313,22 @@ export function getSkyboundCourseObjects(levelId: SkyboundLevelId, goalDistance 
     objects.push({ id:`${levelId}-extended-${section}`,kind,x,y,lateralX,radius:kind==='salvage'?7:17 });
     if (kind === 'salvage') objects.push({ id:`${levelId}-extended-${section}-pair`,kind,x:x+14,y:y+4,lateralX:lateralX+2,radius:7 });
   }
+  const profiledObjects=courseProfile==='landing'
+    ? (()=>{const zone=getSkyboundLandingZone(goalDistance);const approachStart=zone.startX-92;return[
+      ...objects.filter((object)=>object.x<approachStart-24),
+      {id:`${levelId}-landing-approach-1`,kind:'wind_ring' as const,x:approachStart,y:getSkyboundGroundHeight(levelId,approachStart)+30,lateralX:0,radius:14},
+      {id:`${levelId}-landing-approach-2`,kind:'wind_ring' as const,x:zone.startX-58,y:getSkyboundGroundHeight(levelId,zone.startX-58)+16,lateralX:0,radius:13},
+      {id:`${levelId}-landing-approach-3`,kind:'wind_ring' as const,x:zone.startX-28,y:getSkyboundGroundHeight(levelId,zone.startX-28)+8,lateralX:0,radius:12},
+    ];})()
+    : objects;
   const trainingLanes = [-9, 9, -12, 12, -7, 14, -14, 7];
-  return objects.map((object) => {
+  return profiledObjects.map((object) => {
+    const isLandingApproach=courseProfile==='landing'&&object.id.includes('landing-approach');
     const laneCenter = trainingLanes[Math.floor(object.x / 90) % trainingLanes.length];
     return {
       ...object,
-      y: clamp(object.y,level.targetAltitudeMin,level.targetAltitudeMax),
-      lateralX: clamp(laneCenter + ((object.lateralX ?? 0) * 0.35), -18, 18),
+      y:isLandingApproach?object.y:clamp(object.y,level.targetAltitudeMin,level.targetAltitudeMax),
+      lateralX:isLandingApproach?0:clamp(laneCenter + ((object.lateralX ?? 0) * 0.35), -18, 18),
     };
   });
 }
@@ -360,6 +377,7 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     levelId: level.id,
     aircraftId,
     assemblyLevel,
+    courseProfile:input.courseProfile??'standard',
     x: 0,
     y: startY,
     lateralX: 0,
@@ -465,6 +483,9 @@ export function stepSkyboundFlight(
   const normalizedAirspeed=clamp(speed/Math.max(1,flowTargetSpeed),0,1.35);
   const liftAcceleration=level.gravity*(.44+normalizedAirspeed*.48)*level.liftScale*(.94+(tuning.lift-1)*.35)*assembly.lift*(1+upgrades.airframe*.015);
   const controlAcceleration = pitchInput * (7.2 + (upgrades.airframe * 0.65)) * tuning.control * assembly.control;
+  const diveRecoveryAcceleration=state.courseProfile==='landing'&&pitchInput>0&&state.vy<0
+    ? pitchInput*clamp(Math.abs(state.vy)/20,0,1)*13*tuning.control*assembly.control
+    : 0;
   const wind = getDeterministicWind(level, state.x, state.elapsedMs);
   const isBoosting = control.boost && state.fuel > 0 && assemblyLevel >= 4;
   const isStabilizing = control.stabilize === true && state.stabilizer > 0;
@@ -484,6 +505,7 @@ export function stepSkyboundFlight(
     (Math.sin(pitchRad) * boostAcceleration)
     + (Math.cos(velocityAngle) * liftAcceleration)
     + (controlAcceleration * stabilizerControlScale)
+    + diveRecoveryAcceleration
     - level.gravity
     - (state.vy * effectiveDrag * 0.5)
     - (state.vy * stabilizerDamping)
@@ -549,7 +571,7 @@ export function stepSkyboundFlight(
   let terrainImpacts = state.terrainImpacts;
   let terminalReason: SkyboundTerminalReason = null;
 
-  for (const object of getSkyboundCourseObjects(level.id, state.goalDistance)) {
+  for (const object of getSkyboundCourseObjects(level.id, state.goalDistance, state.courseProfile??'standard')) {
     if (resolvedObjectIds.includes(object.id)) continue;
     const objectDistance = getSegmentDistanceToCourseObject(state.x, state.y, x, y, state.lateralX, lateralX, object);
     const collisionDistance = getCourseObjectInteractionRadius(object) + 1.2;
@@ -574,8 +596,18 @@ export function stepSkyboundFlight(
     } else if (object.kind === 'wind_ring') {
       ringsCleared += 1;
       currentStreak += 2;
-      vx += 8 + (upgrades.airframe * 0.7);
-      vy += 2.5;
+      if(object.id.includes('landing-approach')){
+        const approachIndex=Number(object.id.charAt(object.id.length-1));
+        const approachSpeed=[25,20,15.5][Math.max(0,Math.min(2,approachIndex-1))];
+        vx=Math.min(vx,approachSpeed);
+        vy=Math.max(vy,approachIndex===3?-3.8:approachIndex===2?-5:-6);
+        pitchRad*=approachIndex===3?.5:.72;
+        bankRad*=.55;
+        lateralVelocity*=.45;
+      }else{
+        vx += 8 + (upgrades.airframe * 0.7);
+        vy += 2.5;
+      }
       stabilizer = Math.min(stabilizerCapacity, stabilizer + 0.2);
     } else {
       hazardHits += 1;

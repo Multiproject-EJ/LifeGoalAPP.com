@@ -42,6 +42,7 @@ function flightResult(options: {
     ringsCleared: options.rings,
     hazardHits: options.hazards,
     smoothFlightMs: 12_000,
+    goalDistance: 2_000,
   };
 }
 
@@ -118,9 +119,10 @@ export const skyboundPilotAcademyTests: TestCase[] = [
       assert(!missedFlow.passed&&heldFlow.passed,'Energy Turns should require four complete seconds of Flow');
 
       const landingBase=flightResult({distance:540,salvage:8,rings:3,hazards:0});
+      const landedEarly=evaluateSkyboundLesson('trainee_landing',{...landingBase,x:500,status:'landed',terminalReason:'touchdown'});
       const flewPast=evaluateSkyboundLesson('trainee_landing',{...landingBase,status:'finished',terminalReason:'goal'});
       const touchedDown=evaluateSkyboundLesson('trainee_landing',{...landingBase,status:'landed',terminalReason:'touchdown'});
-      assert(!flewPast.passed&&touchedDown.passed,'Landing Pattern should require a controlled touchdown instead of a fly-through');
+      assert(!landedEarly.passed&&!flewPast.passed&&touchedDown.passed,'Landing Pattern should require reaching the zone and a controlled touchdown instead of an early landing or fly-through');
     },
   },
   {

@@ -5,6 +5,7 @@ import {
   createSkyboundFlight,
   getSkyboundFlowTargetSpeedKmh,
   getSkyboundCourseObjects,
+  getSkyboundLandingZone,
   getSkyboundUpgradeCost,
   scoreSkyboundFlight,
   stepSkyboundFlight,
@@ -168,6 +169,27 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
     },
   },
   {
+    name: 'clears a descending approach corridor and touchdown zone for landing lessons',
+    run: () => {
+      const goalDistance=580;
+      const zone=getSkyboundLandingZone(goalDistance);
+      const approach=getSkyboundCourseObjects('coast',goalDistance,'landing');
+      const approachRings=approach.filter((object)=>object.id.includes('landing-approach'));
+      assert(zone.startX===520&&zone.endX===580,'Landing Pattern should expose its declared 520–580m runway zone');
+      assert(approachRings.length===3,'landing profile should provide three descending approach gates');
+      assert(approachRings.every((object,index)=>index===0||object.y<approachRings[index-1].y),'approach gates should descend toward the runway');
+      assert(approachRings.every((object)=>object.lateralX===0),'landing approach gates should align with the runway centerline');
+      assert(approachRings[2].y<SKYBOUND_LEVELS[1].targetAltitudeMin,'the flare gate should descend below the cruise corridor');
+      assert(approach.every((object)=>object.x<zone.startX),'no airborne course object may obstruct the touchdown zone');
+      const flight=createSkyboundFlight({power:1,angleDeg:35,upgrades:SKYBOUND_STARTER_UPGRADES,levelId:'coast',goalDistance,aircraftId:'prop_trainer',assemblyLevel:4,courseProfile:'landing'});
+      assert(flight.courseProfile==='landing','landing profile should survive in the deterministic flight state');
+      const flareGate=approachRings[2];
+      const stabilized=stepSkyboundFlight({...flight,x:flareGate.x-1,y:flareGate.y,vx:30,vy:-2,pitchRad:.18}, {pitch:0,steer:0,boost:false,stabilize:false}, SKYBOUND_STARTER_UPGRADES, 50);
+      assert(stabilized.ringsCleared===1,'crossing the flare gate should clear it');
+      assert(stabilized.vx<=15.5,'the flare gate should bleed speed into the safe touchdown envelope');
+    },
+  },
+  {
     name: 'gives every level a deterministic world identity with multiple visual anchors',
     run: () => {
       const signatures = SKYBOUND_LEVELS.map((level) => {
@@ -313,6 +335,27 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(Math.abs(stable.vy) < Math.abs(free.vy), 'Stabilizer should damp vertical velocity');
       assert(stable.stabilizer < start.stabilizer, 'active Stabilizer should consume its bounded meter');
       assert(start.stabilizer === 1, 'Stabilizer must not mutate prior state');
+    },
+  },
+  {
+    name: 'gives a descending pilot enough elevator authority to recover before terrain',
+    run: () => {
+      const start={
+        ...createSkyboundFlight({power:.72,angleDeg:14,upgrades:SKYBOUND_STARTER_UPGRADES,levelId:'coast',aircraftId:'prop_trainer',courseProfile:'landing'}),
+        x:180,
+        y:105,
+        vx:34,
+        vy:-22,
+        pitchRad:-.45,
+      };
+      let neutral=start;
+      let recovering=start;
+      for(let step=0;step<8;step+=1){
+        neutral=stepSkyboundFlight(neutral,{pitch:0,boost:false},SKYBOUND_STARTER_UPGRADES,50);
+        recovering=stepSkyboundFlight(recovering,{pitch:1,boost:false},SKYBOUND_STARTER_UPGRADES,50);
+      }
+      assert(recovering.vy>neutral.vy+5,'pulling up in a dive should produce a clearly recoverable flight path');
+      assert(recovering.status==='flying','recovery authority should not force an artificial terminal state');
     },
   },
   {
