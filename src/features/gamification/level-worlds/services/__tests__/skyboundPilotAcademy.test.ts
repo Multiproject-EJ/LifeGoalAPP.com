@@ -41,6 +41,7 @@ function flightResult(options: {
     salvageCollected: options.salvage,
     ringsCleared: options.rings,
     hazardHits: options.hazards,
+    smoothFlightMs: 12_000,
   };
 }
 
@@ -106,6 +107,20 @@ export const skyboundPilotAcademyTests: TestCase[] = [
       const passive = evaluateSkyboundLesson('cadet_gates', flightResult({ distance: 270, salvage: 6, rings: 0, hazards: 0 }));
       assert(passive.standardsMet === 2, 'passive flight should still report its two completed standards');
       assert(!passive.passed, 'missing the precision gate objective must require retraining');
+    },
+  },
+  {
+    name: 'makes energy and landing lessons require their named flying skill',
+    run: () => {
+      const energyBase=flightResult({distance:510,salvage:8,rings:3,hazards:0});
+      const missedFlow=evaluateSkyboundLesson('trainee_energy',{...energyBase,smoothFlightMs:3_900});
+      const heldFlow=evaluateSkyboundLesson('trainee_energy',{...energyBase,smoothFlightMs:4_000});
+      assert(!missedFlow.passed&&heldFlow.passed,'Energy Turns should require four complete seconds of Flow');
+
+      const landingBase=flightResult({distance:540,salvage:8,rings:3,hazards:0});
+      const flewPast=evaluateSkyboundLesson('trainee_landing',{...landingBase,status:'finished',terminalReason:'goal'});
+      const touchedDown=evaluateSkyboundLesson('trainee_landing',{...landingBase,status:'landed',terminalReason:'touchdown'});
+      assert(!flewPast.passed&&touchedDown.passed,'Landing Pattern should require a controlled touchdown instead of a fly-through');
     },
   },
   {

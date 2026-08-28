@@ -818,3 +818,67 @@ and the first three ranks visually progress through grounded school worlds. The
 next fidelity loop should tune sustained touch control on a real phone, deepen
 the obstacle/landing missions, and replace the broadest procedural landmarks
 with bespoke production assets and sound.
+
+## Distinct lesson objectives Gauntlet loop 9 — 2026-08-28
+
+This loop preserved the five-rank, twenty-lesson Academy structure while making
+named lessons demand their named skill. It also exposed those requirements live
+instead of revealing them only after a sortie ended.
+
+### Curriculum and evaluation contract
+
+- The event contains exactly 20 lessons: five aircraft ranks with three drills
+  and one exam each. The five worlds remain Meadow, Coast, Canyon, Storm, and
+  Stratosphere; a world is a rank environment, while each lesson is a separate
+  unlock, ticketed attempt, evaluation, and recorded completion.
+- Lesson standards now support sustained Flow and controlled landing in
+  addition to distance, rings, salvage, and impact limits. These remain pure
+  Academy evaluation rules and add no React gameplay authority.
+- Cadet Field Crosswind requires 3s Flow, Trainee Energy Turns requires 4s,
+  Elite Crosswind requires 6s, and Ace Supersonic Gates requires 8s. Their
+  starred core skill can no longer be passed through passive distance and
+  safety alone.
+- Trainee Landing Pattern now requires reaching the 520m landing zone and then
+  making a controlled touchdown before the 580m final marker. Flying through
+  the goal without landing fails the core skill. Gold Formation now requires
+  collecting the twelve ceremonial crests rather than treating it as another
+  ring lesson.
+
+### Live mission checklist
+
+- Every sortie now displays `LESSON n/20 · LIVE` with three updating standards.
+  The required core skill has a gold star, completed standards turn green, and
+  progress uses skill-specific units such as metres, Flow seconds, impacts, or
+  `LAND SAFELY` / `TOUCHDOWN`.
+- The checklist occupies the upper-right instrument area below salvage/ring/
+  integrity pills. It stays separate from the centre flight director and the
+  upper-left telemetry block, preserving the chase-camera play window.
+
+### Evidence and decision
+
+- Full Island Run service suite passed: 1,893 tests, 0 failures. New coverage
+  proves that 3.9s fails the 4s Energy Turns core while 4.0s passes, and that a
+  fly-through fails Landing Pattern while the same flight with controlled
+  touchdown passes.
+- Focused TypeScript compilation passed. Architecture guard passed with 0
+  violations and the same 3 allowlisted legacy warnings. Production Vite build
+  passed with existing mixed-import and large-chunk warnings only.
+- Browser replay confirmed the current lesson briefing, instructor copy, live
+  checklist, core-star hierarchy, and correct initial progress for Energy Turns
+  and Landing Pattern. Browser console produced no warnings or errors.
+- Evidence is saved at `/private/tmp/skybound-flow-mission-v9.png` and
+  `/private/tmp/skybound-landing-mission-v9.png`.
+
+| Loop 9 gate | Score | Decision |
+| --- | ---: | --- |
+| Twenty-lesson progression clarity | 9/10 | Exact lesson number and live requirements are always visible |
+| Mechanical lesson differentiation | 8/10 | Flow, landing, rings, crests, distance, and safety now gate different drills |
+| Landing-school integrity | 8/10 | Controlled touchdown is an actual pass requirement |
+| HUD information hierarchy | 8/10 | Objectives remain readable without obscuring flight control |
+| Mission variety depth | 7/10 | More authored formations, landing strips, and storm events remain |
+
+**Gauntlet decision: pass lesson differentiation, continue toward 10/10.** The
+Academy now has twenty real progression steps rather than five environments
+with repeated scoring labels. The next loop should give the landing zone a
+strong physical runway marker, author rank-specific course formations, and add
+mission audio/impact/Flow sound feedback before final mobile handling polish.
