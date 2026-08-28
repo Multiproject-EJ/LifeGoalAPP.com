@@ -1100,3 +1100,63 @@ repository-wide TypeScript release gate, reconcile the two dry-merge conflict
 blocks with current `main`, then build and sync the Capacitor wrapper for a
 real-device landing, sound, and WebGL pass. Deployment, merge, and native
 publication remain explicit approval boundaries.
+
+## Shared build-gate repair Gauntlet loop 13 — 2026-08-28
+
+This loop removed the repository-wide compiler failure that blocked both the
+PWA deployment workflow and the existing Capacitor iOS sync script. It did not
+merge, deploy, copy the web bundle into iOS, or publish a native build.
+
+### Schema and Supabase client alignment
+
+- The checked-in database definition now reflects migrations 0178 and 0184:
+  goals expose `goal_strategy_type`, while commitment contracts expose
+  `tracking_mode` and `self_reported_outcome` across Row, Insert, and Update.
+- Demo and offline goal construction now supplies the database-backed
+  `standard` strategy default, keeping development state aligned with the
+  non-null production column.
+- Actions, projects, project tasks, and Today todos now send their generated
+  table Update types to Supabase instead of unbounded
+  `Record<string, unknown>` payloads. This preserves strict excess-property
+  checks rather than bypassing the newer PostgREST client contract.
+- Synthetic authentication, validation, and translated outage errors now use
+  the current `PostgrestError` class, including its required `toJSON`
+  behaviour, instead of incomplete object literals.
+
+### Evidence and release boundary
+
+- Full repository `tsc -b --pretty false` passed with zero errors. The same
+  gate previously failed in goals, contracts, actions, projects, routines,
+  notifications, and Today services.
+- Production Vite build passed: 1,337 modules transformed and Skybound emitted
+  as its own 102.00 kB minified chunk. Existing mixed-import and large-chunk
+  warnings remain informational and unchanged in character.
+- Full Island Run service suite passed: 1,898 tests, 0 failures. Architecture
+  guard passed with 0 violations and the same 3 allowlisted legacy warnings.
+  Today todos, demo/cloud routing, auth resilience, service resilience, and
+  goal pillar suites also passed.
+- The Playwright app-boot smoke check skipped because its configured Chromium
+  binary is absent; it is recorded as not run rather than a pass. Loop 12's
+  in-app-browser evaluator replay remains the current browser evidence.
+- The dry merge still contains two conflict blocks, both in the runtime-state
+  store: current `main` adds Vault Rush while this branch adds Skybound. The
+  intended reconciliation is additive—retain both imports and both selected
+  persistence fields—but merging remains an explicit approval boundary.
+- Xcode 26.6 and the Capacitor project are present. `ios/App/App/public` is
+  still absent, confirming no current web bundle has been copied into the
+  native wrapper. The next native action is therefore a deliberate Capacitor
+  sync followed by simulator/device QA, not an App Store publication.
+
+| Loop 13 gate | Score | Decision |
+| --- | ---: | --- |
+| Repository compiler | 10/10 | Full TypeScript project graph is green |
+| PWA production bundle | 9/10 | Bundle succeeds; existing size warnings remain |
+| Regression confidence | 9/10 | 1,898 Island tests and affected service suites pass |
+| Main reconciliation | 8/10 | Two additive conflict blocks are identified, not yet merged |
+| Capacitor iOS readiness | 7/10 | Toolchain exists; sync and physical-device QA remain |
+
+**Gauntlet decision: pass the shared build-gate repair, hold release actions
+for approval.** The branch is ready for a deliberate reconciliation with
+`main`. After that merge is verified, the safe sequence is PWA production
+build, Capacitor iOS sync, simulator launch, physical-device audio/WebGL/touch
+flight pass, and only then a separate deployment/publication decision.

@@ -211,6 +211,7 @@ const defaultState: DemoState = {
       environment_context: null,
       environment_score: null,
       environment_last_audited_at: null,
+      goal_strategy_type: 'standard',
     },
     {
       id: createId('goal'),
@@ -235,6 +236,7 @@ const defaultState: DemoState = {
       environment_context: null,
       environment_score: null,
       environment_last_audited_at: null,
+      goal_strategy_type: 'standard',
     },
     {
       id: createId('goal'),
@@ -258,6 +260,7 @@ const defaultState: DemoState = {
       environment_context: null,
       environment_score: null,
       environment_last_audited_at: null,
+      goal_strategy_type: 'standard',
     },
   ],
   habits: [],
@@ -1149,6 +1152,7 @@ function normalizeGoalRow(goal: GoalRow): GoalRow {
     environment_context: goal.environment_context ?? null,
     environment_score: goal.environment_score ?? null,
     environment_last_audited_at: goal.environment_last_audited_at ?? null,
+    goal_strategy_type: goal.goal_strategy_type ?? 'standard',
   };
 }
 
@@ -1363,6 +1367,7 @@ export function addDemoGoal(payload: GoalInsert): GoalRow {
     environment_context: payload.environment_context ?? null,
     environment_score: payload.environment_score ?? null,
     environment_last_audited_at: payload.environment_last_audited_at ?? null,
+    goal_strategy_type: payload.goal_strategy_type ?? 'standard',
   });
 
   updateState((current) => ({ ...current, goals: [record, ...current.goals] }));

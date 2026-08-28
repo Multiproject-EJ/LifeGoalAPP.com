@@ -14,7 +14,7 @@
  * are idempotent (upsert by id).
  */
 
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { guardedCloudCall, type AppError, type ServiceKind } from './service-health';
 import type { ServiceHealthManager } from './service-health';
 import { getMutationQueue, type MutationQueue } from './offline-queue';
@@ -36,13 +36,12 @@ export function shouldQueueAfterFailure(error: AppError): boolean {
 
 /** Translated AppError → PostgrestError-shaped object for legacy signatures. */
 export function toPostgrestError(appError: AppError): PostgrestError {
-  return {
-    name: 'PostgrestError',
+  return new PostgrestError({
     code: appError.code,
     details: '',
     hint: '',
     message: appError.explanation,
-  } as PostgrestError;
+  });
 }
 
 export type WriteThroughOutcome<T> =

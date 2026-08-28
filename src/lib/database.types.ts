@@ -377,6 +377,7 @@ export interface Database {
           environment_context: Json | null;
           environment_score: number | null;
           environment_last_audited_at: string | null;
+          goal_strategy_type: string;
         };
         Insert: {
           id?: string;
@@ -400,6 +401,7 @@ export interface Database {
           environment_context?: Json | null;
           environment_score?: number | null;
           environment_last_audited_at?: string | null;
+          goal_strategy_type?: string;
         };
         Update: {
           id?: string;
@@ -423,6 +425,7 @@ export interface Database {
           environment_context?: Json | null;
           environment_score?: number | null;
           environment_last_audited_at?: string | null;
+          goal_strategy_type?: string;
         };
         Relationships: [];
       };
@@ -1709,7 +1712,9 @@ export interface Database {
           grace_days: number;
           cooling_off_hours: number;
           status: 'locked' | 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+          tracking_mode: 'progress' | 'outcome_only';
           current_progress: number;
+          self_reported_outcome: 'success' | 'miss' | null;
           miss_count: number;
           success_count: number;
           reset_count: number;
@@ -1760,7 +1765,9 @@ export interface Database {
           grace_days?: number;
           cooling_off_hours?: number;
           status: 'locked' | 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+          tracking_mode?: 'progress' | 'outcome_only';
           current_progress?: number;
+          self_reported_outcome?: 'success' | 'miss' | null;
           miss_count?: number;
           success_count?: number;
           reset_count?: number;
@@ -1811,7 +1818,9 @@ export interface Database {
           grace_days?: number;
           cooling_off_hours?: number;
           status?: 'locked' | 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+          tracking_mode?: 'progress' | 'outcome_only';
           current_progress?: number;
+          self_reported_outcome?: 'success' | 'miss' | null;
           miss_count?: number;
           success_count?: number;
           reset_count?: number;
