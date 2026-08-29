@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { Water } from 'three/addons/objects/Water.js';
 import type {
   VaultIslandQuality,
   VaultTreasureIslandOptions,
@@ -96,14 +98,46 @@ function createPalaceShellGeometry() {
   return geometry;
 }
 
+function createCalmWaterNormalTexture(size = 128) {
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const u = (x / size) * Math.PI * 2;
+      const v = (y / size) * Math.PI * 2;
+      const nx = Math.cos(u * 2.0 + Math.sin(v * 1.5)) * 0.22 + Math.cos(v * 3.0) * 0.08;
+      const nz = Math.sin(v * 2.0 + Math.cos(u * 1.25)) * 0.2 + Math.sin(u * 3.5) * 0.07;
+      const normal = new THREE.Vector3(nx, 1, nz).normalize();
+      const offset = (y * size + x) * 4;
+      data[offset] = Math.round((normal.x * 0.5 + 0.5) * 255);
+      data[offset + 1] = Math.round((normal.z * 0.5 + 0.5) * 255);
+      data[offset + 2] = Math.round((normal.y * 0.5 + 0.5) * 255);
+      data[offset + 3] = 255;
+    }
+  }
+  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat, THREE.UnsignedByteType);
+  texture.name = 'vault-v2-calm-water-normal-field';
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function createMaterials() {
   const hammered = createVaultSurfacePatternTexture('vault-v2-hammered-metal', 'hammered-metal', 7, 7);
   const marbleVein = createVaultSurfacePatternTexture('vault-v2-marble-vein', 'marble-vein', 3.5, 5.5);
   const cutStone = createVaultSurfacePatternTexture('vault-v2-cut-stone', 'cut-stone', 8, 5);
   const materials = {
-    ocean: new THREE.MeshPhysicalMaterial({ color: '#183f52', roughness: 0.2, metalness: 0.04, transmission: 0.08, thickness: 0.25, clearcoat: 0.88, clearcoatRoughness: 0.14, envMapIntensity: 1.18, transparent: true, opacity: 0.24, depthWrite: false }),
+    seabed: new THREE.MeshStandardMaterial({ color: '#168f9d', roughness: 0.92, metalness: 0 }),
+    reefSand: new THREE.MeshStandardMaterial({ color: '#7ac7b7', roughness: 0.86, metalness: 0, transparent: true, opacity: 0.5 }),
     foam: new THREE.MeshBasicMaterial({ color: '#d9fbff', transparent: true, opacity: 0.46, blending: THREE.AdditiveBlending, depthWrite: false }),
+    sunDisc: new THREE.MeshBasicMaterial({ color: '#fff3c2', fog: false, toneMapped: false }),
+    sunHalo: new THREE.MeshBasicMaterial({ color: '#ffc987', fog: false, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    cloudWarm: new THREE.MeshStandardMaterial({ color: '#f4d4c0', roughness: 1, metalness: 0, transparent: true, opacity: 0.46, depthWrite: false }),
+    cloudShadow: new THREE.MeshStandardMaterial({ color: '#91aeb4', roughness: 1, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false }),
     rock: new THREE.MeshStandardMaterial({ color: '#59636a', roughness: 0.86, metalness: 0.02 }),
+    horizonRock: new THREE.MeshStandardMaterial({ color: '#2f5c5b', roughness: 0.92, metalness: 0, emissive: '#173b36', emissiveIntensity: 0.14 }),
+    horizonGreen: new THREE.MeshStandardMaterial({ color: '#214f41', roughness: 0.96, metalness: 0 }),
     stone: new THREE.MeshPhysicalMaterial({ color: '#f0eadf', roughness: 0.52, bumpMap: cutStone, bumpScale: 0.045, envMapIntensity: 0.65 }),
     stoneShade: new THREE.MeshStandardMaterial({ color: '#aaa69f', roughness: 0.78, bumpMap: cutStone, bumpScale: 0.06 }),
     marble: new THREE.MeshPhysicalMaterial({ color: '#fff8e8', roughness: 0.27, metalness: 0.02, clearcoat: 0.42, clearcoatRoughness: 0.18, bumpMap: marbleVein, bumpScale: 0.026, envMapIntensity: 1.08 }),
@@ -130,6 +164,8 @@ function addBoat(root: THREE.Group, materials: Materials, x: number, z: number, 
   const boat = new THREE.Group();
   boat.name = 'vault-v2-sailboat';
   boat.position.set(x, -0.18, z);
+  boat.userData.basePosition = boat.position.clone();
+  boat.userData.phase = Math.abs(x * 0.71 + z * 0.43);
   boat.rotation.y = rotation;
   boat.scale.setScalar(scale);
   const hull = mesh(new THREE.CapsuleGeometry(0.09, 0.42, 4, 8), materials.darkGold, 'vault-v2-boat-hull');
@@ -143,53 +179,188 @@ function addBoat(root: THREE.Group, materials: Materials, x: number, z: number, 
   sail.rotation.z = -Math.PI / 2;
   boat.add(sail);
   root.add(boat);
+  return boat;
+}
+
+function addCloudBank(
+  root: THREE.Group,
+  materials: Materials,
+  quality: VaultIslandQuality,
+  position: readonly [number, number, number],
+  scale: number,
+  phase: number,
+) {
+  const cloud = new THREE.Group();
+  cloud.name = 'vault-v2-animated-three-dimensional-cloud-bank';
+  cloud.position.set(...position);
+  cloud.userData.basePosition = cloud.position.clone();
+  cloud.userData.phase = phase;
+  const puffCount = quality === 'low' ? 4 : quality === 'medium' ? 6 : 8;
+  for (let index = 0; index < puffCount; index += 1) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.62 + (index % 3) * 0.16,
+        segments(quality, 8, 12, 18),
+        segments(quality, 6, 8, 12),
+      ),
+      index % 4 === 0 ? materials.cloudShadow : materials.cloudWarm,
+    );
+    puff.name = 'vault-v2-soft-volumetric-cloud-puff';
+    puff.position.set(
+      (index - (puffCount - 1) * 0.5) * 0.54,
+      Math.sin(index * 1.43 + phase) * 0.2,
+      Math.cos(index * 1.17 + phase) * 0.18,
+    );
+    puff.scale.set(1.2, 0.38 + (index % 2) * 0.12, 0.62);
+    puff.castShadow = false;
+    puff.receiveShadow = false;
+    cloud.add(puff);
+  }
+  cloud.scale.setScalar(scale);
+  root.add(cloud);
+  return cloud;
 }
 
 function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
-  const ocean = mesh(new THREE.CircleGeometry(10, segments(quality, 64, 96, 128)), materials.ocean, 'vault-v2-ocean');
+  const sunDirection = new THREE.Vector3(0.35, 0.1, -0.93).normalize();
+  const sky = new Sky();
+  sky.name = 'vault-v2-three-dimensional-sunset-sky-dome';
+  sky.scale.setScalar(10000);
+  sky.frustumCulled = false;
+  const skyMaterial = sky.material as THREE.ShaderMaterial;
+  skyMaterial.uniforms.turbidity.value = 5.2;
+  skyMaterial.uniforms.rayleigh.value = 2.0;
+  skyMaterial.uniforms.mieCoefficient.value = 0.005;
+  skyMaterial.uniforms.mieDirectionalG.value = 0.82;
+  skyMaterial.uniforms.sunPosition.value.copy(sunDirection).multiplyScalar(1000);
+  skyMaterial.uniforms.cloudScale.value = 0.001;
+  skyMaterial.uniforms.cloudSpeed.value = 0.018;
+  skyMaterial.uniforms.cloudCoverage.value = 0.58;
+  skyMaterial.uniforms.cloudDensity.value = 0.7;
+  skyMaterial.uniforms.cloudElevation.value = 0.46;
+  skyMaterial.uniforms.showSunDisc.value = 0;
+  root.add(sky);
+
+  const sunsetSun = new THREE.Mesh(
+    new THREE.SphereGeometry(0.42, segments(quality, 12, 18, 24), segments(quality, 8, 12, 16)),
+    materials.sunDisc,
+  );
+  sunsetSun.name = 'vault-v2-three-dimensional-sunset-sun';
+  sunsetSun.position.set(4, 5, -15);
+  sunsetSun.castShadow = false;
+  sunsetSun.receiveShadow = false;
+  sunsetSun.renderOrder = 10;
+  const sunsetHalo = new THREE.Mesh(
+    new THREE.SphereGeometry(1.05, segments(quality, 12, 18, 24), segments(quality, 8, 12, 16)),
+    materials.sunHalo,
+  );
+  sunsetHalo.name = 'vault-v2-three-dimensional-sunset-halo';
+  sunsetHalo.position.copy(sunsetSun.position);
+  sunsetHalo.castShadow = false;
+  sunsetHalo.receiveShadow = false;
+  sunsetHalo.renderOrder = 11;
+  root.add(sunsetSun, sunsetHalo);
+
+  const seabed = mesh(
+    new THREE.PlaneGeometry(180, 180, 1, 1),
+    materials.seabed,
+    'vault-v2-submerged-crystalline-seabed',
+  );
+  seabed.rotation.x = -Math.PI / 2;
+  seabed.position.y = -1.45;
+  seabed.castShadow = false;
+  seabed.receiveShadow = false;
+  root.add(seabed);
+  const reefPatches = [
+    [-8, 8, 3.8, 1.8], [7.5, 10, 4.4, 2.1], [-10, -2, 3.1, 1.5],
+    [9.5, -4, 3.6, 1.7], [-3, 14, 2.8, 1.3], [2.2, 13.5, 5.2, 2.5],
+  ] as const;
+  reefPatches.forEach(([x, z, width, depth], index) => {
+    const reef = mesh(
+      new THREE.CircleGeometry(1, segments(quality, 20, 28, 36)),
+      materials.reefSand,
+      'vault-v2-submerged-sunlit-reef-patch',
+    );
+    reef.rotation.x = -Math.PI / 2;
+    reef.rotation.z = index * 0.74;
+    reef.scale.set(width, depth, 1);
+    reef.position.set(x, -1.4 + (index % 2) * 0.015, z);
+    reef.castShadow = false;
+    reef.receiveShadow = false;
+    root.add(reef);
+  });
+
+  const waterNormals = createCalmWaterNormalTexture(quality === 'low' ? 64 : 128);
+  const ocean = new Water(new THREE.PlaneGeometry(180, 180, 1, 1), {
+    textureWidth: quality === 'low' ? 128 : 256,
+    textureHeight: quality === 'low' ? 128 : 256,
+    waterNormals,
+    sunDirection,
+    sunColor: '#ffd29a',
+    waterColor: '#25a6aa',
+    distortionScale: 0.62,
+    alpha: 0.74,
+    fog: true,
+  });
+  ocean.name = 'vault-v2-ocean';
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.y = -0.34;
+  ocean.castShadow = false;
+  ocean.receiveShadow = true;
+  ocean.material.transparent = true;
+  ocean.material.depthWrite = false;
+  (ocean.material as THREE.ShaderMaterial).uniforms.size.value = 0.82;
   root.add(ocean);
-  const waveCount = quality === 'low' ? 10 : 22;
+  const waveCount = quality === 'low' ? 8 : 16;
   for (let index = 0; index < waveCount; index += 1) {
     const foamMaterial = materials.foam.clone();
-    foamMaterial.opacity = 0.16 + (index % 4) * 0.055;
+    foamMaterial.opacity = 0.1 + (index % 4) * 0.035;
     const arcRadius = 3.05 + (index % 8) * 0.62;
     const arc = 0.42 + (index % 5) * 0.11;
-    const foam = mesh(new THREE.TorusGeometry(arcRadius, 0.012 + (index % 3) * 0.006, 5, segments(quality, 28, 42, 60), arc), foamMaterial, 'vault-v2-natural-ocean-wave-arc');
+    const foam = mesh(new THREE.TorusGeometry(arcRadius, 0.008 + (index % 3) * 0.004, 5, segments(quality, 28, 42, 60), arc), foamMaterial, 'vault-v2-natural-ocean-wave-arc');
     foam.rotation.x = -Math.PI / 2;
-    foam.rotation.z = ((index * 2.399) % (Math.PI * 2));
+    foam.rotation.z = (index * 2.399) % (Math.PI * 2);
     foam.position.set(Math.sin(index * 1.73) * 0.7, -0.31 + (index % 3) * 0.003, Math.cos(index * 1.37) * 0.5);
+    foam.userData.phase = index * 0.63;
     root.add(foam);
   }
-  const distant = [[-5.8, -1.5, 1.05], [5.6, -2.1, 0.82], [-4.9, 4.4, 0.7], [4.7, 4.9, 0.9]] as const;
+  const distant = [[-9.2, -10.5, 0.72], [9.0, -10.8, 0.68], [-10.2, -3.4, 0.48], [9.8, -2.8, 0.52]] as const;
   distant.forEach(([x, z, scale], islandIndex) => {
-    const island = cylinder(0.36 * scale, 0.58 * scale, 0.15, 10, materials.rock, 'vault-v2-distant-island');
-    island.position.set(x, -0.22, z);
+    const island = mesh(new THREE.SphereGeometry(0.64, 12, 7), materials.horizonRock, 'vault-v2-distant-island');
+    island.scale.set(1.15 * scale, 0.28 * scale, 0.72 * scale);
+    island.position.set(x, -0.27, z);
     root.add(island);
     for (let index = 0; index < 3; index += 1) {
-      const crown = mesh(new THREE.ConeGeometry(0.1 * scale, 0.32 * scale, 7), materials.gardenDark, 'vault-v2-distant-tree');
-      crown.position.set(x + (index - 1) * 0.16, -0.02, z + ((index + islandIndex) % 2) * 0.08);
+      const crown = mesh(new THREE.SphereGeometry(0.11 * scale, 8, 6), materials.horizonGreen, 'vault-v2-distant-tree');
+      crown.scale.set(1.1, 0.85, 1);
+      crown.position.set(x + (index - 1) * 0.2, 0.02, z + ((index + islandIndex) % 2) * 0.1);
       root.add(crown);
     }
   });
-  const horizonIslands = [[-5.2, -6.8, 1.25], [-2.7, -7.4, 0.92], [2.8, -7.1, 1.05], [5.4, -6.6, 1.38]] as const;
+  const horizonIslands = [[-7.4, -13.2, 1.9], [-3.1, -16.4, 1.25], [3.2, -16.2, 1.4], [7.7, -12.8, 2.0]] as const;
   horizonIslands.forEach(([x, z, scale], islandIndex) => {
-    const rock = cylinder(0.55 * scale, 0.94 * scale, 0.38 * scale, 12, materials.rock, 'vault-v2-horizon-cliff-island');
-    rock.position.set(x, -0.18, z);
+    const rock = mesh(new THREE.SphereGeometry(0.78, 14, 8), materials.horizonRock, 'vault-v2-horizon-cliff-island');
+    rock.scale.set(1.35 * scale, 0.32 * scale, 0.76 * scale);
+    rock.position.set(x, -0.22, z);
     root.add(rock);
     for (let peak = 0; peak < 3; peak += 1) {
-      const mountain = mesh(new THREE.ConeGeometry((0.38 - peak * 0.07) * scale, (0.8 + peak * 0.18) * scale, 7), materials.stoneShade, 'vault-v2-horizon-mountain-peak');
-      mountain.position.set(x + (peak - 1) * 0.34 * scale, 0.28 + peak * 0.08, z + ((peak + islandIndex) % 2) * 0.16);
+      const mountain = mesh(new THREE.DodecahedronGeometry(0.42 * scale, 1), materials.horizonRock, 'vault-v2-horizon-mountain-peak');
+      mountain.scale.set(1.05 - peak * 0.12, 1.18 + peak * 0.18, 0.86);
+      mountain.position.set(x + (peak - 1) * 0.48 * scale, 0.18 + peak * 0.1, z + ((peak + islandIndex) % 2) * 0.2);
       root.add(mountain);
-      const tree = mesh(new THREE.ConeGeometry(0.09 * scale, 0.34 * scale, 7), materials.gardenDark, 'vault-v2-horizon-cypress');
-      tree.position.set(x + (peak - 1) * 0.27 * scale, 0.64 + peak * 0.08, z - 0.18);
+      const tree = mesh(new THREE.SphereGeometry(0.15 * scale, 8, 6), materials.horizonGreen, 'vault-v2-horizon-cypress');
+      tree.scale.set(1.2, 0.78, 1);
+      tree.position.set(x + (peak - 1) * 0.38 * scale, 0.55 + peak * 0.09, z - 0.24);
       root.add(tree);
     }
   });
+  addCloudBank(root, materials, quality, [-8.5, 5.0, -15], 0.82, 0.4);
+  addCloudBank(root, materials, quality, [-1.5, 6.3, -20], 0.62, 1.8);
+  addCloudBank(root, materials, quality, [4.2, 4.8, -16], 0.52, 3.1);
   addBoat(root, materials, -4.1, 3.15, 0.9, -0.55);
   addBoat(root, materials, 4.25, 2.65, 0.62, 0.68);
   addBoat(root, materials, -3.45, -1.85, 0.52, 0.12);
+  return { ocean, sky, waterNormals };
 }
 
 function addRockAndMasonry(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
@@ -1200,7 +1371,7 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
   root.userData.palaceReady = false;
   const materialSet = createMaterials();
   const { materials, textures } = materialSet;
-  addEnvironment(root, materials, quality);
+  const environment = addEnvironment(root, materials, quality);
   addRockAndMasonry(root, materials, quality);
   addInhabitedGalleries(root, materials, quality);
   addGrandVaultPortal(root, materials, quality);
@@ -1279,23 +1450,51 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
     );
   }
   addWarmLights(root, quality);
-  const ocean = root.getObjectByName('vault-v2-ocean');
   const bracelet = root.getObjectByName('vault-v2-articulated-charm-bracelet');
   const charms: THREE.Object3D[] = [];
+  const boats: THREE.Object3D[] = [];
+  const clouds: THREE.Object3D[] = [];
+  const waveArcs: THREE.Mesh[] = [];
   root.traverse((child) => {
     if (child.name === 'vault-v2-hanging-faceted-charm') charms.push(child);
+    if (child.name === 'vault-v2-sailboat') boats.push(child);
+    if (child.name === 'vault-v2-animated-three-dimensional-cloud-bank') clouds.push(child);
+    if (child instanceof THREE.Mesh && child.name === 'vault-v2-natural-ocean-wave-arc') {
+      child.userData.baseRotationZ = child.rotation.z;
+      child.userData.baseOpacity = (child.material as THREE.MeshBasicMaterial).opacity;
+      waveArcs.push(child);
+    }
   });
   return {
     root,
     update: (elapsedSeconds: number) => {
       if (!options.animated) return;
-      if (ocean) ocean.rotation.z = elapsedSeconds * 0.008;
+      (environment.ocean.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds * 0.18;
+      (environment.sky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
       if (bracelet) bracelet.rotation.y = Math.sin(elapsedSeconds * 0.25) * 0.008;
       if (loadedPalace) loadedPalace.rotation.y = Math.sin(elapsedSeconds * 0.16) * 0.005;
       charms.forEach((charm, index) => {
         const baseY = Number(charm.userData.baseY) || charm.position.y;
         charm.position.y = baseY + Math.sin(elapsedSeconds * 1.1 + Number(charm.userData.phase || index)) * 0.018;
         charm.rotation.y = elapsedSeconds * 0.22 + index * 0.4;
+      });
+      boats.forEach((boat, index) => {
+        const base = boat.userData.basePosition as THREE.Vector3;
+        const phase = Number(boat.userData.phase || index);
+        boat.position.y = base.y + Math.sin(elapsedSeconds * 0.72 + phase) * 0.028;
+        boat.position.x = base.x + Math.sin(elapsedSeconds * 0.08 + phase) * 0.055;
+        boat.rotation.z = Math.sin(elapsedSeconds * 0.64 + phase) * 0.025;
+      });
+      clouds.forEach((cloud, index) => {
+        const base = cloud.userData.basePosition as THREE.Vector3;
+        const phase = Number(cloud.userData.phase || index);
+        cloud.position.x = base.x + Math.sin(elapsedSeconds * 0.018 + phase) * 0.34;
+        cloud.position.y = base.y + Math.sin(elapsedSeconds * 0.024 + phase) * 0.045;
+      });
+      waveArcs.forEach((wave, index) => {
+        const phase = Number(wave.userData.phase || index);
+        wave.rotation.z = Number(wave.userData.baseRotationZ) + Math.sin(elapsedSeconds * 0.11 + phase) * 0.014;
+        (wave.material as THREE.MeshBasicMaterial).opacity = Number(wave.userData.baseOpacity) * (0.8 + Math.sin(elapsedSeconds * 0.34 + phase) * 0.2);
       });
     },
     dispose: () => {
@@ -1313,6 +1512,9 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
         });
       });
       ownedMaterials.forEach((material) => material.dispose());
+      environment.waterNormals.dispose();
+      const reflectionTexture = (environment.ocean.material as THREE.ShaderMaterial).uniforms.mirrorSampler?.value as THREE.Texture | undefined;
+      reflectionTexture?.dispose();
       materialSet.textures.forEach((texture) => texture.dispose());
     },
   };

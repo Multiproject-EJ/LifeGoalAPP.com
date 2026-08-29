@@ -367,7 +367,7 @@ async function main() {
       await navigate(client, `/dev/vault-island-collection-preview?owned=${collectionState.owned}`);
       await waitForExpression(
         client,
-        '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "exterior" && qa.frameCount >= 30 ? JSON.parse(JSON.stringify(qa)) : null; })()',
+        `(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "exterior" && qa.frameCount >= 30 && qa.route.includes("owned=${collectionState.owned}") ? JSON.parse(JSON.stringify(qa)) : null; })()`,
         120000,
       );
       const previewEnter = await clickButtonContaining(client, 'Enter palace', '.vault-island-lab__hud--bottom button');

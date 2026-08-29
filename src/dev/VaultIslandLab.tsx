@@ -44,59 +44,6 @@ export interface VaultIslandLabProps {
   holdingsValue?: number;
 }
 
-function createExteriorSkyTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 1024;
-  const context = canvas.getContext('2d');
-  if (!context) return null;
-
-  const sky = context.createLinearGradient(0, 0, 0, canvas.height);
-  sky.addColorStop(0, '#4f8299');
-  sky.addColorStop(0.34, '#8eb8c3');
-  sky.addColorStop(0.58, '#f1d7b0');
-  sky.addColorStop(0.72, '#89b7c3');
-  sky.addColorStop(1, '#1b6687');
-  context.fillStyle = sky;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  const sun = context.createRadialGradient(390, 205, 8, 390, 205, 150);
-  sun.addColorStop(0, 'rgba(255, 244, 195, 0.96)');
-  sun.addColorStop(0.18, 'rgba(255, 211, 140, 0.58)');
-  sun.addColorStop(1, 'rgba(255, 190, 110, 0)');
-  context.fillStyle = sun;
-  context.fillRect(220, 30, 292, 350);
-
-  const cloud = (x: number, y: number, width: number, height: number, opacity: number) => {
-    context.save();
-    context.translate(x, y);
-    context.scale(width, height);
-    const cloudGradient = context.createRadialGradient(0, 0, 0.04, 0, 0, 1);
-    cloudGradient.addColorStop(0, `rgba(255, 247, 226, ${opacity})`);
-    cloudGradient.addColorStop(0.52, `rgba(239, 235, 220, ${opacity * 0.5})`);
-    cloudGradient.addColorStop(1, 'rgba(224, 231, 231, 0)');
-    context.fillStyle = cloudGradient;
-    context.beginPath();
-    context.arc(0, 0, 1, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
-  };
-  cloud(82, 150, 170, 48, 0.54);
-  cloud(215, 240, 150, 34, 0.34);
-  cloud(442, 118, 128, 42, 0.46);
-  cloud(120, 360, 170, 30, 0.22);
-
-  const horizon = context.createLinearGradient(0, 560, 0, 735);
-  horizon.addColorStop(0, 'rgba(255, 226, 181, 0.72)');
-  horizon.addColorStop(1, 'rgba(109, 164, 180, 0)');
-  context.fillStyle = horizon;
-  context.fillRect(0, 540, canvas.width, 210);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
 interface VaultIslandLabQaSnapshot {
   view: VaultIslandLabView;
   quality: VaultIslandQuality;
@@ -253,25 +200,12 @@ export default function VaultIslandLab({
     lastPointerHitRef.current = 'none';
     const scene = new THREE.Scene();
     const isInteriorView = view !== 'exterior';
-    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#91bfca';
-    const exteriorSky = isInteriorView ? null : createExteriorSkyTexture();
-    const exteriorOceanBackdrop = isInteriorView
-      ? null
-      : new THREE.TextureLoader().load('/assets/islands/island-004/background/ambient-background-v2.webp');
-    if (exteriorOceanBackdrop) {
-      exteriorOceanBackdrop.name = 'vault-island-cinematic-ocean-backdrop';
-      exteriorOceanBackdrop.colorSpace = THREE.SRGBColorSpace;
-      exteriorOceanBackdrop.minFilter = THREE.LinearMipmapLinearFilter;
-      exteriorOceanBackdrop.magFilter = THREE.LinearFilter;
-      scene.background = exteriorOceanBackdrop;
-      scene.backgroundIntensity = 0.86;
-    } else {
-      scene.background = exteriorSky ?? new THREE.Color(backgroundColor);
-    }
+    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#8fb8bd';
+    scene.background = new THREE.Color(backgroundColor);
     scene.fog = new THREE.Fog(
-      backgroundColor,
-      view === 'vault' ? 7 : view === 'atrium' ? 18 : 14,
-      view === 'vault' ? 18 : view === 'atrium' ? 38 : 32,
+      view === 'exterior' ? '#9dbab7' : backgroundColor,
+      view === 'vault' ? 7 : view === 'atrium' ? 18 : 36,
+      view === 'vault' ? 18 : view === 'atrium' ? 38 : 78,
     );
 
     const camera = new THREE.PerspectiveCamera(38, 390 / 844, 0.1, 80);
@@ -286,8 +220,8 @@ export default function VaultIslandLab({
         camera.position.set(5.4, 12.4, 14.2);
         camera.lookAt(0, 2.25, 0.1);
       } else {
-        camera.position.set(4.2, 8.4, 17.8);
-        camera.lookAt(0, 2.55, 0.28);
+        camera.position.set(4.4, 7.7, 18.5);
+        camera.lookAt(0, 2.65, 0.28);
       }
     }
 
@@ -295,15 +229,13 @@ export default function VaultIslandLab({
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     } catch {
-      exteriorSky?.dispose();
-      exteriorOceanBackdrop?.dispose();
       setRenderError('Interactive 3D is unavailable on this device.');
       return undefined;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = view === 'atrium' ? 1.03 : isInteriorView ? 1.02 : 0.96;
+    renderer.toneMappingExposure = view === 'atrium' ? 0.94 : isInteriorView ? 0.95 : 0.96;
     renderer.shadowMap.enabled = quality !== 'low';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
@@ -312,12 +244,12 @@ export default function VaultIslandLab({
     const hemi = new THREE.HemisphereLight(
       isInteriorView ? '#fff1c3' : '#fff1d2',
       isInteriorView ? '#081326' : '#0b405e',
-      view === 'atrium' ? 1.46 : isInteriorView ? 1.36 : 0.72,
+      view === 'atrium' ? 1.02 : isInteriorView ? 0.92 : 0.72,
     );
     scene.add(hemi);
 
-    const sun = new THREE.DirectionalLight('#fff0c7', view === 'atrium' ? 4.15 : isInteriorView ? 4.0 : 3.15);
-    sun.position.set(isInteriorView ? -2.2 : -4.5, view === 'atrium' ? 7.2 : isInteriorView ? 5.6 : 7.5, isInteriorView ? 4.8 : 5.8);
+    const sun = new THREE.DirectionalLight(isInteriorView ? '#fff0c7' : '#ffd39b', view === 'atrium' ? 3.2 : isInteriorView ? 2.95 : 3.45);
+    sun.position.set(isInteriorView ? -2.2 : 7.2, view === 'atrium' ? 7.2 : isInteriorView ? 5.6 : 7.6, isInteriorView ? 4.8 : -8.8);
     sun.castShadow = quality !== 'low';
     sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
     sun.shadow.camera.near = 1;
@@ -328,7 +260,7 @@ export default function VaultIslandLab({
     sun.shadow.camera.bottom = -5;
     scene.add(sun);
 
-    const rim = new THREE.DirectionalLight('#7df4ff', isInteriorView ? 1.65 : 0.72);
+    const rim = new THREE.DirectionalLight('#7df4ff', isInteriorView ? 1.28 : 0.5);
     rim.position.set(4, 2.2, -4);
     scene.add(rim);
 
@@ -456,10 +388,10 @@ export default function VaultIslandLab({
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.minDistance = view === 'vault' ? 7.2 : view === 'atrium' ? 15.2 : 8.4;
-    controls.maxDistance = view === 'vault' ? 11.4 : view === 'atrium' ? 22.6 : 16.8;
+    controls.maxDistance = view === 'vault' ? 11.4 : view === 'atrium' ? 22.6 : 30;
     controls.minPolarAngle = isInteriorView ? 0.5 : 0.48;
     controls.maxPolarAngle = view === 'vault' ? 1.3 : view === 'atrium' ? 1.22 : 1.18;
-    controls.target.set(0, view === 'vault' ? 1.75 : view === 'atrium' ? 4.0 : 2.55, view === 'vault' ? -0.72 : view === 'atrium' ? -0.55 : 0.28);
+    controls.target.set(0, view === 'vault' ? 1.75 : view === 'atrium' ? 4.0 : 2.65, view === 'vault' ? -0.72 : view === 'atrium' ? -0.55 : 0.28);
 
     const clock = new THREE.Clock();
     let raf = 0;
@@ -551,8 +483,8 @@ export default function VaultIslandLab({
           camera.position.set(5.4, 12.4, 14.2);
           controls.target.set(0, 2.25, 0.1);
         } else {
-          camera.position.set(4.2, 8.4, 17.8);
-          controls.target.set(0, 2.55, 0.28);
+          camera.position.set(4.4, 7.7, 18.5);
+          controls.target.set(0, 2.65, 0.28);
         }
         camera.lookAt(controls.target);
         controls.update();
@@ -655,8 +587,6 @@ export default function VaultIslandLab({
       selectedHalo.geometry.dispose();
       selectedHaloMaterial.dispose();
       premiumEnvironment.dispose();
-      exteriorSky?.dispose();
-      exteriorOceanBackdrop?.dispose();
       composer?.dispose();
       delete (window as unknown as { __vaultIslandLabQa?: VaultIslandLabQaSnapshot }).__vaultIslandLabQa;
       delete (window as unknown as { __vaultIslandLabQaControls?: typeof qaControls }).__vaultIslandLabQaControls;

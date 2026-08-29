@@ -44,8 +44,8 @@
     "hidden architecture remains inferred from the single supplied exterior source"
   ],
   "acceptedRuntimeEvidence": {
-    "browserManifest": "gauntlet/qa/raw/browser-captures-v079-wealth-reserve-framing/capture-manifest.v1.json",
-    "qualityReview": "gauntlet/qa/reviews/v080-wealth-reserve-quality-lord.md",
+    "browserManifest": "gauntlet/qa/raw/browser-captures-v100-physical-sunset-cloud-world-final/capture-manifest.v1.json",
+    "qualityReview": "gauntlet/qa/reviews/v100-three-dimensional-atmosphere-quality-lord.md",
     "phoneViewport": "390x844",
     "diagnostics": 0,
     "reserveStates": ["empty", "legendary"]

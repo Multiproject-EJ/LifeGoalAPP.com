@@ -31,4 +31,4 @@ The source is a single front/high three-quarter image. Rear architecture, unders
 - Interior vault route: `/dev/vault-island-lab?view=vault`
 - Treasure object lab route: `/dev/vault-treasure-lab`
 
-The production handoff records the Island 004 gift gate, canonical collection ownership, the new-relic ceremony, live holdings reserve tiers, repeatable checks, and the accepted browser evidence. The current phone proof is `gauntlet/qa/raw/browser-captures-v079-wealth-reserve-framing/`; the accepted 38px launcher review is `gauntlet/qa/reviews/v081-island-004-gift-launcher.md`.
+The production handoff records the Island 004 gift gate, canonical collection ownership, the new-relic ceremony, live holdings reserve tiers, repeatable checks, and the accepted browser evidence. The current phone proof is `gauntlet/qa/raw/browser-captures-v100-physical-sunset-cloud-world-final/`; the accepted atmosphere review is `gauntlet/qa/reviews/v100-three-dimensional-atmosphere-quality-lord.md`, the interior review is `gauntlet/qa/reviews/v085-interior-luxury-quality-lord.md`, and the accepted 38px launcher review is `gauntlet/qa/reviews/v081-island-004-gift-launcher.md`.

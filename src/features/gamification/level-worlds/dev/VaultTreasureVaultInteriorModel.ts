@@ -181,6 +181,23 @@ function createVaultInteriorMaterials() {
       envMapIntensity: 1.45,
     }),
     enamel: new THREE.MeshPhysicalMaterial({ color: '#0e2c60', roughness: 0.18, metalness: 0.1, clearcoat: 0.95, clearcoatRoughness: 0.08, envMapIntensity: 1.2, side: THREE.DoubleSide }),
+    onyx: new THREE.MeshPhysicalMaterial({
+      color: '#071426',
+      roughness: 0.16,
+      metalness: 0.18,
+      clearcoat: 0.94,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 1.34,
+    }),
+    velvet: new THREE.MeshPhysicalMaterial({
+      color: '#142952',
+      roughness: 0.68,
+      metalness: 0,
+      sheen: 0.82,
+      sheenColor: new THREE.Color('#4f72b7'),
+      sheenRoughness: 0.72,
+      envMapIntensity: 0.52,
+    }),
     glass: new THREE.MeshPhysicalMaterial({
       color: '#bff8ff',
       roughness: 0.04,
@@ -263,6 +280,23 @@ function goldRing(radius: number, tube: number, materials: VaultInteriorMaterial
   );
   ring.rotation.x = Math.PI / 2;
   return ring;
+}
+
+function curvedGalleryRail(
+  radius: number,
+  y: number,
+  tube: number,
+  material: THREE.Material,
+  name: string,
+  start = -1.38,
+  end = 1.38,
+) {
+  const points: THREE.Vector3[] = [];
+  for (let index = 0; index <= 40; index += 1) {
+    const angle = start + (index / 40) * (end - start);
+    points.push(new THREE.Vector3(Math.sin(angle) * radius, y, -Math.cos(angle) * radius));
+  }
+  return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 64, tube, 8, false), material, name);
 }
 
 function addGlazedRadialFloorTiles(
@@ -773,6 +807,146 @@ function addSpotlightBeams(parent: THREE.Group, materials: VaultInteriorMaterial
   parent.add(beams);
 }
 
+function addMuseumLuxuryGalleryLayer(
+  parent: THREE.Group,
+  materials: VaultInteriorMaterials,
+  quality: VaultIslandQuality,
+) {
+  const gallery = new THREE.Group();
+  gallery.name = 'vault-interior-royal-relic-gallery-layer';
+  const angles = [-1.28, -0.92, -0.58, -0.2, 0.2, 0.58, 0.92, 1.28];
+
+  angles.forEach((angle, index) => {
+    const alcove = new THREE.Group();
+    alcove.name = 'vault-interior-framed-velvet-relic-alcove';
+    alcove.position.set(Math.sin(angle) * 3.39, 1.48, -Math.cos(angle) * 3.39);
+    alcove.rotation.y = -angle;
+
+    const backing = mesh(
+      new RoundedBoxGeometry(0.78, 1.5, 0.09, quality === 'high' ? 4 : 2, 0.055),
+      materials.velvet,
+      'vault-interior-relic-alcove-navy-velvet-backing',
+    );
+    const inset = mesh(
+      new RoundedBoxGeometry(0.62, 1.29, 0.055, quality === 'high' ? 4 : 2, 0.045),
+      materials.onyx,
+      'vault-interior-relic-alcove-polished-onyx-inset',
+    );
+    inset.position.z = 0.06;
+    alcove.add(backing, inset);
+
+    for (const side of [-1, 1] as const) {
+      const pilaster = mesh(
+        new RoundedBoxGeometry(0.045, 1.26, 0.045, 2, 0.014),
+        materials.gold,
+        'vault-interior-relic-alcove-gold-pilaster',
+      );
+      pilaster.position.set(side * 0.34, -0.04, 0.105);
+      alcove.add(pilaster);
+    }
+
+    const arch = mesh(
+      new THREE.TorusGeometry(
+        0.34,
+        0.03,
+        segmentCount(quality, 8, 10, 12),
+        segmentCount(quality, 22, 34, 46),
+        Math.PI,
+      ),
+      materials.gold,
+      'vault-interior-relic-alcove-crowned-gold-arch',
+    );
+    arch.position.set(0, 0.61, 0.11);
+    alcove.add(arch);
+
+    const plaqueFrame = mesh(
+      new RoundedBoxGeometry(0.48, 0.13, 0.065, 3, 0.025),
+      materials.gold,
+      'vault-interior-relic-alcove-accession-plaque-frame',
+    );
+    plaqueFrame.position.set(0, -0.58, 0.11);
+    const plaqueFace = mesh(
+      new RoundedBoxGeometry(0.4, 0.075, 0.045, 3, 0.018),
+      materials.onyx,
+      'vault-interior-relic-alcove-accession-plaque-face',
+    );
+    plaqueFace.position.set(0, -0.58, 0.15);
+    alcove.add(plaqueFrame, plaqueFace);
+
+    const crownGem = mesh(
+      new THREE.OctahedronGeometry(index % 3 === 0 ? 0.075 : 0.06, quality === 'high' ? 1 : 0),
+      index % 3 === 0 ? materials.violetGem : index % 3 === 1 ? materials.cyanGem : materials.emeraldGem,
+      'vault-interior-relic-alcove-crown-gem',
+    );
+    crownGem.position.set(0, 0.79, 0.13);
+    alcove.add(crownGem);
+    gallery.add(alcove);
+  });
+
+  const lowerCornice = curvedGalleryRail(3.47, 0.49, 0.045, materials.darkGold, 'vault-interior-gallery-lower-gold-cornice');
+  const upperCornice = curvedGalleryRail(3.48, 2.28, 0.055, materials.gold, 'vault-interior-gallery-upper-gold-cornice');
+  gallery.add(lowerCornice, upperCornice);
+  parent.add(gallery);
+}
+
+function addAtriumLuxuryDetails(
+  parent: THREE.Group,
+  materials: VaultInteriorMaterials,
+  quality: VaultIslandQuality,
+) {
+  const details = new THREE.Group();
+  details.name = 'vault-palace-atrium-royal-luxury-details';
+
+  for (const side of [-1, 1] as const) {
+    const newel = cylinder(
+      0.1,
+      0.15,
+      0.76,
+      segmentCount(quality, 12, 16, 20),
+      materials.floor,
+      'vault-palace-atrium-royal-stair-newel',
+    );
+    newel.position.set(side * 2.4, 0.6, 0.56);
+    const newelCollar = goldRing(0.14, 0.025, materials, quality, 'vault-palace-atrium-newel-gold-collar');
+    newelCollar.position.copy(newel.position);
+    newelCollar.position.y += 0.25;
+    const newelGem = mesh(
+      new THREE.OctahedronGeometry(0.115, quality === 'high' ? 1 : 0),
+      side < 0 ? materials.cyanGem : materials.violetGem,
+      'vault-palace-atrium-newel-crown-gem',
+    );
+    newelGem.position.copy(newel.position);
+    newelGem.position.y += 0.48;
+    details.add(newel, newelCollar, newelGem);
+  }
+
+  const descentHalo = goldRing(1.64, 0.045, materials, quality, 'vault-palace-atrium-descent-double-gold-halo');
+  descentHalo.position.set(0, 0.245, 0.28);
+  const descentSilverHalo = goldRing(1.5, 0.018, materials, quality, 'vault-palace-atrium-descent-silver-halo');
+  descentSilverHalo.material = materials.silver;
+  descentSilverHalo.position.set(0, 0.255, 0.28);
+  details.add(descentHalo, descentSilverHalo);
+
+  const domeRosetteAngles = [-0.92, -0.46, 0, 0.46, 0.92];
+  domeRosetteAngles.forEach((phi, index) => {
+    const theta = index % 2 === 0 ? 0.58 : 0.82;
+    const radius = 4.05;
+    const rosette = mesh(
+      new THREE.OctahedronGeometry(index === 2 ? 0.13 : 0.09, quality === 'high' ? 1 : 0),
+      index % 2 === 0 ? materials.gold : materials.cyanGem,
+      'vault-palace-atrium-dome-jewel-rosette',
+    );
+    rosette.position.set(
+      Math.sin(theta) * radius * Math.sin(phi),
+      5.48 + Math.cos(theta) * radius * 0.64 - 0.04,
+      -Math.sin(theta) * radius * Math.cos(phi) + 0.05,
+    );
+    details.add(rosette);
+  });
+
+  parent.add(details);
+}
+
 function addPalaceAtriumArchitecture(parent: THREE.Group, materials: VaultInteriorMaterials, quality: VaultIslandQuality) {
   const architecture = new THREE.Group();
   architecture.name = 'vault-palace-atrium-monumental-two-floor-shell';
@@ -890,6 +1064,7 @@ export function createVaultTreasurePalaceAtriumModel(options: VaultTreasureVault
     'vault-palace-atrium-blender-architecture-v001',
     materials,
   );
+  addAtriumLuxuryDetails(root, materials, quality);
   addAtriumArchitecturalLights(root, quality);
 
   const animatedObjects: THREE.Object3D[] = [];
@@ -949,6 +1124,7 @@ export function createVaultTreasureVaultInteriorModel(options: VaultTreasureVaul
     'vault-interior-blender-museum-v001',
     materials,
   );
+  addMuseumLuxuryGalleryLayer(root, materials, quality);
   addVaultMuseumLights(root, quality);
   addSpotlightBeams(root, materials, quality);
   addEssenceIngots(root, materials, quality, wealthDisplay);

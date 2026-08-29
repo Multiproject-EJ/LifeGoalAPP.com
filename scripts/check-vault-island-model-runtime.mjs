@@ -154,6 +154,14 @@ assert(exterior.root.userData.sculptRuntime?.productionUnits === 18, 'Exterior v
 assert(meshCount(exterior.root) > 500, 'Exterior v2 should contain the palace, jewelry, garden, and inhabited cliff construction systems.');
 assertHasNames(exteriorNames, [
   'vault-v2-ocean',
+  'vault-v2-three-dimensional-sunset-sky-dome',
+  'vault-v2-three-dimensional-sunset-sun',
+  'vault-v2-three-dimensional-sunset-halo',
+  'vault-v2-animated-three-dimensional-cloud-bank',
+  'vault-v2-submerged-crystalline-seabed',
+  'vault-v2-submerged-sunlit-reef-patch',
+  'vault-v2-horizon-cliff-island',
+  'vault-v2-sailboat',
   'vault-v2-massive-cliff-backing',
   'vault-v2-individual-ashlar-block',
   'vault-v2-lower-inhabited-gallery-bay',
@@ -178,7 +186,18 @@ assertHasNames(exteriorNames, [
 assert(countNamed(exterior.root, 'vault-v2-lower-inhabited-gallery-bay') >= 10, 'Exterior v2 must expose a substantial occupied lower gallery floor.');
 assert(countNamed(exterior.root, 'vault-v2-upper-inhabited-gallery-bay') >= 10, 'Exterior v2 must expose a substantial occupied upper gallery floor.');
 assert(countNamed(exterior.root, 'vault-v2-bracelet-openwork-link-coupler') >= 8, 'Exterior v2 must read as a large-cadence articulated jewelry perimeter.');
+assert(countNamed(exterior.root, 'vault-v2-horizon-cliff-island') === 4, 'Exterior v2 should retain a layered four-island 3D horizon.');
+assert(countNamed(exterior.root, 'vault-v2-sailboat') === 3, 'Exterior v2 should include three animated sailboats.');
+assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 3, 'Exterior v2 should include three animated 3D sunset cloud banks.');
+assert(countNamed(exterior.root, 'vault-v2-submerged-sunlit-reef-patch') === 6, 'Exterior v2 should include six submerged reef patches beneath the transparent ocean.');
+const exteriorOcean = exterior.root.getObjectByName('vault-v2-ocean');
+const exteriorSky = exterior.root.getObjectByName('vault-v2-three-dimensional-sunset-sky-dome');
+assert(exteriorOcean?.isWater === true, 'Exterior ocean should use the reflective Three.js Water runtime.');
+assert(exteriorSky?.isSky === true, 'Exterior atmosphere should use the analytic Three.js Sky runtime.');
+const oceanTimeBeforeUpdate = exteriorOcean.material.uniforms.time.value;
 exterior.update(1.25);
+assert(exteriorOcean.material.uniforms.time.value > oceanTimeBeforeUpdate, 'Exterior water time uniform should animate.');
+assert(exteriorSky.material.uniforms.time.value === 1.25, 'Exterior sky cloud time uniform should animate.');
 exterior.dispose();
 
 const atrium = interiorModule.createVaultTreasurePalaceAtriumModel({ quality: 'high', animated: true });
@@ -192,6 +211,8 @@ assertHasNames(atriumNames, [
   'vault-palace-atrium-central-vault-descent-void',
   'vault-palace-atrium-left-garden-door',
   'vault-palace-atrium-right-garden-door',
+  'vault-palace-atrium-royal-luxury-details',
+  'vault-palace-atrium-dome-jewel-rosette',
 ], 'Palace atrium model');
 assert(countNamed(atrium.root, 'vault-palace-atrium-split-descent-marble-step') >= 30, 'Atrium should have two substantial split staircase flights.');
 atrium.update(1.8);
@@ -208,7 +229,11 @@ assertHasNames(interiorNames, [
   'vault-interior-sticker-relic-wall',
   'vault-interior-essence-ingot-stack',
   'vault-interior-collection-light-beams',
+  'vault-interior-royal-relic-gallery-layer',
+  'vault-interior-framed-velvet-relic-alcove',
 ], 'Interior model');
+assert(countNamed(interior.root, 'vault-interior-framed-velvet-relic-alcove') === 8, 'Museum should provide one luxury alcove for every relic display.');
+assert(countNamed(interior.root, 'vault-interior-relic-alcove-accession-plaque-face') === 8, 'Museum should provide one accession plaque face for every relic display.');
 
 for (const socket of VAULT_TREASURE_PLACEMENT_SOCKETS) {
   assert(interiorNames.has(socket.sceneNodeName), `Interior runtime tree is missing placement socket node: ${socket.sceneNodeName}.`);
