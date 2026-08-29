@@ -37,7 +37,7 @@
     },
     {
       "file": "../../../../src/features/gamification/level-worlds/dev/VaultTreasureIslandModelV2.ts",
-      "sha256": "1ef13ec9166d4510afd8e40a752128e470ec81b8af849d12a6674c2a2b633b8f"
+      "sha256": "d927a9e78ff2e87505e15f423f125d0674b658541517cc185d5f4281b30b2dce"
     },
     {
       "file": "../../../../src/features/gamification/level-worlds/dev/VaultTreasureVaultInteriorModel.ts",
@@ -64,11 +64,11 @@
     "modalPortal": true
   },
   "evidence": {
-    "browserCapture": "qa/raw/browser-captures-v111-exterior-radial-crystal-final/capture-manifest.v1.json",
-    "browserCaptureSha256": "5392335684a8b3dbd76b33aa2c3041a65f7051819e9b42a0bd180774f30071fe",
+    "browserCapture": "qa/raw/browser-captures-v113-ceremonial-light-cloud-final/capture-manifest.v1.json",
+    "browserCaptureSha256": "b3cddc412cea34537872390ffa9ed7c6a0d1438d60f4b4aa34879cf6c137a564",
     "runtimeCheck": "passed",
     "labContractCheck": "passed",
-    "viteProductionBundle": "passed-1364-modules",
+    "viteProductionBundle": "passed-1365-modules",
     "fullTypeScriptBuild": "passed",
     "capacitorIosSync": "passed",
     "iosSimulatorBuild": "passed",

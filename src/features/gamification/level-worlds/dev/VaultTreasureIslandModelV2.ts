@@ -137,8 +137,8 @@ function createMaterials() {
     foam: new THREE.MeshBasicMaterial({ color: '#d9fbff', transparent: true, opacity: 0.46, blending: THREE.AdditiveBlending, depthWrite: false }),
     sunDisc: new THREE.MeshBasicMaterial({ color: '#ffd35a', fog: false, toneMapped: false }),
     sunHalo: new THREE.MeshBasicMaterial({ color: '#ff941f', fog: false, transparent: true, opacity: 0.46, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
-    cloudWarm: new THREE.MeshStandardMaterial({ color: '#e99350', roughness: 1, metalness: 0, emissive: '#3b1300', emissiveIntensity: 0.1, transparent: true, opacity: 0.56, depthWrite: false }),
-    cloudShadow: new THREE.MeshStandardMaterial({ color: '#6f5d68', roughness: 1, metalness: 0, transparent: true, opacity: 0.32, depthWrite: false }),
+    cloudWarm: new THREE.MeshStandardMaterial({ color: '#ffd08a', roughness: 1, metalness: 0, emissive: '#6b3611', emissiveIntensity: 0.14, transparent: true, opacity: 0.66, depthWrite: false }),
+    cloudShadow: new THREE.MeshStandardMaterial({ color: '#826271', roughness: 1, metalness: 0, emissive: '#27101b', emissiveIntensity: 0.08, transparent: true, opacity: 0.42, depthWrite: false }),
     rock: new THREE.MeshStandardMaterial({ color: '#59636a', roughness: 0.86, metalness: 0.02 }),
     wetRock: new THREE.MeshPhysicalMaterial({ color: '#304f52', roughness: 0.58, metalness: 0.02, clearcoat: 0.22, clearcoatRoughness: 0.38, envMapIntensity: 0.92 }),
     horizonRock: new THREE.MeshStandardMaterial({ color: '#2f5c5b', roughness: 0.92, metalness: 0, emissive: '#173b36', emissiveIntensity: 0.14 }),
@@ -156,12 +156,14 @@ function createMaterials() {
     garden: new THREE.MeshStandardMaterial({ color: '#2f7254', roughness: 0.86 }),
     gardenDark: new THREE.MeshStandardMaterial({ color: '#174a38', roughness: 0.9 }),
     wood: new THREE.MeshStandardMaterial({ color: '#5b351e', roughness: 0.82 }),
-    window: new THREE.MeshPhysicalMaterial({ color: '#07192b', roughness: 0.18, metalness: 0.14, clearcoat: 0.72, emissive: '#d78928', emissiveIntensity: 0.58, envMapIntensity: 1.1 }),
+    window: new THREE.MeshPhysicalMaterial({ color: '#07192b', roughness: 0.18, metalness: 0.14, clearcoat: 0.72, emissive: '#e19532', emissiveIntensity: 0.72, envMapIntensity: 1.1 }),
     void: new THREE.MeshStandardMaterial({ color: '#030913', roughness: 0.8, metalness: 0, emissive: '#06152b', emissiveIntensity: 0.2 }),
-    warmGlow: new THREE.MeshBasicMaterial({ color: '#ffd681', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }),
+    warmGlow: new THREE.MeshBasicMaterial({ color: '#ffd681', transparent: true, opacity: 0.68, blending: THREE.AdditiveBlending, depthWrite: false }),
     cyan: new THREE.MeshPhysicalMaterial({ color: '#55d6e8', roughness: 0.055, transmission: 0.5, thickness: 0.44, clearcoat: 1, emissive: '#073844', emissiveIntensity: 0.22, envMapIntensity: 1.95 }),
-    fountainCrystal: new THREE.MeshPhysicalMaterial({ color: '#58e6ff', roughness: 0.025, metalness: 0.03, transmission: 0.58, thickness: 0.72, ior: 2.1, clearcoat: 1, clearcoatRoughness: 0.018, emissive: '#0879a4', emissiveIntensity: 0.48, envMapIntensity: 2.8 }),
-    fountainWater: new THREE.MeshPhysicalMaterial({ color: '#8bedff', roughness: 0.045, transmission: 0.72, thickness: 0.16, clearcoat: 1, emissive: '#0a7896', emissiveIntensity: 0.2, transparent: true, opacity: 0.78, depthWrite: false, envMapIntensity: 2.1 }),
+    fountainCrystal: new THREE.MeshPhysicalMaterial({ color: '#a5f6ff', roughness: 0.02, metalness: 0.02, transmission: 0.72, thickness: 0.48, ior: 2.18, clearcoat: 1, clearcoatRoughness: 0.012, emissive: '#0bb9e5', emissiveIntensity: 0.62, transparent: true, opacity: 0.96, envMapIntensity: 3.2, flatShading: true }),
+    fountainCobalt: new THREE.MeshPhysicalMaterial({ color: '#176dcc', roughness: 0.045, metalness: 0.04, transmission: 0.34, thickness: 0.42, ior: 2.0, clearcoat: 1, clearcoatRoughness: 0.02, emissive: '#063a8f', emissiveIntensity: 0.42, envMapIntensity: 2.5, flatShading: true }),
+    fountainCore: new THREE.MeshBasicMaterial({ color: '#d9fbff', transparent: true, opacity: 0.62, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    fountainWater: new THREE.MeshPhysicalMaterial({ color: '#a9f3ff', roughness: 0.04, transmission: 0.78, thickness: 0.14, clearcoat: 1, emissive: '#0a8ead', emissiveIntensity: 0.25, transparent: true, opacity: 0.72, depthWrite: false, envMapIntensity: 2.3 }),
     purple: new THREE.MeshPhysicalMaterial({ color: '#6925b9', roughness: 0.055, transmission: 0.3, thickness: 0.34, clearcoat: 1, emissive: '#260549', emissiveIntensity: 0.2, envMapIntensity: 1.95 }),
     ruby: new THREE.MeshPhysicalMaterial({ color: '#c9274b', roughness: 0.06, transmission: 0.22, thickness: 0.3, clearcoat: 1, emissive: '#410613', emissiveIntensity: 0.16, envMapIntensity: 1.85 }),
     sail: new THREE.MeshStandardMaterial({ color: '#fff4de', roughness: 0.5, side: THREE.DoubleSide }),
@@ -444,6 +446,8 @@ function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultI
   addCloudBank(root, materials, quality, [4.2, 4.8, -16], 0.52, 3.1);
   addCloudBank(root, materials, quality, [8.6, 5.8, -21], 0.7, 4.4);
   addCloudBank(root, materials, quality, [-4.8, 3.85, -12], 0.4, 5.7);
+  addCloudBank(root, materials, quality, [5.2, 3.18, -10.7], 0.5, 6.8);
+  addCloudBank(root, materials, quality, [-7.1, 3.12, -9.9], 0.46, 7.9);
   addBoat(root, materials, -4.1, 3.15, 0.9, -0.55);
   addBoat(root, materials, 4.25, 2.65, 0.62, 0.68);
   addBoat(root, materials, -3.45, -1.85, 0.52, 0.12);
@@ -1215,6 +1219,23 @@ function addCeremonialGardenAxis(root: THREE.Group, materials: Materials, qualit
     rayInlay.rotation.y = angle;
     axis.add(rayInlay);
   }
+  if (quality !== 'low') {
+    const pathZ = [0.82, 1.16, 1.5];
+    pathZ.forEach((z, row) => {
+      for (const side of [-1, 1] as const) {
+        const marker = mesh(new THREE.SphereGeometry(0.032, 10, 7), materials.warmGlow, 'vault-v2-ceremonial-axis-warm-lantern-marker');
+        marker.position.set(side * (0.34 + row * 0.035), GARDEN_Y + 0.16, z);
+        marker.castShadow = false;
+        axis.add(marker);
+      }
+      if (quality === 'high' && row !== 1) {
+        const pathLight = new THREE.PointLight('#ffd080', row === 0 ? 0.58 : 0.46, 1.05, 2);
+        pathLight.name = 'vault-v2-ceremonial-axis-warm-path-light';
+        pathLight.position.set(0, GARDEN_Y + 0.28, z);
+        axis.add(pathLight);
+      }
+    });
+  }
   const hedgeCount = quality === 'low' ? 8 : 14;
   for (let index = 0; index < hedgeCount; index += 1) {
     const angle = (index / hedgeCount) * Math.PI * 2 + 0.1;
@@ -1289,11 +1310,21 @@ function addFountain(root: THREE.Group, materials: Materials, quality: VaultIsla
       0.48 + (index % 2) * 0.09,
       0.085,
       new THREE.Vector3(Math.sin(angle) * distance, 0, Math.cos(angle) * distance),
-      index % 2 === 0 ? materials.blue : materials.fountainCrystal,
+      index % 2 === 0 ? materials.fountainCobalt : materials.fountainCrystal,
       'vault-v2-fountain-radial-secondary-prismatic-crystal',
     );
   }
+  const crystalCore = mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.52, 6), materials.fountainCore, 'vault-v2-fountain-luminous-inner-crystal-core');
+  crystalCore.position.y = 0.36;
+  crystalCrown.add(crystalCore);
   fountain.add(crystalCrown);
+  if (quality !== 'low') {
+    const crystalLight = new THREE.PointLight('#5de9ff', quality === 'high' ? 0.72 : 0.5, 1.7, 2);
+    crystalLight.name = 'vault-v2-fountain-cyan-heart-light';
+    crystalLight.position.set(0, 0.58, 0);
+    crystalLight.userData.baseIntensity = crystalLight.intensity;
+    fountain.add(crystalLight);
+  }
   for (let jet = 0; jet < 4; jet += 1) {
     const angle = (jet / 4) * Math.PI * 2;
     const curve = new THREE.QuadraticBezierCurve3(
@@ -1744,7 +1775,7 @@ function addPalaceFamily2(root: THREE.Group, materials: Materials, quality: Vaul
 
 function addWarmLights(root: THREE.Group, quality: VaultIslandQuality) {
   if (quality === 'low') return;
-  const positions = [[0, 1.05, 3.25, 1.45], [-1.35, 1.2, 2.65, 0.85], [1.35, 1.2, 2.65, 0.85], [0, 3.65, 1.1, 1.15]] as const;
+  const positions = [[0, 1.05, 3.25, 2.25], [-1.35, 1.2, 2.65, 1.05], [1.35, 1.2, 2.65, 1.05], [0, 3.65, 1.1, 1.55], [-1.4, 3.0, 1.0, 0.72], [1.4, 3.0, 1.0, 0.72]] as const;
   positions.forEach(([x, y, z, intensity], index) => {
     const light = new THREE.PointLight(index === 3 ? '#ffd38a' : '#ffc86c', intensity, index === 3 ? 4.2 : 2.8, 2);
     light.name = 'vault-v2-warm-architectural-light';
@@ -1856,7 +1887,7 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
             } else if (materialName.includes('warm-glass')) {
               palaceMaterial.color.set('#24170c');
               palaceMaterial.emissive.set('#d86b1f');
-              palaceMaterial.emissiveIntensity = 0.34;
+              palaceMaterial.emissiveIntensity = 0.46;
               palaceMaterial.roughness = 0.24;
             } else if (materialName.includes('cyan-gem')) {
               palaceMaterial.color.set('#55d6e8');
@@ -1890,10 +1921,14 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
   const boats: THREE.Object3D[] = [];
   const clouds: THREE.Object3D[] = [];
   const waveArcs: THREE.Mesh[] = [];
+  const fountainLights: THREE.PointLight[] = [];
+  let fountainCrystalCrown: THREE.Object3D | null = null;
   root.traverse((child) => {
     if (child.name === 'vault-v2-hanging-faceted-charm') charms.push(child);
     if (child.name === 'vault-v2-sailboat') boats.push(child);
     if (child.name === 'vault-v2-animated-three-dimensional-cloud-bank') clouds.push(child);
+    if (child instanceof THREE.PointLight && child.name === 'vault-v2-fountain-cyan-heart-light') fountainLights.push(child);
+    if (child.name === 'vault-v2-fountain-radial-prismatic-crystal-crown') fountainCrystalCrown = child;
     if (child instanceof THREE.Mesh && child.name === 'vault-v2-natural-ocean-wave-arc') {
       child.userData.baseRotationZ = child.rotation.z;
       child.userData.baseOpacity = (child.material as THREE.MeshBasicMaterial).opacity;
@@ -1927,6 +1962,10 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
         const phase = Number(cloud.userData.phase || index);
         cloud.position.x = base.x + Math.sin(elapsedSeconds * 0.018 + phase) * 0.34;
         cloud.position.y = base.y + Math.sin(elapsedSeconds * 0.024 + phase) * 0.045;
+      });
+      if (fountainCrystalCrown) fountainCrystalCrown.rotation.y = elapsedSeconds * 0.08;
+      fountainLights.forEach((light, index) => {
+        light.intensity = Number(light.userData.baseIntensity) * (0.88 + Math.sin(elapsedSeconds * 1.2 + index) * 0.12);
       });
       waveArcs.forEach((wave, index) => {
         const phase = Number(wave.userData.phase || index);

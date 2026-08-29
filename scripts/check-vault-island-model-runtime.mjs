@@ -206,9 +206,13 @@ assertHasNames(exteriorNames, [
   'vault-v2-hanging-faceted-charm',
   'vault-v2-formal-garden-lawn',
   'vault-v2-source-led-ceremonial-garden-axis',
+  'vault-v2-ceremonial-axis-warm-lantern-marker',
+  'vault-v2-ceremonial-axis-warm-path-light',
   'vault-v2-front-crystal-fountain',
   'vault-v2-fountain-radial-prismatic-crystal-crown',
   'vault-v2-fountain-central-prismatic-crystal',
+  'vault-v2-fountain-luminous-inner-crystal-core',
+  'vault-v2-fountain-cyan-heart-light',
   'vault-v2-garden-domed-pavilion',
   'vault-v2-palace-raised-podium',
   'vault-v2-blender-palace-mount',
@@ -218,7 +222,7 @@ assert(countNamed(exterior.root, 'vault-v2-upper-inhabited-gallery-bay') >= 10, 
 assert(countNamed(exterior.root, 'vault-v2-bracelet-openwork-link-coupler') >= 8, 'Exterior v2 must read as a large-cadence articulated jewelry perimeter.');
 assert(countNamed(exterior.root, 'vault-v2-horizon-cliff-island') === 4, 'Exterior v2 should retain a layered four-island 3D horizon.');
 assert(countNamed(exterior.root, 'vault-v2-sailboat') === 3, 'Exterior v2 should include three animated sailboats.');
-assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 5, 'Exterior v2 should include five layered animated 3D sunset cloud banks.');
+assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 7, 'Exterior v2 should include seven layered animated 3D sunset cloud banks.');
 assert(countNamed(exterior.root, 'vault-v2-submerged-sunlit-reef-patch') === 6, 'Exterior v2 should include six submerged reef patches beneath the transparent ocean.');
 assert(countNamed(exterior.root, 'vault-v2-horizon-island-limestone-villa') === 12, 'Exterior v2 should include twelve limestone villas across the inhabited horizon.');
 assert(countNamed(exterior.root, 'vault-v2-wet-natural-shoreline-rock') === 28, 'Exterior v2 should include twenty-eight faceted wet shoreline rocks at high quality.');
@@ -228,6 +232,9 @@ assert(countNamed(exterior.root, 'vault-v2-marina-gate-curved-lower-wing-rail') 
 assert(countNamed(exterior.root, 'vault-v2-marina-gate-wing-end-pier') === 2, 'Exterior marina should terminate both gate wings with marble piers.');
 assert(countNamed(exterior.root, 'vault-v2-fountain-radial-secondary-prismatic-crystal') === 5, 'Exterior crystal fountain should include five radial secondary prismatic crystals.');
 assert(countNamed(exterior.root, 'vault-v2-fountain-arched-crystalline-water-jet') === 4, 'Exterior crystal fountain should include four arched water jets.');
+assert(countNamed(exterior.root, 'vault-v2-ceremonial-axis-warm-lantern-marker') === 6, 'Exterior ceremonial axis should include six visible warm lantern markers.');
+assert(countNamed(exterior.root, 'vault-v2-ceremonial-axis-warm-path-light') === 2, 'Exterior ceremonial axis should include two warm path lights at high quality.');
+assert(countNamed(exterior.root, 'vault-v2-warm-architectural-light') === 6, 'Exterior palace and garden approach should include six warm architectural lights.');
 assert(countNamed(exterior.root, 'vault-v2-garden-ring-planted-station') >= 12, 'Garden perimeter should contain a substantial planted ring.');
 assert(countNamed(exterior.root, 'vault-v2-gold-castle-relief-panel') >= 12, 'Gold castle perimeter should contain a substantial relief-panel frieze.');
 assert(countNamed(exterior.root, 'vault-v2-gold-castle-ornamental-tower') === 8, 'Gold castle perimeter should contain eight ornamental towers.');

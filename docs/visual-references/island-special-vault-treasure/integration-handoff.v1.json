@@ -39,7 +39,7 @@
     "vaultCustomization": "src/features/gamification/level-worlds/services/islandRunVaultCustomization.ts"
   },
   "currentCapabilities": [
-    "Procedural 3D exterior Vault Island with reflective crystalline ocean, animated golden sunset atmosphere, inhabited horizon islands, a foam-lined faceted shoreline, two-gallery cliff-vault base, staggered honey-limestone ashlar courses, source-led radial garden parterres, a luminous radial prismatic crystal fountain, a broad sun-crest marina gate, three interchangeable perimeter assemblies, and the v016 Blender-authored two-storey palace with reinforced horizontal cornices, polished-gold belts, four domed towers, six crown turrets, a main dome drum and lantern, arched entry cut-through, illuminated treasure arcades, jewel mosaics, and open-air museum sockets.",
+    "Procedural 3D exterior Vault Island with reflective crystalline ocean, seven animated overlapping golden-hour cloud banks, inhabited horizon islands, a foam-lined faceted shoreline, two-gallery cliff-vault base, staggered honey-limestone ashlar courses, source-led radial garden parterres with a warm ceremonial light axis, a luminous internally lit radial prismatic crystal fountain, a broad sun-crest marina gate, three interchangeable perimeter assemblies, and the v016 Blender-authored two-storey palace with reinforced horizontal cornices, polished-gold belts, four domed towers, six crown turrets, a main dome drum and lantern, arched entry cut-through, illuminated treasure arcades, jewel mosaics, and open-air museum sockets.",
     "Separate monumental palace-atrium journey view with two very tall gallery floors, visible dome underside, central split staircase descent, a lower vault opening, and two side garden doors.",
     "Enterable procedural 3D vault room with rounded cut-ashlar masonry, a glossy radial marble-and-midnight-enamel tile floor, round vault door, visible palace-dome underside, two tall interior gallery levels, split staircase descent, chandelier, glass display domes, eight treasure displays, sticker/charm wall, safe-deposit wall, wealth stacks, loose coin/gem overflow, spotlights, socket-to-central-inspection movement, automatic return placement, a compact expandable museum plaque, a lab-derived 89,200 holdings total, and saturated-gold reveal rings with warm light and gemstone sparkles.",
     "Reusable procedural treasure object family: crown, compass, obelisk, jeweled egg, hourglass, celestial vault key, sun medallion, and prosperity chalice. All use shared premium PBR material logic with procedural metal/marble detail and PMREM reflections. Treasure Lab supports direct 3D click-to-inspect, command-based inspect/return, close-up turntable spin, value presentation, and reveal celebration.",
@@ -113,7 +113,7 @@
     ]
   },
   "browserQaEvidence": {
-    "captureManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v111-exterior-radial-crystal-final/capture-manifest.v1.json",
+    "captureManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v113-ceremonial-light-cloud-final/capture-manifest.v1.json",
     "viewport": "390x844",
     "captures": [
       "exterior-390x844.png",
@@ -157,7 +157,7 @@
       "click-treasure-lab-chalice",
       "click-treasure-lab-chalice-reveal"
     ],
-    "visualReview": "Phone-size exterior, palace atrium, vault room, collection states, reveal states, inspect states, and all eight treasures were recaptured and inspected on 2026-08-29. The accepted v111 source-fidelity run verifies the v016 palace silhouette and cornice order, source-led radial garden axis, radial hexagonal-prism crystal fountain, expanded sun-crest marina gate, wet faceted shoreline rocks with contact foam, inhabited horizon villas, warm limestone and polished gold separation, reflective teal water, animated golden sky, and three instant persisted perimeter assemblies. Front, rear, both three-quarters, and top-oblique views remain coherent. The independent Quality Lord approved every required view and category at `0.86` or better with no veto. The full 26-capture, 25-interaction, 20-snapshot runtime gate passed with zero diagnostics."
+    "visualReview": "Phone-size exterior, palace atrium, vault room, collection states, reveal states, inspect states, and all eight treasures were recaptured and inspected on 2026-08-29. The accepted v113 finish run preserves the v016 palace and v111 radial crystal silhouette while adding brighter refractive crystal material, an animated cyan fountain core light, seven layered ivory-gold cloud banks, visible warm garden-axis lanterns, and a clearer lower-vault to fountain to palace-entry luminance hierarchy. Front, rear, both three-quarters, and top-oblique views remain coherent. The independent Quality Lord approved every required view and category at `0.86` or better, measured zero regression, and cleared every veto. The full 26-capture, 25-interaction, 20-snapshot runtime gate passed with zero diagnostics."
   },
   "productionQaEvidence": {
     "manifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/production-integration-v059/production-qa-manifest.v1.json",

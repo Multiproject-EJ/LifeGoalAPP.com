@@ -230,7 +230,10 @@ assert(source.contract.includes("collectionMode: 'read-only-authored-preview'"),
 assert(source.exteriorV2.includes("'/assets/islands/special/vault-island/vault-palace.glb'"), 'Exterior v2 must load the stable production palace GLB.');
 for (const exteriorDetail of [
   'vault-v2-source-led-ceremonial-garden-axis',
+  'vault-v2-ceremonial-axis-warm-lantern-marker',
   'vault-v2-fountain-radial-prismatic-crystal-crown',
+  'vault-v2-fountain-luminous-inner-crystal-core',
+  'vault-v2-fountain-cyan-heart-light',
   'vault-v2-marina-gate-curved-gilded-wing-rail',
   'vault-v2-wet-natural-shoreline-rock',
   'vault-v2-rock-contact-foam-ribbon',
