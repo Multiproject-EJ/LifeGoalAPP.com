@@ -1,0 +1,758 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-08-29T02:33:15.450Z",
+  "baseUrl": "http://127.0.0.1:5183",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 1,
+    "mobile": false
+  },
+  "captures": [
+    {
+      "label": "exterior",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/exterior-390x844.png"
+    },
+    {
+      "label": "exterior-left-three-quarter",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/exterior-left-three-quarter-390x844.png"
+    },
+    {
+      "label": "exterior-right-three-quarter",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/exterior-right-three-quarter-390x844.png"
+    },
+    {
+      "label": "exterior-rear",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/exterior-rear-390x844.png"
+    },
+    {
+      "label": "exterior-top-oblique",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/exterior-top-oblique-390x844.png"
+    },
+    {
+      "label": "atrium",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/atrium-390x844.png"
+    },
+    {
+      "label": "vault-initial",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/vault-initial-390x844.png"
+    },
+    {
+      "label": "vault-after-discovery-1",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/vault-after-discovery-1-390x844.png"
+    },
+    {
+      "label": "vault-after-reveal",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/vault-after-reveal-390x844.png"
+    },
+    {
+      "label": "production-collection-empty",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/production-collection-empty-390x844.png"
+    },
+    {
+      "label": "production-collection-partial",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/production-collection-partial-390x844.png"
+    },
+    {
+      "label": "production-new-relic-ceremony",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/production-new-relic-ceremony-390x844.png"
+    },
+    {
+      "label": "production-reserve-empty",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/production-reserve-empty-390x844.png"
+    },
+    {
+      "label": "production-reserve-legendary",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/production-reserve-legendary-390x844.png"
+    },
+    {
+      "label": "treasure-lab-initial",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-initial-390x844.png"
+    },
+    {
+      "label": "treasure-lab-after-reveal",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-after-reveal-390x844.png"
+    },
+    {
+      "label": "treasure-lab-inspect",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-inspect-390x844.png"
+    },
+    {
+      "label": "treasure-lab-pointer-inspect",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-pointer-inspect-390x844.png"
+    },
+    {
+      "label": "treasure-lab-obelisk",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-obelisk-390x844.png"
+    },
+    {
+      "label": "treasure-lab-egg",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-egg-390x844.png"
+    },
+    {
+      "label": "treasure-lab-hourglass",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-hourglass-390x844.png"
+    },
+    {
+      "label": "treasure-lab-key",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-key-390x844.png"
+    },
+    {
+      "label": "treasure-lab-medallion",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-medallion-390x844.png"
+    },
+    {
+      "label": "treasure-lab-chalice",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v102-golden-hour-limestone-final/treasure-lab-chalice-390x844.png"
+    }
+  ],
+  "interactions": [
+    {
+      "label": "click-enter-palace",
+      "result": {
+        "ok": true,
+        "text": "Enter palace"
+      }
+    },
+    {
+      "label": "click-descend-to-vault",
+      "result": {
+        "ok": true,
+        "text": "Descend to vault"
+      }
+    },
+    {
+      "label": "click-discovery-1",
+      "result": {
+        "ok": true,
+        "index": 1,
+        "text": "hotspotTap a special island hotspot"
+      }
+    },
+    {
+      "label": "click-discovery-2",
+      "result": {
+        "ok": true,
+        "index": 2,
+        "text": "riddleSolve a vault riddle"
+      }
+    },
+    {
+      "label": "click-vault-reveal",
+      "result": {
+        "ok": true,
+        "text": "Reveal"
+      }
+    },
+    {
+      "label": "production-collection-empty-enter-palace",
+      "result": {
+        "ok": true,
+        "text": "Enter palace"
+      }
+    },
+    {
+      "label": "production-collection-empty-descend-to-vault",
+      "result": {
+        "ok": true,
+        "text": "Descend to vault"
+      }
+    },
+    {
+      "label": "production-collection-partial-enter-palace",
+      "result": {
+        "ok": true,
+        "text": "Enter palace"
+      }
+    },
+    {
+      "label": "production-collection-partial-descend-to-vault",
+      "result": {
+        "ok": true,
+        "text": "Descend to vault"
+      }
+    },
+    {
+      "label": "click-treasure-lab-sapphire-compass",
+      "result": {
+        "ok": true,
+        "text": "Sapphire"
+      }
+    },
+    {
+      "label": "click-treasure-lab-reveal",
+      "result": {
+        "ok": true,
+        "text": "Reveal shine"
+      }
+    },
+    {
+      "label": "click-treasure-lab-inspect",
+      "result": {
+        "ok": true,
+        "text": "Inspect"
+      }
+    },
+    {
+      "label": "click-treasure-lab-gallery",
+      "result": {
+        "ok": true,
+        "text": "Gallery"
+      }
+    },
+    {
+      "label": "click-treasure-lab-canvas-selected",
+      "result": {
+        "ok": true,
+        "clientX": 195,
+        "clientY": 439
+      }
+    },
+    {
+      "label": "click-treasure-lab-pointer-gallery",
+      "result": {
+        "ok": true,
+        "text": "Gallery"
+      }
+    },
+    {
+      "label": "click-treasure-lab-obelisk",
+      "result": {
+        "ok": true,
+        "text": "Wisdom"
+      }
+    },
+    {
+      "label": "click-treasure-lab-egg",
+      "result": {
+        "ok": true,
+        "text": "Jeweled"
+      }
+    },
+    {
+      "label": "click-treasure-lab-hourglass",
+      "result": {
+        "ok": true,
+        "text": "Hourglass"
+      }
+    },
+    {
+      "label": "click-treasure-lab-key",
+      "result": {
+        "ok": true,
+        "text": "Celestial"
+      }
+    },
+    {
+      "label": "click-treasure-lab-medallion",
+      "result": {
+        "ok": true,
+        "text": "Sun"
+      }
+    },
+    {
+      "label": "click-treasure-lab-chalice",
+      "result": {
+        "ok": true,
+        "text": "Prosperity"
+      }
+    },
+    {
+      "label": "click-treasure-lab-chalice-reveal",
+      "result": {
+        "ok": true,
+        "text": "Reveal shine"
+      }
+    }
+  ],
+  "qaSnapshots": [
+    {
+      "label": "exterior-ready",
+      "snapshot": {
+        "view": "exterior",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 18651,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "exterior-left-three-quarter-ready",
+      "requestedYaw": -0.78,
+      "requestedCamera": "phone",
+      "snapshot": {
+        "view": "exterior",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 18651,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "exterior-right-three-quarter-ready",
+      "requestedYaw": 0.72,
+      "requestedCamera": "phone",
+      "snapshot": {
+        "view": "exterior",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 18651,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "exterior-rear-ready",
+      "requestedYaw": 3.06,
+      "requestedCamera": "phone",
+      "snapshot": {
+        "view": "exterior",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 18651,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "exterior-top-oblique-ready",
+      "requestedYaw": -0.08,
+      "requestedCamera": "top",
+      "snapshot": {
+        "view": "exterior",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 18651,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "atrium-ready",
+      "snapshot": {
+        "view": "atrium",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 32516,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "vault-ready",
+      "snapshot": {
+        "view": "vault",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 2,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 33843,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 8,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "crown",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "legendary",
+        "wealthIngotCount": 56,
+        "wealthCoinCount": 64,
+        "wealthGemCount": 26,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "vault-after-discovery-1",
+      "snapshot": {
+        "view": "vault",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 36977,
+        "sampledPixels": 9,
+        "variedPixelPairs": 6,
+        "clickableDisplays": 8,
+        "selectedTreasureId": "compass",
+        "revealRun": 1,
+        "inspectedDisplay": "compass",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "legendary",
+        "wealthIngotCount": 56,
+        "wealthCoinCount": 64,
+        "wealthGemCount": 26,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "vault-after-discovery-2",
+      "snapshot": {
+        "view": "vault",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 90,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 40105,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 8,
+        "selectedTreasureId": "obelisk",
+        "revealRun": 2,
+        "inspectedDisplay": "obelisk",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "legendary",
+        "wealthIngotCount": 56,
+        "wealthCoinCount": 64,
+        "wealthGemCount": 26,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "vault-after-reveal",
+      "snapshot": {
+        "view": "vault",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 135,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 42926,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 8,
+        "selectedTreasureId": "obelisk",
+        "revealRun": 3,
+        "inspectedDisplay": "obelisk",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "legendary",
+        "wealthIngotCount": 56,
+        "wealthCoinCount": 64,
+        "wealthGemCount": 26,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    },
+    {
+      "label": "production-collection-empty-ready",
+      "snapshot": {
+        "view": "vault",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 19247,
+        "sampledPixels": 9,
+        "variedPixelPairs": 6,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "crown",
+        "collectionValue": 0,
+        "holdingsValue": 6500,
+        "wealthTier": "abundant",
+        "wealthIngotCount": 36,
+        "wealthCoinCount": 42,
+        "wealthGemCount": 16,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-collection-preview?owned=0"
+      }
+    },
+    {
+      "label": "production-collection-partial-ready",
+      "snapshot": {
+        "view": "vault",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 19640,
+        "sampledPixels": 9,
+        "variedPixelPairs": 6,
+        "clickableDisplays": 3,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "crown",
+        "collectionValue": 29400,
+        "holdingsValue": 6500,
+        "wealthTier": "abundant",
+        "wealthIngotCount": 36,
+        "wealthCoinCount": 42,
+        "wealthGemCount": 16,
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-collection-preview?owned=3"
+      }
+    },
+    {
+      "label": "production-new-relic-ceremony-ready",
+      "snapshot": {
+        "qa": {
+          "view": "vault",
+          "quality": "high",
+          "isReady": true,
+          "palaceReady": true,
+          "requestedYaw": -0.08,
+          "frameCount": 45,
+          "canvasWidth": 390,
+          "canvasHeight": 844,
+          "sampledAtMs": 5856,
+          "sampledPixels": 9,
+          "variedPixelPairs": 6,
+          "clickableDisplays": 3,
+          "selectedTreasureId": "obelisk",
+          "revealRun": 1,
+          "inspectedDisplay": "obelisk",
+          "collectionValue": 29400,
+          "holdingsValue": 6500,
+          "wealthTier": "abundant",
+          "wealthIngotCount": 36,
+          "wealthCoinCount": 42,
+          "wealthGemCount": 16,
+          "lastPointerHit": "none",
+          "route": "/dev/vault-island-collection-preview?owned=3&featured=1&island=7"
+        },
+        "copy": "New relic · Island 7"
+      }
+    },
+    {
+      "label": "production-reserve-empty-ready",
+      "snapshot": {
+        "qa": {
+          "view": "vault",
+          "quality": "high",
+          "isReady": true,
+          "palaceReady": true,
+          "requestedYaw": -0.08,
+          "frameCount": 45,
+          "canvasWidth": 390,
+          "canvasHeight": 844,
+          "sampledAtMs": 5559,
+          "sampledPixels": 9,
+          "variedPixelPairs": 6,
+          "clickableDisplays": 3,
+          "selectedTreasureId": "obelisk",
+          "revealRun": 1,
+          "inspectedDisplay": "obelisk",
+          "collectionValue": 29400,
+          "holdingsValue": 0,
+          "wealthTier": "empty",
+          "wealthIngotCount": 0,
+          "wealthCoinCount": 0,
+          "wealthGemCount": 0,
+          "lastPointerHit": "none",
+          "route": "/dev/vault-island-collection-preview?owned=3&featured=1&island=7&holdings=0"
+        },
+        "header": "3/8 relics · 0 reserve"
+      }
+    },
+    {
+      "label": "production-reserve-legendary-ready",
+      "snapshot": {
+        "qa": {
+          "view": "vault",
+          "quality": "high",
+          "isReady": true,
+          "palaceReady": true,
+          "requestedYaw": -0.08,
+          "frameCount": 45,
+          "canvasWidth": 390,
+          "canvasHeight": 844,
+          "sampledAtMs": 5672,
+          "sampledPixels": 9,
+          "variedPixelPairs": 6,
+          "clickableDisplays": 3,
+          "selectedTreasureId": "obelisk",
+          "revealRun": 1,
+          "inspectedDisplay": "obelisk",
+          "collectionValue": 29400,
+          "holdingsValue": 25000,
+          "wealthTier": "legendary",
+          "wealthIngotCount": 56,
+          "wealthCoinCount": 64,
+          "wealthGemCount": 26,
+          "lastPointerHit": "none",
+          "route": "/dev/vault-island-collection-preview?owned=3&featured=1&island=7&holdings=25000"
+        },
+        "header": "3/8 relics · 25,000 reserve"
+      }
+    },
+    {
+      "label": "treasure-lab-dom-state",
+      "snapshot": {
+        "title": "Sapphire Astrolabe",
+        "activeDock": "Sapphire",
+        "canvasSize": {
+          "width": 390,
+          "height": 844
+        },
+        "qa": {
+          "selectedTreasureId": "compass",
+          "inspectMode": false,
+          "revealRun": 2,
+          "frameCount": 60,
+          "canvasWidth": 390,
+          "canvasHeight": 844,
+          "treasureCount": 8,
+          "museumValue": 9200
+        }
+      }
+    },
+    {
+      "label": "treasure-lab-inspect-ready",
+      "snapshot": {
+        "selectedTreasureId": "compass",
+        "inspectMode": true,
+        "revealRun": 2,
+        "frameCount": 90,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "treasureCount": 8,
+        "museumValue": 9200
+      }
+    },
+    {
+      "label": "treasure-lab-pointer-inspect-ready",
+      "snapshot": {
+        "selectedTreasureId": "compass",
+        "inspectMode": true,
+        "revealRun": 3,
+        "frameCount": 180,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "treasureCount": 8,
+        "museumValue": 9200
+      }
+    }
+  ],
+  "notes": [
+    "Chrome stderr included 48 diagnostic line(s); first line: DevTools listening on ws://127.0.0.1:9334/devtools/browser/0b30bb45-ed21-477e-b3d7-769e70b9bea6"
+  ],
+  "diagnostics": []
+}

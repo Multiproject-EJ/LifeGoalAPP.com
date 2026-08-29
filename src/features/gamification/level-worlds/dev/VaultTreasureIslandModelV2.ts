@@ -127,20 +127,24 @@ function createMaterials() {
   const hammered = createVaultSurfacePatternTexture('vault-v2-hammered-metal', 'hammered-metal', 7, 7);
   const marbleVein = createVaultSurfacePatternTexture('vault-v2-marble-vein', 'marble-vein', 3.5, 5.5);
   const cutStone = createVaultSurfacePatternTexture('vault-v2-cut-stone', 'cut-stone', 8, 5);
+  hammered.colorSpace = THREE.NoColorSpace;
+  marbleVein.colorSpace = THREE.NoColorSpace;
+  cutStone.colorSpace = THREE.NoColorSpace;
   const materials = {
     seabed: new THREE.MeshStandardMaterial({ color: '#168f9d', roughness: 0.92, metalness: 0 }),
     reefSand: new THREE.MeshStandardMaterial({ color: '#7ac7b7', roughness: 0.86, metalness: 0, transparent: true, opacity: 0.5 }),
     foam: new THREE.MeshBasicMaterial({ color: '#d9fbff', transparent: true, opacity: 0.46, blending: THREE.AdditiveBlending, depthWrite: false }),
-    sunDisc: new THREE.MeshBasicMaterial({ color: '#fff3c2', fog: false, toneMapped: false }),
-    sunHalo: new THREE.MeshBasicMaterial({ color: '#ffc987', fog: false, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
-    cloudWarm: new THREE.MeshStandardMaterial({ color: '#f4d4c0', roughness: 1, metalness: 0, transparent: true, opacity: 0.46, depthWrite: false }),
-    cloudShadow: new THREE.MeshStandardMaterial({ color: '#91aeb4', roughness: 1, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false }),
+    sunDisc: new THREE.MeshBasicMaterial({ color: '#ffd36f', fog: false, toneMapped: false }),
+    sunHalo: new THREE.MeshBasicMaterial({ color: '#ff9e45', fog: false, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    cloudWarm: new THREE.MeshStandardMaterial({ color: '#efb27c', roughness: 1, metalness: 0, transparent: true, opacity: 0.48, depthWrite: false }),
+    cloudShadow: new THREE.MeshStandardMaterial({ color: '#81777e', roughness: 1, metalness: 0, transparent: true, opacity: 0.28, depthWrite: false }),
     rock: new THREE.MeshStandardMaterial({ color: '#59636a', roughness: 0.86, metalness: 0.02 }),
     horizonRock: new THREE.MeshStandardMaterial({ color: '#2f5c5b', roughness: 0.92, metalness: 0, emissive: '#173b36', emissiveIntensity: 0.14 }),
     horizonGreen: new THREE.MeshStandardMaterial({ color: '#214f41', roughness: 0.96, metalness: 0 }),
-    stone: new THREE.MeshPhysicalMaterial({ color: '#f0eadf', roughness: 0.52, bumpMap: cutStone, bumpScale: 0.045, envMapIntensity: 0.65 }),
-    stoneShade: new THREE.MeshStandardMaterial({ color: '#aaa69f', roughness: 0.78, bumpMap: cutStone, bumpScale: 0.06 }),
-    marble: new THREE.MeshPhysicalMaterial({ color: '#fff8e8', roughness: 0.27, metalness: 0.02, clearcoat: 0.42, clearcoatRoughness: 0.18, bumpMap: marbleVein, bumpScale: 0.026, envMapIntensity: 1.08 }),
+    stone: new THREE.MeshPhysicalMaterial({ color: '#cbb895', roughness: 0.7, roughnessMap: cutStone, bumpMap: cutStone, bumpScale: 0.065, envMapIntensity: 0.48 }),
+    stoneShade: new THREE.MeshStandardMaterial({ color: '#7f6b52', roughness: 0.86, bumpMap: cutStone, bumpScale: 0.075 }),
+    limestone: new THREE.MeshPhysicalMaterial({ color: '#e3d1ae', roughness: 0.5, roughnessMap: cutStone, metalness: 0, clearcoat: 0.06, clearcoatRoughness: 0.52, bumpMap: cutStone, bumpScale: 0.052, envMapIntensity: 0.7 }),
+    marble: new THREE.MeshPhysicalMaterial({ color: '#f2e3ca', roughness: 0.34, metalness: 0.01, clearcoat: 0.3, clearcoatRoughness: 0.26, bumpMap: marbleVein, bumpScale: 0.022, envMapIntensity: 0.84 }),
     gold: new THREE.MeshPhysicalMaterial({ color: '#d7a029', roughness: 0.1, metalness: 1, clearcoat: 0.62, clearcoatRoughness: 0.045, bumpMap: hammered, bumpScale: 0.009, emissive: '#2a1000', emissiveIntensity: 0.045, envMapIntensity: 2.15 }),
     darkGold: new THREE.MeshPhysicalMaterial({ color: '#8e5d10', roughness: 0.22, metalness: 1, bumpMap: hammered, bumpScale: 0.016, envMapIntensity: 1.55 }),
     blackMetal: new THREE.MeshPhysicalMaterial({ color: '#11161c', roughness: 0.24, metalness: 0.82, clearcoat: 0.45, clearcoatRoughness: 0.1, envMapIntensity: 1.5 }),
@@ -157,6 +161,10 @@ function createMaterials() {
     ruby: new THREE.MeshPhysicalMaterial({ color: '#c9274b', roughness: 0.06, transmission: 0.22, thickness: 0.3, clearcoat: 1, emissive: '#410613', emissiveIntensity: 0.16, envMapIntensity: 1.85 }),
     sail: new THREE.MeshStandardMaterial({ color: '#fff4de', roughness: 0.5, side: THREE.DoubleSide }),
   };
+  materials.stone.name = 'vault-v2-weathered-honey-limestone';
+  materials.stoneShade.name = 'vault-v2-deep-limestone-reveal';
+  materials.limestone.name = 'vault-v2-dressed-honey-limestone';
+  materials.marble.name = 'vault-v2-polished-warm-marble-trim';
   return { materials, textures: [hammered, marbleVein, cutStone] };
 }
 
@@ -222,16 +230,16 @@ function addCloudBank(
 }
 
 function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
-  const sunDirection = new THREE.Vector3(0.35, 0.1, -0.93).normalize();
+  const sunDirection = new THREE.Vector3(-0.42, 0.075, -0.9).normalize();
   const sky = new Sky();
   sky.name = 'vault-v2-three-dimensional-sunset-sky-dome';
   sky.scale.setScalar(10000);
   sky.frustumCulled = false;
   const skyMaterial = sky.material as THREE.ShaderMaterial;
-  skyMaterial.uniforms.turbidity.value = 5.2;
-  skyMaterial.uniforms.rayleigh.value = 2.0;
-  skyMaterial.uniforms.mieCoefficient.value = 0.005;
-  skyMaterial.uniforms.mieDirectionalG.value = 0.82;
+  skyMaterial.uniforms.turbidity.value = 8.4;
+  skyMaterial.uniforms.rayleigh.value = 1.45;
+  skyMaterial.uniforms.mieCoefficient.value = 0.008;
+  skyMaterial.uniforms.mieDirectionalG.value = 0.88;
   skyMaterial.uniforms.sunPosition.value.copy(sunDirection).multiplyScalar(1000);
   skyMaterial.uniforms.cloudScale.value = 0.001;
   skyMaterial.uniforms.cloudSpeed.value = 0.018;
@@ -246,7 +254,7 @@ function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultI
     materials.sunDisc,
   );
   sunsetSun.name = 'vault-v2-three-dimensional-sunset-sun';
-  sunsetSun.position.set(4, 5, -15);
+  sunsetSun.position.set(-5.8, 4.35, -15);
   sunsetSun.castShadow = false;
   sunsetSun.receiveShadow = false;
   sunsetSun.renderOrder = 10;
@@ -296,7 +304,7 @@ function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultI
     textureHeight: quality === 'low' ? 128 : 256,
     waterNormals,
     sunDirection,
-    sunColor: '#ffd29a',
+    sunColor: '#ffc164',
     waterColor: '#25a6aa',
     distortionScale: 0.62,
     alpha: 0.74,
@@ -376,7 +384,7 @@ function addRockAndMasonry(root: THREE.Group, materials: Materials, quality: Vau
     const angularOffset = row % 2 === 0 ? 0 : Math.PI / blockCount;
     for (let index = 0; index < blockCount; index += 1) {
       const angle = (index / blockCount) * Math.PI * 2 + angularOffset;
-      const block = mesh(new THREE.BoxGeometry((Math.PI * 2 * CLIFF_RADIUS) / blockCount * 0.9, 0.19, 0.19), row % 3 === 0 ? materials.stone : materials.marble, 'vault-v2-individual-ashlar-block');
+      const block = mesh(new THREE.BoxGeometry((Math.PI * 2 * CLIFF_RADIUS) / blockCount * 0.9, 0.19, 0.19), row % 3 === 0 ? materials.stone : materials.limestone, 'vault-v2-individual-ashlar-block');
       block.position.set(Math.sin(angle) * CLIFF_RADIUS, 0.2 + row * 0.225, Math.cos(angle) * CLIFF_RADIUS);
       block.rotation.y = angle;
       root.add(block);
@@ -415,7 +423,7 @@ function addGalleryBay(root: THREE.Group, materials: Materials, quality: VaultIs
   const shadowPocket = mesh(archedPanel(0.37, 0.31, 0.035), materials.void, 'vault-v2-gallery-inner-shadow-pocket');
   shadowPocket.position.z = 0.09;
   bay.add(shadowPocket);
-  const stoneArch = mesh(new THREE.TorusGeometry(0.28, 0.05, 8, segments(quality, 18, 26, 34), Math.PI), materials.marble, 'vault-v2-gallery-stone-arch');
+  const stoneArch = mesh(new THREE.TorusGeometry(0.28, 0.05, 8, segments(quality, 18, 26, 34), Math.PI), materials.limestone, 'vault-v2-gallery-stone-arch');
   stoneArch.position.set(0, 0.44, 0.065);
   bay.add(stoneArch);
   const goldArch = mesh(new THREE.TorusGeometry(0.24, 0.018, 7, segments(quality, 18, 28, 38), Math.PI), materials.gold, 'vault-v2-gallery-inner-gold-arch');
@@ -498,7 +506,7 @@ function addInhabitedGalleries(root: THREE.Group, materials: Materials, quality:
   for (let index = 0; index < count; index += 1) {
     const angle = THREE.MathUtils.lerp(-Math.PI * 0.72, Math.PI * 0.72, index / (count - 1));
     if (Math.abs(angle) < 0.18) continue;
-    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.marble, 'vault-v2-two-floor-gallery-buttress');
+    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.limestone, 'vault-v2-two-floor-gallery-buttress');
     buttress.position.set(Math.sin(angle) * 3.025, 1, Math.cos(angle) * 3.025);
     root.add(buttress);
     const finial = mesh(new THREE.OctahedronGeometry(0.075, 0), index % 3 === 0 ? materials.cyan : materials.gold, 'vault-v2-gallery-buttress-finial');
@@ -508,7 +516,7 @@ function addInhabitedGalleries(root: THREE.Group, materials: Materials, quality:
   const rearButtressCount = quality === 'low' ? 5 : 6;
   for (let index = 0; index < rearButtressCount; index += 1) {
     const angle = THREE.MathUtils.lerp(Math.PI * 0.76, Math.PI * 1.24, index / (rearButtressCount - 1));
-    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.marble, 'vault-v2-rear-two-floor-gallery-buttress');
+    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.limestone, 'vault-v2-rear-two-floor-gallery-buttress');
     buttress.position.set(Math.sin(angle) * 3.025, 1, Math.cos(angle) * 3.025);
     root.add(buttress);
     const finial = mesh(new THREE.OctahedronGeometry(0.075, 0), index % 2 === 0 ? materials.cyan : materials.gold, 'vault-v2-rear-gallery-buttress-finial');
@@ -529,7 +537,7 @@ function addGrandVaultPortal(root: THREE.Group, materials: Materials, quality: V
   const portal = new THREE.Group();
   portal.name = 'vault-v2-grand-front-vault-portal';
   portal.position.set(0, 0.32, 3.02);
-  portal.add(mesh(archedPanel(1.46, 0.98, 0.34), materials.marble, 'vault-v2-vault-monumental-stone-surround'));
+  portal.add(mesh(archedPanel(1.46, 0.98, 0.34), materials.limestone, 'vault-v2-vault-monumental-stone-surround'));
   const recess = mesh(archedPanel(1.06, 0.78, 0.1), materials.void, 'vault-v2-vault-deep-entry-pocket');
   recess.position.z = 0.205;
   portal.add(recess);
@@ -1402,11 +1410,14 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
             if (!(palaceMaterial instanceof THREE.MeshStandardMaterial)) return;
             const materialName = palaceMaterial.name.toLowerCase();
             if (materialName.includes('white-marble')) {
-              palaceMaterial.color.set('#e5dfd1');
-              palaceMaterial.roughness = 0.29;
-              palaceMaterial.bumpMap = textures[1];
-              palaceMaterial.bumpScale = 0.024;
-              palaceMaterial.envMapIntensity = 1.12;
+              palaceMaterial.name = 'vault-palace-dressed-honey-limestone';
+              palaceMaterial.color.set('#e0cdaa');
+              palaceMaterial.roughness = 0.5;
+              palaceMaterial.roughnessMap = textures[2];
+              palaceMaterial.metalness = 0;
+              palaceMaterial.bumpMap = textures[2];
+              palaceMaterial.bumpScale = 0.048;
+              palaceMaterial.envMapIntensity = 0.74;
             } else if (materialName.includes('polished-gold')) {
               palaceMaterial.color.set('#d7a029');
               palaceMaterial.metalness = 1;

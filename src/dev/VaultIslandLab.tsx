@@ -200,10 +200,10 @@ export default function VaultIslandLab({
     lastPointerHitRef.current = 'none';
     const scene = new THREE.Scene();
     const isInteriorView = view !== 'exterior';
-    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#8fb8bd';
+    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#c8a984';
     scene.background = new THREE.Color(backgroundColor);
     scene.fog = new THREE.Fog(
-      view === 'exterior' ? '#9dbab7' : backgroundColor,
+      view === 'exterior' ? '#d3b184' : backgroundColor,
       view === 'vault' ? 7 : view === 'atrium' ? 18 : 36,
       view === 'vault' ? 18 : view === 'atrium' ? 38 : 78,
     );
@@ -235,20 +235,20 @@ export default function VaultIslandLab({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = view === 'atrium' ? 0.94 : isInteriorView ? 0.95 : 0.96;
+    renderer.toneMappingExposure = view === 'atrium' ? 0.94 : isInteriorView ? 0.95 : 0.9;
     renderer.shadowMap.enabled = quality !== 'low';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
-    const premiumEnvironment = installVaultPremiumEnvironment(renderer, scene, isInteriorView ? 0.52 : 0.43);
+    const premiumEnvironment = installVaultPremiumEnvironment(renderer, scene, isInteriorView ? 0.52 : 0.32);
 
     const hemi = new THREE.HemisphereLight(
-      isInteriorView ? '#fff1c3' : '#fff1d2',
-      isInteriorView ? '#081326' : '#0b405e',
-      view === 'atrium' ? 1.02 : isInteriorView ? 0.92 : 0.72,
+      isInteriorView ? '#fff1c3' : '#ffd18b',
+      isInteriorView ? '#081326' : '#17465b',
+      view === 'atrium' ? 1.02 : isInteriorView ? 0.92 : 0.58,
     );
     scene.add(hemi);
 
-    const sun = new THREE.DirectionalLight(isInteriorView ? '#fff0c7' : '#ffd39b', view === 'atrium' ? 3.2 : isInteriorView ? 2.95 : 3.45);
+    const sun = new THREE.DirectionalLight(isInteriorView ? '#fff0c7' : '#ffc05a', view === 'atrium' ? 3.2 : isInteriorView ? 2.95 : 3.25);
     sun.position.set(isInteriorView ? -2.2 : 7.2, view === 'atrium' ? 7.2 : isInteriorView ? 5.6 : 7.6, isInteriorView ? 4.8 : -8.8);
     sun.castShadow = quality !== 'low';
     sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
@@ -260,9 +260,16 @@ export default function VaultIslandLab({
     sun.shadow.camera.bottom = -5;
     scene.add(sun);
 
-    const rim = new THREE.DirectionalLight('#7df4ff', isInteriorView ? 1.28 : 0.5);
+    const rim = new THREE.DirectionalLight('#79d7df', isInteriorView ? 1.28 : 0.24);
     rim.position.set(4, 2.2, -4);
     scene.add(rim);
+
+    if (!isInteriorView) {
+      const goldenBounce = new THREE.DirectionalLight('#ffd69a', 0.62);
+      goldenBounce.name = 'vault-island-golden-hour-front-bounce';
+      goldenBounce.position.set(-5.5, 4.2, 8.5);
+      scene.add(goldenBounce);
+    }
 
     const model = view === 'vault'
       ? createVaultTreasureVaultInteriorModel({

@@ -113,6 +113,18 @@ function meshCount(rootObject) {
   return count;
 }
 
+function collectMaterialNames(rootObject) {
+  const names = new Set();
+  rootObject.traverse((child) => {
+    if (!child.isMesh) return;
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    materials.forEach((material) => {
+      if (material?.name) names.add(material.name);
+    });
+  });
+  return names;
+}
+
 function assertHasNames(names, expected, label) {
   for (const name of expected) {
     assert(names.has(name), `${label} is missing scene node: ${name}.`);
@@ -149,6 +161,7 @@ assert(existsSync(blenderPalaceAsset) && statSync(blenderPalaceAsset).size > 1_0
 
 const exterior = exteriorModule.createVaultTreasureIslandModel({ quality: 'high', animated: true });
 const exteriorNames = collectNames(exterior.root);
+const exteriorMaterialNames = collectMaterialNames(exterior.root);
 assert(exterior.root.userData.sculptRuntime?.id === 'vault-island-exterior-v2', 'Exterior model is missing v2 sculptRuntime id.');
 assert(exterior.root.userData.sculptRuntime?.productionUnits === 18, 'Exterior v2 must expose the approved 18-unit production inventory.');
 assert(meshCount(exterior.root) > 500, 'Exterior v2 should contain the palace, jewelry, garden, and inhabited cliff construction systems.');
@@ -190,6 +203,9 @@ assert(countNamed(exterior.root, 'vault-v2-horizon-cliff-island') === 4, 'Exteri
 assert(countNamed(exterior.root, 'vault-v2-sailboat') === 3, 'Exterior v2 should include three animated sailboats.');
 assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 3, 'Exterior v2 should include three animated 3D sunset cloud banks.');
 assert(countNamed(exterior.root, 'vault-v2-submerged-sunlit-reef-patch') === 6, 'Exterior v2 should include six submerged reef patches beneath the transparent ocean.');
+assert(exteriorMaterialNames.has('vault-v2-weathered-honey-limestone'), 'Exterior masonry should retain weathered honey-limestone material variation.');
+assert(exteriorMaterialNames.has('vault-v2-dressed-honey-limestone'), 'Exterior architecture should retain dressed honey-limestone surfaces.');
+assert(exteriorMaterialNames.has('vault-v2-polished-warm-marble-trim'), 'Exterior should reserve polished warm marble for trim and circulation surfaces.');
 const exteriorOcean = exterior.root.getObjectByName('vault-v2-ocean');
 const exteriorSky = exterior.root.getObjectByName('vault-v2-three-dimensional-sunset-sky-dome');
 assert(exteriorOcean?.isWater === true, 'Exterior ocean should use the reflective Three.js Water runtime.');
