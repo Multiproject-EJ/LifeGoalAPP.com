@@ -6,8 +6,19 @@ import {
   resolveVaultIslandWealthDisplay,
   VAULT_ISLAND_COLLECTION_TREASURE_IDS,
 } from '../islandRunVaultCollection';
+import { normalizeVaultIslandPerimeterStyle } from '../islandRunVaultCustomization';
 
 export const islandRunVaultCollectionTests: TestCase[] = [
+  {
+    name: 'normalizes the persisted Vault Island perimeter cosmetic without gameplay state',
+    run: () => {
+      assertEqual(normalizeVaultIslandPerimeterStyle('charms'), 'charms', 'the charm bracelet is a valid perimeter');
+      assertEqual(normalizeVaultIslandPerimeterStyle('garden'), 'garden', 'the planted promenade is a valid perimeter');
+      assertEqual(normalizeVaultIslandPerimeterStyle('gold-castle'), 'gold-castle', 'the solid-gold castle molding is a valid perimeter');
+      assertEqual(normalizeVaultIslandPerimeterStyle('unknown'), 'charms', 'malformed persistence falls back safely');
+      assertEqual(normalizeVaultIslandPerimeterStyle(null), 'charms', 'missing persistence uses the default');
+    },
+  },
   {
     name: 'unlocks the special Vault Island only after the Island 004 mission is complete',
     run: () => {
@@ -135,6 +146,7 @@ export const islandRunVaultCollectionTests: TestCase[] = [
       const giftModalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/VaultIslandGiftUnlockModal.tsx', 'utf8');
       const giftModalCss = fsMod.readFileSync('src/features/gamification/level-worlds/components/VaultIslandGiftUnlockModal.css', 'utf8');
       const labSource = fsMod.readFileSync('src/dev/VaultIslandLab.tsx', 'utf8');
+      const customizationSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRunVaultCustomization.ts', 'utf8');
       const focusTrapSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/useVaultModalFocusTrap.ts', 'utf8');
       assert(boardSource.includes('resolveVaultIslandCollection(runtimeState.vaultRushClaimsByIsland)'), 'the board derives ownership from the canonical claim ledger');
       assert(boardSource.includes('isVaultIslandCollectionUnlocked(runtimeState.signatureMissionProgressByIsland)'), 'the board derives Vault Island access from the canonical Island 004 mission ledger');
@@ -160,6 +172,9 @@ export const islandRunVaultCollectionTests: TestCase[] = [
       assert(focusTrapSource.includes('previouslyFocused?.focus()'), 'the shared focus trap restores the launcher focus on close');
       assert(labSource.includes('Collection register mode'), 'WebGL failure preserves a readable museum register');
       assert(labSource.includes('Next relic'), 'the fallback register can browse every owned treasure without 3D hit targets');
+      assert(customizationSource.includes('window.localStorage'), 'the perimeter cosmetic is stored outside canonical gameplay state');
+      assert(!customizationSource.includes('persistIslandRunRuntimeStatePatch'), 'the perimeter cosmetic cannot write canonical gameplay state');
+      assert(!customizationSource.includes('islandRunStateActions'), 'the perimeter cosmetic cannot invoke gameplay actions');
       assert(!modalSource.includes('persistIslandRunRuntimeStatePatch'), 'the collection modal cannot write gameplay state');
       assert(!modalSource.includes('claimVaultRushReward'), 'the collection modal cannot grant its own rewards');
       assert(!giftModalSource.includes('persistIslandRunRuntimeStatePatch'), 'the gift reveal cannot write gameplay state');

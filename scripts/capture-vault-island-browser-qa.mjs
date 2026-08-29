@@ -280,6 +280,25 @@ async function main() {
     logStep('capturing exterior screenshot');
     manifest.captures.push({ label: 'exterior', path: await screenshot(client, 'exterior-390x844.png') });
 
+    for (const perimeter of [
+      { label: 'Garden', id: 'garden', capture: 'exterior-garden-ring' },
+      { label: 'Gold', id: 'gold-castle', capture: 'exterior-gold-castle' },
+    ]) {
+      logStep(`selecting ${perimeter.capture}`);
+      const selection = await clickButtonContaining(client, perimeter.label, '.vault-island-lab__perimeter-selector button');
+      manifest.interactions.push({ label: `click-${perimeter.capture}`, result: selection });
+      const perimeterQa = await waitForExpression(
+        client,
+        `(() => { const qa = window.__vaultIslandLabQa; return qa && qa.perimeterStyle === ${JSON.stringify(perimeter.id)} ? JSON.parse(JSON.stringify(qa)) : null; })()`,
+      );
+      manifest.qaSnapshots.push({ label: `${perimeter.capture}-ready`, snapshot: perimeterQa });
+      manifest.captures.push({ label: perimeter.capture, path: await screenshot(client, `${perimeter.capture}-390x844.png`) });
+    }
+
+    const restoreCharms = await clickButtonContaining(client, 'Charms', '.vault-island-lab__perimeter-selector button');
+    manifest.interactions.push({ label: 'click-exterior-charms-restore', result: restoreCharms });
+    await waitForExpression(client, '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.perimeterStyle === "charms" ? JSON.parse(JSON.stringify(qa)) : null; })()');
+
     const exteriorOrbitViews = [
       { label: 'exterior-left-three-quarter', yaw: -0.78, camera: 'phone' },
       { label: 'exterior-right-three-quarter', yaw: 0.72, camera: 'phone' },

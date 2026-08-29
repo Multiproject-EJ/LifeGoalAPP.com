@@ -33,6 +33,10 @@ const moduleMap = new Map([
     'src/features/gamification/level-worlds/dev/VaultTreasureInteriorArchitectureV3.mjs',
   ],
   [
+    'src/features/gamification/level-worlds/services/islandRunVaultCustomization.ts',
+    'src/features/gamification/level-worlds/services/islandRunVaultCustomization.mjs',
+  ],
+  [
     'src/features/gamification/level-worlds/dev/VaultTreasureIslandModel.ts',
     'src/features/gamification/level-worlds/dev/VaultTreasureIslandModel.mjs',
   ],
@@ -137,6 +141,7 @@ const modelsModule = await import(join(outRoot, 'src/features/gamification/level
 const contractModule = await import(join(outRoot, 'src/features/gamification/level-worlds/dev/VaultIslandLabContract.mjs'));
 const exteriorModule = await import(join(outRoot, 'src/features/gamification/level-worlds/dev/VaultTreasureIslandModel.mjs'));
 const interiorModule = await import(join(outRoot, 'src/features/gamification/level-worlds/dev/VaultTreasureVaultInteriorModel.mjs'));
+const customizationModule = await import(join(outRoot, 'src/features/gamification/level-worlds/services/islandRunVaultCustomization.mjs'));
 
 const {
   VAULT_TREASURE_DEFINITIONS,
@@ -148,6 +153,7 @@ const {
   VAULT_TREASURE_DISCOVERY_RULES,
   VAULT_TREASURE_PLACEMENT_SOCKETS,
 } = contractModule;
+const { normalizeVaultIslandPerimeterStyle } = customizationModule;
 
 assert(VAULT_TREASURE_DEFINITIONS.length === 8, 'Expected exactly eight authored vault treasure definitions.');
 assert(VAULT_TREASURE_DISCOVERY_RULES.length >= 8, 'Expected at least eight vault discovery rules.');
@@ -155,6 +161,9 @@ assert(VAULT_TREASURE_PLACEMENT_SOCKETS.length >= 10, 'Expected at least ten vau
 assert(VAULT_ISLAND_ACTION_READY_REQUIREMENTS.visualOnlyDevLab === true, 'Vault action-ready requirements must remain visual-only for now.');
 assert(VAULT_ISLAND_MUSEUM_PRESENTATION.gameplayWrites === false, 'Museum presentation contract must not permit gameplay writes.');
 assert(VAULT_ISLAND_MUSEUM_PRESENTATION.selectedRelicMotion.includes('central-inspection-stage'), 'Museum presentation must require central relic inspection.');
+assert(normalizeVaultIslandPerimeterStyle('garden') === 'garden', 'Garden must be a valid Vault Island perimeter style.');
+assert(normalizeVaultIslandPerimeterStyle('gold-castle') === 'gold-castle', 'Gold castle must be a valid Vault Island perimeter style.');
+assert(normalizeVaultIslandPerimeterStyle('invalid') === 'charms', 'Invalid Vault Island perimeter styles must fall back to charms.');
 const blenderPalaceAsset = join(root, 'public/assets/islands/special/vault-island/vault-palace.glb');
 assert(existsSync(blenderPalaceAsset), 'Exterior v2 is missing the Blender-authored palace GLB.');
 assert(existsSync(blenderPalaceAsset) && statSync(blenderPalaceAsset).size > 1_000_000, 'Blender palace GLB is unexpectedly small.');
@@ -170,6 +179,7 @@ assertHasNames(exteriorNames, [
   'vault-v2-three-dimensional-sunset-sky-dome',
   'vault-v2-three-dimensional-sunset-sun',
   'vault-v2-three-dimensional-sunset-halo',
+  'vault-v2-animated-golden-scattering-dome',
   'vault-v2-animated-three-dimensional-cloud-bank',
   'vault-v2-submerged-crystalline-seabed',
   'vault-v2-submerged-sunlit-reef-patch',
@@ -184,6 +194,8 @@ assertHasNames(exteriorNames, [
   'vault-v2-vault-round-door',
   'vault-v2-marina-stair-and-gate',
   'vault-v2-articulated-charm-bracelet',
+  'vault-v2-living-garden-perimeter',
+  'vault-v2-solid-gold-castle-perimeter',
   'vault-v2-bracelet-inner-silver-rail',
   'vault-v2-bracelet-outer-silver-rail',
   'vault-v2-bracelet-openwork-gold-diagonal',
@@ -201,19 +213,36 @@ assert(countNamed(exterior.root, 'vault-v2-upper-inhabited-gallery-bay') >= 10, 
 assert(countNamed(exterior.root, 'vault-v2-bracelet-openwork-link-coupler') >= 8, 'Exterior v2 must read as a large-cadence articulated jewelry perimeter.');
 assert(countNamed(exterior.root, 'vault-v2-horizon-cliff-island') === 4, 'Exterior v2 should retain a layered four-island 3D horizon.');
 assert(countNamed(exterior.root, 'vault-v2-sailboat') === 3, 'Exterior v2 should include three animated sailboats.');
-assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 3, 'Exterior v2 should include three animated 3D sunset cloud banks.');
+assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 5, 'Exterior v2 should include five layered animated 3D sunset cloud banks.');
 assert(countNamed(exterior.root, 'vault-v2-submerged-sunlit-reef-patch') === 6, 'Exterior v2 should include six submerged reef patches beneath the transparent ocean.');
+assert(countNamed(exterior.root, 'vault-v2-garden-ring-planted-station') >= 12, 'Garden perimeter should contain a substantial planted ring.');
+assert(countNamed(exterior.root, 'vault-v2-gold-castle-relief-panel') >= 12, 'Gold castle perimeter should contain a substantial relief-panel frieze.');
+assert(countNamed(exterior.root, 'vault-v2-gold-castle-ornamental-tower') === 8, 'Gold castle perimeter should contain eight ornamental towers.');
 assert(exteriorMaterialNames.has('vault-v2-weathered-honey-limestone'), 'Exterior masonry should retain weathered honey-limestone material variation.');
 assert(exteriorMaterialNames.has('vault-v2-dressed-honey-limestone'), 'Exterior architecture should retain dressed honey-limestone surfaces.');
 assert(exteriorMaterialNames.has('vault-v2-polished-warm-marble-trim'), 'Exterior should reserve polished warm marble for trim and circulation surfaces.');
+assert(exteriorMaterialNames.has('vault-v2-royal-solid-gold'), 'Gold castle customization should use its bright solid-gold material.');
 const exteriorOcean = exterior.root.getObjectByName('vault-v2-ocean');
 const exteriorSky = exterior.root.getObjectByName('vault-v2-three-dimensional-sunset-sky-dome');
+const exteriorGoldenSky = exterior.root.getObjectByName('vault-v2-animated-golden-scattering-dome');
 assert(exteriorOcean?.isWater === true, 'Exterior ocean should use the reflective Three.js Water runtime.');
 assert(exteriorSky?.isSky === true, 'Exterior atmosphere should use the analytic Three.js Sky runtime.');
+assert(exteriorGoldenSky?.isMesh === true, 'Exterior atmosphere should layer a real procedural golden scattering dome.');
+const charmPerimeter = exterior.root.getObjectByName('vault-v2-articulated-charm-bracelet');
+const gardenPerimeter = exterior.root.getObjectByName('vault-v2-living-garden-perimeter');
+const goldCastlePerimeter = exterior.root.getObjectByName('vault-v2-solid-gold-castle-perimeter');
+assert(exterior.root.userData.perimeterStyle === 'charms', 'Exterior should default to the charm perimeter.');
+assert(charmPerimeter?.visible === true && gardenPerimeter?.visible === false && goldCastlePerimeter?.visible === false, 'Only the default charm perimeter should initially render.');
+exterior.setPerimeterStyle?.('garden');
+assert(exterior.root.userData.perimeterStyle === 'garden' && gardenPerimeter?.visible === true && charmPerimeter?.visible === false, 'Garden perimeter selection should swap visible geometry immediately.');
+exterior.setPerimeterStyle?.('gold-castle');
+assert(exterior.root.userData.perimeterStyle === 'gold-castle' && goldCastlePerimeter?.visible === true && gardenPerimeter?.visible === false, 'Gold castle perimeter selection should swap visible geometry immediately.');
+exterior.setPerimeterStyle?.('charms');
 const oceanTimeBeforeUpdate = exteriorOcean.material.uniforms.time.value;
 exterior.update(1.25);
 assert(exteriorOcean.material.uniforms.time.value > oceanTimeBeforeUpdate, 'Exterior water time uniform should animate.');
 assert(exteriorSky.material.uniforms.time.value === 1.25, 'Exterior sky cloud time uniform should animate.');
+assert(exteriorGoldenSky.material.uniforms.time.value === 1.25, 'Exterior golden scattering time uniform should animate.');
 exterior.dispose();
 
 const atrium = interiorModule.createVaultTreasurePalaceAtriumModel({ quality: 'high', animated: true });

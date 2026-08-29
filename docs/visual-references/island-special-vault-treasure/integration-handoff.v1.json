@@ -34,7 +34,8 @@
     "routeWiring": "src/main.tsx",
     "productionBoardEntry": "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx",
     "productionModal": "src/features/gamification/level-worlds/components/VaultIslandCollectionModal.tsx",
-    "productionModalStyles": "src/features/gamification/level-worlds/components/VaultIslandCollectionModal.css"
+    "productionModalStyles": "src/features/gamification/level-worlds/components/VaultIslandCollectionModal.css",
+    "vaultCustomization": "src/features/gamification/level-worlds/services/islandRunVaultCustomization.ts"
   },
   "currentCapabilities": [
     "Procedural 3D exterior Vault Island with ocean, a two-gallery inhabited cliff-vault base, staggered cut-ashlar courses, raised garden terrace, dominant polished-silver-and-gold bracelet ring, continuous custom-extruded two-storey palace shell, real arched entry cut-through, raised marble garden approach, four attached domed towers, six crown turrets, main dome drum and lantern, centered vault facade, illuminated treasure arcades, jewel mosaics, crystal waterfall veils, marina, boats, and open-air museum sockets.",
@@ -43,6 +44,7 @@
     "Reusable procedural treasure object family: crown, compass, obelisk, jeweled egg, hourglass, celestial vault key, sun medallion, and prosperity chalice. All use shared premium PBR material logic with procedural metal/marble detail and PMREM reflections. Treasure Lab supports direct 3D click-to-inspect, command-based inspect/return, close-up turntable spin, value presentation, and reveal celebration.",
     "Lab-only discovery path simulator for roll-search, hotspot, riddle, mission, and boss-relic reveals.",
     "Browser-side Runtime QA panel and window.__vaultIslandLabQa snapshot hook.",
+    "Instant persisted perimeter customization with three independent 3D assemblies: articulated charm bracelet, planted garden promenade, and solid-gold castle relief frieze.",
     "Read-only production presentation entry from the Island Run Board menu in a viewport portal with Escape close, locked background scrolling, and approved static concept fallback when WebGL is unavailable."
   ],
   "treasureCadence": {
@@ -62,6 +64,7 @@
       "camera state",
       "exterior, atrium, and vault journey view",
       "quality mode",
+      "persisted perimeter cosmetic choice",
       "selected treasure",
       "reveal animation count",
       "runtime QA metrics"
@@ -90,6 +93,7 @@
       "revealRun",
       "inspectedDisplay",
       "collectionValue",
+      "perimeterStyle",
       "lastPointerHit",
       "route"
     ]
@@ -108,10 +112,16 @@
     ]
   },
   "browserQaEvidence": {
-    "captureManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v058-material-lighting/capture-manifest.v1.json",
+    "captureManifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v106-royal-golden-sunset-final/capture-manifest.v1.json",
     "viewport": "390x844",
     "captures": [
       "exterior-390x844.png",
+      "exterior-garden-ring-390x844.png",
+      "exterior-gold-castle-390x844.png",
+      "exterior-left-three-quarter-390x844.png",
+      "exterior-right-three-quarter-390x844.png",
+      "exterior-rear-390x844.png",
+      "exterior-top-oblique-390x844.png",
       "atrium-390x844.png",
       "vault-initial-390x844.png",
       "vault-after-discovery-1-390x844.png",
@@ -126,6 +136,9 @@
       "treasure-lab-chalice-390x844.png"
     ],
     "verifiedInteractions": [
+      "click-exterior-garden-ring",
+      "click-exterior-gold-castle",
+      "click-exterior-charms-restore",
       "click-enter-palace",
       "click-descend-to-vault",
       "click-discovery-1",
@@ -143,7 +156,7 @@
       "click-treasure-lab-chalice",
       "click-treasure-lab-chalice-reveal"
     ],
-    "visualReview": "Phone-size exterior, palace atrium, vault room, reveal states, inspect states, and all eight treasures were recaptured and inspected on 2026-08-28. The v058 material-and-lighting run adds five exterior POVs, preserves the full palace journey, and verifies the museum ritual: selected relics move from authored sockets to a central inspection stage, the previous relic returns, the compact plaque keeps the collection visible, the HUD reports eight relics and 89,200 lab-derived value, and the celebration uses saturated gold rings, warm light, and gemstone sparkles. Both the Inspect command and direct 3D canvas raycast opened the Sapphire Astrolabe close-up. The full 17-capture, 16-interaction runtime gate passed."
+    "visualReview": "Phone-size exterior, palace atrium, vault room, collection states, reveal states, inspect states, and all eight treasures were recaptured and inspected on 2026-08-29. The accepted v106 royal-golden-sunset run verifies a procedural animated 3D amber sky, warm atmospheric fog, crystalline teal water, honey limestone separation, and three instant persisted perimeter assemblies: articulated charms, a planted garden promenade, and detailed solid-gold castle molding. Front, rear, both three-quarters, and top-oblique views remain coherent. The full 26-capture, 25-interaction, 20-snapshot runtime gate passed with zero diagnostics."
   },
   "productionQaEvidence": {
     "manifest": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/production-integration-v059/production-qa-manifest.v1.json",

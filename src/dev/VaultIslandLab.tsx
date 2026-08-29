@@ -27,6 +27,12 @@ import {
   type VaultTreasureId,
 } from '../features/gamification/level-worlds/dev/VaultTreasureModels';
 import type { VaultIslandCollectionEntry } from '../features/gamification/level-worlds/services/islandRunVaultCollection';
+import {
+  loadVaultIslandPerimeterStyle,
+  normalizeVaultIslandPerimeterStyle,
+  saveVaultIslandPerimeterStyle,
+  type VaultIslandPerimeterStyle,
+} from '../features/gamification/level-worlds/services/islandRunVaultCustomization';
 import './VaultIslandLab.css';
 
 const SOURCE_SRC = '/assets/dev/vault-island-lab/treasure-island-source.png';
@@ -66,6 +72,7 @@ interface VaultIslandLabQaSnapshot {
   wealthIngotCount: number;
   wealthCoinCount: number;
   wealthGemCount: number;
+  perimeterStyle: VaultIslandPerimeterStyle;
   lastPointerHit: VaultTreasureId | 'none';
   route: string;
 }
@@ -94,6 +101,14 @@ function readRequestedYaw() {
 function readCameraPreset() {
   if (typeof window === 'undefined') return 'phone';
   return new URLSearchParams(window.location.search).get('camera') === 'top' ? 'top' : 'phone';
+}
+
+function readInitialPerimeterStyle(): VaultIslandPerimeterStyle {
+  if (typeof window === 'undefined') return 'charms';
+  const requested = new URLSearchParams(window.location.search).get('perimeter');
+  return requested === null
+    ? loadVaultIslandPerimeterStyle()
+    : normalizeVaultIslandPerimeterStyle(requested);
 }
 
 export default function VaultIslandLab({
@@ -129,6 +144,7 @@ export default function VaultIslandLab({
   const revealRunRef = useRef(0);
   const lastPointerHitRef = useRef<VaultTreasureId | 'none'>('none');
   const qaYawOverrideRef = useRef<number | null>(null);
+  const perimeterStyleRef = useRef<VaultIslandPerimeterStyle>(readInitialPerimeterStyle());
   const [quality, setQuality] = useState<VaultIslandQuality>(() => (embedded ? 'high' : readInitialQuality()));
   const [view, setView] = useState<VaultIslandLabView>(() => initialView ?? (embedded ? 'exterior' : readInitialView()));
   const [selectedTreasureId, setSelectedTreasureId] = useState<VaultTreasureId>(initialTreasureId);
@@ -136,12 +152,18 @@ export default function VaultIslandLab({
   const [autoOrbit, setAutoOrbit] = useState(true);
   const [showReference, setShowReference] = useState(false);
   const [isMuseumCardExpanded, setIsMuseumCardExpanded] = useState(false);
+  const [perimeterStyle, setPerimeterStyle] = useState<VaultIslandPerimeterStyle>(() => perimeterStyleRef.current);
   const [isReady, setIsReady] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [qaSnapshot, setQaSnapshot] = useState<VaultIslandLabQaSnapshot | null>(null);
   const requestedYaw = useMemo(() => (embedded ? -0.08 : readRequestedYaw()), [embedded]);
   const cameraPreset = useMemo(() => (embedded ? 'phone' : readCameraPreset()), [embedded]);
   const qualityOptions = useMemo<VaultIslandQuality[]>(() => ['low', 'medium', 'high'], []);
+  const perimeterOptions = useMemo<Array<{ id: VaultIslandPerimeterStyle; label: string }>>(() => [
+    { id: 'charms', label: 'Charms' },
+    { id: 'garden', label: 'Garden' },
+    { id: 'gold-castle', label: 'Gold' },
+  ], []);
   const selectedTreasure = useMemo(() => getVaultTreasureDefinition(selectedTreasureId), [selectedTreasureId]);
   const selectedCollectionEntry = useMemo(
     () => collectionEntries.find((entry) => entry.treasureId === selectedTreasureId) ?? null,
@@ -175,6 +197,11 @@ export default function VaultIslandLab({
   }, [revealRun]);
 
   useEffect(() => {
+    perimeterStyleRef.current = saveVaultIslandPerimeterStyle(perimeterStyle);
+    modelRef.current?.setPerimeterStyle?.(perimeterStyleRef.current);
+  }, [perimeterStyle]);
+
+  useEffect(() => {
     if (
       !featuredTreasureId
       || !availableTreasureIds.includes(featuredTreasureId)
@@ -200,10 +227,10 @@ export default function VaultIslandLab({
     lastPointerHitRef.current = 'none';
     const scene = new THREE.Scene();
     const isInteriorView = view !== 'exterior';
-    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#c8a984';
+    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#d6a14e';
     scene.background = new THREE.Color(backgroundColor);
     scene.fog = new THREE.Fog(
-      view === 'exterior' ? '#d3b184' : backgroundColor,
+      view === 'exterior' ? '#e0ad59' : backgroundColor,
       view === 'vault' ? 7 : view === 'atrium' ? 18 : 36,
       view === 'vault' ? 18 : view === 'atrium' ? 38 : 78,
     );
@@ -242,13 +269,13 @@ export default function VaultIslandLab({
     const premiumEnvironment = installVaultPremiumEnvironment(renderer, scene, isInteriorView ? 0.52 : 0.32);
 
     const hemi = new THREE.HemisphereLight(
-      isInteriorView ? '#fff1c3' : '#ffd18b',
+      isInteriorView ? '#fff1c3' : '#ffca69',
       isInteriorView ? '#081326' : '#17465b',
-      view === 'atrium' ? 1.02 : isInteriorView ? 0.92 : 0.58,
+      view === 'atrium' ? 1.02 : isInteriorView ? 0.92 : 0.66,
     );
     scene.add(hemi);
 
-    const sun = new THREE.DirectionalLight(isInteriorView ? '#fff0c7' : '#ffc05a', view === 'atrium' ? 3.2 : isInteriorView ? 2.95 : 3.25);
+    const sun = new THREE.DirectionalLight(isInteriorView ? '#fff0c7' : '#ffb13f', view === 'atrium' ? 3.2 : isInteriorView ? 2.95 : 3.3);
     sun.position.set(isInteriorView ? -2.2 : 7.2, view === 'atrium' ? 7.2 : isInteriorView ? 5.6 : 7.6, isInteriorView ? 4.8 : -8.8);
     sun.castShadow = quality !== 'low';
     sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
@@ -265,7 +292,7 @@ export default function VaultIslandLab({
     scene.add(rim);
 
     if (!isInteriorView) {
-      const goldenBounce = new THREE.DirectionalLight('#ffd69a', 0.62);
+      const goldenBounce = new THREE.DirectionalLight('#ffc86c', 0.78);
       goldenBounce.name = 'vault-island-golden-hour-front-bounce';
       goldenBounce.position.set(-5.5, 4.2, 8.5);
       scene.add(goldenBounce);
@@ -280,7 +307,7 @@ export default function VaultIslandLab({
       })
       : view === 'atrium'
         ? createVaultTreasurePalaceAtriumModel({ quality, animated: true })
-        : createVaultTreasureIslandModel({ quality, animated: true });
+        : createVaultTreasureIslandModel({ quality, animated: true, perimeterStyle: perimeterStyleRef.current });
     model.root.rotation.y = view === 'exterior' ? -0.08 : 0;
     scene.add(model.root);
     modelRef.current = model;
@@ -462,6 +489,7 @@ export default function VaultIslandLab({
         wealthIngotCount,
         wealthCoinCount,
         wealthGemCount,
+        perimeterStyle: perimeterStyleRef.current,
         lastPointerHit: lastPointerHitRef.current,
         route: window.location.pathname + window.location.search,
       };
@@ -635,6 +663,23 @@ export default function VaultIslandLab({
             </button>
           ) : null}
         </div>
+        {view === 'exterior' && !renderError ? (
+          <div className="vault-island-lab__perimeter-selector" role="group" aria-label="Vault perimeter style">
+            {perimeterOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={option.id === perimeterStyle ? 'is-active' : ''}
+                aria-pressed={option.id === perimeterStyle}
+                title={`${option.label} perimeter`}
+                onClick={() => setPerimeterStyle(option.id)}
+              >
+                <span className={`vault-island-lab__perimeter-swatch is-${option.id}`} aria-hidden="true" />
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {!renderError ? <div className="vault-island-lab__hud vault-island-lab__hud--bottom">
           <button type="button" onClick={() => setView((value) => (value === 'exterior' ? 'atrium' : value === 'atrium' ? 'vault' : 'atrium'))}>
             {view === 'exterior' ? 'Enter palace' : view === 'atrium' ? 'Descend to vault' : 'Palace atrium'}
@@ -728,6 +773,18 @@ export default function VaultIslandLab({
               onClick={() => setQuality(option)}
             >
               {option}
+            </button>
+          ))}
+        </div>
+        <div className="vault-island-lab__quality vault-island-lab__quality--perimeter" role="group" aria-label="Perimeter style">
+          {perimeterOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={option.id === perimeterStyle ? 'is-active' : ''}
+              onClick={() => setPerimeterStyle(option.id)}
+            >
+              {option.label}
             </button>
           ))}
         </div>
