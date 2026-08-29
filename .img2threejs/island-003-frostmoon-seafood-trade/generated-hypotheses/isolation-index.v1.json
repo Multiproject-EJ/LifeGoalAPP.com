@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostmoon-seafood-trade",
+  "createdAt": "2026-08-27",
+  "authority": "secondary-inferred",
+  "status": "awaiting-user-integration-approval",
+  "promptSet": "../prompts/concept-studies-v001.md",
+  "studies": [
+    {
+      "id": "wind-sail-seafood-freight-cart",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/seafood-trade-studies/003-wind-sail-seafood-freight-cart-turnaround-v001.png",
+      "sha256": "ac0afca968bc4193c0250bd0709e2c10f740a6b9cd1bef3b90b69c88fd73e853",
+      "productionStatus": "not-integrated"
+    },
+    {
+      "id": "wind-kite-dog-seafood-courier",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/seafood-trade-studies/003-kite-dog-seafood-courier-turnaround-v001.png",
+      "sha256": "1692f3a46277c7bcfd162db0a7ac36ef38af284c64182a6f42700cd1993c6fba",
+      "productionStatus": "not-integrated"
+    },
+    {
+      "id": "frostmoon-wolf-puppy-family",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/seafood-trade-studies/003-wolf-puppy-family-model-sheet-v001.png",
+      "sha256": "ad89bdd50c82d4a50f88878dedb1f53da2a03e7160f5677aa3b072324c9f7c41",
+      "productionStatus": "not-integrated"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostwell-under-ice-cutaway",
+  "passId": "form-refinement",
+  "status": "implementation-complete-render-review-pending",
+  "recordedAt": "2026-08-29",
+  "implementation": [
+    {
+      "path": "src/features/gamification/level-worlds/dev/FrostwellIceworksThreeModel.ts",
+      "sha256": "f870998752e9b3c8bb9ae05a78e1dba5e73912e726b01089f8cbb82b196b80c3"
+    },
+    {
+      "path": "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx",
+      "sha256": "6d649db9315b2e61f93e3e1e681c95b9ab66a500d6c26f867b408b8c040f382d"
+    },
+    {
+      "path": "src/features/gamification/level-worlds/services/__tests__/island5ThreePilotContract.test.ts",
+      "sha256": "d230958b4e6b42ef734eaf8a8592a174b252e5d265e756359df2a394fee4ba04"
+    }
+  ],
+  "implementedSystems": [
+    "quality-scaled cutter-origin ice chips",
+    "visible helical bore scoring",
+    "late-depth freshwater proximity ripples",
+    "bounded 500m water breakthrough droplets",
+    "1.8-second canonical-bounded presentation tween",
+    "dev-only 5.2-second final-depth replay clock",
+    "dev-only deterministic frozen evidence frames"
+  ],
+  "deterministicFrames": [
+    { "timeSeconds": 0.4, "intent": "450m active cutting and chip transport" },
+    { "timeSeconds": 1.7, "intent": "450m-to-500m mid-descent" },
+    { "timeSeconds": 3.1, "intent": "500m water-contact burst" },
+    { "timeSeconds": 3.7, "intent": "breakthrough settle" }
+  ],
+  "verification": {
+    "islandRunServiceTests": { "passed": 1850, "failed": 0 },
+    "architectureGuard": { "passed": true, "violations": 0, "allowlistedLegacyWarnings": 3 },
+    "diffCheck": "passed"
+  },
+  "captureGate": {
+    "status": "blocked-by-browser-environment",
+    "reason": "The Codex in-app browser has WebGL disabled. Chrome is installed, running, and its extension/native-host diagnostics pass, but the Chrome browser bridge did not reconnect after the window was reopened.",
+    "requiredBeforeContinue": [
+      "capture the four deterministic phone frames in a WebGL-capable Chrome tab",
+      "run Tier 1 and multi-angle diagnostics on the captures",
+      "inspect a comparison sheet and record exactly one visual review action"
+    ]
+  },
+  "decision": "do-not-advance-to-material-pass"
+}

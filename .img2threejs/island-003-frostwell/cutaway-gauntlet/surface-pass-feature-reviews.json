@@ -1,0 +1,11 @@
+[
+  {"id":"offshore-read","score":0.96,"notes":"Cracked platform silhouette and snow cap remain intact."},
+  {"id":"board-clear","score":0.97,"notes":"Surface relief remains entirely inside the offshore presentation root."},
+  {"id":"drill-read","score":0.95,"notes":"Helical cutter, shaft collars and bore score retain strong mechanical continuity."},
+  {"id":"operating-read","score":0.92,"notes":"Named operating materials and geometry remain independent from the drill state."},
+  {"id":"construction-read","score":0.9,"notes":"Snow and water particle systems keep distinct material and timing roles."},
+  {"id":"macro-surface-frequency","score":0.94,"notes":"Layer bands, frame extrusion and freshwater lens establish the large surface hierarchy."},
+  {"id":"meso-surface-frequency","score":0.93,"notes":"Seams, depth ticks, shaft collars and helical bore scoring remain legible under the three-quarter light."},
+  {"id":"micro-surface-frequency","score":0.9,"notes":"Ice inclusions and cutter chips break highlights without visible tiling."},
+  {"id":"grazing-response","score":0.91,"notes":"The diagonal key reflection and local point lights expose roughness and clearcoat differences rather than flat plastic response."}
+]

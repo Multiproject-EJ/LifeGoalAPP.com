@@ -1,0 +1,26 @@
+{
+  "subject": "Frostfire Archive L3 embedded runtime",
+  "reference": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-frostfire-archive-l3-goal-v001.png",
+  "fixedView": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-frostfire/frostfire-archive-day-front.png",
+  "tier1": {
+    "passed": false,
+    "silhouetteIoU": 0.4276,
+    "aspectRatioDelta": 0.0046,
+    "scaleDelta": 0.051,
+    "reason": "Advisory failure: the approved reference is a four-view studio sheet while the render is an embedded phone-world crop with island foreground and scenery. The tool warned that the runtime image was not isolated, so literal pixel IoU is not a valid acceptance gate for this production mode."
+  },
+  "multiAngle": {
+    "passed": true,
+    "degenerate": false,
+    "areaRatios": [1.0302, 1.0207, 1.0391],
+    "views": ["right", "rear", "left"]
+  },
+  "turntable": {
+    "covered": true,
+    "missingAzimuths": [],
+    "degenerate": false,
+    "passed": false,
+    "reason": "All four azimuth captures exist and volume does not collapse, but segmentation is unreliable because the phone crop contains the surrounding island rather than an isolated studio background. Hole checks were disabled because windows and the open lantern cage contain intentional negative space."
+  },
+  "decision": "Use deterministic measurements as advisory evidence and apply the embedded-runtime visual contract plus semantic part coverage as the acceptance authority."
+}

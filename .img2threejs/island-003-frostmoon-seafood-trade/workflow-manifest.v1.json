@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostmoon-seafood-trade",
+  "title": "Frostmoon premium seafood trade and winter freight ambience",
+  "status": "admission-gate-awaiting-user-approval",
+  "createdAt": "2026-08-27",
+  "goalHashes": [
+    {
+      "path": "goals/exact/user-goal-v001.md",
+      "sha256": "b8037a668d4261c278b1006094e2a0f470969cc2c2fdf0ebbb8e31e6d051d277",
+      "authority": "exact-user-direction"
+    }
+  ],
+  "renderProfile": {
+    "engine": "procedural-threejs",
+    "primaryViewport": "390x844-css-pixels",
+    "qualityTiers": ["low", "medium", "high"],
+    "reducedMotionRequired": true,
+    "weatherStates": ["day", "blizzard", "dusk", "night"]
+  },
+  "requiredCameras": [
+    "canonical-phone-overview",
+    "left-survey",
+    "right-survey",
+    "rear-survey",
+    "freight-profile",
+    "courier-three-quarter",
+    "puppy-phone-proof"
+  ],
+  "gates": {
+    "userDecompositionApproval": "required-before-production",
+    "representativeSlice": "seafood-loading-yard-plus-one-large-wind-freight-cart",
+    "minimumVisualScore": 0.85,
+    "hardVetoes": [
+      "playable-route obstruction",
+      "cart or animal floating above snow",
+      "paper-thin sail or blank vehicle rear",
+      "dog or puppy spike/stretch between views",
+      "seafood props reading as generic coloured blobs",
+      "new gameplay, wallet, market-price or progression authority",
+      "aurora or saturated blue roof drift"
+    ]
+  },
+  "roles": {
+    "root": "manifest, assembly, runtime integration and final review",
+    "builder": "serialized procedural Three.js part families only",
+    "qualityLord": "independent read-only visual verdict after runtime captures"
+  },
+  "budgets": {
+    "high": { "largeFreightCarts": 2, "courierTeams": 2, "puppies": 3 },
+    "medium": { "largeFreightCarts": 1, "courierTeams": 1, "puppies": 2 },
+    "low": { "largeFreightCarts": 1, "courierTeams": 0, "puppies": 1 }
+  }
+}

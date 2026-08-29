@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-hearthguard-yard-l3",
+  "sharedFrame": {
+    "origin": "existing habit landmark socket at foundation centre",
+    "upAxis": "+Y",
+    "front": "+Z",
+    "footprintLimitWorldUnits": 3.7,
+    "reviewViews": ["gameplay", "front-three-quarter", "left", "right", "rear"]
+  },
+  "representativeSlice": ["court-and-gate", "climbing-and-target-system", "recovery-hut-and-hearth"],
+  "detailFirewall": "Do not add rivets, roof courses, snow micro-clumps or rope knots until the open-court silhouette, perimeter distribution and all major attachments pass at phone scale.",
+  "parts": [
+    {"id":"oval-foundation","parent":null,"level":"macro","topologyClass":"assembled-solid","owns":["stone plinth","court support"],"excludes":["playable route"],"dependencies":[],"symmetry":"radial-oval","sockets":["gate-left","gate-right","fence-ring","rig-bed","target-bed","hut-bed"],"confidence":1.0,"acceptance":["low oval footprint","grounded contact"]},
+    {"id":"court-surface","parent":"oval-foundation","level":"macro","topologyClass":"conforming-shell","owns":["open snow-dusted training floor"],"excludes":["fence","equipment"],"dependencies":["oval-foundation"],"symmetry":"bilateral","sockets":[],"confidence":0.95,"acceptance":["large unobstructed negative space"]},
+    {"id":"front-gate","parent":"oval-foundation","level":"macro","topologyClass":"assembled-solid","owns":["two gate posts","lintel","stone feet"],"excludes":["feather crown","lanterns"],"dependencies":["oval-foundation"],"symmetry":"bilateral","sockets":["crown","lantern-left","lantern-right"],"confidence":1.0,"acceptance":["wide readable entrance","medium-height silhouette"]},
+    {"id":"feather-crown","parent":"front-gate","level":"meso","topologyClass":"continuous-sculpt","owns":["copper feather plate","raised vein"],"excludes":["gate beams"],"dependencies":["front-gate"],"symmetry":"bilateral","sockets":[],"confidence":0.95,"acceptance":["reads as feather, not shield or ladder"]},
+    {"id":"perimeter-posts","parent":"oval-foundation","level":"meso","topologyClass":"assembled-solid","owns":["embedded timber posts","copper caps"],"excludes":["front opening"],"dependencies":["oval-foundation"],"symmetry":"paired-around-oval","sockets":["rail-high","rail-low"],"confidence":0.95,"acceptance":["complete 360-degree perimeter with open gate"]},
+    {"id":"perimeter-rails","parent":"perimeter-posts","level":"meso","topologyClass":"fiber-strand","owns":["rope/timber rails","lashings"],"excludes":["gate opening"],"dependencies":["perimeter-posts"],"symmetry":"paired-segments","sockets":[],"confidence":0.9,"acceptance":["rails visibly connect posts without floating"]},
+    {"id":"climbing-frame","parent":"oval-foundation","level":"macro","topologyClass":"assembled-solid","owns":["four uprights","upper crossbars","lower brace"],"excludes":["rings"],"dependencies":["oval-foundation"],"symmetry":"bilateral","sockets":["ring-left","ring-right"],"confidence":1.0,"acceptance":["tallest rear-left training silhouette","all feet grounded"]},
+    {"id":"hanging-rings","parent":"climbing-frame","level":"meso","topologyClass":"fiber-strand","owns":["two ropes","two rings"],"excludes":["crossbars"],"dependencies":["climbing-frame"],"symmetry":"paired","sockets":[],"confidence":1.0,"acceptance":["two separated circular rings hang beneath crossbar"]},
+    {"id":"shield-target-system","parent":"oval-foundation","level":"macro","topologyClass":"assembled-solid","owns":["two target posts","shield plates","central bosses"],"excludes":["climbing frame"],"dependencies":["oval-foundation"],"symmetry":"paired","sockets":[],"confidence":1.0,"acceptance":["two unmistakable shield targets face the court"]},
+    {"id":"recovery-hut-shell","parent":"oval-foundation","level":"macro","topologyClass":"assembled-solid","owns":["rear-right timber shelter","open front","rear wall"],"excludes":["roof","hearth","storage"],"dependencies":["oval-foundation"],"symmetry":"bilateral-shell","sockets":["roof","chimney","bench","brazier","service-storage"],"confidence":1.0,"acceptance":["compact shelter does not close the court"]},
+    {"id":"recovery-hut-roof","parent":"recovery-hut-shell","level":"meso","topologyClass":"conforming-shell","owns":["curved/flared copper roof","snow cap","eaves"],"excludes":["chimney"],"dependencies":["recovery-hut-shell"],"symmetry":"bilateral","sockets":["chimney"],"confidence":0.95,"acceptance":["warm copper roof without blue tint"]},
+    {"id":"recovery-hearth","parent":"recovery-hut-shell","level":"meso","topologyClass":"assembled-solid","owns":["bench","brazier bowl","fire","interior lantern"],"excludes":["hut shell"],"dependencies":["recovery-hut-shell"],"symmetry":"asymmetric","sockets":["fire-fx"],"confidence":1.0,"acceptance":["warm resting function readable at phone scale"]},
+    {"id":"banner-and-lanterns","parent":"front-gate","level":"meso","topologyClass":"assembled-solid","owns":["banner mast","burgundy banner","gate lantern pair"],"excludes":["feather crown"],"dependencies":["front-gate"],"symmetry":"mixed","sockets":[],"confidence":0.9,"acceptance":["restrained civic identity, no text"]},
+    {"id":"rear-service-dressing","parent":"recovery-hut-shell","level":"meso","topologyClass":"assembled-solid","owns":["stone chimney","wood stack","barrel","rear braces"],"excludes":["court equipment"],"dependencies":["recovery-hut-shell","recovery-hut-roof"],"symmetry":"asymmetric","sockets":["smoke-fx"],"confidence":0.9,"acceptance":["rear view remains authored and useful"]},
+    {"id":"snow-and-fastener-system","parent":"oval-foundation","level":"micro","topologyClass":"surface-relief","owns":["post caps","roof snow","copper foot plates","rivets","stone joint snow"],"excludes":["macro silhouette"],"dependencies":["front-gate","perimeter-posts","climbing-frame","shield-target-system","recovery-hut-roof"],"symmetry":"repeated","sockets":[],"confidence":0.85,"acceptance":["supports construction readability without clutter"]}
+  ],
+  "ambiguities": [
+    "The goal sheet is wider than the frozen runtime landmark envelope; equipment spacing will be compressed while preserving the gate-court-rig-hut hierarchy.",
+    "Exact rope knot topology and roof rivet count are stylistic inference and are not approval-critical.",
+    "Only restrained smoke/fire motion is in scope; training equipment remains static until gameplay explicitly needs interaction."
+  ],
+  "productionOrder": ["oval-foundation","court-surface","front-gate","perimeter-posts","climbing-frame","shield-target-system","recovery-hut-shell","recovery-hut-roof","perimeter-rails","hanging-rings","recovery-hearth","banner-and-lanterns","rear-service-dressing","feather-crown","snow-and-fastener-system"]
+}

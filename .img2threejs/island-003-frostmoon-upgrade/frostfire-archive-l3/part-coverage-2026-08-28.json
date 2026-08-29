@@ -1,0 +1,16 @@
+{
+  "model": "island-003-frostfire-archive-l3",
+  "specifiedComponents": 15,
+  "builtParts": 14,
+  "errors": 0,
+  "warnings": 0,
+  "result": "pass",
+  "findings": [
+    {
+      "check": "component-folded",
+      "severity": "info",
+      "subject": "brass-index-and-fastener-system",
+      "detail": "no mesh of its own \u2014 folded into 'octagonal-stone-and-timber-shell', which is built. Correct for relief; a real gap only if this needed to be separable."
+    }
+  ]
+}

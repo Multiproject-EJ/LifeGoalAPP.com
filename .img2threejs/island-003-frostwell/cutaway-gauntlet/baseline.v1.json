@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostwell-under-ice-cutaway",
+  "status": "approved-production-active-form-refinement",
+  "capturedAt": "2026-08-27",
+  "goalAuthority": [
+    {
+      "kind": "user-authored-text",
+      "path": ".img2threejs/island-003-frostwell/cutaway-gauntlet/goals/exact/user-goal-v001.md",
+      "sha256": "e3df82b658a310875466743da6d3eccd0a83509c4cf3e35053e0e4a7a2a030bb",
+      "authority": "exact"
+    }
+  ],
+  "currentResult": {
+    "salvageDecision": "salvage-surface-facility-add-new-cutaway-stage",
+    "reason": "The existing offshore facility, wheel-driven progress and surface auger are usable. The present camera never reveals a volumetric ice section, a real bore path or the approaching water layer, so that presentation cannot satisfy the new goal without a new cutaway stage.",
+    "implementation": {
+      "path": "src/features/gamification/level-worlds/dev/FrostwellIceworksThreeModel.ts",
+      "sha256": "970968cd6b819f061f8ef632a660687f36075232b26774512b1fe6ff30ed207c"
+    },
+    "matchedCaptures": [
+      {
+        "view": "locked-phone-overview",
+        "phase": "baseline",
+        "path": ".img2threejs/island-003-frostwell/evidence/island-003-frostmoon-baseline.png",
+        "sha256": "de3ef7a785727f9e4432686d9ebce4290936c75f2dc3a6c665812201db6409c5"
+      },
+      {
+        "view": "north-surface-focus",
+        "phase": "drilling",
+        "path": ".img2threejs/island-003-frostwell/evidence/frostwell-north-drilling-phone-v2.png",
+        "sha256": "01a729fcb534d2484574f5fdb6d0b3655d65292800eb5f9a02a8142981bcbae0"
+      },
+      {
+        "view": "north-surface-focus",
+        "phase": "operating",
+        "path": ".img2threejs/island-003-frostwell/evidence/frostwell-north-operating-phone-v2.png",
+        "sha256": "2ff86467d2d6b3b46e015c010c2ac76685cc21a58057ee5081ddb963c5dc4440"
+      },
+      {
+        "view": "fresh-desktop-surface-focus",
+        "phase": "drilling",
+        "path": ".codex/screenshots/island-003/mission-frostwell-drilling.png",
+        "sha256": "b37bf8eac7615db7f9bf83a419d3e98e1c6c511cdab0539818d5ff54d0944cad"
+      },
+      {
+        "view": "fresh-desktop-surface-focus",
+        "phase": "operating",
+        "path": ".codex/screenshots/island-003/mission-frostwell-operating.png",
+        "sha256": "8759eb37bef27bd4909afcf71404966dd9faa3c448856b42e6dfb0425cffade8"
+      }
+    ]
+  },
+  "lockedGameplayFacts": {
+    "depthMeters": 500,
+    "drillTileIndicesZeroBased": [8, 17, 27],
+    "spinMeters": [15, 20, 25, 30, 40, 50, 60, 75],
+    "baseEssenceCost": 1000,
+    "stateAuthority": "canonical Island Run action services",
+    "presentationRule": "The cutaway reads committed state and never owns or duplicates progress."
+  },
+  "structuralPass": {
+    "status": "accepted",
+    "acceptedAt": "2026-08-28",
+    "representation": "clean volumetric geological cut with a shallow three-quarter side camera",
+    "compressedWorldDepth": 6.4,
+    "evidence": [
+      {
+        "phase": "approaching-water-450m",
+        "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-frostwell-cutaway/frostwell-cutaway-upgraded-450m-crop.png",
+        "sha256": "41f5d760dba42a6b034451fa8e9a0cd17fdfc07e1d003aec93ba21ddff0ac24f"
+      },
+      {
+        "phase": "water-contact-500m",
+        "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-frostwell-cutaway/frostwell-cutaway-upgraded-500m-crop.png",
+        "sha256": "d8476b58b4f8ad1ed97beac56a8e3c9909ce6d15b4a98189753ffead248309a5"
+      }
+    ],
+    "nextPass": "form-refinement visual gate: cutter chips, bore scoring, water breakthrough and proximity motion are implemented and await motion evidence capture"
+  },
+  "unresolvedVisualAuthority": []
+}

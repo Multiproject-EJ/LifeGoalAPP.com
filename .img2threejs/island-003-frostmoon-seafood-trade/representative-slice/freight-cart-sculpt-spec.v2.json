@@ -1,0 +1,1940 @@
+{
+  "schemaVersion": "2.1",
+  "targetId": "frostmoon-wind-sail-seafood-freight-cart",
+  "targetName": "Frostmoon Wind-Sail Seafood Freight Cart",
+  "sourceImage": ".img2threejs/island-003-frostmoon-seafood-trade/representative-slice/derived/freight-cart-front-three-quarter-v4.png",
+  "suitability": "pass",
+  "coordinateFrame": {
+    "units": "world",
+    "up": "+Y",
+    "forward": "+Z",
+    "vehicleLongitudinal": "+X",
+    "origin": "deck center at runner contact midpoint"
+  },
+  "silhouette": {
+    "bounding": "long low deck with four interrupted wheel circles, two extended runners and one tall triangular sail",
+    "symmetry": "bilateral running gear with asymmetric cargo",
+    "aspect": "overall length 4.8, deck width 1.45, mast height 3.0"
+  },
+  "terminologyProfile": {
+    "geometryTerms": [
+      "chassis",
+      "bogie",
+      "runner",
+      "spoke",
+      "hub",
+      "mast",
+      "boom",
+      "cargo rack"
+    ],
+    "materialTerms": [
+      "albedo",
+      "roughness",
+      "metalness",
+      "normal relief",
+      "contact shadow"
+    ],
+    "lightingTerms": [
+      "key light",
+      "hemisphere fill",
+      "moon rim",
+      "exposure",
+      "tone mapping"
+    ],
+    "descriptionRule": "Use object-space mechanical terms and distinguish observed reference evidence from inferred hidden construction."
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "winter wind-sail freight cart",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "hard-surface",
+        "mechanical",
+        "stylized"
+      ],
+      "structureKind": [
+        "articulated assembly",
+        "repeated modules"
+      ],
+      "motionPotential": [
+        "wheel rotation",
+        "suspension bob",
+        "sail flex",
+        "route travel"
+      ],
+      "materialFamilies": [
+        "wood",
+        "metal",
+        "fabric",
+        "ice",
+        "seafood"
+      ]
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 2,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 3,
+        "mesoComponents": 4,
+        "microFeatureGroups": 18,
+        "materialLayers": 5,
+        "repetitionSystems": 5
+      },
+      "reasoning": [
+        "The multi-view vehicle combines a deep mechanical hierarchy with repeated spokes, fasteners, cargo and rigging.",
+        "The tall sail, paired runners and wheel system are independent silhouette owners and motion systems."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Separate silhouette owners and motion pivots are required for the approved vehicle identity."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "details": [
+        {
+          "id": "copper-sail-perimeter",
+          "kind": "linework",
+          "description": "Copper spar and binding around the cream triangular sail",
+          "region": {
+            "x": 0.2,
+            "y": 0.0,
+            "width": 0.5,
+            "height": 0.56,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "sail silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "copper-perimeter"
+          },
+          "evidenceRef": "full-turnaround",
+          "confidence": 0.94
+        },
+        {
+          "id": "wheel-rim-bands",
+          "kind": "ridge",
+          "description": "Copper outer bands around dark timber wheel rims",
+          "region": {
+            "x": 0.16,
+            "y": 0.5,
+            "width": 0.72,
+            "height": 0.32,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "wheel silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "rim-bands"
+          },
+          "evidenceRef": "primary-crop",
+          "confidence": 0.97
+        },
+        {
+          "id": "wheel-spokes",
+          "kind": "ridge",
+          "description": "Eight radial timber spokes per wheel",
+          "region": {
+            "x": 0.16,
+            "y": 0.5,
+            "width": 0.72,
+            "height": 0.32,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "wheel negative space",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "spokes"
+          },
+          "evidenceRef": "primary-crop",
+          "confidence": 0.98
+        },
+        {
+          "id": "hub-rivets",
+          "kind": "fastener",
+          "description": "Copper fasteners around rims and hubs",
+          "region": {
+            "x": 0.16,
+            "y": 0.5,
+            "width": 0.72,
+            "height": 0.32,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "hardware rhythm",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "hub-rivets"
+          },
+          "evidenceRef": "primary-crop",
+          "confidence": 0.9
+        },
+        {
+          "id": "ski-upturns",
+          "kind": "contour",
+          "description": "Strongly upturned copper-capped runner noses",
+          "region": {
+            "x": 0.05,
+            "y": 0.68,
+            "width": 0.9,
+            "height": 0.22,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "winter vehicle identity",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "upturned-tips"
+          },
+          "evidenceRef": "full-turnaround",
+          "confidence": 0.99
+        },
+        {
+          "id": "underframe-brackets",
+          "kind": "fastener",
+          "description": "Copper-banded transverse rails and runner struts",
+          "region": {
+            "x": 0.2,
+            "y": 0.58,
+            "width": 0.65,
+            "height": 0.24,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "credible underside",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "underframe-brackets"
+          },
+          "evidenceRef": "underside-view",
+          "confidence": 0.86
+        },
+        {
+          "id": "mast-bands",
+          "kind": "fastener",
+          "description": "Copper collars spaced along the timber mast",
+          "region": {
+            "x": 0.28,
+            "y": 0.04,
+            "width": 0.16,
+            "height": 0.52,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "mast construction",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "mast-bands"
+          },
+          "evidenceRef": "primary-crop",
+          "confidence": 0.94
+        },
+        {
+          "id": "insulated-crates",
+          "kind": "seam",
+          "description": "Timber boxes with copper latches and open snow-packed tops",
+          "region": {
+            "x": 0.38,
+            "y": 0.36,
+            "width": 0.48,
+            "height": 0.28,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "seafood trade identity",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "insulated-crates"
+          },
+          "evidenceRef": "primary-crop",
+          "confidence": 0.96
+        },
+        {
+          "id": "rope-tie-downs",
+          "kind": "linework",
+          "description": "Tensioned rope loops securing cargo and sail",
+          "region": {
+            "x": 0.18,
+            "y": 0.08,
+            "width": 0.68,
+            "height": 0.58,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "attachment coherence",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "tie-downs"
+          },
+          "evidenceRef": "full-turnaround",
+          "confidence": 0.82
+        },
+        {
+          "id": "fish-silhouettes",
+          "kind": "contour",
+          "description": "Silver fish bodies resting on pale ice",
+          "region": {
+            "x": 0.34,
+            "y": 0.4,
+            "width": 0.5,
+            "height": 0.18,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "readable seafood cargo",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "fish-silhouettes"
+          },
+          "evidenceRef": "primary-crop",
+          "confidence": 0.97
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0,
+      "proportions": {},
+      "pose": {
+        "type": "not-applicable",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {},
+      "features": [],
+      "confidence": 1,
+      "note": "Object track."
+    },
+    "sourceImage": ".img2threejs/island-003-frostmoon-seafood-trade/representative-slice/derived/freight-cart-front-three-quarter-v4.png"
+  },
+  "viewEvidence": [
+    {
+      "id": "primary-crop",
+      "path": ".img2threejs/island-003-frostmoon-seafood-trade/representative-slice/derived/freight-cart-front-three-quarter-v4.png",
+      "role": "fixed front three-quarter",
+      "confidence": 0.98
+    },
+    {
+      "id": "full-turnaround",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/seafood-trade-studies/003-wind-sail-seafood-freight-cart-turnaround-v001.png",
+      "role": "front profile rear and underside authority",
+      "confidence": 0.9
+    },
+    {
+      "id": "underside-view",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/seafood-trade-studies/003-wind-sail-seafood-freight-cart-turnaround-v001.png",
+      "role": "underframe authority",
+      "confidence": 0.86
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "root",
+      "name": "Freight cart assembly",
+      "level": "macro",
+      "role": "vehicle assembly",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The complete vehicle is a scene-graph container for separately moving mechanical solids.",
+      "geometryDescriptor": {
+        "topologyIntent": "non-rendered action-ready assembly container",
+        "uvStrategy": "none",
+        "normalStrategy": "child geometry normals"
+      },
+      "parent": null,
+      "dimensions": {
+        "width": 4.8,
+        "height": 3.25,
+        "depth": 1.55,
+        "units": "world",
+        "confidence": 0.85
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "timber",
+      "materialLayers": [
+        "timber"
+      ],
+      "localFeatures": [
+        {
+          "id": "loading-socket",
+          "description": "Stable cargo-loading socket above the deck"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(55, 34, 27, 1.0)",
+        "secondaryAlbedo": "rgba(111, 56, 37, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.94
+      },
+      "evidenceRefs": [
+        "full-turnaround"
+      ]
+    },
+    {
+      "id": "chassis",
+      "name": "Deck chassis",
+      "level": "macro",
+      "role": "deck assembly",
+      "importance": 1,
+      "confidence": 0.96,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The reference shows a continuous timber deck reinforced by separate transverse copper-banded rails.",
+      "geometryDescriptor": {
+        "topologyIntent": "bevelled deck and frame rails",
+        "edgeTreatment": {
+          "type": "bevel",
+          "bevelRadius": 0.035,
+          "segments": 2
+        },
+        "uvStrategy": "procedural wood grain",
+        "normalStrategy": "geometry normals plus grain normal"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "vehicle-origin",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.65,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.05,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "underside-view"
+        ]
+      },
+      "dimensions": {
+        "width": 3.7,
+        "height": 0.42,
+        "depth": 1.28,
+        "units": "world",
+        "confidence": 0.92
+      },
+      "transform": {
+        "position": [
+          0,
+          0.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "timber",
+      "materialLayers": [
+        "timber",
+        "copper"
+      ],
+      "localFeatures": [
+        {
+          "id": "underframe-brackets",
+          "description": "Transverse rail and runner-mount system"
+        },
+        {
+          "id": "deck-rails",
+          "description": "Raised cargo side rails"
+        },
+        {
+          "id": "tow-point",
+          "description": "Forward service/tow socket"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(55, 34, 27, 1.0)",
+        "secondaryAlbedo": "rgba(111, 56, 37, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.95
+      },
+      "evidenceRefs": [
+        "primary-crop",
+        "underside-view"
+      ]
+    },
+    {
+      "id": "running-gear",
+      "name": "Wheel and ski running gear",
+      "level": "macro",
+      "role": "paired running gear assembly",
+      "importance": 1,
+      "confidence": 0.93,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Four discrete wheels, paired axles, suspension struts and two long runners form one coupled motion unit.",
+      "geometryDescriptor": {
+        "topologyIntent": "separate wheel pivots and runner solids",
+        "edgeTreatment": {
+          "type": "bevel",
+          "bevelRadius": 0.025,
+          "segments": 2
+        },
+        "uvStrategy": "procedural",
+        "normalStrategy": "geometry normals"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "underframe",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.52,
+          0
+        ],
+        "contactType": "socket",
+        "embedDepth": 0.06,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "underside-view"
+        ]
+      },
+      "dimensions": {
+        "width": 4.55,
+        "height": 1.08,
+        "depth": 1.48,
+        "units": "world",
+        "confidence": 0.9
+      },
+      "transform": {
+        "position": [
+          0,
+          0.35,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "timber",
+      "materialLayers": [
+        "timber",
+        "copper"
+      ],
+      "localFeatures": [
+        {
+          "id": "rim-bands",
+          "description": "Copper-banded wheel rims"
+        },
+        {
+          "id": "spokes",
+          "description": "Eight timber spokes per wheel"
+        },
+        {
+          "id": "hub-rivets",
+          "description": "Radial fastener system"
+        },
+        {
+          "id": "upturned-tips",
+          "description": "Raised copper-capped ski noses"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(45, 30, 25, 1.0)",
+        "secondaryAlbedo": "rgba(149, 76, 43, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.93
+      },
+      "evidenceRefs": [
+        "primary-crop",
+        "full-turnaround",
+        "underside-view"
+      ]
+    },
+    {
+      "id": "sail-rig",
+      "name": "Mast boom and sail",
+      "level": "meso",
+      "role": "sail assembly",
+      "importance": 1,
+      "confidence": 0.91,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The visible sail has a narrow but nonzero double-sided cloth thickness held between solid timber and copper spars.",
+      "geometryDescriptor": {
+        "topologyIntent": "double-sided triangular cloth solid with separate spars",
+        "edgeTreatment": {
+          "type": "rounded",
+          "bevelRadius": 0.012,
+          "segments": 2
+        },
+        "deformationStack": [
+          "bounded wind bow"
+        ],
+        "uvStrategy": "planar cloth weave",
+        "normalStrategy": "geometry normals plus cloth normal"
+      },
+      "parent": "chassis",
+      "attachment": {
+        "parentId": "chassis",
+        "parentSocket": "mast-step",
+        "localStart": [
+          -1.05,
+          0,
+          0
+        ],
+        "localEnd": [
+          -1.05,
+          2.82,
+          0
+        ],
+        "contactType": "socket",
+        "embedDepth": 0.08,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "primary-crop"
+        ]
+      },
+      "dimensions": {
+        "width": 2.45,
+        "height": 2.82,
+        "depth": 0.08,
+        "units": "world",
+        "confidence": 0.88
+      },
+      "transform": {
+        "position": [
+          -0.9,
+          0.86,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "cloth",
+      "materialLayers": [
+        "cloth",
+        "timber",
+        "copper"
+      ],
+      "localFeatures": [
+        {
+          "id": "copper-perimeter",
+          "description": "Copper-edged triangular silhouette"
+        },
+        {
+          "id": "mast-bands",
+          "description": "Repeated collars on the mast"
+        },
+        {
+          "id": "sail-bow",
+          "description": "Subtle animated wind camber"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(224, 213, 185, 1.0)",
+        "secondaryAlbedo": "rgba(164, 118, 78, 1.0)",
+        "materialClass": "fabric",
+        "materialClassConfidence": 0.93
+      },
+      "evidenceRefs": [
+        "primary-crop",
+        "full-turnaround"
+      ]
+    },
+    {
+      "id": "cargo-system",
+      "name": "Insulated seafood cargo",
+      "level": "meso",
+      "role": "cargo assembly",
+      "importance": 0.94,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Distinct boxes, baskets, ice beds and fish silhouettes remain separate readable modules on the deck.",
+      "geometryDescriptor": {
+        "topologyIntent": "repeated bevelled crates with open ice tops",
+        "edgeTreatment": {
+          "type": "bevel",
+          "bevelRadius": 0.025,
+          "segments": 2
+        },
+        "uvStrategy": "procedural",
+        "normalStrategy": "geometry normals plus ice facets"
+      },
+      "parent": "chassis",
+      "attachment": {
+        "parentId": "chassis",
+        "parentSocket": "cargo-rack",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.36,
+          0
+        ],
+        "contactType": "flush",
+        "overlap": 0.025,
+        "gapTolerance": 0.008,
+        "evidenceRefs": [
+          "primary-crop"
+        ]
+      },
+      "dimensions": {
+        "width": 2.55,
+        "height": 0.65,
+        "depth": 1.05,
+        "units": "world",
+        "confidence": 0.9
+      },
+      "transform": {
+        "position": [
+          0.55,
+          1.03,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "timber",
+      "materialLayers": [
+        "timber",
+        "copper",
+        "ice",
+        "seafood"
+      ],
+      "localFeatures": [
+        {
+          "id": "insulated-crates",
+          "description": "Open snow-packed export boxes"
+        },
+        {
+          "id": "fish-silhouettes",
+          "description": "Readable silver fish on ice"
+        },
+        {
+          "id": "crab-baskets",
+          "description": "Warm orange crab cargo accents"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(58, 38, 30, 1.0)",
+        "secondaryAlbedo": "rgba(208, 223, 225, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9
+      },
+      "evidenceRefs": [
+        "primary-crop",
+        "full-turnaround"
+      ]
+    },
+    {
+      "id": "rigging-system",
+      "name": "Sail and cargo rigging",
+      "level": "meso",
+      "role": "rigging assembly",
+      "importance": 0.82,
+      "confidence": 0.8,
+      "primitive": "tube",
+      "topologyClass": "fiber-strand",
+      "topologyRationale": "The reference shows tensioned cylindrical ropes spanning between fixed mast, boom, chassis and cargo sockets.",
+      "geometryDescriptor": {
+        "topologyIntent": "curve tubes between explicit sockets",
+        "uvStrategy": "curve length",
+        "normalStrategy": "tube normals"
+      },
+      "parent": "sail-rig",
+      "attachment": {
+        "parentId": "sail-rig",
+        "parentSocket": "rigging-cleats",
+        "localStart": [
+          -0.9,
+          0.9,
+          0
+        ],
+        "localEnd": [
+          1.2,
+          2.1,
+          0
+        ],
+        "contactType": "socket",
+        "embedDepth": 0.02,
+        "gapTolerance": 0.01,
+        "baseRadius": 0.018,
+        "endRadius": 0.018,
+        "evidenceRefs": [
+          "full-turnaround"
+        ]
+      },
+      "dimensions": {
+        "length": 5.8,
+        "radius": 0.018,
+        "units": "world",
+        "confidence": 0.78
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "rope",
+      "materialLayers": [
+        "rope"
+      ],
+      "localFeatures": [
+        {
+          "id": "tie-downs",
+          "description": "Tensioned cargo and sail ropes"
+        },
+        {
+          "id": "cleat-loops",
+          "description": "Visible attachment collars"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(78, 59, 43, 1.0)",
+        "secondaryAlbedo": "rgba(118, 92, 62, 1.0)",
+        "materialClass": "fabric",
+        "materialClassConfidence": 0.78
+      },
+      "evidenceRefs": [
+        "full-turnaround"
+      ]
+    },
+    {
+      "id": "service-ends",
+      "name": "Front and rear service construction",
+      "level": "meso",
+      "role": "service assembly",
+      "importance": 0.76,
+      "confidence": 0.84,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The front curved guard and rear drop gate are separate timber-and-copper solids attached to the deck ends.",
+      "geometryDescriptor": {
+        "topologyIntent": "designed front guard and rear loading gate",
+        "edgeTreatment": {
+          "type": "bevel",
+          "bevelRadius": 0.025,
+          "segments": 2
+        },
+        "uvStrategy": "procedural",
+        "normalStrategy": "geometry normals"
+      },
+      "parent": "chassis",
+      "attachment": {
+        "parentId": "chassis",
+        "parentSocket": "deck-ends",
+        "localStart": [
+          -1.85,
+          0,
+          0
+        ],
+        "localEnd": [
+          1.85,
+          0,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "full-turnaround"
+        ]
+      },
+      "dimensions": {
+        "width": 4.05,
+        "height": 0.85,
+        "depth": 1.3,
+        "units": "world",
+        "confidence": 0.82
+      },
+      "transform": {
+        "position": [
+          0,
+          0.85,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "material": "timber",
+      "materialLayers": [
+        "timber",
+        "copper"
+      ],
+      "localFeatures": [
+        {
+          "id": "rear-gate",
+          "description": "Detailed rear loading access"
+        },
+        {
+          "id": "front-guard",
+          "description": "Curved front service guard"
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(50, 32, 27, 1.0)",
+        "secondaryAlbedo": "rgba(142, 70, 42, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.88
+      },
+      "evidenceRefs": [
+        "full-turnaround"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "timber",
+      "name": "Dark winter timber",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#3a261e",
+      "albedo": {
+        "dominant": "#3a261e",
+        "secondary": [
+          "#251914",
+          "#684231"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#251914",
+          "#3a261e",
+          "#684231"
+        ],
+        "pattern": "directional grain",
+        "amplitude": 0.12
+      },
+      "roughness": {
+        "base": 0.84,
+        "variation": 0.1,
+        "map": "independent procedural wood grain"
+      },
+      "metalness": {
+        "base": 0
+      },
+      "normal": {
+        "pattern": "directional grain",
+        "strength": 0.22
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.28,
+        "contactShadowBias": 0.35
+      },
+      "localOverrides": [
+        {
+          "id": "timber-edge-wear",
+          "region": "runner tips and deck edges",
+          "roughness": 0.7,
+          "color": "#79503a"
+        }
+      ],
+      "wear": {
+        "edgeWear": 0.18,
+        "scratches": [
+          "longitudinal runner wear"
+        ],
+        "chips": []
+      }
+    },
+    {
+      "id": "copper",
+      "name": "Hammered copper bronze",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#95502f",
+      "albedo": {
+        "dominant": "#95502f",
+        "secondary": [
+          "#60311f",
+          "#c77b45"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#60311f",
+          "#95502f",
+          "#c77b45"
+        ],
+        "pattern": "hammered",
+        "amplitude": 0.09
+      },
+      "roughness": {
+        "base": 0.38,
+        "variation": 0.12,
+        "map": "independent hammered field"
+      },
+      "metalness": {
+        "base": 0.86
+      },
+      "normal": {
+        "pattern": "hammered dimples",
+        "strength": 0.16
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.22,
+        "contactShadowBias": 0.25
+      },
+      "localOverrides": [
+        {
+          "id": "copper-contact-patina",
+          "region": "fastener collars",
+          "roughness": 0.5,
+          "color": "#6f3825"
+        }
+      ],
+      "wear": {
+        "edgeWear": 0.24,
+        "scratches": [
+          "rim shoe scuffs"
+        ],
+        "chips": []
+      }
+    },
+    {
+      "id": "cloth",
+      "name": "Warm cream winter sail",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#e0d5ba",
+      "doubleSided": true,
+      "albedo": {
+        "dominant": "#e0d5ba",
+        "secondary": [
+          "#c9b991",
+          "#f0e7d2"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#c9b991",
+          "#e0d5ba",
+          "#f0e7d2"
+        ],
+        "pattern": "woven",
+        "amplitude": 0.06
+      },
+      "roughness": {
+        "base": 0.84,
+        "variation": 0.06,
+        "map": "independent weave field"
+      },
+      "metalness": {
+        "base": 0
+      },
+      "normal": {
+        "pattern": "cross weave",
+        "strength": 0.13
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.08,
+        "contactShadowBias": 0.12
+      },
+      "localOverrides": [
+        {
+          "id": "sail-edge-weathering",
+          "region": "perimeter near bindings",
+          "roughness": 0.9,
+          "color": "#bcae8d"
+        }
+      ]
+    },
+    {
+      "id": "ice",
+      "name": "Packed clean ice",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#d5e9ef",
+      "albedo": {
+        "dominant": "#d5e9ef",
+        "secondary": [
+          "#a8cfdc",
+          "#f5fbff"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#a8cfdc",
+          "#d5e9ef",
+          "#f5fbff"
+        ],
+        "pattern": "faceted",
+        "amplitude": 0.12
+      },
+      "roughness": {
+        "base": 0.24,
+        "variation": 0.18,
+        "map": "independent facet field"
+      },
+      "metalness": {
+        "base": 0
+      },
+      "normal": {
+        "pattern": "faceted chips",
+        "strength": 0.28
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.18,
+        "contactShadowBias": 0.25
+      },
+      "localOverrides": [
+        {
+          "id": "ice-cavity-shadow",
+          "region": "crate ice beds",
+          "roughness": 0.32,
+          "color": "#a7c9d4"
+        }
+      ]
+    },
+    {
+      "id": "seafood",
+      "name": "Silver fish and crab accents",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#83929a",
+      "albedo": {
+        "dominant": "#83929a",
+        "secondary": [
+          "#43515a",
+          "#d26d36"
+        ]
+      },
+      "colorVariation": {
+        "palette": [
+          "#43515a",
+          "#83929a",
+          "#d26d36"
+        ],
+        "pattern": "species accents",
+        "amplitude": 0.18
+      },
+      "roughness": {
+        "base": 0.48,
+        "variation": 0.14,
+        "map": "independent scale and shell field"
+      },
+      "metalness": {
+        "base": 0.08
+      },
+      "normal": {
+        "pattern": "large readable scale and shell facets",
+        "strength": 0.18
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.2,
+        "contactShadowBias": 0.28
+      },
+      "localOverrides": [
+        {
+          "id": "crab-shell-accent",
+          "region": "crab baskets",
+          "roughness": 0.42,
+          "color": "#d26d36"
+        }
+      ]
+    },
+    {
+      "id": "rope",
+      "name": "Dark hemp rope",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#594431",
+      "qualityTier": "utility",
+      "albedo": {
+        "dominant": "#594431",
+        "secondary": [
+          "#35281e",
+          "#796046"
+        ]
+      },
+      "roughness": {
+        "base": 0.92,
+        "variation": 0.05,
+        "map": "independent twist field"
+      },
+      "metalness": {
+        "base": 0
+      },
+      "normal": {
+        "pattern": "helical twist",
+        "strength": 0.12
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.16,
+        "contactShadowBias": 0.2
+      },
+      "localOverrides": []
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "four-wheel-system",
+      "owner": "running-gear",
+      "buildsGeometry": true,
+      "geometry": "four wheel pivots with eight spokes each",
+      "distribution": "two axles, bilateral"
+    },
+    {
+      "id": "wheel-fastener-system",
+      "owner": "running-gear",
+      "buildsGeometry": true,
+      "geometry": "instanced copper rim rivets",
+      "distribution": "radial"
+    },
+    {
+      "id": "mast-band-system",
+      "owner": "sail-rig",
+      "buildsGeometry": true,
+      "geometry": "copper collars",
+      "distribution": "five vertical bands"
+    },
+    {
+      "id": "cargo-crate-system",
+      "owner": "cargo-system",
+      "buildsGeometry": true,
+      "geometry": "bevelled insulated crate modules",
+      "distribution": "two staggered deck rows"
+    },
+    {
+      "id": "seafood-display-system",
+      "owner": "cargo-system",
+      "buildsGeometry": true,
+      "geometry": "large fish silhouettes and crab bodies",
+      "distribution": "readable clustered loads"
+    }
+  ],
+  "proceduralStrategy": [
+    "Bevelled BoxGeometry for the chassis and cargo modules.",
+    "TorusGeometry plus radial spoke cylinders for independently rotating wheels.",
+    "Extruded ShapeGeometry for grounded runners with upturned noses and for the double-sided triangular sail.",
+    "TubeGeometry curves for tensioned rigging.",
+    "Deterministic instance counts by quality tier; no downloaded meshes or baked lighting."
+  ],
+  "qualityContract": {
+    "qualityBar": "complex stylized real-time",
+    "definitionOfDone": [
+      "Phone-scale read matches the approved long wheel-and-ski freighter silhouette, tall cream sail and premium seafood cargo.",
+      "Front, profile, rear and underside show coherent construction and grounded contact.",
+      "Wheel, suspension and sail pivots are action-ready and reduced motion produces a stable static pose."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 3,
+      "mesoComponents": 4,
+      "microFeatureGroups": 10,
+      "materialLayers": 5,
+      "repetitionSystems": 5,
+      "reviewViewpoints": 5
+    },
+    "featureGroups": [
+      {
+        "id": "dual-running-gear",
+        "name": "Wheel and ski silhouette",
+        "required": true,
+        "qualityCriteria": [
+          "Four deep spoked wheels and two long grounded runners remain distinct in front and profile."
+        ],
+        "evidenceRefs": [
+          "primary-crop",
+          "full-turnaround"
+        ],
+        "failureModes": [
+          "floating wheels",
+          "flat discs",
+          "runner penetration"
+        ]
+      },
+      {
+        "id": "sail-identity",
+        "name": "Cream copper-edged sail",
+        "required": true,
+        "qualityCriteria": [
+          "The mast, boom, thick sail and rear face remain coherent across orbit views."
+        ],
+        "evidenceRefs": [
+          "primary-crop",
+          "full-turnaround"
+        ],
+        "failureModes": [
+          "paper-thin sail",
+          "missing rear",
+          "disconnected mast"
+        ]
+      },
+      {
+        "id": "premium-cargo",
+        "name": "Readable seafood cargo",
+        "required": true,
+        "qualityCriteria": [
+          "Fish, ice, boxes and crab accents read as premium seafood rather than coloured blocks."
+        ],
+        "evidenceRefs": [
+          "primary-crop"
+        ],
+        "failureModes": [
+          "generic crates",
+          "unreadable seafood"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "ground-contact delta",
+      "rear and underside construction delta",
+      "material separation delta",
+      "phone-scale seafood readability delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not add micro rope stitches before the dual running gear passes.",
+      "Do not use detail to conceal a blank rear or disconnected underframe."
+    ],
+    "mustNotDo": [
+      "obstruct playable route",
+      "introduce gameplay state",
+      "use bright blue or aurora colours",
+      "ship a one-sided vehicle"
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.85,
+    "mustMatch": [
+      "dual wheel-and-ski silhouette",
+      "tall triangular sail",
+      "dark timber and copper palette",
+      "readable seafood cargo",
+      "coherent rear and underside"
+    ],
+    "niceToHave": [
+      "small rope wraps",
+      "minor wood edge wear"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "canonical-phone-overview",
+      "front-three-quarter",
+      "profile",
+      "rear-three-quarter",
+      "underside"
+    ]
+  },
+  "featureReviewTargets": [
+    {
+      "id": "dual-wheel-ski-silhouette",
+      "name": "Dual wheel and ski silhouette",
+      "tier": "critical",
+      "passIds": [
+        "blockout",
+        "structural-pass"
+      ],
+      "minimumScore": 0.85,
+      "mustPass": true,
+      "componentRefs": [
+        "running-gear"
+      ],
+      "evidenceRefs": [
+        "primary-crop",
+        "full-turnaround"
+      ]
+    },
+    {
+      "id": "sail-rig-silhouette",
+      "name": "Mast sail and rigging silhouette",
+      "tier": "critical",
+      "passIds": [
+        "blockout",
+        "form-refinement"
+      ],
+      "minimumScore": 0.85,
+      "mustPass": true,
+      "componentRefs": [
+        "sail-rig",
+        "rigging-system"
+      ],
+      "evidenceRefs": [
+        "primary-crop",
+        "full-turnaround"
+      ]
+    },
+    {
+      "id": "seafood-cargo-read",
+      "name": "Premium seafood cargo readability",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "material-pass"
+      ],
+      "minimumScore": 0.82,
+      "mustPass": true,
+      "componentRefs": [
+        "cargo-system"
+      ],
+      "evidenceRefs": [
+        "primary-crop"
+      ]
+    },
+    {
+      "id": "rear-underside-construction",
+      "name": "Rear and underside construction",
+      "tier": "important",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.82,
+      "mustPass": false,
+      "componentRefs": [
+        "chassis",
+        "service-ends",
+        "running-gear"
+      ],
+      "evidenceRefs": [
+        "full-turnaround",
+        "underside-view"
+      ]
+    },
+    {
+      "id": "frostmoon-material-separation",
+      "name": "Timber copper cloth ice material separation",
+      "tier": "important",
+      "passIds": [
+        "material-pass",
+        "lighting-pass"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": false,
+      "componentRefs": [
+        "chassis",
+        "running-gear",
+        "sail-rig",
+        "cargo-system"
+      ],
+      "evidenceRefs": [
+        "primary-crop"
+      ]
+    }
+  ],
+  "lookDevTargets": {
+    "qualityPriority": "runtime-stylized",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": false,
+        "acceptedLimitation": "The reference is a secondary concept study; production reuses the live Frostmoon material response rather than baking studio pixels."
+      }
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "hemisphere fill",
+        "moon rim",
+        "exposure",
+        "tone mapping",
+        "contact shadow"
+      ]
+    },
+    "screenshotReview": [
+      "Compare silhouette first.",
+      "Review least flattering rear and underside surveys.",
+      "Verify day, blizzard and night material separation."
+    ]
+  },
+  "lightingFromPhoto": [
+    "Upper-left key light, ACES filmic tone mapping and exposure matched to the existing Frostmoon world.",
+    "Cool hemisphere fill and ordinary moon rim preserve runner and sail thickness at night.",
+    "Soft contact shadows and ambient occlusion ground both runners and all four wheels without hiding the underframe."
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Lock chassis, runner, wheel and sail macro silhouette.",
+      "componentRefs": [
+        "root",
+        "chassis",
+        "running-gear",
+        "sail-rig"
+      ],
+      "acceptance": [
+        "Required silhouette targets score at least 0.85."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build rear, underside, cargo modules and sockets.",
+      "componentRefs": [
+        "chassis",
+        "running-gear",
+        "cargo-system",
+        "service-ends"
+      ],
+      "acceptance": [
+        "No floating attachment and no blank survey face."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine runner tips, wheel depth, sail thickness and rigging.",
+      "componentRefs": [
+        "running-gear",
+        "sail-rig",
+        "rigging-system"
+      ],
+      "acceptance": [
+        "Orbit views remain coherent."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Apply separated timber, copper, cloth, ice and seafood materials.",
+      "componentRefs": [
+        "chassis",
+        "running-gear",
+        "sail-rig",
+        "cargo-system"
+      ],
+      "acceptance": [
+        "Materials remain distinct across ambience states."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Verify live Frostmoon day, blizzard, dusk and night response.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Contact shadows and silhouettes survive every phase."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Expose animation pivots and route sockets.",
+      "componentRefs": [
+        "root",
+        "running-gear",
+        "sail-rig"
+      ],
+      "acceptance": [
+        "Reduced motion freezes decorative travel."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Scale geometry and motion by quality tier.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Low tier preserves the identity silhouette."
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "blockout",
+    "completedPasses": [],
+    "lastCompletedPass": "",
+    "blockedReason": "blockout requires real runtime captures and visual review before structural-pass unlocks",
+    "nextRequiredEvidence": [
+      "front three-quarter runtime screenshot",
+      "profile and rear orbit screenshots",
+      "reference comparison sheet",
+      "visual score and one review action"
+    ]
+  },
+  "performanceBudget": {
+    "qualityPriority": "reference-fidelity",
+    "targetTriangles": 48000,
+    "maxDrawCalls": 110,
+    "textureSize": 1024,
+    "fpsTarget": 60,
+    "optimizationPolicy": "Use quality-tier segments and repeated primitive reuse after visual acceptance."
+  },
+  "actionReadiness": {
+    "contract": "Named explodable and clickable hierarchy with visual-only animation pivots.",
+    "defaultRigType": "mechanical scene graph",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "name",
+      "pivot",
+      "socket ownership"
+    ],
+    "transformChannels": [
+      "root translation",
+      "wheel rotation",
+      "suspension translation",
+      "sail rotation"
+    ],
+    "authoringRules": [
+      "Meshes are named.",
+      "Surface relief rides its owning part.",
+      "Gameplay and hit targets remain outside this factory."
+    ],
+    "destructionPolicy": {
+      "enabled": false
+    }
+  },
+  "animationAnchors": [
+    {
+      "id": "wheel-pivots",
+      "component": "running-gear"
+    },
+    {
+      "id": "sail-pivot",
+      "component": "sail-rig"
+    },
+    {
+      "id": "loading-socket",
+      "component": "root"
+    }
+  ],
+  "selfCorrectLoop": {
+    "enabled": true,
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "lighting-pass",
+      "interaction-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "wrong silhouette strategy",
+      "missing component ownership"
+    ],
+    "codeRefineTriggers": [
+      "sound spec but incorrect geometry or placement"
+    ],
+    "stopCriteria": [
+      "hard veto",
+      "correction ceiling",
+      "repeated dominant defect"
+    ],
+    "visualAcceptance": {
+      "reviewer": "agent vision plus independent gauntlet review",
+      "threshold": 0.85,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "Worst required view governs.",
+      "requiredLayerScores": [
+        "silhouette",
+        "structure",
+        "materials",
+        "attachment",
+        "phone readability"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": false,
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.85,
+        "importantAverageThreshold": 0.8,
+        "reviewUnit": "named feature system",
+        "selectionRule": "identity and worst-view risk"
+      }
+    },
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "real Island 003 browser route",
+      "fallbackCapture": "isolated neutral turntable",
+      "minimumEvidence": "front profile rear underside and phone overview",
+      "reviewPairRule": "reference and runtime side by side",
+      "acceptanceAuthority": "visual review, not metrics alone"
+    }
+  },
+  "scores": {
+    "referenceIntegrity": 3,
+    "suitability": 3,
+    "targetFidelity": 3
+  },
+  "visualEvidence": [
+    {
+      "passId": "blockout",
+      "referenceScreenshot": ".img2threejs/island-003-frostmoon-seafood-trade/representative-slice/reference-profile-crop.png",
+      "renderScreenshot": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-frostmoon-seafood-freighter-side-runtime-v002.png",
+      "comparisonImage": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-frostmoon-seafood-freighter-profile-comparison-v002.png",
+      "cameraView": "profile plus island three-quarter and low orbit",
+      "notes": "Runtime model holds as a real volume across multiple island orbits. Final placement is grounded on a dedicated ice spur and no longer intersects the Frostwell mission platform."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "passId": "blockout",
+      "iteration": 2,
+      "action": "continue",
+      "aiVisionScore": 0.86,
+      "layerScores": {
+        "silhouetteProportion": 0.87,
+        "componentStructure": 0.88,
+        "formDetail": 0.81,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.8
+      },
+      "featureReviews": [
+        {
+          "id": "dual-wheel-ski-silhouette",
+          "score": 0.86,
+          "visible": true,
+          "notes": "Four deep wheel circles and paired full-length runners remain distinct in profile."
+        },
+        {
+          "id": "sail-rig-silhouette",
+          "score": 0.88,
+          "visible": true,
+          "notes": "The enlarged cream sail, mast and copper booms now match the tall long-haul identity."
+        }
+      ],
+      "aiVisionNotes": "The representative blockout clears its two required critical features. Automated IoU remains non-authoritative because the isolated white-background concept view is compared with a cluttered live gameplay scene; its failure and missing map-stripped capture remain recorded in tier1Results. Seafood cargo is readable but remains a structural/material-pass concern rather than a blockout veto.",
+      "evidence": [
+        "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-frostmoon-overview-day-runtime-v002.png",
+        "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-frostmoon-seafood-trade-spur-three-quarter-runtime-v002.png",
+        "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-frostmoon-seafood-trade-spur-low-runtime-v002.png",
+        "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-frostmoon-seafood-freighter-profile-comparison-v002.png"
+      ]
+    }
+  ],
+  "assumptions": [
+    "The fixed dual-contact wheel-and-ski construction is a stylized visual mechanism, not a manufacturable deployment system.",
+    "Hidden cargo arrangement may vary while preserving the approved silhouette."
+  ],
+  "risks": [
+    "Sail can dominate phone composition if placed too close to the route.",
+    "Four wheels plus spokes can exceed low-tier draw-call budget without reuse.",
+    "Seafood can collapse into generic blobs below phone-scale cue thresholds."
+  ],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.3486,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0855,
+        "bilateralSymmetryError": 0.3486,
+        "colorDelta": {
+          "checked": 7,
+          "maxDeltaE": 26.54,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 7.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.54
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.31
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.15
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.79
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.349 is below threshold 0.85",
+        "scale delta 0.086 exceeds threshold 0.08",
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [],
+      "renderHash": "f0a68672273ab4e3",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.3613,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0855,
+        "bilateralSymmetryError": 0.3414,
+        "colorDelta": {
+          "checked": 7,
+          "maxDeltaE": 26.65,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 6.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.16
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.65
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.63
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.08
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.361 is below threshold 0.85",
+        "scale delta 0.086 exceeds threshold 0.08",
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [],
+      "renderHash": "a227814d810f5093",
+      "passId": "blockout"
+    }
+  ]
+}

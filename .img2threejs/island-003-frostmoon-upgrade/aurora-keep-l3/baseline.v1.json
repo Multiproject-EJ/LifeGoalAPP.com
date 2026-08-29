@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-aurora-keep-l3",
+  "candidateGoal": [
+    {
+      "view": "five-view-turnaround",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-turnarounds/003-aurora-keep-turnaround-v001.png",
+      "sha256": "4d5e9ea7750ea13a223b7909960b4b707e41ec0451cf4e0e64dd49ece578d065",
+      "authority": "secondary-inferred-awaiting-user-approval"
+    },
+    {
+      "view": "night-ambience-proof",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-turnarounds/003-aurora-keep-night-proof-v001.png",
+      "sha256": "5e99e6d10da345feb25c00872228d55818398fd52231ca70bb136ec8c2d2659b",
+      "authority": "secondary-inferred-awaiting-user-approval"
+    }
+  ],
+  "currentBaseline": [
+    {
+      "view": "front",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-aurora-keep/aurora-keep-baseline-front.png",
+      "sha256": "ad3c23fb5e852c3686f4bb279bb2dbd4b245c75c1d7e1a6ffe91f414c78d25dc"
+    },
+    {
+      "view": "front-right-orbit",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-aurora-keep/aurora-keep-baseline-right.png",
+      "sha256": "c31647b248e7243dac493878714c215bbe2bd05608e0ce163a1e06fa7d3f314d"
+    },
+    {
+      "view": "far-right-orbit",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-aurora-keep/aurora-keep-baseline-rear.png",
+      "sha256": "f19f51f9f3b142c3807a9beb57599d3d6ebbf46213bcd07bc1eac58d5dd6b693"
+    }
+  ],
+  "salvageDecision": "retain the frozen boss socket, gameplay camera envelope, foundation footprint, broad central-hall proportions, neutral snow, dark timber family and warm window-light material; replace the generic tower ring, flat wall faces, blue-indigo roof use, pasted balcony, faceted beacon and unauthored side/rear construction",
+  "largestBaselineFailure": "The current Level 3 boss reads as a tall alpine lodge surrounded by repeated cylindrical turrets. It lacks the candidate goal's civic winter-fortress hierarchy: two dominant round guard towers, a coherent gatehouse, copper roof construction, upper watch gallery, inhabited side wings, ridge-ring signals and a functional rear service elevation."
+}

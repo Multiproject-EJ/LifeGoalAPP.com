@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "islandNumber": 3,
+  "slug": "frostmoon-upgrade",
+  "status": "implemented-and-runtime-validated",
+  "currentSource": {
+    "path": "003-source-current-production.png",
+    "sha256": "cd6d1d7459f07e6508829652f80a4a77e23d80c14883adc12828e97b551a49ed",
+    "authority": "exact-current-runtime-baseline"
+  },
+  "userDecisions": [
+    {
+      "date": "2026-08-27",
+      "decision": "Select the warm raw-copper and dark-bronze architectural direction from visual Variant C."
+    },
+    {
+      "date": "2026-08-27",
+      "decision": "Remove aurora/northern lights because that ambience is used on other islands."
+    },
+    {
+      "date": "2026-08-27",
+      "decision": "Use a daylight-to-night cycle with a short late-day blizzard, clearing dusk, cozy yellow lights and fireplaces."
+    },
+    {
+      "date": "2026-08-28",
+      "decision": "Approve Snowfeather Roost Level 3 goal v002 and begin the representative procedural 3D rebuild before extending the style to later landmarks."
+    }
+  ],
+  "references": [
+    {
+      "id": "style-copper-v001",
+      "path": "secondary-inferred/ambience/003-style-direction-copper-v001.png",
+      "sha256": "6634fe47c608bc7daad6d12434f521430f1d6242cd34f80faa32865a9af42564",
+      "authority": "secondary-inferred-user-selected-material-direction",
+      "note": "Aurora in this initial style image is explicitly rejected and must not ship."
+    },
+    {
+      "id": "ambience-day-v001",
+      "path": "secondary-inferred/ambience/003-ambience-day-v001.png",
+      "sha256": "6aca3a43034b7a58bab21d19f3da03f4bd9930f320a81860671ecd2d9988a76d",
+      "authority": "secondary-inferred-user-requested-sequence"
+    },
+    {
+      "id": "ambience-blizzard-v001",
+      "path": "secondary-inferred/ambience/003-ambience-late-day-blizzard-v001.png",
+      "sha256": "fd5e15692426b9dad1d5dce5fa1198767cf1eef82a4b9d46b255f20c60700156",
+      "authority": "secondary-inferred-user-requested-sequence"
+    },
+    {
+      "id": "ambience-dusk-v001",
+      "path": "secondary-inferred/ambience/003-ambience-clearing-dusk-v001.png",
+      "sha256": "2af6e70a1d514e789db4f2f6b218e45f143aa95531aa49805317812766113ead",
+      "authority": "secondary-inferred-user-requested-sequence"
+    },
+    {
+      "id": "ambience-night-v001",
+      "path": "secondary-inferred/ambience/003-ambience-cozy-night-v001.png",
+      "sha256": "162d423f3a6095f9775b1f7f21e9a70fb7193de9a7b5098f57cec4fdfe2a84d9",
+      "authority": "secondary-inferred-user-requested-sequence"
+    },
+    {
+      "id": "aurora-keep-turnaround-v001",
+      "path": "secondary-inferred/landmark-turnarounds/003-aurora-keep-turnaround-v001.png",
+      "sha256": "4d5e9ea7750ea13a223b7909960b4b707e41ec0451cf4e0e64dd49ece578d065",
+      "authority": "secondary-inferred-approved-production-direction"
+    },
+    {
+      "id": "aurora-keep-night-proof-v001",
+      "path": "secondary-inferred/landmark-turnarounds/003-aurora-keep-night-proof-v001.png",
+      "sha256": "5e99e6d10da345feb25c00872228d55818398fd52231ca70bb136ec8c2d2659b",
+      "authority": "secondary-inferred-approved-lighting-direction"
+    },
+    {
+      "id": "snowfeather-roost-turnaround-v001",
+      "path": "secondary-inferred/landmark-turnarounds/003-snowfeather-roost-turnaround-v001.png",
+      "sha256": "cb2fb358cf94f1fa338a4a2dfe71709f34d1c4c774a5f91f47dbd59e8ebcbc2b",
+      "authority": "secondary-inferred-approved-production-direction"
+    },
+    {
+      "id": "snowfeather-roost-l3-goal-v002",
+      "path": "secondary-inferred/landmark-goals/003-snowfeather-roost-l3-goal-v002.png",
+      "sha256": "5e0c75efdd129522d4d59dd15bfdfc07a6df305054c57c860d287790302d0b65",
+      "authority": "secondary-inferred-user-approved-production-goal",
+      "prompt": "prompts/snowfeather-roost-l3-goal-v002.md"
+    },
+    {
+      "id": "hearthguard-yard-turnaround-v001",
+      "path": "secondary-inferred/landmark-turnarounds/003-hearthguard-yard-turnaround-v001.png",
+      "sha256": "4d1d17736f0dae946f2d1b2e866592e7f11e1151469ef996ad1ca5844773487d",
+      "authority": "secondary-inferred-approved-production-direction"
+    },
+    {
+      "id": "hearthguard-yard-l3-goal-v002",
+      "path": "secondary-inferred/landmark-goals/003-hearthguard-yard-l3-goal-v002.png",
+      "sha256": "7bae7ccdf1225f7e9f179be72553b87016354ff264d4040b3b96d8a2c6ddcf0a",
+      "authority": "secondary-inferred-proposed-goal-awaiting-user-approval",
+      "prompt": "prompts/hearthguard-yard-l3-goal-v002.md"
+    },
+    {
+      "id": "moonwell-observatory-turnaround-v001",
+      "path": "secondary-inferred/landmark-turnarounds/003-moonwell-observatory-turnaround-v001.png",
+      "sha256": "0da5296d34f7e474a49cc4993043fdedb04a3ef4d692bf7e7da924ee73a395e9",
+      "authority": "secondary-inferred-approved-production-direction"
+    },
+    {
+      "id": "frostfire-archive-turnaround-v001",
+      "path": "secondary-inferred/landmark-turnarounds/003-frostfire-archive-turnaround-v001.png",
+      "sha256": "f3941e64b4d1176e751a0c87d9dd27866c734a5648afdcdc93f0f71b0435a4c6",
+      "authority": "secondary-inferred-approved-production-direction"
+    },
+    {
+      "id": "runtime-day-v001",
+      "path": "runtime-evidence/003-runtime-day-v001.png",
+      "sha256": "2ecfbd87de2dca11c2d32b4cc2229163f9680e638325731fd19e39e0d5627fb6",
+      "authority": "exact-runtime-evidence"
+    },
+    {
+      "id": "runtime-blizzard-v001",
+      "path": "runtime-evidence/003-runtime-blizzard-v001.png",
+      "sha256": "d6fc73da97902ac76eb2b83b0d71b2c5131827ad456d2badab5a7d1b0d3eb53e",
+      "authority": "exact-runtime-evidence"
+    },
+    {
+      "id": "runtime-dusk-v001",
+      "path": "runtime-evidence/003-runtime-dusk-v001.png",
+      "sha256": "66baf035a6ff6667a580140c85c9fad2fb00fe64686f1f61f6e51342fdb1dc1c",
+      "authority": "exact-runtime-evidence"
+    },
+    {
+      "id": "runtime-night-v001",
+      "path": "runtime-evidence/003-runtime-night-v001.png",
+      "sha256": "64ba820f6f46ace7d58a7e63f9829dc80aac3e9e0156bbaf5eb113cfe4eff563",
+      "authority": "exact-runtime-evidence"
+    },
+    {
+      "id": "runtime-cutaway-235m-v001",
+      "path": "runtime-evidence/003-runtime-cutaway-235m-v001.png",
+      "sha256": "12ea6ea91e7d6b16e5a7daf2fe519a60d71621ec3a0fe4eb1c50c3053acfbd98",
+      "authority": "exact-runtime-evidence"
+    },
+    {
+      "id": "runtime-cutaway-500m-v001",
+      "path": "runtime-evidence/003-runtime-cutaway-500m-v001.png",
+      "sha256": "2c61913ed916772bc76bad33b9ff38cda69219fc74e7d6a676685e69b60229da",
+      "authority": "exact-runtime-evidence"
+    }
+  ],
+  "promptProvenance": "prompts/ambience-sequence-v001.md",
+  "forbiddenDrift": [
+    "aurora or northern lights",
+    "saturated blue, teal or verdigris roofs",
+    "moved landmark footprints",
+    "replacement or obscuration of the canonical 36-tile route",
+    "fake baked HUD or gameplay state",
+    "blizzard intensity that destroys phone readability"
+  ]
+}

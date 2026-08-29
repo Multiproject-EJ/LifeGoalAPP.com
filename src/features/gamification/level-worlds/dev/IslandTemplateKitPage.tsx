@@ -47,6 +47,27 @@ function readInitialPreviewState() {
   const honeyfallMissionStage = Number.isFinite(honeyfallMissionStageParam)
     ? Math.max(0, Math.min(4, Math.floor(honeyfallMissionStageParam)))
     : 0;
+  const frostwellDepthParam = Number(params.get('frostwellDepth'));
+  const frostwellCutawayPreview = params.has('frostwellDepth');
+  const frostwellDepth = frostwellCutawayPreview && Number.isFinite(frostwellDepthParam)
+    ? Math.max(0, Math.min(500, Math.floor(frostwellDepthParam)))
+    : 0;
+  const frostwellCutawayLoop = params.get('frostwellCutawayLoop') === '1';
+  const frostwellBuilt = params.get('frostwellBuilt') === '1';
+  const frostwellCutawayTimeParam = Number(params.get('frostwellCutawayTime'));
+  const frostwellCutawayTimeSeconds = params.has('frostwellCutawayTime') && Number.isFinite(frostwellCutawayTimeParam)
+    ? Math.max(0, Math.min(5.2, frostwellCutawayTimeParam))
+    : undefined;
+  const frostwellCutawayViewParam = params.get('frostwellCutawayView');
+  const frostwellCutawayView: 'left' | 'right' | 'rear' | 'front' | undefined = frostwellCutawayViewParam === 'left'
+    ? 'left'
+    : frostwellCutawayViewParam === 'right'
+      ? 'right'
+      : frostwellCutawayViewParam === 'rear'
+        ? 'rear'
+        : frostwellCutawayViewParam === 'front'
+          ? 'front'
+          : undefined;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
       ? requestedMode
@@ -60,6 +81,12 @@ function readInitialPreviewState() {
     assemblyReplay,
     honeyfallMissionStage,
     honeyfallReplay: params.get('honeyfallReplay') === '1',
+    frostwellDepth,
+    frostwellCutawayPreview,
+    frostwellCutawayLoop,
+    frostwellBuilt,
+    frostwellCutawayTimeSeconds,
+    frostwellCutawayView,
     overlays: params.get('guides') !== '0',
     construction: params.get('construction') === '1',
     constructionWorking: params.get('working') !== '0',
@@ -329,6 +356,15 @@ export default function IslandTemplateKitPage() {
                   : initialState.constructionLandmark as 'hatchery' | 'habit' | 'wisdom' | 'boss'
                 : null}
               constructionPresentation={constructionPresentation}
+              signatureMissionPresentation={{
+                metersDrilled: initialState.frostwellDepth,
+                built: initialState.frostwellBuilt,
+                constructionSequence: 0,
+                cutawayPreview: initialState.frostwellCutawayPreview,
+                cutawayPreviewLoop: initialState.frostwellCutawayLoop,
+                cutawayPreviewTimeSeconds: initialState.frostwellCutawayTimeSeconds,
+                cutawayEvidenceView: initialState.frostwellCutawayView,
+              }}
               sunkenSandsTreasurePresentation={{
                 revealProgress: initialState.treasureRolls / SUNKEN_SANDS_TREASURE_ROLL_TARGET,
                 ready: initialState.treasureRolls >= SUNKEN_SANDS_TREASURE_ROLL_TARGET,

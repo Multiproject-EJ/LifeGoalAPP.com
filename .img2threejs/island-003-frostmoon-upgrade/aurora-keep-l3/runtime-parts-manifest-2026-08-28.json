@@ -1,0 +1,32 @@
+{
+  "model": "island-003-aurora-keep-l3",
+  "source": "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts",
+  "mappingPolicy": "Component ids are stable coverage aliases. runtimeName records the selectable Three.js group, or the owning named group when phone-scale repeated detail is intentionally distributed inside that group.",
+  "parts": [
+    { "name": "root", "kind": "part", "module": "keep-root", "runtimeName": "ISLAND_3_AURORA_KEEP_L3" },
+    { "name": "raised-frost-stone-foundation", "kind": "part", "module": "foundation", "runtimeName": "ISLAND_3_AURORA_KEEP_RAISED_FROST_STONE_FOUNDATION" },
+    { "name": "central-great-hall-shell", "kind": "part", "module": "great-hall", "runtimeName": "ISLAND_3_AURORA_KEEP_CENTRAL_GREAT_HALL_SHELL" },
+    { "name": "main-snow-copper-gable-roof", "kind": "part", "module": "main-roof", "runtimeName": "ISLAND_3_AURORA_KEEP_MAIN_SNOW_COPPER_GABLE_ROOF" },
+    { "name": "front-gatehouse-and-heavy-door", "kind": "part", "module": "entry", "runtimeName": "ISLAND_3_AURORA_KEEP_FRONT_GATEHOUSE_AND_HEAVY_DOOR" },
+    { "name": "upper-watch-gallery-and-window-grid", "kind": "part", "module": "gallery", "runtimeName": "ISLAND_3_AURORA_KEEP_UPPER_WATCH_GALLERY_AND_WINDOW_GRID" },
+    { "name": "left-round-guard-tower", "kind": "part", "module": "guard-tower", "runtimeName": "ISLAND_3_AURORA_KEEP_LEFT_ROUND_GUARD_TOWER" },
+    { "name": "right-round-guard-tower", "kind": "part", "module": "guard-tower", "runtimeName": "ISLAND_3_AURORA_KEEP_RIGHT_ROUND_GUARD_TOWER" },
+    { "name": "left-side-residential-wing", "kind": "part", "module": "residential-wing", "runtimeName": "ISLAND_3_AURORA_KEEP_LEFT_RESIDENTIAL_WING" },
+    { "name": "right-side-residential-wing", "kind": "part", "module": "residential-wing", "runtimeName": "ISLAND_3_AURORA_KEEP_RIGHT_RESIDENTIAL_WING" },
+    { "name": "rear-service-wing-and-yard-door", "kind": "part", "module": "rear-service", "runtimeName": "ISLAND_3_AURORA_KEEP_REAR_SERVICE_WING_AND_LOADING_DOOR" },
+    { "name": "copper-conical-tower-roofs", "kind": "part", "module": "tower-roofs", "runtimeName": "ISLAND_3_AURORA_KEEP_LEFT_ROUND_GUARD_TOWER_COPPER_CONICAL_ROOF + ISLAND_3_AURORA_KEEP_RIGHT_ROUND_GUARD_TOWER_COPPER_CONICAL_ROOF" },
+    { "name": "ridge-ring-beacon-system", "kind": "part", "module": "signal-rings", "runtimeName": "ISLAND_3_AURORA_KEEP_RIDGE_RING_BEACON_SYSTEM" },
+    { "name": "chimneys-caps-and-smoke-sockets", "kind": "part", "module": "chimneys", "runtimeName": "ISLAND_3_AURORA_KEEP_CHIMNEYS_CAPS_AND_SMOKE_SOCKETS" },
+    { "name": "dark-timber-buttress-and-trim-system", "kind": "part", "module": "structural-trim", "runtimeName": "ISLAND_3_AURORA_KEEP_CENTRAL_GREAT_HALL_SHELL" },
+    { "name": "warm-window-and-lantern-system", "kind": "part", "module": "inhabited-lighting", "runtimeName": "ISLAND_3_AURORA_KEEP_UPPER_WATCH_GALLERY_AND_WINDOW_GRID" },
+    { "name": "snow-load-icicle-and-roof-seam-system", "kind": "part", "module": "weather-detail", "runtimeName": "ISLAND_3_AURORA_KEEP_SNOW_LOAD_ICICLE_AND_ROOF_SEAM_SYSTEM" },
+    { "name": "rear-crates-firewood-tools-and-guard-rack", "kind": "part", "module": "rear-dressing", "runtimeName": "ISLAND_3_AURORA_KEEP_REAR_CRATES_FIREWOOD_TOOLS_AND_GUARD_RACK" }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 0,
+  "notes": [
+    "The dark-timber trim is intentionally distributed inside the great-hall and wing owners instead of becoming a second overlapping selectable shell.",
+    "Warm windows and lanterns remain owned by their gallery, tower, gatehouse and wing groups; the gallery group is the coverage alias for the repeated system.",
+    "Presentation-only sockets include the heavy door, smoke emitters, ring pivots and the future fish-shipment launch point."
+  ]
+}

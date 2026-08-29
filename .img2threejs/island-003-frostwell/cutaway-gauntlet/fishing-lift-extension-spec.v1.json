@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "frostwell-deep-fishery-lift-extension",
+  "status": "user-approved-production",
+  "authority": "user-authored-conversation-2026-08-29",
+  "goal": "Put the working fishery at the bottom of the completed under-ice section and visibly transport people and fish between it and the surface.",
+  "hierarchy": [
+    {"id":"surface-lift-headhouse","parent":"operating-state","owns":["surface shell","copper roof","warm practical"]},
+    {"id":"deep-fishery-processing-hall","parent":"under-ice-cutaway-stage","owns":["bottom platform","processing shell","warm window","lift lobby"]},
+    {"id":"people-lift","parent":"deep-fishery-processing-hall","owns":["shaft rails","winch wheel","cage","worker"]},
+    {"id":"fish-cargo-lift","parent":"deep-fishery-processing-hall","owns":["shaft rails","winch wheel","wet-catch cage","fish cargo"]},
+    {"id":"under-ice-fishing-system","parent":"deep-fishery-processing-hall","owns":["winch drum","cable","net basket","caught fish","fish school"]}
+  ],
+  "motionContract": {
+    "peopleLift": "smooth bounded surface-to-bottom cycle",
+    "fishCargoLift": "independent counterbalanced bottom-to-surface cycle",
+    "fishingNet": "bounded water-line dip and recovery",
+    "fishSchool": "bounded orbit inside the freshwater-lens envelope",
+    "reducedMotion": "freeze optional motion at the committed completed presentation"
+  },
+  "cameraContract": "The completed deep fishery appears only inside the explicit Frostwell inspection camera and remains hidden from the ordinary board overview.",
+  "gameplayAuthority": "presentation-only; built state is read from canonical signature mission progress and this extension performs no gameplay write",
+  "acceptance": [
+    "fishery building is visibly located at the bottom beside the water",
+    "people and fish use separate named cages and shafts",
+    "both cages visibly traverse the ice section without overlapping",
+    "fishing winch and net visibly operate at the water line",
+    "normal board overview remains uncluttered",
+    "phone cutaway retains the complete surface-to-water silhouette"
+  ]
+}

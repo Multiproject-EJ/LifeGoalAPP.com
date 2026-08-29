@@ -1,0 +1,103 @@
+{
+  "scanMethod": "component-zones",
+  "targetMinDetails": 10,
+  "note": "Identity details are mapped to named runtime components or material overrides.",
+  "details": [
+    {
+      "id": "copper-roof-plate-seams",
+      "kind": "seam",
+      "mapsTo": {
+        "ref": "copper-roof-seams"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "broken-snow-eaves",
+      "kind": "ridge",
+      "mapsTo": {
+        "ref": "broken-snow-edges"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "tower-stone-courses",
+      "kind": "linework",
+      "mapsTo": {
+        "ref": "tower-stone-joints"
+      },
+      "realization": "raised geometry"
+    },
+    {
+      "id": "gallery-window-muntins",
+      "kind": "ridge",
+      "mapsTo": {
+        "ref": "gallery-muntins"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "heavy-gable-truss",
+      "kind": "ridge",
+      "mapsTo": {
+        "ref": "gable-truss-system"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "gate-door-hardware",
+      "kind": "fastener",
+      "mapsTo": {
+        "ref": "gate-door-hardware"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "ridge-ring-brackets",
+      "kind": "fastener",
+      "mapsTo": {
+        "ref": "ridge-ring-supports"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "warm-window-glow",
+      "kind": "emissive",
+      "mapsTo": {
+        "ref": "window-emissive"
+      },
+      "realization": "emissive material and optional local lights"
+    },
+    {
+      "id": "copper-worn-edges",
+      "kind": "gloss",
+      "mapsTo": {
+        "ref": "copper-edge-wear"
+      },
+      "realization": "material override"
+    },
+    {
+      "id": "timber-grain-wear",
+      "kind": "scratch",
+      "mapsTo": {
+        "ref": "timber-grain-wear"
+      },
+      "realization": "procedural material response"
+    },
+    {
+      "id": "sparse-eave-icicles",
+      "kind": "ridge",
+      "mapsTo": {
+        "ref": "sparse-icicles"
+      },
+      "realization": "geometry"
+    },
+    {
+      "id": "rear-shipment-crate-straps",
+      "kind": "fastener",
+      "mapsTo": {
+        "ref": "crate-brass-straps"
+      },
+      "realization": "repeated geometry"
+    }
+  ]
+}

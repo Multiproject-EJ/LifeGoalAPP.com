@@ -303,6 +303,9 @@ interface CameraAuthoringPose extends CameraPoseSnapshot {
   fov: number;
   zoom: number;
   aspect: number;
+  /** Dev-only inspection data; never participates in mission state. */
+  signatureMissionSocketActive?: boolean;
+  signatureMissionMetersDrilled?: number;
 }
 
 interface ActiveTileImpact {
@@ -2298,11 +2301,13 @@ const ISLAND_5_SKY_DOME_SRC = '/assets/islands/island-005/background/sky-dome-v2
 
 interface Island5AmbienceRuntime {
   root: THREE.Group;
-  animate: (elapsed: number) => void;
+  animate: (elapsed: number, reducedMotion?: boolean) => void;
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
   registerRedockingLandmark?: (landmarkId: Island5LandmarkDefinition['id'], root: THREE.Object3D) => void;
   updateRedocking?: (presentation: Island2CelestialRedockingPresentation, immediate?: boolean) => void;
+  getSignatureMissionCameraPose?: () => { position: THREE.Vector3; target: THREE.Vector3 } | null;
+  setSignatureMissionCinematicActive?: (active: boolean) => void;
   updatePowerworksStage?: (presentation: Island10RootheartPowerworksPresentation) => void;
   updateTreasureProgress?: (
     presentation: Island12SunkenSandsTreasurePresentation,
@@ -5774,6 +5779,13 @@ export default function Island5ThreePilot({
         fov: round(camera.fov),
         zoom: round(camera.zoom),
         aspect: round(camera.aspect),
+        ...(isFrostmoonHaven ? {
+          signatureMissionSocketActive: Boolean(livingAmbience.getSignatureMissionCameraPose?.()),
+          signatureMissionMetersDrilled: Math.max(
+            0,
+            Math.floor(signatureMissionPresentationRef.current.metersDrilled),
+          ),
+        } : {}),
       };
       const payload = JSON.stringify(pose);
       canvas.dataset.cameraAuthoringPose = payload;
@@ -5956,6 +5968,10 @@ export default function Island5ThreePilot({
         position: readonly [number, number, number];
         target: readonly [number, number, number];
       }>> = {
+        // Frostfire's public stair, book crest and reading alcove face the
+        // centre promenade. Approach from that quadrant so the wisdom preset
+        // inspects the authored front rather than defaulting to the furnace rear.
+        wisdom: { position: [-0.6, 5.4, -2.4], target: [-4.36, 1.3, 3.9] },
         frostwell: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75
           ? { position: [0, 8.6, 14.5], target: [0, 0.5, -9.4] }
           : { position: [0, 5.4, 2.8], target: [0, 0.82, -9.4] },
@@ -6158,6 +6174,10 @@ export default function Island5ThreePilot({
       canvas.dataset.evidenceOrbitDegrees = String(degrees);
     };
     const trainRideParams = new URLSearchParams(window.location.search);
+    const frostwellDeterministicEvidence = import.meta.env.DEV
+      && isFrostmoonHaven
+      && trainRideParams.get('island3dEvidence') === '1'
+      && trainRideParams.get('island3dEvidencePreset') === 'frostwell';
     const requestedTrainRideView = trainRideParams.get('island13TrainRideView');
     const holdRequestedTrainRideView = import.meta.env.DEV
       && trainRideParams.get('island13TrainRideHold') === '1';
@@ -7289,6 +7309,27 @@ export default function Island5ThreePilot({
           }
         }
       }
+      const signatureMissionCameraPose = isFrostmoonHaven && activeInspectionPreset === 'frostwell'
+        ? livingAmbience.getSignatureMissionCameraPose?.()
+        : null;
+      livingAmbience.setSignatureMissionCinematicActive?.(Boolean(signatureMissionCameraPose));
+      if (
+        signatureMissionCameraPose
+        && !transition
+        && !activeTokenMotion
+        && !activeTour
+        && !activeProfiler
+      ) {
+        // Frostwell owns the presentation socket; this renderer only eases the
+        // existing inspection camera toward it. Canonical drill progress remains
+        // in the signature-mission action service and is read-only here.
+        const cutawayEase = isReducedMotion || frostwellDeterministicEvidence
+          ? 1
+          : 1 - Math.exp(-Math.max(0.001, frameDeltaSeconds) * 1.7);
+        camera.position.lerp(signatureMissionCameraPose.position, cutawayEase);
+        controls.target.lerp(signatureMissionCameraPose.target, cutawayEase);
+        camera.lookAt(controls.target);
+      }
       const waterDragonPresentation = fishermansFishingPresentationRef.current;
       const fishingInteraction = waterDragonPresentation.fishingInteraction;
       const fishingCameraActive = isFishermansVillage && Boolean(fishingInteraction?.active);
@@ -7885,7 +7926,7 @@ export default function Island5ThreePilot({
             <>
               <code aria-label="Current camera POV coordinates">
                 {cameraAuthoringPose
-                  ? `position [${cameraAuthoringPose.position.join(', ')}]\ntarget [${cameraAuthoringPose.target.join(', ')}]\nfov ${cameraAuthoringPose.fov} · zoom ${cameraAuthoringPose.zoom} · aspect ${cameraAuthoringPose.aspect}`
+                  ? `preset ${cameraAuthoringPose.preset}\nposition [${cameraAuthoringPose.position.join(', ')}]\ntarget [${cameraAuthoringPose.target.join(', ')}]\nfov ${cameraAuthoringPose.fov} · zoom ${cameraAuthoringPose.zoom} · aspect ${cameraAuthoringPose.aspect}${cameraAuthoringPose.signatureMissionSocketActive === undefined ? '' : `\nmission socket ${cameraAuthoringPose.signatureMissionSocketActive ? 'active' : 'inactive'} · ${cameraAuthoringPose.signatureMissionMetersDrilled ?? 0}m`}`
                   : 'Reading camera…'}
               </code>
               <button

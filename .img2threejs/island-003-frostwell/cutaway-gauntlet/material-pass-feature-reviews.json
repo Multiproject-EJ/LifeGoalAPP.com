@@ -1,0 +1,12 @@
+[
+  {"id":"offshore-read","score":0.96,"notes":"Detached snow and ice platform retains its pale glacial material identity."},
+  {"id":"board-clear","score":0.97,"notes":"Material changes do not alter the route-clear offshore footprint."},
+  {"id":"drill-read","score":0.95,"notes":"Dark steel, light steel and aged copper separate the rig, collars and cutter."},
+  {"id":"operating-read","score":0.92,"notes":"Completed fishery keeps glass, water, timber and copper families, now with a copper rather than blue roof."},
+  {"id":"construction-read","score":0.9,"notes":"Snow-burst material remains translucent, soft and distinct from water droplets."},
+  {"id":"palette-separation","score":0.94,"notes":"Ice cyan, polar steel, dark timber, aged copper and snow/hearth values remain distinct at phone scale."},
+  {"id":"ice-transmission","score":0.92,"notes":"Physical transmission, clearcoat and layered opacity create visible depth without hiding the shaft."},
+  {"id":"metal-response","score":0.93,"notes":"Independent steel and copper roughness/metalness/clearcoat responses preserve warm-cool mechanical contrast."},
+  {"id":"local-surface-variation","score":0.9,"notes":"Seams, inclusions, bore score, chips and depth ticks break otherwise flat procedural surfaces."},
+  {"id":"no-blue-roofs","score":0.96,"notes":"The Frostwell fishery roof now uses aged copper, matching the approved no-blue-roof direction."}
+]

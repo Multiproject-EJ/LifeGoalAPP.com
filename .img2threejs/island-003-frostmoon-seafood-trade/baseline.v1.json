@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostmoon-seafood-trade",
+  "status": "awaiting-user-decomposition-approval",
+  "capturedAt": "2026-08-27",
+  "goalAuthority": [
+    {
+      "kind": "user-authored-text",
+      "path": "goals/exact/user-goal-v001.md",
+      "sha256": "b8037a668d4261c278b1006094e2a0f470969cc2c2fdf0ebbb8e31e6d051d277",
+      "authority": "exact"
+    }
+  ],
+  "currentResult": {
+    "salvageDecision": "salvage-complete-approved-frostmoon-world-and-frostwell-mission-add-trade-ambience-only",
+    "reason": "The copper-roof Frostmoon world, no-aurora day-to-night ambience, and Frostwell drilling/fishery identity are approved. The missing layer is a visible premium seafood economy, winter freight language, courier life, and playful wolf-puppy ambience.",
+    "implementation": [
+      {
+        "path": "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts",
+        "sha256": "8ef3fdb5009a2cf651b301a7895ca7af3dc25c33d18a7a0f9f8fb6f00cc720c5"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/dev/FrostwellIceworksThreeModel.ts",
+        "sha256": "308c0b1606632f69a903ce5b2fa92ccb97b76198e1ceab8536f091ce73b3930d"
+      }
+    ],
+    "matchedCaptures": [
+      {
+        "view": "approved-day-overview",
+        "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-runtime-day-v001.png",
+        "sha256": "2ecfbd87de2dca11c2d32b4cc2229163f9680e638325731fd19e39e0d5627fb6"
+      },
+      {
+        "view": "approved-night-overview",
+        "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-runtime-night-v001.png",
+        "sha256": "64ba820f6f46ace7d58a7e63f9829dc80aac3e9e0156bbaf5eb113cfe4eff563"
+      },
+      {
+        "view": "approved-frostwell-freshwater-cutaway",
+        "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/003-runtime-cutaway-500m-v001.png",
+        "sha256": "2c61913ed916772bc76bad33b9ff38cda69219fc74e7d6a676685e69b60229da"
+      }
+    ]
+  },
+  "frozenFacts": {
+    "world": "Winter Island 003 Frostmoon Haven",
+    "roofPalette": "warm raw copper and dark bronze with snow caps",
+    "aurora": "prohibited",
+    "ambienceCycle": ["day", "short late-day blizzard", "dusk", "cozy night"],
+    "boardAuthority": "existing canonical 36-tile route and gameplay UI remain unchanged",
+    "missionAuthority": "existing canonical Frostwell mission progress and action services remain unchanged"
+  },
+  "salvageableTradeSeeds": [
+    "Frostwell operating fishery building",
+    "animated net carriers with fish",
+    "catch-sorting bin",
+    "freshwater reservoir and pipe network",
+    "existing wind, snow and wildlife animation clocks"
+  ],
+  "unresolvedVisualAuthority": [
+    "Exact historic engineering of the hybrid snow-wheel-plus-ski running gear",
+    "Exact sail plan for the long-haul freight cart",
+    "Whether the smaller courier kite is rigid-wing, parafoil, or split-tail",
+    "Exact coat markings and ear shapes for the wolf-like puppies"
+  ]
+}
