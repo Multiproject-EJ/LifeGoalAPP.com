@@ -1729,6 +1729,21 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(midwayY < startY && midwayY > 0.1 - 0.9 * 4.88, 'the auger should visibly descend between the committed start and target depths');
       runtime.animate(11.8);
       assert(Math.abs((augerBit?.position.y ?? 0) - (0.1 - 0.9 * 4.88)) < 0.001, 'the eased drill presentation must land exactly on committed 450m progress');
+      const preCommissionY = augerBit?.position.y ?? 0;
+      runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
+      assert(Boolean(operating?.visible), 'automatic commissioning must reveal the operating fishery immediately');
+      assertEqual(augerBit?.position.y, preCommissionY, 'automatic commissioning must preserve the final eased drill descent instead of jumping the auger');
+      runtime.animate(12.7);
+      assert(
+        (augerBit?.position.y ?? 0) < preCommissionY && (augerBit?.position.y ?? 0) > 0.1 - 4.88,
+        'the commissioned final spin must still animate visibly from 450m toward the water layer',
+      );
+      runtime.animate(14.1);
+      const automaticBreakthroughSystem = runtime.root.getObjectByName('FROSTWELL_BREAKTHROUGH_BURST_SYSTEM');
+      assert(
+        automaticBreakthroughSystem?.children.some((child) => ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity > 0),
+        'automatic commissioning must retain the visible water-contact breakthrough burst',
+      );
       runtime.setPresentation({
         metersDrilled: 450,
         built: false,
@@ -1736,7 +1751,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
         cutawayPreview: true,
         cutawayPreviewTimeSeconds: 1.7,
       });
-      runtime.animate(12);
+      runtime.animate(14.2);
       const evidenceY = augerBit?.position.y ?? 0;
       assert(evidenceY < 0.1 - 0.9 * 4.88 && evidenceY > 0.1 - 4.88, 'the frozen motion-evidence clock must show the auger between 450m and 500m');
       runtime.setPresentation({
@@ -1746,14 +1761,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
         cutawayPreview: true,
         cutawayPreviewTimeSeconds: 3.1,
       });
-      runtime.animate(12.1);
+      runtime.animate(14.3);
       const breakthroughSystem = runtime.root.getObjectByName('FROSTWELL_BREAKTHROUGH_BURST_SYSTEM');
       assert(
         breakthroughSystem?.children.some((child) => ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity > 0),
         'the deterministic water-contact frame must expose a readable 500m breakthrough burst',
       );
       runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
-      assert(Boolean(operating?.visible), 'funding must reveal the operating fishery and freshwater reservoir');
+      assert(Boolean(operating?.visible), 'the commissioned 500m state must reveal the operating fishery and freshwater reservoir');
       const deepFishery = runtime.root.getObjectByName('FROSTWELL_DEEP_FISHERY_PROCESSING_HALL');
       const peopleLift = runtime.root.getObjectByName('FROSTWELL_PEOPLE_LIFT_CAGE');
       const fishLift = runtime.root.getObjectByName('FROSTWELL_FISH_CARGO_LIFT_CAGE');

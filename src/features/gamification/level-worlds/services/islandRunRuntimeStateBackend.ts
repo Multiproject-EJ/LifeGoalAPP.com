@@ -381,7 +381,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         patch.technologyUnlocksById !== null && typeof patch.technologyUnlocksById === 'object' && !Array.isArray(patch.technologyUnlocksById)
           ? { ...current.technologyUnlocksById, ...patch.technologyUnlocksById }
           : current.technologyUnlocksById,
-      // Signature missions are owned by their canonical roll/funding actions.
+      // Signature missions are owned by their canonical mission actions.
       // The legacy compatibility patch surface must never become a second writer.
       signatureMissionProgressByIsland: current.signatureMissionProgressByIsland,
       marketOwnedBundlesByIsland:

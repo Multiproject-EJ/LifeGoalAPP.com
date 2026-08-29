@@ -485,7 +485,6 @@ import {
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
   detonateFirstLightAssemblyCharge,
-  fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
@@ -512,7 +511,6 @@ import {
   getStagedRestorationAvailableCharges,
   getStagedRestorationMissionDescriptor,
   getFrostwellAvailableSpins,
-  getFrostwellIceworksTechCost,
   getRootheartPowerworksStageCost,
   getSunkenSandsTreasureRevealProgress,
   isRootheartPowerworksCollectionComplete,
@@ -1826,7 +1824,6 @@ export function IslandRunBoardPrototype({
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
       frostwellMissionState: requestedFrostwellMissionState === 'drilling'
-        || requestedFrostwellMissionState === 'ready'
         || requestedFrostwellMissionState === 'constructing'
         || requestedFrostwellMissionState === 'operating'
         ? requestedFrostwellMissionState
@@ -1967,7 +1964,6 @@ export function IslandRunBoardPrototype({
     return window.localStorage.getItem(`island_run_landmark_coachmark_seen_${session.user.id}`) !== '1';
   });
   const [showFrostwellMission, setShowFrostwellMission] = useState(false);
-  const [isFundingFrostwell, setIsFundingFrostwell] = useState(false);
   const [isSpinningFrostwell, setIsSpinningFrostwell] = useState(false);
   const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
   const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
@@ -3228,7 +3224,6 @@ export function IslandRunBoardPrototype({
   const celestialRedockingDockedPlatforms = getCelestialRedockingDockedPlatformCount(
     celestialRedockingProgress,
   );
-  const frostwellTechCost = getFrostwellIceworksTechCost(runtimeState.cycleIndex);
   const frostwellBuilt = frostwellProgress.builtAtMs !== null;
   const frostwellPreviewActive = isIslandVisualPreview && islandVisualIslandNumber === 3;
   const frostwellPresentationMeters = frostwellPreviewActive
@@ -13279,7 +13274,10 @@ export function IslandRunBoardPrototype({
       runtimeStateRef.current = fresh;
       setRuntimeStateWithTrace('spin_frostwell_drill_wheel', fresh);
       setFrostwellLastSpinMeters(result.meters);
-      setLandingText(`⛏ Frostwell auger drilled ${result.meters}m deeper${result.metersAfter >= FROSTWELL_DEPTH_METERS ? ' — breakthrough!' : '.'}`);
+      if (result.commissioned) setFrostwellConstructionSequence((value) => value + 1);
+      setLandingText(result.commissioned
+        ? '🐟 Breakthrough! Frostwell is online — fishing, lifts, sorting and seafood trade have started.'
+        : `⛏ Frostwell auger drilled ${result.meters}m deeper.`);
       playIslandRunSound(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_claim' : 'stop_land');
     } finally {
@@ -13488,28 +13486,6 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic,
   ]);
 
-  const handleFundFrostwell = useCallback(async () => {
-    if (isFundingFrostwell) return;
-    setIsFundingFrostwell(true);
-    try {
-      const result = await fundFrostwellIceworks({ session, client });
-      if (result.status === 'ok') {
-        refreshIslandRunStateFromLocal(session);
-        const fresh = getIslandRunStateSnapshot(session);
-        runtimeStateRef.current = fresh;
-        setRuntimeStateWithTrace('fund_frostwell_iceworks', fresh);
-        setFrostwellConstructionSequence((value) => value + 1);
-        setLandingText('💨 Frostwell Iceworks online! Fresh water and fish are flowing from beneath the frozen ocean.');
-        playIslandRunSound('reward_bar_claim_burst');
-        triggerIslandRunHaptic('reward_claim');
-        window.setTimeout(() => setShowFrostwellMission(false), 1050);
-      } else if (result.status === 'insufficient_essence') {
-        setLandingText(`The Frostwell needs ${result.cost.toLocaleString()} Essence to install its fishery and reservoir.`);
-      }
-    } finally {
-      setIsFundingFrostwell(false);
-    }
-  }, [client, isFundingFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
   const handleFundRootheartPowerworks = useCallback(async () => {
     if (isFundingRootheartPowerworks) return;
     setIsFundingRootheartPowerworks(true);
@@ -15336,9 +15312,7 @@ export function IslandRunBoardPrototype({
                   <strong>Frostwell</strong>
                   {frostwellBuilt
                     ? 'Waterworks online'
-                    : frostwellProgress.metersDrilled >= FROSTWELL_DEPTH_METERS
-                      ? `Fund ${frostwellTechCost.toLocaleString()}`
-                      : `${frostwellProgress.metersDrilled}/${FROSTWELL_DEPTH_METERS}m · ${frostwellAvailableSpins} spin${frostwellAvailableSpins === 1 ? '' : 's'}`}
+                    : `${frostwellProgress.metersDrilled}/${FROSTWELL_DEPTH_METERS}m · ${frostwellAvailableSpins} spin${frostwellAvailableSpins === 1 ? '' : 's'}`}
                 </span>
               </button>
             ) : null}
@@ -19762,8 +19736,8 @@ export function IslandRunBoardPrototype({
               </div>
             ) : (
               <div className="frostwell-mission-modal__status frostwell-mission-modal__status--ready">
-                <strong>Breakthrough! Technology installation ready</strong>
-                <span>The bore has reached water. Fund the fishery, reservoir, conveyor nets and pipeworks.</span>
+                <strong>Breakthrough! Automatic commissioning started</strong>
+                <span>The fishery, reservoir, conveyor nets and pipeworks are coming online without another payment or action.</span>
               </div>
             )}
             <div className="frostwell-mission-modal__actions">
@@ -19774,20 +19748,6 @@ export function IslandRunBoardPrototype({
               >
                 {frostwellPresentationBuilt ? 'Return to island' : 'Keep exploring'}
               </button>
-              {!frostwellPresentationBuilt && frostwellPresentationMeters >= FROSTWELL_DEPTH_METERS ? (
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action"
-                  disabled={isFundingFrostwell || runtimeState.essence < frostwellTechCost}
-                  onClick={() => void handleFundFrostwell()}
-                >
-                  {isFundingFrostwell
-                    ? 'Building Iceworks…'
-                    : runtimeState.essence < frostwellTechCost
-                      ? `Need ${(frostwellTechCost - runtimeState.essence).toLocaleString()} more Essence`
-                      : `Build for ${frostwellTechCost.toLocaleString()} Essence`}
-                </button>
-              ) : null}
             </div>
           </section>
         </div>

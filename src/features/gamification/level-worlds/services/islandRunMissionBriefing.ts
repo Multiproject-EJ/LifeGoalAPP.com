@@ -107,9 +107,9 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   3: {
     progressKind: 'frostwell_iceworks',
     headline: 'Open the Frostwell',
-    missionStatement: 'Frostwild survives above an immense frozen ocean. Help its builders drill through the ice, install the fishery and reservoir, and make hidden abundance flow again.',
+    missionStatement: 'Frostwild survives above an immense frozen ocean. Help its builders drill through the ice so the fishery and reservoir can start the instant the water layer is reached.',
     primaryObjective: 'Earn drill spins and reach the 500-metre water layer.',
-    supportingObjective: 'Fund the Iceworks and restore fish and fresh-water circulation.',
+    supportingObjective: 'At 500 metres, commission the Iceworks automatically and restore fish and fresh-water circulation.',
     fieldProtocol: 'Protect the route while the offshore auger is under load.',
     caretakerSignal: 'The water is not gone. It is waiting beneath everything we fear to break.',
   },

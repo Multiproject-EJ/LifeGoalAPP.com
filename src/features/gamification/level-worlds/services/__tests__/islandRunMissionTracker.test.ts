@@ -211,8 +211,8 @@ export const islandRunMissionTrackerTests: TestCase[] = [
           },
         }),
       });
-      assertEqual(ready.objectives[0].label, 'Build Iceworks', 'completed drilling advances the same row');
-      assertEqual(ready.objectives[0].displayValue, 'Ready', 'funding action is readable without a third row');
+      assertEqual(ready.objectives[0].label, 'Fishery Online', 'completed drilling commissions the business in the same row');
+      assertEqual(ready.objectives[0].displayValue, 'Done', 'there is no separate funding phase after 500m');
       assert(ready.objectives[0].value > drilling.objectives[0].value, 'phase transition remains monotonic');
     },
   },

@@ -912,6 +912,7 @@ export function createFrostwellIceworks(
     const normalizedMeters = Math.max(0, Math.min(FROSTWELL_DEPTH_METERS, Math.floor(next.metersDrilled)));
     const progress = normalizedMeters / FROSTWELL_DEPTH_METERS;
     const previousTargetProgress = targetCutawayProgress;
+    const justCommissioned = next.built && !presentation.built && progress >= 1 && previousTargetProgress < 1;
     targetCutawayProgress = progress;
     presentation = { ...next, metersDrilled: normalizedMeters };
     operating.visible = next.built;
@@ -919,7 +920,11 @@ export function createFrostwellIceworks(
     cutawayRoot.visible = next.built
       ? inspectionActive
       : progress > 0 || next.cutawayPreview === true;
-    if (!hasPresentation || next.built || progress <= previousTargetProgress) {
+    if (justCommissioned) {
+      transitionFromProgress = cutawayProgress;
+      transitionStartedAt = lastElapsed;
+      breakthroughStartedAt = lastElapsed + 1.8;
+    } else if (!hasPresentation || next.built || progress <= previousTargetProgress) {
       transitionStartedAt = null;
       applyCutawayProgress(progress);
     } else {
@@ -984,10 +989,10 @@ export function createFrostwellIceworks(
         applyCutawayProgress(THREE.MathUtils.lerp(transitionFromProgress, targetCutawayProgress, easedT));
         if (transitionT >= 1) transitionStartedAt = null;
       }
-      const drilling = !presentation.built && (cutawayPreviewCycle !== null
+      const drilling = transitionStartedAt !== null || (!presentation.built && (cutawayPreviewCycle !== null
         ? cutawayPreviewCycle < 2.6
         : targetCutawayProgress > 0.001
-          && (targetCutawayProgress < 1 || cutawayProgress < targetCutawayProgress - 0.001));
+          && (targetCutawayProgress < 1 || cutawayProgress < targetCutawayProgress - 0.001)));
       if (drilling) {
         drillPivot.rotation.y = motionElapsed * 3.6;
         drillPivot.position.y = -cutawayProgress * 0.42 + Math.sin(motionElapsed * 8) * 0.0018;
@@ -1022,7 +1027,7 @@ export function createFrostwellIceworks(
       const previewBreakthroughT = cutawayPreviewCycle === null
         ? null
         : THREE.MathUtils.clamp((cutawayPreviewCycle - 2.6) / 1.25, 0, 1);
-      if ((previewBreakthroughT !== null || breakthroughStartedAt !== null) && !presentation.built) {
+      if (previewBreakthroughT !== null || breakthroughStartedAt !== null) {
         const breakthroughT = previewBreakthroughT
           ?? THREE.MathUtils.clamp((elapsed - (breakthroughStartedAt ?? elapsed)) / 1.25, 0, 1);
         if (previewBreakthroughT !== null ? cutawayPreviewCycle! >= 2.6 : elapsed >= (breakthroughStartedAt ?? elapsed)) {
