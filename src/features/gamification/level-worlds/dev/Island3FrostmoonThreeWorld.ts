@@ -3,6 +3,7 @@ import type {
   Island3DQuality,
   Island3DQualityProfile,
   Island5LandmarkDefinition,
+  Island5LandmarkId,
 } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 import {
@@ -45,8 +46,28 @@ export interface Island3FrostmoonMaterials {
   egg: THREE.MeshPhysicalMaterial;
   eggSpot: THREE.MeshStandardMaterial;
   banner: THREE.MeshStandardMaterial;
+  accent: THREE.MeshStandardMaterial;
   smoke: THREE.MeshStandardMaterial;
 }
+
+export interface Island3FrostmoonLandmarkPalette extends Pick<Island3FrostmoonMaterials,
+  | 'frostRock'
+  | 'frostRockDark'
+  | 'timber'
+  | 'timberDark'
+  | 'indigo'
+  | 'indigoLight'
+  | 'brass'
+  | 'windowGlow'
+  | 'paper'
+  | 'banner'
+  | 'accent'
+> {}
+
+const frostmoonLandmarkPalettes = new WeakMap<
+  Island3FrostmoonMaterials,
+  Record<Island5LandmarkId, Island3FrostmoonLandmarkPalette>
+>();
 
 export interface Island3FrostmoonAmbienceRuntime {
   root: THREE.Group;
@@ -175,7 +196,7 @@ export function createIsland3FrostmoonMaterials(): Island3FrostmoonMaterials {
   const stoneMap = createPatternTexture(128, 'stone');
   const woodMap = createPatternTexture(128, 'wood');
   const roofMap = createPatternTexture(96, 'roof');
-  return {
+  const materials: Island3FrostmoonMaterials = {
     snow: new THREE.MeshStandardMaterial({ color: 0xeaf4ff, map: snowMap, roughness: 0.8, metalness: 0 }),
     snowShadow: new THREE.MeshStandardMaterial({ color: 0xbccce6, map: snowMap, roughness: 0.9 }),
     frostRock: new THREE.MeshStandardMaterial({ color: 0x78828d, map: stoneMap, roughness: 0.92 }),
@@ -196,8 +217,126 @@ export function createIsland3FrostmoonMaterials(): Island3FrostmoonMaterials {
     egg: new THREE.MeshPhysicalMaterial({ color: 0xf6e6c7, roughness: 0.42, clearcoat: 0.28, clearcoatRoughness: 0.32 }),
     eggSpot: new THREE.MeshStandardMaterial({ color: 0x8f6572, roughness: 0.52, emissive: 0x351f24, emissiveIntensity: 0.05 }),
     banner: new THREE.MeshStandardMaterial({ color: 0x612f35, roughness: 0.6, side: THREE.DoubleSide }),
+    accent: new THREE.MeshStandardMaterial({ color: 0x7c4d3f, roughness: 0.62, metalness: 0.08 }),
     smoke: new THREE.MeshStandardMaterial({ color: 0xcbd3e2, roughness: 1, transparent: true, opacity: 0.34, depthWrite: false }),
   };
+
+  const createPalette = (colors: {
+    frostRock: number;
+    frostRockDark: number;
+    timber: number;
+    timberDark: number;
+    copper: number;
+    copperLight: number;
+    brass: number;
+    paper: number;
+    banner: number;
+    accent: number;
+    glow?: number;
+  }): Island3FrostmoonLandmarkPalette => ({
+    frostRock: new THREE.MeshStandardMaterial({ color: colors.frostRock, map: stoneMap, roughness: 0.92 }),
+    frostRockDark: new THREE.MeshStandardMaterial({ color: colors.frostRockDark, map: stoneMap, roughness: 0.96 }),
+    timber: new THREE.MeshStandardMaterial({ color: colors.timber, map: woodMap, roughness: 0.84 }),
+    timberDark: new THREE.MeshStandardMaterial({ color: colors.timberDark, map: woodMap, roughness: 0.92 }),
+    indigo: new THREE.MeshPhysicalMaterial({ color: colors.copper, map: roofMap, roughness: 0.46, metalness: 0.7, clearcoat: 0.28, clearcoatRoughness: 0.3 }),
+    indigoLight: new THREE.MeshPhysicalMaterial({ color: colors.copperLight, map: roofMap, roughness: 0.38, metalness: 0.76, clearcoat: 0.38, clearcoatRoughness: 0.24 }),
+    brass: new THREE.MeshStandardMaterial({ color: colors.brass, roughness: 0.36, metalness: 0.78, emissive: 0x4f2c08, emissiveIntensity: 0.08 }),
+    windowGlow: new THREE.MeshStandardMaterial({ color: 0xffdfa0, roughness: 0.28, emissive: colors.glow ?? 0xff8a2a, emissiveIntensity: 0.42 }),
+    paper: new THREE.MeshStandardMaterial({ color: colors.paper, roughness: 0.9, side: THREE.DoubleSide }),
+    banner: new THREE.MeshStandardMaterial({ color: colors.banner, roughness: 0.6, side: THREE.DoubleSide }),
+    accent: new THREE.MeshStandardMaterial({ color: colors.accent, roughness: 0.62, metalness: 0.08 }),
+  });
+
+  frostmoonLandmarkPalettes.set(materials, {
+    hatchery: createPalette({
+      frostRock: 0xb5b7ad,
+      frostRockDark: 0x66716e,
+      timber: 0x9b7047,
+      timberDark: 0x4e3827,
+      copper: 0x7f432d,
+      copperLight: 0xb96d3d,
+      brass: 0xbca06b,
+      paper: 0xe2d3b2,
+      banner: 0x5f7465,
+      accent: 0x78907a,
+    }),
+    habit: createPalette({
+      frostRock: 0x687079,
+      frostRockDark: 0x3f454c,
+      timber: 0x4f3a33,
+      timberDark: 0x272323,
+      copper: 0x713c31,
+      copperLight: 0xa6573c,
+      brass: 0xc27a3d,
+      paper: 0xb9aaa0,
+      banner: 0x87343b,
+      accent: 0xa7473f,
+    }),
+    wisdom: createPalette({
+      frostRock: 0x766d69,
+      frostRockDark: 0x443b39,
+      timber: 0x6b4431,
+      timberDark: 0x33201f,
+      copper: 0x7d402c,
+      copperLight: 0xb45d37,
+      brass: 0xae8246,
+      paper: 0xdcc9a0,
+      banner: 0x6f2f3e,
+      accent: 0x874455,
+    }),
+    event: createPalette({
+      frostRock: 0xa9b3b6,
+      frostRockDark: 0x58656a,
+      timber: 0x6f5a46,
+      timberDark: 0x3f3530,
+      copper: 0x86503a,
+      copperLight: 0xb66b43,
+      brass: 0xc9a45f,
+      paper: 0xd7d5c5,
+      banner: 0x526d67,
+      accent: 0x4f8278,
+    }),
+    boss: createPalette({
+      frostRock: 0x596069,
+      frostRockDark: 0x30363e,
+      timber: 0x51372e,
+      timberDark: 0x271f1e,
+      copper: 0x81432e,
+      copperLight: 0xbe673c,
+      brass: 0xd19b4a,
+      paper: 0xd9cdb0,
+      banner: 0x7b2d36,
+      accent: 0x8b3740,
+    }),
+  });
+  return materials;
+}
+
+export function getIsland3FrostmoonLandmarkPalette(
+  materials: Island3FrostmoonMaterials,
+  landmarkId: Island5LandmarkId,
+): Island3FrostmoonLandmarkPalette {
+  const palette = frostmoonLandmarkPalettes.get(materials)?.[landmarkId];
+  return palette ?? {
+    frostRock: materials.frostRock,
+    frostRockDark: materials.frostRockDark,
+    timber: materials.timber,
+    timberDark: materials.timberDark,
+    indigo: materials.indigo,
+    indigoLight: materials.indigoLight,
+    brass: materials.brass,
+    windowGlow: materials.windowGlow,
+    paper: materials.paper,
+    banner: materials.banner,
+    accent: materials.accent,
+  };
+}
+
+function resolveIsland3FrostmoonLandmarkMaterials(
+  materials: Island3FrostmoonMaterials,
+  landmarkId: Island5LandmarkId,
+): Island3FrostmoonMaterials {
+  return { ...materials, ...getIsland3FrostmoonLandmarkPalette(materials, landmarkId) };
 }
 
 function createGableGeometry(width: number, height: number, depth: number) {
@@ -491,6 +630,10 @@ function createSnowfeatherRoost(level: 1 | 2 | 3, quality: Island3DQuality, mate
 
   const lodge = createSnowfeatherPart('ISLAND_3_SNOWFEATHER_MAIN_LODGE');
   addTimberFrame(lodge, 1.68, 1.08, 1.26, 0.44, materials);
+  const sageFascia = box(1.12, 0.085, 0.08, materials.accent);
+  sageFascia.name = 'ISLAND_3_SNOWFEATHER_SAGE_ENTRY_FASCIA';
+  sageFascia.position.set(0, 1.41, 0.675);
+  lodge.add(sageFascia);
   group.add(lodge);
 
   const roof = createSnowfeatherPart('ISLAND_3_SNOWFEATHER_FLARED_COPPER_ROOF');
@@ -1046,7 +1189,7 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
       [0.29, 0.28, 1.12, 0.58],
     ];
     ringSpecs.forEach(([radius, x, y, z], index) => {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, index === 0 ? 0.045 : 0.033, 7, quality === 'low' ? 18 : 28), index === 1 ? materials.indigoLight : materials.brass);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, index === 0 ? 0.045 : 0.033, 7, quality === 'low' ? 18 : 28), index === 1 ? materials.accent : materials.brass);
       ring.name = `ISLAND_3_MOONWELL_ARMILLARY_RING_${index + 1}`;
       ring.rotation.set(x, y, z);
       rings.add(ring);
@@ -1058,7 +1201,7 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
     const axisEnd = new THREE.Vector3(0.5, 1.9, -0.24);
     addHearthguardBeam(axis, axisStart, axisEnd, 0.04, materials.brass, 'ISLAND_3_MOONWELL_ARMILLARY_SPINDLE');
     [axisStart, axisEnd].forEach((point, index) => {
-      const collar = new THREE.Mesh(new THREE.SphereGeometry(index ? 0.1 : 0.12, 9, 6), materials.indigoLight);
+      const collar = new THREE.Mesh(new THREE.SphereGeometry(index ? 0.1 : 0.12, 9, 6), materials.accent);
       collar.name = `ISLAND_3_MOONWELL_COUNTERWEIGHT_${index + 1}`;
       collar.position.copy(point);
       axis.add(collar);
@@ -1659,6 +1802,13 @@ function createAuroraKeep(level: 1 | 2 | 3, quality: Island3DQuality, materials:
   [-1, 1].forEach((side) => addLantern(gatehouse, side * 0.36, 0.88, 1.2, materials, 0.64));
   group.add(gatehouse);
 
+  if (level === 3) {
+    const civicColor = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_CRIMSON_CIVIC_BANNERS');
+    addBanner(civicColor, -0.92, 0.98, 0.7, 0, materials);
+    addBanner(civicColor, 0.92, 0.98, 0.7, Math.PI, materials);
+    group.add(civicColor);
+  }
+
   if (level >= 2) {
     const gallery = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_UPPER_WATCH_GALLERY_AND_WINDOW_GRID');
     const galleryFloor = box(1.55, 0.12, 0.42, materials.timberDark);
@@ -1812,23 +1962,24 @@ export function buildIsland3FrostmoonLandmark(
   materials: Island3FrostmoonMaterials,
   options: IslandConstructionFactoryOptions = {},
 ) {
+  const landmarkMaterials = resolveIsland3FrostmoonLandmarkMaterials(materials, definition.id);
   const root = new THREE.Group();
   root.name = `ISLAND_3_FROSTMOON_${definition.id.toUpperCase()}_ROOT`;
   root.position.set(...definition.position);
   root.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-003-frostmoon' };
   if (level === 0) {
-    addFoundation(root, definition.id === 'boss' ? 1.9 : 1.42, materials, quality, 0.1);
+    addFoundation(root, definition.id === 'boss' ? 1.9 : 1.42, landmarkMaterials, quality, 0.1);
   } else {
     const resolved = level as 1 | 2 | 3;
     const building = definition.id === 'hatchery'
-      ? createSnowfeatherRoost(resolved, quality, materials)
+      ? createSnowfeatherRoost(resolved, quality, landmarkMaterials)
       : definition.id === 'habit'
-        ? createHearthguardYard(resolved, quality, materials)
+        ? createHearthguardYard(resolved, quality, landmarkMaterials)
         : definition.id === 'wisdom'
-          ? createFrostfireArchive(resolved, quality, materials)
+          ? createFrostfireArchive(resolved, quality, landmarkMaterials)
           : definition.id === 'event'
-            ? createMoonwellObservatory(resolved, quality, materials)
-            : createAuroraKeep(resolved, quality, materials);
+            ? createMoonwellObservatory(resolved, quality, landmarkMaterials)
+            : createAuroraKeep(resolved, quality, landmarkMaterials);
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
     const scale = options.constructionPreview
       ? (definition.id === 'boss' ? 1.2 : 1.12)
@@ -2021,6 +2172,10 @@ export function createIsland3FrostmoonLivingAmbience(
   root.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-003-frostmoon' };
   const quality = profile.id;
   const detail = detailFor(quality);
+  const landmarkPalettes = (['boss', 'hatchery', 'habit', 'wisdom', 'event'] as const)
+    .map((landmarkId) => getIsland3FrostmoonLandmarkPalette(materials, landmarkId));
+  const windowGlowMaterials = [materials.windowGlow, ...landmarkPalettes.map((palette) => palette.windowGlow)];
+  const warmMetalMaterials = [materials.brass, ...landmarkPalettes.map((palette) => palette.brass)];
   const oceanMaterial = ocean.material as THREE.MeshPhysicalMaterial;
   oceanMaterial.color.setHex(0x87cfe6);
   oceanMaterial.roughness = 0.2;
@@ -2219,32 +2374,66 @@ export function createIsland3FrostmoonLivingAmbience(
     return light;
   });
 
+  const hearthSnowSpillMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffb45f,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const hearthSnowSpills = hearthLightSources.slice(0, hearthLightCount).map(([x, z], index) => {
+    const spill = new THREE.Mesh(
+      new THREE.CircleGeometry(index === 0 ? 0.92 : 0.72, quality === 'low' ? 12 : 20),
+      hearthSnowSpillMaterial,
+    );
+    spill.name = `ISLAND_3_HEARTH_SNOW_LIGHT_POOL_${index + 1}`;
+    spill.position.set(x, 0.515, z);
+    spill.rotation.x = -Math.PI / 2;
+    spill.renderOrder = 1;
+    root.add(spill);
+    return spill;
+  });
+
   const distantCount = quality === 'high' ? 7 : quality === 'medium' ? 5 : 3;
   for (let index = 0; index < distantCount; index += 1) {
     const angle = index / distantCount * Math.PI * 2 + 0.48;
     const radius = 23 + index % 3 * 3.5;
     const cluster = new THREE.Group();
-    cluster.name = 'ISLAND_3_DISTANT_ALPINE_MOUNTAIN';
+    const archetype = index % 3;
+    cluster.name = `ISLAND_3_DISTANT_ALPINE_RIDGE_${archetype + 1}`;
     cluster.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
     cluster.rotation.y = -angle + index * 0.17;
-    const peakHeight = 4.4 + index % 3 * 0.45;
-    const peakRadius = 2.35 + index % 2 * 0.32;
-    const mountain = new THREE.Mesh(new THREE.ConeGeometry(peakRadius, peakHeight, 8), materials.frostRockDark);
-    mountain.position.y = 0.88;
-    mountain.scale.z = 0.78;
-    const snow = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.62, peakHeight * 0.48, 8), materials.snow);
-    snow.position.y = 0.88 + peakHeight * 0.27;
-    snow.scale.z = 0.79;
+    const peakHeight = 4.25 + archetype * 0.52 + index % 2 * 0.24;
+    const peakRadius = 2.25 + archetype * 0.24;
+    const mountain = new THREE.Mesh(new THREE.ConeGeometry(peakRadius, peakHeight, 7 + archetype), materials.frostRockDark);
+    mountain.position.y = 0.52;
+    mountain.rotation.z = (archetype - 1) * 0.07;
+    mountain.scale.set(1 + archetype * 0.08, 1, 0.62 + archetype * 0.08);
+    const snow = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.54, peakHeight * 0.4, 7 + archetype), materials.snowShadow);
+    snow.position.y = 0.52 + peakHeight * 0.3;
+    snow.rotation.z = mountain.rotation.z;
+    snow.scale.set(mountain.scale.x * 1.01, 1, mountain.scale.z * 1.01);
     cluster.add(mountain, snow);
+    const foothill = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(peakRadius * 0.86, 0),
+      archetype === 1 ? materials.frostRock : materials.frostRockDark,
+    );
+    foothill.name = 'ISLAND_3_DISTANT_ALPINE_FOOTHILL';
+    foothill.position.set(archetype === 2 ? -1.25 : 1.15, -0.42, 0.36);
+    foothill.scale.set(1.52, 0.58 + archetype * 0.05, 0.72);
+    foothill.rotation.set(0.08, 0.22 + archetype * 0.17, -0.04);
+    cluster.add(foothill);
     if (quality !== 'low') {
       [-1, 1].forEach((side) => {
         const shoulderHeight = peakHeight * (0.52 + (side > 0 ? 0.08 : 0));
         const shoulder = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.56, shoulderHeight, 7), materials.frostRock);
-        shoulder.position.set(side * peakRadius * 0.72, -0.1, 0.25);
-        shoulder.scale.z = 0.72;
+        shoulder.position.set(side * peakRadius * 0.72, -0.26, 0.25 + archetype * 0.12);
+        shoulder.rotation.z = side * (0.04 + archetype * 0.015);
+        shoulder.scale.set(side < 0 ? 0.94 : 1.08, 1, 0.58 + archetype * 0.05);
         const shoulderSnow = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.32, shoulderHeight * 0.4, 7), materials.snowShadow);
-        shoulderSnow.position.set(side * peakRadius * 0.72, shoulderHeight * 0.2, 0.25);
-        shoulderSnow.scale.z = 0.73;
+        shoulderSnow.position.set(side * peakRadius * 0.72, shoulderHeight * 0.15 - 0.1, 0.25 + archetype * 0.12);
+        shoulderSnow.rotation.z = shoulder.rotation.z;
+        shoulderSnow.scale.set(shoulder.scale.x, 1, shoulder.scale.z * 1.01);
         cluster.add(shoulder, shoulderSnow);
       });
     }
@@ -2327,14 +2516,22 @@ export function createIsland3FrostmoonLivingAmbience(
       moonlight.intensity = ambience.night * 2.82 + ambience.dusk * 0.24;
       starMaterial.opacity = ambience.night * 0.86;
       moonMaterial.opacity = ambience.night * 0.96;
-      materials.windowGlow.emissiveIntensity = THREE.MathUtils.lerp(0.42, 3.8, ambience.hearth);
-      materials.brass.emissiveIntensity = THREE.MathUtils.lerp(0.08, 0.22, ambience.hearth);
+      windowGlowMaterials.forEach((material) => {
+        material.emissiveIntensity = THREE.MathUtils.lerp(0.42, 4.8, ambience.hearth);
+      });
+      warmMetalMaterials.forEach((material) => {
+        material.emissiveIntensity = THREE.MathUtils.lerp(0.08, 0.24, ambience.hearth);
+      });
       oceanMaterial.color.set(0x87cfe6)
         .lerp(stormOceanColor, ambience.blizzard)
         .lerp(nightOceanColor, ambience.night);
       hearthLights.forEach((light, index) => {
-        light.intensity = ambience.hearth * (quality === 'high' ? 3.25 : 2.1)
+        light.intensity = ambience.hearth * (quality === 'high' ? 4.2 : quality === 'medium' ? 2.8 : 2.1)
           * (0.92 + Math.sin(elapsed * 2.4 + index * 1.7) * 0.08);
+      });
+      hearthSnowSpillMaterial.opacity = ambience.hearth * (0.1 + Math.sin(elapsed * 1.7) * 0.012);
+      hearthSnowSpills.forEach((spill, index) => {
+        spill.scale.setScalar(0.96 + Math.sin(elapsed * 1.3 + index * 0.8) * 0.035);
       });
 
       const positions = snowGeometry.getAttribute('position') as THREE.BufferAttribute;

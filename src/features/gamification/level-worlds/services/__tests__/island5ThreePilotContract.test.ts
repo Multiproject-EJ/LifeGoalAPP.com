@@ -74,7 +74,9 @@ import {
 } from '../../dev/Island2CelestialThreeWorld';
 import {
   buildIsland3FrostmoonLandmark,
+  createIsland3FrostmoonLivingAmbience,
   createIsland3FrostmoonMaterials,
+  getIsland3FrostmoonLandmarkPalette,
   resolveIsland3FrostmoonAmbienceState,
 } from '../../dev/Island3FrostmoonThreeWorld';
 import {
@@ -1432,6 +1434,68 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(resolveIsland3FrostmoonAmbienceState(0, 'dusk').dusk > 0.5, 'the storm must clear through ordinary dusk');
       const night = resolveIsland3FrostmoonAmbienceState(0, 'night');
       assert(night.night > 0.9 && night.hearth > 0.9, 'night must activate the moonlit sky and cozy contained hearths together');
+    },
+  },
+  {
+    name: 'gives every Frostmoon landmark a distinct occupational palette while keeping all roof metal warm copper',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const landmarkIds = ['boss', 'hatchery', 'habit', 'wisdom', 'event'] as const;
+      const palettes = landmarkIds.map((landmarkId) => getIsland3FrostmoonLandmarkPalette(materials, landmarkId));
+      assertEqual(new Set(palettes.map((palette) => palette.timber.color.getHex())).size, 5, 'the five landmarks need visibly different timber/facade families');
+      assertEqual(new Set(palettes.map((palette) => palette.banner.color.getHex())).size, 5, 'occupational banners and trim must not collapse into one village color');
+      palettes.forEach((palette) => {
+        [palette.indigo, palette.indigoLight].forEach((roofMaterial) => {
+          assert(
+            roofMaterial.color.r > roofMaterial.color.g && roofMaterial.color.r > roofMaterial.color.b,
+            'every roof-family material must remain warm copper rather than returning to blue',
+          );
+        });
+      });
+      const snowfeather = getIsland3FrostmoonLandmarkPalette(materials, 'hatchery');
+      const hearthguard = getIsland3FrostmoonLandmarkPalette(materials, 'habit');
+      const moonwell = getIsland3FrostmoonLandmarkPalette(materials, 'event');
+      assert(snowfeather.timber.color.r > hearthguard.timber.color.r, 'Snowfeather must read as the lighter honey-and-cream hatchery');
+      assert(hearthguard.banner.color.r > hearthguard.banner.color.g * 1.5, 'Hearthguard needs a restrained oxblood training-yard identity');
+      assert(moonwell.accent.color.g > moonwell.accent.color.r, 'Moonwell may use subdued patina only on instrument accents');
+
+      const seen = new Set<THREE.Material>();
+      [
+        ...Object.values(materials),
+        ...palettes.flatMap((palette) => Object.values(palette)),
+      ].forEach((material) => {
+        if (seen.has(material)) return;
+        seen.add(material);
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'casts restrained warm hearth spill onto Frostmoon snow at night',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xc7d9ee);
+      scene.fog = new THREE.FogExp2(0xdbe5f3, 0.0068);
+      scene.add(new THREE.HemisphereLight(), new THREE.DirectionalLight());
+      const ocean = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshPhysicalMaterial({ transparent: true }),
+      );
+      const runtime = createIsland3FrostmoonLivingAmbience(scene, ISLAND_3D_QUALITY_PROFILES.low, materials, ocean);
+      runtime.animate(0.87 * 480);
+      const spill = runtime.root.getObjectByName('ISLAND_3_HEARTH_SNOW_LIGHT_POOL_1') as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial> | undefined;
+      assert(Boolean(spill) && spill!.material.opacity > 0.08, 'night needs a visible but restrained warm light pool outside the Keep');
+      assert(
+        getIsland3FrostmoonLandmarkPalette(materials, 'hatchery').windowGlow.emissiveIntensity > 4,
+        'the distinct satellite-window materials must brighten with the shared night ambience clock',
+      );
+      runtime.root.traverse((object) => {
+        if (object instanceof THREE.Mesh || object instanceof THREE.Points) object.geometry.dispose();
+      });
+      ocean.geometry.dispose();
+      (ocean.material as THREE.Material).dispose();
     },
   },
   {
