@@ -8,7 +8,7 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PALACE_VERSION = "v015"
+PALACE_VERSION = "v016"
 OUTPUT = ROOT / f"public/assets/dev/vault-island-lab/vault-palace-{PALACE_VERSION}.glb"
 PRODUCTION_OUTPUT = ROOT / "public/assets/islands/special/vault-island/vault-palace.glb"
 BLEND_OUTPUT = ROOT / f"work/vault-island-palace/vault-palace-{PALACE_VERSION}.blend"
@@ -357,13 +357,21 @@ def lantern_tower(name, x, y, radius, base_z, shaft_height, mats, front=True):
                 mats["gold"],
             ).rotation_euler[2] = -angle
 
+    pinnacle_height = min(shaft_height * 0.42, 0.74)
     for angle in range(0, 360, 90):
         radians = math.radians(angle)
         px = x + math.sin(radians) * radius * 1.02
         py = y + math.cos(radians) * radius * 1.02
-        cylinder(f"{name}-corner-pinnacle", (px, py, base_z + shaft_height * 0.63), radius * 0.11, shaft_height * 0.82, mats["marble"], 12)
-        cylinder(f"{name}-corner-pinnacle-gold-cap", (px, py, base_z + shaft_height * 1.04), radius * 0.15, 0.08, mats["gold"], 12)
-        cone(f"{name}-corner-pinnacle-spire", (px, py, base_z + shaft_height * 1.14), radius * 0.12, 0, shaft_height * 0.2, mats["gold"], 10)
+        cylinder(
+            f"{name}-corner-pinnacle",
+            (px, py, base_z + shaft_height - pinnacle_height * 0.5),
+            radius * 0.11,
+            pinnacle_height,
+            mats["marble"],
+            12,
+        )
+        cylinder(f"{name}-corner-pinnacle-gold-cap", (px, py, base_z + shaft_height - 0.035), radius * 0.15, 0.07, mats["gold"], 12)
+        cone(f"{name}-corner-pinnacle-spire", (px, py, base_z + shaft_height + 0.11), radius * 0.11, 0, 0.22, mats["gold"], 10)
 
     lantern_z = base_z + shaft_height
     cylinder(f"{name}-open-lantern", (x, y, lantern_z + radius * 0.38), radius * 0.78, radius * 0.72, mats["marble"], 16, bevel_amount=0.02)
@@ -381,8 +389,8 @@ def facade_buttress(name, x, y, base_z, height, mats, rear=False):
     cylinder(f"{name}-marble-shaft", (x, y, base_z + height / 2), 0.075, height, mats["marble"], 12, bevel_amount=0.012)
     for z, radius in ((base_z + 0.06, 0.105), (base_z + height * 0.49, 0.095), (base_z + height - 0.05, 0.11)):
         cylinder(f"{name}-gilded-collar", (x, y + face * 0.008, z), radius, 0.075, mats["gold"], 12)
-    cone(f"{name}-marble-crown", (x, y, base_z + height + 0.15), 0.13, 0.045, 0.3, mats["marble"], 12)
-    sphere(f"{name}-crown-jewel", (x, y + face * 0.035, base_z + height + 0.31), (0.045, 0.035, 0.06), mats["purple"] if x < 0 else mats["cyan"], 12, 6)
+    cone(f"{name}-marble-crown", (x, y, base_z + height + 0.11), 0.13, 0.045, 0.22, mats["marble"], 12)
+    sphere(f"{name}-crown-jewel", (x, y + face * 0.035, base_z + height + 0.23), (0.045, 0.035, 0.06), mats["purple"] if x < 0 else mats["cyan"], 12, 6)
 
 
 def build_palace():
@@ -420,6 +428,13 @@ def build_palace():
     box("palace-rear-layered-facade-skin", (0, 0.88, 1.12), (2.58, 0.22, 2.24), mats["marble"], 0.055)
     for side in (-1, 1):
         box("palace-side-layered-facade-skin", (side * 1.57, 0.03, 1.12), (0.2, 1.34, 2.24), mats["marble"], 0.05)
+
+    # Broad horizontal orders keep the dense facade readable at phone scale.
+    for y, rear_suffix in ((-0.995, "front"), (1.055, "rear")):
+        box(f"palace-{rear_suffix}-first-floor-marble-cornice", (0, y, 1.055), (3.08, 0.18, 0.13), mats["marble"], 0.025)
+        box(f"palace-{rear_suffix}-first-floor-polished-gold-belt", (0, y - (0.095 if y < 0 else -0.095), 1.115), (3.02, 0.045, 0.045), mats["gold"], 0.01)
+        box(f"palace-{rear_suffix}-upper-marble-crown-course", (0, y, 2.12), (2.48, 0.18, 0.14), mats["marble"], 0.025)
+        box(f"palace-{rear_suffix}-upper-polished-gold-belt", (0, y - (0.095 if y < 0 else -0.095), 2.18), (2.42, 0.045, 0.045), mats["gold"], 0.01)
 
     # Stepped side chapels make the body read as an ornate palace rather than one block.
     for side in (-1, 1):
