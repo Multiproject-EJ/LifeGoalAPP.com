@@ -295,6 +295,7 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 - A building can be funded at **any time**, regardless of which stop is currently active.
 - Buildings have **3 levels (L1, L2, L3)**. Each level requires Essence to fund.
 - Tapping a building in the Build Panel spends 10 Essence toward the current level. Holding continues spending.
+- Each visible build beat remains one awaited canonical spend. A tap presents its beat within 500 ms; holding ramps the presentation cadence from 420 ms to 160 ms while preserving every funded part, sound, haptic, robot phase, and level boundary. Rapid hold must never batch, skip, or pre-fund the next building level.
 - When a level is fully funded, the building animates and advances to the next level.
 - When **all 3 levels are funded**, the building's `buildComplete` flag is set.
 

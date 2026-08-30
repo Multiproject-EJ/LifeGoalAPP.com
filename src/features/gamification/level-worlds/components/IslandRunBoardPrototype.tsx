@@ -681,6 +681,13 @@ import {
   resolveBuildLevelCompletionPresentation,
   type BuildLevelCompletionPresentation,
 } from '../services/islandRunBuildModalV2ViewModel';
+import {
+  ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS,
+  ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS,
+  ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
+  ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS,
+  resolveIslandRunBuildHoldCadence,
+} from '../services/islandRunBuildCadence';
 import { deriveIslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
@@ -786,11 +793,10 @@ const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
-const BUILD_TAP_STEP_ANIMATION_DELAY_MS = 1_150;
-const BUILD_HOLD_REPEAT_DELAY_MS = 1_250;
-const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 3_200;
-const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 4_600;
-const BUILD_CAMERA_HANDOFF_DURATION_MS = 1_100;
+const BUILD_TAP_STEP_ANIMATION_DELAY_MS = ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS;
+const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS;
+const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS;
+const BUILD_CAMERA_HANDOFF_DURATION_MS = ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS;
 
 type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
   reviewId: number;
@@ -11292,7 +11298,7 @@ export function IslandRunBoardPrototype({
   const stopBuildHold = useCallback((): void => {
     holdBuildSpendActiveRef.current = false;
     setIsBuildHoldActive(false);
-    markBuildChoreographyActive(1800);
+    markBuildChoreographyActive(900);
   }, [markBuildChoreographyActive]);
 
   const startBuildHold = useCallback((stopIndex: number): void => {
@@ -11305,9 +11311,10 @@ export function IslandRunBoardPrototype({
     ) return;
     holdBuildSpendActiveRef.current = true;
     setIsBuildHoldActive(true);
-    markBuildChoreographyActive(4000);
-    setBuildHoldFeedbackLabel('⚒️ Building steadily…');
+    markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
+    setBuildHoldFeedbackLabel(resolveIslandRunBuildHoldCadence(0).feedbackLabel);
     void (async () => {
+      let holdStepsApplied = 0;
       while (holdBuildSpendActiveRef.current) {
         const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);
         if (
@@ -11318,7 +11325,10 @@ export function IslandRunBoardPrototype({
           stopBuildHold();
           return;
         }
-        await wait(BUILD_HOLD_REPEAT_DELAY_MS);
+        holdStepsApplied += 1;
+        const cadence = resolveIslandRunBuildHoldCadence(holdStepsApplied);
+        setBuildHoldFeedbackLabel(cadence.feedbackLabel);
+        await wait(cadence.delayMs);
       }
     })();
   }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive, stopBuildHold]);

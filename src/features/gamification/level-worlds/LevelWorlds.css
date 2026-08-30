@@ -25533,7 +25533,7 @@
   margin: 0 0.5rem 0.12rem;
   padding: 0.48rem 0.72rem;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.58rem;
   overflow: hidden;
@@ -25557,6 +25557,21 @@
 .bm2-hold-build__copy { position: relative; z-index: 1; display: grid; gap: 0.04rem; }
 .bm2-hold-build__copy strong { font-size: 0.77rem; letter-spacing: 0.015em; }
 .bm2-hold-build__copy small { color: rgba(224, 255, 243, 0.76); font-size: 0.58rem; }
+.bm2-hold-build__sequence {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.18rem;
+}
+.bm2-hold-build__sequence i {
+  display: block;
+  width: 0.32rem;
+  height: 0.32rem;
+  border: 1px solid rgba(182, 255, 223, 0.46);
+  border-radius: 50%;
+  background: rgba(8, 38, 48, 0.66);
+}
 .bm2-hold-build__meter {
   position: absolute;
   inset: 0 auto 0 0;
@@ -25572,11 +25587,40 @@
 }
 .bm2-hold-build--active .bm2-hold-build__meter {
   opacity: 1;
-  animation: bm2-hold-build-sweep 520ms linear infinite;
+  animation: bm2-hold-build-sweep 180ms linear infinite;
+}
+.bm2-hold-build--active .bm2-hold-build__sequence i {
+  animation: bm2-rapid-build-pip 420ms ease-in-out infinite alternate;
+}
+.bm2-hold-build--active .bm2-hold-build__sequence i:nth-child(2) { animation-delay: 60ms; }
+.bm2-hold-build--active .bm2-hold-build__sequence i:nth-child(3) { animation-delay: 120ms; }
+.bm2-hold-build--active .bm2-hold-build__sequence i:nth-child(4) { animation-delay: 180ms; }
+.bm2-hold-build--active .bm2-hold-build__sequence i:nth-child(5) { animation-delay: 240ms; }
+
+.bm2-build-mode--rapid .bm2-dock {
+  border-color: rgba(151, 255, 218, 0.86);
+  box-shadow: 0 0 0 3px rgba(82, 230, 185, 0.14), 0 -13px 34px rgba(0, 0, 0, 0.36), 0 0 34px rgba(70, 235, 188, 0.2);
+}
+.bm2-build-mode--rapid .bm2-progress__fill {
+  transition-duration: 140ms;
+  box-shadow: 0 0 12px rgba(105, 255, 207, 0.74);
+}
+.bm2-build-mode--rapid .bm2-part:not(.bm2-part--complete) .bm2-part__icon {
+  animation: bm2-rapid-build-hammer 240ms ease-in-out infinite alternate;
 }
 
 @keyframes bm2-hold-build-sweep {
   to { transform: translateX(410%); }
+}
+
+@keyframes bm2-rapid-build-pip {
+  from { background: rgba(8, 38, 48, 0.66); box-shadow: none; transform: scale(0.82); }
+  to { background: #a7ffd8; box-shadow: 0 0 8px rgba(112, 255, 208, 0.88); transform: scale(1.16); }
+}
+
+@keyframes bm2-rapid-build-hammer {
+  from { transform: translateY(1px) rotate(-12deg) scale(0.94); }
+  to { transform: translateY(-2px) rotate(10deg) scale(1.08); }
 }
 
 .bm2-dock .bm2-tray {
@@ -25776,7 +25820,7 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 4.6s linear both;
+  animation: bm2-level-toast-timer 2.1s linear both;
 }
 
 /* Build mode owns the viewport. Any already-mounted secondary surface remains
@@ -25885,7 +25929,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bm2-hold-build--active .bm2-hold-build__meter { animation: none; opacity: 0.2; transform: none; }
+  .bm2-hold-build--active .bm2-hold-build__meter,
+  .bm2-hold-build--active .bm2-hold-build__sequence i,
+  .bm2-build-mode--rapid .bm2-part:not(.bm2-part--complete) .bm2-part__icon { animation: none; opacity: 0.35; transform: none; }
   .bm2-build-mode .bm2-header,
   .bm2-dock,
   .bm2-level-review__timer {
@@ -25920,7 +25966,7 @@
   background: linear-gradient(90deg, transparent, rgba(255, 252, 220, 0.62), transparent);
   filter: blur(5px);
   transform: skewX(-18deg);
-  animation: bm2-level-scene-shine 2.7s ease-in-out 0.18s both;
+  animation: bm2-level-scene-shine 1.25s ease-in-out 0.08s both;
 }
 
 .bm2-level-complete__sparkle {
@@ -25936,21 +25982,21 @@
   background: #fff7bd;
   clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
   filter: drop-shadow(0 0 7px rgba(255, 226, 122, 0.88));
-  animation: bm2-level-sparkle 1.35s ease-in-out var(--sparkle-delay) 2 both;
+  animation: bm2-level-sparkle 0.62s ease-in-out var(--sparkle-delay) 2 both;
 }
 
-.bm2-level-complete__sparkle--1 { --sparkle-x: 14%; --sparkle-y: 28%; --sparkle-delay: 0.08s; }
-.bm2-level-complete__sparkle--2 { --sparkle-x: 24%; --sparkle-y: 62%; --sparkle-delay: 0.38s; }
-.bm2-level-complete__sparkle--3 { --sparkle-x: 34%; --sparkle-y: 18%; --sparkle-delay: 0.66s; }
-.bm2-level-complete__sparkle--4 { --sparkle-x: 43%; --sparkle-y: 72%; --sparkle-delay: 0.24s; }
-.bm2-level-complete__sparkle--5 { --sparkle-x: 55%; --sparkle-y: 24%; --sparkle-delay: 0.5s; }
-.bm2-level-complete__sparkle--6 { --sparkle-x: 66%; --sparkle-y: 67%; --sparkle-delay: 0.12s; }
-.bm2-level-complete__sparkle--7 { --sparkle-x: 76%; --sparkle-y: 18%; --sparkle-delay: 0.82s; }
-.bm2-level-complete__sparkle--8 { --sparkle-x: 86%; --sparkle-y: 48%; --sparkle-delay: 0.3s; }
-.bm2-level-complete__sparkle--9 { --sparkle-x: 18%; --sparkle-y: 82%; --sparkle-delay: 0.72s; }
-.bm2-level-complete__sparkle--10 { --sparkle-x: 47%; --sparkle-y: 42%; --sparkle-delay: 0.94s; }
-.bm2-level-complete__sparkle--11 { --sparkle-x: 71%; --sparkle-y: 84%; --sparkle-delay: 0.58s; }
-.bm2-level-complete__sparkle--12 { --sparkle-x: 91%; --sparkle-y: 28%; --sparkle-delay: 1.04s; }
+.bm2-level-complete__sparkle--1 { --sparkle-x: 14%; --sparkle-y: 28%; --sparkle-delay: 0.04s; }
+.bm2-level-complete__sparkle--2 { --sparkle-x: 24%; --sparkle-y: 62%; --sparkle-delay: 0.17s; }
+.bm2-level-complete__sparkle--3 { --sparkle-x: 34%; --sparkle-y: 18%; --sparkle-delay: 0.3s; }
+.bm2-level-complete__sparkle--4 { --sparkle-x: 43%; --sparkle-y: 72%; --sparkle-delay: 0.1s; }
+.bm2-level-complete__sparkle--5 { --sparkle-x: 55%; --sparkle-y: 24%; --sparkle-delay: 0.22s; }
+.bm2-level-complete__sparkle--6 { --sparkle-x: 66%; --sparkle-y: 67%; --sparkle-delay: 0.05s; }
+.bm2-level-complete__sparkle--7 { --sparkle-x: 76%; --sparkle-y: 18%; --sparkle-delay: 0.35s; }
+.bm2-level-complete__sparkle--8 { --sparkle-x: 86%; --sparkle-y: 48%; --sparkle-delay: 0.13s; }
+.bm2-level-complete__sparkle--9 { --sparkle-x: 18%; --sparkle-y: 82%; --sparkle-delay: 0.31s; }
+.bm2-level-complete__sparkle--10 { --sparkle-x: 47%; --sparkle-y: 42%; --sparkle-delay: 0.4s; }
+.bm2-level-complete__sparkle--11 { --sparkle-x: 71%; --sparkle-y: 84%; --sparkle-delay: 0.25s; }
+.bm2-level-complete__sparkle--12 { --sparkle-x: 91%; --sparkle-y: 28%; --sparkle-delay: 0.44s; }
 
 .bm2-level-complete .bm2-level-complete__card {
   position: absolute;
@@ -25976,7 +26022,7 @@
   color: #fffaf0;
   text-align: left;
   transform: translateX(-50%);
-  animation: bm2-level-toast-arrive 4.6s cubic-bezier(0.2, 1.1, 0.35, 1) both;
+  animation: bm2-level-toast-arrive 2.1s cubic-bezier(0.2, 1.1, 0.35, 1) both;
 }
 
 .bm2-level-complete .bm2-level-complete__glow {
@@ -26028,7 +26074,7 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 4.6s linear both;
+  animation: bm2-level-toast-timer 2.1s linear both;
 }
 
 @keyframes bm2-level-scene-shine {
