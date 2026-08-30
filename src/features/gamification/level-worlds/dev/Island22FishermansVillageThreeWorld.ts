@@ -65,6 +65,7 @@ export interface Island22FishermansVillageMaterials {
   ocean: THREE.MeshPhysicalMaterial;
   rope: THREE.MeshStandardMaterial;
   foliage: THREE.MeshStandardMaterial;
+  grassBlade: THREE.MeshStandardMaterial;
   foam: THREE.MeshBasicMaterial;
 }
 
@@ -77,6 +78,60 @@ export interface Island22FishermansVillageRuntime {
   getFishingInteractionCameraPose: () => Island22WaterDragonCameraPose;
   getWaterDragonMissionCameraPose: () => Island22WaterDragonCameraPose;
   getWaterDragonMissionPhase: () => Island22WaterDragonPhase;
+}
+
+export type Island22HarborWeatherPhase = 'calm' | 'building' | 'windy' | 'easing';
+
+export interface Island22HarborWeatherState {
+  phase: Island22HarborWeatherPhase;
+  cycleProgress: number;
+  intensity: number;
+  wind: number;
+  waveStrength: number;
+  gust: number;
+}
+
+export const ISLAND_22_HARBOR_WEATHER_CYCLE_SECONDS = 96;
+
+function smoothWeatherStep(value: number) {
+  const clamped = THREE.MathUtils.clamp(value, 0, 1);
+  return clamped * clamped * (3 - 2 * clamped);
+}
+
+export function resolveIsland22HarborWeatherState(elapsedSeconds: number): Island22HarborWeatherState {
+  const elapsed = Number.isFinite(elapsedSeconds) ? Math.max(0, elapsedSeconds) : 0;
+  const cycleProgress = (elapsed % ISLAND_22_HARBOR_WEATHER_CYCLE_SECONDS)
+    / ISLAND_22_HARBOR_WEATHER_CYCLE_SECONDS;
+  const gust = 0.5 + Math.sin(elapsed * 0.43 + Math.sin(elapsed * 0.11) * 1.2) * 0.5;
+  let phase: Island22HarborWeatherPhase = 'calm';
+  let envelope = 0.07;
+  if (cycleProgress >= 0.18 && cycleProgress < 0.46) {
+    phase = 'building';
+    envelope = THREE.MathUtils.lerp(
+      0.07,
+      0.94,
+      smoothWeatherStep((cycleProgress - 0.18) / 0.28),
+    );
+  } else if (cycleProgress >= 0.46 && cycleProgress < 0.62) {
+    phase = 'windy';
+    envelope = 0.9 + gust * 0.1;
+  } else if (cycleProgress >= 0.62 && cycleProgress < 0.88) {
+    phase = 'easing';
+    envelope = THREE.MathUtils.lerp(
+      0.9,
+      0.07,
+      smoothWeatherStep((cycleProgress - 0.62) / 0.26),
+    );
+  }
+  const intensity = THREE.MathUtils.clamp(envelope * (0.88 + gust * 0.12), 0.05, 1);
+  return {
+    phase,
+    cycleProgress,
+    intensity,
+    wind: THREE.MathUtils.clamp(intensity * (0.72 + gust * 0.28), 0.04, 1),
+    waveStrength: THREE.MathUtils.clamp(0.035 + Math.pow(intensity, 1.25) * 0.965, 0.035, 1),
+    gust,
+  };
 }
 
 export type Island22FishingInteractionPhase =
@@ -159,6 +214,312 @@ function box(width: number, height: number, depth: number, material: THREE.Mater
   return new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
 }
 
+type ProceduralSurfaceKind = 'cliff' | 'stone' | 'cobble' | 'grass' | 'wood' | 'dark-wood';
+
+function hashSurfaceNoise(x: number, y: number, seed: number) {
+  let value = Math.imul(x + seed * 1013, 374761393) ^ Math.imul(y + seed * 1999, 668265263);
+  value = Math.imul(value ^ (value >>> 13), 1274126177);
+  return ((value ^ (value >>> 16)) >>> 0) / 4294967295;
+}
+
+function createProceduralSurfaceMaps(
+  kind: ProceduralSurfaceKind,
+  base: readonly [number, number, number],
+  seed: number,
+) {
+  const size = 64;
+  const albedoData = new Uint8Array(size * size * 4);
+  const roughnessData = new Uint8Array(size * size * 4);
+  const isWood = kind === 'wood' || kind === 'dark-wood';
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const u = x / size;
+      const v = y / size;
+      const coarse = hashSurfaceNoise(Math.floor(x / 8), Math.floor(y / 8), seed);
+      const medium = hashSurfaceNoise(Math.floor(x / 3), Math.floor(y / 3), seed + 17);
+      const fine = hashSurfaceNoise(x, y, seed + 41);
+      let value = (coarse - 0.5) * 0.2 + (medium - 0.5) * 0.12 + (fine - 0.5) * 0.055;
+      let warmth = 0;
+      let roughness = 0.82;
+
+      if (isWood) {
+        const grain = Math.sin((u * 13.5 + Math.sin(v * 11 + seed) * 0.3) * Math.PI * 2);
+        const pore = Math.pow(Math.abs(grain), 9);
+        const knotDistance = Math.hypot(u - 0.68, (v - 0.35) * 1.8);
+        const knot = Math.max(0, 1 - knotDistance * 8) * Math.sin(knotDistance * 64);
+        value += grain * 0.055 - pore * 0.12 + knot * 0.08;
+        warmth = (coarse - 0.5) * 0.04;
+        roughness = kind === 'dark-wood' ? 0.88 : 0.73 + pore * 0.16;
+      } else if (kind === 'grass') {
+        const bladeBands = Math.sin((u * 7.5 + v * 4.2 + coarse) * Math.PI * 2) * 0.035;
+        value += bladeBands + (coarse > 0.72 ? 0.085 : 0);
+        warmth = (medium - 0.5) * 0.06;
+        roughness = 0.91 - coarse * 0.05;
+      } else {
+        const seam = Math.pow(Math.max(0, Math.sin((u * 5.2 + v * 3.7 + coarse * 0.7) * Math.PI)), 18);
+        const mineral = Math.sin((u * 9.1 - v * 6.4 + medium) * Math.PI * 2) * 0.035;
+        value += mineral - seam * (kind === 'cobble' ? 0.18 : 0.1);
+        warmth = kind === 'cobble' ? (coarse - 0.5) * 0.075 : (medium - 0.5) * 0.025;
+        roughness = kind === 'cliff' ? 0.94 : kind === 'stone' ? 0.9 : 0.86;
+      }
+
+      const pixelIndex = (y * size + x) * 4;
+      const shade = THREE.MathUtils.clamp(1 + value, 0.64, 1.28);
+      albedoData[pixelIndex] = Math.round(THREE.MathUtils.clamp(base[0] * (shade + warmth), 0, 255));
+      albedoData[pixelIndex + 1] = Math.round(THREE.MathUtils.clamp(base[1] * shade, 0, 255));
+      albedoData[pixelIndex + 2] = Math.round(THREE.MathUtils.clamp(base[2] * (shade - warmth * 0.35), 0, 255));
+      albedoData[pixelIndex + 3] = 255;
+      const roughnessByte = Math.round(THREE.MathUtils.clamp(roughness + (fine - 0.5) * 0.09, 0.45, 0.98) * 255);
+      roughnessData[pixelIndex] = roughnessByte;
+      roughnessData[pixelIndex + 1] = roughnessByte;
+      roughnessData[pixelIndex + 2] = roughnessByte;
+      roughnessData[pixelIndex + 3] = 255;
+    }
+  }
+
+  const map = new THREE.DataTexture(albedoData, size, size, THREE.RGBAFormat);
+  map.name = `ISLAND_22_${kind.toUpperCase()}_ALBEDO`;
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.wrapS = THREE.RepeatWrapping;
+  map.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(isWood ? 2 : 3, isWood ? 6 : 3);
+  map.minFilter = THREE.LinearMipmapLinearFilter;
+  map.magFilter = THREE.LinearFilter;
+  map.generateMipmaps = true;
+  map.anisotropy = 4;
+  map.needsUpdate = true;
+
+  const roughnessMap = new THREE.DataTexture(roughnessData, size, size, THREE.RGBAFormat);
+  roughnessMap.name = `ISLAND_22_${kind.toUpperCase()}_ROUGHNESS`;
+  roughnessMap.wrapS = THREE.RepeatWrapping;
+  roughnessMap.wrapT = THREE.RepeatWrapping;
+  roughnessMap.repeat.copy(map.repeat);
+  roughnessMap.minFilter = THREE.LinearMipmapLinearFilter;
+  roughnessMap.magFilter = THREE.LinearFilter;
+  roughnessMap.generateMipmaps = true;
+  roughnessMap.anisotropy = 4;
+  roughnessMap.needsUpdate = true;
+  return { map, roughnessMap };
+}
+
+function createIrregularTerraceGeometry(
+  radiusTop: number,
+  radiusBottom: number,
+  height: number,
+  segments: number,
+  seed: number,
+  zScale = 1,
+) {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  for (let index = 0; index < segments; index += 1) {
+    const angle = index / segments * Math.PI * 2;
+    const largeWave = Math.sin(angle * 3 + seed * 0.73) * 0.045;
+    const smallWave = Math.sin(angle * 7 - seed * 0.41) * 0.022;
+    const topRadius = radiusTop * (1 + largeWave + smallWave);
+    const bottomRadius = radiusBottom * (1 + largeWave * 0.72 - smallWave * 0.55);
+    positions.push(Math.cos(angle) * topRadius, height / 2, Math.sin(angle) * topRadius * zScale);
+    positions.push(Math.cos(angle) * bottomRadius, -height / 2, Math.sin(angle) * bottomRadius * zScale);
+    uvs.push(index / segments, 1, index / segments, 0);
+  }
+  const topCenterIndex = positions.length / 3;
+  positions.push(0, height / 2, 0);
+  uvs.push(0.5, 0.5);
+  const bottomCenterIndex = positions.length / 3;
+  positions.push(0, -height / 2, 0);
+  uvs.push(0.5, 0.5);
+  for (let index = 0; index < segments; index += 1) {
+    const next = (index + 1) % segments;
+    const top = index * 2;
+    const bottom = top + 1;
+    const nextTop = next * 2;
+    const nextBottom = nextTop + 1;
+    indices.push(top, bottom, nextTop, nextTop, bottom, nextBottom);
+    indices.push(topCenterIndex, nextTop, top);
+    indices.push(bottomCenterIndex, bottom, nextBottom);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createIrregularPatchGeometry(
+  radius: number,
+  segments: number,
+  seed: number,
+  zScale = 1,
+) {
+  const positions: number[] = [0, 0, 0];
+  const uvs: number[] = [0.5, 0.5];
+  const indices: number[] = [];
+  for (let index = 0; index < segments; index += 1) {
+    const angle = index / segments * Math.PI * 2;
+    const outlineNoise = Math.sin(angle * 3 + seed * 0.71) * 0.13
+      + Math.sin(angle * 7 - seed * 0.37) * 0.055;
+    const pointRadius = radius * (1 + outlineNoise);
+    const x = Math.cos(angle) * pointRadius;
+    const z = Math.sin(angle) * pointRadius * zScale;
+    positions.push(x, Math.sin(angle * 4 + seed) * 0.008, z);
+    uvs.push(0.5 + x / (radius * 2.5), 0.5 + z / (radius * zScale * 2.5));
+  }
+  for (let index = 0; index < segments; index += 1) {
+    indices.push(0, index + 1, (index + 1) % segments + 1);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createHarborOceanGeometry(radius: number, radialSegments: number, angularSegments: number) {
+  const positions: number[] = [0, 0, 0];
+  const uvs: number[] = [0.5, 0.5];
+  const indices: number[] = [];
+  for (let ring = 1; ring <= radialSegments; ring += 1) {
+    const ringRadius = radius * ring / radialSegments;
+    for (let segment = 0; segment < angularSegments; segment += 1) {
+      const angle = segment / angularSegments * Math.PI * 2;
+      const x = Math.cos(angle) * ringRadius;
+      const y = Math.sin(angle) * ringRadius;
+      positions.push(x, y, 0);
+      uvs.push(0.5 + x / (radius * 2), 0.5 + y / (radius * 2));
+    }
+  }
+  for (let segment = 0; segment < angularSegments; segment += 1) {
+    indices.push(0, segment + 1, (segment + 1) % angularSegments + 1);
+  }
+  for (let ring = 1; ring < radialSegments; ring += 1) {
+    const innerStart = 1 + (ring - 1) * angularSegments;
+    const outerStart = 1 + ring * angularSegments;
+    for (let segment = 0; segment < angularSegments; segment += 1) {
+      const next = (segment + 1) % angularSegments;
+      const inner = innerStart + segment;
+      const innerNext = innerStart + next;
+      const outer = outerStart + segment;
+      const outerNext = outerStart + next;
+      indices.push(inner, outer, innerNext, innerNext, outer, outerNext);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+type HarborWeatherUniforms = {
+  uHarborWeatherTime: { value: number };
+  uHarborWeatherStrength: { value: number };
+};
+
+function attachHarborOceanWaveShader(material: THREE.MeshPhysicalMaterial) {
+  const uniforms: HarborWeatherUniforms = {
+    uHarborWeatherTime: { value: 0 },
+    uHarborWeatherStrength: { value: 0.02 },
+  };
+  material.userData.harborWeatherUniforms = uniforms;
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+uniform float uHarborWeatherTime;
+uniform float uHarborWeatherStrength;`,
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+float harborWaveA = sin(position.x * 0.52 + uHarborWeatherTime * 1.28);
+float harborWaveB = sin(position.y * 0.38 - uHarborWeatherTime * 0.92 + position.x * 0.11);
+float harborWaveC = sin((position.x + position.y) * 0.24 + uHarborWeatherTime * 0.58);
+transformed.z += (harborWaveA * 0.5 + harborWaveB * 0.32 + harborWaveC * 0.18)
+  * uHarborWeatherStrength;`,
+      );
+  };
+  material.customProgramCacheKey = () => 'island-016-dynamic-harbor-ocean-v1';
+}
+
+function attachHarborWindShader(material: THREE.MeshStandardMaterial, responseScale: number) {
+  const uniforms: HarborWeatherUniforms = {
+    uHarborWeatherTime: { value: 0 },
+    uHarborWeatherStrength: { value: 0 },
+  };
+  material.userData.harborWeatherUniforms = uniforms;
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+uniform float uHarborWeatherTime;
+uniform float uHarborWeatherStrength;`,
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+float harborWindHeight = max(position.y + 0.45, 0.0);
+float harborWindPulse = sin(uHarborWeatherTime * 1.9 + position.x * 2.1 + position.z * 1.7);
+float harborWindCross = sin(uHarborWeatherTime * 1.27 + position.z * 2.7);
+transformed.x += harborWindPulse * harborWindHeight * uHarborWeatherStrength * ${responseScale.toFixed(3)};
+transformed.z += harborWindCross * harborWindHeight * uHarborWeatherStrength * ${(responseScale * 0.42).toFixed(3)};`,
+      );
+  };
+  material.customProgramCacheKey = () => `island-016-harbor-wind-v1-${responseScale.toFixed(3)}`;
+}
+
+function updateHarborWeatherUniforms(
+  material: THREE.Material,
+  elapsed: number,
+  strength: number,
+) {
+  const uniforms = material.userData.harborWeatherUniforms as HarborWeatherUniforms | undefined;
+  if (!uniforms) return;
+  uniforms.uHarborWeatherTime.value = elapsed;
+  uniforms.uHarborWeatherStrength.value = strength;
+}
+
+function createGrassTuftGeometry() {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  const bladeCount = 6;
+  for (let blade = 0; blade < bladeCount; blade += 1) {
+    const angle = blade / bladeCount * Math.PI * 2 + (blade % 2) * 0.22;
+    const directionX = Math.cos(angle);
+    const directionZ = Math.sin(angle);
+    const sideX = -directionZ;
+    const sideZ = directionX;
+    const radialOffset = blade % 3 * 0.026;
+    const width = 0.042 + blade % 2 * 0.014;
+    const height = 0.34 + blade % 3 * 0.075;
+    const bend = 0.1 + blade % 2 * 0.045;
+    const start = positions.length / 3;
+    positions.push(
+      directionX * radialOffset + sideX * width, 0, directionZ * radialOffset + sideZ * width,
+      directionX * radialOffset - sideX * width, 0, directionZ * radialOffset - sideZ * width,
+      directionX * bend + sideX * width * 0.55, height * 0.56, directionZ * bend + sideZ * width * 0.55,
+      directionX * bend - sideX * width * 0.55, height * 0.56, directionZ * bend - sideZ * width * 0.55,
+      directionX * bend * 1.7, height, directionZ * bend * 1.7,
+    );
+    uvs.push(0, 0, 1, 0, 0.2, 0.55, 0.8, 0.55, 0.5, 1);
+    indices.push(start, start + 1, start + 2, start + 1, start + 3, start + 2, start + 2, start + 3, start + 4);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 function setShadow(root: THREE.Object3D, cast = true) {
   root.traverse((node) => {
     if (!(node instanceof THREE.Mesh)) return;
@@ -202,14 +563,88 @@ export function createIsland22FishermansVillageMaterials(): Island22FishermansVi
   oceanAlphaMap.name = 'ISLAND_22_OCEAN_RADIAL_ALPHA';
   oceanAlphaMap.needsUpdate = true;
 
+  const cliffSurface = createProceduralSurfaceMaps('cliff', [67, 83, 81], 22);
+  const stoneSurface = createProceduralSurfaceMaps('stone', [132, 124, 105], 37);
+  const cobbleSurface = createProceduralSurfaceMaps('cobble', [185, 164, 119], 53);
+  const grassSurface = createProceduralSurfaceMaps('grass', [87, 119, 69], 71);
+  const timberSurface = createProceduralSurfaceMaps('wood', [157, 101, 55], 89);
+  const darkTimberSurface = createProceduralSurfaceMaps('dark-wood', [71, 47, 34], 107);
+
+  const foliage = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map: grassSurface.map,
+    roughness: 0.92,
+    roughnessMap: grassSurface.roughnessMap,
+    flatShading: true,
+  });
+  attachHarborWindShader(foliage, 0.07);
+  const ocean = new THREE.MeshPhysicalMaterial({
+    color: 0x0d78a4,
+    roughness: 0.12,
+    metalness: 0.03,
+    clearcoat: 0.82,
+    clearcoatRoughness: 0.14,
+    transparent: true,
+    opacity: 0.56,
+    alphaMap: oceanAlphaMap,
+    depthWrite: false,
+  });
+  attachHarborOceanWaveShader(ocean);
+  const grassBlade = new THREE.MeshStandardMaterial({
+    color: 0xf4f7d2,
+    map: grassSurface.map,
+    roughness: 0.94,
+    roughnessMap: grassSurface.roughnessMap,
+    side: THREE.DoubleSide,
+    flatShading: true,
+  });
+  attachHarborWindShader(grassBlade, 0.14);
+
   return {
-    cliff: new THREE.MeshStandardMaterial({ color: 0x3f4d4d, roughness: 0.91, metalness: 0.015, flatShading: true }),
-    stone: new THREE.MeshStandardMaterial({ color: 0x756f62, roughness: 0.89, metalness: 0.018, flatShading: true }),
-    cobble: new THREE.MeshStandardMaterial({ color: 0xc4af7c, roughness: 0.9, metalness: 0, flatShading: true }),
-    terrace: new THREE.MeshStandardMaterial({ color: 0x667951, roughness: 0.86, metalness: 0.006 }),
+    cliff: new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: cliffSurface.map,
+      roughness: 0.94,
+      roughnessMap: cliffSurface.roughnessMap,
+      metalness: 0.012,
+      flatShading: true,
+    }),
+    stone: new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: stoneSurface.map,
+      roughness: 0.9,
+      roughnessMap: stoneSurface.roughnessMap,
+      metalness: 0.012,
+      flatShading: true,
+    }),
+    cobble: new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: cobbleSurface.map,
+      roughness: 0.88,
+      roughnessMap: cobbleSurface.roughnessMap,
+      metalness: 0,
+      flatShading: true,
+    }),
+    terrace: new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: grassSurface.map,
+      roughness: 0.9,
+      roughnessMap: grassSurface.roughnessMap,
+      metalness: 0.004,
+    }),
     plaster: new THREE.MeshStandardMaterial({ color: 0xe0aa70, roughness: 0.8, metalness: 0 }),
-    timber: new THREE.MeshStandardMaterial({ color: 0xa46636, roughness: 0.72 }),
-    timberDark: new THREE.MeshStandardMaterial({ color: 0x35231c, roughness: 0.86 }),
+    timber: new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: timberSurface.map,
+      roughness: 0.74,
+      roughnessMap: timberSurface.roughnessMap,
+    }),
+    timberDark: new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: darkTimberSurface.map,
+      roughness: 0.88,
+      roughnessMap: darkTimberSurface.roughnessMap,
+    }),
     roof: new THREE.MeshStandardMaterial({
       color: 0x405b66,
       roughness: 0.82,
@@ -242,110 +677,291 @@ export function createIsland22FishermansVillageMaterials(): Island22FishermansVi
       transparent: true,
       opacity: 0.92,
     }),
-    ocean: new THREE.MeshPhysicalMaterial({
-      color: 0x0d78a4,
-      roughness: 0.12,
-      metalness: 0.03,
-      clearcoat: 0.82,
-      clearcoatRoughness: 0.14,
-      transparent: true,
-      opacity: 0.56,
-      alphaMap: oceanAlphaMap,
-      depthWrite: false,
-    }),
+    ocean,
     rope: new THREE.MeshStandardMaterial({ color: 0xc09b64, roughness: 0.94 }),
-    foliage: new THREE.MeshStandardMaterial({ color: 0x3f6949, roughness: 0.92, flatShading: true }),
+    foliage,
+    grassBlade,
     foam: new THREE.MeshBasicMaterial({ color: 0xd8f4ee, transparent: true, opacity: 0.42, depthWrite: false }),
   };
 }
 
-export function createIsland22FishermansVillageBackdrop() {
-  const backdrop = new THREE.TextureLoader().load('/assets/islands/island-016/background/fishermans-village-ocean-sky-v2.png');
-  backdrop.colorSpace = THREE.SRGBColorSpace;
-  backdrop.wrapS = THREE.ClampToEdgeWrapping;
-  backdrop.wrapT = THREE.ClampToEdgeWrapping;
-  backdrop.name = 'ISLAND_22_FISHERMANS_VILLAGE_OCEAN_SKY_BACKDROP_V2';
-  return backdrop;
+interface Island22HarborSkyRuntime {
+  root: THREE.Group;
+  update: (elapsed: number, weather: Island22HarborWeatherState) => void;
 }
 
-function addHarborSky(root: THREE.Group, quality: Island3DQuality) {
+function addHarborSky(root: THREE.Group, quality: Island3DQuality): Island22HarborSkyRuntime {
+  const skyMaterial = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    uniforms: {
+      topColor: { value: new THREE.Color(0x3f91bc) },
+      horizonColor: { value: new THREE.Color(0xb7d8d2) },
+      lowColor: { value: new THREE.Color(0x5d9eaa) },
+    },
+    vertexShader: `varying float vSkyHeight;
+      void main() {
+        vSkyHeight = normalize(position).y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `uniform vec3 topColor;
+      uniform vec3 horizonColor;
+      uniform vec3 lowColor;
+      varying float vSkyHeight;
+      void main() {
+        float above = smoothstep(-0.05, 0.72, vSkyHeight);
+        float below = smoothstep(-0.45, -0.02, vSkyHeight);
+        vec3 lowerSky = mix(lowColor, horizonColor, below);
+        gl_FragColor = vec4(mix(lowerSky, topColor, above), 1.0);
+      }`,
+  });
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(48, quality === 'low' ? 16 : 24, quality === 'low' ? 9 : 14),
-    new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      depthWrite: false,
-      uniforms: {
-        topColor: { value: new THREE.Color(0x3f91bc) },
-        horizonColor: { value: new THREE.Color(0xb7d8d2) },
-        lowColor: { value: new THREE.Color(0x5d9eaa) },
-      },
-      vertexShader: `varying float vSkyHeight;
-        void main() {
-          vSkyHeight = normalize(position).y;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }`,
-      fragmentShader: `uniform vec3 topColor;
-        uniform vec3 horizonColor;
-        uniform vec3 lowColor;
-        varying float vSkyHeight;
-        void main() {
-          float above = smoothstep(-0.05, 0.72, vSkyHeight);
-          float below = smoothstep(-0.45, -0.02, vSkyHeight);
-          vec3 lowerSky = mix(lowColor, horizonColor, below);
-          gl_FragColor = vec4(mix(lowerSky, topColor, above), 1.0);
-        }`,
-    }),
+    skyMaterial,
   );
   sky.name = 'ISLAND_22_HARBOR_GRADIENT_SKY';
   sky.renderOrder = -20;
-  // Retained as a fallback object for asset-load failure and dev inspection;
-  // the production scene uses the richer source-matched ocean/sky plate.
-  sky.visible = false;
+  sky.visible = true;
   root.add(sky);
 
+  const sunMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffd27d,
+    transparent: true,
+    opacity: 0.94,
+    depthWrite: false,
+  });
   const harborSun = new THREE.Mesh(
-    new THREE.SphereGeometry(1.35, quality === 'low' ? 10 : 16, quality === 'low' ? 6 : 10),
-    new THREE.MeshBasicMaterial({ color: 0xffd27d, transparent: true, opacity: 0.94, depthWrite: false }),
+    new THREE.SphereGeometry(1, quality === 'low' ? 10 : 16, quality === 'low' ? 6 : 10),
+    sunMaterial,
   );
   harborSun.name = 'ISLAND_22_WARM_HARBOR_SUN';
-  harborSun.position.set(-13.5, 7.2, -21);
+  // Keep the sun inside the sky dome and well inside the camera-orbit radius.
+  // This preserves its warm front-view read without turning it into a clipped,
+  // near-camera disc when a landmark camera travels around the island.
+  harborSun.position.set(-8, 9, -8);
   harborSun.renderOrder = -10;
-  harborSun.visible = false;
+  harborSun.visible = true;
   root.add(harborSun);
 
+  const skyRuntimeRoot = new THREE.Group();
+  skyRuntimeRoot.name = 'ISLAND_22_DYNAMIC_HARBOR_SKY_RUNTIME';
   const cloudRoot = new THREE.Group();
-  cloudRoot.name = 'ISLAND_22_HORIZON_CLOUD_BANK';
-  const cloudCount = quality === 'low' ? 10 : quality === 'medium' ? 16 : 22;
+  cloudRoot.name = 'ISLAND_22_VOLUMETRIC_HORIZON_CLOUD_BANK';
+  const cloudClusterCount = quality === 'low' ? 7 : quality === 'medium' ? 10 : 13;
+  const puffsPerCluster = quality === 'low' ? 4 : quality === 'medium' ? 6 : 7;
+  const cloudMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 1,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.78,
+    depthWrite: false,
+  });
   const clouds = new THREE.InstancedMesh(
-    new THREE.IcosahedronGeometry(1, 1),
-    new THREE.MeshBasicMaterial({ color: 0xf0faf6, transparent: true, opacity: 0.58, depthWrite: false }),
-    cloudCount,
+    new THREE.SphereGeometry(1, quality === 'low' ? 8 : 12, quality === 'low' ? 5 : 8),
+    cloudMaterial,
+    cloudClusterCount * puffsPerCluster,
   );
+  clouds.name = 'ISLAND_22_SHADED_LAYERED_CLOUD_PUFFS';
+  const cloudBaseMaterial = new THREE.MeshStandardMaterial({
+    color: 0xdce9e7,
+    roughness: 1,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.54,
+    depthWrite: false,
+  });
+  const cloudBases = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(1, quality === 'low' ? 8 : 12, quality === 'low' ? 5 : 8),
+    cloudBaseMaterial,
+    cloudClusterCount,
+  );
+  cloudBases.name = 'ISLAND_22_COHESIVE_CLOUD_SHADOW_UNDERBELLIES';
+  const puffOffsets = [
+    [0, 0.52, 0],
+    [-0.78, 0.2, 0.1],
+    [0.78, 0.2, -0.05],
+    [-1.38, -0.05, 0.05],
+    [1.38, -0.04, 0.08],
+    [-0.3, -0.18, 0.3],
+    [0.48, -0.16, 0.26],
+  ] as const;
+  const puffScales = [
+    [1.28, 0.9, 1.06],
+    [1.08, 0.72, 0.92],
+    [1.12, 0.75, 0.96],
+    [0.94, 0.58, 0.82],
+    [0.98, 0.6, 0.86],
+    [0.9, 0.54, 1.02],
+    [0.88, 0.52, 0.98],
+  ] as const;
+  const cloudPalette = [
+    new THREE.Color(0xf7fbf7),
+    new THREE.Color(0xe4eeea),
+    new THREE.Color(0xfff8eb),
+    new THREE.Color(0xd8e6e5),
+  ];
   const matrix = new THREE.Matrix4();
   const position = new THREE.Vector3();
   const quaternion = new THREE.Quaternion();
   const scale = new THREE.Vector3();
-  for (let index = 0; index < cloudCount; index += 1) {
-    const angle = index / cloudCount * Math.PI * 2 + 0.17;
-    const radius = 21 + index % 4 * 1.15;
-    const heroCloud = index < 6;
-    const cloudX = heroCloud ? -9 + index * 3.6 : Math.cos(angle) * radius;
-    const cloudY = heroCloud ? 5.1 + index % 3 * 0.74 : 5.4 + index % 5 * 0.82;
-    const cloudZ = heroCloud ? -18 - index % 2 * 1.8 : Math.sin(angle) * radius;
+  for (let clusterIndex = 0; clusterIndex < cloudClusterCount; clusterIndex += 1) {
+    const angle = clusterIndex / cloudClusterCount * Math.PI * 2 + 0.17;
+    const radius = 21 + clusterIndex % 4 * 1.15;
+    const heroCloud = clusterIndex < 5;
+    const cloudX = heroCloud ? -8.4 + clusterIndex * 4.1 : Math.cos(angle) * radius;
+    const cloudY = heroCloud ? 5.05 + clusterIndex % 3 * 0.72 : 5.35 + clusterIndex % 4 * 0.8;
+    const cloudZ = heroCloud ? -19.2 - clusterIndex % 2 * 1.45 : Math.sin(angle) * radius;
+    const tangentX = heroCloud ? 1 : -Math.sin(angle);
+    const tangentZ = heroCloud ? 0 : Math.cos(angle);
+    const radialX = heroCloud ? 0 : Math.cos(angle);
+    const radialZ = heroCloud ? 1 : Math.sin(angle);
+    const clusterScale = 0.92 + clusterIndex % 4 * 0.1;
     matrix.compose(
-      position.set(cloudX, cloudY, cloudZ),
-      quaternion.setFromEuler(new THREE.Euler(0, -angle, (index % 3 - 1) * 0.08)),
-      scale.set(2.15 + index % 3 * 0.72, 0.58 + index % 2 * 0.22, 1.05 + index % 4 * 0.22),
+      position.set(cloudX, cloudY - 0.02, cloudZ + 0.12),
+      quaternion.setFromEuler(new THREE.Euler(0, -angle + clusterIndex * 0.07, 0)),
+      scale.set(2.18 * clusterScale, 0.36 * clusterScale, 0.88 * clusterScale),
     );
-    clouds.setMatrixAt(index, matrix);
+    cloudBases.setMatrixAt(clusterIndex, matrix);
+    for (let puffIndex = 0; puffIndex < puffsPerCluster; puffIndex += 1) {
+      const index = clusterIndex * puffsPerCluster + puffIndex;
+      const [lateral, vertical, depthOffset] = puffOffsets[puffIndex];
+      const [width, height, depthScale] = puffScales[puffIndex];
+      matrix.compose(
+        position.set(
+          cloudX + tangentX * lateral * clusterScale + radialX * depthOffset,
+          cloudY + vertical * clusterScale,
+          cloudZ + tangentZ * lateral * clusterScale + radialZ * depthOffset,
+        ),
+        quaternion.setFromEuler(new THREE.Euler(
+          puffIndex % 2 * 0.05,
+          -angle + puffIndex * 0.17,
+          (puffIndex % 3 - 1) * 0.04,
+        )),
+        scale.set(width * clusterScale, height * clusterScale, depthScale * clusterScale),
+      );
+      clouds.setMatrixAt(index, matrix);
+      clouds.setColorAt(index, cloudPalette[(clusterIndex + puffIndex) % cloudPalette.length]);
+    }
   }
   clouds.instanceMatrix.needsUpdate = true;
+  if (clouds.instanceColor) clouds.instanceColor.needsUpdate = true;
   clouds.frustumCulled = false;
-  clouds.visible = false;
-  cloudRoot.add(clouds);
+  cloudBases.instanceMatrix.needsUpdate = true;
+  cloudBases.frustumCulled = false;
+  cloudRoot.add(cloudBases, clouds);
 
-  // A tiny flock gives the harbor sky depth in the close fishing camera. The
-  // paired wings remain instanced so the silhouette costs two draw calls.
+  // The hero bank above carries the readable weather beat. A second, smaller
+  // cloud system sits outside every production camera so the horizon remains
+  // meteorologically believable from the overview and every orbit instead of
+  // exposing one isolated cloud collection in an otherwise empty sky.
+  const distantCloudRoot = new THREE.Group();
+  distantCloudRoot.name = 'ISLAND_22_FULL_360_DISTANT_HORIZON_CLOUD_BELT';
+  const distantClusterCount = quality === 'low' ? 14 : quality === 'medium' ? 24 : 32;
+  const distantPuffsPerCluster = 4;
+  const distantCloudMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe5efed,
+    roughness: 1,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.36,
+    depthWrite: false,
+  });
+  const distantCloudBaseMaterial = new THREE.MeshStandardMaterial({
+    color: 0xcbdcdd,
+    roughness: 1,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.28,
+    depthWrite: false,
+  });
+  const distantCloudGeometry = new THREE.SphereGeometry(
+    1,
+    quality === 'low' ? 7 : 10,
+    quality === 'low' ? 5 : 6,
+  );
+  const distantCloudPuffs = new THREE.InstancedMesh(
+    distantCloudGeometry,
+    distantCloudMaterial,
+    distantClusterCount * distantPuffsPerCluster,
+  );
+  distantCloudPuffs.name = 'ISLAND_22_DISTANT_HORIZON_CLOUD_PUFFS';
+  const distantCloudBases = new THREE.InstancedMesh(
+    distantCloudGeometry,
+    distantCloudBaseMaterial,
+    distantClusterCount,
+  );
+  distantCloudBases.name = 'ISLAND_22_DISTANT_HORIZON_CLOUD_UNDERBELLIES';
+  for (let clusterIndex = 0; clusterIndex < distantClusterCount; clusterIndex += 1) {
+    const angle = clusterIndex / distantClusterCount * Math.PI * 2
+      + 0.11
+      + Math.sin(clusterIndex * 2.17) * 0.075
+      + Math.sin(clusterIndex * 0.73) * 0.028;
+    const radius = 37.2
+      + clusterIndex % 4 * 0.68
+      + Math.sin(clusterIndex * 1.61) * 0.5;
+    const clusterScale = 0.58
+      + clusterIndex % 5 * 0.105
+      + (clusterIndex % 7 === 0 ? 0.2 : 0);
+    const cloudX = Math.cos(angle) * radius;
+    const cloudY = 3.3
+      + clusterIndex % 7 * 0.29
+      + Math.sin(clusterIndex * 1.37) * 0.32;
+    const cloudZ = Math.sin(angle) * radius;
+    const tangentX = -Math.sin(angle);
+    const tangentZ = Math.cos(angle);
+    const radialX = Math.cos(angle);
+    const radialZ = Math.sin(angle);
+    matrix.compose(
+      position.set(cloudX, cloudY - 0.08, cloudZ),
+      quaternion.setFromEuler(new THREE.Euler(0, -angle, 0)),
+      scale.set(
+        (2.25 + clusterIndex % 3 * 0.34) * clusterScale,
+        (0.24 + clusterIndex % 2 * 0.055) * clusterScale,
+        (0.74 + clusterIndex % 4 * 0.07) * clusterScale,
+      ),
+    );
+    distantCloudBases.setMatrixAt(clusterIndex, matrix);
+    const topologyPuffCount = 2 + (clusterIndex * 7) % 3;
+    for (let puffIndex = 0; puffIndex < distantPuffsPerCluster; puffIndex += 1) {
+      const visiblePuff = puffIndex < topologyPuffCount;
+      const lateral = (puffIndex - (topologyPuffCount - 1) / 2)
+        * (0.66 + clusterIndex % 4 * 0.065)
+        * clusterScale;
+      const radialOffset = (puffIndex === 1 ? -0.06 : 0.12) * clusterScale;
+      const index = clusterIndex * distantPuffsPerCluster + puffIndex;
+      const centrality = 1 - Math.abs(puffIndex - (topologyPuffCount - 1) / 2)
+        / Math.max(1, topologyPuffCount);
+      const puffVariance = 0.82
+        + (clusterIndex + puffIndex * 3) % 5 * 0.075;
+      matrix.compose(
+        position.set(
+          cloudX + tangentX * lateral + radialX * radialOffset,
+          cloudY + (0.04 + centrality * 0.34 + Math.sin(clusterIndex + puffIndex) * 0.08) * clusterScale,
+          cloudZ + tangentZ * lateral + radialZ * radialOffset,
+        ),
+        quaternion.setFromEuler(new THREE.Euler(
+          (puffIndex - 1) * 0.035,
+          -angle + puffIndex * 0.13,
+          (puffIndex - 1) * 0.04,
+        )),
+        scale.set(
+          visiblePuff ? (0.82 + centrality * 0.3) * clusterScale * puffVariance : 0,
+          visiblePuff ? (0.42 + centrality * 0.2) * clusterScale / puffVariance : 0,
+          visiblePuff ? (0.68 + centrality * 0.16) * clusterScale : 0,
+        ),
+      );
+      distantCloudPuffs.setMatrixAt(index, matrix);
+    }
+  }
+  distantCloudPuffs.instanceMatrix.needsUpdate = true;
+  distantCloudBases.instanceMatrix.needsUpdate = true;
+  distantCloudPuffs.frustumCulled = false;
+  distantCloudBases.frustumCulled = false;
+  distantCloudRoot.add(distantCloudBases, distantCloudPuffs);
+
+  const gullRoot = new THREE.Group();
+  gullRoot.name = 'ISLAND_22_HARBOR_GULL_FLOCK';
   const gullCount = quality === 'low' ? 4 : 7;
   const gullMaterial = new THREE.MeshBasicMaterial({
     color: 0xf7fbf1,
@@ -389,9 +1005,74 @@ function addHarborSky(root: THREE.Group, quality: Island3DQuality) {
   rightGullWings.instanceMatrix.needsUpdate = true;
   leftGullWings.frustumCulled = false;
   rightGullWings.frustumCulled = false;
-  cloudRoot.add(leftGullWings, rightGullWings);
-  root.add(cloudRoot);
-  return cloudRoot;
+  gullRoot.add(leftGullWings, rightGullWings);
+  skyRuntimeRoot.add(distantCloudRoot, cloudRoot, gullRoot);
+  root.add(skyRuntimeRoot);
+
+  const calmTop = new THREE.Color(0x3f91bc);
+  const windyTop = new THREE.Color(0x426d84);
+  const calmHorizon = new THREE.Color(0xb7d8d2);
+  const windyHorizon = new THREE.Color(0x839fa7);
+  const calmLow = new THREE.Color(0x5d9eaa);
+  const windyLow = new THREE.Color(0x426674);
+  const calmCloud = new THREE.Color(0xffffff);
+  const windyCloud = new THREE.Color(0xa9bec4);
+  const calmCloudBase = new THREE.Color(0xdce9e7);
+  const windyCloudBase = new THREE.Color(0x6f8791);
+  const calmDistantCloud = new THREE.Color(0xe5efed);
+  const windyDistantCloud = new THREE.Color(0x9fb5ba);
+  const calmDistantCloudBase = new THREE.Color(0xcbdcdd);
+  const windyDistantCloudBase = new THREE.Color(0x718a93);
+  return {
+    root: skyRuntimeRoot,
+    update: (elapsed, weather) => {
+      const isEasing = weather.phase === 'easing';
+      const phaseClearing = isEasing
+        ? smoothWeatherStep((weather.cycleProgress - 0.62) / 0.26)
+        : 0;
+      const cloudLift = Math.sin(elapsed * 0.08) * 0.08
+        - weather.intensity * 0.18
+        + phaseClearing * 0.28;
+      cloudRoot.position.y = cloudLift;
+      cloudRoot.rotation.y = elapsed * (0.0027 + weather.wind * 0.0018)
+        + Math.sin(elapsed * 0.041) * 0.022
+        + Math.sin(elapsed * 0.13) * 0.012 * weather.wind;
+      cloudRoot.scale.set(
+        1 + weather.intensity * 0.055,
+        1 + weather.intensity * 0.19 - phaseClearing * 0.07,
+        1 + weather.intensity * 0.075,
+      );
+      cloudMaterial.color.copy(calmCloud).lerp(windyCloud, weather.intensity * 0.58);
+      cloudMaterial.opacity = THREE.MathUtils.lerp(0.72, 0.93, weather.intensity)
+        - phaseClearing * 0.12;
+      cloudBaseMaterial.color.copy(calmCloudBase).lerp(windyCloudBase, weather.intensity * 0.62);
+      cloudBaseMaterial.opacity = THREE.MathUtils.lerp(0.48, 0.82, weather.intensity)
+        - phaseClearing * 0.2;
+      distantCloudRoot.rotation.y = -elapsed * (0.0009 + weather.wind * 0.0012)
+        + Math.sin(elapsed * 0.027) * 0.009;
+      distantCloudRoot.position.y = -weather.intensity * 0.1 + phaseClearing * 0.15;
+      distantCloudRoot.scale.set(
+        1 + weather.intensity * 0.012,
+        1 + weather.intensity * 0.1 - phaseClearing * 0.04,
+        1 + weather.intensity * 0.012,
+      );
+      distantCloudMaterial.color.copy(calmDistantCloud)
+        .lerp(windyDistantCloud, weather.intensity * 0.62);
+      distantCloudMaterial.opacity = THREE.MathUtils.lerp(0.34, 0.62, weather.intensity)
+        - phaseClearing * 0.08;
+      distantCloudBaseMaterial.color.copy(calmDistantCloudBase)
+        .lerp(windyDistantCloudBase, weather.intensity * 0.65);
+      distantCloudBaseMaterial.opacity = THREE.MathUtils.lerp(0.24, 0.55, weather.intensity)
+        - phaseClearing * 0.1;
+      gullRoot.rotation.y = elapsed * (0.004 + weather.wind * 0.006);
+      gullRoot.position.y = Math.sin(elapsed * 0.18) * (0.04 + weather.wind * 0.08);
+      sunMaterial.opacity = THREE.MathUtils.lerp(0.94, 0.4, weather.intensity)
+        + phaseClearing * 0.16;
+      skyMaterial.uniforms.topColor.value.copy(calmTop).lerp(windyTop, weather.intensity * 0.82);
+      skyMaterial.uniforms.horizonColor.value.copy(calmHorizon).lerp(windyHorizon, weather.intensity * 0.75);
+      skyMaterial.uniforms.lowColor.value.copy(calmLow).lerp(windyLow, weather.intensity * 0.72);
+    },
+  };
 }
 
 function addHarborHorizonIslets(
@@ -402,10 +1083,15 @@ function addHarborHorizonIslets(
   const islets = new THREE.Group();
   islets.name = 'ISLAND_22_HARBOR_HORIZON_ISLETS';
   const rockMaterial = materials.cliff.clone();
-  rockMaterial.color.set(0x586865);
-  rockMaterial.roughness = 0.88;
+  rockMaterial.color.set(0xffffff);
+  rockMaterial.roughness = 0.94;
   const sunlitRockMaterial = materials.stone.clone();
-  sunlitRockMaterial.color.set(0x8f8a72);
+  sunlitRockMaterial.color.set(0xffffff);
+  const wetRockMaterial = materials.cliff.clone();
+  wetRockMaterial.color.set(0xdce8df);
+  wetRockMaterial.roughness = 0.82;
+  wetRockMaterial.emissive.set(0x173d3d);
+  wetRockMaterial.emissiveIntensity = 0.16;
   const foamMaterial = new THREE.MeshBasicMaterial({
     color: 0xdffbf3,
     transparent: true,
@@ -413,33 +1099,39 @@ function addHarborHorizonIslets(
     depthWrite: false,
   });
   const placements = [
-    [-16.5, -17.5, 1.45, 0.2],
-    [-3.5, -23.5, 0.86, -0.35],
-    [10.5, -21.2, 1.12, 0.65],
-    [-23.2, -5.8, 0.74, -0.6],
-    [21.8, -8.6, 0.82, 0.42],
-    [-19.4, 14.8, 0.62, 0.8],
-    [18.2, 15.6, 0.7, -0.45],
+    [-15, -28, 1.18, 0.2],
+    [-4, -31, 0.82, -0.35],
+    [10, -29, 1.02, 0.65],
+    [20, -26, 0.68, 0.42],
   ] as const;
-  placements.slice(0, quality === 'low' ? 4 : placements.length).forEach(([x, z, size, yaw], index) => {
+  placements.slice(0, quality === 'low' ? 3 : placements.length).forEach(([x, z, size, yaw], index) => {
     const islet = new THREE.Group();
     islet.name = `ISLAND_22_HORIZON_ROCK_ISLET_${index + 1}`;
-    islet.position.set(x, -0.58, z);
+    // Seat the wet shelf below the shared ocean plane so the rocks rise out of
+    // the sea instead of reading as dark floating saucers.
+    islet.position.set(x, -0.72, z);
     islet.rotation.y = yaw;
     islet.scale.setScalar(size);
 
-    const foundation = new THREE.Mesh(new THREE.DodecahedronGeometry(1.25, 0), rockMaterial);
-    foundation.scale.set(1.75, 0.78, 1.18);
-    foundation.position.y = 0.16;
-    const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(0.86, 0), sunlitRockMaterial);
-    crown.scale.set(1.08, 1.38, 0.92);
+    const wetBase = new THREE.Mesh(
+      createIrregularTerraceGeometry(1.08, 1.28, 0.46, 11, 131 + index * 7, 0.72),
+      wetRockMaterial,
+    );
+    wetBase.position.y = -0.12;
+    const foundation = new THREE.Mesh(
+      createIrregularTerraceGeometry(0.88, 1.12, 0.78, 10, 97 + index * 11, 0.7),
+      rockMaterial,
+    );
+    foundation.position.y = 0.18;
+    const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(0.66, 0), sunlitRockMaterial);
+    crown.scale.set(0.96, 1.25, 0.8);
     crown.position.set(-0.18, 0.9, 0.04);
     crown.rotation.set(0.08, 0.4 + index * 0.23, -0.12);
-    const shoulder = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 0), rockMaterial);
-    shoulder.scale.set(1.18, 0.86, 0.9);
-    shoulder.position.set(0.9, 0.38, -0.12);
+    const shoulder = new THREE.Mesh(new THREE.DodecahedronGeometry(0.48, 0), sunlitRockMaterial);
+    shoulder.scale.set(1.08, 0.72, 0.82);
+    shoulder.position.set(0.68, 0.42, -0.1);
     shoulder.rotation.z = 0.18;
-    islet.add(foundation, crown, shoulder);
+    islet.add(wetBase, foundation, crown, shoulder);
 
     if (quality !== 'low' && index % 3 !== 1) {
       const pine = new THREE.Group();
@@ -454,33 +1146,160 @@ function addHarborHorizonIslets(
       islet.add(pine);
     }
 
-    const foam = new THREE.Mesh(new THREE.TorusGeometry(1.62, 0.045, 4, 32), foamMaterial);
-    foam.rotation.x = Math.PI / 2;
-    foam.scale.z = 0.68;
-    foam.position.y = -0.01;
-    foam.renderOrder = 2;
-    islet.add(foam);
+    [0.18, 3.62].forEach((startAngle, foamIndex) => {
+      const foam = new THREE.Mesh(
+        new THREE.TorusGeometry(1.62, 0.045, 4, 18, foamIndex === 0 ? 2.05 : 1.48),
+        foamMaterial,
+      );
+      foam.rotation.set(Math.PI / 2, 0, startAngle);
+      foam.scale.z = 0.68;
+      foam.position.y = -0.1 + foamIndex * 0.012;
+      foam.renderOrder = 2;
+      islet.add(foam);
+    });
     islets.add(islet);
   });
   root.add(islets);
   return islets;
 }
 
-function addHarborOceanDetail(root: THREE.Group, quality: Island3DQuality) {
+interface Island22HarborOceanDetailRuntime {
+  root: THREE.Group;
+  update: (elapsed: number, weather: Island22HarborWeatherState) => void;
+}
+
+function addHarborOceanDetail(
+  root: THREE.Group,
+  quality: Island3DQuality,
+): Island22HarborOceanDetailRuntime {
   const detail = new THREE.Group();
   detail.name = 'ISLAND_22_LIVING_HARBOR_OCEAN_DETAIL';
-  const shorelineFoam = new THREE.Mesh(
-    new THREE.TorusGeometry(9.18, 0.055, 4, quality === 'low' ? 56 : 96),
-    new THREE.MeshBasicMaterial({ color: 0xcdf8ef, transparent: true, opacity: 0.36, depthWrite: false }),
+  const foamMaterial = new THREE.MeshBasicMaterial({
+    color: 0xcdf8ef,
+    transparent: true,
+    opacity: 0.36,
+    depthWrite: false,
+  });
+  const arcCount = quality === 'low' ? 4 : 7;
+  const shorelineArcs: THREE.Mesh[] = [];
+  for (let index = 0; index < arcCount; index += 1) {
+    const arc = new THREE.Mesh(
+      new THREE.TorusGeometry(
+        9.05 + index % 3 * 0.12,
+        0.045 + index % 2 * 0.012,
+        4,
+        quality === 'low' ? 16 : 24,
+        0.52 + index % 3 * 0.17,
+      ),
+      foamMaterial,
+    );
+    arc.name = `ISLAND_22_BROKEN_SHORELINE_FOAM_ARC_${index + 1}`;
+    arc.rotation.set(Math.PI / 2, 0, index / arcCount * Math.PI * 2 + 0.16);
+    arc.scale.z = 1.08;
+    arc.position.y = -0.72 + index % 2 * 0.018;
+    arc.renderOrder = 2;
+    arc.userData.baseArcAngle = arc.rotation.z;
+    detail.add(arc);
+    shorelineArcs.push(arc);
+  }
+
+  const crestCount = quality === 'low' ? 18 : quality === 'medium' ? 36 : 52;
+  const crestMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe2fbf4,
+    transparent: true,
+    opacity: 0.08,
+    depthWrite: false,
+  });
+  const waveCrests = new THREE.InstancedMesh(
+    new THREE.TorusGeometry(0.68, 0.035, 4, quality === 'low' ? 9 : 12, 1.25),
+    crestMaterial,
+    crestCount,
   );
-  shorelineFoam.name = 'ISLAND_22_OUTER_SHORELINE_FOAM_RING';
-  shorelineFoam.rotation.x = Math.PI / 2;
-  shorelineFoam.scale.z = 1.08;
-  shorelineFoam.position.y = -0.72;
-  shorelineFoam.renderOrder = 2;
-  detail.add(shorelineFoam);
+  waveCrests.name = 'ISLAND_22_DYNAMIC_OFFSHORE_WAVE_CRESTS';
+  waveCrests.frustumCulled = false;
+  waveCrests.renderOrder = 2;
+  detail.add(waveCrests);
+
+  const swellFrontMaterial = new THREE.MeshBasicMaterial({
+    color: 0xdaf7f2,
+    transparent: true,
+    opacity: 0.02,
+    depthWrite: false,
+  });
+  const swellFrontCount = quality === 'low' ? 4 : quality === 'medium' ? 7 : 9;
+  const swellFronts: THREE.Mesh[] = [];
+  for (let index = 0; index < swellFrontCount; index += 1) {
+    const swellArcLength = 0.82 + index % 3 * 0.15;
+    const swellFront = new THREE.Mesh(
+      new THREE.TorusGeometry(
+        12.2 + index * 2.75,
+        0.032 + index % 2 * 0.012,
+        4,
+        quality === 'low' ? 22 : 34,
+        swellArcLength,
+      ),
+      swellFrontMaterial,
+    );
+    swellFront.name = `ISLAND_22_CONNECTED_WIND_SWELL_FRONT_${index + 1}`;
+    swellFront.rotation.set(
+      Math.PI / 2,
+      0,
+      Math.PI / 2 - swellArcLength / 2 + (index % 3 - 1) * 0.18,
+    );
+    swellFront.position.y = -0.765 + index % 2 * 0.01;
+    swellFront.renderOrder = 2;
+    swellFront.userData.baseSwellAngle = swellFront.rotation.z;
+    detail.add(swellFront);
+    swellFronts.push(swellFront);
+  }
+
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const euler = new THREE.Euler();
   root.add(detail);
-  return detail;
+  return {
+    root: detail,
+    update: (elapsed, weather) => {
+      foamMaterial.opacity = 0.2 + weather.waveStrength * 0.36
+        + Math.sin(elapsed * 0.61) * 0.025;
+      shorelineArcs.forEach((arc, index) => {
+        const pulse = Math.sin(elapsed * (0.52 + weather.wind * 0.48) + index * 1.27);
+        arc.rotation.z = arc.userData.baseArcAngle + pulse * (0.008 + weather.wind * 0.025);
+        arc.scale.z = 1.06 + weather.waveStrength * 0.08 + pulse * 0.012;
+        arc.position.y = -0.72 + index % 2 * 0.018
+          + pulse * (0.006 + weather.waveStrength * 0.018);
+      });
+      crestMaterial.opacity = 0.025 + Math.pow(weather.waveStrength, 1.55) * 0.34;
+      swellFrontMaterial.opacity = 0.008 + Math.pow(weather.waveStrength, 2.05) * 0.32;
+      swellFronts.forEach((swellFront, index) => {
+        const swellPulse = Math.sin(elapsed * (0.26 + weather.wind * 0.42) + index * 0.78);
+        swellFront.rotation.z = swellFront.userData.baseSwellAngle
+          + swellPulse * (0.006 + weather.wind * 0.024);
+        swellFront.scale.setScalar(0.985 + weather.waveStrength * 0.035 + swellPulse * 0.006);
+        swellFront.position.y = -0.765 + index % 2 * 0.01
+          + swellPulse * (0.004 + weather.waveStrength * 0.014);
+      });
+      for (let index = 0; index < crestCount; index += 1) {
+        const baseAngle = index * 2.399963229728653 + 0.31;
+        const baseRadius = 10.6 + index % 9 * 2.28 + Math.sin(index * 1.71) * 0.38;
+        const phase = elapsed * (0.34 + weather.wind * 0.78) + index * 1.43;
+        const driftAngle = baseAngle + Math.sin(phase * 0.33) * (0.008 + weather.wind * 0.02);
+        const radialDrift = Math.sin(phase) * (0.05 + weather.waveStrength * 0.16);
+        const radius = baseRadius + radialDrift;
+        const lift = Math.sin(phase * 1.38) * (0.008 + weather.waveStrength * 0.052);
+        const crestWidth = (0.62 + index % 4 * 0.18) * (0.88 + weather.waveStrength * 0.24);
+        matrix.compose(
+          position.set(Math.cos(driftAngle) * radius, -0.77 + lift, Math.sin(driftAngle) * radius),
+          quaternion.setFromEuler(euler.set(Math.PI / 2, -driftAngle + Math.PI / 2, 0)),
+          scale.set(crestWidth, 0.82 + weather.waveStrength * 0.42, 0.72 + weather.waveStrength * 0.34),
+        );
+        waveCrests.setMatrixAt(index, matrix);
+      }
+      waveCrests.instanceMatrix.needsUpdate = true;
+    },
+  };
 }
 
 function createRoof(width: number, depth: number, height: number, material: THREE.Material) {
@@ -2191,12 +3010,61 @@ function createDock(name: string, x: number, z: number, rotation: number, length
   root.name = name;
   root.position.set(x, -0.15, z);
   root.rotation.y = rotation;
-  const deck = box(1.15, 0.18, length, materials.timber);
-  deck.position.y = 0.42;
-  root.add(deck);
+  const underDeck = box(0.92, 0.1, length, materials.timberDark);
+  underDeck.name = `${name}_DARK_WET_UNDERFRAME`;
+  underDeck.position.y = 0.35;
+  root.add(underDeck);
+
+  const plankCount = Math.max(7, Math.round(length / 0.36));
+  const plankStep = length / plankCount;
+  const planks = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.12, 0.14, plankStep * 0.84),
+    materials.timber,
+    plankCount,
+  );
+  planks.name = `${name}_INDIVIDUAL_WEATHERED_PLANKS`;
+  const pegs = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.022, 0.026, 0.035, 6),
+    materials.timberDark,
+    plankCount * 2,
+  );
+  pegs.name = `${name}_HAND_DRIVEN_DARK_PEGS`;
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const plankPalette = [
+    new THREE.Color(0xfff1d4),
+    new THREE.Color(0xe8cfaa),
+    new THREE.Color(0xd7b487),
+    new THREE.Color(0xf4ddba),
+  ];
+  for (let index = 0; index < plankCount; index += 1) {
+    const zPosition = -length / 2 + plankStep * (index + 0.5);
+    matrix.compose(
+      position.set((index % 3 - 1) * 0.018, 0.45 + index % 2 * 0.012, zPosition),
+      quaternion.setFromEuler(new THREE.Euler(0, (index % 5 - 2) * 0.008, (index % 3 - 1) * 0.006)),
+      scale.set(1 - index % 4 * 0.018, 1, 1),
+    );
+    planks.setMatrixAt(index, matrix);
+    planks.setColorAt(index, plankPalette[index % plankPalette.length]);
+    [-0.42, 0.42].forEach((pegX, pegIndex) => {
+      matrix.compose(
+        position.set(pegX, 0.538 + index % 2 * 0.012, zPosition),
+        quaternion.identity(),
+        scale.setScalar(1),
+      );
+      pegs.setMatrixAt(index * 2 + pegIndex, matrix);
+    });
+  }
+  planks.instanceMatrix.needsUpdate = true;
+  if (planks.instanceColor) planks.instanceColor.needsUpdate = true;
+  pegs.instanceMatrix.needsUpdate = true;
+  root.add(planks, pegs);
   [-0.45, 0.45].forEach((side) => {
     for (let index = 0; index < 4; index += 1) {
       const pile = cylinder(0.075, 0.095, 1.3, materials.timberDark, 8);
+      pile.name = `${name}_DARK_WET_LOAD_PILE_${side > 0 ? 'R' : 'L'}_${index + 1}`;
       pile.position.set(side, -0.05, -length / 2 + 0.45 + index * ((length - 0.9) / 3));
       root.add(pile);
     }
@@ -4108,35 +4976,93 @@ export function createIsland22FishermansVillageLivingAmbience(
   const root = new THREE.Group();
   root.name = 'ISLAND_22_FISHERMANS_VILLAGE_WORLD_ROOT';
   scene.add(root);
-  const harborClouds = addHarborSky(root, qualityProfile.id);
+  const harborSky = addHarborSky(root, qualityProfile.id);
 
+  sharedOcean.geometry.dispose();
+  sharedOcean.geometry = createHarborOceanGeometry(
+    42,
+    qualityProfile.id === 'low' ? 10 : qualityProfile.id === 'medium' ? 16 : 22,
+    qualityProfile.id === 'low' ? 40 : qualityProfile.id === 'medium' ? 56 : 72,
+  );
+  sharedOcean.geometry.name = 'ISLAND_22_RADIAL_SUBDIVIDED_DYNAMIC_OCEAN_GEOMETRY';
   sharedOcean.material = materials.ocean;
   sharedOcean.position.y = -0.82;
   sharedOcean.name = 'ISLAND_22_OCEAN_SURFACE';
   root.add(sharedOcean);
-  addHarborOceanDetail(root, qualityProfile.id);
+  const harborOceanDetail = addHarborOceanDetail(root, qualityProfile.id);
+  addHarborHorizonIslets(root, qualityProfile.id, materials);
 
-  const terrain = cylinder(8.35, 9.2, 1.65, materials.cliff, qualitySegments(qualityProfile.id));
+  const terrain = new THREE.Mesh(
+    createIrregularTerraceGeometry(
+      8.35,
+      9.2,
+      1.65,
+      qualitySegments(qualityProfile.id) + 6,
+      22,
+      1.08,
+    ),
+    materials.cliff,
+  );
   terrain.name = 'ISLAND_22_TERRAIN_SHELL';
   terrain.position.y = -0.44;
-  terrain.scale.z = 1.08;
   root.add(terrain);
   markPart(terrain, 'terrain-shell', {
     pond: 'ISLAND_22_POND_AXIS',
     marketDock: 'ISLAND_22_FISH_MARKET_DOCK_SOCKET',
   });
 
-  const topTerrace = cylinder(7.9, 8.25, 0.5, materials.terrace, qualitySegments(qualityProfile.id));
+  const wetFoundationMaterial = materials.cliff.clone();
+  wetFoundationMaterial.name = 'ISLAND_22_WET_FOUNDATION_MATERIAL';
+  wetFoundationMaterial.color.set(0xdce9e3);
+  wetFoundationMaterial.emissive.set(0x173b3a);
+  wetFoundationMaterial.emissiveIntensity = 0.11;
+  wetFoundationMaterial.roughness = 0.96;
+  const wetFoundation = new THREE.Mesh(
+    createIrregularTerraceGeometry(
+      8.54,
+      9.12,
+      1,
+      qualitySegments(qualityProfile.id) + 10,
+      73,
+      1.08,
+    ),
+    wetFoundationMaterial,
+  );
+  wetFoundation.name = 'ISLAND_22_CONTINUOUS_WET_ROCK_FOUNDATION';
+  wetFoundation.position.y = -0.45;
+  wetFoundation.castShadow = true;
+  wetFoundation.receiveShadow = true;
+  root.add(wetFoundation);
+
+  const topTerrace = new THREE.Mesh(
+    createIrregularTerraceGeometry(
+      7.9,
+      8.25,
+      0.5,
+      qualitySegments(qualityProfile.id) + 4,
+      41,
+      1.08,
+    ),
+    materials.stone,
+  );
   topTerrace.name = 'ISLAND_22_TOP_TERRACE';
   topTerrace.position.y = 0.33;
-  topTerrace.scale.z = 1.08;
   root.add(topTerrace);
-  const middleStoneTerrace = cylinder(7.15, 7.62, 0.34, materials.stone, qualitySegments(qualityProfile.id));
+  const middleStoneTerrace = new THREE.Mesh(
+    createIrregularTerraceGeometry(
+      7.15,
+      7.62,
+      0.34,
+      qualitySegments(qualityProfile.id) + 4,
+      59,
+      1.055,
+    ),
+    materials.stone,
+  );
   middleStoneTerrace.name = 'ISLAND_22_MIDDLE_STONE_TERRACE';
   // Keep the terrace cap below the canonical pond and Spark36 surfaces. The
   // earlier 0.57 centre buried both under a flat stone disc in the review shot.
   middleStoneTerrace.position.y = 0.42;
-  middleStoneTerrace.scale.z = 1.055;
   root.add(middleStoneTerrace);
   addSteppedHarborTerraces(root, qualityProfile.id, materials);
   addAuthoredVillageClusters(root, qualityProfile.id, materials);
@@ -4162,48 +5088,29 @@ export function createIsland22FishermansVillageLivingAmbience(
   const livingPondSurface = addLivingPondSurface(root, qualityProfile.id, materials);
   markPart(pondShadow, 'central-pond-bowl', { vortex: 'ISLAND_22_POND_VORTEX_AXIS' });
 
-  const cliffCount = Math.round(22 * qualityScale(qualityProfile.id));
-  const cliffBlocks = new THREE.InstancedMesh(
-    new THREE.DodecahedronGeometry(0.82, 0),
-    materials.cliff,
-    cliffCount,
-  );
-  cliffBlocks.name = 'ISLAND_22_OUTER_CLIFF_STRATA';
   const matrix = new THREE.Matrix4();
   const position = new THREE.Vector3();
   const scale = new THREE.Vector3();
   const quaternion = new THREE.Quaternion();
-  for (let index = 0; index < cliffCount; index += 1) {
-    const angle = index / cliffCount * Math.PI * 2 + 0.11;
-    const radius = 8.45 + (index % 3) * 0.32;
-    matrix.compose(
-      position.set(Math.cos(angle) * radius, -0.35 - (index % 2) * 0.18, Math.sin(angle) * radius * 1.08),
-      quaternion.setFromEuler(new THREE.Euler(0, -angle, (index % 3 - 1) * 0.08)),
-      scale.set(1.25 + (index % 4) * 0.13, 1.15 + (index % 3) * 0.22, 1.0),
-    );
-    cliffBlocks.setMatrixAt(index, matrix);
-  }
-  cliffBlocks.instanceMatrix.needsUpdate = true;
-  cliffBlocks.receiveShadow = true;
-  root.add(cliffBlocks);
 
-  // A second, smaller rock family breaks the old smooth cylinder silhouette.
+  // Embedded stones break the old smooth cylinder silhouette without adding
+  // detached lower chunks; the irregular shell remains the continuous cliff.
   // Keep it instanced: this reads as hand-stacked coastal strata at phone scale
   // while adding one draw call instead of dozens of individual meshes.
-  const accentRockCount = qualityProfile.id === 'low' ? 24 : 42;
+  const accentRockCount = qualityProfile.id === 'low' ? 12 : 20;
   const accentRocks = new THREE.InstancedMesh(
-    new THREE.DodecahedronGeometry(0.46, 0),
+    new THREE.DodecahedronGeometry(0.36, 0),
     materials.stone,
     accentRockCount,
   );
   accentRocks.name = 'ISLAND_22_SHORELINE_ACCENT_ROCKS';
   for (let index = 0; index < accentRockCount; index += 1) {
     const angle = index / accentRockCount * Math.PI * 2 + 0.04;
-    const radius = 8.08 + (index % 4) * 0.27;
+    const radius = 7.9 + (index % 4) * 0.09 + Math.sin(index * 1.19) * 0.06;
     matrix.compose(
       position.set(
         Math.cos(angle) * radius,
-        0.06 + (index % 3) * 0.2,
+        0.48 + (index % 3) * 0.018,
         Math.sin(angle) * radius * 1.08,
       ),
       quaternion.setFromEuler(new THREE.Euler(
@@ -4212,9 +5119,9 @@ export function createIsland22FishermansVillageLivingAmbience(
         (index % 4 - 1.5) * 0.1,
       )),
       scale.set(
-        0.72 + (index % 5) * 0.12,
-        0.54 + (index % 4) * 0.12,
-        0.62 + (index % 3) * 0.14,
+        0.62 + (index % 5) * 0.08,
+        0.5 + (index % 4) * 0.07,
+        0.55 + (index % 3) * 0.09,
       ),
     );
     accentRocks.setMatrixAt(index, matrix);
@@ -4223,6 +5130,62 @@ export function createIsland22FishermansVillageLivingAmbience(
   accentRocks.castShadow = true;
   accentRocks.receiveShadow = true;
   root.add(accentRocks);
+
+  // Broken turf shelves give the cliff a readable wet-rock → dry-stone →
+  // grass value stack instead of one uninterrupted green terrace disc.
+  const turfShelfCount = qualityProfile.id === 'low' ? 16 : qualityProfile.id === 'medium' ? 24 : 32;
+  const turfShelves = new THREE.Group();
+  turfShelves.name = 'ISLAND_22_BROKEN_GRASS_TURF_SHELVES';
+  const turfSoil = new THREE.InstancedMesh(
+    createIrregularTerraceGeometry(0.48, 0.54, 0.09, 12, 83, 0.72),
+    materials.cliff,
+    turfShelfCount,
+  );
+  turfSoil.name = 'ISLAND_22_EMBEDDED_TURF_SOIL_POCKETS';
+  const turfCaps = new THREE.InstancedMesh(
+    createIrregularPatchGeometry(0.5, 13, 101, 0.72),
+    materials.terrace,
+    turfShelfCount,
+  );
+  turfCaps.name = 'ISLAND_22_IRREGULAR_MOSS_GRASS_CAPS';
+  const turfPalette = [
+    new THREE.Color(0xc4d39b),
+    new THREE.Color(0x9db879),
+    new THREE.Color(0xb2c48a),
+    new THREE.Color(0x7f9f67),
+  ];
+  const turfClusterAngles = [0.22, 0.92, 1.72, 2.52, 3.28, 4.08, 4.86, 5.62];
+  for (let index = 0; index < turfShelfCount; index += 1) {
+    const clusterIndex = index % turfClusterAngles.length;
+    const clusterLayer = Math.floor(index / turfClusterAngles.length);
+    const angle = turfClusterAngles[clusterIndex] + (clusterLayer - 1.5) * 0.055 + Math.sin(index * 1.71) * 0.018;
+    const radius = 7.16 + clusterLayer * 0.19 + (index % 2) * 0.07;
+    matrix.compose(
+      position.set(Math.cos(angle) * radius, 0.56 + index % 3 * 0.012, Math.sin(angle) * radius * 1.065),
+      quaternion.setFromEuler(new THREE.Euler(
+        (index % 3 - 1) * 0.08,
+        -angle + index % 4 * 0.13,
+        (index % 5 - 2) * 0.04,
+      )),
+      scale.set(0.88 + index % 4 * 0.13, 0.82 + index % 3 * 0.05, 0.76 + index % 5 * 0.07),
+    );
+    turfSoil.setMatrixAt(index, matrix);
+    matrix.setPosition(
+      Math.cos(angle) * radius,
+      0.615 + index % 3 * 0.012,
+      Math.sin(angle) * radius * 1.065,
+    );
+    turfCaps.setMatrixAt(index, matrix);
+    turfCaps.setColorAt(index, turfPalette[index % turfPalette.length]);
+  }
+  turfSoil.instanceMatrix.needsUpdate = true;
+  turfCaps.instanceMatrix.needsUpdate = true;
+  if (turfCaps.instanceColor) turfCaps.instanceColor.needsUpdate = true;
+  turfSoil.castShadow = true;
+  turfSoil.receiveShadow = true;
+  turfCaps.receiveShadow = true;
+  turfShelves.add(turfSoil, turfCaps);
+  root.add(turfShelves);
 
   const marketDock = createDock('ISLAND_22_FISH_MARKET_OFFLOAD_DOCK', -8.15, -5.55, -0.78, 5.2, materials);
   const marketApron = box(2.6, 0.2, 2.35, materials.timber);
@@ -4339,6 +5302,7 @@ export function createIsland22FishermansVillageLivingAmbience(
   premiumMarketHall.name = 'ISLAND_22_FISH_MARKET_HALL';
   premiumMarketHall.position.set(0, 0.28, -0.5);
   marketDock.add(premiumMarketHall);
+
   root.add(marketDock);
   markPart(marketDock, 'fish-market-offload-dock', {
     offload: 'ISLAND_22_FISH_MARKET_OFFLOAD_SOCKET',
@@ -4385,6 +5349,7 @@ export function createIsland22FishermansVillageLivingAmbience(
   const coniferMaterial = materials.foliage.clone();
   coniferMaterial.name = 'ISLAND_22_CONIFER_INSTANCE_PALETTE_BASE';
   coniferMaterial.color.set(0xffffff);
+  attachHarborWindShader(coniferMaterial, 0.075);
   const treeCrowns = new THREE.InstancedMesh(
     new THREE.ConeGeometry(0.46, 0.82, 7),
     coniferMaterial,
@@ -4437,42 +5402,58 @@ export function createIsland22FishermansVillageLivingAmbience(
   treeTrunks.castShadow = true;
   root.add(treeTrunks, treeCrowns);
 
-  const reedCount = qualityProfile.id === 'low' ? 24 : 48;
-  const reedMaterial = materials.foliage.clone();
-  reedMaterial.name = 'ISLAND_22_REED_INSTANCE_PALETTE_BASE';
-  reedMaterial.color.set(0xffffff);
-  const shorelineReeds = new THREE.InstancedMesh(
-    new THREE.ConeGeometry(0.075, 0.52, 5),
-    reedMaterial,
-    reedCount,
+  const grassCount = qualityProfile.id === 'low' ? 38 : qualityProfile.id === 'medium' ? 72 : 108;
+  const grassTufts = new THREE.InstancedMesh(
+    createGrassTuftGeometry(),
+    materials.grassBlade,
+    grassCount,
   );
-  shorelineReeds.name = 'ISLAND_22_SHORELINE_REED_AND_GRASS_CLUSTERS';
-  const reedPalette = [
-    new THREE.Color(0x355e43),
-    new THREE.Color(0x587849),
-    new THREE.Color(0x82905b),
+  grassTufts.name = 'ISLAND_22_LAYERED_GRASS_BLADE_TUFTS';
+  const grassPalette = [
+    new THREE.Color(0x5f7e50),
+    new THREE.Color(0x7f985c),
+    new THREE.Color(0xa3ad69),
+    new THREE.Color(0x486c47),
   ];
-  for (let index = 0; index < reedCount; index += 1) {
-    const angle = index / reedCount * Math.PI * 2 + (index % 3) * 0.05;
-    const radius = 6.0 + (index % 4) * 0.52;
+  for (let index = 0; index < grassCount; index += 1) {
+    const clusterIndex = index % turfClusterAngles.length;
+    const clusterLayer = Math.floor(index / turfClusterAngles.length);
+    const angle = turfClusterAngles[clusterIndex]
+      + ((clusterLayer % 9) - 4) * 0.027
+      + Math.sin(index * 1.31) * 0.012;
+    const radius = 6.72 + (clusterLayer % 6) * 0.14 + Math.sin(index * 0.73) * 0.07;
+    const tuftScale = 0.66 + (index % 5) * 0.11;
     matrix.compose(
-      position.set(Math.cos(angle) * radius, 0.87, Math.sin(angle) * radius * 1.04),
-      quaternion.setFromEuler(new THREE.Euler(0, angle * 1.7, (index % 3 - 1) * 0.16)),
-      scale.set(0.7 + (index % 4) * 0.16, 0.76 + (index % 5) * 0.11, 0.7 + (index % 4) * 0.16),
+      position.set(Math.cos(angle) * radius, 0.61 + index % 3 * 0.025, Math.sin(angle) * radius * 1.045),
+      quaternion.setFromEuler(new THREE.Euler(0, angle * 1.37, (index % 3 - 1) * 0.07)),
+      scale.set(tuftScale * (1 + index % 3 * 0.08), tuftScale, tuftScale),
     );
-    shorelineReeds.setMatrixAt(index, matrix);
-    shorelineReeds.setColorAt(index, reedPalette[index % reedPalette.length]);
+    grassTufts.setMatrixAt(index, matrix);
+    grassTufts.setColorAt(index, grassPalette[index % grassPalette.length]);
   }
-  shorelineReeds.instanceMatrix.needsUpdate = true;
-  if (shorelineReeds.instanceColor) shorelineReeds.instanceColor.needsUpdate = true;
-  root.add(shorelineReeds);
+  grassTufts.instanceMatrix.needsUpdate = true;
+  if (grassTufts.instanceColor) grassTufts.instanceColor.needsUpdate = true;
+  grassTufts.castShadow = true;
+  grassTufts.receiveShadow = true;
+  root.add(grassTufts);
 
-  const foam = new THREE.Mesh(new THREE.TorusGeometry(8.9, 0.11, 6, 72), materials.foam);
-  foam.name = 'ISLAND_22_SHORE_FOAM_RING';
-  foam.rotation.x = Math.PI / 2;
-  foam.scale.z = 1.08;
-  foam.position.y = -0.72;
-  root.add(foam);
+  const foamRoot = new THREE.Group();
+  foamRoot.name = 'ISLAND_22_SHORE_FOAM_BROKEN_ARCS';
+  const foamArcs: THREE.Mesh[] = [];
+  const foamArcCount = qualityProfile.id === 'low' ? 4 : 7;
+  for (let index = 0; index < foamArcCount; index += 1) {
+    const foamArc = new THREE.Mesh(
+      new THREE.TorusGeometry(8.86 + index % 3 * 0.12, 0.075 + index % 2 * 0.025, 5, 22, 0.55 + index % 3 * 0.18),
+      materials.foam,
+    );
+    foamArc.name = `ISLAND_22_SHORE_FOAM_ARC_${index + 1}`;
+    foamArc.rotation.set(Math.PI / 2, 0, index / foamArcCount * Math.PI * 2 + 0.22);
+    foamArc.scale.z = 1.08;
+    foamArc.position.y = -0.7 + index % 2 * 0.016;
+    foamRoot.add(foamArc);
+    foamArcs.push(foamArc);
+  }
+  root.add(foamRoot);
 
   setShadow(root, false);
   root.userData.slice = 'slice-01-macro-composition';
@@ -4505,26 +5486,54 @@ export function createIsland22FishermansVillageLivingAmbience(
   });
   const fishingInteraction = createHeroFishingInteraction(root, materials, qualityProfile.id);
   let waterDragonPresentation: Island22WaterDragonPresentation = { fishCaughtKg: 0 };
+  const calmOceanColor = new THREE.Color(0x0d78a4);
+  const windyOceanColor = new THREE.Color(0x0a607b);
 
   return {
     root,
     animate: (elapsed) => {
       const motion = Math.sin(elapsed * 0.75);
+      const weather = resolveIsland22HarborWeatherState(elapsed);
       const missionActive = waterDragonPresentation.fishCaughtKg >= ISLAND_22_DRAGON_TRIGGER_KG
         && (waterDragonPresentation.impactRepairProgress ?? 0) < 1;
-      harborClouds.rotation.y = elapsed * 0.0025;
-      pond.position.y = 0.66 + motion * 0.012;
+      root.userData.harborWeatherPhase = weather.phase;
+      root.userData.harborWeatherIntensity = weather.intensity;
+      harborSky.update(elapsed, weather);
+      harborOceanDetail.update(elapsed, weather);
+      updateHarborWeatherUniforms(materials.ocean, elapsed, 0.018 + weather.waveStrength * 0.22);
+      updateHarborWeatherUniforms(materials.foliage, elapsed, weather.wind);
+      updateHarborWeatherUniforms(materials.grassBlade, elapsed, weather.wind);
+      updateHarborWeatherUniforms(coniferMaterial, elapsed, weather.wind);
+      materials.ocean.color.copy(calmOceanColor).lerp(windyOceanColor, weather.intensity * 0.72);
+      materials.ocean.roughness = THREE.MathUtils.lerp(0.12, 0.28, weather.waveStrength);
+      materials.ocean.clearcoatRoughness = THREE.MathUtils.lerp(0.14, 0.31, weather.waveStrength);
+      materials.ocean.opacity = THREE.MathUtils.lerp(0.54, 0.69, weather.waveStrength);
+      sharedOcean.position.y = -0.82
+        + Math.sin(elapsed * (0.34 + weather.wind * 0.32)) * (0.003 + weather.waveStrength * 0.012);
+      pond.position.y = 0.66 + motion * (0.011 + weather.waveStrength * 0.005);
       (depth.material as THREE.MeshPhysicalMaterial).opacity = 0.71 + Math.sin(elapsed * 0.42) * 0.04;
       livingPondSurface.update(elapsed, pond.position.y, missionActive);
       boats.forEach((boat, index) => {
-        boat.rotation.z = Math.sin(elapsed * 0.68 + index) * 0.025;
-        boat.position.y = boatPlacements[index][1] + Math.sin(elapsed * 0.74 + index * 0.8) * 0.035;
+        boat.rotation.z = Math.sin(elapsed * (0.62 + weather.wind * 0.32) + index)
+          * (0.022 + weather.waveStrength * 0.055);
+        boat.position.y = boatPlacements[index][1]
+          + Math.sin(elapsed * (0.68 + weather.wind * 0.38) + index * 0.8)
+          * (0.03 + weather.waveStrength * 0.055);
       });
       pondSkiffs.forEach((skiff, index) => {
-        skiff.position.y = 0.76 + Math.sin(elapsed * 0.86 + index * 1.7) * 0.018;
-        skiff.rotation.z = Math.sin(elapsed * 0.72 + index) * 0.018;
+        skiff.position.y = 0.76 + Math.sin(elapsed * 0.86 + index * 1.7)
+          * (0.016 + weather.waveStrength * 0.012);
+        skiff.rotation.z = Math.sin(elapsed * 0.72 + index)
+          * (0.016 + weather.wind * 0.018);
       });
-      (foam.material as THREE.MeshBasicMaterial).opacity = 0.38 + Math.sin(elapsed * 0.52) * 0.06;
+      materials.foam.opacity = 0.3 + weather.waveStrength * 0.28 + Math.sin(elapsed * 0.52) * 0.04;
+      foamRoot.rotation.y = Math.sin(elapsed * 0.31) * weather.wind * 0.016;
+      foamArcs.forEach((foamArc, index) => {
+        const shorePulse = Math.sin(elapsed * (0.48 + weather.wind * 0.48) + index * 1.1);
+        foamArc.scale.z = 1.06 + weather.waveStrength * 0.09 + shorePulse * 0.018;
+        foamArc.position.y = -0.7 + index % 2 * 0.016
+          + shorePulse * (0.006 + weather.waveStrength * 0.016);
+      });
       fishingInteraction.update(elapsed);
       waterDragonMission.update(elapsed, waterDragonPresentation);
     },

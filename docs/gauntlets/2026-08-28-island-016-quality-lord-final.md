@@ -49,3 +49,9 @@ Verdict: **PASS — release candidate ready; no deployment performed**
 - A real authenticated production Island Run board/UI capture is still required for final certification; the available production route opened the unauthenticated HabitGame landing shell.
 - Repository-wide `tsc -b` is not counted as passing because the repository has unrelated existing type failures and, on later runs, remained silent until manually stopped.
 - No commit, push, main merge, GitHub/PWA publication, Capacitor sync or Xcode operation is part of this verification pass.
+
+## 2026-08-30 real-3D-only superseding addendum
+
+The earlier environment-plate runtime claim is superseded. The v2 PNG remains in the reference manifest only as archived provenance and is no longer imported, loaded or assigned to the production scene or the Island 016 lab. A plain clear colour sits behind an enclosing gradient sky sphere; all visible scenery is world-space Three.js geometry: the 360-degree cloud belt, local weather bank, sun, gulls, horizon islets, dynamic radial ocean, whitecaps, shoreline foam, terrain, buildings and vegetation. The ambience continues through the production `livingAmbience.animate(elapsed)` path and remains frozen by the shared reduced-motion gate.
+
+Final phone evidence: `artifacts/island-016-gauntlet/real-3d-only-v001/` (calm front, windy front and easing reverse-azimuth captures). The opposite view confirms that the atmosphere wraps the complete world rather than terminating at a scenic card. Production Vite build: pass (1,360 modules transformed). Island Run architecture guard: pass (0 violations). Canonical Island Run suite: **1,900 passed, 0 failed**. `git diff --check`: pass.
