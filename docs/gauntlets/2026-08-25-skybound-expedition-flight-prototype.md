@@ -1217,3 +1217,55 @@ PWA, sign an archive, or publish an App Store build.
 compile, install, and simulator startup.** The next release slice is a
 physical-device Skybound flight replay, followed by an explicit decision to
 push/deploy and create a signed iOS archive.
+
+## Event catalogue control Gauntlet loop 15 — 2026-08-30
+
+This loop made the reward-bar modal a complete development catalogue without
+changing canonical event progression. Ordinary development islands can select
+one of the five rotating events directly from its tile and can pointer-drag all
+eleven registered games into a persisted preference order. Chapter islands
+that replace the ordinary event surface with Journey Disc keep selection and
+sorting locked, preserving the authored island-specific event contract.
+
+### Catalogue completeness and interaction
+
+- The modal reports all eleven registered games: five rotating events and six
+  exhibition games. Saved orders are normalized so stale or duplicate ids can
+  never hide a newly registered game.
+- Number badges make the preference order explicit from #1 at the top-left to
+  #11 at the bottom-right, with a one-click reset to catalogue order.
+- Selecting Skybound Academy updates the modal header, reward bar, quick-action
+  icon, and active tile immediately while leaving the catalogue open.
+- Sorting uses pointer events instead of native HTML drag data, making the same
+  interaction work with mouse, touch, and the in-app-browser test harness.
+
+### Evidence and release boundary
+
+- Focused Island Run integration tests passed: 9 cases, 0 failures, including
+  complete-catalogue normalization, drag ordering, ordinary-island restoration,
+  and Journey Disc replacement rules.
+- The Island Run architecture guard passed with 0 violations and the existing
+  3 allowlisted legacy warnings.
+- In-app-browser replay verified 11 visible tiles, switched the active event to
+  Skybound Academy, dragged it from rank #5 to #1, and confirmed the reward bar
+  changed with it. The finished modal remains open as the handoff preview.
+- The production Vite build passed with 1,379 modules transformed; Skybound
+  remains a separate 101.99 kB minified chunk. Existing mixed-import and
+  large-chunk warnings remain informational.
+- A concurrent full `tsc -b` gate was stopped after 28 minutes while still
+  active and without emitting an error because the shared machine was heavily
+  contended. Loop 14's full TypeScript pass remains the latest completed
+  repository-wide type gate; the changed runtime was compiled by Vite and
+  exercised in-browser in this loop.
+
+| Loop 15 gate | Score | Decision |
+| --- | ---: | --- |
+| Catalogue completeness | 10/10 | All 11 registered games remain visible |
+| Dev event selection | 10/10 | Rotating event and reward bar switch in place |
+| Preference sorting | 10/10 | Pointer/touch drag persists #1–#11 order |
+| Special-island safety | 10/10 | Authored replacement islands stay locked |
+| Build confidence | 9/10 | Production build and focused gates pass; full type rerun was resource-bound |
+
+**Gauntlet decision: pass the development catalogue control.** No production
+rotation state, release deployment, native sync, or publication was changed by
+this loop.
