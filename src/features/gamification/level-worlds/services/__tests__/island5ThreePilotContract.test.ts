@@ -150,6 +150,8 @@ import {
   createIsland22FishermansVillageLivingAmbience,
   createIsland22FishermansVillageMaterials,
   isIsland22RouteCorridorClear,
+  resolveIsland22HarborWeatherState,
+  ISLAND_22_HARBOR_WEATHER_CYCLE_SECONDS,
   ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
 } from '../../dev/Island22FishermansVillageThreeWorld';
 import {
@@ -167,6 +169,53 @@ import {
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'cycles Fisherman’s Village weather smoothly from calm through wind and back down',
+    run: () => {
+      const calm = resolveIsland22HarborWeatherState(6);
+      const building = resolveIsland22HarborWeatherState(36);
+      const windy = resolveIsland22HarborWeatherState(52);
+      const easing = resolveIsland22HarborWeatherState(75);
+      const repeated = resolveIsland22HarborWeatherState(6 + ISLAND_22_HARBOR_WEATHER_CYCLE_SECONDS);
+      assertEqual(calm.phase, 'calm', 'early harbor weather stays calm');
+      assertEqual(building.phase, 'building', 'wind and waves build gradually');
+      assertEqual(windy.phase, 'windy', 'the middle of the cycle reaches its windy crest');
+      assertEqual(easing.phase, 'easing', 'the harbor settles after the windy crest');
+      [calm, building, windy, easing].forEach((weather) => {
+        assert(weather.intensity >= 0 && weather.intensity <= 1, 'weather intensity remains bounded');
+        assert(weather.wind >= 0 && weather.wind <= 1, 'weather wind remains bounded');
+        assert(weather.waveStrength >= 0 && weather.waveStrength <= 1, 'weather waves remain bounded');
+      });
+      assert(Math.abs(calm.intensity - repeated.intensity) < 0.08, 'weather repeats without a visible envelope jump');
+    },
+  },
+  {
+    name: 'renders Fisherman’s Village scenery and ambience exclusively as world-space 3D',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync(
+        'src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts',
+        'utf8',
+      );
+      const pilotSource = fsMod.readFileSync(
+        'src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx',
+        'utf8',
+      );
+      const labSource = fsMod.readFileSync('src/dev/Island016FishingInteractionLab.ts', 'utf8');
+
+      assert(!worldSource.includes('createIsland22FishermansVillageBackdrop'), 'Island 016 must not expose a 2D backdrop factory');
+      assert(!worldSource.includes('fishermans-village-ocean-sky-v2.png'), 'Island 016 runtime must not load the retired sky plate');
+      assert(!pilotSource.includes('createIsland22FishermansVillageBackdrop'), 'production routing must retain the plain clear colour behind the 3D sky');
+      assert(!labSource.includes('createIsland22FishermansVillageBackdrop'), 'the evidence lab must use the same no-plate background contract');
+      assert(worldSource.includes("sky.name = 'ISLAND_22_HARBOR_GRADIENT_SKY'"), 'the world needs a real enclosing 3D sky sphere');
+      assert(worldSource.includes("distantCloudRoot.name = 'ISLAND_22_FULL_360_DISTANT_HORIZON_CLOUD_BELT'"), 'the world needs a complete world-space cloud horizon');
+      assert(worldSource.includes("sharedOcean.name = 'ISLAND_22_OCEAN_SURFACE'"), 'the world needs a real animated ocean mesh');
+      assert(worldSource.includes('harborSky.update(elapsed, weather)'), 'sky and cloud ambience must follow the live weather cycle');
+      assert(worldSource.includes('harborOceanDetail.update(elapsed, weather)'), 'ocean detail must follow the live weather cycle');
+      assert(pilotSource.includes('livingAmbience.animate(elapsed)'), 'production must advance the real 3D ambience when motion is enabled');
+    },
+  },
   {
     name: 'gives every staged restoration mission three construction robots, pop stages, sparkles, and a finale',
     run: () => {

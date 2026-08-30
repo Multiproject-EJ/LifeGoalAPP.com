@@ -190,7 +190,6 @@ import {
 } from './Island13CactusCanyonThreeWorld';
 import {
   buildIsland22FishermansVillageLandmark,
-  createIsland22FishermansVillageBackdrop,
   createIsland22FishermansVillageLivingAmbience,
   createIsland22FishermansVillageMaterials,
   ISLAND_22_BOARD_PRESENTATION_Y_OFFSET,
@@ -3830,8 +3829,6 @@ export default function Island5ThreePilot({
       scene.background = createSunkenSandsDesertBackdrop() ?? scene.background;
     } else if (isCactusCanyon) {
       scene.background = createIsland13CactusCanyonBackdrop();
-    } else if (isFishermansVillage) {
-      scene.background = createIsland22FishermansVillageBackdrop();
     } else if (isHoneycombKingdom) {
       scene.background = createIsland14HoneycombBackdrop();
     } else if (isMoonveilNexus) {
