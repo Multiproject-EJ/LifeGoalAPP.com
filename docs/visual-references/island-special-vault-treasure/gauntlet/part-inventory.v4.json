@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "subject": "vault-island-hand-authored-blender-production",
+  "created": "2026-08-29",
+  "globalAxis": {"up": "+Z in Blender / +Y in Three.js", "authoredFront": "-Y in Blender / +Z after glTF conversion"},
+  "parts": [
+    {"id":"museum-shell","parent":null,"owns":["floor","two-storey-wall-mass","upper-gallery","vault-door","ceiling","eight-bays","pedestals"],"excludes":["treasure-geometry","runtime-lights"],"dependencies":[],"views":["front","left-three-quarter","right-three-quarter","phone-front"],"confidence":"high","acceptanceCues":["two tall floors","clear central processional axis","eight distinct display locations","credible stone and metal thickness"]},
+    {"id":"treasure-crown","parent":"museum-shell","socket":"relic-crown-socket","owns":["circlet","fleur arches","velvet cap","apex orb and cross","set gemstones"],"excludes":["pedestal","museum lighting"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","rear","top","phone-display"],"confidence":"high","acceptanceCues":["open royal silhouette","substantial gold thickness","front amethyst hierarchy","readable at phone scale"]},
+    {"id":"treasure-egg","parent":"museum-shell","socket":"relic-egg-socket","owns":["gold lattice shell","enamel body","gemstone seams","footed stand"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"treasure-hourglass","parent":"museum-shell","socket":"relic-hourglass-socket","owns":["gold frame","glass bulbs","sand","jewelled capitals"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"treasure-compass","parent":"museum-shell","socket":"relic-compass-socket","owns":["hinged case","dial","needle","gem bezel"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"treasure-chalice","parent":"museum-shell","socket":"relic-chalice-socket","owns":["bowl","stem","foot","handles","gem rim"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"treasure-key","parent":"museum-shell","socket":"relic-key-socket","owns":["ornate bow","shaft","bit","gem settings"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"treasure-medallion","parent":"museum-shell","socket":"relic-medallion-socket","owns":["portrait relief","enamel field","gem bezel","display chain"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"treasure-obelisk","parent":"museum-shell","socket":"relic-obelisk-socket","owns":["faceted crystal body","gold claws","tiered base","luminous core"],"dependencies":["museum-shell"],"views":["front","profile","both-three-quarters","phone-display"],"confidence":"high"},
+    {"id":"garden-shell","parent":null,"owns":["arrival court","reflecting-water axis","paired walks","colonnades","rotunda","sunset terrace","planting beds"],"excludes":["runtime sky animation","runtime water animation"],"dependencies":[],"views":["front","left-three-quarter","right-three-quarter","phone-front"],"confidence":"medium","acceptanceCues":["deep navigable route","architecturally substantial colonnade","golden sunset atmosphere","crystal water reads as water"]},
+    {"id":"prosperity-tree","parent":"garden-shell","socket":"garden-rotunda-center","owns":["sculptural trunk","branches","jewel leaves","heart gem"],"excludes":["fountain basin","rotunda"],"dependencies":["garden-shell"],"views":["front","profile","both-three-quarters","phone-destination"],"confidence":"medium"},
+    {"id":"reveal-ceremony","parent":"museum-shell","owns":["treasure-placement-motion","hero-spin","gold-shine","sparkle-bursts","museum-label-presentation"],"dependencies":["all-eight-treasures","museum-shell"],"views":["phone-discovery","phone-mid-reveal","phone-settled"],"confidence":"high"}
+  ],
+  "representativeFirstSlice": ["museum-shell", "treasure-crown"],
+  "workerGrouping": ["museum-architecture", "treasures-serialized", "garden-architecture", "runtime-integration", "independent-quality-lord"]
+}

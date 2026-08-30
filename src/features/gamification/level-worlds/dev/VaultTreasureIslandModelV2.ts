@@ -454,6 +454,75 @@ function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultI
   return { ocean, sky, goldenSky, waterNormals };
 }
 
+export function createVaultTreasureIslandScenicEnvironment(
+  options: Pick<VaultTreasureIslandOptions, 'quality' | 'animated'> = {},
+): VaultTreasureIslandRuntime {
+  const quality = options.quality ?? 'medium';
+  const materialSet = createMaterials();
+  const { materials } = materialSet;
+  const root = new THREE.Group();
+  root.name = 'vault-v2-reusable-real-three-dimensional-scenic-environment';
+  const environment = addEnvironment(root, materials, quality);
+  const boats: THREE.Object3D[] = [];
+  const clouds: THREE.Object3D[] = [];
+  const waveArcs: THREE.Mesh[] = [];
+  root.traverse((child) => {
+    if (child.name === 'vault-v2-sailboat') boats.push(child);
+    if (child.name === 'vault-v2-animated-three-dimensional-cloud-bank') clouds.push(child);
+    if (child instanceof THREE.Mesh && child.name === 'vault-v2-natural-ocean-wave-arc') {
+      child.userData.baseRotationZ = child.rotation.z;
+      child.userData.baseOpacity = (child.material as THREE.MeshBasicMaterial).opacity;
+      waveArcs.push(child);
+    }
+  });
+
+  return {
+    root,
+    update: (elapsedSeconds: number) => {
+      if (!options.animated) return;
+      (environment.ocean.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds * 0.18;
+      (environment.sky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
+      (environment.goldenSky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
+      boats.forEach((boat, index) => {
+        const base = boat.userData.basePosition as THREE.Vector3;
+        const phase = Number(boat.userData.phase || index);
+        boat.position.y = base.y + Math.sin(elapsedSeconds * 0.72 + phase) * 0.028;
+        boat.position.x = base.x + Math.sin(elapsedSeconds * 0.08 + phase) * 0.055;
+        boat.rotation.z = Math.sin(elapsedSeconds * 0.64 + phase) * 0.025;
+      });
+      clouds.forEach((cloud, index) => {
+        const base = cloud.userData.basePosition as THREE.Vector3;
+        const phase = Number(cloud.userData.phase || index);
+        cloud.position.x = base.x + Math.sin(elapsedSeconds * 0.018 + phase) * 0.34;
+        cloud.position.y = base.y + Math.sin(elapsedSeconds * 0.024 + phase) * 0.045;
+      });
+      waveArcs.forEach((wave, index) => {
+        const phase = Number(wave.userData.phase || index);
+        wave.rotation.z = Number(wave.userData.baseRotationZ) + Math.sin(elapsedSeconds * 0.11 + phase) * 0.014;
+        (wave.material as THREE.MeshBasicMaterial).opacity = Number(wave.userData.baseOpacity)
+          * (0.8 + Math.sin(elapsedSeconds * 0.34 + phase) * 0.2);
+      });
+    },
+    dispose: () => {
+      const ownedMaterials = new Set<THREE.Material>(Object.values(materials));
+      root.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        child.geometry.dispose();
+        const childMaterials = Array.isArray(child.material) ? child.material : [child.material];
+        childMaterials.forEach((material) => {
+          if (!ownedMaterials.has(material)) material.dispose();
+        });
+      });
+      ownedMaterials.forEach((material) => material.dispose());
+      environment.waterNormals.dispose();
+      const reflectionTexture = (environment.ocean.material as THREE.ShaderMaterial)
+        .uniforms.mirrorSampler?.value as THREE.Texture | undefined;
+      reflectionTexture?.dispose();
+      materialSet.textures.forEach((texture) => texture.dispose());
+    },
+  };
+}
+
 function addRockAndMasonry(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
   const backing = cylinder(2.68, 2.86, 1.92, segments(quality, 40, 64, 80), materials.stoneShade, 'vault-v2-massive-cliff-backing');
   backing.position.y = 0.78;
@@ -867,7 +936,7 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
     bracelet.add(station);
   }
 
-  [-1.22, -0.82, -0.42, 0, 0.42, 0.82, 1.22].forEach((angle, index) => {
+  [-1.22, -0.82, -0.42, 0.42, 0.82, 1.22].forEach((angle, index) => {
     const x = Math.sin(angle) * 3.22;
     const z = Math.cos(angle) * 3.22;
     const length = 0.45 + (index % 3) * 0.1;
@@ -884,6 +953,128 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
     medallion.rotation.y = angle;
     bracelet.add(medallion);
   });
+
+  const gigaCharm = new THREE.Group();
+  gigaCharm.name = 'vault-v2-giga-charm-sovereign-medallion';
+  gigaCharm.position.set(0, 1.08, radius + 0.2);
+  gigaCharm.userData.baseY = gigaCharm.position.y;
+  gigaCharm.userData.phase = 0.7;
+  const addGigaPart = (part: THREE.Object3D, threshold: number) => {
+    part.userData.gigaCharmFillThreshold = threshold;
+    gigaCharm.add(part);
+    return part;
+  };
+  const bail = mesh(
+    new THREE.TorusGeometry(0.12, 0.027, 10, 44),
+    materials.royalGold,
+    'vault-v2-giga-charm-articulated-solid-gold-bail',
+  );
+  bail.position.set(0, 0.62, 0.015);
+  addGigaPart(bail, 6);
+  const pivot = mesh(
+    new THREE.IcosahedronGeometry(0.064, 1),
+    materials.silver,
+    'vault-v2-giga-charm-visible-polished-pivot-joint',
+  );
+  pivot.position.set(0, 0.51, 0.045);
+  addGigaPart(pivot, 7);
+  for (const side of [-1, 1] as const) {
+    const chain = cylinderBetween(
+      new THREE.Vector3(side * 0.24, 1.12, -0.01),
+      new THREE.Vector3(side * 0.075, 0.69, 0),
+      0.022,
+      materials.royalGold,
+      'vault-v2-giga-charm-double-articulated-chain',
+    );
+    addGigaPart(chain, 8);
+  }
+  const outerFrame = mesh(new THREE.TorusGeometry(0.47, 0.062, 12, 80), materials.royalGold, 'vault-v2-giga-charm-heavy-solid-gold-frame');
+  addGigaPart(outerFrame, 16);
+  const innerFrame = mesh(new THREE.TorusGeometry(0.365, 0.026, 10, 72), materials.silver, 'vault-v2-giga-charm-inner-polished-silver-halo');
+  innerFrame.position.z = 0.028;
+  addGigaPart(innerFrame, 24);
+  const enamelDisc = mesh(new THREE.CircleGeometry(0.35, 72), materials.blue, 'vault-v2-giga-charm-deep-sapphire-enamel-disc');
+  enamelDisc.position.z = 0.018;
+  addGigaPart(enamelDisc, 30);
+  for (let rayIndex = 0; rayIndex < 12; rayIndex += 1) {
+    const angle = (rayIndex / 12) * Math.PI * 2;
+    const ray = mesh(
+      new THREE.BoxGeometry(rayIndex % 2 === 0 ? 0.04 : 0.028, rayIndex % 2 === 0 ? 0.34 : 0.27, 0.032),
+      rayIndex % 3 === 0 ? materials.silver : materials.royalGold,
+      'vault-v2-giga-charm-radial-jewelry-ray',
+    );
+    ray.position.set(Math.sin(angle) * 0.18, Math.cos(angle) * 0.18, 0.052);
+    ray.rotation.z = -angle;
+    addGigaPart(ray, 38 + (rayIndex % 4) * 2);
+  }
+  const heart = mesh(new THREE.OctahedronGeometry(0.205, 2), materials.fountainCrystal, 'vault-v2-giga-charm-faceted-aquamarine-heart');
+  heart.scale.set(0.94, 1.2, 0.76);
+  heart.position.z = 0.15;
+  addGigaPart(heart, 52);
+  const crown = new THREE.Group();
+  crown.name = 'vault-v2-giga-charm-gold-crown-crest';
+  crown.position.set(0, 0.51, 0.035);
+  for (let spikeIndex = 0; spikeIndex < 5; spikeIndex += 1) {
+    const x = (spikeIndex - 2) * 0.085;
+    const spike = mesh(
+      new THREE.ConeGeometry(0.042, 0.19 + (2 - Math.abs(spikeIndex - 2)) * 0.042, 10),
+      materials.royalGold,
+      'vault-v2-giga-charm-crown-spike',
+    );
+    spike.position.set(x, Math.abs(spikeIndex - 2) * -0.018, 0);
+    crown.add(spike);
+  }
+  const crownJewel = mesh(new THREE.OctahedronGeometry(0.075, 1), materials.ruby, 'vault-v2-giga-charm-crown-ruby');
+  crownJewel.position.set(0, 0.075, 0.07);
+  crown.add(crownJewel);
+  addGigaPart(crown, 64);
+
+  for (const side of [-1, 1] as const) {
+    for (let leafIndex = 0; leafIndex < 5; leafIndex += 1) {
+      const t = leafIndex / 4;
+      const leaf = mesh(
+        new THREE.OctahedronGeometry(0.09, 1),
+        leafIndex % 2 === 0 ? materials.royalGold : materials.gold,
+        'vault-v2-giga-charm-chased-gold-laurel-leaf',
+      );
+      leaf.scale.set(0.56, 1.2, 0.35);
+      leaf.position.set(side * (0.39 + Math.sin(t * Math.PI) * 0.11), -0.25 + t * 0.5, 0.075);
+      leaf.rotation.z = side * (-0.6 + t * 1.2);
+      addGigaPart(leaf, 68 + leafIndex * 2);
+    }
+  }
+
+  for (let beadIndex = 0; beadIndex < 16; beadIndex += 1) {
+    const angle = beadIndex / 16 * Math.PI * 2;
+    const bead = mesh(
+      new THREE.IcosahedronGeometry(0.033, 1),
+      beadIndex % 4 === 0 ? materials.silver : materials.royalGold,
+      'vault-v2-giga-charm-granulated-jewelry-bead',
+    );
+    bead.position.set(Math.sin(angle) * 0.42, Math.cos(angle) * 0.42, 0.095);
+    addGigaPart(bead, 76 + beadIndex % 4);
+  }
+  for (let jewelIndex = 0; jewelIndex < 8; jewelIndex += 1) {
+    const angle = (jewelIndex / 8) * Math.PI * 2 + Math.PI / 8;
+    const jewel = mesh(
+      new THREE.OctahedronGeometry(0.062 + (jewelIndex % 2) * 0.012, 1),
+      jewelIndex % 3 === 0 ? materials.ruby : jewelIndex % 3 === 1 ? materials.purple : materials.cyan,
+      'vault-v2-giga-charm-orbiting-cut-jewel',
+    );
+    jewel.position.set(Math.sin(angle) * 0.48, Math.cos(angle) * 0.48, 0.1);
+    jewel.userData.gigaOrbitAngle = angle;
+    addGigaPart(jewel, 72 + jewelIndex * 3);
+  }
+  const lowerDrop = mesh(new THREE.OctahedronGeometry(0.145, 2), materials.purple, 'vault-v2-giga-charm-royal-amethyst-drop');
+  lowerDrop.scale.y = 1.42;
+  lowerDrop.position.set(0, -0.66, 0.1);
+  addGigaPart(lowerDrop, 92);
+  const gigaGlow = new THREE.PointLight('#7deeff', 1.15, 2.8, 2);
+  gigaGlow.name = 'vault-v2-giga-charm-aquamarine-jewelry-light';
+  gigaGlow.position.set(0, 0, 0.45);
+  gigaGlow.userData.baseIntensity = gigaGlow.intensity;
+  addGigaPart(gigaGlow, 100);
+  bracelet.add(gigaCharm);
   root.add(bracelet);
   return bracelet;
 }
@@ -1827,8 +2018,10 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
     garden: addGardenPerimeter(root, materials, quality),
     'gold-castle': addGoldCastlePerimeter(root, materials, quality),
   };
+  let selectedPerimeterStyle: VaultIslandPerimeterStyle = 'charms';
   const setPerimeterStyle = (style: VaultIslandPerimeterStyle) => {
     const selectedStyle: VaultIslandPerimeterStyle = style in perimeterStyles ? style : 'charms';
+    selectedPerimeterStyle = selectedStyle;
     Object.entries(perimeterStyles).forEach(([id, group]) => {
       group.visible = id === selectedStyle;
     });
@@ -1917,6 +2110,9 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
   }
   addWarmLights(root, quality);
   const bracelet = root.getObjectByName('vault-v2-articulated-charm-bracelet');
+  const gigaCharm = root.getObjectByName('vault-v2-giga-charm-sovereign-medallion');
+  const gigaCharmJewels: THREE.Object3D[] = [];
+  const gigaCharmLights: THREE.PointLight[] = [];
   const charms: THREE.Object3D[] = [];
   const boats: THREE.Object3D[] = [];
   const clouds: THREE.Object3D[] = [];
@@ -1925,6 +2121,8 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
   let fountainCrystalCrown: THREE.Object3D | null = null;
   root.traverse((child) => {
     if (child.name === 'vault-v2-hanging-faceted-charm') charms.push(child);
+    if (child.name === 'vault-v2-giga-charm-orbiting-cut-jewel') gigaCharmJewels.push(child);
+    if (child instanceof THREE.PointLight && child.name === 'vault-v2-giga-charm-aquamarine-jewelry-light') gigaCharmLights.push(child);
     if (child.name === 'vault-v2-sailboat') boats.push(child);
     if (child.name === 'vault-v2-animated-three-dimensional-cloud-bank') clouds.push(child);
     if (child instanceof THREE.PointLight && child.name === 'vault-v2-fountain-cyan-heart-light') fountainLights.push(child);
@@ -1935,9 +2133,51 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
       waveArcs.push(child);
     }
   });
+
+  const clampFill = (value: number | undefined, fallback = 100) => Math.min(100, Math.max(0, Number.isFinite(value) ? Number(value) : fallback));
+  let exteriorFill = clampFill(options.exteriorFill);
+  let gigaCharmFill = clampFill(options.gigaCharmFill);
+  const exteriorThreshold = (object: THREE.Object3D) => {
+    if (object instanceof THREE.Light) return 0;
+    const name = object.name.toLowerCase();
+    if (Object.values(perimeterStyles).includes(object as THREE.Group)) return null;
+    if (name.includes('ocean') || name.includes('sky') || name.includes('cloud') || name.includes('rock') || name.includes('cliff')) return 0;
+    if (name.includes('palace')) return 76;
+    if (name.includes('garden') || name.includes('fountain') || name.includes('pavilion')) return 48;
+    if (name.includes('gallery') || name.includes('portal') || name.includes('marina') || name.includes('vault')) return 28;
+    if (name.includes('jewel') || name.includes('lantern') || name.includes('gold')) return 66;
+    return 18;
+  };
+  const setExteriorFill = (value: number) => {
+    exteriorFill = clampFill(value);
+    root.children.forEach((child) => {
+      const threshold = exteriorThreshold(child);
+      if (threshold === null) return;
+      child.visible = exteriorFill >= threshold;
+    });
+    root.userData.exteriorFill = exteriorFill;
+    setPerimeterStyle(selectedPerimeterStyle);
+  };
+  const setGigaCharmFill = (value: number) => {
+    gigaCharmFill = clampFill(value);
+    if (gigaCharm) {
+      gigaCharm.traverse((child) => {
+        if (child === gigaCharm) return;
+        const threshold = Number(child.userData.gigaCharmFillThreshold ?? 0);
+        child.visible = gigaCharmFill >= threshold;
+      });
+      const scale = 0.72 + gigaCharmFill * 0.0028;
+      gigaCharm.scale.setScalar(scale);
+    }
+    root.userData.gigaCharmFill = gigaCharmFill;
+  };
+  setExteriorFill(exteriorFill);
+  setGigaCharmFill(gigaCharmFill);
   return {
     root,
     setPerimeterStyle,
+    setExteriorFill,
+    setGigaCharmFill,
     update: (elapsedSeconds: number) => {
       if (!options.animated) return;
       (environment.ocean.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds * 0.18;
@@ -1949,6 +2189,18 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
         const baseY = Number(charm.userData.baseY) || charm.position.y;
         charm.position.y = baseY + Math.sin(elapsedSeconds * 1.1 + Number(charm.userData.phase || index)) * 0.018;
         charm.rotation.y = elapsedSeconds * 0.22 + index * 0.4;
+      });
+      if (gigaCharm) {
+        const baseY = Number(gigaCharm.userData.baseY) || gigaCharm.position.y;
+        gigaCharm.position.y = baseY + Math.sin(elapsedSeconds * 0.72 + Number(gigaCharm.userData.phase)) * 0.025;
+        gigaCharm.rotation.z = Math.sin(elapsedSeconds * 0.54) * 0.035;
+      }
+      gigaCharmJewels.forEach((jewel, index) => {
+        jewel.rotation.y = elapsedSeconds * (0.32 + index * 0.018);
+        jewel.rotation.z = Math.sin(elapsedSeconds * 0.8 + index) * 0.16;
+      });
+      gigaCharmLights.forEach((light, index) => {
+        light.intensity = Number(light.userData.baseIntensity) * (0.86 + Math.sin(elapsedSeconds * 1.4 + index) * 0.14);
       });
       boats.forEach((boat, index) => {
         const base = boat.userData.basePosition as THREE.Vector3;

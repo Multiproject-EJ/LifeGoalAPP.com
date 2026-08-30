@@ -98,11 +98,11 @@ function createTreasureMaterials() {
   return {
     metalPattern,
     marblePattern,
-    marble: new THREE.MeshPhysicalMaterial({ color: '#f8f0df', map: marblePattern, bumpMap: marblePattern, bumpScale: 0.025, roughness: 0.26, metalness: 0, clearcoat: 0.72, clearcoatRoughness: 0.18, envMapIntensity: 0.82 }),
-    marbleShade: new THREE.MeshStandardMaterial({ color: '#d8ccba', map: marblePattern, bumpMap: marblePattern, bumpScale: 0.035, roughness: 0.48, metalness: 0, envMapIntensity: 0.7 }),
-    gold: new THREE.MeshPhysicalMaterial({ color: '#f4b82f', map: metalPattern, bumpMap: metalPattern, bumpScale: 0.055, roughness: 0.16, metalness: 0.82, clearcoat: 0.72, clearcoatRoughness: 0.08, emissive: '#5b2100', emissiveIntensity: 0.1, envMapIntensity: 1.65 }),
-    darkGold: new THREE.MeshPhysicalMaterial({ color: '#9c6518', map: metalPattern, bumpMap: metalPattern, bumpScale: 0.045, roughness: 0.28, metalness: 0.78, clearcoat: 0.46, clearcoatRoughness: 0.16, envMapIntensity: 1.35 }),
-    silver: new THREE.MeshPhysicalMaterial({ color: '#e9f3ff', map: metalPattern, bumpMap: metalPattern, bumpScale: 0.035, roughness: 0.13, metalness: 0.9, clearcoat: 0.78, clearcoatRoughness: 0.06, envMapIntensity: 1.72 }),
+    marble: new THREE.MeshPhysicalMaterial({ color: '#eee2ca', roughness: 0.42, metalness: 0, clearcoat: 0.24, clearcoatRoughness: 0.3, envMapIntensity: 0.82 }),
+    marbleShade: new THREE.MeshStandardMaterial({ color: '#b9aa91', roughness: 0.54, metalness: 0, envMapIntensity: 0.7 }),
+    gold: new THREE.MeshPhysicalMaterial({ color: '#d99a1a', roughness: 0.17, metalness: 1, clearcoat: 0.3, clearcoatRoughness: 0.12, emissive: '#321200', emissiveIntensity: 0.04, envMapIntensity: 2.25 }),
+    darkGold: new THREE.MeshPhysicalMaterial({ color: '#76501a', roughness: 0.28, metalness: 0.94, clearcoat: 0.2, clearcoatRoughness: 0.2, envMapIntensity: 1.85 }),
+    silver: new THREE.MeshPhysicalMaterial({ color: '#d8e2e9', roughness: 0.16, metalness: 1, clearcoat: 0.28, clearcoatRoughness: 0.1, envMapIntensity: 2.2 }),
     ruby: new THREE.MeshPhysicalMaterial({
       color: '#ff4d72',
       roughness: 0.07,
@@ -207,17 +207,33 @@ function tube(points: THREE.Vector3[], radius: number, material: THREE.Material,
 function addPedestal(root: THREE.Group, materials: TreasureMaterials, id: VaultTreasureId) {
   const pedestal = new THREE.Group();
   pedestal.name = `treasure-${id}-pedestal`;
-  const base = cylinder(0.74, 0.82, 0.18, 40, materials.marbleShade, 'treasure-pedestal-marble-base');
+  const sidesByTreasure: Record<VaultTreasureId, number> = {
+    crown: 8,
+    compass: 48,
+    obelisk: 6,
+    egg: 10,
+    hourglass: 12,
+    key: 4,
+    medallion: 16,
+    chalice: 24,
+  };
+  const sides = sidesByTreasure[id];
+  const baseRadius = id === 'crown' ? 0.86 : id === 'key' ? 0.78 : id === 'medallion' ? 0.68 : 0.74;
+  const topRadius = id === 'crown' ? 0.7 : id === 'key' ? 0.66 : 0.62;
+  const base = cylinder(baseRadius * 0.92, baseRadius, 0.2, sides, materials.marbleShade, `treasure-${id}-distinct-marble-base`);
   base.position.y = 0.09;
-  const top = cylinder(0.62, 0.66, 0.18, 40, materials.marble, 'treasure-pedestal-polished-top');
-  top.position.y = 0.27;
-  const goldTrim = mesh(new THREE.TorusGeometry(0.66, 0.025, 8, 48), materials.gold, 'treasure-pedestal-gold-trim');
+  const riserMaterial = id === 'compass' || id === 'key' ? materials.silver : id === 'egg' ? materials.darkGold : materials.enamelBlue;
+  const riser = cylinder(topRadius, topRadius * 1.05, 0.17, sides, riserMaterial, `treasure-${id}-distinct-riser`);
+  riser.position.y = 0.25;
+  const top = cylinder(topRadius, topRadius * 1.04, 0.13, sides, materials.marble, `treasure-${id}-polished-display-top`);
+  top.position.y = 0.4;
+  const goldTrim = mesh(new THREE.TorusGeometry(topRadius, 0.025, 8, Math.max(24, sides * 2)), materials.gold, `treasure-${id}-pedestal-gold-trim`);
   goldTrim.rotation.x = Math.PI / 2;
-  goldTrim.position.y = 0.37;
-  const glow = mesh(new THREE.RingGeometry(0.44, 0.72, 48), materials.glow, 'treasure-selection-glow');
+  goldTrim.position.y = 0.47;
+  const glow = mesh(new THREE.RingGeometry(topRadius * 0.68, topRadius * 1.04, Math.max(24, sides * 2)), materials.glow, 'treasure-selection-glow');
   glow.rotation.x = -Math.PI / 2;
-  glow.position.y = 0.385;
-  pedestal.add(base, top, goldTrim, glow);
+  glow.position.y = 0.485;
+  pedestal.add(base, riser, top, goldTrim, glow);
   root.add(pedestal);
 }
 
@@ -231,7 +247,7 @@ function addGem(parent: THREE.Group, material: THREE.Material, position: THREE.V
 function createCrownTreasure(materials: TreasureMaterials) {
   const group = new THREE.Group();
   group.name = 'treasure-crown-model';
-  const band = mesh(new THREE.TorusGeometry(0.48, 0.065, 8, 64), materials.gold, 'crown-gold-lower-band');
+  const band = mesh(new THREE.TorusGeometry(0.5, 0.075, 10, 72), materials.gold, 'crown-substantial-open-gold-circlet');
   band.rotation.x = Math.PI / 2;
   band.position.y = 0.68;
   const enamel = mesh(new THREE.TorusGeometry(0.43, 0.035, 8, 64), materials.enamelBlue, 'crown-blue-enamel-band');
@@ -244,18 +260,11 @@ function createCrownTreasure(materials: TreasureMaterials) {
   velvetCap.position.y = 0.73;
   group.add(velvetCap);
 
-  for (let index = 0; index < 8; index += 1) {
-    const angle = (index / 8) * Math.PI * 2;
-    const arch = tube([
-      new THREE.Vector3(Math.sin(angle) * 0.45, 0.72, Math.cos(angle) * 0.45),
-      new THREE.Vector3(Math.sin(angle) * 0.38, 1.08, Math.cos(angle) * 0.38),
-      new THREE.Vector3(Math.sin(angle) * 0.16, 1.38, Math.cos(angle) * 0.16),
-      new THREE.Vector3(0, 1.47, 0),
-    ], 0.035, index % 2 === 0 ? materials.gold : materials.silver, 'crown-sweeping-royal-arch');
-    group.add(arch);
-
-    const point = mesh(new THREE.ConeGeometry(0.095, index % 2 === 0 ? 0.38 : 0.28, 5), materials.gold, 'crown-fleur-point');
-    point.position.set(Math.sin(angle) * 0.46, index % 2 === 0 ? 0.94 : 0.88, Math.cos(angle) * 0.46);
+  for (let index = 0; index < 10; index += 1) {
+    const angle = (index / 10) * Math.PI * 2;
+    const isCardinal = index % 2 === 0;
+    const point = mesh(new THREE.ConeGeometry(isCardinal ? 0.13 : 0.09, isCardinal ? 0.66 : 0.42, 5), index % 3 === 0 ? materials.silver : materials.gold, 'crown-distinct-open-fleur-spire');
+    point.position.set(Math.sin(angle) * 0.47, isCardinal ? 1.08 : 0.94, Math.cos(angle) * 0.47);
     point.rotation.z = Math.sin(angle) * -0.12;
     point.rotation.x = Math.cos(angle) * 0.12;
     group.add(point);
@@ -274,12 +283,14 @@ function createCrownTreasure(materials: TreasureMaterials) {
     pearl.scale.y = index % 4 === 0 ? 1.15 : 0.72;
   }
 
-  const crownOrb = addGem(group, materials.amethyst, new THREE.Vector3(0, 1.48, 0), 0.12, 'crown-apex-amethyst-orb');
-  crownOrb.scale.y = 1.08;
+  const frontFleur = mesh(new THREE.ConeGeometry(0.19, 0.82, 5), materials.gold, 'crown-central-front-fleur-silhouette');
+  frontFleur.position.set(0, 1.15, 0.47);
+  group.add(frontFleur);
+  const crownOrb = addGem(group, materials.amethyst, new THREE.Vector3(0, 1.54, 0.47), 0.11, 'crown-front-amethyst-orb');
   const crossStem = mesh(new THREE.BoxGeometry(0.045, 0.28, 0.045), materials.gold, 'crown-apex-cross-stem');
-  crossStem.position.y = 1.68;
+  crossStem.position.set(0, 1.75, 0.47);
   const crossBar = mesh(new THREE.BoxGeometry(0.2, 0.045, 0.045), materials.gold, 'crown-apex-cross-bar');
-  crossBar.position.y = 1.72;
+  crossBar.position.set(0, 1.79, 0.47);
   group.add(crossStem, crossBar);
   addGem(group, materials.amethyst, new THREE.Vector3(0, 0.88, 0.48), 0.16, 'crown-central-amethyst');
   addGem(group, materials.sapphire, new THREE.Vector3(-0.28, 0.78, 0.44), 0.08, 'crown-side-sapphire');
@@ -340,37 +351,41 @@ function createCompassTreasure(materials: TreasureMaterials) {
 function createObeliskTreasure(materials: TreasureMaterials) {
   const group = new THREE.Group();
   group.name = 'treasure-obelisk-model';
-  const base = cylinder(0.36, 0.44, 0.34, 6, materials.enamelBlue, 'obelisk-blue-enamel-base');
-  base.position.y = 0.62;
-  const trim = mesh(new THREE.TorusGeometry(0.38, 0.028, 6, 32), materials.gold, 'obelisk-base-gold-trim');
+  const base = cylinder(0.32, 0.44, 0.28, 6, materials.enamelBlue, 'wisdom-crystal-blue-enamel-cradle');
+  base.position.y = 0.65;
+  const trim = mesh(new THREE.TorusGeometry(0.36, 0.028, 6, 36), materials.gold, 'wisdom-crystal-cradle-gold-trim');
   trim.rotation.x = Math.PI / 2;
-  trim.position.y = 0.79;
-  const crystal = mesh(new THREE.ConeGeometry(0.25, 1.18, 6), materials.crystal, 'obelisk-clear-crystal-spire');
-  crystal.position.y = 1.26;
+  trim.position.y = 0.8;
+  const crystal = mesh(new THREE.OctahedronGeometry(0.42, 0), materials.crystal, 'wisdom-crystal-large-faceted-hero-stone');
+  crystal.position.y = 1.38;
+  crystal.scale.set(0.78, 2.1, 0.78);
   group.add(base, trim, crystal);
 
-  const core = mesh(new THREE.ConeGeometry(0.12, 0.82, 6), materials.sapphire, 'obelisk-inner-sapphire-core');
-  core.position.y = 1.33;
-  core.scale.z = 0.72;
+  const core = mesh(new THREE.OctahedronGeometry(0.17, 0), materials.sapphire, 'wisdom-crystal-inner-sapphire-heart');
+  core.position.y = 1.38;
+  core.scale.set(0.72, 2.0, 0.72);
   group.add(core);
 
-  for (let index = 0; index < 6; index += 1) {
-    const angle = (index / 6) * Math.PI * 2;
-    const claw = cylinder(0.018, 0.03, 0.42, 5, materials.gold, 'obelisk-gold-crystal-claw');
-    claw.position.set(Math.sin(angle) * 0.24, 0.86, Math.cos(angle) * 0.24);
-    claw.rotation.x = Math.cos(angle) * 0.34;
-    claw.rotation.z = -Math.sin(angle) * 0.34;
+  addGem(group, materials.amethyst, new THREE.Vector3(0, 2.34, 0), 0.11, 'wisdom-crystal-apex-amethyst-star');
+
+  for (let index = 0; index < 4; index += 1) {
+    const angle = (index / 4) * Math.PI * 2;
+    const claw = cylinder(0.025, 0.04, 0.62, 6, materials.gold, 'wisdom-crystal-substantial-gold-claw');
+    claw.position.set(Math.sin(angle) * 0.28, 0.96, Math.cos(angle) * 0.28);
+    claw.rotation.x = Math.cos(angle) * 0.38;
+    claw.rotation.z = -Math.sin(angle) * 0.38;
     group.add(claw);
   }
 
-  for (let index = 0; index < 5; index += 1) {
-    const shard = mesh(new THREE.ConeGeometry(0.055, 0.36, 5), index % 2 === 0 ? materials.crystal : materials.sapphire, 'obelisk-side-attendant-crystal');
-    shard.position.set(-0.28 + index * 0.14, 0.74 + (index % 2) * 0.06, 0.32);
-    shard.rotation.z = -0.2 + index * 0.1;
+  for (let index = 0; index < 3; index += 1) {
+    const shard = mesh(new THREE.OctahedronGeometry(0.14 - index * 0.015, 0), index % 2 === 0 ? materials.crystal : materials.sapphire, 'wisdom-crystal-attendant-faceted-shard');
+    shard.position.set(-0.3 + index * 0.3, 0.8 + (index % 2) * 0.08, 0.28);
+    shard.scale.y = 1.65;
+    shard.rotation.z = -0.22 + index * 0.22;
     group.add(shard);
   }
 
-  addGem(group, materials.sapphire, new THREE.Vector3(0, 0.82, 0.36), 0.07, 'obelisk-front-sapphire');
+  addGem(group, materials.sapphire, new THREE.Vector3(0, 0.84, 0.38), 0.085, 'wisdom-crystal-front-sapphire-seal');
   return group;
 }
 

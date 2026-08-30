@@ -1,0 +1,30 @@
+{
+  "version": 18,
+  "asset": "vault-island-interior",
+  "status": "royal-lift-museum-frozen-diagonal-orchard-in-progress",
+  "activeRoute": {
+    "id": "camera-matched-diagonal-prosperity-orchard-v005",
+    "hypothesis": "An asymmetrical branching water garden with separate fountain and jewel-tree destinations, open horizon, and runtime physical Sky will create real depth without a frontal stage.",
+    "blockoutEvidence": "browser-captures-v193-diagonal-orchard-blockout",
+    "allowedCorrections": 1
+  },
+  "frozenParts": [
+    "vault-atrium-v028",
+    "vault-museum-royal-hydraulic-lift-cloister-v041",
+    "vault-treasure-crown-v002",
+    "seven-blender-treasure-assets-v001",
+    "runtime-phone-camera-triplet"
+  ],
+  "frozenHashes": {
+    "vault-museum.glb": "70edae39434f3dd2d34ce39131e2e78129ee273b00566ae2f24d4eb6ccd85e85",
+    "vault-museum-royal-lift-cloister-v041.blend": "ac5d94860dac3866b2cd8627051c6bfe3649560cab6ebd606d7b18da8c94bafc"
+  },
+  "retiredRoutes": [
+    "procedural-garden-family-b-v172-v173",
+    "blender-rotunda-garden-v001-v002",
+    "open-belvedere-garden-v003-v004",
+    "camera-matched-grand-stair-museum-v034-v035",
+    "camera-matched-central-twin-stair-museum-v036-v037",
+    "camera-matched-palace-enfilade-treasury-v038-v039"
+  ]
+}

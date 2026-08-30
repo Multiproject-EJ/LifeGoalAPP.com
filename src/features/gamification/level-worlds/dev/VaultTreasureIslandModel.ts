@@ -8,12 +8,16 @@ export interface VaultTreasureIslandOptions {
   quality?: VaultIslandQuality;
   animated?: boolean;
   perimeterStyle?: VaultIslandPerimeterStyle;
+  exteriorFill?: number;
+  gigaCharmFill?: number;
 }
 
 export interface VaultTreasureIslandRuntime {
   root: THREE.Group;
   update: (elapsedSeconds: number) => void;
   setPerimeterStyle?: (style: VaultIslandPerimeterStyle) => void;
+  setExteriorFill?: (value: number) => void;
+  setGigaCharmFill?: (value: number) => void;
   dispose: () => void;
 }
 
