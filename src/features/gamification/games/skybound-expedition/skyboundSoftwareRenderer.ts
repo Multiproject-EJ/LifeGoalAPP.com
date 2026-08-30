@@ -450,6 +450,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
   let previousSalvage=0;
   let previousRings=0;
   let previousNearMisses=0;
+  let previousStuntSerial=0;
   let feedbackText='';
   let feedbackColor='#ffffff';
   let feedbackAge=0;
@@ -480,6 +481,9 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     const speedEnergy=clamp((speed-18)/58,0,1);
     if(flight&&flight.impactSerial!==lastImpactSerial){
       shake=1;lastImpactSerial=flight.impactSerial;feedbackText='IMPACT!';feedbackColor='#ff8a6e';feedbackAge=1;
+    } else if(flight&&flight.stuntSerial>previousStuntSerial) {
+      const stuntLabel=flight.lastStuntKind==='barrel_roll'?'BARREL ROLL':flight.lastStuntKind==='terrain_skim'?'TERRAIN SKIM':flight.lastStuntKind==='crash_finale'?'CRASH FINALE':'NEAR MISS';
+      feedbackText=`${stuntLabel}  +${flight.lastStuntBonus}`;feedbackColor=flight.lastStuntKind==='crash_finale'?'#ffb071':'#ffe477';feedbackAge=1;
     } else if(flight&&flight.ringsCleared>previousRings) {
       feedbackText='WIND GATE  +2 STREAK';feedbackColor='#8ff8ff';feedbackAge=1;
     } else if(flight&&flight.salvageCollected>previousSalvage) {
@@ -487,8 +491,8 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     } else if(flight&&flight.nearMisses>previousNearMisses) {
       feedbackText='NEAR MISS  +1 STREAK';feedbackColor='#ffda77';feedbackAge=1;
     }
-    if(flight){previousSalvage=flight.salvageCollected;previousRings=flight.ringsCleared;previousNearMisses=flight.nearMisses;}
-    else {previousSalvage=0;previousRings=0;previousNearMisses=0;}
+    if(flight){previousSalvage=flight.salvageCollected;previousRings=flight.ringsCleared;previousNearMisses=flight.nearMisses;previousStuntSerial=flight.stuntSerial;}
+    else {previousSalvage=0;previousRings=0;previousNearMisses=0;previousStuntSerial=0;}
     feedbackAge=Math.max(0,feedbackAge-dt);
     const pitch=flight?.pitchRad??aim.angleDeg*Math.PI/180;
     const horizon=height*(.43+clamp(pitch,-.7,.8)*.12);
@@ -608,7 +612,7 @@ export function startSkyboundSoftwareRenderer(input:SkyboundSoftwareRendererInpu
     const shakeX=(seeded(Math.floor(time),2)-.5)*shake*18;
     const shakeY=(seeded(Math.floor(time),5)-.5)*shake*12;
     context.translate(planeX+shakeX,planeY+shakeY);
-    context.rotate((flight?.bankRad??0)*.62);
+    context.rotate(((flight?.bankRad??0)*.62)+(flight?.rollAngleRad??0));
     context.scale(planeScale,planeScale*(1-pitch*.08));
     if(input.isStabilizing()) {
       context.strokeStyle='rgba(120,255,239,.78)';context.lineWidth=3;context.shadowBlur=18;context.shadowColor='#74ffef';

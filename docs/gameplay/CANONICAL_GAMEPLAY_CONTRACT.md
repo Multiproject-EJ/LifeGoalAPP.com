@@ -516,6 +516,13 @@ Academy progression, or reward-bar progress. The final Ace checkride awards the
 Gold Wings medal and military pilot certificate presentation; it does not
 create a second direct wallet payout.
 
+Skybound stunt bonuses remain part of that same bounded flight settlement:
+close hazard passes, sustained low terrain skims, completed barrel rolls, and
+an actively rotating crash finale may add stunt score before settlement. A
+crash finale is presentation and score only — ground contact outside the safe
+landing envelope still destroys the aircraft, cannot pass a lesson, and cannot
+refund or bypass the one-ticket launch cost.
+
 **Task Tower scope clarification (current product truth):** Task Tower remains available as a standalone game in the Tasks / Actions area. It is **not** currently part of Island Run, not a 120-island landmark stop, not a timed-event minigame, not used for Feeding Frenzy, and not part of mystery-stop rotation.
 
 ---

@@ -7,6 +7,7 @@ export type SkyboundUpgradeKind = 'launcher' | 'airframe' | 'engine';
 export type SkyboundCourseObjectKind = 'salvage' | 'wind_ring' | 'hazard';
 export type SkyboundCourseProfile = 'standard' | 'landing' | 'storm_corridor' | 'gold_formation';
 export type SkyboundTouchdownGrade = 'gold' | 'silver' | 'bronze';
+export type SkyboundStuntKind = 'near_miss' | 'terrain_skim' | 'barrel_roll' | 'crash_finale' | null;
 
 export interface SkyboundTouchdownResult {
   grade: SkyboundTouchdownGrade;
@@ -82,6 +83,10 @@ export interface SkyboundFlightState {
   lateralVelocity: number;
   pitchRad: number;
   bankRad: number;
+  rollAngleRad: number;
+  rollRateRadPerSecond: number;
+  rollProgressRad: number;
+  rollDirection: -1 | 0 | 1;
   fuel: number;
   stabilizer: number;
   elapsedMs: number;
@@ -97,6 +102,15 @@ export interface SkyboundFlightState {
   ringsCleared: number;
   hazardHits: number;
   nearMisses: number;
+  flipsCompleted: number;
+  closeFlyingMs: number;
+  closeFlyingWindowMs: number;
+  closeFlyingBonuses: number;
+  stuntScore: number;
+  stuntSerial: number;
+  lastStuntKind: SkyboundStuntKind;
+  lastStuntBonus: number;
+  crashStyleBonus: number;
   integrity: number;
   detachedPartIds: readonly string[];
   impactSerial: number;
@@ -122,6 +136,8 @@ export interface SkyboundFlightControl {
 
 export const SKYBOUND_MAX_UPGRADE_LEVEL = 5;
 export const SKYBOUND_MAX_STEP_MS = 64;
+export const SKYBOUND_CLOSE_FLYING_MILESTONE_MS = 1_100;
+const SKYBOUND_FULL_ROLL_RAD = Math.PI * 2;
 
 export const SKYBOUND_LEVELS: readonly SkyboundLevelDefinition[] = [
   {
@@ -303,6 +319,10 @@ function clamp(value: number, minimum: number, maximum: number) {
   return Math.max(minimum, Math.min(maximum, value));
 }
 
+function normalizeAngleRad(value: number) {
+  return Math.atan2(Math.sin(value), Math.cos(value));
+}
+
 export function getSkyboundLevel(levelId: SkyboundLevelId): SkyboundLevelDefinition {
   return SKYBOUND_LEVELS.find((level) => level.id === levelId) ?? SKYBOUND_LEVELS[0];
 }
@@ -446,6 +466,10 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     lateralVelocity: 0,
     pitchRad: angleRad,
     bankRad: 0,
+    rollAngleRad: 0,
+    rollRateRadPerSecond: 0,
+    rollProgressRad: 0,
+    rollDirection: 0,
     fuel: (1 + (input.upgrades.engine * 0.18)) * tuning.fuel,
     stabilizer: (1 + (input.upgrades.airframe * 0.12)) * tuning.stability * assembly.stability,
     elapsedMs: 0,
@@ -461,6 +485,15 @@ export function createSkyboundFlight(input: SkyboundLaunchInput): SkyboundFlight
     ringsCleared: 0,
     hazardHits: 0,
     nearMisses: 0,
+    flipsCompleted: 0,
+    closeFlyingMs: 0,
+    closeFlyingWindowMs: 0,
+    closeFlyingBonuses: 0,
+    stuntScore: 0,
+    stuntSerial: 0,
+    lastStuntKind: null,
+    lastStuntBonus: 0,
+    crashStyleBonus: 0,
     integrity: tuning.integrity,
     detachedPartIds: [],
     impactSerial: 0,
@@ -557,6 +590,35 @@ export function stepSkyboundFlight(
   const stabilizerWindScale = isStabilizing ? 0.24 : 1;
   const stabilizerControlScale = isStabilizing ? 1.32 : 1;
   const stabilizerDamping = isStabilizing ? 1.4 : 0;
+  const currentClearance = state.y - (getSkyboundGroundHeight(level.id, state.x) + 1.2);
+  const commandedRollDirection: -1 | 0 | 1 = !isStabilizing
+    && Math.abs(steerInput) >= 0.88
+    && speed >= 22
+    && currentClearance >= 7
+      ? (steerInput < 0 ? -1 : 1)
+      : 0;
+  const targetRollRate = commandedRollDirection * (2.75 + (tuning.control * 0.72) + (upgrades.airframe * 0.09)) * Math.max(0.5, assembly.control);
+  const rollRateRadPerSecond = (state.rollRateRadPerSecond ?? 0)
+    + ((targetRollRate - (state.rollRateRadPerSecond ?? 0)) * Math.min(1, dt * (commandedRollDirection === 0 ? 5.8 : 7.2)));
+  const rollDeltaRad = rollRateRadPerSecond * dt;
+  let rollAngleRad = normalizeAngleRad((state.rollAngleRad ?? 0) + rollDeltaRad);
+  if (commandedRollDirection === 0 && Math.abs(rollRateRadPerSecond) < 0.45) {
+    rollAngleRad = normalizeAngleRad(rollAngleRad * Math.max(0, 1 - (dt * 3.8)));
+  }
+  let rollProgressRad = state.rollProgressRad ?? 0;
+  if (commandedRollDirection !== 0) {
+    rollProgressRad = (state.rollDirection !== 0 && state.rollDirection !== commandedRollDirection ? 0 : rollProgressRad)
+      + Math.abs(rollDeltaRad);
+  } else {
+    rollProgressRad = Math.max(0, rollProgressRad - (dt * 1.65));
+  }
+  const flipsGained = Math.floor(rollProgressRad / SKYBOUND_FULL_ROLL_RAD);
+  if (flipsGained > 0) rollProgressRad %= SKYBOUND_FULL_ROLL_RAD;
+  const rollDirection: -1 | 0 | 1 = commandedRollDirection !== 0
+    ? commandedRollDirection
+    : Math.abs(rollRateRadPerSecond) >= 0.35
+      ? (state.rollDirection ?? 0)
+      : 0;
 
   let vx = state.vx + (
     (Math.cos(pitchRad) * boostAcceleration)
@@ -632,12 +694,37 @@ export function stepSkyboundFlight(
   let detachedPartIds = [...state.detachedPartIds];
   let currentStreak = state.currentStreak;
   let bestStreak = state.bestStreak;
+  let flipsCompleted = (state.flipsCompleted ?? 0) + flipsGained;
+  let closeFlyingMs = state.closeFlyingMs ?? 0;
+  let closeFlyingWindowMs = state.closeFlyingWindowMs ?? 0;
+  let closeFlyingBonuses = state.closeFlyingBonuses ?? 0;
+  let stuntScore = state.stuntScore ?? 0;
+  let stuntSerial = state.stuntSerial ?? 0;
+  let lastStuntKind = state.lastStuntKind ?? null;
+  let lastStuntBonus = state.lastStuntBonus ?? 0;
+  let crashStyleBonus = state.crashStyleBonus ?? 0;
   let terrainImpacts = state.terrainImpacts;
   let terminalReason: SkyboundTerminalReason = null;
   let touchdownSpeedKmh=state.touchdownSpeedKmh??null;
   let touchdownSinkRateMps=state.touchdownSinkRateMps??null;
   let touchdownPitchDeg=state.touchdownPitchDeg??null;
   let touchdownOffsetM=state.touchdownOffsetM??null;
+
+  const awardStunt = (kind: Exclude<SkyboundStuntKind, null>, bonus: number) => {
+    const boundedBonus = Math.max(0, Math.round(bonus));
+    if (boundedBonus <= 0) return;
+    stuntScore += boundedBonus;
+    stuntSerial += 1;
+    lastStuntKind = kind;
+    lastStuntBonus = boundedBonus;
+  };
+
+  if (flipsGained > 0) {
+    const flipBonus = flipsGained * (70 + Math.min(50, (flipsCompleted - flipsGained) * 10));
+    awardStunt('barrel_roll', flipBonus);
+    currentStreak += flipsGained * 2;
+    bestStreak = Math.max(bestStreak, currentStreak);
+  }
 
   for (const object of getSkyboundCourseObjects(level.id, state.goalDistance, state.courseProfile??'standard')) {
     if (resolvedObjectIds.includes(object.id)) continue;
@@ -652,6 +739,7 @@ export function stepSkyboundFlight(
           nearMisses += 1;
           currentStreak += 1;
           bestStreak = Math.max(bestStreak, currentStreak);
+          awardStunt('near_miss', 45 + Math.min(35, nearMisses * 5));
         }
       }
       continue;
@@ -697,6 +785,32 @@ export function stepSkyboundFlight(
     bestStreak = Math.max(bestStreak, currentStreak);
   }
 
+  const isCloseFlying = status === 'flying'
+    && airborneMs >= 600
+    && clearance >= 2.4
+    && clearance <= 6.4
+    && Math.hypot(vx, vy) >= 22
+    && impactSerial === state.impactSerial;
+  if (isCloseFlying) {
+    const previousMilestone = Math.floor(closeFlyingWindowMs / SKYBOUND_CLOSE_FLYING_MILESTONE_MS);
+    closeFlyingMs += safeDtMs;
+    closeFlyingWindowMs += safeDtMs;
+    const nextMilestone = Math.floor(closeFlyingWindowMs / SKYBOUND_CLOSE_FLYING_MILESTONE_MS);
+    const milestonesGained = Math.max(0, nextMilestone - previousMilestone);
+    if (milestonesGained > 0) {
+      const firstBonusIndex = closeFlyingBonuses;
+      closeFlyingBonuses += milestonesGained;
+      const skimBonus = Array.from({ length: milestonesGained }, (_, index) => 35 + Math.min(35, (firstBonusIndex + index) * 5))
+        .reduce((sum, bonus) => sum + bonus, 0);
+      awardStunt('terrain_skim', skimBonus);
+      currentStreak += milestonesGained;
+      bestStreak = Math.max(bestStreak, currentStreak);
+    }
+  } else {
+    closeFlyingWindowMs = 0;
+  }
+
+  const terminalApproachSpeed = Math.hypot(vx, vy);
   if (status === 'crashed') {
     detachedPartIds = [...new Set([...detachedPartIds, 'right-wing', 'left-tailplane', 'canopy', 'nose-cap'])];
   } else if (clearance <= 0) {
@@ -727,6 +841,18 @@ export function stepSkyboundFlight(
     terminalReason = 'goal';
   }
 
+  const crashHasActiveRotation = Math.abs(rollRateRadPerSecond) >= 1.35
+    || rollProgressRad >= Math.PI * 0.55;
+  if (status === 'crashed' && crashStyleBonus <= 0 && crashHasActiveRotation) {
+    crashStyleBonus = Math.min(180, Math.round(
+      35
+      + Math.min(85, flipsCompleted * 25)
+      + Math.min(45, (rollProgressRad / SKYBOUND_FULL_ROLL_RAD) * 70)
+      + Math.min(35, terminalApproachSpeed * 0.9),
+    ));
+    awardStunt('crash_finale', crashStyleBonus);
+  }
+
   const resultingSpeed = Math.hypot(vx, vy);
   const isStalled = status === 'flying' && resultingSpeed < 18 && pitchRad > 0.18;
   const isSmooth = status === 'flying'
@@ -747,6 +873,10 @@ export function stepSkyboundFlight(
     lateralVelocity,
     pitchRad,
     bankRad,
+    rollAngleRad,
+    rollRateRadPerSecond,
+    rollProgressRad,
+    rollDirection,
     fuel,
     stabilizer,
     elapsedMs,
@@ -761,6 +891,15 @@ export function stepSkyboundFlight(
     ringsCleared,
     hazardHits,
     nearMisses,
+    flipsCompleted,
+    closeFlyingMs,
+    closeFlyingWindowMs,
+    closeFlyingBonuses,
+    stuntScore,
+    stuntSerial,
+    lastStuntKind,
+    lastStuntBonus,
+    crashStyleBonus,
     integrity,
     detachedPartIds,
     impactSerial,
@@ -778,7 +917,7 @@ export function stepSkyboundFlight(
   };
 }
 
-export interface SkyboundFlightScoreBreakdown { distance:number;flow:number;course:number;finish:number;landing:number;altitude:number;collisionPenalty:number;total:number; }
+export interface SkyboundFlightScoreBreakdown { distance:number;flow:number;course:number;stunts:number;finish:number;landing:number;altitude:number;collisionPenalty:number;total:number; }
 export function getSkyboundTouchdownResult(state:SkyboundFlightState):SkyboundTouchdownResult|null {
   if(state.status!=='landed'||state.touchdownSpeedKmh===null||state.touchdownSinkRateMps===null||state.touchdownPitchDeg===null||state.touchdownOffsetM===null)return null;
   const metrics={speedKmh:state.touchdownSpeedKmh,sinkRateMps:state.touchdownSinkRateMps,pitchDeg:state.touchdownPitchDeg,offsetM:state.touchdownOffsetM};
@@ -790,10 +929,11 @@ export function getSkyboundFlightScoreBreakdown(state:SkyboundFlightState):Skybo
   const distance=Math.round(Math.min(state.x,state.goalDistance)*.55);
   const finish=state.status==='finished'?Math.round(140+state.goalDistance*.06):0;
   const landing=state.status==='landed'?(getSkyboundTouchdownResult(state)?.score??55):0;
-  const course=(state.salvageCollected*18)+(state.ringsCleared*45)+(state.nearMisses*25)+(state.bestStreak*4);
+  const course=(state.salvageCollected*18)+(state.ringsCleared*45)+(state.bestStreak*4);
+  const stunts=Math.max(0,Math.round(state.stuntScore??0));
   const flow=Math.min(160,Math.round(state.smoothFlightMs/420));
   const altitude=Math.round(state.maxAltitude*.55);
   const collisionPenalty=(state.hazardHits+Math.min(3,state.terrainImpacts))*20;
-  return{distance,flow,course,finish,landing,altitude,collisionPenalty,total:Math.max(45,distance+flow+course+finish+landing+altitude-collisionPenalty)};
+  return{distance,flow,course,stunts,finish,landing,altitude,collisionPenalty,total:Math.max(45,distance+flow+course+stunts+finish+landing+altitude-collisionPenalty)};
 }
 export function scoreSkyboundFlight(state: SkyboundFlightState): number { return getSkyboundFlightScoreBreakdown(state).total; }

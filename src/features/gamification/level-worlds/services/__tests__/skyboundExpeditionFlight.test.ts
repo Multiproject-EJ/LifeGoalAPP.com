@@ -1,9 +1,11 @@
 import {
   SKYBOUND_LEVELS,
+  SKYBOUND_CLOSE_FLYING_MILESTONE_MS,
   SKYBOUND_MAX_STEP_MS,
   SKYBOUND_STARTER_UPGRADES,
   createSkyboundFlight,
   getSkyboundFlowTargetSpeedKmh,
+  getSkyboundFlightScoreBreakdown,
   getSkyboundCourseObjects,
   getSkyboundGroundHeight,
   getSkyboundLandingZone,
@@ -327,11 +329,99 @@ export const skyboundExpeditionFlightTests: TestCase[] = [
       assert(closePass.nearMisses === 1, 'passing through the hazard proximity band should award one near-miss');
       assert(closePass.hazardHits === 0, 'a near-miss must not also count as a collision');
       assert(closePass.currentStreak === 3, 'a near-miss should extend the skill streak');
+      assert(closePass.lastStuntKind === 'near_miss' && closePass.stuntScore > 0, 'a near-miss should create explicit stunt feedback and score');
       const repeated = stepSkyboundFlight(closePass, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(repeated.nearMisses === 1, 'the same hazard must not award more than one near-miss');
       const collision = stepSkyboundFlight({ ...state, y: hazard.y }, { pitch: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
       assert(collision.hazardHits === 1 && collision.nearMisses === 0, 'a direct hit should remain a collision, not a near-miss');
-      assert(scoreSkyboundFlight({ ...closePass, status: 'landed' }) > scoreSkyboundFlight({ ...closePass, status: 'landed', nearMisses: 0 }), 'near-misses should add bounded settlement value');
+      assert(scoreSkyboundFlight({ ...closePass, status: 'landed' }) > scoreSkyboundFlight({ ...closePass, status: 'landed', nearMisses: 0, stuntScore: 0 }), 'near-misses should add bounded settlement value');
+    },
+  },
+  {
+    name: 'rewards sustained terrain skimming without rewarding ordinary altitude',
+    run: () => {
+      let skim = {
+        ...createSkyboundFlight({
+          power: 1,
+          angleDeg: 20,
+          upgrades: SKYBOUND_STARTER_UPGRADES,
+          levelId: 'coast',
+          aircraftId: 'prop_trainer',
+          assemblyLevel: 4,
+        }),
+        airborneMs: 1_000,
+      };
+      const frames = Math.ceil((SKYBOUND_CLOSE_FLYING_MILESTONE_MS + 64) / 64);
+      for (let frame = 0; frame < frames; frame += 1) {
+        const x = 12;
+        skim = stepSkyboundFlight({
+          ...skim,
+          x,
+          y: getSkyboundGroundHeight('coast', x) + 5.2,
+          vx: 30,
+          vy: 0,
+          pitchRad: 0,
+        }, { pitch: 0, steer: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      }
+      assert(skim.closeFlyingBonuses >= 1, 'holding the low-flight band should cross a skim milestone');
+      assert(skim.lastStuntKind === 'terrain_skim' && skim.stuntScore >= 35, 'a terrain skim should award visible stunt score');
+
+      const highFlight = stepSkyboundFlight({ ...skim, closeFlyingWindowMs: 0, x: 12, y: 60, vx: 30, vy: 0 }, { pitch: 0, steer: 0, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(highFlight.closeFlyingWindowMs === 0, 'ordinary high flight must not advance the terrain skim window');
+    },
+  },
+  {
+    name: 'completes and scores a deliberate hard-bank barrel roll',
+    run: () => {
+      let roll = {
+        ...createSkyboundFlight({
+          power: 1,
+          angleDeg: 35,
+          upgrades: SKYBOUND_STARTER_UPGRADES,
+          levelId: 'coast',
+          aircraftId: 'prop_trainer',
+          assemblyLevel: 4,
+        }),
+        airborneMs: 2_000,
+      };
+      for (let frame = 0; frame < 45; frame += 1) {
+        roll = stepSkyboundFlight({ ...roll, x: 12, y: 70, vx: 42, vy: 0 }, { pitch: 0, steer: 1, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      }
+      assert(roll.flipsCompleted >= 1, 'a sustained hard bank should complete a full visual roll');
+      assert(roll.lastStuntKind === 'barrel_roll' && roll.stuntScore >= 70, 'a full roll should award stunt score');
+      assert(Math.abs(roll.rollAngleRad) > 0.05, 'the scored roll should drive the aircraft model rotation');
+
+      const stabilized = stepSkyboundFlight({ ...roll, rollProgressRad: 0, rollRateRadPerSecond: 0 }, { pitch: 0, steer: 1, boost: false, stabilize: true }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(stabilized.rollProgressRad === 0, 'Stabilizer should suppress deliberate roll commands');
+    },
+  },
+  {
+    name: 'scores a rotating crash finale without turning the crash into a pass',
+    run: () => {
+      const base = createSkyboundFlight({
+        power: 1,
+        angleDeg: 35,
+        upgrades: SKYBOUND_STARTER_UPGRADES,
+        levelId: 'meadow',
+        aircraftId: 'toy_glider',
+        assemblyLevel: 4,
+      });
+      const x = 36;
+      const crash = stepSkyboundFlight({
+        ...base,
+        x,
+        y: getSkyboundGroundHeight('meadow', x) + 1.25,
+        vx: 30,
+        vy: -12,
+        pitchRad: 0.65,
+        airborneMs: 2_000,
+        rollRateRadPerSecond: 3,
+        rollProgressRad: Math.PI,
+        rollDirection: 1,
+      }, { pitch: 0, steer: 1, boost: false }, SKYBOUND_STARTER_UPGRADES, 64);
+      assert(crash.status === 'crashed' && crash.terminalReason === 'hard_impact', 'ground contact outside the safe envelope must remain a crash');
+      assert(crash.lastStuntKind === 'crash_finale' && crash.crashStyleBonus > 0, 'an actively rotating impact should earn crash-finale spectacle score');
+      assert(getSkyboundFlightScoreBreakdown(crash).stunts === crash.stuntScore, 'crash-finale score should remain inside the existing flight settlement breakdown');
     },
   },
   {

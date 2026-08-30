@@ -503,7 +503,7 @@ function startSoftwareFlightRenderer(
     for(const object of visible){const p=project(object.lateralX??0,object.y,object.x);if(p.y<-100||p.y>height+120)continue;const size=Math.max(2,object.radius*p.scale*.34);if(object.kind==='wind_ring'){const color=props.courseProfile==='gold_formation'?'#ffe05b':props.courseProfile==='storm_corridor'?'#c1a0ff':'#63f4ff';context.strokeStyle=color;context.lineWidth=Math.max(2,p.scale*.22);context.shadowBlur=12;context.shadowColor=color;context.beginPath();context.ellipse(p.x,p.y,size,size,0,0,Math.PI*2);context.stroke();context.shadowBlur=0;}else if(object.kind==='salvage'){context.fillStyle='#ffe064';context.save();context.translate(p.x,p.y);context.rotate(time*.002+object.x);context.fillRect(-size*.5,-size*.5,size,size);context.restore();}else{context.fillStyle='#a83248';for(let spike=-1;spike<=1;spike+=1){context.beginPath();context.moveTo(p.x+spike*size*.45,p.y-size);context.lineTo(p.x+(spike-.45)*size*.5,p.y+size*.8);context.lineTo(p.x+(spike+.45)*size*.5,p.y+size*.8);context.fill();}}}
     const gate=project(0,14,props.goalDistance);if(props.courseProfile!=='landing'&&gate.depth<520){const gateSize=Math.max(7,7*gate.scale);context.strokeStyle='#ffe16d';context.lineWidth=Math.max(2,gate.scale*.28);context.strokeRect(gate.x-gateSize,gate.y-gateSize,gateSize*2,gateSize*1.4);}
     if(isBoosting()){context.strokeStyle='rgba(190,248,255,.45)';context.lineWidth=2;for(let index=0;index<12;index+=1){const x=(index*97+time*.4)%width;context.beginPath();context.moveTo(x,horizon);context.lineTo(x+(x-width/2)*.18,height);context.stroke();}}
-    const planeX=width/2+(flight?.bankRad??0)*26;const planeY=height*(phase==='aiming'?.67:.72)-(flight?.pitchRad??aim.angleDeg*Math.PI/180)*12;drawAircraft(planeX,planeY,flight?.bankRad??0,flight?.pitchRad??0,Math.max(.65,Math.min(1.08,width/650)),flight?.detachedPartIds??[]);
+    const planeX=width/2+(flight?.bankRad??0)*26;const planeY=height*(phase==='aiming'?.67:.72)-(flight?.pitchRad??aim.angleDeg*Math.PI/180)*12;drawAircraft(planeX,planeY,(flight?.bankRad??0)+(flight?.rollAngleRad??0),flight?.pitchRad??0,Math.max(.65,Math.min(1.08,width/650)),flight?.detachedPartIds??[]);
     for(let index=0;index<(flight?.detachedPartIds.length??0);index+=1){const age=(time*.002+index*.8)%4;context.save();context.translate(planeX+(index%2?-1:1)*age*28,planeY+age*age*10);context.rotate(age*2.4);context.fillStyle=aircraftColors[props.aircraftId][index%3];context.fillRect(-9,-3,18,6);context.restore();}
     frame=requestAnimationFrame(animate);
   };
@@ -698,7 +698,7 @@ export default function SkyboundExpeditionThreeStage(props: Props) {
 
       if (flight) {
         plane.position.set(flight.lateralX, flight.y, flight.x);
-        plane.rotation.set(-flight.pitchRad, 0, -flight.bankRad);
+        plane.rotation.set(-flight.pitchRad, 0, -flight.bankRad - (flight.rollAngleRad ?? 0));
         for (const id of flight.detachedPartIds) detachPart(id, flight.impactSerial);
         if (flight.impactSerial !== lastImpactSerial) {
           shake = 1;

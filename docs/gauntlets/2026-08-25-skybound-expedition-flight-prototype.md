@@ -1269,3 +1269,51 @@ sorting locked, preserving the authored island-specific event contract.
 **Gauntlet decision: pass the development catalogue control.** No production
 rotation state, release deployment, native sync, or publication was changed by
 this loop.
+
+## Stunt-flight Gauntlet loop 16 — 2026-08-30
+
+This loop added an aerobatics layer to the existing flight and settlement
+model without creating another wallet, event clock, ticket rule, or reward
+track. The manoeuvres are skill bonuses inside the ordinary sortie score; the
+Academy lesson standards remain the authority for pass, Ace, and promotion.
+
+### Stunt vocabulary and feedback
+
+- Close hazard passes now announce and score a `NEAR MISS` once per obstacle.
+- Holding 2.4–6.4m terrain clearance above 22m/s earns escalating `TERRAIN
+  SKIM` milestones every 1.1 seconds; leaving the band resets the active skim.
+- A hard left or right bank above 7m and 22m/s drives the actual aircraft model
+  through a full roll. Each completed rotation earns `BARREL ROLL` score and a
+  two-step streak increase; Stabilizer deliberately suppresses the command.
+- A ground impact with meaningful active rotation can earn one bounded `CRASH
+  FINALE`. It remains a crash: the aircraft is lost, the lesson cannot pass,
+  and the launch ticket is not refunded.
+- The live HUD shows total stunt score and animated manoeuvre callouts. The
+  result card exposes a separate STUNTS line plus near-miss, roll, skim, impact,
+  and best-streak counts; a qualifying rotating crash gets an explicit finale
+  card instead of being mistaken for a successful landing.
+
+### Evidence and boundary
+
+- The full Island Run service graph passed 1,955 tests with 0 failures,
+  including deterministic near-miss, terrain-skim, barrel-roll, Stabilizer,
+  crash-finale, ground-impact, and settlement-breakdown coverage.
+- The Island Run architecture guard passed with 0 violations and the same 3
+  allowlisted legacy warnings.
+- In-app replay confirmed an ordinary live near miss appears as explicit stunt
+  score and the result dialog renders the separate STUNTS breakdown and seven
+  flight counters. Threshold-sensitive roll and crash-finale behaviour was
+  verified deterministically in the service suite.
+- The canonical gameplay contract now states that stunts settle through the
+  existing flight result and never change ticket or lesson authority.
+
+| Loop 16 gate | Score | Decision |
+| --- | ---: | --- |
+| Stunt readability | 9/10 | Live callouts, total, and result breakdown are explicit |
+| Flight skill | 9/10 | Risk bands, full rolls, and Stabilizer trade-off are deterministic |
+| Crash integrity | 10/10 | Spectacle scores, but ground impact still loses the aircraft |
+| Economy safety | 10/10 | Existing ticket, settlement, wallet, and reward-bar paths are unchanged |
+| Regression confidence | 10/10 | 1,955 Island Run tests and architecture guards pass |
+
+**Gauntlet decision: pass the stunt-flight slice.** It is ready for player feel
+tuning; no push, production deployment, native sync, or publication was made.
