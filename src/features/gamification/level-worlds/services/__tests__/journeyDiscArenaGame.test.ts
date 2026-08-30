@@ -1,5 +1,6 @@
 import {
   createJourneyDiscArenaState,
+  doesJourneyDiscDriveOffSucceed,
   getJourneyDiscArenaFighterStats,
   getJourneyDiscArenaRankStats,
   getJourneyDiscArenaRankUpCost,
@@ -13,6 +14,7 @@ import {
   resolveJourneyDiscArenaEncounter,
   scoreJourneyDiscArenaRound,
   stepJourneyDiscArena,
+  triggerJourneyDiscArenaFreezeAttack,
   triggerJourneyDiscArenaSurge,
   upgradeJourneyDiscArenaRank,
   type JourneyDiscArenaFighterSeed,
@@ -193,6 +195,30 @@ export const journeyDiscArenaGameTests: TestCase[] = [
     },
   },
   {
+    name: 'captain freeze pulse is visible game state, targets the nearest rival, and recharges',
+    run: () => {
+      const state = createJourneyDiscArenaState({
+        seed: 620,
+        arenaRadius: 50,
+        durationSeconds: 20,
+        fighters: [
+          { id: 'captain', pieceId: 'world_seed', team: 'player', rank: 1, position: { x: -4, z: 0 }, velocity: { x: 0, z: 0 } },
+          { id: 'near', pieceId: 'fallen_star', team: 'rival', rank: 1, position: { x: 1, z: 0 }, velocity: { x: -2, z: 0 } },
+          { id: 'far', pieceId: 'guardian_idol', team: 'rival', rank: 1, position: { x: 8, z: 4 }, velocity: { x: 0, z: 0 } },
+        ],
+      });
+      const fired = triggerJourneyDiscArenaFreezeAttack(state, 'captain');
+      const freeze = fired.events.find((event) => event.type === 'freeze');
+      assertEqual(fired.accepted, true, 'freeze pulse starts ready so the player can use it immediately');
+      assert(freeze?.type === 'freeze' && freeze.targetFighterId === 'near', 'freeze pulse locks the selected captain onto the nearest rival');
+      assertEqual(fired.state.playerFreezeCharge, 0, 'freeze pulse spends its own explicit charge meter');
+      assertEqual(triggerJourneyDiscArenaFreezeAttack(fired.state, 'captain').failureReason, 'not_ready', 'freeze pulse cannot be spammed before recharge');
+      const recharged = playTicks(fired.state, 440);
+      assertEqual(recharged.playerFreezeCharge, 100, 'freeze charge returns to its clamped maximum during battle');
+      assertDeepEqual(fired, triggerJourneyDiscArenaFreezeAttack(state, 'captain'), 'freeze source, target, and duration replay exactly');
+    },
+  },
+  {
     name: 'echo pickup spawns one temporary helper, expires, and cannot inflate terminal score',
     run: () => {
       const state = createJourneyDiscArenaState({
@@ -239,7 +265,7 @@ export const journeyDiscArenaGameTests: TestCase[] = [
     },
   },
   {
-    name: 'allied discs steer into separate attack lanes without losing deterministic replay',
+    name: 'allied discs keep collision-safe attack lanes while converging on the same target',
     run: () => {
       const state = createJourneyDiscArenaState({
         seed: 78,
@@ -251,12 +277,13 @@ export const journeyDiscArenaGameTests: TestCase[] = [
           { id: 'target', pieceId: 'guardian_idol', team: 'rival', rank: 1, position: { x: 10, z: 0 }, velocity: { x: 0, z: 0 } },
         ],
       });
-      const initialSpacing = 1.6;
       const separated = playTicks(state, 24);
       const left = separated.fighters.find((fighter) => fighter.id === 'left-wing')!;
       const right = separated.fighters.find((fighter) => fighter.id === 'right-wing')!;
       const finalSpacing = Math.hypot(left.position.x - right.position.x, left.position.z - right.position.z);
-      assert(finalSpacing > initialSpacing, 'same-team steering should open readable lanes before the shared target');
+      const minimumSafeSpacing = getJourneyDiscArenaFighterStats(left).radius + getJourneyDiscArenaFighterStats(right).radius;
+      assert(finalSpacing >= minimumSafeSpacing - 0.000001, 'allied hunters may converge but must not overlap each other');
+      assert(left.position.x > -4 && right.position.x > -4, 'both allies should actively hunt the shared target instead of orbiting in place');
       assertDeepEqual(separated, playTicks(state, 24), 'formation separation must remain fully deterministic');
     },
   },
@@ -414,6 +441,41 @@ export const journeyDiscArenaGameTests: TestCase[] = [
       assert(result.events.some((event) => event.type === 'impact'), 'collision should emit an animation-ready impact event');
       assert(result.state.fighters.every((fighter) => fighter.shield < getJourneyDiscArenaFighterStats(fighter).maxShield), 'both opponents should lose shield');
       assert(result.state.fighters[0].velocity.x < 0 && result.state.fighters[1].velocity.x > 0, 'impulse should separate approaching discs');
+    },
+  },
+  {
+    name: 'small opposing contacts always chip shield and edge drive-offs fail exactly one time in twenty',
+    run: () => {
+      const smallContact = createJourneyDiscArenaState({
+        seed: 702,
+        arenaRadius: 50,
+        fighters: [
+          { id: 'left', pieceId: 'explorer_ship', team: 'player', rank: 1, position: { x: -0.66, z: 0 }, velocity: { x: 0.35, z: 0 } },
+          { id: 'right', pieceId: 'guardian_idol', team: 'rival', rank: 1, position: { x: 0.66, z: 0 }, velocity: { x: -0.35, z: 0 } },
+        ],
+      });
+      const chipped = stepJourneyDiscArena(smallContact);
+      assert(chipped.events.some((event) => event.type === 'impact'), 'a small opposing bounce is still an authored impact');
+      assert(chipped.state.fighters.every((fighter) => fighter.shield < getJourneyDiscArenaFighterStats(fighter).maxShield), 'each small opposing bounce removes a little shield life');
+
+      const edgeClash = stepJourneyDiscArena(createJourneyDiscArenaState({
+        seed: 77,
+        fighters: [
+          { id: 'hunter', pieceId: 'explorer_ship', team: 'player', rank: 1, position: { x: 4.5, z: 0 }, velocity: { x: 5, z: 0 } },
+          { id: 'edge-runner', pieceId: 'guardian_idol', team: 'rival', rank: 1, position: { x: 5.75, z: 0 }, velocity: { x: 0, z: 0 } },
+        ],
+      }));
+      assert(edgeClash.events.some((event) => event.type === 'drive_off'), 'a hard outward edge collision attempts the named drive-off trick');
+
+      const outcomes = Array.from({ length: 20 }, (_, attemptIndex) => doesJourneyDiscDriveOffSucceed({
+        seed: 77,
+        attemptIndex,
+        attackerFighterId: 'hunter',
+        targetFighterId: 'edge-runner',
+      }));
+      assertEqual(outcomes.filter(Boolean).length, 19, 'drive-off trick succeeds nineteen times in each deterministic twenty-attempt cycle');
+      assertEqual(outcomes.filter((succeeded) => !succeeded).length, 1, 'drive-off trick has exactly one readable failure in twenty');
+      assertDeepEqual(outcomes, Array.from({ length: 20 }, (_, attemptIndex) => doesJourneyDiscDriveOffSucceed({ seed: 77, attemptIndex, attackerFighterId: 'hunter', targetFighterId: 'edge-runner' })), 'drive-off success never depends on ambient randomness');
     },
   },
   {

@@ -18,6 +18,9 @@ export const JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS = 6;
 export const JOURNEY_DISC_ARENA_MAX_SURGE = 100;
 export const JOURNEY_DISC_ARENA_SURGE_READY = 70;
 export const JOURNEY_DISC_ARENA_SURGE_RECHARGE_PER_SECOND = 34;
+export const JOURNEY_DISC_ARENA_FREEZE_MAX_CHARGE = 100;
+export const JOURNEY_DISC_ARENA_FREEZE_READY = 100;
+export const JOURNEY_DISC_ARENA_FREEZE_RECHARGE_PER_SECOND = 14;
 export const JOURNEY_DISC_ARENA_FREEZE_TICKS = 180;
 export const JOURNEY_DISC_ARENA_ECHO_TICKS = 360;
 export const JOURNEY_DISC_ARENA_SPEED_BOOST_TICKS = 90;
@@ -153,6 +156,7 @@ export interface JourneyDiscArenaState {
   winner: JourneyDiscArenaWinner;
   openingTicksRemaining: number;
   playerSurge: number;
+  playerFreezeCharge: number;
   fighters: readonly JourneyDiscArenaFighterState[];
   speedField: JourneyDiscArenaSpeedFieldState;
   powerups: readonly JourneyDiscArenaPowerupState[];
@@ -165,6 +169,7 @@ export type JourneyDiscArenaEvent =
   | { type: 'knockout'; fighterId: string; byFighterId: string | null }
   | { type: 'speed_field'; fighterId: string }
   | { type: 'freeze'; collectorFighterId: string; targetFighterId: string; untilTick: number }
+  | { type: 'drive_off'; attackerFighterId: string; targetFighterId: string; succeeded: boolean; power: number }
   | { type: 'echo_spawn'; collectorFighterId: string; echoFighterId: string; untilTick: number }
   | { type: 'echo_expired'; fighterId: string }
   | { type: 'round_complete'; winner: Exclude<JourneyDiscArenaWinner, null>; reason: 'elimination' | 'timeout' };
@@ -175,6 +180,13 @@ export interface JourneyDiscArenaStepResult {
 }
 
 export interface JourneyDiscArenaSurgeResult {
+  accepted: boolean;
+  failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | null;
+  state: JourneyDiscArenaState;
+  events: readonly JourneyDiscArenaEvent[];
+}
+
+export interface JourneyDiscArenaFreezeAttackResult {
   accepted: boolean;
   failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | null;
   state: JourneyDiscArenaState;
@@ -536,6 +548,7 @@ export function createJourneyDiscArenaState(options: {
     winner: null,
     openingTicksRemaining: Math.max(0, Math.floor(options.openingTicks ?? 0)),
     playerSurge: JOURNEY_DISC_ARENA_MAX_SURGE,
+    playerFreezeCharge: JOURNEY_DISC_ARENA_FREEZE_MAX_CHARGE,
     fighters,
     speedField: { position: { x: 0, z: 0 }, radius: 1.75 },
     powerups: [
@@ -543,6 +556,20 @@ export function createJourneyDiscArenaState(options: {
       { id: 'echo-core', type: 'echo', position: { x: 2.4, z: 1.4 }, active: true },
     ],
   };
+}
+
+/**
+ * Deterministic 19-in-20 drive-off execution. The rare failure keeps edge
+ * attacks dramatic without hiding a random source inside the fixed-step loop.
+ */
+export function doesJourneyDiscDriveOffSucceed(options: {
+  seed: number;
+  attemptIndex: number;
+  attackerFighterId: string;
+  targetFighterId: string;
+}): boolean {
+  const phase = stableHash(`${options.seed >>> 0}:${options.attackerFighterId}:${options.targetFighterId}`) % 20;
+  return (Math.max(0, Math.floor(options.attemptIndex)) + phase) % 20 !== 0;
 }
 
 /**
@@ -615,6 +642,48 @@ export function triggerJourneyDiscArenaSurge(state: JourneyDiscArenaState, reque
       moduleId: chosen.fighter.moduleId,
       shieldRestored: chosen.fighter.shield - shieldBefore,
       speedBoostUntilTick: chosen.fighter.speedBoostUntilTick,
+    }],
+  };
+}
+
+/** Fire a visible, player-controlled freeze pulse from the selected captain. */
+export function triggerJourneyDiscArenaFreezeAttack(
+  state: JourneyDiscArenaState,
+  requestedFighterId: string | null = null,
+): JourneyDiscArenaFreezeAttackResult {
+  if (state.phase !== 'running') {
+    return { accepted: false, failureReason: 'round_finished', state, events: [] };
+  }
+  if (state.openingTicksRemaining > 0) {
+    return { accepted: false, failureReason: 'opening', state, events: [] };
+  }
+  if (state.playerFreezeCharge < JOURNEY_DISC_ARENA_FREEZE_READY) {
+    return { accepted: false, failureReason: 'not_ready', state, events: [] };
+  }
+  const fighters = state.fighters.map((fighter) => ({
+    ...fighter,
+    position: { ...fighter.position },
+    velocity: { ...fighter.velocity },
+  }));
+  const sources = fighters
+    .filter((fighter) => fighter.active && !fighter.isEcho && fighter.team === 'player')
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const source = sources.find((fighter) => fighter.id === requestedFighterId) ?? sources[0];
+  const target = source ? nearestOpponent(source, fighters.filter((fighter) => !fighter.isEcho)) : null;
+  if (!source || !target) return { accepted: false, failureReason: 'no_target', state, events: [] };
+
+  target.frozenUntilTick = state.tick + JOURNEY_DISC_ARENA_FREEZE_TICKS;
+  target.velocity.x *= 0.18;
+  target.velocity.z *= 0.18;
+  return {
+    accepted: true,
+    failureReason: null,
+    state: { ...state, playerFreezeCharge: 0, fighters },
+    events: [{
+      type: 'freeze',
+      collectorFighterId: source.id,
+      targetFighterId: target.id,
+      untilTick: target.frozenUntilTick,
     }],
   };
 }
@@ -711,14 +780,21 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
     const target = nearestOpponent(fighter, fighters);
     const radialDistance = length(fighter.position);
     const toCenter = normalize({ x: -fighter.position.x, z: -fighter.position.z });
+    const targetDistance = target
+      ? Math.hypot(target.position.x - fighter.position.x, target.position.z - fighter.position.z)
+      : 0;
+    const interceptSeconds = target ? clamp(targetDistance / Math.max(1, stats.maxSpeed) * 0.28, 0.08, 0.5) : 0;
     const towardTarget = target
-      ? normalize({ x: target.position.x - fighter.position.x, z: target.position.z - fighter.position.z })
+      ? normalize({
+        x: target.position.x + target.velocity.x * interceptSeconds - fighter.position.x,
+        z: target.position.z + target.velocity.z * interceptSeconds - fighter.position.z,
+      })
       : toCenter;
     const orbitSign = ((stableHash(fighter.id) ^ state.seed) & 1) === 0 ? 1 : -1;
     const tangent = { x: -towardTarget.z * orbitSign, z: towardTarget.x * orbitSign };
     const edgePressure = clamp((radialDistance - state.arenaRadius * 0.67) / (state.arenaRadius * 0.22), 0, 1);
     const spinRatio = clamp(fighter.spin / stats.maxSpin, 0, 1);
-    const driveScale = 0.36 + spinRatio * 0.64;
+    const driveScale = 0.52 + spinRatio * 0.48;
     const insideSpeedField = Math.hypot(
       fighter.position.x - state.speedField.position.x,
       fighter.position.z - state.speedField.position.z,
@@ -733,16 +809,17 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       const dx = fighter.position.x - ally.position.x;
       const dz = fighter.position.z - ally.position.z;
       const distance = Math.hypot(dx, dz);
-      const spacingRadius = (stats.radius + getJourneyDiscArenaFighterStats(ally).radius) * 2.15;
+      const spacingRadius = (stats.radius + getJourneyDiscArenaFighterStats(ally).radius) * 1.72;
       if (distance <= 0.0001 || distance >= spacingRadius) return separation;
       const pressure = (spacingRadius - distance) / spacingRadius;
       separation.x += (dx / distance) * pressure;
       separation.z += (dz / distance) * pressure;
       return separation;
     }, { x: 0, z: 0 });
+    const huntPressure = target ? 1.06 + clamp(targetDistance / state.arenaRadius, 0, 1.4) * 0.2 : 1;
     const acceleration = {
-      x: (towardTarget.x * 0.72 + tangent.x * 0.22 + allySpacing.x * 0.58 + toCenter.x * edgePressure * 1.45) * stats.drive * driveScale * speedMultiplier,
-      z: (towardTarget.z * 0.72 + tangent.z * 0.22 + allySpacing.z * 0.58 + toCenter.z * edgePressure * 1.45) * stats.drive * driveScale * speedMultiplier,
+      x: (towardTarget.x * huntPressure + tangent.x * 0.1 + allySpacing.x * 0.34 + toCenter.x * edgePressure * 1.42) * stats.drive * driveScale * speedMultiplier,
+      z: (towardTarget.z * huntPressure + tangent.z * 0.1 + allySpacing.z * 0.34 + toCenter.z * edgePressure * 1.42) * stats.drive * driveScale * speedMultiplier,
     };
     fighter.velocity.x += acceleration.x * dt;
     fighter.velocity.z += acceleration.z * dt;
@@ -831,22 +908,24 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       right.position.x += normal.x * overlap * (leftStats.mass / totalMass);
       right.position.z += normal.z * overlap * (leftStats.mass / totalMass);
 
+      const leftVelocityBefore = { ...left.velocity };
+      const rightVelocityBefore = { ...right.velocity };
       const relativeNormalSpeed = (right.velocity.x - left.velocity.x) * normal.x
         + (right.velocity.z - left.velocity.z) * normal.z;
       if (relativeNormalSpeed >= 0) continue;
       const impactSpeed = -relativeNormalSpeed;
       const inverseMassSum = 1 / leftStats.mass + 1 / rightStats.mass;
-      const impulse = (1.58 * impactSpeed) / inverseMassSum;
+      const impulse = (1.82 * impactSpeed) / inverseMassSum;
       left.velocity.x -= (impulse / leftStats.mass) * normal.x;
       left.velocity.z -= (impulse / leftStats.mass) * normal.z;
       right.velocity.x += (impulse / rightStats.mass) * normal.x;
       right.velocity.z += (impulse / rightStats.mass) * normal.z;
 
-      if (left.team === right.team || impactSpeed < 0.72) continue;
-      // Regular opening clashes should wound, not erase, a shield. A charged
-      // Surge still reaches the higher speed band and lands dramatically.
-      const leftDamage = Math.max(1, Math.round((impactSpeed - 0.35) * 3.1 * rightStats.impact / leftStats.stability));
-      const rightDamage = Math.max(1, Math.round((impactSpeed - 0.35) * 3.1 * leftStats.impact / rightStats.stability));
+      if (left.team === right.team || impactSpeed < 0.28) continue;
+      // Even small opposing clashes chip shields; high-speed hits retain the
+      // dramatic damage band and the livelier rebound carries into the hunt.
+      const leftDamage = Math.max(1, Math.round((impactSpeed - 0.18) * 3.45 * rightStats.impact / leftStats.stability));
+      const rightDamage = Math.max(1, Math.round((impactSpeed - 0.18) * 3.45 * leftStats.impact / rightStats.stability));
       const leftWasShielded = left.shield > 0;
       const rightWasShielded = right.shield > 0;
       left.shield = Math.max(0, left.shield - leftDamage);
@@ -856,6 +935,37 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       left.lastHitBy = right.id;
       right.lastHitBy = left.id;
       events.push({ type: 'impact', fighterAId: left.id, fighterBId: right.id, strength: impactSpeed });
+
+      const leftEdgeRatio = length(left.position) / state.arenaRadius;
+      const rightEdgeRatio = length(right.position) / state.arenaRadius;
+      const driveTarget = leftEdgeRatio >= rightEdgeRatio ? left : right;
+      const driveAttacker = driveTarget === left ? right : left;
+      const attackerVelocity = driveAttacker === left ? leftVelocityBefore : rightVelocityBefore;
+      const outward = normalize(driveTarget.position);
+      const outwardDrive = attackerVelocity.x * outward.x + attackerVelocity.z * outward.z;
+      if (Math.max(leftEdgeRatio, rightEdgeRatio) >= 0.62 && impactSpeed >= 2.35 && outwardDrive >= 1.05) {
+        const succeeded = doesJourneyDiscDriveOffSucceed({
+          seed: state.seed,
+          attemptIndex: state.tick,
+          attackerFighterId: driveAttacker.id,
+          targetFighterId: driveTarget.id,
+        });
+        const power = clamp(impactSpeed * 0.62, 1.2, 4.4);
+        if (succeeded) {
+          driveTarget.velocity.x += outward.x * power;
+          driveTarget.velocity.z += outward.z * power;
+        } else {
+          driveAttacker.velocity.x -= outward.x * power * 0.42;
+          driveAttacker.velocity.z -= outward.z * power * 0.42;
+        }
+        events.push({
+          type: 'drive_off',
+          attackerFighterId: driveAttacker.id,
+          targetFighterId: driveTarget.id,
+          succeeded,
+          power,
+        });
+      }
       if (leftWasShielded && left.shield === 0) {
         left.shieldBroken = true;
         events.push({ type: 'shield_break', fighterId: left.id, byFighterId: right.id });
@@ -883,6 +993,10 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
     JOURNEY_DISC_ARENA_MAX_SURGE,
     state.playerSurge + JOURNEY_DISC_ARENA_SURGE_RECHARGE_PER_SECOND * dt,
   );
+  const playerFreezeCharge = Math.min(
+    JOURNEY_DISC_ARENA_FREEZE_MAX_CHARGE,
+    state.playerFreezeCharge + JOURNEY_DISC_ARENA_FREEZE_RECHARGE_PER_SECOND * dt,
+  );
   const eliminationWinner = resolveWinner(fighters);
   const timedOut = elapsedSeconds >= state.durationSeconds;
   const winner = eliminationWinner ?? (timedOut ? resolveTimeoutWinner(fighters) : null);
@@ -899,6 +1013,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       phase,
       winner,
       playerSurge,
+      playerFreezeCharge,
       fighters,
       powerups,
     },
