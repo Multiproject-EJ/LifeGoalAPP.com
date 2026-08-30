@@ -101,8 +101,9 @@ function tuneBlenderInteriorMaterials(root: THREE.Object3D, lookdev: VaultInteri
         material.map = null;
         material.bumpMap = lookdev.masonryPattern;
         material.bumpScale = name.includes('carved ivory') ? 0.016 : 0.024;
-        material.roughness = name.includes('carved ivory') ? 0.46 : 0.56;
-        material.envMapIntensity = 0.82;
+        material.roughnessMap = lookdev.metalPattern;
+        material.roughness = name.includes('carved ivory') ? 0.54 : 0.62;
+        material.envMapIntensity = 0.9;
       } else if (name.includes('garden polished blue marble') || name.includes('garden veined royal blue marble')) {
         material.color.set(name.includes('veined') ? '#15548c' : '#082c62');
         material.map = null;
@@ -670,29 +671,52 @@ function addGardenCoastalTerminus(
   coveWaterShape.bezierCurveTo(-2.1, 8.15, 2.1, 8.15, 4.35, 7.2);
   coveWaterShape.bezierCurveTo(5.1, 4.5, 4.3, 1.2, 2.72, 0);
   coveWaterShape.closePath();
+  const coveWaterGeometry = new THREE.ShapeGeometry(coveWaterShape, segmentCount(quality, 3, 5, 7));
+  const coveDepthBed = mesh(
+    coveWaterGeometry.clone(),
+    new THREE.MeshStandardMaterial({
+      color: '#075966',
+      roughness: 0.34,
+      metalness: 0.08,
+      emissive: '#012e38',
+      emissiveIntensity: 0.1,
+      envMapIntensity: 0.82,
+      side: THREE.DoubleSide,
+    }),
+    'vault-garden-crystalline-cove-dimensional-aquamarine-depth-bed',
+  );
+  coveDepthBed.rotation.x = -Math.PI / 2;
+  coveDepthBed.position.set(0, 0.065, -10.08);
+  coveDepthBed.renderOrder = 1;
+  terminus.add(coveDepthBed);
   const coveWaterMaterial = new THREE.MeshPhysicalMaterial({
-    color: '#39c7c3',
+    color: '#38d2c9',
     roughness: 0.055,
     metalness: 0,
-    transmission: 0.46,
+    transmission: 0.52,
     thickness: 0.32,
     clearcoat: 1,
     clearcoatRoughness: 0.035,
     transparent: true,
-    opacity: 0.68,
+    opacity: 0.66,
     depthWrite: false,
-    envMapIntensity: 1.9,
+    envMapIntensity: 2.05,
     side: THREE.DoubleSide,
   });
   const coveWater = mesh(
-    new THREE.ShapeGeometry(coveWaterShape, segmentCount(quality, 3, 5, 7)),
+    coveWaterGeometry,
     coveWaterMaterial,
     'vault-garden-wide-concave-crystalline-shallow-water-cove',
   );
   coveWater.rotation.x = -Math.PI / 2;
   coveWater.position.set(0, 0.12, -10.08);
   coveWater.renderOrder = 3;
+  coveWater.userData.waterPhase = 11.2;
   terminus.add(coveWater);
+  const coveLight = new THREE.PointLight('#45e9df', quality === 'low' ? 0.28 : 0.4, 9, 2);
+  coveLight.name = 'vault-garden-crystalline-cove-underwater-turquoise-light';
+  coveLight.position.set(0, 0.92, -12.2);
+  terminus.add(coveLight);
   const foamMaterial = new THREE.MeshBasicMaterial({
     color: '#e6ffff',
     transparent: true,
@@ -746,13 +770,13 @@ function addGardenCoastalTerminus(
       causewayIndex % 2 === 0 ? materials.floor : materials.wall,
       'vault-garden-offshore-pavilion-ceremonial-causeway-landing',
     );
-    landing.position.set(Math.sin(causewayIndex * 0.8) * 0.08, -0.04, z);
+    landing.position.set(Math.sin(causewayIndex * 0.8) * 0.08, 0.18, z);
     const landingInlay = mesh(
       new RoundedBoxGeometry(0.58, 0.035, 0.46, 2, 0.045),
       causewayIndex % 2 === 0 ? materials.gold : materials.floorShade,
       'vault-garden-offshore-pavilion-causeway-gold-and-sapphire-inlay',
     );
-    landingInlay.position.set(landing.position.x, 0.045, z);
+    landingInlay.position.set(landing.position.x, 0.275, z);
     terminus.add(landing, landingInlay);
   }
 
@@ -2358,7 +2382,7 @@ export function createVaultTreasureGardenGalleryModel(options: VaultTreasureVaul
     },
   );
 
-  const sunlight = new THREE.DirectionalLight('#ff963d', quality === 'low' ? 1.08 : 1.68);
+  const sunlight = new THREE.DirectionalLight('#ff963d', quality === 'low' ? 1.02 : 1.56);
   sunlight.position.set(-7.5, 4.4, 5.2);
   const coastalFill = new THREE.HemisphereLight('#ffe8bd', '#126f78', quality === 'low' ? 0.18 : 0.28);
   coastalFill.name = 'vault-garden-golden-sky-and-turquoise-sea-material-separation-fill';

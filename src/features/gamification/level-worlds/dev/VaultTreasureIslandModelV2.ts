@@ -211,6 +211,7 @@ function addCloudBank(
   cloud.position.set(...position);
   cloud.userData.basePosition = cloud.position.clone();
   cloud.userData.phase = phase;
+  cloud.rotation.set(Math.sin(phase * 0.7) * 0.035, phase * 0.29, Math.sin(phase) * 0.045);
   const puffCount = quality === 'low' ? 4 : quality === 'medium' ? 6 : 8;
   for (let index = 0; index < puffCount; index += 1) {
     const puff = new THREE.Mesh(
@@ -227,7 +228,11 @@ function addCloudBank(
       Math.sin(index * 1.43 + phase) * 0.2,
       Math.cos(index * 1.17 + phase) * 0.18,
     );
-    puff.scale.set(1.2, 0.38 + (index % 2) * 0.12, 0.62);
+    puff.scale.set(
+      1.08 + (index % 3) * 0.08,
+      0.5 + (index % 2) * 0.14,
+      0.74 + ((index + 1) % 3) * 0.09,
+    );
     puff.castShadow = false;
     puff.receiveShadow = false;
     cloud.add(puff);
@@ -979,6 +984,13 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
   pivot.position.set(0, 0.51, 0.045);
   addGigaPart(pivot, 7);
   for (const side of [-1, 1] as const) {
+    const attachmentCollar = mesh(
+      new THREE.TorusGeometry(0.072, 0.019, 9, 32),
+      materials.royalGold,
+      'vault-v2-giga-charm-bracelet-attachment-collar',
+    );
+    attachmentCollar.position.set(side * 0.24, 1.13, 0.015);
+    addGigaPart(attachmentCollar, 8);
     const chain = cylinderBetween(
       new THREE.Vector3(side * 0.24, 1.12, -0.01),
       new THREE.Vector3(side * 0.075, 0.69, 0),
@@ -1007,7 +1019,16 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
     ray.rotation.z = -angle;
     addGigaPart(ray, 38 + (rayIndex % 4) * 2);
   }
-  const heart = mesh(new THREE.OctahedronGeometry(0.205, 2), materials.fountainCrystal, 'vault-v2-giga-charm-faceted-aquamarine-heart');
+  const heartMaterial = materials.fountainCrystal.clone();
+  heartMaterial.name = 'vault-v2-giga-charm-facet-readable-aquamarine';
+  heartMaterial.color.set('#68ddea');
+  heartMaterial.roughness = 0.06;
+  heartMaterial.transmission = 0.66;
+  heartMaterial.emissive.set('#087d9a');
+  heartMaterial.emissiveIntensity = 0.25;
+  heartMaterial.opacity = 0.92;
+  heartMaterial.envMapIntensity = 2.2;
+  const heart = mesh(new THREE.OctahedronGeometry(0.205, 2), heartMaterial, 'vault-v2-giga-charm-faceted-aquamarine-heart');
   heart.scale.set(0.94, 1.2, 0.76);
   heart.position.z = 0.15;
   addGigaPart(heart, 52);
@@ -1065,9 +1086,17 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
     jewel.userData.gigaOrbitAngle = angle;
     addGigaPart(jewel, 72 + jewelIndex * 3);
   }
-  const lowerDrop = mesh(new THREE.OctahedronGeometry(0.145, 2), materials.purple, 'vault-v2-giga-charm-royal-amethyst-drop');
-  lowerDrop.scale.y = 1.42;
-  lowerDrop.position.set(0, -0.66, 0.1);
+  const dropConnector = cylinderBetween(
+    new THREE.Vector3(0, -0.39, 0.08),
+    new THREE.Vector3(0, -0.46, 0.16),
+    0.016,
+    materials.royalGold,
+    'vault-v2-giga-charm-articulated-amethyst-drop-connector',
+  );
+  addGigaPart(dropConnector, 90);
+  const lowerDrop = mesh(new THREE.OctahedronGeometry(0.11, 2), materials.purple, 'vault-v2-giga-charm-royal-amethyst-drop');
+  lowerDrop.scale.y = 1.25;
+  lowerDrop.position.set(0, -0.54, 0.2);
   addGigaPart(lowerDrop, 92);
   const gigaGlow = new THREE.PointLight('#7deeff', 1.15, 2.8, 2);
   gigaGlow.name = 'vault-v2-giga-charm-aquamarine-jewelry-light';

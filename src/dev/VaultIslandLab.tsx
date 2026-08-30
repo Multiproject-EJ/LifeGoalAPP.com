@@ -277,8 +277,8 @@ export default function VaultIslandLab({
     const fogColor = view === 'exterior' ? '#e0ad59' : view === 'garden' ? '#d89a55' : backgroundColor;
     scene.fog = new THREE.Fog(
       fogColor,
-      view === 'vault' ? 7 : view === 'atrium' ? 18 : view === 'garden' ? 34 : 36,
-      view === 'vault' ? 18 : view === 'atrium' ? 38 : view === 'garden' ? 118 : 78,
+      view === 'vault' ? 7 : view === 'atrium' ? 18 : view === 'garden' ? 42 : 36,
+      view === 'vault' ? 18 : view === 'atrium' ? 38 : view === 'garden' ? 132 : 78,
     );
 
     const camera = new THREE.PerspectiveCamera(view === 'atrium' ? 56 : view === 'garden' ? 54 : isInteriorView ? 52 : 38, 390 / 844, 0.1, view === 'garden' ? 140 : 80);
@@ -311,7 +311,7 @@ export default function VaultIslandLab({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = view === 'atrium' ? 0.68 : view === 'garden' ? 0.72 : isInteriorView ? 0.78 : 0.9;
+    renderer.toneMappingExposure = view === 'atrium' ? 0.68 : view === 'garden' ? 0.69 : isInteriorView ? 0.78 : 0.9;
     renderer.shadowMap.enabled = quality !== 'low';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
@@ -324,7 +324,7 @@ export default function VaultIslandLab({
     );
     scene.add(hemi);
 
-    const sun = new THREE.DirectionalLight(isInteriorView ? '#ffc56d' : '#ffb13f', view === 'atrium' ? 1.08 : isInteriorView ? 1.52 : 3.3);
+    const sun = new THREE.DirectionalLight(isInteriorView ? '#ffc56d' : '#ffb13f', view === 'atrium' ? 1.08 : view === 'garden' ? 1.42 : isInteriorView ? 1.52 : 3.3);
     sun.position.set(isInteriorView ? -3.8 : 7.2, view === 'atrium' ? 9.4 : isInteriorView ? 7.2 : 7.6, isInteriorView ? 7.8 : -8.8);
     sun.castShadow = quality !== 'low';
     sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
@@ -635,6 +635,20 @@ export default function VaultIslandLab({
         camera.lookAt(controls.target);
         controls.update();
       },
+      setCharmCamera: (preset: 'front' | 'left' | 'right') => {
+        if (view !== 'exterior') return;
+        controls.minDistance = 0.8;
+        camera.fov = 50;
+        camera.position.set(
+          preset === 'left' ? -1.85 : preset === 'right' ? 1.85 : 0,
+          preset === 'front' ? 1.6 : 1.72,
+          preset === 'front' ? 7.8 : 7.45,
+        );
+        controls.target.set(0, 1.1, 3.42);
+        camera.lookAt(controls.target);
+        camera.updateProjectionMatrix();
+        controls.update();
+      },
       setInteriorCamera: (preset: 'front' | 'left' | 'right') => {
         if (view === 'atrium') {
           if (preset === 'left') {
@@ -655,11 +669,11 @@ export default function VaultIslandLab({
           }
           camera.updateProjectionMatrix();
         } else if (view === 'garden') {
-          camera.fov = preset === 'front' ? 54 : 60;
+          camera.fov = preset === 'front' ? 54 : 61;
           camera.position.set(
             preset === 'left' ? -0.48 : preset === 'right' ? 0.48 : 0.15,
             preset === 'front' ? 5.65 : 5.25,
-            preset === 'front' ? 11.4 : 12.15,
+            preset === 'front' ? 11.4 : 12.45,
           );
           controls.target.set(
             preset === 'left' ? -0.38 : preset === 'right' ? 0.38 : 0,

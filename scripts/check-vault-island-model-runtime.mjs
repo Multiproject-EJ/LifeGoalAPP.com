@@ -269,6 +269,8 @@ assert(countNamed(exterior.root, 'vault-v2-bracelet-openwork-link-coupler') >= 8
 assert(countNamed(exterior.root, 'vault-v2-hanging-faceted-charm') === 6, 'The standard bracelet must leave its front-center station clear for the Giga Charm.');
 assert(countNamed(exterior.root, 'vault-v2-giga-charm-chased-gold-laurel-leaf') === 10, 'The Giga Charm must retain ten chased-gold laurel leaves.');
 assert(countNamed(exterior.root, 'vault-v2-giga-charm-granulated-jewelry-bead') === 16, 'The Giga Charm must retain its granulated jewelry halo.');
+assert(countNamed(exterior.root, 'vault-v2-giga-charm-bracelet-attachment-collar') === 2, 'The Giga Charm must expose two unambiguous bracelet attachment collars.');
+assert(countNamed(exterior.root, 'vault-v2-giga-charm-articulated-amethyst-drop-connector') === 1, 'The Giga Charm must retain its forward articulated amethyst connector.');
 assert(countNamed(exterior.root, 'vault-v2-horizon-cliff-island') === 4, 'Exterior v2 should retain a layered four-island 3D horizon.');
 assert(countNamed(exterior.root, 'vault-v2-sailboat') === 3, 'Exterior v2 should include three animated sailboats.');
 assert(countNamed(exterior.root, 'vault-v2-animated-three-dimensional-cloud-bank') === 7, 'Exterior v2 should include seven layered animated 3D sunset cloud banks.');
@@ -358,6 +360,9 @@ assertHasNames(gardenNames, [
   'vault-garden-family-b-prosperity-tree-sculptural-gold-trunk',
   'vault-garden-family-b-prosperity-tree-heart-jewel',
   'vault-garden-family-b-layered-palace-horizon-terrace',
+  'vault-garden-wide-concave-crystalline-shallow-water-cove',
+  'vault-garden-crystalline-cove-dimensional-aquamarine-depth-bed',
+  'vault-garden-crystalline-cove-underwater-turquoise-light',
 ], 'Garden Gallery model');
 assert(countNamed(garden.root, 'vault-garden-family-b-visible-blue-tile-joint') === 20, 'Garden Gallery should expose real tile joints on both processional walks.');
 assert(countNamed(garden.root, 'vault-garden-family-b-monumental-colonnade-shaft') === 10, 'Garden Gallery should provide a substantial paired colonnade.');

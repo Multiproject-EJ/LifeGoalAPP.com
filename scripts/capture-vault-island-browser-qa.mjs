@@ -9,6 +9,8 @@ const EXTERNAL_CDP_PORT = process.env.VAULT_ISLAND_QA_EXTERNAL_CDP_PORT;
 const PORT = Number(EXTERNAL_CDP_PORT || process.env.VAULT_ISLAND_QA_CDP_PORT || 9334);
 const USE_EXTERNAL_CDP = Boolean(EXTERNAL_CDP_PORT);
 const INTERIOR_ONLY = process.env.VAULT_ISLAND_QA_INTERIOR_ONLY === '1';
+const EXTERIOR_ONLY = process.env.VAULT_ISLAND_QA_EXTERIOR_ONLY === '1';
+const CHARM_ONLY = process.env.VAULT_ISLAND_QA_CHARM_ONLY === '1';
 const ATRIUM_TIMEOUT_MS = Number(process.env.VAULT_ISLAND_QA_ATRIUM_TIMEOUT_MS || 240000);
 const USER_DATA_DIR = join('/tmp', `vault-island-browser-qa-${process.pid}-${Date.now()}`);
 const PHONE = { width: 390, height: 844, deviceScaleFactor: 1, mobile: false };
@@ -280,6 +282,7 @@ async function main() {
       ATRIUM_TIMEOUT_MS,
     );
     manifest.qaSnapshots.push({ label: 'exterior-ready', snapshot: exteriorQa });
+    if (!CHARM_ONLY) {
     logStep('capturing exterior screenshot');
     manifest.captures.push({ label: 'exterior', path: await screenshot(client, 'exterior-390x844.png') });
 
@@ -327,6 +330,20 @@ async function main() {
       });
       manifest.captures.push({ label: orbitView.label, path: await screenshot(client, `${orbitView.label}-390x844.png`) });
     }
+    }
+
+    for (const charmView of ['front', 'left', 'right']) {
+      logStep(`capturing giga-charm-${charmView}`);
+      await evaluate(
+        client,
+        `(() => { const controls = window.__vaultIslandLabQaControls; if (!controls?.setCharmCamera) return false; controls.setCharmCamera(${JSON.stringify(charmView)}); return true; })()`,
+      );
+      await sleep(900);
+      manifest.captures.push({
+        label: `giga-charm-${charmView}`,
+        path: await screenshot(client, `giga-charm-${charmView}-390x844.png`),
+      });
+    }
 
     await evaluate(
       client,
@@ -335,6 +352,7 @@ async function main() {
     await sleep(1100);
     }
 
+    if (!EXTERIOR_ONLY) {
     logStep('entering palace atrium');
     if (INTERIOR_ONLY) {
       await navigate(client, '/dev/vault-island-lab?quality=high&view=atrium&clean=1');
@@ -620,6 +638,7 @@ async function main() {
     manifest.interactions.push({ label: 'click-treasure-lab-chalice-reveal', result: chaliceRevealClick });
     await sleep(750);
     manifest.captures.push({ label: 'treasure-lab-chalice', path: await screenshot(client, 'treasure-lab-chalice-390x844.png') });
+    }
     }
 
     const failedInteractions = manifest.interactions.filter((interaction) => interaction.result?.ok === false);
