@@ -1,4 +1,5 @@
 import { isJourneyDiscArenaIsland } from './journeyDiscArmory';
+import type { ArenaGameId } from './islandRunArenaCatalog';
 import type { IslandRunContractV2StopStatus } from './islandRunContractV2StopResolver';
 
 export type JourneyDiscCenterLandmarkOwner = 'canonical_boss' | 'journey_disc_arena';
@@ -25,10 +26,17 @@ export interface IslandEventGridTemplate {
   icon: string;
 }
 
+export interface IslandEventGridExhibition {
+  gameId: ArenaGameId;
+  displayName: string;
+  icon: string;
+}
+
 export type IslandEventGridSlot =
   | {
       kind: 'event';
       id: string;
+      orderId: string;
       eventId: string;
       displayName: string;
       icon: string;
@@ -37,14 +45,70 @@ export type IslandEventGridSlot =
   | {
       kind: 'journey_disc';
       id: 'journey_disc_arena';
+      orderId: string;
       displayName: 'Journey Disc Arena';
       icon: '◉';
       active: true;
     }
   | {
+      kind: 'exhibition';
+      id: string;
+      orderId: string;
+      gameId: ArenaGameId;
+      displayName: string;
+      icon: string;
+      active: false;
+    }
+  | {
       kind: 'empty';
       id: string;
     };
+
+type PopulatedIslandEventGridSlot = Exclude<IslandEventGridSlot, { kind: 'empty' }>;
+
+/**
+ * Keeps a user-authored presentation order safe as the catalogue grows. Stale
+ * ids are discarded, duplicates collapse to their first occurrence, and every
+ * newly registered game is appended so it can never disappear from the grid.
+ */
+export function resolveIslandEventGridOrder(options: {
+  availableIds: readonly string[];
+  preferredIds?: readonly string[];
+}): string[] {
+  const availableIds = [...new Set(options.availableIds.filter((id) => id.length > 0))];
+  const available = new Set(availableIds);
+  const resolved: string[] = [];
+  const seen = new Set<string>();
+
+  (options.preferredIds ?? []).forEach((id) => {
+    if (!available.has(id) || seen.has(id)) return;
+    seen.add(id);
+    resolved.push(id);
+  });
+  availableIds.forEach((id) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    resolved.push(id);
+  });
+  return resolved;
+}
+
+/** Moves one visible game before another without dropping catalogue entries. */
+export function moveIslandEventGridItem(options: {
+  orderedIds: readonly string[];
+  sourceId: string;
+  targetId: string;
+}): string[] {
+  const orderedIds = [...options.orderedIds];
+  const sourceIndex = orderedIds.indexOf(options.sourceId);
+  const targetIndex = orderedIds.indexOf(options.targetId);
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return orderedIds;
+  const [sourceId] = orderedIds.splice(sourceIndex, 1);
+  if (!sourceId) return orderedIds;
+  const insertionIndex = orderedIds.indexOf(options.targetId);
+  orderedIds.splice(insertionIndex < 0 ? orderedIds.length : insertionIndex, 0, sourceId);
+  return orderedIds;
+}
 
 /**
  * Journey Disc borrows the one canonical timed-event channel on its chapter
@@ -65,20 +129,26 @@ export function shouldJourneyDiscReplaceTimedEventSurface(options: {
 /** Builds the three-row event launcher grid without introducing event state. */
 export function resolveIslandEventGridSlots(options: {
   templates: readonly IslandEventGridTemplate[];
+  exhibitions?: readonly IslandEventGridExhibition[];
   activeEventType: string | null;
   journeyDiscReplacesTimedEvent: boolean;
+  orderedIds?: readonly string[];
   slotCount?: number;
 }): IslandEventGridSlot[] {
+  const visibleExhibitions = (options.exhibitions ?? []).filter((exhibition) => (
+    !options.journeyDiscReplacesTimedEvent || exhibition.gameId !== 'journey_disc_arena'
+  ));
   const requestedSlotCount = Math.max(
-    options.templates.length,
+    options.templates.length + visibleExhibitions.length,
     Math.floor(options.slotCount ?? ISLAND_EVENT_GRID_SLOT_COUNT),
   );
-  const slots: IslandEventGridSlot[] = options.templates.map((template) => {
+  const slots: PopulatedIslandEventGridSlot[] = options.templates.map((template) => {
     const isActiveTemplate = template.eventId === options.activeEventType;
     if (options.journeyDiscReplacesTimedEvent && isActiveTemplate) {
       return {
         kind: 'journey_disc',
         id: 'journey_disc_arena',
+        orderId: template.eventId,
         displayName: 'Journey Disc Arena',
         icon: '◉',
         active: true,
@@ -87,6 +157,7 @@ export function resolveIslandEventGridSlots(options: {
     return {
       kind: 'event',
       id: template.eventId,
+      orderId: template.eventId,
       eventId: template.eventId,
       displayName: template.displayName,
       icon: template.icon,
@@ -94,10 +165,33 @@ export function resolveIslandEventGridSlots(options: {
     };
   });
 
-  while (slots.length < requestedSlotCount) {
-    slots.push({ kind: 'empty', id: `empty-${slots.length}` });
+  visibleExhibitions.forEach((exhibition) => {
+    slots.push({
+      kind: 'exhibition',
+      id: `exhibition-${exhibition.gameId}`,
+      orderId: exhibition.gameId,
+      gameId: exhibition.gameId,
+      displayName: exhibition.displayName,
+      icon: exhibition.icon,
+      active: false,
+    });
+  });
+
+  const orderedIds = resolveIslandEventGridOrder({
+    availableIds: slots.map((slot) => slot.orderId),
+    preferredIds: options.orderedIds,
+  });
+  const rankById = new Map(orderedIds.map((id, index) => [id, index]));
+  slots.sort((left, right) => (
+    (rankById.get(left.orderId) ?? Number.MAX_SAFE_INTEGER)
+      - (rankById.get(right.orderId) ?? Number.MAX_SAFE_INTEGER)
+  ));
+
+  const completedSlots: IslandEventGridSlot[] = [...slots];
+  while (completedSlots.length < requestedSlotCount) {
+    completedSlots.push({ kind: 'empty', id: `empty-${completedSlots.length}` });
   }
-  return slots;
+  return completedSlots;
 }
 
 /**

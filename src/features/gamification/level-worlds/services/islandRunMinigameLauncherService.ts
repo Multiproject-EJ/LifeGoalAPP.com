@@ -82,7 +82,7 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'island_workshop' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
+  minigameId: 'island_workshop' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | 'skybound_expedition';
   ticketCost: number;
   ticketsSpent: number;
   spendMode: 'entry' | 'per_action';
@@ -110,6 +110,11 @@ export interface EventMinigameLaunchDescriptor {
         source: 'timed_event';
         eventId: 'companion_feast';
         mode: 'companion_feast';
+      }
+    | {
+        source: 'timed_event';
+        eventId: 'skybound_expedition';
+        mode: 'pilot_academy';
       };
 }
 
@@ -390,6 +395,30 @@ export function resolveCompanionFeastEventMinigame(
       source: 'timed_event',
       eventId: 'companion_feast',
       mode: 'companion_feast',
+    },
+  };
+}
+
+/** Skybound opens freely; one canonical event ticket is spent on valid release. */
+export function resolveSkyboundExpeditionEventMinigame(
+  ctx: EventMinigameLaunchContext,
+): EventMinigameLaunchDescriptor | null {
+  if (ctx.eventId !== 'skybound_expedition') return null;
+  const launch = openEventMinigame({
+    eventId: ctx.eventId,
+    ticketsAvailable: ctx.ticketsAvailable,
+    ticketsToSpend: ctx.ticketsToSpend,
+  });
+  if (!launch || launch.minigameId !== 'skybound_expedition') return null;
+  return {
+    minigameId: 'skybound_expedition',
+    spendMode: 'per_action',
+    ticketCost: launch.ticketCost,
+    ticketsSpent: launch.ticketsSpent,
+    config: {
+      source: 'timed_event',
+      eventId: 'skybound_expedition',
+      mode: 'pilot_academy',
     },
   };
 }

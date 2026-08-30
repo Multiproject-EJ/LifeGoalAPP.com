@@ -56,6 +56,10 @@ import {
   type JourneyDiscArmoryState,
 } from './journeyDiscArmory';
 import {
+  sanitizeSkyboundAcademyEventProgress,
+  type SkyboundAcademyEventProgress,
+} from './skyboundAcademyStorage';
+import {
   sanitizeVaultRushClaimsByIsland,
   type VaultRushClaimsByIsland,
 } from './islandRunVaultRush';
@@ -498,6 +502,8 @@ export interface IslandRunGameStateRecord {
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
   companionFeastProgressByEvent: Record<string, CompanionFeastProgressEntry>;
   fortuneEngineProgressByEvent: Record<string, FortuneEngineProgressEntry>;
+  /** Pilot Academy career, fleet upgrades, and flight idempotency per Skybound event runtime. */
+  skyboundAcademyProgressByEvent: Record<string, SkyboundAcademyEventProgress>;
   /** Journey Disc Arena reward-track and round ledger, keyed by active event runtime id. */
   journeyDiscArenaProgressByEvent: Record<string, JourneyDiscArenaProgressEntry>;
   /** Permanent Journey Disc fighter rank and weapons carried across eligible HabitGame islands. */
@@ -1059,6 +1065,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
     fortuneEngineProgressByEvent: {},
+    skyboundAcademyProgressByEvent: {},
     journeyDiscArenaProgressByEvent: {},
     journeyDiscArmory: createJourneyDiscArmory(0),
     momentumMatrixProgressByEvent: {},
@@ -1738,6 +1745,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.fortuneEngineProgressByEvent,
       fallback.fortuneEngineProgressByEvent,
     ),
+    skyboundAcademyProgressByEvent: sanitizeSkyboundAcademyProgressByEvent(
+      value.skyboundAcademyProgressByEvent,
+      fallback.skyboundAcademyProgressByEvent,
+    ),
     journeyDiscArenaProgressByEvent: sanitizeJourneyDiscArenaProgressByEvent(
       value.journeyDiscArenaProgressByEvent,
       fallback.journeyDiscArenaProgressByEvent,
@@ -2254,6 +2265,58 @@ function mergeFortuneEngineProgressByEvent(
   return merged;
 }
 
+function sanitizeSkyboundAcademyProgressByEvent(
+  value: unknown,
+  fallback: Record<string, SkyboundAcademyEventProgress>,
+): Record<string, SkyboundAcademyEventProgress> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return fallback;
+  const out: Record<string, SkyboundAcademyEventProgress> = {};
+  for (const [eventId, rawProgress] of Object.entries(value as Record<string, unknown>)) {
+    if (!eventId.trim()) continue;
+    out[eventId] = sanitizeSkyboundAcademyEventProgress(rawProgress);
+  }
+  return out;
+}
+
+function mergeSkyboundAcademyProgressByEvent(
+  remote: Record<string, SkyboundAcademyEventProgress>,
+  local: Record<string, SkyboundAcademyEventProgress>,
+): Record<string, SkyboundAcademyEventProgress> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, SkyboundAcademyEventProgress> = {};
+  keys.forEach((eventId) => {
+    const remoteProgress = remote[eventId];
+    const localProgress = local[eventId];
+    if (!remoteProgress || !localProgress) {
+      merged[eventId] = localProgress ?? remoteProgress;
+      return;
+    }
+    const latest = localProgress.updatedAtMs >= remoteProgress.updatedAtMs ? localProgress : remoteProgress;
+    merged[eventId] = {
+      ...latest,
+      progress: {
+        ...latest.progress,
+        tickets: 0,
+        sorties: Math.max(remoteProgress.progress.sorties, localProgress.progress.sorties),
+        academyXp: Math.max(remoteProgress.progress.academyXp, localProgress.progress.academyXp),
+        completedLessonIds: Array.from(new Set([...remoteProgress.progress.completedLessonIds, ...localProgress.progress.completedLessonIds])),
+        aceLessonIds: Array.from(new Set([...remoteProgress.progress.aceLessonIds, ...localProgress.progress.aceLessonIds])),
+        promotedRankIds: Array.from(new Set([...remoteProgress.progress.promotedRankIds, ...localProgress.progress.promotedRankIds])),
+        medalRankIds: Array.from(new Set([...remoteProgress.progress.medalRankIds, ...localProgress.progress.medalRankIds])),
+        certificateAwarded: remoteProgress.progress.certificateAwarded || localProgress.progress.certificateAwarded,
+      },
+      upgrades: {
+        launcher: Math.max(remoteProgress.upgrades.launcher, localProgress.upgrades.launcher),
+        airframe: Math.max(remoteProgress.upgrades.airframe, localProgress.upgrades.airframe),
+        engine: Math.max(remoteProgress.upgrades.engine, localProgress.upgrades.engine),
+      },
+      bestFlightScore: Math.max(remoteProgress.bestFlightScore, localProgress.bestFlightScore),
+      settledAttemptIds: Array.from(new Set([...remoteProgress.settledAttemptIds, ...localProgress.settledAttemptIds])).slice(-80),
+    };
+  });
+  return merged;
+}
+
 function sanitizeJourneyDiscArenaProgressByEvent(
   value: unknown,
   fallback: Record<string, JourneyDiscArenaProgressEntry>,
@@ -2640,6 +2703,8 @@ export function mergeRecordForConflict(options: {
       localSpaceExcavatorProgress: local.spaceExcavatorProgressByEvent,
       remoteMomentumMatrixProgress: remote.momentumMatrixProgressByEvent,
       localMomentumMatrixProgress: local.momentumMatrixProgressByEvent,
+      remoteSkyboundProgress: remote.skyboundAcademyProgressByEvent,
+      localSkyboundProgress: local.skyboundAcademyProgressByEvent,
     }),
     arenaFirstTicketBoostClaimedByEvent: {
       ...remote.arenaFirstTicketBoostClaimedByEvent,
@@ -2660,6 +2725,10 @@ export function mergeRecordForConflict(options: {
     fortuneEngineProgressByEvent: mergeFortuneEngineProgressByEvent(
       remote.fortuneEngineProgressByEvent,
       local.fortuneEngineProgressByEvent,
+    ),
+    skyboundAcademyProgressByEvent: mergeSkyboundAcademyProgressByEvent(
+      remote.skyboundAcademyProgressByEvent,
+      local.skyboundAcademyProgressByEvent,
     ),
     journeyDiscArenaProgressByEvent: mergeJourneyDiscArenaProgressByEvent(
       remote.journeyDiscArenaProgressByEvent,
@@ -2703,6 +2772,8 @@ function mergeMinigameTicketsByEvent(options: {
   localSpaceExcavatorProgress?: Record<string, SpaceExcavatorProgressEntry>;
   remoteMomentumMatrixProgress?: Record<string, MomentumMatrixProgressEntry>;
   localMomentumMatrixProgress?: Record<string, MomentumMatrixProgressEntry>;
+  remoteSkyboundProgress?: Record<string, SkyboundAcademyEventProgress>;
+  localSkyboundProgress?: Record<string, SkyboundAcademyEventProgress>;
 }): Record<string, number> {
   const { remote, local } = options;
   const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
@@ -2718,12 +2789,16 @@ function mergeMinigameTicketsByEvent(options: {
       + (options.localSpaceExcavatorProgress?.[key]?.completedBoardCount ?? 0);
     const remoteMatrixRuns = options.remoteMomentumMatrixProgress?.[key]?.runsStarted ?? 0;
     const localMatrixRuns = options.localMomentumMatrixProgress?.[key]?.runsStarted ?? 0;
+    const remoteSkyboundSorties = options.remoteSkyboundProgress?.[key]?.progress.sorties ?? 0;
+    const localSkyboundSorties = options.localSkyboundProgress?.[key]?.progress.sorties ?? 0;
     const localSpentMoreActions = localFeastDrops > remoteFeastDrops
       || localDigs > remoteDigs
-      || localMatrixRuns > remoteMatrixRuns;
+      || localMatrixRuns > remoteMatrixRuns
+      || localSkyboundSorties > remoteSkyboundSorties;
     const remoteSpentMoreActions = remoteFeastDrops > localFeastDrops
       || remoteDigs > localDigs
-      || remoteMatrixRuns > localMatrixRuns;
+      || remoteMatrixRuns > localMatrixRuns
+      || remoteSkyboundSorties > localSkyboundSorties;
     const count = localSpentMoreActions && !remoteSpentMoreActions
       ? localCount
       : remoteSpentMoreActions && !localSpentMoreActions
@@ -2818,6 +2893,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     companion_feast_progress_by_event: record.companionFeastProgressByEvent,
     fortune_engine_progress_by_event: record.fortuneEngineProgressByEvent,
+    skybound_academy_progress_by_event: record.skyboundAcademyProgressByEvent,
     journey_disc_arena_progress_by_event: record.journeyDiscArenaProgressByEvent,
     journey_disc_armory: record.journeyDiscArmory,
     momentum_matrix_progress_by_event: record.momentumMatrixProgressByEvent,
@@ -2885,7 +2961,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,vault_rush_claims_by_island,vault_island_progress,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_last_claim_at_ms,reward_bar_escalation_tier,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,journey_disc_arena_progress_by_event,journey_disc_armory,momentum_matrix_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,vault_rush_claims_by_island,vault_island_progress,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_last_claim_at_ms,reward_bar_escalation_tier,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,skybound_academy_progress_by_event,journey_disc_arena_progress_by_event,journey_disc_armory,momentum_matrix_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -3033,6 +3109,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
               (legacyData as Record<string, unknown>).fortune_engine_progress_by_event,
               fallback.fortuneEngineProgressByEvent,
+            ),
+            skyboundAcademyProgressByEvent: sanitizeSkyboundAcademyProgressByEvent(
+              (legacyData as Record<string, unknown>).skybound_academy_progress_by_event,
+              fallback.skyboundAcademyProgressByEvent,
             ),
             journeyDiscArenaProgressByEvent: sanitizeJourneyDiscArenaProgressByEvent(
               (legacyData as Record<string, unknown>).journey_disc_arena_progress_by_event,
@@ -3232,6 +3312,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
         (data as Record<string, unknown>).fortune_engine_progress_by_event,
         fallback.fortuneEngineProgressByEvent,
+      ),
+      skyboundAcademyProgressByEvent: sanitizeSkyboundAcademyProgressByEvent(
+        (data as Record<string, unknown>).skybound_academy_progress_by_event,
+        fallback.skyboundAcademyProgressByEvent,
       ),
       journeyDiscArenaProgressByEvent: sanitizeJourneyDiscArenaProgressByEvent(
         (data as Record<string, unknown>).journey_disc_arena_progress_by_event,

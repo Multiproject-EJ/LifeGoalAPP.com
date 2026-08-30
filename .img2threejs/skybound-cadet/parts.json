@@ -1,0 +1,28 @@
+{
+  "model": "cadet-toy-glider",
+  "parts": [
+    { "name": "root", "kind": "part", "module": "flight-root", "triangles": 0 },
+    { "name": "fuselage-shell", "kind": "part", "module": "body", "triangles": 1008 },
+    { "name": "nose-cap", "kind": "part", "module": "nose", "triangles": 616 },
+    { "name": "left-wing", "kind": "part", "module": "main-wing", "triangles": 84 },
+    { "name": "right-wing", "kind": "part", "module": "main-wing", "triangles": 84 },
+    { "name": "left-tailplane", "kind": "part", "module": "tailplane", "triangles": 84 },
+    { "name": "right-tailplane", "kind": "part", "module": "tailplane", "triangles": 84 },
+    { "name": "tail-fin", "kind": "part", "module": "fin", "triangles": 96 },
+    { "name": "canopy", "kind": "part", "module": "cockpit", "triangles": 672 },
+    { "name": "launch-hook", "kind": "part", "module": "launch", "triangles": 320 },
+    { "name": "rear-nozzle", "kind": "part", "module": "boost", "triangles": 80 },
+    { "name": "left-wing-trim", "kind": "part", "module": "left-wing", "triangles": 12 },
+    { "name": "right-wing-trim", "kind": "part", "module": "right-wing", "triangles": 12 },
+    { "name": "navy-belly-band", "kind": "part", "module": "body", "triangles": 672 },
+    { "name": "left-panel-line", "kind": "part", "module": "left-wing", "triangles": 12 },
+    { "name": "right-panel-line", "kind": "part", "module": "right-wing", "triangles": 12 },
+    { "name": "left-aileron", "kind": "part", "module": "left-wing", "triangles": 12 },
+    { "name": "right-aileron", "kind": "part", "module": "right-wing", "triangles": 12 },
+    { "name": "left-elevator", "kind": "part", "module": "left-tailplane", "triangles": 12 },
+    { "name": "right-elevator", "kind": "part", "module": "right-tailplane", "triangles": 12 },
+    { "name": "rudder", "kind": "part", "module": "tail-fin", "triangles": 12 }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 0
+}

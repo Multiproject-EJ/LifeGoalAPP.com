@@ -88,6 +88,14 @@ export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
     icon: '🐾',
     durationMs: 4 * 24 * 60 * 60 * 1000, // 4 days
   },
+  {
+    templateId: 'skybound_expedition',
+    eventType: 'skybound_expedition',
+    ladderId: 'skybound_expedition_ladder_v1',
+    stickerId: 'skybound_gold_wings_sticker',
+    icon: '✈️',
+    durationMs: 3 * 24 * 60 * 60 * 1000, // 3 days
+  },
 ] as const;
 
 /**
@@ -100,6 +108,7 @@ export const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayN
   space_excavator: { icon: '🚀', displayName: 'Space Excavator' },
   companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
   lucky_spin: { icon: '🎰', displayName: 'Lucky Spin' },
+  skybound_expedition: { icon: '✈️', displayName: 'Skybound Academy' },
 };
 
 // ── Progress sources ─────────────────────────────────────────────────────────

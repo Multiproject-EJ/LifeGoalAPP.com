@@ -1365,6 +1365,7 @@ export interface Database {
           space_excavator_progress_by_event: Json;
           companion_feast_progress_by_event: Json;
           fortune_engine_progress_by_event: Json;
+          skybound_academy_progress_by_event: Json;
           last_writer_device_session_id: string | null;
           created_at: string;
           updated_at: string;
@@ -1395,6 +1396,7 @@ export interface Database {
           space_excavator_progress_by_event?: Json;
           companion_feast_progress_by_event?: Json;
           fortune_engine_progress_by_event?: Json;
+          skybound_academy_progress_by_event?: Json;
           last_writer_device_session_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1425,6 +1427,7 @@ export interface Database {
           space_excavator_progress_by_event?: Json;
           companion_feast_progress_by_event?: Json;
           fortune_engine_progress_by_event?: Json;
+          skybound_academy_progress_by_event?: Json;
           last_writer_device_session_id?: string | null;
           created_at?: string;
           updated_at?: string;

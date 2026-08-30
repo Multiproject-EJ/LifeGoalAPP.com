@@ -20,11 +20,11 @@ export interface JourneyDiscArenaMilestone {
 
 export const JOURNEY_DISC_ARENA_MILESTONES: readonly JourneyDiscArenaMilestone[] = Object.freeze([
   { id: 'disc_1', points: 60, icon: '🎲', label: '15 dice', reward: { dice: 15 } },
-  { id: 'disc_2', points: 160, icon: 'Ⅱ', label: 'Resonant + Aegis', reward: { rank: 2, armoryUpgrade: 'aegis_ring' } },
-  { id: 'disc_3', points: 300, icon: '◉', label: '2 discs + Comet level', reward: { eventTickets: 2, armoryUpgrade: 'ram_fin' } },
-  { id: 'disc_4', points: 560, icon: 'Ⅲ', label: 'Ascendant + Pulse', reward: { rank: 3, armoryUpgrade: 'pulse_vane' } },
-  { id: 'disc_5', points: 900, icon: '♜', label: 'Guardian gate + Aegis level', reward: { dice: 50, armoryUpgrade: 'aegis_ring' } },
-  { id: 'disc_6', points: 1350, icon: '💎', label: 'End prize + Pulse level', reward: { diamonds: 1, armoryUpgrade: 'pulse_vane' } },
+  { id: 'disc_2', points: 160, icon: 'Ⅱ', label: 'Rank 2 + unlock Aegis', reward: { rank: 2, armoryUpgrade: 'aegis_ring' } },
+  { id: 'disc_3', points: 300, icon: '◉', label: '2 battle tickets + Comet Lv. 2', reward: { eventTickets: 2, armoryUpgrade: 'ram_fin' } },
+  { id: 'disc_4', points: 560, icon: 'Ⅲ', label: 'Rank 3 + unlock Pulse', reward: { rank: 3, armoryUpgrade: 'pulse_vane' } },
+  { id: 'disc_5', points: 900, icon: '♜', label: '50 dice + Aegis Lv. 2', reward: { dice: 50, armoryUpgrade: 'aegis_ring' } },
+  { id: 'disc_6', points: 1350, icon: '💎', label: '1 diamond + Pulse Lv. 2', reward: { diamonds: 1, armoryUpgrade: 'pulse_vane' } },
 ] as const);
 
 export function createJourneyDiscArenaProgress(nowMs = Date.now()): JourneyDiscArenaProgressEntry {

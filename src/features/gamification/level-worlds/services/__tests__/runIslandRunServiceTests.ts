@@ -12,6 +12,11 @@ import { fortuneEngineEconomyModelTests } from './fortuneEngineEconomyModel.test
 import { fortuneEngineStateActionsTests } from './fortuneEngineStateActions.test';
 import { islandWorkshopGameTests } from './islandWorkshopGame.test';
 import { momentumMatrixGameTests } from './momentumMatrixGame.test';
+import { skyboundExpeditionFlightTests } from './skyboundExpeditionFlight.test';
+import { skyboundPilotAcademyTests } from './skyboundPilotAcademy.test';
+import { islandRunSkyboundAcademyActionsTests } from './islandRunSkyboundAcademyActions.test';
+import { minigameTicketStoreTests } from './minigameTicketStore.test';
+import { skyboundAircraftModelsTests } from './skyboundAircraftModels.test';
 import { momentumMatrixStateActionsTests } from './momentumMatrixStateActions.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { creatureCardCatalogTests } from './creatureCardCatalog.test';
@@ -236,6 +241,11 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'fortuneEngineStateActions', tests: fortuneEngineStateActionsTests },
   { label: 'islandWorkshopGame', tests: islandWorkshopGameTests },
   { label: 'momentumMatrixGame', tests: momentumMatrixGameTests },
+  { label: 'skyboundExpeditionFlight', tests: skyboundExpeditionFlightTests },
+  { label: 'skyboundPilotAcademy', tests: skyboundPilotAcademyTests },
+  { label: 'islandRunSkyboundAcademyActions', tests: islandRunSkyboundAcademyActionsTests },
+  { label: 'minigameTicketStore', tests: minigameTicketStoreTests },
+  { label: 'skyboundAircraftModels', tests: skyboundAircraftModelsTests },
   { label: 'momentumMatrixStateActions', tests: momentumMatrixStateActionsTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
   { label: 'creatureCardCatalog', tests: creatureCardCatalogTests },

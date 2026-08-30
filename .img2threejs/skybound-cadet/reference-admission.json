@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "reference",
+    "sourcePath": ".img2threejs/skybound-cadet/cadet-toy-glider-isolated-v1.png",
+    "width": 1536,
+    "height": 1024,
+    "foregroundCoverage": 0.2616,
+    "largestComponentFraction": 1.0,
+    "pHash": 16065717150769525188,
+    "duplicateOfHash": null
+  }
+}

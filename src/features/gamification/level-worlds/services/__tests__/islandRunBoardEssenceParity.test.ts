@@ -328,20 +328,20 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         source.includes('while (holdBuildSpendActiveRef.current) {') &&
           source.includes('const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);') &&
-          source.includes('await wait(BUILD_HOLD_REPEAT_DELAY_MS);') &&
+          source.includes('const cadence = resolveIslandRunBuildHoldCadence(holdStepsApplied);') &&
+          source.includes('await wait(cadence.delayMs);') &&
           source.includes('buildLevelCompletionRef.current') &&
           !source.includes('holdInterval = window.setInterval(() => {'),
-        'Hold-to-build should apply one awaited canonical step per steady beat and stop at each level review.',
+        'Hold-to-build should apply one awaited canonical step per accelerating beat and stop at each level review.',
       );
       assert(
-        source.includes('const BUILD_HOLD_REPEAT_DELAY_MS = 1_250;') &&
-          source.includes('const BUILD_TAP_STEP_ANIMATION_DELAY_MS = 1_150;') &&
+        source.includes('const BUILD_TAP_STEP_ANIMATION_DELAY_MS = ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS;') &&
           source.includes('for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1)') &&
           source.includes('await wait(BUILD_TAP_STEP_ANIMATION_DELAY_MS);') &&
-          source.includes("setBuildHoldFeedbackLabel('⚒️ Building steadily…');") &&
+          source.includes('setBuildHoldFeedbackLabel(resolveIslandRunBuildHoldCadence(0).feedbackLabel);') &&
           !source.includes('resolveBuildHoldBatchSteps') &&
-          !source.includes('resolveBuildHoldRepeatDelayMs'),
-        'Tap and hold building should stay deliberately paced at one canonical step per readable construction beat.',
+          source.includes('handleSpendEssenceOnBuild(stopIndex, 1)'),
+        'Tap and hold building should run at the accelerated presentation cadence while preserving one canonical action per visible beat.',
       );
       // aria-disabled lives in BuildModalV2 (v2 tray cards) — verify it is
       // present in either the board source or the v2 modal component.
@@ -360,7 +360,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;') ||
             buildModalV2Source.includes('const isDisabled = isComplete || !part.canAfford || disabledByTutorial || disabledByAnimation || isBuildHoldActive;')
           ) &&
-          buildModalV2Source.includes('Hold to auto-build'),
+          buildModalV2Source.includes('Hold for rapid build'),
         'Build choices and hold control should expose true affordability/interaction disabled states.',
       );
       assert(

@@ -5,6 +5,12 @@ import {
 } from '../islandRunBuildModalV2ViewModel';
 import { normalizeIslandArtManifest, type IslandArtManifest } from '../islandArtManifest';
 import { deriveIslandRunConstructionPresentation } from '../islandRunConstructionPresentation';
+import {
+  ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS,
+  ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
+  ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS,
+  resolveIslandRunBuildHoldCadence,
+} from '../islandRunBuildCadence';
 import type { IslandRunContractV2BuildState } from '../islandRunContractV2EssenceBuild';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
@@ -152,6 +158,21 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
+    name: 'rapid build cadence is over twice as fast while retaining every visible beat',
+    run: () => {
+      assert(ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS <= 575, 'ordinary build beats should be at least twice as fast as the former 1.15-second cadence');
+      assert(ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS <= 1_600, 'manual review access should arrive at least twice as fast as the former 3.2-second dwell');
+      assert(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS <= 2_300, 'level review should finish at least twice as fast as the former 4.6-second window');
+      const cadence = [0, 1, 2, 3, 4].map(resolveIslandRunBuildHoldCadence);
+      assertEqual(cadence[0].delayMs, 420, 'hold should begin with a readable rapid-build beat');
+      assertEqual(cadence[1].delayMs, 320, 'the first completed part should accelerate the hold');
+      assertEqual(cadence[2].delayMs, 230, 'the second completed part should accelerate again');
+      assertEqual(cadence[3].delayMs, 160, 'the full-sequence hold should settle at maximum speed');
+      assert(cadence.every((entry, index) => index === 0 || entry.delayMs <= cadence[index - 1].delayMs), 'hold cadence should only accelerate, never stutter slower');
+      assert(cadence[4].feedbackLabel.includes('full animation'), 'maximum speed should explicitly promise the preserved full animation');
+    },
+  },
+  {
     name: 'live-board Build owns input and completed levels preserve their full choreography window',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
@@ -163,8 +184,8 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(modalSource.includes('role="dialog"') && modalSource.includes('aria-modal="true"'), 'Build should expose its exclusive live-board session as an accessible modal dialog');
       assert(!modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
       assert(modalSource.includes('completed-crest-v001.png'), 'the final state should use the generated in-world Completed crest');
-      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 3_200'), 'completed levels should protect at least 3.2 seconds for the robot and reveal choreography');
-      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 4_600'), 'completed levels should auto-advance only after the full 4.6-second review');
+      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS'), 'completed levels should use the shared accelerated review cadence');
+      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS'), 'completed levels should auto-advance through the shared accelerated cadence');
       assert(modalSource.includes('disabled={!review.isAdvanceReady}') && modalSource.includes('Robots and reveal still moving'), 'review controls should remain disabled while an older celebration is playing');
       assert(!boardSource.includes("completionPresentation && nextRuntimeState.firstSessionTutorialState !== 'hatchery_l1_built'"), 'the first tutorial landmark must receive the same completed-level review as every later build');
       assert(boardSource.includes('buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId'), 'the camera should keep the just-completed landmark focused throughout review');
@@ -180,7 +201,8 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(cssSource.includes('.bm2-level-review__advance:disabled') && cssSource.includes('cursor: wait'), 'the protected choreography window should have explicit disabled feedback');
       assert(modalSource.includes('bm2-dock__topline') && modalSource.includes('bm2-dock__funding'), 'the active build summary should keep level, identity, and funding information in compact rows');
       assert(cssSource.includes('.bm2-level-complete__scene-fx') && cssSource.includes('bm2-level-scene-shine'), 'level completion should add a board-wide shine and sparkle pass');
-      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 4.6s linear both'), 'auto-dismiss celebration should visualize the full choreography window');
+      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 2.1s linear both'), 'auto-dismiss celebration should visualize the accelerated full choreography window');
+      assert(modalSource.includes('bm2-build-mode--rapid') && modalSource.includes('Every part animation is playing'), 'hold mode should visibly communicate that its full animation sequence is running');
     },
   },
 ];

@@ -1,5 +1,7 @@
 import {
   ISLAND_EVENT_GRID_SLOT_COUNT,
+  moveIslandEventGridItem,
+  resolveIslandEventGridOrder,
   resolveIslandEventGridSlots,
   resolveJourneyDiscCenterLandmarkPresentation,
   shouldJourneyDiscReplaceTimedEventSurface,
@@ -82,6 +84,7 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
         { eventId: 'lucky_spin', displayName: 'Lucky Spin', icon: '🎰' },
         { eventId: 'space_excavator', displayName: 'Space Excavator', icon: '🚀' },
         { eventId: 'companion_feast', displayName: 'Companion Feast', icon: '🐾' },
+        { eventId: 'skybound_expedition', displayName: 'Skybound Academy', icon: '✈️' },
       ];
       const replacesTimedEvent = shouldJourneyDiscReplaceTimedEventSurface({
         featureEnabled: true,
@@ -90,6 +93,10 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
       });
       const slots = resolveIslandEventGridSlots({
         templates,
+        exhibitions: [
+          { gameId: 'journey_disc_arena', displayName: 'Journey Disc Arena', icon: '◉' },
+          { gameId: 'lexicon_relay', displayName: 'Lexicon Relay', icon: 'A↗' },
+        ],
         activeEventType: 'lucky_spin',
         journeyDiscReplacesTimedEvent: replacesTimedEvent,
       });
@@ -97,7 +104,8 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
       assertEqual(replacesTimedEvent, true, 'the chapter exhibition owns the visible event surface');
       assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the grid has three complete rows of four');
       assertEqual(slots[1]?.kind, 'journey_disc', 'Journey Disc occupies the active timed-game slot');
-      assertEqual(slots.filter((slot) => slot.kind === 'empty').length, 8, 'two new rows remain empty');
+      assertEqual(slots.filter((slot) => slot.kind === 'exhibition').length, 1, 'word exhibition is appended without duplicating Journey Disc');
+      assertEqual(slots.filter((slot) => slot.kind === 'empty').length, 6, 'remaining future slots stay visibly reserved');
       assertEqual(
         slots.some((slot) => slot.kind === 'event' && slot.eventId === 'lucky_spin'),
         false,
@@ -119,6 +127,11 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
           { eventId: 'lucky_spin', displayName: 'Lucky Spin', icon: '🎰' },
           { eventId: 'space_excavator', displayName: 'Space Excavator', icon: '🚀' },
           { eventId: 'companion_feast', displayName: 'Companion Feast', icon: '🐾' },
+          { eventId: 'skybound_expedition', displayName: 'Skybound Academy', icon: '✈️' },
+        ],
+        exhibitions: [
+          { gameId: 'journey_disc_arena', displayName: 'Journey Disc Arena', icon: '◉' },
+          { gameId: 'lexicon_relay', displayName: 'Lexicon Relay', icon: 'A↗' },
         ],
         activeEventType: 'lucky_spin',
         journeyDiscReplacesTimedEvent: replacesTimedEvent,
@@ -130,8 +143,52 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
         true,
         'Lucky Spin resumes as the active tile without resetting its event',
       );
-      assertEqual(slots.some((slot) => slot.kind === 'journey_disc'), false, 'Journey Disc leaves the grid');
+      assertEqual(slots.some((slot) => slot.kind === 'journey_disc'), false, 'Journey Disc no longer replaces the active timed tile');
+      assertEqual(
+        slots.some((slot) => slot.kind === 'exhibition' && slot.gameId === 'journey_disc_arena'),
+        true,
+        'Journey Disc remains discoverable as a chapter-gated exhibition',
+      );
       assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the expanded grid remains available');
+    },
+  },
+  {
+    name: 'developer event-grid order keeps every registered game visible',
+    run: () => {
+      const availableIds = [
+        'feeding_frenzy',
+        'lucky_spin',
+        'space_excavator',
+        'companion_feast',
+        'skybound_expedition',
+        'journey_disc_arena',
+        'momentum_matrix',
+        'concord_categories',
+        'lexicon_relay',
+        'signal_path',
+        'twin_sigils',
+      ];
+      const resolved = resolveIslandEventGridOrder({
+        availableIds,
+        preferredIds: ['skybound_expedition', 'skybound_expedition', 'retired_game', 'feeding_frenzy'],
+      });
+      assertEqual(resolved.length, 11, 'all eleven event and exhibition games remain visible');
+      assertEqual(resolved[0], 'skybound_expedition', 'the preferred top-ranked game is preserved');
+      assertEqual(resolved[1], 'feeding_frenzy', 'the next valid preference follows');
+      assertEqual(resolved.includes('lexicon_relay'), true, 'word exhibitions are appended when absent from saved order');
+      assertEqual(resolved.includes('twin_sigils'), true, 'new catalogue games cannot be hidden by stale saved order');
+    },
+  },
+  {
+    name: 'developer drag order moves a game without dropping its peers',
+    run: () => {
+      const moved = moveIslandEventGridItem({
+        orderedIds: ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'skybound_expedition'],
+        sourceId: 'skybound_expedition',
+        targetId: 'feeding_frenzy',
+      });
+      assertEqual(moved.join(','), 'skybound_expedition,feeding_frenzy,lucky_spin,space_excavator', 'dragged game moves before its target');
+      assertEqual(new Set(moved).size, 4, 'drag ordering preserves every unique game');
     },
   },
   {

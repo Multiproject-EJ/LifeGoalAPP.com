@@ -64,6 +64,7 @@ const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
 const MOMENTUM_MATRIX_PREVIEW_PATH = '/dev/momentum-matrix-preview';
+const SKYBOUND_EXPEDITION_PREVIEW_PATH = '/dev/skybound-expedition';
 const JOURNEY_DISC_ARENA_PREVIEW_PATH = '/dev/journey-disc-arena';
 const ARENA_PUZZLE_PREVIEW_PATH = '/dev/arena-puzzle-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
@@ -94,6 +95,22 @@ function MomentumMatrixPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/games/momentum-matrix/MomentumMatrixPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function SkyboundExpeditionPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/games/skybound-expedition/SkyboundExpeditionPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -561,6 +578,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === MOMENTUM_MATRIX_PREVIEW_PATH;
+  const isSkyboundExpeditionPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === SKYBOUND_EXPEDITION_PREVIEW_PATH;
   const isJourneyDiscArenaPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -644,6 +665,10 @@ function Root() {
 
   if (isMomentumMatrixPreviewRoute) {
     return <MomentumMatrixPreviewRoute />;
+  }
+
+  if (isSkyboundExpeditionPreviewRoute) {
+    return <SkyboundExpeditionPreviewRoute />;
   }
 
   if (isJourneyDiscArenaPreviewRoute) {

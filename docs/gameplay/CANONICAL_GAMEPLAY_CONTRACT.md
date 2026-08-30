@@ -295,6 +295,7 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 - A building can be funded at **any time**, regardless of which stop is currently active.
 - Buildings have **3 levels (L1, L2, L3)**. Each level requires Essence to fund.
 - Tapping a building in the Build Panel spends 10 Essence toward the current level. Holding continues spending.
+- Each visible build beat remains one awaited canonical spend. A tap presents its beat within 500 ms; holding ramps the presentation cadence from 420 ms to 160 ms while preserving every funded part, sound, haptic, robot phase, and level boundary. Rapid hold must never batch, skip, or pre-fund the next building level.
 - When a level is fully funded, the building animates and advances to the next level.
 - When **all 3 levels are funded**, the building's `buildComplete` flag is set.
 
@@ -496,10 +497,32 @@ canonical stop and never creates a second ticket or reward write path.
 
 | Event | Duration | Icon | Description |
 |---|---|---|---|
-| Feeding Frenzy | 8 hours | 🔥 | Feed creatures for bonus rewards |
+| Island Workshop (`feeding_frenzy`) | 8 hours | 🛠️ | Build route structures in the block-placement workshop |
 | Lucky Spin | 24 hours | 🎰 | Spin for prizes |
-| Space Excavator | 2 days | 🚀 | Excavation/resource gathering event |
+| Space Excavator | 1 day | 🚀 | Excavation/resource gathering event |
 | Companion Feast | 4 days | 🐾 | Extended companion bonding event |
+| Skybound Academy (`skybound_expedition`) | 3 days | ✈️ | Complete a five-aircraft Pilot Academy and earn Gold Wings |
+
+Skybound Academy is the fifth event in the canonical rotation. It owns no
+parallel wallet or reward bar: one valid aircraft launch spends exactly one
+ticket from `minigameTicketsByEvent[activeEventRuntimeId]`, and aiming,
+navigation, upgrades, invalid short pulls, and opening/closing the event spend
+nothing. Its event-scoped Academy record contains the 20-flight syllabus,
+five aircraft ranks, medals, certificate, fleet upgrades, earned salvage,
+active attempt, and bounded settlement-id ledger. A passed flight adds the
+normal four event-progress points; an Ace flight adds eight. The first pass of
+each rank checkride refills the shared event-ticket bucket by that rank's
+declared amount, and retry/duplicate settlement cannot repay tickets, salvage,
+Academy progression, or reward-bar progress. The final Ace checkride awards the
+Gold Wings medal and military pilot certificate presentation; it does not
+create a second direct wallet payout.
+
+Skybound stunt bonuses remain part of that same bounded flight settlement:
+close hazard passes, sustained low terrain skims, completed barrel rolls, and
+an actively rotating crash finale may add stunt score before settlement. A
+crash finale is presentation and score only — ground contact outside the safe
+landing envelope still destroys the aircraft, cannot pass a lesson, and cannot
+refund or bypass the one-ticket launch cost.
 
 **Task Tower scope clarification (current product truth):** Task Tower remains available as a standalone game in the Tasks / Actions area. It is **not** currently part of Island Run, not a 120-island landmark stop, not a timed-event minigame, not used for Feeding Frenzy, and not part of mystery-stop rotation.
 

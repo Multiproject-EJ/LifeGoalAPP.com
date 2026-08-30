@@ -408,10 +408,16 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
-import { isArenaPuzzleGameId } from '../services/islandRunArenaCatalog';
+import {
+  ARENA_GAME_CATALOG,
+  getArenaGameDefinition,
+  isArenaPuzzleGameId,
+} from '../services/islandRunArenaCatalog';
 import { isJourneyDiscArenaIsland } from '../services/journeyDiscArmory';
 import {
+  moveIslandEventGridItem,
   resolveIslandEventGridSlots,
+  resolveIslandEventGridOrder,
   shouldJourneyDiscReplaceTimedEventSurface,
 } from '../services/journeyDiscArenaIslandIntegration';
 import {
@@ -457,10 +463,20 @@ import {
   resolveTimedEventLaunchTicketDelta,
   resolveEventMinigameCompletionId,
   resolveSpaceExcavatorEventMinigame,
+  resolveSkyboundExpeditionEventMinigame,
   type MinigameLaunchSource,
   shouldResolveEventArenaStopOnMinigameComplete,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../services/islandRunMinigameLauncherService';
+import {
+  initSkyboundAcademyProgressForEvent,
+  installSkyboundAircraftPart,
+  settleSkyboundSortie,
+  startSkyboundSortie,
+  upgradeSkyboundFleetPart,
+} from '../services/islandRunSkyboundAcademyActions';
+import type { SkyboundFlightState, SkyboundUpgradeKind } from '../services/skyboundExpeditionFlight';
+import type { SkyboundAcademyRankId, SkyboundLessonId } from '../services/skyboundPilotAcademy';
 import {
   canOpenIslandRunOverlayWhileRollingState,
   resolveIslandRunPlaceholderDescriptor,
@@ -666,6 +682,13 @@ import {
   resolveBuildLevelCompletionPresentation,
   type BuildLevelCompletionPresentation,
 } from '../services/islandRunBuildModalV2ViewModel';
+import {
+  ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS,
+  ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS,
+  ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
+  ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS,
+  resolveIslandRunBuildHoldCadence,
+} from '../services/islandRunBuildCadence';
 import { deriveIslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
@@ -686,7 +709,7 @@ const ROLL_MIN = 1;
 const ROLL_MAX = 6;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
-const CANONICAL_EVENT_IDS: readonly EventId[] = ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast'];
+const CANONICAL_EVENT_IDS: readonly EventId[] = ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast', 'skybound_expedition'];
 const isCanonicalEventId = (value: string): value is EventId => (
   (CANONICAL_EVENT_IDS as readonly string[]).includes(value)
 );
@@ -720,8 +743,28 @@ function resolveIsland5BuildCameraPreset(stopId: string | undefined): Island5Cam
 }
 const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
+const DEBUG_EVENT_GRID_ORDER_KEY = 'islandRunDebugEventGridOrderV1';
 const DISCOVERY_FOG_DEV_STORAGE_KEY = 'islandRunDevDisableDiscoveryFog';
 const ISLAND_5_3D_DEV_QUALITY_KEY = 'islandRunDevIsland5ThreeQuality';
+
+function readDevEventGridOrder(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(DEBUG_EVENT_GRID_ORDER_KEY) ?? '[]');
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistDevEventGridOrder(order: readonly string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(DEBUG_EVENT_GRID_ORDER_KEY, JSON.stringify(order));
+  } catch {
+    // The reordered grid remains available for this session when storage is blocked.
+  }
+}
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark36_ring');
@@ -751,11 +794,10 @@ const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
-const BUILD_TAP_STEP_ANIMATION_DELAY_MS = 1_150;
-const BUILD_HOLD_REPEAT_DELAY_MS = 1_250;
-const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 3_200;
-const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 4_600;
-const BUILD_CAMERA_HANDOFF_DURATION_MS = 1_100;
+const BUILD_TAP_STEP_ANIMATION_DELAY_MS = ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS;
+const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS;
+const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS;
+const BUILD_CAMERA_HANDOFF_DURATION_MS = ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS;
 
 type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
   reviewId: number;
@@ -775,7 +817,6 @@ const TRAFFIC_LIGHT_REWARD_TAP_TWO_MS = 560;
 const TRAFFIC_LIGHT_REWARD_OPEN_MS = 560;
 const TRAFFIC_LIGHT_COIN_IDLE_HINT_DELAY_MS = 3_000;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
-const SPACE_EXCAVATOR_EVENT_ICON_SRC = '/assets/icons/Eventgame_excavator.webp';
 const TRAFFIC_LIGHT_MODAL_IMAGE_SRC = '/assets/traffic_light/Traffic_img.webp';
 const TRAFFIC_LIGHT_BOX_IMAGE_SRC = '/assets/traffic_light/IMG_box.webp';
 const TRAFFIC_LIGHT_GIFT_IMAGE_SRC = '/assets/traffic_light/IMG_gift.webp';
@@ -1890,6 +1931,10 @@ export function IslandRunBoardPrototype({
     const raw = window.sessionStorage.getItem(DEBUG_TIMED_EVENT_OVERRIDE_KEY);
     return raw && isCanonicalEventId(raw) ? raw : null;
   });
+  const [devEventGridOrder, setDevEventGridOrder] = useState<string[]>(readDevEventGridOrder);
+  const [draggedEventGridOrderId, setDraggedEventGridOrderId] = useState<string | null>(null);
+  const suppressEventGridClickAfterDragRef = useRef(false);
+  const eventGridPointerDragRef = useRef<{ pointerId: number; sourceId: string } | null>(null);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [isControllerTucked, setIsControllerTucked] = useState(false);
   const controllerTuckPointerRef = useRef<{
@@ -7154,14 +7199,12 @@ export function IslandRunBoardPrototype({
     return `${devTimedEventOverrideType}:dev:${nonce}`;
   }, [devTimedEventOverrideType]);
   const effectiveActiveTimedEvent = useMemo(() => {
-    // The four rotating event games (Island Workshop, Lucky Spin, Space
-    // Excavator, Companion Feast) are preview-only: surface them to admins and
-    // to an explicitly unlocked local QA session. Production non-admins never
-    // see the event banner, ticket chip, quick launch, or minigame launcher.
-    // The underlying reward-bar/event rotation remains untouched.
+    // The legacy four event surfaces remain preview-gated. Skybound Academy is
+    // the first production event promoted through the full canonical cycle.
     const journeyDiscChapterExhibitionCanExposeEvent = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
       && isJourneyDiscArenaIsland(islandNumber);
-    if (!journeyDiscChapterExhibitionCanExposeEvent && !shouldExposeArenaTimedEvent({
+    const productionSkyboundEventIsActive = activeTimedEvent?.eventType === 'skybound_expedition';
+    if (!productionSkyboundEventIsActive && !journeyDiscChapterExhibitionCanExposeEvent && !shouldExposeArenaTimedEvent({
       isAdmin,
       isDevModeEnabled,
       isLocalDevelopment: import.meta.env.DEV,
@@ -7235,11 +7278,34 @@ export function IslandRunBoardPrototype({
     ? { displayName: 'Journey Disc Arena', icon: '◉' }
     : activeEventMeta;
   const eventSurfaceTicketIcon = journeyDiscReplacesTimedEventSurface ? '◉' : timedEventTokenIcon;
+  const eventGridTemplates = useMemo(() => getEventRotationTemplates().map((template) => {
+    const game = getArenaGameDefinition(template.eventId);
+    return { ...template, icon: game.iconSrc ?? template.icon };
+  }), []);
+  const eventGridExhibitions = useMemo(() => ARENA_GAME_CATALOG
+    .filter((game) => game.availability === 'exhibition')
+    .map((game) => ({
+      gameId: game.id,
+      displayName: game.displayName,
+      icon: game.iconSrc ?? game.icon,
+    })), []);
+  const eventGridAvailableOrderIds = useMemo(() => [
+    ...eventGridTemplates.map((template) => template.eventId),
+    ...eventGridExhibitions.map((game) => game.gameId),
+  ], [eventGridExhibitions, eventGridTemplates]);
+  const resolvedDevEventGridOrder = useMemo(() => resolveIslandEventGridOrder({
+    availableIds: eventGridAvailableOrderIds,
+    preferredIds: devEventGridOrder,
+  }), [devEventGridOrder, eventGridAvailableOrderIds]);
+  const isDevEventGridControlEnabled = isDevModeEnabled && !journeyDiscReplacesTimedEventSurface;
   const eventGridSlots = useMemo(() => resolveIslandEventGridSlots({
-    templates: getEventRotationTemplates(),
+    templates: eventGridTemplates,
+    exhibitions: eventGridExhibitions,
     activeEventType: effectiveActiveTimedEvent?.eventType ?? null,
     journeyDiscReplacesTimedEvent: journeyDiscReplacesTimedEventSurface,
-  }), [effectiveActiveTimedEvent?.eventType, journeyDiscReplacesTimedEventSurface]);
+    orderedIds: isDevEventGridControlEnabled ? resolvedDevEventGridOrder : undefined,
+  }), [effectiveActiveTimedEvent?.eventType, eventGridExhibitions, eventGridTemplates, isDevEventGridControlEnabled, journeyDiscReplacesTimedEventSurface, resolvedDevEventGridOrder]);
+  const eventGridGameCount = eventGridSlots.filter((slot) => slot.kind !== 'empty').length;
   const handleLandmarkOpenRequest = useCallback((stopId: string) => {
     if (stopId === 'boss' && islandNumber === 1) {
       openFirstLightAssemblyCrater();
@@ -7290,8 +7356,8 @@ export function IslandRunBoardPrototype({
   }, [activeEventSurfaceMeta?.displayName, activeEventSurfaceMeta?.icon, trafficLightCoinFlip?.reward]);
   const activeEventIcon = journeyDiscReplacesTimedEventSurface
     ? '◉'
-    : effectiveActiveTimedEvent?.eventType === 'space_excavator'
-      ? SPACE_EXCAVATOR_EVENT_ICON_SRC
+    : effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType)
+      ? (getArenaGameDefinition(effectiveActiveTimedEvent.eventType).iconSrc ?? activeEventMeta?.icon ?? '')
       : activeEventMeta?.icon ?? '';
   const renderEventIcon = (className: string) => activeEventIcon.startsWith('/')
     ? <img className={`${className} ${className}--image`} src={activeEventIcon} alt="" aria-hidden="true" loading="lazy" />
@@ -10094,7 +10160,7 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleLaunchTimedEventMinigame = () => {
+  const handleLaunchTimedEventMinigame = async () => {
     if (!effectiveActiveTimedEvent) return;
     if (journeyDiscReplacesTimedEventSurface) {
       setIsTimedEventLaunchQueued(false);
@@ -10139,6 +10205,8 @@ export function IslandRunBoardPrototype({
           return resolveSpaceExcavatorEventMinigame(baseContext);
         case 'companion_feast':
           return resolveCompanionFeastEventMinigame(baseContext);
+        case 'skybound_expedition':
+          return resolveSkyboundExpeditionEventMinigame(baseContext);
         default:
           return null;
       }
@@ -10169,6 +10237,15 @@ export function IslandRunBoardPrototype({
         return;
       }
     }
+    const skyboundInitialRecord = effectiveActiveTimedEvent.eventType === 'skybound_expedition'
+      ? await initSkyboundAcademyProgressForEvent({
+          session,
+          client,
+          eventId: effectiveActiveTimedEvent.eventId,
+          triggerSource: 'skybound_event_open',
+        })
+      : null;
+    if (skyboundInitialRecord) setRuntimeState(skyboundInitialRecord);
     const eventSpecificLaunchConfig =
       effectiveActiveTimedEvent.eventType === 'space_excavator'
         ? {
@@ -10241,6 +10318,35 @@ export function IslandRunBoardPrototype({
               const finale = applyFortuneEngineFinaleResult({ session, client, eventId: effectiveActiveTimedEvent.eventId, success, triggerSource: 'fortune_engine_finale' });
               if (finale.ok) setRuntimeState(finale.record);
               return { ok: finale.ok, progress: finale.progress, rewardLabel: finale.rewardLabel, failureReason: finale.failureReason };
+            },
+          }
+        : effectiveActiveTimedEvent.eventType === 'skybound_expedition'
+        ? {
+            ...descriptor.config,
+            activeEventId: effectiveActiveTimedEvent.eventId,
+            eventExpiresAtMs: effectiveActiveTimedEvent.expiresAtMs,
+            arenaTimerManagedByGame: true,
+            initialProgress: skyboundInitialRecord?.skyboundAcademyProgressByEvent?.[effectiveActiveTimedEvent.eventId] ?? null,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
+            requestSortieStart: async (attemptId: string, lessonId: SkyboundLessonId) => {
+              const result = await startSkyboundSortie({ session, client, eventId: effectiveActiveTimedEvent.eventId, attemptId, lessonId, triggerSource: 'skybound_sortie_start' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, ticketsRemaining: result.ticketsRemaining, progress: result.progress, failureReason: result.failureReason };
+            },
+            requestSortieSettlement: async (attemptId: string, flight: SkyboundFlightState) => {
+              const result = await settleSkyboundSortie({ session, client, eventId: effectiveActiveTimedEvent.eventId, attemptId, flight, triggerSource: 'skybound_sortie_settle' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, alreadySettled: result.alreadySettled, ticketsRemaining: result.ticketsRemaining, ticketsAwarded: result.ticketsAwarded, rewardBarProgressAdded: result.rewardBarProgressAdded, progress: result.progress, evaluation: result.evaluation, salvageAwarded: result.salvageAwarded, failureReason: result.failureReason };
+            },
+            requestUpgrade: async (kind: SkyboundUpgradeKind) => {
+              const result = await upgradeSkyboundFleetPart({ session, client, eventId: effectiveActiveTimedEvent.eventId, kind, triggerSource: 'skybound_upgrade' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, cost: result.cost, progress: result.progress, failureReason: result.failureReason };
+            },
+            requestAssemblyPart: async (rankId: SkyboundAcademyRankId) => {
+              const result = await installSkyboundAircraftPart({ session, client, eventId: effectiveActiveTimedEvent.eventId, rankId, triggerSource: 'skybound_aircraft_assembly' });
+              if (result.ok) setRuntimeState(result.record);
+              return { ok: result.ok, cost: result.cost, progress: result.progress, failureReason: result.failureReason };
             },
           }
         : effectiveActiveTimedEvent.eventType === 'feeding_frenzy'
@@ -10484,7 +10590,7 @@ export function IslandRunBoardPrototype({
       return;
     }
     if (effectiveActiveTimedEvent?.eventType === gameId) {
-      handleLaunchTimedEventMinigame();
+      void handleLaunchTimedEventMinigame();
       return;
     }
     setLandingText('That diplomatic game returns in a future Arena rotation.');
@@ -10505,7 +10611,7 @@ export function IslandRunBoardPrototype({
       isAnimatingRoll: isAnimatingRollRef.current,
       isRollSyncPending: isRollSyncPendingRef.current,
     })) {
-      handleLaunchTimedEventMinigame();
+      void handleLaunchTimedEventMinigame();
     }
   }, [activeLaunchedMinigameId, handleLaunchTimedEventMinigame, isRolling, isTimedEventLaunchQueued, journeyDiscReplacesTimedEventSurface]);
   const handleLaunchEventSurface = () => {
@@ -10513,7 +10619,7 @@ export function IslandRunBoardPrototype({
       handleLaunchArenaGame('journey_disc_arena');
       return;
     }
-    handleLaunchTimedEventMinigame();
+    void handleLaunchTimedEventMinigame();
   };
   const handleSetDevTimedEventOverride = useCallback((eventType: EventId | null) => {
     if (!isDevModeEnabled || typeof window === 'undefined') return;
@@ -10524,6 +10630,24 @@ export function IslandRunBoardPrototype({
     }
     window.sessionStorage.setItem(DEBUG_TIMED_EVENT_OVERRIDE_KEY, eventType);
   }, [isDevModeEnabled]);
+  const handleMoveDevEventGridItem = useCallback((sourceId: string, targetId: string) => {
+    if (!isDevEventGridControlEnabled) return;
+    setDevEventGridOrder((current) => {
+      const orderedIds = resolveIslandEventGridOrder({
+        availableIds: eventGridAvailableOrderIds,
+        preferredIds: current,
+      });
+      const next = moveIslandEventGridItem({ orderedIds, sourceId, targetId });
+      persistDevEventGridOrder(next);
+      return next;
+    });
+  }, [eventGridAvailableOrderIds, isDevEventGridControlEnabled]);
+  const handleResetDevEventGridOrder = useCallback(() => {
+    if (!isDevEventGridControlEnabled) return;
+    const next = resolveIslandEventGridOrder({ availableIds: eventGridAvailableOrderIds });
+    persistDevEventGridOrder(next);
+    setDevEventGridOrder(next);
+  }, [eventGridAvailableOrderIds, isDevEventGridControlEnabled]);
   const handleGrantDevTimedEventTickets = useCallback((amount: number) => {
     if (!isDevModeEnabled || !devTimedEventOverrideEventId) return;
     const result = applyDevGrantTimedEventTickets({
@@ -11180,7 +11304,7 @@ export function IslandRunBoardPrototype({
   const stopBuildHold = useCallback((): void => {
     holdBuildSpendActiveRef.current = false;
     setIsBuildHoldActive(false);
-    markBuildChoreographyActive(1800);
+    markBuildChoreographyActive(900);
   }, [markBuildChoreographyActive]);
 
   const startBuildHold = useCallback((stopIndex: number): void => {
@@ -11193,9 +11317,10 @@ export function IslandRunBoardPrototype({
     ) return;
     holdBuildSpendActiveRef.current = true;
     setIsBuildHoldActive(true);
-    markBuildChoreographyActive(4000);
-    setBuildHoldFeedbackLabel('⚒️ Building steadily…');
+    markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
+    setBuildHoldFeedbackLabel(resolveIslandRunBuildHoldCadence(0).feedbackLabel);
     void (async () => {
+      let holdStepsApplied = 0;
       while (holdBuildSpendActiveRef.current) {
         const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);
         if (
@@ -11206,7 +11331,10 @@ export function IslandRunBoardPrototype({
           stopBuildHold();
           return;
         }
-        await wait(BUILD_HOLD_REPEAT_DELAY_MS);
+        holdStepsApplied += 1;
+        const cadence = resolveIslandRunBuildHoldCadence(holdStepsApplied);
+        setBuildHoldFeedbackLabel(cadence.feedbackLabel);
+        await wait(cadence.delayMs);
       }
     })();
   }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive, stopBuildHold]);
@@ -17158,40 +17286,121 @@ export function IslandRunBoardPrototype({
               </button>
             </header>
 
-            <div className="island-event-modal__grid" role="list" aria-label="Event mini-games">
-              {eventGridSlots.map((slot) => {
+            <div className={`island-event-modal__catalogue-summary${isDevModeEnabled ? ' is-dev' : ''}`}>
+              <div>
+                <strong>{eventGridGameCount} MINI-GAMES</strong>
+                <span>5 rotating events · {eventGridGameCount - 5} exhibitions</span>
+              </div>
+              {isDevModeEnabled && (
+                <button
+                  type="button"
+                  className="island-event-modal__reset-order"
+                  onClick={handleResetDevEventGridOrder}
+                  disabled={!isDevEventGridControlEnabled}
+                >
+                  Reset order
+                </button>
+              )}
+            </div>
+
+            {isDevModeEnabled && (
+              <div className={`island-event-modal__dev-control${isDevEventGridControlEnabled ? '' : ' is-locked'}`}>
+                <strong>DEV EVENT CONTROL</strong>
+                <span>
+                  {isDevEventGridControlEnabled
+                    ? 'Click a rotating game to make it active. Drag any tile to rank #1–#11.'
+                    : 'This island owns a special event surface, so rotation overrides and sorting are locked here.'}
+                </span>
+              </div>
+            )}
+
+            <div className="island-event-modal__grid" role="group" aria-label="Event mini-games">
+              {eventGridSlots.map((slot, slotIndex) => {
                 if (slot.kind === 'empty') {
                   return (
                     <span
                       key={slot.id}
-                      role="listitem"
                       className="island-event-modal__grid-item island-event-modal__grid-item--empty"
                       aria-label="Empty future game slot"
                     />
                   );
                 }
                 const isJourneyDisc = slot.kind === 'journey_disc';
+                const isExhibition = slot.kind === 'exhibition';
+                const canDevSelect = isDevEventGridControlEnabled && slot.kind === 'event';
+                const canPlayNow = isJourneyDisc || isExhibition || slot.active;
+                const actionLabel = slot.active || isJourneyDisc || isExhibition
+                  ? 'PLAY'
+                  : canDevSelect ? 'SELECT' : null;
                 const isSelected = slot.kind === 'event' && selectedEventInfoEventId === slot.eventId;
+                const isDragging = draggedEventGridOrderId === slot.orderId;
                 return (
                   <button
                     key={slot.id}
                     type="button"
-                    role="listitem"
-                    className={`island-event-modal__grid-item${slot.active ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}${isJourneyDisc ? ' island-event-modal__grid-item--journey-disc' : ''}`}
+                    className={`island-event-modal__grid-item${slot.active ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}${isJourneyDisc ? ' island-event-modal__grid-item--journey-disc' : ''}${isExhibition ? ' island-event-modal__grid-item--exhibition' : ''}${isDragging ? ' is-dragging' : ''}${isDevEventGridControlEnabled ? ' is-sortable' : ''}`}
+                    data-event-game-id={slot.orderId}
+                    aria-grabbed={isDevEventGridControlEnabled ? isDragging : undefined}
+                    onPointerDown={(event) => {
+                      if (!isDevEventGridControlEnabled || !event.isPrimary || event.button !== 0) return;
+                      eventGridPointerDragRef.current = {
+                        pointerId: event.pointerId,
+                        sourceId: slot.orderId,
+                      };
+                      setDraggedEventGridOrderId(slot.orderId);
+                    }}
+                    onPointerUp={(event) => {
+                      const pointerDrag = eventGridPointerDragRef.current;
+                      if (!isDevEventGridControlEnabled || !pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+                      eventGridPointerDragRef.current = null;
+                      setDraggedEventGridOrderId(null);
+                      if (pointerDrag.sourceId === slot.orderId) return;
+                      suppressEventGridClickAfterDragRef.current = true;
+                      handleMoveDevEventGridItem(pointerDrag.sourceId, slot.orderId);
+                      window.setTimeout(() => { suppressEventGridClickAfterDragRef.current = false; }, 0);
+                    }}
+                    onPointerCancel={(event) => {
+                      if (eventGridPointerDragRef.current?.pointerId !== event.pointerId) return;
+                      eventGridPointerDragRef.current = null;
+                      setDraggedEventGridOrderId(null);
+                    }}
                     onClick={() => {
+                      if (suppressEventGridClickAfterDragRef.current) return;
                       if (slot.kind === 'journey_disc') {
                         setSelectedEventInfoEventId(null);
                         setShowRewardDetailsModal(false);
                         handleLaunchArenaGame('journey_disc_arena');
                         return;
                       }
+                      if (slot.kind === 'exhibition') {
+                        setSelectedEventInfoEventId(null);
+                        setShowRewardDetailsModal(false);
+                        handleLaunchArenaGame(slot.gameId);
+                        return;
+                      }
+                      if (canDevSelect && !slot.active) {
+                        handleSetDevTimedEventOverride(slot.eventId as EventId);
+                        setSelectedEventInfoEventId(slot.eventId as EventId);
+                        return;
+                      }
+                      if (slot.active) {
+                        setSelectedEventInfoEventId(null);
+                        setShowRewardDetailsModal(false);
+                        handleLaunchEventSurface();
+                        return;
+                      }
                       setSelectedEventInfoEventId(slot.eventId as EventId);
                     }}
-                    aria-label={`${isJourneyDisc ? 'Play ' : ''}${slot.displayName}${slot.active ? ' (active now)' : ''}`}
+                    aria-label={`${canPlayNow ? 'Play' : canDevSelect ? 'Select' : 'View'} ${slot.displayName}${slot.active ? ' (active now)' : ''}${isDevEventGridControlEnabled ? `, rank ${slotIndex + 1}, draggable` : ''}`}
                   >
-                    <span aria-hidden="true" className="island-event-modal__grid-icon">{slot.icon}</span>
+                    {isDevModeEnabled && <span className="island-event-modal__grid-rank" aria-hidden="true">#{slotIndex + 1}</span>}
+                    <span aria-hidden="true" className="island-event-modal__grid-icon">
+                      {slot.icon.startsWith('/')
+                        ? <img className="island-event-modal__grid-icon-image" src={slot.icon} alt="" loading="lazy" />
+                        : slot.icon}
+                    </span>
                     <span className="island-event-modal__grid-label">{slot.displayName}</span>
-                    {isJourneyDisc && <span className="island-event-modal__grid-play-label">PLAY</span>}
+                    {actionLabel && <span className="island-event-modal__grid-play-label">{actionLabel}</span>}
                     {slot.active && <span className="island-event-modal__grid-active-dot" aria-hidden="true" />}
                   </button>
                 );
@@ -18852,6 +19061,7 @@ export function IslandRunBoardPrototype({
           <IslandRunMinigameLauncher
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
+            ticketBudget={activeLaunchedMinigameSource === 'timed_event' ? activeEventTickets : undefined}
             controllerInput={activeLaunchedMinigameId === 'shooter_blitz' ? shooterControllerInput : undefined}
             launchConfig={activeLaunchedMinigameConfig}
             onComplete={(result) => {

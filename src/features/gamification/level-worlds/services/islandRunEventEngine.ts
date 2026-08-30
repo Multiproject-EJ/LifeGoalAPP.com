@@ -40,7 +40,7 @@ import {
 } from './islandRunContractV2RewardBar';
 
 /** Canonical event ids — one per entry in `TIMED_EVENT_SEQUENCE`. */
-export type EventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
+export type EventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | 'skybound_expedition';
 
 /**
  * Ordered list of every canonical event id. Matches `TIMED_EVENT_SEQUENCE`
@@ -51,6 +51,7 @@ export const EVENT_IDS: readonly EventId[] = [
   'lucky_spin',
   'space_excavator',
   'companion_feast',
+  'skybound_expedition',
 ] as const;
 
 /** Full descriptor for the currently-active event. */
@@ -347,6 +348,7 @@ export type EventMinigameId =
   | 'lucky_spin'
   | 'space_excavator'
   | 'companion_feast'
+  | 'skybound_expedition'
   | 'momentum_matrix'
   | 'journey_disc_arena'
   | 'concord_categories'
@@ -371,6 +373,8 @@ function resolveEventMinigameId(eventId: EventId): EventMinigameId {
       return 'space_excavator';
     case 'companion_feast':
       return 'companion_feast';
+    case 'skybound_expedition':
+      return 'skybound_expedition';
     default:
       return 'lucky_spin';
   }
@@ -390,7 +394,8 @@ export function openEventMinigame(options: {
   // surface can open ticketless (the daily free Golden Launch still plays).
   const isPerActionSpend = options.eventId === 'space_excavator'
     || options.eventId === 'companion_feast'
-    || options.eventId === 'lucky_spin';
+    || options.eventId === 'lucky_spin'
+    || options.eventId === 'skybound_expedition';
   const requestedSpend = isPerActionSpend ? 0 : Math.floor(options.ticketsToSpend ?? ticketCost);
   if (!Number.isFinite(requestedSpend) || requestedSpend < 0) return null;
   if (!isPerActionSpend && requestedSpend < ticketCost) return null;

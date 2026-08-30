@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "partId": "cadet-core",
+  "status": "secondary-inferred-runtime-sprite",
+  "authority": "generated-hypothesis",
+  "sourceGoals": [
+    {"path":"docs/visual-references/skybound-expedition/skybound-pilot-academy-flight-goal-v2.png","sha256":"8c831a96a1c348490fb442e025c697446b6c60a9f8725f4436d3b949a06caccb"},
+    {"path":"docs/visual-references/skybound-expedition/skybound-pilot-academy-evolution-goal-v2.png","sha256":"c4bbf4f6f7c72561a3608be0685438d5e339a605b222968f95c094d1ebb22d7f"}
+  ],
+  "output": {
+    "path":"src/features/gamification/games/skybound-expedition/assets/cadet-chase-sprite-v1.png",
+    "sha256":"367b06f100c120adcadfdd3ae30adeda8c9dc6d525921873c880eaf8e1f4ce39",
+    "dimensions":[768,512],
+    "alpha":true,
+    "view":"rear-three-quarter-chase"
+  },
+  "visibleConfidence":"medium",
+  "hiddenConfidence":"low",
+  "prompt":"Create only the Rank 1 Cadet toy glider as a polished isolated rear three-quarter chase-camera view. Preserve white body, deep navy panels, cyan luminous trim, gold nose/edge accents, rounded toy-aircraft proportions, canopy, simple wings and tail; transparent background; one aircraft; no weapons or text.",
+  "exclusions":["not exact goal pixels","not geometry authority","not a hidden-side reference","not a replacement for the procedural Three.js model"]
+}

@@ -187,7 +187,7 @@ function BuildModalV2HoldButton({
       className={`bm2-hold-build${isActive ? ' bm2-hold-build--active' : ''}`}
       disabled={isDisabled}
       aria-disabled={isDisabled}
-      aria-label={`Press and hold to build ${activeTitle} steadily. Each beat costs up to ${nextTapEssenceCost} Money.`}
+      aria-label={`Press and hold to rapidly build ${activeTitle}. Every construction beat plays and costs up to ${nextTapEssenceCost} Money.`}
       onPointerDown={(event) => {
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
@@ -212,8 +212,11 @@ function BuildModalV2HoldButton({
     >
       <span className="bm2-hold-build__icon" aria-hidden="true">⚒️</span>
       <span className="bm2-hold-build__copy">
-        <strong>{isActive ? 'Building steadily…' : 'Hold to auto-build'}</strong>
-        <small>{nextTapEssenceCost} Money per smooth build beat</small>
+        <strong>{isActive ? 'Rapid build · full sequence' : 'Hold for rapid build'}</strong>
+        <small>{isActive ? 'Every part animation is playing' : `${nextTapEssenceCost} Money per build beat`}</small>
+      </span>
+      <span className="bm2-hold-build__sequence" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, index) => <i key={index} />)}
       </span>
       <span className="bm2-hold-build__meter" aria-hidden="true" />
     </button>
@@ -255,7 +258,7 @@ export function BuildModalV2({
     : '15 of 15 complete';
 
   return (
-    <div className={`island-run-overlay-root bm2-build-mode${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}`} role="presentation">
+    <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}`} role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
         <header className="bm2-header">
           <span className="bm2-header__crest" aria-hidden="true">⚒</span>
@@ -326,7 +329,7 @@ export function BuildModalV2({
                 </div>
               </div>
 
-              <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Choose any unfinished milestone or hold to build steadily.</p>
+              <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Choose any unfinished milestone or hold for rapid build.</p>
               <BuildModalV2HoldButton
                 activeTitle={active.title}
                 activeStopIndex={active.stopIndex}

@@ -21,11 +21,11 @@ import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const arenaPuzzleGamesTests: TestCase[] = [
   {
-    name: 'catalog preserves four rotation games and includes Journey Disc plus puzzle exhibitions',
+    name: 'catalog exposes five rotation games and includes Journey Disc plus puzzle exhibitions',
     run: () => {
       const ids = ARENA_GAME_CATALOG.map((game) => game.id);
       assertEqual(new Set(ids).size, ids.length, 'Arena ids must be unique');
-      assertEqual(ARENA_GAME_CATALOG.filter((game) => game.availability === 'active_event').length, 4, 'four existing rotation games remain');
+      assertEqual(ARENA_GAME_CATALOG.filter((game) => game.availability === 'active_event').length, 5, 'five rotation games should be available');
       ARENA_PUZZLE_GAME_IDS.forEach((id) => assert(ids.includes(id), `${id} should be in the Arena catalog`));
       assert(ids.includes('journey_disc_arena'), 'Journey Disc Arena should be a canonical exhibition choice');
     },

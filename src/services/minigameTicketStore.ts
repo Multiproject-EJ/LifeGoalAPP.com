@@ -24,6 +24,7 @@ export const MINIGAME_TICKET_SKU_BY_EVENT: Record<EventId, MinigameTicketSkuId> 
   lucky_spin: 'lucky_spin_tickets_10',
   space_excavator: 'space_excavator_tickets_10',
   companion_feast: 'companion_feast_tickets_10',
+  skybound_expedition: 'minigame_tickets_10',
 };
 
 export function resolveMinigameTicketSku(eventId: EventId | null | undefined): MinigameTicketSkuId {
