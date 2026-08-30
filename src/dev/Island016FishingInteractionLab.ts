@@ -6,9 +6,9 @@ import {
 } from '../features/gamification/level-worlds/dev/island5ThreePilotContract';
 import {
   buildIsland22FishermansVillageLandmark,
-  createIsland22FishermansVillageBackdrop,
   createIsland22FishermansVillageLivingAmbience,
   createIsland22FishermansVillageMaterials,
+  resolveIsland22HarborWeatherState,
   type Island22FishingInteractionPhase,
   type Island22FishingInteractionPresentation,
 } from '../features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld';
@@ -35,7 +35,10 @@ scene.environment = environmentTarget.texture;
 scene.environmentIntensity = 0.34;
 roomEnvironment.dispose();
 pmremGenerator.dispose();
-scene.background = createIsland22FishermansVillageBackdrop();
+// A plain clear colour is intentionally the only non-geometry fallback. The
+// visible sky, clouds, sun, islets, gulls, ocean and weather all live in the
+// Island 016 Three.js world so the lab cannot conceal a retired 2D plate.
+scene.background = new THREE.Color(0x8ecdda);
 // Match the production Island Run fog. The former 0.012 lab-only density
 // flattened the sea, erased the authored horizon islets and made evidence
 // materially harsher than the actual phone scene.
@@ -59,11 +62,16 @@ const world = createIsland22FishermansVillageLivingAmbience(
 
 const params = new URLSearchParams(window.location.search);
 const requestedView = params.get('view');
-const requestedAzimuth = Number(params.get('azimuth'));
+const requestedAzimuthParam = params.get('azimuth');
+const requestedAzimuth = Number(requestedAzimuthParam);
+const hasRequestedAzimuth = requestedAzimuthParam !== null && Number.isFinite(requestedAzimuth);
 const isolateLandmark = params.get('isolate') === '1';
 const clayReview = params.get('clay') === '1';
 const macroReview = params.get('macro') === '1';
 const dragonTime = Number(params.get('dragonTime'));
+const weatherTimeParam = params.get('weatherTime');
+const weatherTime = Number(weatherTimeParam);
+const hasLockedWeatherTime = weatherTimeParam !== null && Number.isFinite(weatherTime);
 const baselineView = requestedView && requestedView !== 'fishing' ? requestedView : null;
 const landmarkObjectNames: Record<string, string> = {
   boss: 'ISLAND_22_BOSS_LANDMARK_ROOT',
@@ -233,6 +241,7 @@ function updateHud(presentation: Island22FishingInteractionPresentation) {
 
 function frame() {
   const elapsed = clock.getElapsedTime();
+  const weatherElapsed = hasLockedWeatherTime ? Math.max(0, weatherTime) : elapsed;
   const presentation = resolvePresentation(elapsed);
   world.updateFishingInteraction(baselineView
     ? { ...presentation, active: false, phase: 'off' }
@@ -242,7 +251,10 @@ function frame() {
     fishCaughtKg: dragonActive ? 78 : 46,
     previewElapsedSeconds: dragonActive ? Math.max(0, dragonTime) : 0,
   });
-  world.animate(elapsed);
+  world.animate(weatherElapsed);
+  const weather = resolveIsland22HarborWeatherState(weatherElapsed);
+  document.body.dataset.weatherPhase = weather.phase;
+  document.body.dataset.weatherIntensity = weather.intensity.toFixed(3);
   if (!baselineView) updateHud(presentation);
   if (baselineView === 'dragon') {
     const pose = world.getWaterDragonMissionCameraPose();
@@ -261,7 +273,13 @@ function frame() {
       camera.updateProjectionMatrix();
     }
     const portraitOverview = window.innerWidth / Math.max(1, window.innerHeight) < 0.75;
-    camera.position.set(0, portraitOverview ? 21.5 : 19.5, portraitOverview ? 36.5 : 33);
+    const overviewAzimuth = hasRequestedAzimuth ? THREE.MathUtils.degToRad(requestedAzimuth) : 0;
+    const overviewDistance = portraitOverview ? 36.5 : 33;
+    camera.position.set(
+      Math.sin(overviewAzimuth) * overviewDistance,
+      portraitOverview ? 21.5 : 19.5,
+      Math.cos(overviewAzimuth) * overviewDistance,
+    );
     camera.lookAt(0, 0.25, 0);
   } else if (baselineView && landmarkObjectNames[baselineView]) {
     const subject = isolatedLandmark ?? world.root.getObjectByName(landmarkObjectNames[baselineView]);
@@ -279,7 +297,7 @@ function frame() {
     const viewDirection = baselineView === 'market'
       ? towardCenter.clone().negate()
       : towardCenter;
-    const lockedGuildHallOrbit = baselineView === 'boss' && Number.isFinite(requestedAzimuth);
+    const lockedGuildHallOrbit = baselineView === 'boss' && hasRequestedAzimuth;
     if (lockedGuildHallOrbit) {
       const orbitRadians = THREE.MathUtils.degToRad(requestedAzimuth);
       viewDirection.set(Math.sin(orbitRadians), 0, Math.cos(orbitRadians));
