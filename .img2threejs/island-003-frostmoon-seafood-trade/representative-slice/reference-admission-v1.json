@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-28",
+  "fullTurnaround": {
+    "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/seafood-trade-studies/003-wind-sail-seafood-freight-cart-turnaround-v001.png",
+    "sha256": "ac0afca968bc4193c0250bd0709e2c10f740a6b9cd1bef3b90b69c88fd73e853",
+    "role": "cross-view-authority",
+    "automatedAdmission": "rejected-as-fragmented-because-four-separated-turnaround-views-share-one-sheet"
+  },
+  "primaryCrop": {
+    "path": ".img2threejs/island-003-frostmoon-seafood-trade/representative-slice/derived/freight-cart-front-three-quarter-v4.png",
+    "sha256": "fec238120ca00a83c2721d4a51db12e717c1dc299331406d3c8ab72ebb748e5a",
+    "width": 760,
+    "height": 560,
+    "phash": "17634395186250402049",
+    "automatedAdmission": "admitted",
+    "semanticSuitability": "pass"
+  },
+  "decision": "Use the admitted primary crop for single-frame deterministic gates and the immutable full turnaround for profile, rear and underside review."
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "offshore-read",
+    "score": 0.96,
+    "notes": "The detached ice platform remains structurally complete above the section and connected only by its service umbilical."
+  },
+  {
+    "id": "board-clear",
+    "score": 0.97,
+    "notes": "The cutaway is a mission-camera presentation below the offshore root and adds no playable route geometry."
+  },
+  {
+    "id": "drill-read",
+    "score": 0.95,
+    "notes": "A-frame, winch, bore, segmented shaft and helical cutter read as one working drilling machine."
+  },
+  {
+    "id": "operating-read",
+    "score": 0.91,
+    "notes": "The completed fishery, reservoir and conveyor remain a separate named operating-state hierarchy."
+  },
+  {
+    "id": "construction-read",
+    "score": 0.9,
+    "notes": "The existing bounded snow construction burst remains separate from the drilling and breakthrough particle systems."
+  },
+  {
+    "id": "complete-cutaway-silhouette",
+    "score": 0.96,
+    "notes": "Rig, surface slab, section frame, full drill string, cutter and freshwater destination remain legible in one phone frame."
+  },
+  {
+    "id": "volumetric-ice-section",
+    "score": 0.94,
+    "notes": "Five extruded bands, front seams, side rails and thickness-axis views prove a real 3D section rather than a billboard."
+  },
+  {
+    "id": "mechanical-continuity",
+    "score": 0.95,
+    "notes": "Bore opening, collars, segmented shaft and copper helical cutter share one uninterrupted drilling axis."
+  },
+  {
+    "id": "cutter-and-debris-read",
+    "score": 0.91,
+    "notes": "Copper flights, cutting crown, bore score and bounded ice inclusions/chips add readable meso and micro form."
+  },
+  {
+    "id": "water-approach-read",
+    "score": 0.94,
+    "notes": "The cyan lens, proximity glow and concentric ripples create an unambiguous destination under the ice."
+  },
+  {
+    "id": "phone-framing",
+    "score": 0.93,
+    "notes": "The section fills the phone without clipping the rig crown or water lens."
+  }
+]

@@ -3,7 +3,6 @@ import { resolveCollisionFreeTileIndices } from './islandRunTileReservations';
 
 export const FROSTWELL_ISLAND_NUMBER = 3;
 export const FROSTWELL_DEPTH_METERS = 500;
-export const FROSTWELL_BASE_TECH_COST = 1_000;
 /** Three route positions, deliberately clear of landmark-door clusters. */
 export const FROSTWELL_DRILL_TILE_INDICES = Object.freeze([8, 17, 27] as const);
 export const FROSTWELL_SPIN_METERS = Object.freeze([15, 20, 25, 30, 40, 50, 60, 75] as const);
@@ -590,22 +589,30 @@ export function sanitizeIslandRunSignatureMissionProgress(
     const builtAtRaw = record.builtAtMs ?? record.built_at_ms;
     const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
     const lastSpinRaw = record.lastSpinMeters ?? record.last_spin_meters;
+    const normalizedMetersDrilled = Math.max(0, Math.min(
+      FROSTWELL_DEPTH_METERS,
+      typeof metersDrilled === 'number' && Number.isFinite(metersDrilled)
+        ? Math.floor(metersDrilled)
+        : Math.floor(Math.max(0, legacyRolls) * 2.5),
+    ));
+    const normalizedUpdatedAtMs = typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+      ? Math.max(0, updatedAtRaw)
+      : 0;
     result[key] = {
       missionId: 'frostwell-iceworks',
       version: 2,
-      metersDrilled: Math.max(0, Math.min(
-        FROSTWELL_DEPTH_METERS,
-        typeof metersDrilled === 'number' && Number.isFinite(metersDrilled)
-          ? Math.floor(metersDrilled)
-          : Math.floor(Math.max(0, legacyRolls) * 2.5),
-      )),
+      metersDrilled: normalizedMetersDrilled,
       spinsEarned: Math.max(0, finiteInteger(record.spinsEarned ?? record.spins_earned)),
       spinsUsed: Math.max(0, finiteInteger(record.spinsUsed ?? record.spins_used)),
       lastSpinMeters: typeof lastSpinRaw === 'number' && Number.isFinite(lastSpinRaw)
         ? Math.max(0, Math.floor(lastSpinRaw))
         : null,
-      builtAtMs: typeof builtAtRaw === 'number' && Number.isFinite(builtAtRaw) ? Math.max(0, builtAtRaw) : null,
-      updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw) ? Math.max(0, updatedAtRaw) : 0,
+      builtAtMs: typeof builtAtRaw === 'number' && Number.isFinite(builtAtRaw)
+        ? Math.max(0, builtAtRaw)
+        : normalizedMetersDrilled >= FROSTWELL_DEPTH_METERS
+          ? Math.max(1, normalizedUpdatedAtMs)
+          : null,
+      updatedAtMs: normalizedUpdatedAtMs,
     };
   });
   return result;
@@ -618,7 +625,12 @@ export function resolveFrostwellIceworksProgress(options: {
 }): FrostwellIceworksProgress {
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber ?? FROSTWELL_ISLAND_NUMBER);
   const current = options.ledger[key];
-  return current?.missionId === 'frostwell-iceworks' ? current : {
+  if (current?.missionId === 'frostwell-iceworks') {
+    return current.metersDrilled >= FROSTWELL_DEPTH_METERS && current.builtAtMs === null
+      ? { ...current, builtAtMs: Math.max(1, current.updatedAtMs) }
+      : current;
+  }
+  return {
     missionId: 'frostwell-iceworks',
     version: 2,
     metersDrilled: 0,
@@ -1647,11 +1659,6 @@ export function mergeIslandRunSignatureMissionProgress(
     };
   });
   return merged;
-}
-
-export function getFrostwellIceworksTechCost(cycleIndex: number): number {
-  const effectiveIsland = getEffectiveIslandNumber(FROSTWELL_ISLAND_NUMBER, cycleIndex);
-  return Math.round(FROSTWELL_BASE_TECH_COST * getIslandEssenceMultiplier(effectiveIsland));
 }
 
 export function getFrostwellDepthProgress(progress: FrostwellIceworksProgress): number {

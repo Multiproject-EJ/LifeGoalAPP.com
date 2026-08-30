@@ -1,0 +1,12 @@
+[
+  {"id":"offshore-read","score":0.96,"notes":"The cool key keeps the detached platform silhouette readable above the section."},
+  {"id":"board-clear","score":0.97,"notes":"Lighting remains local to the presentation root and does not create route affordances."},
+  {"id":"drill-read","score":0.95,"notes":"Warm cutter task light separates the shaft, collars and helical bit from the ice."},
+  {"id":"operating-read","score":0.92,"notes":"Completed fishery practicals remain independent from the active drilling state."},
+  {"id":"construction-read","score":0.90,"notes":"Soft snow particles and cyan water effects retain distinct lighting responses."},
+  {"id":"key-fill-rim","score":0.94,"notes":"Cool daylight key, cold hemisphere fill and reflective edge response preserve the complete section silhouette."},
+  {"id":"cutter-task-light","score":0.93,"notes":"A bounded warm point light focuses attention on the active cutter without hiding geometry."},
+  {"id":"freshwater-bounce","score":0.94,"notes":"Cyan bounce and emissive ripples make the approaching freshwater readable below the last ice band."},
+  {"id":"warm-cool-separation","score":0.95,"notes":"Copper machinery and hearth practicals remain warm against the cool ice and water environment."},
+  {"id":"exposure","score":0.92,"notes":"ACES tone mapping retains snow highlights, dark steel detail and translucent cyan layers in one phone frame."}
+]

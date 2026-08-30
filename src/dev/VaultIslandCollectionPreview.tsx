@@ -32,9 +32,19 @@ export default function VaultIslandCollectionPreview() {
   const previewState = readPreviewState();
   const [showGift, setShowGift] = useState(previewState.gift);
   const unlockedTreasureIds = VAULT_ISLAND_COLLECTION_TREASURE_IDS.slice(0, previewState.ownedCount);
+  const collectionEntries = unlockedTreasureIds.map((treasureId, index) => {
+    const sourceIslandNumber = index === unlockedTreasureIds.length - 1
+      ? previewState.sourceIslandNumber
+      : index + 1;
+    return {
+      treasureId,
+      sourceIslandNumber,
+      accessionNumber: `VI-${String(sourceIslandNumber).padStart(3, '0')}-${String(index + 1).padStart(2, '0')}`,
+    };
+  });
   const featuredTreasureId = unlockedTreasureIds[unlockedTreasureIds.length - 1];
   const featuredTreasure = previewState.featured && featuredTreasureId
-    ? { treasureId: featuredTreasureId, sourceIslandNumber: previewState.sourceIslandNumber }
+    ? collectionEntries[collectionEntries.length - 1]
     : null;
   if (showGift) {
     return (
@@ -71,6 +81,7 @@ export default function VaultIslandCollectionPreview() {
   return (
     <VaultIslandCollectionModal
       unlockedTreasureIds={unlockedTreasureIds}
+      collectionEntries={collectionEntries}
       initialView={featuredTreasure ? 'vault' : undefined}
       featuredTreasure={featuredTreasure}
       holdingsValue={previewState.holdingsValue}

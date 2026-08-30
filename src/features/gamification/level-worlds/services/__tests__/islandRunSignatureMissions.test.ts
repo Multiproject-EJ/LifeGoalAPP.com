@@ -28,7 +28,6 @@ import {
   getGreatHoneyfallAvailableNectar,
   getGreatHoneyfallNectarQuantityForTile,
   getFrostwellAvailableSpins,
-  getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
   getStagedRestorationMissionDescriptor,
   getStagedRestorationPickupTileIndices,
@@ -51,7 +50,6 @@ import {
   activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   detonateFirstLightAssemblyCharge,
-  fundFrostwellIceworks,
   fundRootheartPowerworksStage,
   releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
@@ -1039,7 +1037,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'Frostwell wheel resolves canonical metres, consumes one spin, and caps at 500m',
+    name: 'Frostwell final wheel spin reaches 500m and commissions the fishery immediately without an Essence charge',
     run: async () => {
       await seedFrostwell({ meters: 470, spinsEarned: 2 });
       const result = await spinFrostwellDrillWheel({ session: makeSession(), client: null, random: () => 0.999 });
@@ -1051,6 +1049,10 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(result.meters, 30, 'award is clipped to remaining depth');
       assertEqual(progress.metersDrilled, 500, 'depth caps at target');
       assertEqual(progress.spinsUsed, 1, 'exactly one credit is consumed');
+      assertEqual(result.commissioned, true, 'the final drill result reports immediate commissioning');
+      assert(progress.builtAtMs !== null && result.builtAtMs !== null, 'the same canonical commit persists the operating timestamp');
+      assertEqual(after.essence, 1_500, 'automatic commissioning does not charge a second Essence gate');
+      assertEqual(after.essenceLifetimeSpent, 20, 'automatic commissioning leaves lifetime Essence spend unchanged');
     },
   },
   {
@@ -1080,40 +1082,19 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'Frostwell funding action deducts exactly once and persists the built timestamp',
-    run: async () => {
-      await seedFrostwell();
-      const first = await fundFrostwellIceworks({ session: makeSession(), client: null });
-      const afterFirst = readIslandRunGameStateRecord(makeSession());
-      const second = await fundFrostwellIceworks({ session: makeSession(), client: null });
-      assertEqual(first.status, 'ok', 'ready mission can be funded');
-      assertEqual(afterFirst.essence, 500, 'funding deducts the 1000 Essence cost');
-      assertEqual(afterFirst.essenceLifetimeSpent, 1_020, 'lifetime spend increments atomically');
-      assertEqual(second.status, 'already_built', 'funding is idempotent');
-      assertEqual(readIslandRunGameStateRecord(makeSession()).essence, 500, 'repeat funding cannot double-spend');
-    },
-  },
-  {
-    name: 'Frostwell funding action rejects an insufficient wallet without mutation',
-    run: async () => {
-      await seedFrostwell({ essence: 999 });
-      const result = await fundFrostwellIceworks({ session: makeSession(), client: null });
-      assertEqual(result.status, 'insufficient_essence', 'wallet guard blocks purchase');
-      assertEqual(readIslandRunGameStateRecord(makeSession()).essence, 999, 'blocked funding leaves wallet untouched');
-    },
-  },
-  {
-    name: 'Frostwell sanitizer migrates the 50m local draft and normalizes v2 fields',
+    name: 'Frostwell sanitizer migrates the 50m draft and auto-commissions existing 500m saves',
     run: () => {
       const sanitized = sanitizeIslandRunSignatureMissionProgress({
         '0:3': { rolls_completed: 20, built_at_ms: -4, updated_at_ms: 9 },
+        '1:3': { meters_drilled: 500, updated_at_ms: 12 },
         bad: 'nope',
       });
       const progress = resolveFrostwellIceworksProgress({ ledger: sanitized, islandNumber: 3, cycleIndex: 0 });
+      const completed = resolveFrostwellIceworksProgress({ ledger: sanitized, islandNumber: 3, cycleIndex: 1 });
       assertEqual(progress.metersDrilled, 50, 'legacy draft preserves actual drilled metres');
       assertEqual(progress.builtAtMs, 0, 'timestamps are normalized');
+      assertEqual(completed.builtAtMs, 12, 'an existing 500m save becomes operating without a funding tap');
       assertEqual(resolveFrostwellSpinMeters(0.999), 75, 'wheel edge maps to final segment');
-      assertEqual(getFrostwellIceworksTechCost(0), 1_000, 'Island 003 first-cycle tech cost matches brief');
     },
   },
 ];

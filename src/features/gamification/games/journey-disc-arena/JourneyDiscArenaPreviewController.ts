@@ -5,6 +5,7 @@ import {
   resolveJourneyDiscArenaEncounter,
   scoreJourneyDiscArenaRound,
   stepJourneyDiscArena,
+  triggerJourneyDiscArenaFreezeAttack,
   triggerJourneyDiscArenaSurge,
   type JourneyDiscArenaEvent,
   type JourneyDiscArenaEncounterProfile,
@@ -66,13 +67,14 @@ export interface JourneyDiscArenaPreviewController {
   getSnapshot: () => JourneyDiscArenaPreviewSnapshot;
   setDeployedDiscCount: (count: number) => void;
   toggleFormationSlot: (slotIndex: number) => void;
-  addSelectedFighterToFormation: () => void;
+  addSelectedFighterToFormation: (fighterId?: string) => void;
   removeFormationFighter: (fighterId: string) => void;
   applyExternalProgress: (progress: JourneyDiscArenaProgressEntry, tickets?: number) => void;
   claimMilestone: (milestoneId: string) => void;
   launchRound: () => void;
   selectFighter: (fighterId: string) => void;
   triggerSurge: () => void;
+  triggerFreezeAttack: () => void;
   launchRematch: () => void;
   prepareNextRound: () => void;
   resetPreview: () => void;
@@ -191,7 +193,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
     combo: 0,
     comboExpiresAtMs: 0,
     lastImpactLabel: '',
-    notice: 'Choose a disc to inspect it. Tickets are spent only when battle starts.',
+    notice: 'Team ready. Start the next battle, or change your team.',
   };
   let animationFrame = 0;
   let previousTimeMs = 0;
@@ -242,6 +244,10 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         const comboExpiresAtMs = meaningfulImpact || knockouts > 0 ? nowMs + 1850 : snapshot.comboExpiresAtMs;
         const lastImpactLabel = knockouts > 0
           ? 'RING OUT!'
+          : newestEvents.some((event) => event.type === 'drive_off' && event.succeeded)
+            ? 'DRIVE-OFF!'
+            : newestEvents.some((event) => event.type === 'drive_off' && !event.succeeded)
+              ? 'PUSH-OFF EVADED!'
           : newestEvents.some((event) => event.type === 'echo_spawn')
             ? 'ECHO SPAWNED!'
             : newestEvents.some((event) => event.type === 'freeze')
@@ -367,9 +373,9 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
           : 'Active team empty. Select a disc, then add it.',
       });
     },
-    addSelectedFighterToFormation() {
+    addSelectedFighterToFormation(fighterId) {
       if (snapshot.mode !== 'prep') return;
-      const selectedIndex = lineup.findIndex((fighter) => fighter.id === snapshot.selectedFighterId);
+      const selectedIndex = lineup.findIndex((fighter) => fighter.id === (fighterId ?? snapshot.selectedFighterId));
       if (selectedIndex < 0) {
         commit({ notice: 'Select a disc from your collection first.' });
         return;
@@ -394,6 +400,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         formationSlots,
         deployedDiscCount,
         encounter,
+        selectedFighterId: lineup[selectedIndex].id,
         notice: `${lineup[selectedIndex].name} added · tickets remain untouched until battle starts.`,
       });
     },
@@ -419,7 +426,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
       commit({ progress, encounter, playerLineup: lineup, wins: progress.victories, ...(tickets === undefined ? {} : { tickets }), notice: 'Reward claimed. Formation energy increased.' });
     },
     claimMilestone(milestoneId) {
-      if (snapshot.mode !== 'prep') return;
+      if (snapshot.mode !== 'prep' && snapshot.mode !== 'result') return;
       const external = options.requestClaimMilestone?.(milestoneId);
       if (external) {
         if (external.ok && external.progress) {
@@ -461,7 +468,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
     launchRound() {
       if (snapshot.mode !== 'prep') return;
       if (snapshot.deployedDiscCount < 1) {
-        commit({ notice: 'Add at least one fighter to the formation pad.' });
+        commit({ notice: 'Add at least one disc to your team.' });
         return;
       }
       if (snapshot.tickets < snapshot.deployedDiscCount) {
@@ -473,7 +480,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
           deployedDiscCount: affordableCount,
           notice: affordableCount > 0
             ? `Only ${affordableCount} weapon disc${affordableCount === 1 ? '' : 's'} available. Formation adjusted.`
-            : 'No weapon discs remain. Earn event tickets from the Island Run reward bar.',
+            : 'No battle tickets remain. Earn more from the Island Run reward bar.',
         });
         return;
       }
@@ -524,7 +531,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
       if (snapshot.mode === 'prep') {
         const lineupEntry = snapshot.playerLineup.find((candidate) => candidate.id === fighterId);
         if (!lineupEntry) return;
-        commit({ selectedFighterId: fighterId, notice: `${lineupEntry.name} selected · inspect it, then choose Add to Team.` });
+        commit({ selectedFighterId: fighterId, notice: `${lineupEntry.name} selected. Use Add or Remove to change the team.` });
         return;
       }
       if (snapshot.mode !== 'battle' || !snapshot.battle) return;
@@ -555,11 +562,25 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         lastImpactLabel: `${actionLabel}!`,
       });
     },
+    triggerFreezeAttack() {
+      if (snapshot.mode !== 'battle' || !snapshot.battle) return;
+      const result = triggerJourneyDiscArenaFreezeAttack(snapshot.battle, snapshot.selectedFighterId);
+      if (!result.accepted) {
+        commit({ notice: result.failureReason === 'opening' ? 'Hold formation…' : result.failureReason === 'not_ready' ? 'Freeze pulse is recharging…' : 'No rival can be frozen.' });
+        return;
+      }
+      commit({
+        battle: result.state,
+        recentEvents: result.events,
+        notice: 'FREEZE PULSE — nearest rival locked in ice!',
+        lastImpactLabel: 'FROZEN!',
+      });
+    },
     launchRematch() {
       if (snapshot.mode !== 'result') return;
       const affordableCount = Math.min(snapshot.deployedDiscCount, snapshot.tickets);
       if (affordableCount < 1) {
-        commit({ mode: 'prep', battle: null, notice: 'No weapon discs remain. Earn event tickets from the Island Run reward bar.' });
+        commit({ mode: 'prep', battle: null, notice: 'No battle tickets remain. Earn more from the Island Run reward bar.' });
         return;
       }
       const start = options.requestStartRound?.(affordableCount);
@@ -603,7 +624,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         combo: 0,
         comboExpiresAtMs: 0,
         lastImpactLabel: '',
-        notice: `${encounter.label} rematch · Surge is ready.`,
+        notice: `${encounter.label} · next campaign battle · abilities ready.`,
       });
     },
     prepareNextRound() {
@@ -624,7 +645,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         lastImpactLabel: '',
         notice: snapshot.tickets > 0
           ? `Formation adjusted to ${affordableCount} available weapon disc${affordableCount === 1 ? '' : 's'}.`
-          : 'No weapon discs remain. Earn event tickets from the Island Run reward bar.',
+          : 'No battle tickets remain. Earn more from the Island Run reward bar.',
       });
     },
     resetPreview() {

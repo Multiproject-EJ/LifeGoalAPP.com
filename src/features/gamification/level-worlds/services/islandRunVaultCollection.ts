@@ -22,6 +22,7 @@ export type VaultIslandCollectionTreasureId = typeof VAULT_ISLAND_COLLECTION_TRE
 export interface VaultIslandCollectionEntry {
   treasureId: VaultIslandCollectionTreasureId;
   sourceIslandNumber: number;
+  accessionNumber: string;
 }
 
 export interface VaultIslandCollectionResolution {
@@ -35,6 +36,13 @@ export interface VaultIslandCollectionResolution {
 }
 
 export type VaultIslandWealthTier = 'empty' | 'starter' | 'growing' | 'abundant' | 'legendary';
+
+function formatVaultIslandAccessionNumber(
+  sourceIslandNumber: number,
+  collectionIndex: number,
+): string {
+  return `VI-${String(sourceIslandNumber).padStart(3, '0')}-${String(collectionIndex + 1).padStart(2, '0')}`;
+}
 
 export interface VaultIslandWealthDisplay {
   holdingsValue: number;
@@ -91,6 +99,7 @@ export function resolveVaultIslandCollection(
     .map((sourceIslandNumber, index) => ({
       treasureId: VAULT_ISLAND_COLLECTION_TREASURE_IDS[index],
       sourceIslandNumber,
+      accessionNumber: formatVaultIslandAccessionNumber(sourceIslandNumber, index),
     }));
   const unlockedTreasureIds = entries.map((entry) => entry.treasureId);
   const unlockedCount = unlockedTreasureIds.length;

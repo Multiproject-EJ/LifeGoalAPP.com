@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostmoon-landmark-palette-identity",
+  "status": "approved-bounded-correction-in-production",
+  "approvedAt": "2026-08-29",
+  "approvalInput": "great, continue",
+  "problem": "The approved landmark silhouettes read as one repeated dark-timber house family at the gameplay overview distance.",
+  "frozen": [
+    "all five approved landmark silhouettes and footprints",
+    "Level 1 through Level 3 additive construction",
+    "canonical 36-tile route and protected corridor",
+    "mission, reward, lift, fishing and seafood-trade state authority",
+    "warm raw-copper roof direction",
+    "ordinary winter sky with no northern lights"
+  ],
+  "palettes": {
+    "hatchery": "cream and honey timber with sage facade trim and warm copper roof",
+    "habit": "charcoal timber with oxblood banners and fire-orange metal details",
+    "wisdom": "walnut timber with burgundy archive accents and aged bronze",
+    "event": "pale stone and brass with subdued patina restricted to instrument accents",
+    "boss": "dark civic stone with burnished copper, warm ivory plaster and crimson banners"
+  },
+  "boundedAdditions": [
+    "Snowfeather sage entry fascia",
+    "Aurora Keep crimson civic banners",
+    "Moonwell patina armillary accents",
+    "night window emissive synchronization across all landmark-owned palettes",
+    "restrained hearth light pools on snow",
+    "three deterministic distant alpine ridge archetypes"
+  ],
+  "acceptance": [
+    "all five landmarks have distinct facade and trim colors at the overview camera",
+    "every roof-family material remains warmer in red than green or blue",
+    "Moonwell patina never becomes a blue roof",
+    "night windows and facade light spill remain readable without aurora",
+    "no new gameplay write path or route obstruction is introduced"
+  ]
+}

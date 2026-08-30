@@ -1,0 +1,20 @@
+{
+  "subject": "Aurora Keep L3 embedded runtime",
+  "reference": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-turnarounds/003-aurora-keep-turnaround-v001.png",
+  "fixedView": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-aurora-keep/aurora-keep-implementation-front.png",
+  "tier1": {
+    "passed": false,
+    "silhouetteIoU": 0.4369,
+    "aspectRatioDelta": 0.0413,
+    "scaleDelta": 0.1013,
+    "symmetryError": 0.068,
+    "reason": "Advisory failure: the approved reference is a multi-view neutral studio sheet while the render is an embedded phone-world crop containing the island, board and scenery. The diagnostic explicitly reported that the runtime render was not isolated, so literal pixel IoU is not a valid acceptance authority for this production mode."
+  },
+  "multiAngle": {
+    "passed": true,
+    "degenerate": false,
+    "areaRatios": [1.0101, 1.0259],
+    "views": ["right", "rear"]
+  },
+  "decision": "Use deterministic measurements as advisory evidence and apply the embedded-runtime visual contract, cross-view inspection and semantic part coverage as the acceptance authority."
+}

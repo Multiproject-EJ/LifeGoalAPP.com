@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-frostmoon-copper-day-night-upgrade",
+  "status": "awaiting-user-decomposition-approval",
+  "capturedAt": "2026-08-27",
+  "goalAuthority": [
+    {
+      "kind": "user-authored-text",
+      "path": ".img2threejs/island-003-frostmoon-upgrade/goals/exact/user-goal-v001.md",
+      "sha256": "c42af5cf78d7f5b4d0b51348b5c146786ad75d19b3c4fa0e773e357e2bb3f490",
+      "authority": "exact"
+    }
+  ],
+  "currentResult": {
+    "salvageDecision": "salvage-all-landmark-identities-footprints-and-gameplay-rebuild-material-lighting-and-ambience-systems",
+    "reason": "The five Level 3 landmarks already have distinct readable silhouettes and valid placement. The blue roof family and static arctic lighting do not match the selected warm raw-copper direction or requested day-to-night ambience.",
+    "implementation": {
+      "path": "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts",
+      "sha256": "8c590100c3e4a102dc41a865c1cbce250efa59a1cfc73c4c53c6dd29f10fefea"
+    },
+    "matchedCaptures": [
+      {
+        "landmark": "Snowfeather Roost",
+        "path": ".codex/screenshots/island-003/landmark-level3-hatchery.png",
+        "sha256": "18cf1a811c5a39f03db46994d9af74507a47d9a2a95eef1f9ac03f7bffaa5bc1"
+      },
+      {
+        "landmark": "Hearthguard Yard",
+        "path": ".codex/screenshots/island-003/landmark-level3-habit.png",
+        "sha256": "ce574cc03daaa0492983805d2c56a9cf2c76cbd9fc7f18b320af04a5a83be7a5"
+      },
+      {
+        "landmark": "Moonwell Observatory",
+        "path": ".codex/screenshots/island-003/landmark-level3-event.png",
+        "sha256": "ab77df7bc0a01ca8ea7d739d9c34c23345ac27298d52c0a221c4d69983bc0772"
+      },
+      {
+        "landmark": "Frostfire Archive",
+        "path": ".codex/screenshots/island-003/landmark-level3-wisdom.png",
+        "sha256": "8993108cc095e9cdce8b57602f99fc411d3bec3daf9a1a6780909ff971e518a6"
+      },
+      {
+        "landmark": "Aurora Keep",
+        "path": ".codex/screenshots/island-003/landmark-level3-boss.png",
+        "sha256": "cc22c3cfd5e63188706fe37a65c453dc98a0dbd4576cf4f9fae803949271c228"
+      }
+    ]
+  },
+  "selectedSecondaryReferences": [
+    {
+      "role": "material-and-style-direction",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/ambience/003-style-direction-copper-v001.png",
+      "sha256": "6634fe47c608bc7daad6d12434f521430f1d6242cd34f80faa32865a9af42564"
+    },
+    {
+      "role": "clear-day-keyframe",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/ambience/003-ambience-day-v001.png",
+      "sha256": "6aca3a43034b7a58bab21d19f3da03f4bd9930f320a81860671ecd2d9988a76d"
+    },
+    {
+      "role": "late-day-blizzard-keyframe",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/ambience/003-ambience-late-day-blizzard-v001.png",
+      "sha256": "fd5e15692426b9dad1d5dce5fa1198767cf1eef82a4b9d46b255f20c60700156"
+    },
+    {
+      "role": "clearing-dusk-keyframe",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/ambience/003-ambience-clearing-dusk-v001.png",
+      "sha256": "2af6e70a1d514e789db4f2f6b218e45f143aa95531aa49805317812766113ead"
+    },
+    {
+      "role": "cozy-night-keyframe",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/ambience/003-ambience-cozy-night-v001.png",
+      "sha256": "162d423f3a6095f9775b1f7f21e9a70fb7193de9a7b5098f57cec4fdfe2a84d9"
+    }
+  ],
+  "lockedVisualFacts": {
+    "aurora": "prohibited",
+    "roofDirection": "warm raw copper and dark bronze; no blue roof family and no verdigris",
+    "cycle": ["clear day", "short late-day blizzard", "clearing dusk", "cozy night"],
+    "nightCues": ["warm yellow windows", "contained hearth glow", "chimney smoke", "moon and stars"],
+    "authorityRule": "Generated overview images guide material, lighting and ambience only; current runtime silhouettes and footprints remain authoritative."
+  },
+  "unresolvedVisualAuthority": [
+    "Exact hidden rear and side construction of each landmark",
+    "Exact duration of the day-to-night loop",
+    "Whether every landmark receives a visible chimney or only selected hearth buildings",
+    "Final blizzard density at Low and Reduced Motion settings"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "model": "island-003-frostfire-archive-l3",
+  "source": "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts",
+  "mappingPolicy": "Component ids are stable coverage aliases; runtimeName records the exact selectable Three.js group name verified by the landmark contract test.",
+  "parts": [
+    { "name": "circular-foundation", "kind": "part", "module": "foundation", "runtimeName": "ISLAND_3_FROSTFIRE_CIRCULAR_FROST_STONE_FOUNDATION" },
+    { "name": "octagonal-stone-and-timber-shell", "kind": "part", "module": "shell", "runtimeName": "ISLAND_3_FROSTFIRE_OCTAGONAL_STONE_AND_TIMBER_SHELL" },
+    { "name": "front-stair-and-archive-door", "kind": "part", "module": "entry", "runtimeName": "ISLAND_3_FROSTFIRE_FRONT_STAIR_AND_ARCHIVE_DOOR" },
+    { "name": "exterior-reading-alcove", "kind": "part", "module": "reading-alcove", "runtimeName": "ISLAND_3_FROSTFIRE_EXTERIOR_READING_ALCOVE" },
+    { "name": "radial-copper-roof", "kind": "part", "module": "roof", "runtimeName": "ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF" },
+    { "name": "frostfire-lantern-stack", "kind": "part", "module": "frostfire-stack", "runtimeName": "ISLAND_3_FROSTFIRE_OPEN_LANTERN_STACK" },
+    { "name": "rear-furnace-and-flue", "kind": "part", "module": "rear-service", "runtimeName": "ISLAND_3_FROSTFIRE_REAR_FURNACE_AND_CAPPED_FLUE" },
+    { "name": "dark-timber-buttress-system", "kind": "part", "module": "shell-bracing", "runtimeName": "ISLAND_3_FROSTFIRE_DARK_TIMBER_BUTTRESS_SYSTEM" },
+    { "name": "reading-window-system", "kind": "part", "module": "reading-windows", "runtimeName": "ISLAND_3_FROSTFIRE_READING_WINDOW_SYSTEM" },
+    { "name": "archive-shelves-and-books", "kind": "part", "module": "archive-dressing", "runtimeName": "ISLAND_3_FROSTFIRE_ARCHIVE_SHELVES_BOOKS_AND_CHARTS" },
+    { "name": "open-book-crest", "kind": "part", "module": "identity-crest", "runtimeName": "ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST" },
+    { "name": "rear-document-chests", "kind": "part", "module": "rear-service", "runtimeName": "ISLAND_3_FROSTFIRE_REAR_DOCUMENT_CHESTS" },
+    { "name": "rear-tools-and-logs", "kind": "part", "module": "rear-service", "runtimeName": "ISLAND_3_FROSTFIRE_REAR_TOOLS_AND_SPLIT_LOGS" },
+    { "name": "roof-ribs-brackets-and-snow-seams", "kind": "part", "module": "roof-finish", "runtimeName": "ISLAND_3_FROSTFIRE_ROOF_RIBS_BRACKETS_SNOW_SEAMS_AND_ICICLES" }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 0,
+  "notes": [
+    "The brass index and fastener system is intentionally distributed across the entry, roof-finish and rear-chest parts; it is not exposed as a second fused ownership group.",
+    "The L3 stack flame remains a separately named animation subtree beneath the lantern stack."
+  ]
+}

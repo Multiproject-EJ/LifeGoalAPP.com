@@ -1,0 +1,50 @@
+[
+  {
+    "id": "keep-silhouette",
+    "importance": "critical",
+    "score": 0.86,
+    "threshold": 0.85,
+    "passed": true,
+    "finding": "Tall civic gable, paired round towers and visible wings preserve the approved hierarchy at the canonical camera."
+  },
+  {
+    "id": "gate-gallery-system",
+    "importance": "critical",
+    "score": 0.86,
+    "threshold": 0.85,
+    "passed": true,
+    "finding": "The gatehouse projects below the warm upper gallery, with corrected roof attachment and a clear heavy door."
+  },
+  {
+    "id": "copper-roof-system",
+    "importance": "critical",
+    "score": 0.85,
+    "threshold": 0.85,
+    "passed": true,
+    "finding": "Warm raw-copper main, tower and wing roofs replace blue roofs and retain snow caps; plate embossing is simplified."
+  },
+  {
+    "id": "ridge-ring-system",
+    "importance": "critical",
+    "score": 0.87,
+    "threshold": 0.85,
+    "passed": true,
+    "finding": "Two visibly supported engineered rings form the L3 crown without aurora or magical glow language."
+  },
+  {
+    "id": "night-habitation",
+    "importance": "critical",
+    "score": 0.88,
+    "threshold": 0.85,
+    "passed": true,
+    "finding": "Warm gallery, tower and gatehouse windows remain legible under the restrained night lighting."
+  },
+  {
+    "id": "rear-service-system",
+    "importance": "important",
+    "score": 0.82,
+    "threshold": 0.8,
+    "passed": true,
+    "finding": "Rear wing, yard door, truss, roof, chimney and shipment dressing make the back functional, though small props are subtle from the world camera."
+  }
+]

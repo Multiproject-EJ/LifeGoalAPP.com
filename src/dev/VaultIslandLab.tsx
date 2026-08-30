@@ -5,12 +5,14 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {
   createVaultTreasureIslandModel,
   type VaultIslandQuality,
   type VaultTreasureIslandRuntime,
 } from '../features/gamification/level-worlds/dev/VaultTreasureIslandModel';
 import {
+  createVaultTreasureGardenGalleryModel,
   createVaultTreasurePalaceAtriumModel,
   createVaultTreasureVaultInteriorModel,
 } from '../features/gamification/level-worlds/dev/VaultTreasureVaultInteriorModel';
@@ -26,73 +28,29 @@ import {
   VAULT_TREASURE_DEFINITIONS,
   type VaultTreasureId,
 } from '../features/gamification/level-worlds/dev/VaultTreasureModels';
+import type { VaultIslandCollectionEntry } from '../features/gamification/level-worlds/services/islandRunVaultCollection';
+import {
+  loadVaultIslandPerimeterStyle,
+  normalizeVaultIslandPerimeterStyle,
+  saveVaultIslandPerimeterStyle,
+  type VaultIslandPerimeterStyle,
+} from '../features/gamification/level-worlds/services/islandRunVaultCustomization';
+import { VaultIslandBuildTuner } from './VaultIslandBuildTuner';
 import './VaultIslandLab.css';
 
 const SOURCE_SRC = '/assets/dev/vault-island-lab/treasure-island-source.png';
 const FALLBACK_SRC = '/assets/islands/special/vault-island/vault-island-fallback.png';
-export type VaultIslandLabView = 'exterior' | 'atrium' | 'vault';
+export type VaultIslandLabView = 'exterior' | 'atrium' | 'garden' | 'vault';
 
 export interface VaultIslandLabProps {
   embedded?: boolean;
   onClose?: () => void;
   unlockedTreasureIds?: readonly VaultTreasureId[];
+  collectionEntries?: readonly VaultIslandCollectionEntry[];
   initialView?: VaultIslandLabView;
   featuredTreasureId?: VaultTreasureId;
   featuredSourceIslandNumber?: number;
   holdingsValue?: number;
-}
-
-function createExteriorSkyTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 1024;
-  const context = canvas.getContext('2d');
-  if (!context) return null;
-
-  const sky = context.createLinearGradient(0, 0, 0, canvas.height);
-  sky.addColorStop(0, '#4f8299');
-  sky.addColorStop(0.34, '#8eb8c3');
-  sky.addColorStop(0.58, '#f1d7b0');
-  sky.addColorStop(0.72, '#89b7c3');
-  sky.addColorStop(1, '#1b6687');
-  context.fillStyle = sky;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  const sun = context.createRadialGradient(390, 205, 8, 390, 205, 150);
-  sun.addColorStop(0, 'rgba(255, 244, 195, 0.96)');
-  sun.addColorStop(0.18, 'rgba(255, 211, 140, 0.58)');
-  sun.addColorStop(1, 'rgba(255, 190, 110, 0)');
-  context.fillStyle = sun;
-  context.fillRect(220, 30, 292, 350);
-
-  const cloud = (x: number, y: number, width: number, height: number, opacity: number) => {
-    context.save();
-    context.translate(x, y);
-    context.scale(width, height);
-    const cloudGradient = context.createRadialGradient(0, 0, 0.04, 0, 0, 1);
-    cloudGradient.addColorStop(0, `rgba(255, 247, 226, ${opacity})`);
-    cloudGradient.addColorStop(0.52, `rgba(239, 235, 220, ${opacity * 0.5})`);
-    cloudGradient.addColorStop(1, 'rgba(224, 231, 231, 0)');
-    context.fillStyle = cloudGradient;
-    context.beginPath();
-    context.arc(0, 0, 1, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
-  };
-  cloud(82, 150, 170, 48, 0.54);
-  cloud(215, 240, 150, 34, 0.34);
-  cloud(442, 118, 128, 42, 0.46);
-  cloud(120, 360, 170, 30, 0.22);
-
-  const horizon = context.createLinearGradient(0, 560, 0, 735);
-  horizon.addColorStop(0, 'rgba(255, 226, 181, 0.72)');
-  horizon.addColorStop(1, 'rgba(109, 164, 180, 0)');
-  context.fillStyle = horizon;
-  context.fillRect(0, 540, canvas.width, 210);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
 }
 
 interface VaultIslandLabQaSnapshot {
@@ -117,6 +75,7 @@ interface VaultIslandLabQaSnapshot {
   wealthIngotCount: number;
   wealthCoinCount: number;
   wealthGemCount: number;
+  perimeterStyle: VaultIslandPerimeterStyle;
   lastPointerHit: VaultTreasureId | 'none';
   route: string;
 }
@@ -131,6 +90,7 @@ function readInitialView(): VaultIslandLabView {
   if (typeof window === 'undefined') return 'exterior';
   const params = new URLSearchParams(window.location.search);
   if (params.get('view') === 'vault' || params.get('vault') === '1') return 'vault';
+  if (params.get('view') === 'garden') return 'garden';
   return params.get('view') === 'atrium' ? 'atrium' : 'exterior';
 }
 
@@ -147,10 +107,44 @@ function readCameraPreset() {
   return new URLSearchParams(window.location.search).get('camera') === 'top' ? 'top' : 'phone';
 }
 
+function readInitialPerimeterStyle(): VaultIslandPerimeterStyle {
+  if (typeof window === 'undefined') return 'charms';
+  const requested = new URLSearchParams(window.location.search).get('perimeter');
+  return requested === null
+    ? loadVaultIslandPerimeterStyle()
+    : normalizeVaultIslandPerimeterStyle(requested);
+}
+
+function readCleanPresentationMode() {
+  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('clean') === '1';
+}
+
+function readBuildTunerMode() {
+  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('dev') === '1';
+}
+
+function readBuildFill(name: string, fallback = 100) {
+  if (typeof window === 'undefined') return fallback;
+  const value = new URLSearchParams(window.location.search).get(name);
+  if (value === null) return fallback;
+  const raw = Number(value);
+  return Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : fallback;
+}
+
+function wealthFromBuildFill(fill: number) {
+  const normalized = Math.min(100, Math.max(0, fill));
+  if (normalized === 0) return 0;
+  if (normalized <= 25) return Math.max(1, Math.round((normalized / 25) * 499));
+  if (normalized <= 50) return Math.round(500 + ((normalized - 25) / 25) * 1_999);
+  if (normalized <= 75) return Math.round(2_500 + ((normalized - 50) / 25) * 7_499);
+  return Math.round(10_000 + ((normalized - 75) / 25) * 90_000);
+}
+
 export default function VaultIslandLab({
   embedded = false,
   onClose,
   unlockedTreasureIds,
+  collectionEntries = [],
   initialView,
   featuredTreasureId,
   featuredSourceIslandNumber,
@@ -179,6 +173,7 @@ export default function VaultIslandLab({
   const revealRunRef = useRef(0);
   const lastPointerHitRef = useRef<VaultTreasureId | 'none'>('none');
   const qaYawOverrideRef = useRef<number | null>(null);
+  const perimeterStyleRef = useRef<VaultIslandPerimeterStyle>(readInitialPerimeterStyle());
   const [quality, setQuality] = useState<VaultIslandQuality>(() => (embedded ? 'high' : readInitialQuality()));
   const [view, setView] = useState<VaultIslandLabView>(() => initialView ?? (embedded ? 'exterior' : readInitialView()));
   const [selectedTreasureId, setSelectedTreasureId] = useState<VaultTreasureId>(initialTreasureId);
@@ -186,19 +181,43 @@ export default function VaultIslandLab({
   const [autoOrbit, setAutoOrbit] = useState(true);
   const [showReference, setShowReference] = useState(false);
   const [isMuseumCardExpanded, setIsMuseumCardExpanded] = useState(false);
+  const [perimeterStyle, setPerimeterStyle] = useState<VaultIslandPerimeterStyle>(() => perimeterStyleRef.current);
   const [isReady, setIsReady] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [qaSnapshot, setQaSnapshot] = useState<VaultIslandLabQaSnapshot | null>(null);
+  const [exteriorFill, setExteriorFill] = useState(() => readBuildFill('exteriorFill'));
+  const [vaultInteriorFill, setVaultInteriorFill] = useState(() => readBuildFill('interiorFill'));
+  const [gigaCharmFill, setGigaCharmFill] = useState(() => readBuildFill('charmFill'));
   const requestedYaw = useMemo(() => (embedded ? -0.08 : readRequestedYaw()), [embedded]);
+  const cleanPresentationMode = useMemo(() => embedded || readCleanPresentationMode(), [embedded]);
+  const buildTunerMode = useMemo(() => !embedded && readBuildTunerMode(), [embedded]);
   const cameraPreset = useMemo(() => (embedded ? 'phone' : readCameraPreset()), [embedded]);
   const qualityOptions = useMemo<VaultIslandQuality[]>(() => ['low', 'medium', 'high'], []);
+  const perimeterOptions = useMemo<Array<{ id: VaultIslandPerimeterStyle; label: string }>>(() => [
+    { id: 'charms', label: 'Charms' },
+    { id: 'garden', label: 'Garden' },
+    { id: 'gold-castle', label: 'Gold' },
+  ], []);
   const selectedTreasure = useMemo(() => getVaultTreasureDefinition(selectedTreasureId), [selectedTreasureId]);
+  const selectedCollectionEntry = useMemo(
+    () => collectionEntries.find((entry) => entry.treasureId === selectedTreasureId) ?? null,
+    [collectionEntries, selectedTreasureId],
+  );
+  const effectiveHoldingsValue = buildTunerMode
+    ? wealthFromBuildFill(vaultInteriorFill)
+    : normalizedHoldingsValue;
   const collectionValue = useMemo(
     () => VAULT_TREASURE_DEFINITIONS
       .filter((treasure) => availableTreasureIds.includes(treasure.id))
       .reduce((total, treasure) => total + treasure.value, 0),
     [availableTreasureIds],
   );
+  const selectNextTreasure = () => {
+    if (availableTreasureIds.length < 2) return;
+    const selectedIndex = availableTreasureIds.indexOf(selectedTreasureId);
+    setSelectedTreasureId(availableTreasureIds[(selectedIndex + 1) % availableTreasureIds.length]);
+    setIsMuseumCardExpanded(false);
+  };
 
   useEffect(() => {
     if (availableTreasureIds.length > 0 && !availableTreasureIds.includes(selectedTreasureId)) {
@@ -213,6 +232,19 @@ export default function VaultIslandLab({
   useEffect(() => {
     revealRunRef.current = revealRun;
   }, [revealRun]);
+
+  useEffect(() => {
+    perimeterStyleRef.current = saveVaultIslandPerimeterStyle(perimeterStyle);
+    modelRef.current?.setPerimeterStyle?.(perimeterStyleRef.current);
+  }, [perimeterStyle]);
+
+  useEffect(() => {
+    modelRef.current?.setExteriorFill?.(exteriorFill);
+  }, [exteriorFill]);
+
+  useEffect(() => {
+    modelRef.current?.setGigaCharmFill?.(gigaCharmFill);
+  }, [gigaCharmFill]);
 
   useEffect(() => {
     if (
@@ -240,41 +272,32 @@ export default function VaultIslandLab({
     lastPointerHitRef.current = 'none';
     const scene = new THREE.Scene();
     const isInteriorView = view !== 'exterior';
-    const backgroundColor = view === 'vault' ? '#10192b' : view === 'atrium' ? '#1a3044' : '#91bfca';
-    const exteriorSky = isInteriorView ? null : createExteriorSkyTexture();
-    const exteriorOceanBackdrop = isInteriorView
-      ? null
-      : new THREE.TextureLoader().load('/assets/islands/island-004/background/ambient-background-v2.webp');
-    if (exteriorOceanBackdrop) {
-      exteriorOceanBackdrop.name = 'vault-island-cinematic-ocean-backdrop';
-      exteriorOceanBackdrop.colorSpace = THREE.SRGBColorSpace;
-      exteriorOceanBackdrop.minFilter = THREE.LinearMipmapLinearFilter;
-      exteriorOceanBackdrop.magFilter = THREE.LinearFilter;
-      scene.background = exteriorOceanBackdrop;
-      scene.backgroundIntensity = 0.86;
-    } else {
-      scene.background = exteriorSky ?? new THREE.Color(backgroundColor);
-    }
+    const backgroundColor = view === 'vault' ? '#10192b' : view === 'garden' ? '#b66f34' : view === 'atrium' ? '#244b57' : '#d6a14e';
+    scene.background = new THREE.Color(backgroundColor);
+    const fogColor = view === 'exterior' ? '#e0ad59' : view === 'garden' ? '#d89a55' : backgroundColor;
     scene.fog = new THREE.Fog(
-      backgroundColor,
-      view === 'vault' ? 7 : view === 'atrium' ? 18 : 14,
-      view === 'vault' ? 18 : view === 'atrium' ? 38 : 32,
+      fogColor,
+      view === 'vault' ? 7 : view === 'atrium' ? 18 : view === 'garden' ? 42 : 36,
+      view === 'vault' ? 18 : view === 'atrium' ? 38 : view === 'garden' ? 132 : 78,
     );
 
-    const camera = new THREE.PerspectiveCamera(38, 390 / 844, 0.1, 80);
+    const camera = new THREE.PerspectiveCamera(view === 'atrium' ? 56 : view === 'garden' ? 54 : isInteriorView ? 52 : 38, 390 / 844, 0.1, view === 'garden' ? 140 : 80);
     if (view === 'vault') {
-      camera.position.set(0, 3.45, 9.65);
-      camera.lookAt(0, 1.75, -0.72);
+      camera.position.set(0, 2.12, 7.62);
+      camera.lookAt(0, 2.62, -3.32);
+    } else if (view === 'garden') {
+      camera.position.set(0.15, 5.65, 11.4);
+      camera.lookAt(0, 1.55, -5.4);
     } else if (view === 'atrium') {
-      camera.position.set(0, 4.55, 19.2);
-      camera.lookAt(0, 4.0, -0.55);
+      camera.position.set(0.2, 1.58, 10.62);
+      camera.lookAt(0, 4.72, -2.88);
     } else {
       if (cameraPreset === 'top') {
         camera.position.set(5.4, 12.4, 14.2);
         camera.lookAt(0, 2.25, 0.1);
       } else {
-        camera.position.set(4.2, 8.4, 17.8);
-        camera.lookAt(0, 2.55, 0.28);
+        camera.position.set(4.4, 7.7, 18.5);
+        camera.lookAt(0, 2.65, 0.28);
       }
     }
 
@@ -282,29 +305,27 @@ export default function VaultIslandLab({
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     } catch {
-      exteriorSky?.dispose();
-      exteriorOceanBackdrop?.dispose();
       setRenderError('Interactive 3D is unavailable on this device.');
       return undefined;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = view === 'atrium' ? 1.03 : isInteriorView ? 1.02 : 0.96;
+    renderer.toneMappingExposure = view === 'atrium' ? 0.68 : view === 'garden' ? 0.69 : isInteriorView ? 0.78 : 0.9;
     renderer.shadowMap.enabled = quality !== 'low';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
-    const premiumEnvironment = installVaultPremiumEnvironment(renderer, scene, isInteriorView ? 0.52 : 0.43);
+    const premiumEnvironment = installVaultPremiumEnvironment(renderer, scene, view === 'garden' ? 0.6 : isInteriorView ? 0.46 : 0.32);
 
     const hemi = new THREE.HemisphereLight(
-      isInteriorView ? '#fff1c3' : '#fff1d2',
-      isInteriorView ? '#081326' : '#0b405e',
-      view === 'atrium' ? 1.46 : isInteriorView ? 1.36 : 0.72,
+      isInteriorView ? '#fff1c3' : '#ffca69',
+      isInteriorView ? '#081326' : '#17465b',
+      view === 'atrium' ? 0.48 : isInteriorView ? 0.62 : 0.66,
     );
     scene.add(hemi);
 
-    const sun = new THREE.DirectionalLight('#fff0c7', view === 'atrium' ? 4.15 : isInteriorView ? 4.0 : 3.15);
-    sun.position.set(isInteriorView ? -2.2 : -4.5, view === 'atrium' ? 7.2 : isInteriorView ? 5.6 : 7.5, isInteriorView ? 4.8 : 5.8);
+    const sun = new THREE.DirectionalLight(isInteriorView ? '#ffc56d' : '#ffb13f', view === 'atrium' ? 1.08 : view === 'garden' ? 1.42 : isInteriorView ? 1.52 : 3.3);
+    sun.position.set(isInteriorView ? -3.8 : 7.2, view === 'atrium' ? 9.4 : isInteriorView ? 7.2 : 7.6, isInteriorView ? 7.8 : -8.8);
     sun.castShadow = quality !== 'low';
     sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
     sun.shadow.camera.near = 1;
@@ -315,20 +336,35 @@ export default function VaultIslandLab({
     sun.shadow.camera.bottom = -5;
     scene.add(sun);
 
-    const rim = new THREE.DirectionalLight('#7df4ff', isInteriorView ? 1.65 : 0.72);
+    const rim = new THREE.DirectionalLight('#68cde0', isInteriorView ? 0.58 : 0.24);
     rim.position.set(4, 2.2, -4);
     scene.add(rim);
+
+    if (!isInteriorView) {
+      const goldenBounce = new THREE.DirectionalLight('#ffc86c', 0.78);
+      goldenBounce.name = 'vault-island-golden-hour-front-bounce';
+      goldenBounce.position.set(-5.5, 4.2, 8.5);
+      scene.add(goldenBounce);
+    }
 
     const model = view === 'vault'
       ? createVaultTreasureVaultInteriorModel({
         quality,
         animated: true,
         unlockedTreasureIds: hasOwnershipFilter ? availableTreasureIds : undefined,
-        holdingsValue: normalizedHoldingsValue ?? undefined,
+        holdingsValue: effectiveHoldingsValue ?? undefined,
       })
-      : view === 'atrium'
+      : view === 'garden'
+        ? createVaultTreasureGardenGalleryModel({ quality, animated: true })
+        : view === 'atrium'
         ? createVaultTreasurePalaceAtriumModel({ quality, animated: true })
-        : createVaultTreasureIslandModel({ quality, animated: true });
+        : createVaultTreasureIslandModel({
+          quality,
+          animated: true,
+          perimeterStyle: perimeterStyleRef.current,
+          exteriorFill,
+          gigaCharmFill,
+        });
     model.root.rotation.y = view === 'exterior' ? -0.08 : 0;
     scene.add(model.root);
     modelRef.current = model;
@@ -337,10 +373,14 @@ export default function VaultIslandLab({
     if (composer) {
       composer.addPass(new RenderPass(scene, camera));
       const ssao = new SSAOPass(scene, camera, 390, 844);
-      ssao.kernelRadius = view === 'exterior' ? 0.2 : 0.08;
+      ssao.kernelRadius = view === 'exterior' ? 0.2 : 0.13;
       ssao.minDistance = 0.001;
-      ssao.maxDistance = view === 'exterior' ? 0.15 : 0.06;
+      ssao.maxDistance = view === 'exterior' ? 0.15 : 0.1;
       composer.addPass(ssao);
+      if (isInteriorView) {
+        const bloom = new UnrealBloomPass(new THREE.Vector2(390, 844), view === 'vault' ? 0.12 : 0.08, 0.2, 0.94);
+        composer.addPass(bloom);
+      }
       composer.addPass(new OutputPass());
     }
 
@@ -355,6 +395,11 @@ export default function VaultIslandLab({
         child.userData.baseScale = child.scale.x;
         child.userData.basePosition = child.position.clone();
         child.userData.baseRotationY = child.rotation.y;
+        const heroTreasure = child.children.find((candidate) => candidate.userData.vaultInteriorHeroTreasure === true);
+        if (heroTreasure) {
+          heroTreasure.userData.baseHeroScale = heroTreasure.scale.clone();
+          child.userData.heroTreasure = heroTreasure;
+        }
         treasureDisplays.push(child);
       }
       if (child.name === 'vault-interior-stacked-essence-ingot') wealthIngotCount += 1;
@@ -395,8 +440,8 @@ export default function VaultIslandLab({
     const revealRings = new THREE.Group();
     revealRings.name = 'vault-room-luxury-reveal-rings';
     revealRings.visible = false;
-    for (let index = 0; index < 3; index += 1) {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42 + index * 0.12, 0.012, 6, 64), revealRingMaterial);
+    for (let index = 0; index < 2; index += 1) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.38 + index * 0.1, 0.009, 6, 64), revealRingMaterial);
       ring.name = 'vault-room-luxury-reveal-gold-ring';
       ring.rotation.set(index * 0.52, index * 0.68, index * 0.44);
       revealRings.add(ring);
@@ -406,6 +451,47 @@ export default function VaultIslandLab({
     const revealLight = new THREE.PointLight('#ffd77d', 0, 4.6, 2);
     revealLight.name = 'vault-room-luxury-reveal-light';
     scene.add(revealLight);
+    const revealRimLight = new THREE.PointLight('#86e8ff', 0, 4.2, 2);
+    revealRimLight.name = 'vault-room-luxury-reveal-crystal-rim-light';
+    scene.add(revealRimLight);
+    const presentationLights: THREE.Light[] = [];
+    scene.traverse((child) => {
+      if (!(child instanceof THREE.Light) || child === revealLight || child === revealRimLight) return;
+      child.userData.presentationBaseIntensity = child.intensity;
+      presentationLights.push(child);
+    });
+
+    const revealBackdropMaterial = new THREE.MeshBasicMaterial({
+      color: '#020713',
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const revealBackdrop = new THREE.Mesh(new THREE.PlaneGeometry(14, 10), revealBackdropMaterial);
+    revealBackdrop.name = 'vault-room-luxury-reveal-backdrop';
+    revealBackdrop.position.set(0, 3.2, 0.74);
+    revealBackdrop.renderOrder = 10;
+    revealBackdropMaterial.depthTest = false;
+    revealBackdrop.visible = false;
+    scene.add(revealBackdrop);
+
+    const presentationGold = new THREE.MeshBasicMaterial({
+      color: '#f4bd3e',
+      transparent: true,
+      opacity: 0,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const presentationFrame = new THREE.Group();
+    presentationFrame.name = 'vault-room-dedicated-luxury-presentation-frame';
+    presentationFrame.position.set(0, 1.62, 0.9);
+    presentationFrame.renderOrder = 11;
+    const presentationHalo = new THREE.Mesh(new THREE.TorusGeometry(0.98, 0.012, 8, 96), presentationGold);
+    presentationHalo.scale.y = 1.36;
+    presentationHalo.renderOrder = 11;
+    presentationFrame.add(presentationHalo);
+    presentationFrame.visible = false;
+    scene.add(presentationFrame);
 
     const selectedHaloMaterial = new THREE.MeshBasicMaterial({
       color: '#ffe18b',
@@ -442,11 +528,13 @@ export default function VaultIslandLab({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minDistance = view === 'vault' ? 7.2 : view === 'atrium' ? 15.2 : 8.4;
-    controls.maxDistance = view === 'vault' ? 11.4 : view === 'atrium' ? 22.6 : 16.8;
-    controls.minPolarAngle = isInteriorView ? 0.5 : 0.48;
-    controls.maxPolarAngle = view === 'vault' ? 1.3 : view === 'atrium' ? 1.22 : 1.18;
-    controls.target.set(0, view === 'vault' ? 1.75 : view === 'atrium' ? 4.0 : 2.55, view === 'vault' ? -0.72 : view === 'atrium' ? -0.55 : 0.28);
+    controls.minDistance = view === 'garden' ? 8.4 : view === 'vault' ? 7.2 : view === 'atrium' ? 10.4 : 8.4;
+    controls.maxDistance = view === 'garden' ? 20 : view === 'vault' ? 12.2 : view === 'atrium' ? 13.5 : 30;
+    controls.minPolarAngle = isInteriorView ? 0.38 : 0.48;
+    controls.maxPolarAngle = view === 'vault' ? 1.46 : view === 'atrium' ? 1.4 : 1.18;
+    controls.minAzimuthAngle = isInteriorView ? -0.82 : -Infinity;
+    controls.maxAzimuthAngle = isInteriorView ? 0.82 : Infinity;
+    controls.target.set(0, view === 'garden' ? 1.15 : view === 'vault' ? 2.66 : view === 'atrium' ? 4.72 : 2.65, view === 'garden' ? -4.8 : view === 'vault' ? -3.28 : view === 'atrium' ? -2.88 : 0.28);
 
     const clock = new THREE.Clock();
     let raf = 0;
@@ -455,7 +543,9 @@ export default function VaultIslandLab({
     let frameCount = 0;
     const selectedWorld = new THREE.Vector3();
     const haloTarget = new THREE.Vector3();
-    const inspectionTarget = new THREE.Vector3(0, 0.2, 1.52);
+    const inspectionTarget = new THREE.Vector3(0, 1.24, 1.14);
+    const presentationCameraPosition = new THREE.Vector3(0.08, 1.72, 4.72);
+    const presentationCameraTarget = new THREE.Vector3(0, 1.34, 1.12);
     const scaleTarget = new THREE.Vector3();
     const samplePixels = new Uint8Array(4 * 9);
     const sampleCanvas = () => {
@@ -505,11 +595,12 @@ export default function VaultIslandLab({
         revealRun: revealRunRef.current,
         inspectedDisplay: view === 'vault' ? selectedTreasureRef.current : 'none',
         collectionValue,
-        holdingsValue: normalizedHoldingsValue,
+        holdingsValue: effectiveHoldingsValue,
         wealthTier: String(model.root.userData.sculptRuntime?.wealthTier ?? 'showcase'),
         wealthIngotCount,
         wealthCoinCount,
         wealthGemCount,
+        perimeterStyle: perimeterStyleRef.current,
         lastPointerHit: lastPointerHitRef.current,
         route: window.location.pathname + window.location.search,
       };
@@ -538,8 +629,69 @@ export default function VaultIslandLab({
           camera.position.set(5.4, 12.4, 14.2);
           controls.target.set(0, 2.25, 0.1);
         } else {
-          camera.position.set(4.2, 8.4, 17.8);
-          controls.target.set(0, 2.55, 0.28);
+          camera.position.set(4.4, 7.7, 18.5);
+          controls.target.set(0, 2.65, 0.28);
+        }
+        camera.lookAt(controls.target);
+        controls.update();
+      },
+      setCharmCamera: (preset: 'front' | 'left' | 'right') => {
+        if (view !== 'exterior') return;
+        controls.minDistance = 0.8;
+        camera.fov = 50;
+        camera.position.set(
+          preset === 'left' ? -1.85 : preset === 'right' ? 1.85 : 0,
+          preset === 'front' ? 1.6 : 1.72,
+          preset === 'front' ? 7.8 : 7.45,
+        );
+        controls.target.set(0, 1.1, 3.42);
+        camera.lookAt(controls.target);
+        camera.updateProjectionMatrix();
+        controls.update();
+      },
+      setInteriorCamera: (preset: 'front' | 'left' | 'right') => {
+        if (view === 'atrium') {
+          if (preset === 'left') {
+            controls.minDistance = 1.2;
+            camera.fov = 52;
+            camera.position.set(-4.45, 1.7, 2.88);
+            controls.target.set(-4.18, 1.1, -1.48);
+          } else if (preset === 'right') {
+            controls.minDistance = 1.2;
+            camera.fov = 52;
+            camera.position.set(4.45, 1.7, 2.88);
+            controls.target.set(4.18, 1.1, -1.48);
+          } else {
+            controls.minDistance = 10.4;
+            camera.fov = 56;
+            camera.position.set(0.2, 1.58, 10.62);
+            controls.target.set(0, 4.72, -2.88);
+          }
+          camera.updateProjectionMatrix();
+        } else if (view === 'garden') {
+          camera.fov = preset === 'front' ? 54 : 61;
+          camera.position.set(
+            preset === 'left' ? -0.48 : preset === 'right' ? 0.48 : 0.15,
+            preset === 'front' ? 5.65 : 5.25,
+            preset === 'front' ? 11.4 : 12.45,
+          );
+          controls.target.set(
+            preset === 'left' ? -0.38 : preset === 'right' ? 0.38 : 0,
+            preset === 'front' ? 1.55 : 1.65,
+            preset === 'front' ? -5.4 : -6.4,
+          );
+          camera.updateProjectionMatrix();
+        } else if (view === 'vault') {
+          if (preset === 'left') {
+            camera.position.set(-4.5, 2.42, 6.78);
+            controls.target.set(-1.72, 2.22, -3.02);
+          } else if (preset === 'right') {
+            camera.position.set(4.5, 2.42, 6.78);
+            controls.target.set(1.72, 2.22, -3.02);
+          } else {
+            camera.position.set(0, 2.12, 7.62);
+            controls.target.set(0, 2.62, -3.32);
+          }
         }
         camera.lookAt(controls.target);
         controls.update();
@@ -554,6 +706,8 @@ export default function VaultIslandLab({
       } else if (autoOrbit) {
         model.root.rotation.y = view === 'vault'
           ? Math.sin(elapsed * 0.18) * 0.06
+          : view === 'garden'
+            ? Math.sin(elapsed * 0.11) * 0.018
           : view === 'atrium'
             ? Math.sin(elapsed * 0.14) * 0.035
             : -0.08 + Math.sin(elapsed * 0.22) * 0.04;
@@ -566,21 +720,57 @@ export default function VaultIslandLab({
         }
         const selectedId = selectedTreasureRef.current;
         const selectedDisplay = treasureDisplays.find((display) => display.userData.treasureId === selectedId);
+        const revealActive = revealRunRef.current > 0;
+        const revealT = Math.min(1, Math.max(0, (elapsed - revealStartedAt) / 0.82));
+        const easedReveal = 1 - Math.pow(1 - revealT, 3);
         treasureDisplays.forEach((display) => {
           const baseScale = Number(display.userData.baseScale) || 0.64;
           const isSelected = display === selectedDisplay;
           const basePosition = display.userData.basePosition as THREE.Vector3 | undefined;
-          if (basePosition) display.position.lerp(isSelected ? inspectionTarget : basePosition, isSelected ? 0.12 : 0.09);
-          const targetScale = isSelected ? baseScale * 1.55 : baseScale * 0.78;
+          if (basePosition) {
+            if (isSelected && revealActive) display.position.lerpVectors(basePosition, inspectionTarget, easedReveal);
+            else display.position.lerp(basePosition, 0.09);
+          }
+          const targetScale = isSelected && revealActive ? baseScale * 1.24 : revealActive ? baseScale * 0.54 : baseScale;
           scaleTarget.set(targetScale, targetScale, targetScale);
           display.scale.lerp(scaleTarget, 0.08);
+          const heroTreasure = display.userData.heroTreasure as THREE.Object3D | undefined;
+          const baseHeroScale = heroTreasure?.userData.baseHeroScale as THREE.Vector3 | undefined;
+          if (heroTreasure && baseHeroScale) {
+            const selectedTreasureId = display.userData.treasureId as VaultTreasureId | undefined;
+            const heroMultiplier = isSelected && revealActive
+              ? selectedTreasureId === 'obelisk'
+                ? 1.38
+                : selectedTreasureId === 'key' || selectedTreasureId === 'medallion'
+                  ? 1.82
+                  : 1.68
+              : 1;
+            scaleTarget.copy(baseHeroScale).multiplyScalar(heroMultiplier);
+            heroTreasure.scale.lerp(scaleTarget, 0.1);
+          }
           const baseRotationY = Number(display.userData.baseRotationY) || 0;
-          display.rotation.y = isSelected
-            ? Math.sin(elapsed * 0.52) * 0.28
+          display.rotation.y = isSelected && revealActive
+            ? elapsed * 0.42
             : THREE.MathUtils.lerp(display.rotation.y, baseRotationY, 0.08);
+          display.traverse((child) => {
+            if (child instanceof THREE.Mesh) child.renderOrder = isSelected && revealActive ? 12 : 0;
+          });
+        });
+
+        revealBackdrop.visible = revealActive;
+        revealBackdropMaterial.opacity = THREE.MathUtils.lerp(revealBackdropMaterial.opacity, revealActive ? 0.7 : 0, 0.1);
+        presentationFrame.visible = false;
+        presentationGold.opacity = THREE.MathUtils.lerp(presentationGold.opacity, 0, 0.09);
+        presentationLights.forEach((light) => {
+          const baseIntensity = Number(light.userData.presentationBaseIntensity) || 0;
+          light.intensity = THREE.MathUtils.lerp(light.intensity, baseIntensity * (revealActive ? 0.42 : 1), 0.08);
         });
 
         if (selectedDisplay) {
+          if (revealActive) {
+            camera.position.lerp(presentationCameraPosition, 0.075);
+            controls.target.lerp(presentationCameraTarget, 0.075);
+          }
           selectedDisplay.getWorldPosition(selectedWorld);
           haloTarget.set(selectedWorld.x, 0.31, selectedWorld.z);
           selectedHalo.visible = true;
@@ -588,20 +778,29 @@ export default function VaultIslandLab({
           selectedHalo.rotation.z += 0.016;
           selectedHaloMaterial.opacity = 0.26 + Math.sin(elapsed * 2.4) * 0.08;
 
-          const revealT = Math.min(1, (elapsed - revealStartedAt) / 1.25);
-          const easedReveal = 1 - Math.pow(1 - revealT, 3);
-          const sparkleOpacity = revealT < 1 ? Math.sin(revealT * Math.PI) * 0.86 : 0;
+          const sparkleOpacity = revealT < 1
+            ? Math.sin(revealT * Math.PI) * 0.86
+            : revealActive
+              ? 0.14 + Math.sin(elapsed * 2.2) * 0.05
+              : 0;
           sparkleMaterial.opacity = sparkleOpacity;
           revealSparkles.visible = sparkleOpacity > 0.02;
           revealSparkles.position.copy(selectedWorld);
           revealSparkles.position.y += 0.74;
           revealRings.position.copy(revealSparkles.position);
-          revealRings.visible = sparkleOpacity > 0.02;
-          revealRings.scale.setScalar(0.42 + easedReveal * 1.18);
-          revealRingMaterial.opacity = sparkleOpacity * 0.68;
+          revealRings.visible = revealT < 0.92 && sparkleOpacity > 0.02;
+          revealRings.scale.setScalar(0.36 + easedReveal * 0.88);
+          revealRingMaterial.opacity = revealT < 0.92 ? sparkleOpacity * 0.5 : 0;
           revealRings.rotation.set(elapsed * 0.58, elapsed * 0.78, elapsed * 0.36);
+          presentationFrame.rotation.z = Math.sin(elapsed * 0.35) * 0.025;
           revealLight.position.copy(revealSparkles.position);
-          revealLight.intensity = sparkleOpacity * 3.4;
+          revealLight.position.z += 0.72;
+          revealLight.intensity = revealActive ? 3.15 + sparkleOpacity * 1.45 : 0;
+          revealRimLight.position.copy(revealSparkles.position);
+          revealRimLight.position.setX(revealRimLight.position.x - 1.15);
+          revealRimLight.position.y += 0.45;
+          revealRimLight.position.z += 0.3;
+          revealRimLight.intensity = revealActive ? 2.15 : 0;
           revealSparkles.children.forEach((sparkle, index) => {
             const angle = Number(sparkle.userData.angle) + elapsed * Number(sparkle.userData.speed);
             const radius = 0.18 + easedReveal * 0.62 + (index % 4) * 0.025;
@@ -641,25 +840,31 @@ export default function VaultIslandLab({
       revealRingMaterial.dispose();
       selectedHalo.geometry.dispose();
       selectedHaloMaterial.dispose();
+      revealBackdrop.geometry.dispose();
+      revealBackdropMaterial.dispose();
+      presentationFrame.children.forEach((child) => {
+        if (child instanceof THREE.Mesh) child.geometry.dispose();
+      });
+      presentationGold.dispose();
       premiumEnvironment.dispose();
-      exteriorSky?.dispose();
-      exteriorOceanBackdrop?.dispose();
       composer?.dispose();
       delete (window as unknown as { __vaultIslandLabQa?: VaultIslandLabQaSnapshot }).__vaultIslandLabQa;
       delete (window as unknown as { __vaultIslandLabQaControls?: typeof qaControls }).__vaultIslandLabQaControls;
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [autoOrbit, availableTreasureIds, cameraPreset, hasOwnershipFilter, normalizedHoldingsValue, quality, requestedYaw, view]);
+  }, [autoOrbit, availableTreasureIds, cameraPreset, effectiveHoldingsValue, hasOwnershipFilter, quality, requestedYaw, view]);
 
   return (
-    <main className={`vault-island-lab${embedded ? ' vault-island-lab--embedded' : ''}`}>
+    <main className={`vault-island-lab${embedded ? ' vault-island-lab--embedded' : ''}${cleanPresentationMode ? ' vault-island-lab--clean' : ''}`}>
       <section className="vault-island-lab__phone" aria-label={embedded ? 'Vault Island collection' : 'Vault island 3D lab'}>
         <div ref={mountRef} className="vault-island-lab__stage" />
         {renderError ? (
           <>
             <img className="vault-island-lab__fallback" src={FALLBACK_SRC} alt="Vault Island palace rising above its treasure galleries" />
-            <p className="vault-island-lab__fallback-note">{renderError}</p>
+            <p className="vault-island-lab__fallback-note">
+              {view === 'vault' ? 'Collection register mode' : renderError}
+            </p>
           </>
         ) : null}
         {!isReady && !renderError ? <div className="vault-island-lab__loading">Loading</div> : null}
@@ -671,57 +876,101 @@ export default function VaultIslandLab({
           />
         ) : null}
         <div className="vault-island-lab__hud vault-island-lab__hud--top">
-          <strong>{view === 'vault' ? 'Vault Room' : view === 'atrium' ? 'Palace Atrium' : 'Vault Island'}</strong>
+          <strong>{view === 'vault' ? 'Vault Room' : view === 'garden' ? 'Garden Gallery' : view === 'atrium' ? 'Palace Atrium' : 'Vault Island'}</strong>
           <span>{view === 'vault'
-            ? normalizedHoldingsValue === null
+            ? effectiveHoldingsValue === null
               ? `${availableTreasureIds.length}/${VAULT_TREASURE_DEFINITIONS.length} relics · ${collectionValue.toLocaleString()}`
-              : `${availableTreasureIds.length}/${VAULT_TREASURE_DEFINITIONS.length} relics · ${normalizedHoldingsValue.toLocaleString()} reserve`
-            : view === 'atrium' ? 'Descent' : 'Special'}</span>
+              : `${availableTreasureIds.length}/${VAULT_TREASURE_DEFINITIONS.length} relics · ${effectiveHoldingsValue.toLocaleString()} reserve`
+            : view === 'garden' ? 'Royal gardens' : view === 'atrium' ? 'Descent' : 'Special'}</span>
           {embedded && onClose ? (
             <button type="button" className="vault-island-lab__close" aria-label="Close Vault Island" onClick={onClose} autoFocus>
               ×
             </button>
           ) : null}
         </div>
+        {view === 'exterior' && !renderError ? (
+          <div className="vault-island-lab__perimeter-selector" role="group" aria-label="Vault perimeter style">
+            {perimeterOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={option.id === perimeterStyle ? 'is-active' : ''}
+                aria-pressed={option.id === perimeterStyle}
+                title={`${option.label} perimeter`}
+                onClick={() => setPerimeterStyle(option.id)}
+              >
+                <span className={`vault-island-lab__perimeter-swatch is-${option.id}`} aria-hidden="true" />
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {!renderError ? <div className="vault-island-lab__hud vault-island-lab__hud--bottom">
           <button type="button" onClick={() => setView((value) => (value === 'exterior' ? 'atrium' : value === 'atrium' ? 'vault' : 'atrium'))}>
             {view === 'exterior' ? 'Enter palace' : view === 'atrium' ? 'Descend to vault' : 'Palace atrium'}
           </button>
+          {view === 'atrium' ? <button type="button" onClick={() => setView('garden')}>Gardens</button> : null}
           {view !== 'exterior' ? <button type="button" onClick={() => setView('exterior')}>Exterior</button> : null}
-          {!embedded ? <button type="button" onClick={() => setAutoOrbit((value) => !value)}>
+          {!cleanPresentationMode ? <button type="button" onClick={() => setAutoOrbit((value) => !value)}>
             {autoOrbit ? 'Orbit on' : 'Orbit off'}
           </button> : null}
-          {!embedded ? (
+          {!cleanPresentationMode ? (
             <button type="button" onClick={() => setShowReference((value) => !value)}>
               {showReference ? '3D view' : 'Source'}
             </button>
           ) : null}
-          {!embedded ? (
+          {!cleanPresentationMode ? (
             <button type="button" onClick={() => { window.location.href = VAULT_ISLAND_LAB_ROUTES.treasureLab; }}>
               Treasure lab
             </button>
           ) : null}
-        </div> : null}
-        {view === 'vault' && !renderError && availableTreasureIds.length > 0 ? (
-          <article className={`vault-island-lab__treasure-card${isMuseumCardExpanded ? ' is-expanded' : ''}${featuredTreasureId === selectedTreasureId ? ' is-featured-relic' : ''}`} aria-live="polite">
+        </div> : (
+          <div className="vault-island-lab__hud vault-island-lab__hud--bottom vault-island-lab__hud--fallback">
+            <button type="button" onClick={() => setView((value) => (value === 'vault' ? 'exterior' : 'vault'))}>
+              {view === 'vault' ? 'Back to palace' : 'Collection register'}
+            </button>
+          </div>
+        )}
+        {view === 'vault' && availableTreasureIds.length > 0 ? (
+          <article className={`vault-island-lab__treasure-card${isMuseumCardExpanded ? ' is-expanded' : ''}${featuredTreasureId === selectedTreasureId ? ' is-featured-relic' : ''}${revealRun > 0 ? ' is-reveal-active' : ''}`} aria-live="polite">
             <header>
               <div>
                 <p>{featuredTreasureId === selectedTreasureId && featuredSourceIslandNumber
                   ? `New relic · Island ${featuredSourceIslandNumber}`
-                  : selectedTreasure.origin}</p>
+                  : selectedCollectionEntry
+                    ? `Recovered · Island ${selectedCollectionEntry.sourceIslandNumber}`
+                    : selectedTreasure.origin}</p>
                 <h2>{selectedTreasure.name}</h2>
               </div>
               <strong>{selectedTreasure.value.toLocaleString()}</strong>
             </header>
-            <div className="vault-island-lab__treasure-meta">
-              <span>{selectedTreasure.rarity}</span>
-              <span>Museum value</span>
-            </div>
-            {isMuseumCardExpanded ? <small>{selectedTreasure.materialStory}</small> : null}
+            {isMuseumCardExpanded ? (
+              <div className="vault-island-lab__treasure-meta">
+                <span>{selectedTreasure.rarity}</span>
+                <span>{selectedCollectionEntry?.accessionNumber ?? 'Museum value'}</span>
+              </div>
+            ) : null}
+            {isMuseumCardExpanded ? (
+              <div className="vault-island-lab__treasure-details">
+                <small>{selectedTreasure.materialStory}</small>
+                {selectedCollectionEntry ? (
+                  <small>
+                    Recovered through Vault Rush on Island {selectedCollectionEntry.sourceIslandNumber}.
+                    {' '}Registry {selectedCollectionEntry.accessionNumber}.
+                  </small>
+                ) : null}
+              </div>
+            ) : null}
             <footer>
-              <button type="button" onClick={() => setRevealRun((value) => value + 1)}>
-                Reveal
-              </button>
+              {renderError ? (
+                <button type="button" onClick={selectNextTreasure} disabled={availableTreasureIds.length < 2}>
+                  Next relic
+                </button>
+              ) : (
+                <button type="button" onClick={() => setRevealRun((value) => value + 1)}>
+                  Reveal
+                </button>
+              )}
               <button
                 type="button"
                 aria-expanded={isMuseumCardExpanded}
@@ -731,7 +980,7 @@ export default function VaultIslandLab({
               </button>
             </footer>
           </article>
-        ) : view === 'vault' && !renderError ? (
+        ) : view === 'vault' ? (
           <article className="vault-island-lab__treasure-card vault-island-lab__treasure-card--empty" aria-live="polite">
             <p>Private collection</p>
             <h2>The treasury awaits</h2>
@@ -755,6 +1004,28 @@ export default function VaultIslandLab({
             </button>
           ))}
         </div>
+        <div className="vault-island-lab__quality vault-island-lab__quality--perimeter" role="group" aria-label="Perimeter style">
+          {perimeterOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={option.id === perimeterStyle ? 'is-active' : ''}
+              onClick={() => setPerimeterStyle(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        {buildTunerMode ? (
+          <VaultIslandBuildTuner
+            exteriorFill={exteriorFill}
+            vaultInteriorFill={vaultInteriorFill}
+            gigaCharmFill={gigaCharmFill}
+            onExteriorFillChange={setExteriorFill}
+            onVaultInteriorFillChange={setVaultInteriorFill}
+            onGigaCharmFillChange={setGigaCharmFill}
+          />
+        ) : null}
         <dl>
           <div>
             <dt>Source</dt>
@@ -766,7 +1037,7 @@ export default function VaultIslandLab({
           </div>
           <div>
             <dt>Pass</dt>
-            <dd>{view === 'vault' ? 'vault interior' : view === 'atrium' ? 'palace descent' : 'island exterior'}</dd>
+            <dd>{view === 'vault' ? 'vault interior' : view === 'garden' ? 'garden gallery' : view === 'atrium' ? 'palace descent' : 'island exterior'}</dd>
           </div>
           <div>
             <dt>Cadence</dt>

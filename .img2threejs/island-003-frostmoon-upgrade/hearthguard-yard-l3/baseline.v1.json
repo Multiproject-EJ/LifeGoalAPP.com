@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-hearthguard-yard-l3",
+  "goal": {
+    "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-hearthguard-yard-l3-goal-v002.png",
+    "sha256": "7bae7ccdf1225f7e9f179be72553b87016354ff264d4040b3b96d8a2c6ddcf0a",
+    "authority": "user-approved-secondary-inferred-visible-pixels"
+  },
+  "currentBaseline": [
+    {
+      "view": "gameplay-overview",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-hearthguard/hearthguard-baseline-overview-full.png",
+      "sha256": "89a785b450f60584a016b4f706f12c4b6d87b47a1c7e9370e334182d7f660be7"
+    },
+    {
+      "view": "oblique-orbit",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-hearthguard/hearthguard-baseline-orbit-full.png",
+      "sha256": "dfe26603e51bb44483df1763fb1746ba5deccf88a18ffdc3e460f95a9e9877b3"
+    }
+  ],
+  "salvageDecision": "retain only the frozen foundation scale, landmark socket and existing material system; replace the generic radial dummy/fence composition",
+  "largestBaselineFailure": "The current Level 3 landmark reads as isolated posts and a small hut rather than an open training yard with a gate, climbing rig, shield targets and recovery hearth."
+}

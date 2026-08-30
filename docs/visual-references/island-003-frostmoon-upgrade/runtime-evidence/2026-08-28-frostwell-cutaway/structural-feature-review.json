@@ -1,0 +1,52 @@
+[
+  {
+    "id": "offshore-read",
+    "score": 0.96,
+    "notes": "The detached platform and its sea-ice cap remain legible above the section."
+  },
+  {
+    "id": "board-clear",
+    "score": 0.97,
+    "notes": "The cutaway remains a mission camera presentation and does not change board geometry."
+  },
+  {
+    "id": "drill-read",
+    "score": 0.93,
+    "notes": "A-frame, bore, shaft, collars, and helical cutter read as one machine."
+  },
+  {
+    "id": "operating-read",
+    "score": 0.9,
+    "notes": "The structural drilling proof preserves the separate completed operating-state hierarchy."
+  },
+  {
+    "id": "construction-read",
+    "score": 0.87,
+    "notes": "The structural drilling proof preserves the existing construction transition hierarchy."
+  },
+  {
+    "id": "three-dimensional-section",
+    "score": 0.9,
+    "notes": "Shallow three-quarter framing reveals real layer and frame extrusion."
+  },
+  {
+    "id": "drill-bore-continuity",
+    "score": 0.92,
+    "notes": "Tower, bore, segmented shaft, and helical cutter share one centered axis."
+  },
+  {
+    "id": "strata-readability",
+    "score": 0.88,
+    "notes": "Five cyan bands remain distinct at phone scale through luminous seams."
+  },
+  {
+    "id": "water-approach",
+    "score": 0.91,
+    "notes": "450m and 500m states clearly separate approach from contact."
+  },
+  {
+    "id": "mission-framing",
+    "score": 0.86,
+    "notes": "Full drill tower and geological destination fit inside the phone viewport."
+  }
+]

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-08-30T13:14:00.662Z",
+  "baseUrl": "http://127.0.0.1:5187",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 1,
+    "mobile": false
+  },
+  "captures": [
+    {
+      "label": "giga-charm-front",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v221-giga-charm-seated-drop-final/giga-charm-front-390x844.png"
+    },
+    {
+      "label": "giga-charm-left",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v221-giga-charm-seated-drop-final/giga-charm-left-390x844.png"
+    },
+    {
+      "label": "giga-charm-right",
+      "path": "docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v221-giga-charm-seated-drop-final/giga-charm-right-390x844.png"
+    }
+  ],
+  "interactions": [],
+  "qaSnapshots": [
+    {
+      "label": "exterior-ready",
+      "snapshot": {
+        "view": "exterior",
+        "quality": "high",
+        "isReady": true,
+        "palaceReady": true,
+        "requestedYaw": -0.08,
+        "frameCount": 45,
+        "canvasWidth": 390,
+        "canvasHeight": 844,
+        "sampledAtMs": 19693,
+        "sampledPixels": 9,
+        "variedPixelPairs": 8,
+        "clickableDisplays": 0,
+        "selectedTreasureId": "crown",
+        "revealRun": 0,
+        "inspectedDisplay": "none",
+        "collectionValue": 89200,
+        "holdingsValue": null,
+        "wealthTier": "showcase",
+        "wealthIngotCount": 0,
+        "wealthCoinCount": 0,
+        "wealthGemCount": 0,
+        "perimeterStyle": "charms",
+        "lastPointerHit": "none",
+        "route": "/dev/vault-island-lab?quality=high&yaw=-0.08"
+      }
+    }
+  ],
+  "notes": [
+    "Chrome stderr included 35 diagnostic line(s); first line: DevTools listening on ws://127.0.0.1:9334/devtools/browser/aee8e805-e714-48b1-8ce3-7002cfe4cca3"
+  ],
+  "diagnostics": []
+}

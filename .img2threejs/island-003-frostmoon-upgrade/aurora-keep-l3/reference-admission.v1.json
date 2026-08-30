@@ -1,0 +1,16 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "front",
+    "sourcePath": ".img2threejs/island-003-frostmoon-upgrade/aurora-keep-l3/derived/crops/front-v003.png",
+    "sourceSheetPath": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-turnarounds/003-aurora-keep-turnaround-v001.png",
+    "width": 560,
+    "height": 470,
+    "foregroundCoverage": 0.4873,
+    "largestComponentFraction": 1.0,
+    "pHash": 17220270447670370696,
+    "duplicateOfHash": null
+  },
+  "sheetNote": "The complete five-view sheet fails single-subject mask coherence because it intentionally contains five separated copies. Its isolated front-v003 crop passes deterministic admission as one coherent subject; the remaining views are retained as cross-view construction evidence."
+}

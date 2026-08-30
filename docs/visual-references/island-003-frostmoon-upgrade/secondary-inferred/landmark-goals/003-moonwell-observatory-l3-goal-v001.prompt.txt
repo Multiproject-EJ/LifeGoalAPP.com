@@ -1,0 +1,18 @@
+Use case: stylized-concept
+Asset type: game landmark 3D production goal sheet for Island 003 Frostmoon Haven
+Primary request: Design the Level 3 MOONWELL OBSERVATORY as a compact, immediately readable winter landmark that can be rebuilt as a procedural low-poly Three.js asset. This is a neutral-background orthographic-style turnaround sheet, not an in-world scene.
+Scene/backdrop: clean warm light-gray studio backdrop, soft contact shadows, generous margins.
+Subject: one circular frost-stone observatory platform with a shallow central moonwell basin containing glassy pale ice-water and a clear moon-disc reflection; dark timber radial pavilion supports; warm raw copper/bronze cladding and fittings; three strong curved copper observatory ribs forming an open partial dome rather than a closed roof; one large tilted armillary/astrolabe ring above the basin as the unmistakable Level 3 silhouette; a practical brass telescope on a grounded tripod at one side; short front stairs and a clear entrance; paired amber lanterns; snow accumulated naturally on stone ledges and upper ribs; a compact rear chart cabinet/service hatch and small capped chimney or vent so the rear elevation is authored.
+Style/medium: polished stylized 3D game-environment concept render, handcrafted dark timber, dark frost stone, weathered copper roof-metal and brass fasteners, cozy amber glass; matching a premium cozy winter strategy-game landmark; clear chunky forms suitable for phone-scale low-poly translation.
+Composition/framing: four-view production sheet with one large front three-quarter hero occupying the left two-thirds, plus three smaller clean front/side/rear elevations stacked on the right; show the entire foundation and highest finial in every view; consistent proportions across views; no cut-off geometry.
+Lighting/mood: bright neutral studio lighting with contained amber lantern glow; the moonwell may have a subtle icy blue-white glow only inside the basin.
+Color palette: near-black brown timber, charcoal frost stone, raw copper and aged bronze, warm amber windows/lanterns, white snow, restrained pale ice-blue only for water/ice.
+Materials/textures: visibly layered timber beams, copper plates with seams and rivets, stacked frost-stone foundation, glassy ice-water, wool-rope or metal tension details, crisp snow caps.
+Constraints: one coherent buildable landmark; open center and readable entrance; strong all-angle silhouette; practical structural connections; no people; no animals; no text or labels; no logos; no watermark; no floating parts.
+Avoid: blue roofs, turquoise roof metal, northern lights, aurora, purple magic, giant fantasy crystal, full enclosed dome, generic sci-fi observatory, excessive spires, flat cardboard facades, unrelated buildings.
+
+Built-in ImageGen output source:
+/Users/ejmac/.codex/generated_images/01a03e6f-084a-7a21-be71-6e80164132c0/exec-9fd5a691-cd61-4f8e-a8ef-cc1d4f7aa716.png
+
+Workspace output SHA-256:
+b44c507f8ef6a33294bdeb508a42810d868c4fff9733a4fef43b70d97f2edf49

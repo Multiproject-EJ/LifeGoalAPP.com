@@ -1,0 +1,12 @@
+[
+  {"id":"offshore-read","score":0.96,"notes":"The offshore platform remains the stable origin of the cinematic."},
+  {"id":"board-clear","score":0.97,"notes":"The mission view is a camera presentation and never changes board collision or route geometry."},
+  {"id":"drill-read","score":0.96,"notes":"Named drill pivots drive the segmented shaft and helical cutter as one mechanism."},
+  {"id":"operating-read","score":0.94,"notes":"At completion the fishery, conveyor, reservoir and seafood loading state become visible through canonical mission progress."},
+  {"id":"construction-read","score":0.92,"notes":"Construction and breakthrough bursts remain bounded named systems rather than gameplay state."},
+  {"id":"canonical-progress","score":0.97,"notes":"Presentation reads signature mission meters and activity; it does not write or mirror gameplay progress."},
+  {"id":"bounded-transition","score":0.95,"notes":"Committed progress eases over 1.8 seconds and the deterministic evidence loop completes in 5.2 seconds."},
+  {"id":"water-breakthrough","score":0.95,"notes":"Proximity cue, ripples, droplets and the final burst make water approach and contact visibly distinct."},
+  {"id":"camera-handoff","score":0.94,"notes":"The side cutaway pose frames the full drill-to-water path and hands control back after the mission cinematic."},
+  {"id":"reduced-motion","score":0.96,"notes":"Reduced-motion mode snaps to committed progress and freezes optional ambient animation."}
+]

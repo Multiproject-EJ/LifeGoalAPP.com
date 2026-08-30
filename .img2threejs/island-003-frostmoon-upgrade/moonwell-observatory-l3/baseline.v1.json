@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "subjectId": "island-003-moonwell-observatory-l3",
+  "goal": {
+    "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-moonwell-observatory-l3-goal-v001.png",
+    "sha256": "b44c507f8ef6a33294bdeb508a42810d868c4fff9733a4fef43b70d97f2edf49",
+    "authority": "user-approved-secondary-inferred-visible-pixels"
+  },
+  "currentBaseline": [
+    {
+      "view": "gameplay-overview",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-moonwell/moonwell-baseline-overview-full.png",
+      "sha256": "7ae29743d43612126965e78ae6066e85b5e000f68a8349516a5508aeb7529d1d"
+    },
+    {
+      "view": "oblique-orbit",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-28-moonwell/moonwell-baseline-orbit-full.png",
+      "sha256": "de4614bd9f6adc11f086b467a6b26dcb690ecc1f155b56c46858d7f0d024be86"
+    }
+  ],
+  "salvageDecision": "retain only the frozen landmark socket, foundation scale, copper material family and existing crystal/ice material; replace the oversized opaque cone canopy, generic posts and purple floating rings",
+  "largestBaselineFailure": "The current Level 3 landmark reads as a snow-covered tent over floating purple hoops, not a working observatory with a moonwell basin, open copper ribs, armillary mechanism, telescope and authored rear service elevation."
+}

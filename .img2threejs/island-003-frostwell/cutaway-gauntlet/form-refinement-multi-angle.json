@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "referenceAreaFraction": 0.9928493364558938,
+  "angles": [
+    {
+      "view": "thickness-axis-a",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-29-frostwell-final/frostwell-thickness-t170-pipeline.png",
+      "areaFraction": 0.9967447306791569,
+      "ratio": 1.003923449490502,
+      "degenerate": false
+    },
+    {
+      "view": "thickness-axis-b",
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/runtime-evidence/2026-08-29-frostwell-final/frostwell-thickness-t310-pipeline.png",
+      "areaFraction": 0.996112412177986,
+      "ratio": 1.0032865769279156,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Deterministic silhouette-area gate. Both thickness-axis renders retain real extruded volume."
+}

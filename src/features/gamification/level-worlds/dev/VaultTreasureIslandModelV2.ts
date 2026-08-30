@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { Water } from 'three/addons/objects/Water.js';
 import type {
   VaultIslandQuality,
   VaultTreasureIslandOptions,
   VaultTreasureIslandRuntime,
 } from './VaultTreasureIslandModel';
+import type { VaultIslandPerimeterStyle } from '../services/islandRunVaultCustomization';
 import { createVaultSurfacePatternTexture } from './VaultPremiumLookdev';
 
 type Materials = ReturnType<typeof createMaterials>['materials'];
@@ -96,18 +99,56 @@ function createPalaceShellGeometry() {
   return geometry;
 }
 
+function createCalmWaterNormalTexture(size = 128) {
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const u = (x / size) * Math.PI * 2;
+      const v = (y / size) * Math.PI * 2;
+      const nx = Math.cos(u * 2.0 + Math.sin(v * 1.5)) * 0.22 + Math.cos(v * 3.0) * 0.08;
+      const nz = Math.sin(v * 2.0 + Math.cos(u * 1.25)) * 0.2 + Math.sin(u * 3.5) * 0.07;
+      const normal = new THREE.Vector3(nx, 1, nz).normalize();
+      const offset = (y * size + x) * 4;
+      data[offset] = Math.round((normal.x * 0.5 + 0.5) * 255);
+      data[offset + 1] = Math.round((normal.z * 0.5 + 0.5) * 255);
+      data[offset + 2] = Math.round((normal.y * 0.5 + 0.5) * 255);
+      data[offset + 3] = 255;
+    }
+  }
+  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat, THREE.UnsignedByteType);
+  texture.name = 'vault-v2-calm-water-normal-field';
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function createMaterials() {
   const hammered = createVaultSurfacePatternTexture('vault-v2-hammered-metal', 'hammered-metal', 7, 7);
   const marbleVein = createVaultSurfacePatternTexture('vault-v2-marble-vein', 'marble-vein', 3.5, 5.5);
   const cutStone = createVaultSurfacePatternTexture('vault-v2-cut-stone', 'cut-stone', 8, 5);
+  hammered.colorSpace = THREE.NoColorSpace;
+  marbleVein.colorSpace = THREE.NoColorSpace;
+  cutStone.colorSpace = THREE.NoColorSpace;
   const materials = {
-    ocean: new THREE.MeshPhysicalMaterial({ color: '#183f52', roughness: 0.2, metalness: 0.04, transmission: 0.08, thickness: 0.25, clearcoat: 0.88, clearcoatRoughness: 0.14, envMapIntensity: 1.18, transparent: true, opacity: 0.24, depthWrite: false }),
+    seabed: new THREE.MeshStandardMaterial({ color: '#168f9d', roughness: 0.92, metalness: 0 }),
+    reefSand: new THREE.MeshStandardMaterial({ color: '#7ac7b7', roughness: 0.86, metalness: 0, transparent: true, opacity: 0.5 }),
     foam: new THREE.MeshBasicMaterial({ color: '#d9fbff', transparent: true, opacity: 0.46, blending: THREE.AdditiveBlending, depthWrite: false }),
+    sunDisc: new THREE.MeshBasicMaterial({ color: '#ffd35a', fog: false, toneMapped: false }),
+    sunHalo: new THREE.MeshBasicMaterial({ color: '#ff941f', fog: false, transparent: true, opacity: 0.46, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    cloudWarm: new THREE.MeshStandardMaterial({ color: '#ffd08a', roughness: 1, metalness: 0, emissive: '#6b3611', emissiveIntensity: 0.14, transparent: true, opacity: 0.66, depthWrite: false }),
+    cloudShadow: new THREE.MeshStandardMaterial({ color: '#826271', roughness: 1, metalness: 0, emissive: '#27101b', emissiveIntensity: 0.08, transparent: true, opacity: 0.42, depthWrite: false }),
     rock: new THREE.MeshStandardMaterial({ color: '#59636a', roughness: 0.86, metalness: 0.02 }),
-    stone: new THREE.MeshPhysicalMaterial({ color: '#f0eadf', roughness: 0.52, bumpMap: cutStone, bumpScale: 0.045, envMapIntensity: 0.65 }),
-    stoneShade: new THREE.MeshStandardMaterial({ color: '#aaa69f', roughness: 0.78, bumpMap: cutStone, bumpScale: 0.06 }),
-    marble: new THREE.MeshPhysicalMaterial({ color: '#fff8e8', roughness: 0.27, metalness: 0.02, clearcoat: 0.42, clearcoatRoughness: 0.18, bumpMap: marbleVein, bumpScale: 0.026, envMapIntensity: 1.08 }),
+    wetRock: new THREE.MeshPhysicalMaterial({ color: '#304f52', roughness: 0.58, metalness: 0.02, clearcoat: 0.22, clearcoatRoughness: 0.38, envMapIntensity: 0.92 }),
+    horizonRock: new THREE.MeshStandardMaterial({ color: '#2f5c5b', roughness: 0.92, metalness: 0, emissive: '#173b36', emissiveIntensity: 0.14 }),
+    horizonGreen: new THREE.MeshStandardMaterial({ color: '#214f41', roughness: 0.96, metalness: 0 }),
+    stone: new THREE.MeshPhysicalMaterial({ color: '#cbb895', roughness: 0.7, roughnessMap: cutStone, bumpMap: cutStone, bumpScale: 0.065, envMapIntensity: 0.48 }),
+    stoneShade: new THREE.MeshStandardMaterial({ color: '#7f6b52', roughness: 0.86, bumpMap: cutStone, bumpScale: 0.075 }),
+    limestone: new THREE.MeshPhysicalMaterial({ color: '#e3d1ae', roughness: 0.5, roughnessMap: cutStone, metalness: 0, clearcoat: 0.06, clearcoatRoughness: 0.52, bumpMap: cutStone, bumpScale: 0.052, envMapIntensity: 0.7 }),
+    marble: new THREE.MeshPhysicalMaterial({ color: '#f2e3ca', roughness: 0.34, metalness: 0.01, clearcoat: 0.3, clearcoatRoughness: 0.26, bumpMap: marbleVein, bumpScale: 0.022, envMapIntensity: 0.84 }),
     gold: new THREE.MeshPhysicalMaterial({ color: '#d7a029', roughness: 0.1, metalness: 1, clearcoat: 0.62, clearcoatRoughness: 0.045, bumpMap: hammered, bumpScale: 0.009, emissive: '#2a1000', emissiveIntensity: 0.045, envMapIntensity: 2.15 }),
+    royalGold: new THREE.MeshPhysicalMaterial({ color: '#ffd552', roughness: 0.12, metalness: 0.62, clearcoat: 0.78, clearcoatRoughness: 0.045, bumpMap: hammered, bumpScale: 0.008, emissive: '#8a3e00', emissiveIntensity: 0.17, envMapIntensity: 3.1 }),
     darkGold: new THREE.MeshPhysicalMaterial({ color: '#8e5d10', roughness: 0.22, metalness: 1, bumpMap: hammered, bumpScale: 0.016, envMapIntensity: 1.55 }),
     blackMetal: new THREE.MeshPhysicalMaterial({ color: '#11161c', roughness: 0.24, metalness: 0.82, clearcoat: 0.45, clearcoatRoughness: 0.1, envMapIntensity: 1.5 }),
     silver: new THREE.MeshPhysicalMaterial({ color: '#e5edf2', roughness: 0.085, metalness: 1, clearcoat: 0.72, clearcoatRoughness: 0.04, bumpMap: hammered, bumpScale: 0.008, envMapIntensity: 2.3 }),
@@ -115,14 +156,23 @@ function createMaterials() {
     garden: new THREE.MeshStandardMaterial({ color: '#2f7254', roughness: 0.86 }),
     gardenDark: new THREE.MeshStandardMaterial({ color: '#174a38', roughness: 0.9 }),
     wood: new THREE.MeshStandardMaterial({ color: '#5b351e', roughness: 0.82 }),
-    window: new THREE.MeshPhysicalMaterial({ color: '#07192b', roughness: 0.18, metalness: 0.14, clearcoat: 0.72, emissive: '#d78928', emissiveIntensity: 0.58, envMapIntensity: 1.1 }),
+    window: new THREE.MeshPhysicalMaterial({ color: '#07192b', roughness: 0.18, metalness: 0.14, clearcoat: 0.72, emissive: '#e19532', emissiveIntensity: 0.72, envMapIntensity: 1.1 }),
     void: new THREE.MeshStandardMaterial({ color: '#030913', roughness: 0.8, metalness: 0, emissive: '#06152b', emissiveIntensity: 0.2 }),
-    warmGlow: new THREE.MeshBasicMaterial({ color: '#ffd681', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }),
+    warmGlow: new THREE.MeshBasicMaterial({ color: '#ffd681', transparent: true, opacity: 0.68, blending: THREE.AdditiveBlending, depthWrite: false }),
     cyan: new THREE.MeshPhysicalMaterial({ color: '#55d6e8', roughness: 0.055, transmission: 0.5, thickness: 0.44, clearcoat: 1, emissive: '#073844', emissiveIntensity: 0.22, envMapIntensity: 1.95 }),
+    fountainCrystal: new THREE.MeshPhysicalMaterial({ color: '#a5f6ff', roughness: 0.02, metalness: 0.02, transmission: 0.72, thickness: 0.48, ior: 2.18, clearcoat: 1, clearcoatRoughness: 0.012, emissive: '#0bb9e5', emissiveIntensity: 0.62, transparent: true, opacity: 0.96, envMapIntensity: 3.2, flatShading: true }),
+    fountainCobalt: new THREE.MeshPhysicalMaterial({ color: '#176dcc', roughness: 0.045, metalness: 0.04, transmission: 0.34, thickness: 0.42, ior: 2.0, clearcoat: 1, clearcoatRoughness: 0.02, emissive: '#063a8f', emissiveIntensity: 0.42, envMapIntensity: 2.5, flatShading: true }),
+    fountainCore: new THREE.MeshBasicMaterial({ color: '#d9fbff', transparent: true, opacity: 0.62, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    fountainWater: new THREE.MeshPhysicalMaterial({ color: '#a9f3ff', roughness: 0.04, transmission: 0.78, thickness: 0.14, clearcoat: 1, emissive: '#0a8ead', emissiveIntensity: 0.25, transparent: true, opacity: 0.72, depthWrite: false, envMapIntensity: 2.3 }),
     purple: new THREE.MeshPhysicalMaterial({ color: '#6925b9', roughness: 0.055, transmission: 0.3, thickness: 0.34, clearcoat: 1, emissive: '#260549', emissiveIntensity: 0.2, envMapIntensity: 1.95 }),
     ruby: new THREE.MeshPhysicalMaterial({ color: '#c9274b', roughness: 0.06, transmission: 0.22, thickness: 0.3, clearcoat: 1, emissive: '#410613', emissiveIntensity: 0.16, envMapIntensity: 1.85 }),
     sail: new THREE.MeshStandardMaterial({ color: '#fff4de', roughness: 0.5, side: THREE.DoubleSide }),
   };
+  materials.stone.name = 'vault-v2-weathered-honey-limestone';
+  materials.stoneShade.name = 'vault-v2-deep-limestone-reveal';
+  materials.limestone.name = 'vault-v2-dressed-honey-limestone';
+  materials.marble.name = 'vault-v2-polished-warm-marble-trim';
+  materials.royalGold.name = 'vault-v2-royal-solid-gold';
   return { materials, textures: [hammered, marbleVein, cutStone] };
 }
 
@@ -130,6 +180,8 @@ function addBoat(root: THREE.Group, materials: Materials, x: number, z: number, 
   const boat = new THREE.Group();
   boat.name = 'vault-v2-sailboat';
   boat.position.set(x, -0.18, z);
+  boat.userData.basePosition = boat.position.clone();
+  boat.userData.phase = Math.abs(x * 0.71 + z * 0.43);
   boat.rotation.y = rotation;
   boat.scale.setScalar(scale);
   const hull = mesh(new THREE.CapsuleGeometry(0.09, 0.42, 4, 8), materials.darkGold, 'vault-v2-boat-hull');
@@ -143,53 +195,337 @@ function addBoat(root: THREE.Group, materials: Materials, x: number, z: number, 
   sail.rotation.z = -Math.PI / 2;
   boat.add(sail);
   root.add(boat);
+  return boat;
+}
+
+function addCloudBank(
+  root: THREE.Group,
+  materials: Materials,
+  quality: VaultIslandQuality,
+  position: readonly [number, number, number],
+  scale: number,
+  phase: number,
+) {
+  const cloud = new THREE.Group();
+  cloud.name = 'vault-v2-animated-three-dimensional-cloud-bank';
+  cloud.position.set(...position);
+  cloud.userData.basePosition = cloud.position.clone();
+  cloud.userData.phase = phase;
+  cloud.rotation.set(Math.sin(phase * 0.7) * 0.035, phase * 0.29, Math.sin(phase) * 0.045);
+  const puffCount = quality === 'low' ? 4 : quality === 'medium' ? 6 : 8;
+  for (let index = 0; index < puffCount; index += 1) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.62 + (index % 3) * 0.16,
+        segments(quality, 8, 12, 18),
+        segments(quality, 6, 8, 12),
+      ),
+      index % 4 === 0 ? materials.cloudShadow : materials.cloudWarm,
+    );
+    puff.name = 'vault-v2-soft-volumetric-cloud-puff';
+    puff.position.set(
+      (index - (puffCount - 1) * 0.5) * 0.54,
+      Math.sin(index * 1.43 + phase) * 0.2,
+      Math.cos(index * 1.17 + phase) * 0.18,
+    );
+    puff.scale.set(
+      1.08 + (index % 3) * 0.08,
+      0.5 + (index % 2) * 0.14,
+      0.74 + ((index + 1) % 3) * 0.09,
+    );
+    puff.castShadow = false;
+    puff.receiveShadow = false;
+    cloud.add(puff);
+  }
+  cloud.scale.setScalar(scale);
+  root.add(cloud);
+  return cloud;
 }
 
 function addEnvironment(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
-  const ocean = mesh(new THREE.CircleGeometry(10, segments(quality, 64, 96, 128)), materials.ocean, 'vault-v2-ocean');
+  const sunDirection = new THREE.Vector3(-0.44, 0.045, -0.9).normalize();
+  const sky = new Sky();
+  sky.name = 'vault-v2-three-dimensional-sunset-sky-dome';
+  sky.scale.setScalar(10000);
+  sky.frustumCulled = false;
+  const skyMaterial = sky.material as THREE.ShaderMaterial;
+  skyMaterial.uniforms.turbidity.value = 11.2;
+  skyMaterial.uniforms.rayleigh.value = 1.0;
+  skyMaterial.uniforms.mieCoefficient.value = 0.012;
+  skyMaterial.uniforms.mieDirectionalG.value = 0.91;
+  skyMaterial.uniforms.sunPosition.value.copy(sunDirection).multiplyScalar(1000);
+  skyMaterial.uniforms.cloudScale.value = 0.001;
+  skyMaterial.uniforms.cloudSpeed.value = 0.018;
+  skyMaterial.uniforms.cloudCoverage.value = 0.58;
+  skyMaterial.uniforms.cloudDensity.value = 0.7;
+  skyMaterial.uniforms.cloudElevation.value = 0.46;
+  skyMaterial.uniforms.showSunDisc.value = 0;
+  sky.renderOrder = -1000;
+  root.add(sky);
+
+  const goldenSkyMaterial = new THREE.ShaderMaterial({
+    name: 'vault-v2-animated-golden-scattering-material',
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    uniforms: {
+      time: { value: 0 },
+      sunDirection: { value: sunDirection.clone() },
+    },
+    vertexShader: `
+      varying vec3 vVaultSkyDirection;
+      void main() {
+        vVaultSkyDirection = normalize(position);
+        vec4 projectedPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectedPosition.xyww;
+      }
+    `,
+    fragmentShader: `
+      uniform float time;
+      uniform vec3 sunDirection;
+      varying vec3 vVaultSkyDirection;
+
+      void main() {
+        vec3 direction = normalize(vVaultSkyDirection);
+        float elevation = clamp(direction.y * 0.5 + 0.5, 0.0, 1.0);
+        float horizon = pow(1.0 - clamp(abs(direction.y), 0.0, 1.0), 1.35);
+        float sunFacing = pow(max(dot(direction, normalize(sunDirection)), 0.0), 4.0);
+        float cloudWaveA = sin(direction.x * 18.0 + direction.z * 11.0 + time * 0.025);
+        float cloudWaveB = sin(direction.x * 31.0 - direction.z * 17.0 - time * 0.018);
+        float cloudNoise = cloudWaveA * 0.58 + cloudWaveB * 0.42;
+        float cloudBand = smoothstep(0.18, 0.82, cloudNoise) * horizon;
+
+        vec3 zenith = vec3(0.48, 0.30, 0.29);
+        vec3 upperAmber = vec3(1.0, 0.49, 0.10);
+        vec3 horizonGold = vec3(1.0, 0.76, 0.27);
+        vec3 sunsetOrange = vec3(1.0, 0.32, 0.055);
+        vec3 cloudGold = vec3(1.0, 0.76, 0.34);
+        vec3 color = mix(zenith, upperAmber, pow(horizon, 0.58) * 0.96);
+        color = mix(color, horizonGold, pow(horizon, 1.55) * 0.82);
+        color = mix(color, sunsetOrange, horizon * sunFacing * 0.68);
+        color = mix(color, cloudGold, cloudBand * (0.4 + sunFacing * 0.25));
+        color += vec3(1.0, 0.62, 0.18) * pow(sunFacing, 2.4) * 0.34;
+        color *= mix(0.9, 1.08, elevation);
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  });
+  const goldenSky = new THREE.Mesh(
+    new THREE.SphereGeometry(9200, segments(quality, 16, 24, 32), segments(quality, 10, 16, 20)),
+    goldenSkyMaterial,
+  );
+  goldenSky.name = 'vault-v2-animated-golden-scattering-dome';
+  goldenSky.frustumCulled = false;
+  goldenSky.renderOrder = -999;
+  goldenSky.castShadow = false;
+  goldenSky.receiveShadow = false;
+  root.add(goldenSky);
+
+  const sunsetSun = new THREE.Mesh(
+    new THREE.SphereGeometry(0.42, segments(quality, 12, 18, 24), segments(quality, 8, 12, 16)),
+    materials.sunDisc,
+  );
+  sunsetSun.name = 'vault-v2-three-dimensional-sunset-sun';
+  sunsetSun.position.set(-5.8, 4.35, -15);
+  sunsetSun.castShadow = false;
+  sunsetSun.receiveShadow = false;
+  sunsetSun.renderOrder = 10;
+  const sunsetHalo = new THREE.Mesh(
+    new THREE.SphereGeometry(1.42, segments(quality, 12, 18, 24), segments(quality, 8, 12, 16)),
+    materials.sunHalo,
+  );
+  sunsetHalo.name = 'vault-v2-three-dimensional-sunset-halo';
+  sunsetHalo.position.copy(sunsetSun.position);
+  sunsetHalo.castShadow = false;
+  sunsetHalo.receiveShadow = false;
+  sunsetHalo.renderOrder = 11;
+  root.add(sunsetSun, sunsetHalo);
+
+  const seabed = mesh(
+    new THREE.PlaneGeometry(180, 180, 1, 1),
+    materials.seabed,
+    'vault-v2-submerged-crystalline-seabed',
+  );
+  seabed.rotation.x = -Math.PI / 2;
+  seabed.position.y = -1.45;
+  seabed.castShadow = false;
+  seabed.receiveShadow = false;
+  root.add(seabed);
+  const reefPatches = [
+    [-8, 8, 3.8, 1.8], [7.5, 10, 4.4, 2.1], [-10, -2, 3.1, 1.5],
+    [9.5, -4, 3.6, 1.7], [-3, 14, 2.8, 1.3], [2.2, 13.5, 5.2, 2.5],
+  ] as const;
+  reefPatches.forEach(([x, z, width, depth], index) => {
+    const reef = mesh(
+      new THREE.CircleGeometry(1, segments(quality, 20, 28, 36)),
+      materials.reefSand,
+      'vault-v2-submerged-sunlit-reef-patch',
+    );
+    reef.rotation.x = -Math.PI / 2;
+    reef.rotation.z = index * 0.74;
+    reef.scale.set(width, depth, 1);
+    reef.position.set(x, -1.4 + (index % 2) * 0.015, z);
+    reef.castShadow = false;
+    reef.receiveShadow = false;
+    root.add(reef);
+  });
+
+  const waterNormals = createCalmWaterNormalTexture(quality === 'low' ? 64 : 128);
+  const ocean = new Water(new THREE.PlaneGeometry(180, 180, 1, 1), {
+    textureWidth: quality === 'low' ? 128 : 256,
+    textureHeight: quality === 'low' ? 128 : 256,
+    waterNormals,
+    sunDirection,
+    sunColor: '#ffc164',
+    waterColor: '#25a6aa',
+    distortionScale: 0.62,
+    alpha: 0.74,
+    fog: true,
+  });
+  ocean.name = 'vault-v2-ocean';
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.y = -0.34;
+  ocean.castShadow = false;
+  ocean.receiveShadow = true;
+  ocean.material.transparent = true;
+  ocean.material.depthWrite = false;
+  (ocean.material as THREE.ShaderMaterial).uniforms.size.value = 0.82;
   root.add(ocean);
-  const waveCount = quality === 'low' ? 10 : 22;
+  const waveCount = quality === 'low' ? 8 : 16;
   for (let index = 0; index < waveCount; index += 1) {
     const foamMaterial = materials.foam.clone();
-    foamMaterial.opacity = 0.16 + (index % 4) * 0.055;
+    foamMaterial.opacity = 0.1 + (index % 4) * 0.035;
     const arcRadius = 3.05 + (index % 8) * 0.62;
     const arc = 0.42 + (index % 5) * 0.11;
-    const foam = mesh(new THREE.TorusGeometry(arcRadius, 0.012 + (index % 3) * 0.006, 5, segments(quality, 28, 42, 60), arc), foamMaterial, 'vault-v2-natural-ocean-wave-arc');
+    const foam = mesh(new THREE.TorusGeometry(arcRadius, 0.008 + (index % 3) * 0.004, 5, segments(quality, 28, 42, 60), arc), foamMaterial, 'vault-v2-natural-ocean-wave-arc');
     foam.rotation.x = -Math.PI / 2;
-    foam.rotation.z = ((index * 2.399) % (Math.PI * 2));
+    foam.rotation.z = (index * 2.399) % (Math.PI * 2);
     foam.position.set(Math.sin(index * 1.73) * 0.7, -0.31 + (index % 3) * 0.003, Math.cos(index * 1.37) * 0.5);
+    foam.userData.phase = index * 0.63;
     root.add(foam);
   }
-  const distant = [[-5.8, -1.5, 1.05], [5.6, -2.1, 0.82], [-4.9, 4.4, 0.7], [4.7, 4.9, 0.9]] as const;
+  const distant = [[-9.2, -10.5, 0.72], [9.0, -10.8, 0.68], [-10.2, -3.4, 0.48], [9.8, -2.8, 0.52]] as const;
   distant.forEach(([x, z, scale], islandIndex) => {
-    const island = cylinder(0.36 * scale, 0.58 * scale, 0.15, 10, materials.rock, 'vault-v2-distant-island');
-    island.position.set(x, -0.22, z);
+    const island = mesh(new THREE.SphereGeometry(0.64, 12, 7), materials.horizonRock, 'vault-v2-distant-island');
+    island.scale.set(1.15 * scale, 0.28 * scale, 0.72 * scale);
+    island.position.set(x, -0.27, z);
     root.add(island);
     for (let index = 0; index < 3; index += 1) {
-      const crown = mesh(new THREE.ConeGeometry(0.1 * scale, 0.32 * scale, 7), materials.gardenDark, 'vault-v2-distant-tree');
-      crown.position.set(x + (index - 1) * 0.16, -0.02, z + ((index + islandIndex) % 2) * 0.08);
+      const crown = mesh(new THREE.SphereGeometry(0.11 * scale, 8, 6), materials.horizonGreen, 'vault-v2-distant-tree');
+      crown.scale.set(1.1, 0.85, 1);
+      crown.position.set(x + (index - 1) * 0.2, 0.02, z + ((index + islandIndex) % 2) * 0.1);
       root.add(crown);
     }
   });
-  const horizonIslands = [[-5.2, -6.8, 1.25], [-2.7, -7.4, 0.92], [2.8, -7.1, 1.05], [5.4, -6.6, 1.38]] as const;
+  const horizonIslands = [[-7.4, -13.2, 1.9], [-3.1, -16.4, 1.25], [3.2, -16.2, 1.4], [7.7, -12.8, 2.0]] as const;
   horizonIslands.forEach(([x, z, scale], islandIndex) => {
-    const rock = cylinder(0.55 * scale, 0.94 * scale, 0.38 * scale, 12, materials.rock, 'vault-v2-horizon-cliff-island');
-    rock.position.set(x, -0.18, z);
+    const rock = mesh(new THREE.SphereGeometry(0.78, 14, 8), materials.horizonRock, 'vault-v2-horizon-cliff-island');
+    rock.scale.set(1.35 * scale, 0.32 * scale, 0.76 * scale);
+    rock.position.set(x, -0.22, z);
     root.add(rock);
     for (let peak = 0; peak < 3; peak += 1) {
-      const mountain = mesh(new THREE.ConeGeometry((0.38 - peak * 0.07) * scale, (0.8 + peak * 0.18) * scale, 7), materials.stoneShade, 'vault-v2-horizon-mountain-peak');
-      mountain.position.set(x + (peak - 1) * 0.34 * scale, 0.28 + peak * 0.08, z + ((peak + islandIndex) % 2) * 0.16);
+      const mountain = mesh(new THREE.DodecahedronGeometry(0.42 * scale, 1), materials.horizonRock, 'vault-v2-horizon-mountain-peak');
+      mountain.scale.set(1.05 - peak * 0.12, 1.18 + peak * 0.18, 0.86);
+      mountain.position.set(x + (peak - 1) * 0.48 * scale, 0.18 + peak * 0.1, z + ((peak + islandIndex) % 2) * 0.2);
       root.add(mountain);
-      const tree = mesh(new THREE.ConeGeometry(0.09 * scale, 0.34 * scale, 7), materials.gardenDark, 'vault-v2-horizon-cypress');
-      tree.position.set(x + (peak - 1) * 0.27 * scale, 0.64 + peak * 0.08, z - 0.18);
+      const tree = mesh(new THREE.SphereGeometry(0.15 * scale, 8, 6), materials.horizonGreen, 'vault-v2-horizon-cypress');
+      tree.scale.set(1.2, 0.78, 1);
+      tree.position.set(x + (peak - 1) * 0.38 * scale, 0.55 + peak * 0.09, z - 0.24);
       root.add(tree);
     }
+    if (quality !== 'low') {
+      for (let villaIndex = 0; villaIndex < 3; villaIndex += 1) {
+        const villaX = x + (villaIndex - 1) * 0.34 * scale;
+        const villaZ = z - 0.12 - (villaIndex % 2) * 0.08;
+        const villa = mesh(new THREE.BoxGeometry(0.2 * scale, 0.2 * scale, 0.16 * scale), materials.limestone, 'vault-v2-horizon-island-limestone-villa');
+        villa.position.set(villaX, 0.32 + villaIndex * 0.03, villaZ);
+        root.add(villa);
+        const roof = mesh(new THREE.ConeGeometry(0.15 * scale, 0.13 * scale, 8), materials.blue, 'vault-v2-horizon-island-blue-villa-roof');
+        roof.position.set(villaX, 0.49 + villaIndex * 0.03, villaZ);
+        root.add(roof);
+      }
+    }
   });
+  addCloudBank(root, materials, quality, [-8.5, 5.0, -15], 0.82, 0.4);
+  addCloudBank(root, materials, quality, [-1.5, 6.3, -20], 0.62, 1.8);
+  addCloudBank(root, materials, quality, [4.2, 4.8, -16], 0.52, 3.1);
+  addCloudBank(root, materials, quality, [8.6, 5.8, -21], 0.7, 4.4);
+  addCloudBank(root, materials, quality, [-4.8, 3.85, -12], 0.4, 5.7);
+  addCloudBank(root, materials, quality, [5.2, 3.18, -10.7], 0.5, 6.8);
+  addCloudBank(root, materials, quality, [-7.1, 3.12, -9.9], 0.46, 7.9);
   addBoat(root, materials, -4.1, 3.15, 0.9, -0.55);
   addBoat(root, materials, 4.25, 2.65, 0.62, 0.68);
   addBoat(root, materials, -3.45, -1.85, 0.52, 0.12);
+  return { ocean, sky, goldenSky, waterNormals };
+}
+
+export function createVaultTreasureIslandScenicEnvironment(
+  options: Pick<VaultTreasureIslandOptions, 'quality' | 'animated'> = {},
+): VaultTreasureIslandRuntime {
+  const quality = options.quality ?? 'medium';
+  const materialSet = createMaterials();
+  const { materials } = materialSet;
+  const root = new THREE.Group();
+  root.name = 'vault-v2-reusable-real-three-dimensional-scenic-environment';
+  const environment = addEnvironment(root, materials, quality);
+  const boats: THREE.Object3D[] = [];
+  const clouds: THREE.Object3D[] = [];
+  const waveArcs: THREE.Mesh[] = [];
+  root.traverse((child) => {
+    if (child.name === 'vault-v2-sailboat') boats.push(child);
+    if (child.name === 'vault-v2-animated-three-dimensional-cloud-bank') clouds.push(child);
+    if (child instanceof THREE.Mesh && child.name === 'vault-v2-natural-ocean-wave-arc') {
+      child.userData.baseRotationZ = child.rotation.z;
+      child.userData.baseOpacity = (child.material as THREE.MeshBasicMaterial).opacity;
+      waveArcs.push(child);
+    }
+  });
+
+  return {
+    root,
+    update: (elapsedSeconds: number) => {
+      if (!options.animated) return;
+      (environment.ocean.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds * 0.18;
+      (environment.sky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
+      (environment.goldenSky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
+      boats.forEach((boat, index) => {
+        const base = boat.userData.basePosition as THREE.Vector3;
+        const phase = Number(boat.userData.phase || index);
+        boat.position.y = base.y + Math.sin(elapsedSeconds * 0.72 + phase) * 0.028;
+        boat.position.x = base.x + Math.sin(elapsedSeconds * 0.08 + phase) * 0.055;
+        boat.rotation.z = Math.sin(elapsedSeconds * 0.64 + phase) * 0.025;
+      });
+      clouds.forEach((cloud, index) => {
+        const base = cloud.userData.basePosition as THREE.Vector3;
+        const phase = Number(cloud.userData.phase || index);
+        cloud.position.x = base.x + Math.sin(elapsedSeconds * 0.018 + phase) * 0.34;
+        cloud.position.y = base.y + Math.sin(elapsedSeconds * 0.024 + phase) * 0.045;
+      });
+      waveArcs.forEach((wave, index) => {
+        const phase = Number(wave.userData.phase || index);
+        wave.rotation.z = Number(wave.userData.baseRotationZ) + Math.sin(elapsedSeconds * 0.11 + phase) * 0.014;
+        (wave.material as THREE.MeshBasicMaterial).opacity = Number(wave.userData.baseOpacity)
+          * (0.8 + Math.sin(elapsedSeconds * 0.34 + phase) * 0.2);
+      });
+    },
+    dispose: () => {
+      const ownedMaterials = new Set<THREE.Material>(Object.values(materials));
+      root.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        child.geometry.dispose();
+        const childMaterials = Array.isArray(child.material) ? child.material : [child.material];
+        childMaterials.forEach((material) => {
+          if (!ownedMaterials.has(material)) material.dispose();
+        });
+      });
+      ownedMaterials.forEach((material) => material.dispose());
+      environment.waterNormals.dispose();
+      const reflectionTexture = (environment.ocean.material as THREE.ShaderMaterial)
+        .uniforms.mirrorSampler?.value as THREE.Texture | undefined;
+      reflectionTexture?.dispose();
+      materialSet.textures.forEach((texture) => texture.dispose());
+    },
+  };
 }
 
 function addRockAndMasonry(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
@@ -205,7 +541,7 @@ function addRockAndMasonry(root: THREE.Group, materials: Materials, quality: Vau
     const angularOffset = row % 2 === 0 ? 0 : Math.PI / blockCount;
     for (let index = 0; index < blockCount; index += 1) {
       const angle = (index / blockCount) * Math.PI * 2 + angularOffset;
-      const block = mesh(new THREE.BoxGeometry((Math.PI * 2 * CLIFF_RADIUS) / blockCount * 0.9, 0.19, 0.19), row % 3 === 0 ? materials.stone : materials.marble, 'vault-v2-individual-ashlar-block');
+      const block = mesh(new THREE.BoxGeometry((Math.PI * 2 * CLIFF_RADIUS) / blockCount * 0.9, 0.19, 0.19), row % 3 === 0 ? materials.stone : materials.limestone, 'vault-v2-individual-ashlar-block');
       block.position.set(Math.sin(angle) * CLIFF_RADIUS, 0.2 + row * 0.225, Math.cos(angle) * CLIFF_RADIUS);
       block.rotation.y = angle;
       root.add(block);
@@ -217,7 +553,33 @@ function addRockAndMasonry(root: THREE.Group, materials: Materials, quality: Vau
     const rock = mesh(new THREE.DodecahedronGeometry(0.19 + (index % 4) * 0.025, 0), materials.rock, 'vault-v2-waterline-rock');
     rock.position.set(Math.sin(angle) * radius, -0.17 + (index % 2) * 0.05, Math.cos(angle) * radius);
     rock.rotation.set(angle * 0.6, angle, angle * 0.23);
+    rock.scale.set(0.78 + (index % 5) * 0.1, 0.7 + (index % 4) * 0.13, 0.86 + (index % 3) * 0.12);
     root.add(rock);
+  }
+  const wetRockCount = quality === 'low' ? 16 : 28;
+  for (let index = 0; index < wetRockCount; index += 1) {
+    const angle = (index / wetRockCount) * Math.PI * 2 + 0.07;
+    const radius = 3.0 + (index % 4) * 0.07;
+    const wetRock = mesh(new THREE.DodecahedronGeometry(0.15 + (index % 3) * 0.025, 0), materials.wetRock, 'vault-v2-wet-natural-shoreline-rock');
+    wetRock.position.set(Math.sin(angle) * radius, -0.25 + (index % 3) * 0.035, Math.cos(angle) * radius);
+    wetRock.rotation.set(index * 0.37, angle, index * 0.19);
+    wetRock.scale.set(1.15, 0.58 + (index % 2) * 0.18, 0.88);
+    root.add(wetRock);
+  }
+  if (quality !== 'low') {
+    for (let index = 0; index < 20; index += 1) {
+      const foam = mesh(
+        new THREE.TorusGeometry(3.08 + (index % 4) * 0.055, 0.012, 5, 30, 0.25 + (index % 3) * 0.08),
+        materials.foam,
+        'vault-v2-rock-contact-foam-ribbon',
+      );
+      foam.rotation.x = Math.PI / 2;
+      foam.rotation.z = (index / 20) * Math.PI * 2 + (index % 2) * 0.08;
+      foam.position.y = -0.305 + (index % 2) * 0.006;
+      foam.castShadow = false;
+      foam.receiveShadow = false;
+      root.add(foam);
+    }
   }
   const courses: Array<[number, number, number, THREE.Material, string]> = [
     [2.84, 0.3, 0.025, materials.gold, 'vault-v2-lower-foundation-gold-course'],
@@ -244,7 +606,7 @@ function addGalleryBay(root: THREE.Group, materials: Materials, quality: VaultIs
   const shadowPocket = mesh(archedPanel(0.37, 0.31, 0.035), materials.void, 'vault-v2-gallery-inner-shadow-pocket');
   shadowPocket.position.z = 0.09;
   bay.add(shadowPocket);
-  const stoneArch = mesh(new THREE.TorusGeometry(0.28, 0.05, 8, segments(quality, 18, 26, 34), Math.PI), materials.marble, 'vault-v2-gallery-stone-arch');
+  const stoneArch = mesh(new THREE.TorusGeometry(0.28, 0.05, 8, segments(quality, 18, 26, 34), Math.PI), materials.limestone, 'vault-v2-gallery-stone-arch');
   stoneArch.position.set(0, 0.44, 0.065);
   bay.add(stoneArch);
   const goldArch = mesh(new THREE.TorusGeometry(0.24, 0.018, 7, segments(quality, 18, 28, 38), Math.PI), materials.gold, 'vault-v2-gallery-inner-gold-arch');
@@ -327,7 +689,7 @@ function addInhabitedGalleries(root: THREE.Group, materials: Materials, quality:
   for (let index = 0; index < count; index += 1) {
     const angle = THREE.MathUtils.lerp(-Math.PI * 0.72, Math.PI * 0.72, index / (count - 1));
     if (Math.abs(angle) < 0.18) continue;
-    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.marble, 'vault-v2-two-floor-gallery-buttress');
+    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.limestone, 'vault-v2-two-floor-gallery-buttress');
     buttress.position.set(Math.sin(angle) * 3.025, 1, Math.cos(angle) * 3.025);
     root.add(buttress);
     const finial = mesh(new THREE.OctahedronGeometry(0.075, 0), index % 3 === 0 ? materials.cyan : materials.gold, 'vault-v2-gallery-buttress-finial');
@@ -337,7 +699,7 @@ function addInhabitedGalleries(root: THREE.Group, materials: Materials, quality:
   const rearButtressCount = quality === 'low' ? 5 : 6;
   for (let index = 0; index < rearButtressCount; index += 1) {
     const angle = THREE.MathUtils.lerp(Math.PI * 0.76, Math.PI * 1.24, index / (rearButtressCount - 1));
-    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.marble, 'vault-v2-rear-two-floor-gallery-buttress');
+    const buttress = cylinder(0.062, 0.1, 1.64, 7, materials.limestone, 'vault-v2-rear-two-floor-gallery-buttress');
     buttress.position.set(Math.sin(angle) * 3.025, 1, Math.cos(angle) * 3.025);
     root.add(buttress);
     const finial = mesh(new THREE.OctahedronGeometry(0.075, 0), index % 2 === 0 ? materials.cyan : materials.gold, 'vault-v2-rear-gallery-buttress-finial');
@@ -358,7 +720,7 @@ function addGrandVaultPortal(root: THREE.Group, materials: Materials, quality: V
   const portal = new THREE.Group();
   portal.name = 'vault-v2-grand-front-vault-portal';
   portal.position.set(0, 0.32, 3.02);
-  portal.add(mesh(archedPanel(1.46, 0.98, 0.34), materials.marble, 'vault-v2-vault-monumental-stone-surround'));
+  portal.add(mesh(archedPanel(1.46, 0.98, 0.34), materials.limestone, 'vault-v2-vault-monumental-stone-surround'));
   const recess = mesh(archedPanel(1.06, 0.78, 0.1), materials.void, 'vault-v2-vault-deep-entry-pocket');
   recess.position.z = 0.205;
   portal.add(recess);
@@ -428,7 +790,7 @@ function addMarinaApproach(root: THREE.Group, materials: Materials) {
   approach.name = 'vault-v2-marina-stair-and-gate';
   for (let index = 0; index < 12; index += 1) {
     const t = index / 11;
-    const step = mesh(new THREE.BoxGeometry(1.12 + t * 0.52, 0.07, 0.22), materials.marble, 'vault-v2-marina-marble-step');
+    const step = mesh(new THREE.BoxGeometry(1.28 + t * 0.68, 0.07, 0.22), materials.marble, 'vault-v2-marina-marble-step');
     step.position.set(0, 0.4 - t * 0.56, 3.12 + t * 1.08);
     approach.add(step);
   }
@@ -443,26 +805,59 @@ function addMarinaApproach(root: THREE.Group, materials: Materials) {
       approach.add(lamp);
     }
   }
-  const rail = mesh(new THREE.BoxGeometry(2.55, 0.06, 0.07), materials.gold, 'vault-v2-marina-gate-rail');
+  const rail = mesh(new THREE.BoxGeometry(3.16, 0.06, 0.07), materials.gold, 'vault-v2-marina-gate-rail');
   rail.position.set(0, 0.25, 4.34);
   approach.add(rail);
-  for (let index = -8; index <= 8; index += 1) {
+  for (let index = -10; index <= 10; index += 1) {
     const height = 0.5 + (1 - Math.abs(index) / 11) * 0.28;
     const picket = cylinder(0.018, 0.022, height, 7, materials.gold, 'vault-v2-marina-gate-picket');
-    picket.position.set(index * 0.135, 0.23 + height / 2, 4.34);
+    picket.position.set(index * 0.145, 0.23 + height / 2, 4.34);
     approach.add(picket);
   }
   for (const side of [-1, 1] as const) {
     const pier = mesh(new THREE.BoxGeometry(0.26, 0.86, 0.28), materials.marble, 'vault-v2-marina-gate-pier');
-    pier.position.set(side * 1.32, 0.35, 4.34);
+    pier.position.set(side * 1.66, 0.35, 4.34);
     approach.add(pier);
     const finial = mesh(new THREE.OctahedronGeometry(0.1, 0), materials.gold, 'vault-v2-marina-gate-finial');
-    finial.position.set(side * 1.32, 0.86, 4.34);
+    finial.position.set(side * 1.66, 0.86, 4.34);
     approach.add(finial);
   }
   const crest = mesh(new THREE.OctahedronGeometry(0.16, 0), materials.blue, 'vault-v2-marina-gate-crest');
   crest.position.set(0, 0.7, 4.36);
   approach.add(crest);
+  const crestRing = mesh(new THREE.TorusGeometry(0.21, 0.025, 7, 28), materials.gold, 'vault-v2-marina-gate-sun-crest-ring');
+  crestRing.position.set(0, 0.7, 4.39);
+  approach.add(crestRing);
+  for (let ray = 0; ray < 8; ray += 1) {
+    const angle = (ray / 8) * Math.PI * 2;
+    const sunRay = mesh(new THREE.BoxGeometry(0.025, 0.18, 0.025), materials.gold, 'vault-v2-marina-gate-sunburst-ray');
+    sunRay.position.set(Math.sin(angle) * 0.12, 0.7 + Math.cos(angle) * 0.12, 4.4);
+    sunRay.rotation.z = -angle;
+    approach.add(sunRay);
+  }
+  for (const side of [-1, 1] as const) {
+    const points: THREE.Vector3[] = [];
+    for (let index = 0; index <= 8; index += 1) {
+      const t = index / 8;
+      points.push(new THREE.Vector3(side * (1.68 + t * 1.45), 0.68 - t * 0.2, 4.31 - t * 1.34));
+    }
+    approach.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 28, 0.022, 7, false), materials.gold, 'vault-v2-marina-gate-curved-gilded-wing-rail'));
+    const lowerPoints = points.map((point) => point.clone().add(new THREE.Vector3(0, -0.38, 0)));
+    approach.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lowerPoints), 28, 0.017, 7, false), materials.darkGold, 'vault-v2-marina-gate-curved-lower-wing-rail'));
+    points.forEach((point, index) => {
+      if (index === 0) return;
+      const wingPicket = cylinder(0.014, 0.019, 0.48 - index * 0.015, 7, materials.gold, 'vault-v2-marina-gate-wing-picket');
+      wingPicket.position.set(point.x, point.y - 0.24, point.z);
+      approach.add(wingPicket);
+    });
+    const wingEnd = points[points.length - 1];
+    const endPier = mesh(new THREE.BoxGeometry(0.2, 0.72, 0.22), materials.marble, 'vault-v2-marina-gate-wing-end-pier');
+    endPier.position.set(wingEnd.x, wingEnd.y - 0.2, wingEnd.z);
+    approach.add(endPier);
+    const endFinial = mesh(new THREE.OctahedronGeometry(0.085, 0), materials.royalGold, 'vault-v2-marina-gate-wing-end-finial');
+    endFinial.position.set(wingEnd.x, wingEnd.y + 0.22, wingEnd.z);
+    approach.add(endFinial);
+  }
   root.add(approach);
 }
 
@@ -546,7 +941,7 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
     bracelet.add(station);
   }
 
-  [-1.22, -0.82, -0.42, 0, 0.42, 0.82, 1.22].forEach((angle, index) => {
+  [-1.22, -0.82, -0.42, 0.42, 0.82, 1.22].forEach((angle, index) => {
     const x = Math.sin(angle) * 3.22;
     const z = Math.cos(angle) * 3.22;
     const length = 0.45 + (index % 3) * 0.1;
@@ -563,7 +958,306 @@ function addBracelet(root: THREE.Group, materials: Materials, quality: VaultIsla
     medallion.rotation.y = angle;
     bracelet.add(medallion);
   });
+
+  const gigaCharm = new THREE.Group();
+  gigaCharm.name = 'vault-v2-giga-charm-sovereign-medallion';
+  gigaCharm.position.set(0, 1.08, radius + 0.2);
+  gigaCharm.userData.baseY = gigaCharm.position.y;
+  gigaCharm.userData.phase = 0.7;
+  const addGigaPart = (part: THREE.Object3D, threshold: number) => {
+    part.userData.gigaCharmFillThreshold = threshold;
+    gigaCharm.add(part);
+    return part;
+  };
+  const bail = mesh(
+    new THREE.TorusGeometry(0.12, 0.027, 10, 44),
+    materials.royalGold,
+    'vault-v2-giga-charm-articulated-solid-gold-bail',
+  );
+  bail.position.set(0, 0.62, 0.015);
+  addGigaPart(bail, 6);
+  const pivot = mesh(
+    new THREE.IcosahedronGeometry(0.064, 1),
+    materials.silver,
+    'vault-v2-giga-charm-visible-polished-pivot-joint',
+  );
+  pivot.position.set(0, 0.51, 0.045);
+  addGigaPart(pivot, 7);
+  for (const side of [-1, 1] as const) {
+    const attachmentCollar = mesh(
+      new THREE.TorusGeometry(0.072, 0.019, 9, 32),
+      materials.royalGold,
+      'vault-v2-giga-charm-bracelet-attachment-collar',
+    );
+    attachmentCollar.position.set(side * 0.24, 1.13, 0.015);
+    addGigaPart(attachmentCollar, 8);
+    const chain = cylinderBetween(
+      new THREE.Vector3(side * 0.24, 1.12, -0.01),
+      new THREE.Vector3(side * 0.075, 0.69, 0),
+      0.022,
+      materials.royalGold,
+      'vault-v2-giga-charm-double-articulated-chain',
+    );
+    addGigaPart(chain, 8);
+  }
+  const outerFrame = mesh(new THREE.TorusGeometry(0.47, 0.062, 12, 80), materials.royalGold, 'vault-v2-giga-charm-heavy-solid-gold-frame');
+  addGigaPart(outerFrame, 16);
+  const innerFrame = mesh(new THREE.TorusGeometry(0.365, 0.026, 10, 72), materials.silver, 'vault-v2-giga-charm-inner-polished-silver-halo');
+  innerFrame.position.z = 0.028;
+  addGigaPart(innerFrame, 24);
+  const enamelDisc = mesh(new THREE.CircleGeometry(0.35, 72), materials.blue, 'vault-v2-giga-charm-deep-sapphire-enamel-disc');
+  enamelDisc.position.z = 0.018;
+  addGigaPart(enamelDisc, 30);
+  for (let rayIndex = 0; rayIndex < 12; rayIndex += 1) {
+    const angle = (rayIndex / 12) * Math.PI * 2;
+    const ray = mesh(
+      new THREE.BoxGeometry(rayIndex % 2 === 0 ? 0.04 : 0.028, rayIndex % 2 === 0 ? 0.34 : 0.27, 0.032),
+      rayIndex % 3 === 0 ? materials.silver : materials.royalGold,
+      'vault-v2-giga-charm-radial-jewelry-ray',
+    );
+    ray.position.set(Math.sin(angle) * 0.18, Math.cos(angle) * 0.18, 0.052);
+    ray.rotation.z = -angle;
+    addGigaPart(ray, 38 + (rayIndex % 4) * 2);
+  }
+  const heartMaterial = materials.fountainCrystal.clone();
+  heartMaterial.name = 'vault-v2-giga-charm-facet-readable-aquamarine';
+  heartMaterial.color.set('#68ddea');
+  heartMaterial.roughness = 0.06;
+  heartMaterial.transmission = 0.66;
+  heartMaterial.emissive.set('#087d9a');
+  heartMaterial.emissiveIntensity = 0.25;
+  heartMaterial.opacity = 0.92;
+  heartMaterial.envMapIntensity = 2.2;
+  const heart = mesh(new THREE.OctahedronGeometry(0.205, 2), heartMaterial, 'vault-v2-giga-charm-faceted-aquamarine-heart');
+  heart.scale.set(0.94, 1.2, 0.76);
+  heart.position.z = 0.15;
+  addGigaPart(heart, 52);
+  const crown = new THREE.Group();
+  crown.name = 'vault-v2-giga-charm-gold-crown-crest';
+  crown.position.set(0, 0.51, 0.035);
+  for (let spikeIndex = 0; spikeIndex < 5; spikeIndex += 1) {
+    const x = (spikeIndex - 2) * 0.085;
+    const spike = mesh(
+      new THREE.ConeGeometry(0.042, 0.19 + (2 - Math.abs(spikeIndex - 2)) * 0.042, 10),
+      materials.royalGold,
+      'vault-v2-giga-charm-crown-spike',
+    );
+    spike.position.set(x, Math.abs(spikeIndex - 2) * -0.018, 0);
+    crown.add(spike);
+  }
+  const crownJewel = mesh(new THREE.OctahedronGeometry(0.075, 1), materials.ruby, 'vault-v2-giga-charm-crown-ruby');
+  crownJewel.position.set(0, 0.075, 0.07);
+  crown.add(crownJewel);
+  addGigaPart(crown, 64);
+
+  for (const side of [-1, 1] as const) {
+    for (let leafIndex = 0; leafIndex < 5; leafIndex += 1) {
+      const t = leafIndex / 4;
+      const leaf = mesh(
+        new THREE.OctahedronGeometry(0.09, 1),
+        leafIndex % 2 === 0 ? materials.royalGold : materials.gold,
+        'vault-v2-giga-charm-chased-gold-laurel-leaf',
+      );
+      leaf.scale.set(0.56, 1.2, 0.35);
+      leaf.position.set(side * (0.39 + Math.sin(t * Math.PI) * 0.11), -0.25 + t * 0.5, 0.075);
+      leaf.rotation.z = side * (-0.6 + t * 1.2);
+      addGigaPart(leaf, 68 + leafIndex * 2);
+    }
+  }
+
+  for (let beadIndex = 0; beadIndex < 16; beadIndex += 1) {
+    const angle = beadIndex / 16 * Math.PI * 2;
+    const bead = mesh(
+      new THREE.IcosahedronGeometry(0.033, 1),
+      beadIndex % 4 === 0 ? materials.silver : materials.royalGold,
+      'vault-v2-giga-charm-granulated-jewelry-bead',
+    );
+    bead.position.set(Math.sin(angle) * 0.42, Math.cos(angle) * 0.42, 0.095);
+    addGigaPart(bead, 76 + beadIndex % 4);
+  }
+  for (let jewelIndex = 0; jewelIndex < 8; jewelIndex += 1) {
+    const angle = (jewelIndex / 8) * Math.PI * 2 + Math.PI / 8;
+    const jewel = mesh(
+      new THREE.OctahedronGeometry(0.062 + (jewelIndex % 2) * 0.012, 1),
+      jewelIndex % 3 === 0 ? materials.ruby : jewelIndex % 3 === 1 ? materials.purple : materials.cyan,
+      'vault-v2-giga-charm-orbiting-cut-jewel',
+    );
+    jewel.position.set(Math.sin(angle) * 0.48, Math.cos(angle) * 0.48, 0.1);
+    jewel.userData.gigaOrbitAngle = angle;
+    addGigaPart(jewel, 72 + jewelIndex * 3);
+  }
+  const dropConnector = cylinderBetween(
+    new THREE.Vector3(0, -0.39, 0.08),
+    new THREE.Vector3(0, -0.46, 0.16),
+    0.016,
+    materials.royalGold,
+    'vault-v2-giga-charm-articulated-amethyst-drop-connector',
+  );
+  addGigaPart(dropConnector, 90);
+  const lowerDrop = mesh(new THREE.OctahedronGeometry(0.11, 2), materials.purple, 'vault-v2-giga-charm-royal-amethyst-drop');
+  lowerDrop.scale.y = 1.25;
+  lowerDrop.position.set(0, -0.54, 0.2);
+  addGigaPart(lowerDrop, 92);
+  const gigaGlow = new THREE.PointLight('#7deeff', 1.15, 2.8, 2);
+  gigaGlow.name = 'vault-v2-giga-charm-aquamarine-jewelry-light';
+  gigaGlow.position.set(0, 0, 0.45);
+  gigaGlow.userData.baseIntensity = gigaGlow.intensity;
+  addGigaPart(gigaGlow, 100);
+  bracelet.add(gigaCharm);
   root.add(bracelet);
+  return bracelet;
+}
+
+function addGardenPerimeter(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
+  const gardenRing = new THREE.Group();
+  gardenRing.name = 'vault-v2-living-garden-perimeter';
+  const radius = 3.2;
+  const ringY = 2.25;
+
+  const foundation = band(radius, 0.19, materials.limestone, quality, 'vault-v2-garden-ring-limestone-planter-wall');
+  foundation.position.y = ringY;
+  const soil = band(radius, 0.135, materials.gardenDark, quality, 'vault-v2-garden-ring-deep-soil-bed');
+  soil.position.y = ringY + 0.11;
+  const innerRail = band(radius - 0.19, 0.035, materials.gold, quality, 'vault-v2-garden-ring-inner-gold-rail');
+  innerRail.position.y = ringY + 0.08;
+  const outerRail = band(radius + 0.19, 0.045, materials.gold, quality, 'vault-v2-garden-ring-outer-gold-rail');
+  outerRail.position.y = ringY + 0.08;
+  gardenRing.add(foundation, soil, innerRail, outerRail);
+
+  const plantingCount = quality === 'low' ? 12 : quality === 'medium' ? 16 : 20;
+  for (let index = 0; index < plantingCount; index += 1) {
+    const angle = (index / plantingCount) * Math.PI * 2;
+    const station = new THREE.Group();
+    station.name = 'vault-v2-garden-ring-planted-station';
+    station.position.set(Math.sin(angle) * radius, ringY + 0.12, Math.cos(angle) * radius);
+    station.rotation.y = angle;
+
+    const planter = cylinder(0.105, 0.14, 0.13, 10, materials.limestone, 'vault-v2-garden-ring-fluted-limestone-planter');
+    planter.position.y = 0.02;
+    station.add(planter);
+
+    if (index % 4 === 0) {
+      const trunk = cylinder(0.025, 0.038, 0.25, 7, materials.wood, 'vault-v2-garden-ring-cypress-trunk');
+      trunk.position.y = 0.2;
+      station.add(trunk);
+      for (let layer = 0; layer < 3; layer += 1) {
+        const crown = mesh(new THREE.ConeGeometry(0.14 - layer * 0.022, 0.24, 9), layer % 2 === 0 ? materials.gardenDark : materials.garden, 'vault-v2-garden-ring-sculpted-cypress');
+        crown.position.y = 0.34 + layer * 0.11;
+        station.add(crown);
+      }
+      const trellis = mesh(new THREE.TorusGeometry(0.21, 0.018, 7, 24, Math.PI), materials.gold, 'vault-v2-garden-ring-gilded-rose-trellis');
+      trellis.position.set(0, 0.29, 0.05);
+      station.add(trellis);
+    } else {
+      const shrub = mesh(new THREE.DodecahedronGeometry(0.14, 1), index % 2 === 0 ? materials.garden : materials.gardenDark, 'vault-v2-garden-ring-clipped-shrub');
+      shrub.scale.set(1.15, 0.82, 0.92);
+      shrub.position.y = 0.2;
+      station.add(shrub);
+      for (let blossom = 0; blossom < 3; blossom += 1) {
+        const bloom = mesh(new THREE.OctahedronGeometry(0.035, 0), (index + blossom) % 3 === 0 ? materials.ruby : (index + blossom) % 3 === 1 ? materials.purple : materials.cyan, 'vault-v2-garden-ring-jewel-blossom');
+        bloom.position.set((blossom - 1) * 0.075, 0.31 + (blossom % 2) * 0.035, 0.08);
+        station.add(bloom);
+      }
+    }
+    gardenRing.add(station);
+  }
+
+  for (let index = 0; index < 8; index += 1) {
+    const angle = (index / 8) * Math.PI * 2 + Math.PI / 8;
+    const lantern = new THREE.Group();
+    lantern.name = 'vault-v2-garden-ring-crystal-lantern';
+    lantern.position.set(Math.sin(angle) * (radius + 0.02), ringY + 0.18, Math.cos(angle) * (radius + 0.02));
+    lantern.rotation.y = angle;
+    const post = cylinder(0.014, 0.022, 0.34, 7, materials.gold, 'vault-v2-garden-ring-lantern-post');
+    post.position.y = 0.12;
+    const jewel = mesh(new THREE.OctahedronGeometry(0.07, 0), index % 2 === 0 ? materials.cyan : materials.purple, 'vault-v2-garden-ring-luminous-jewel');
+    jewel.position.y = 0.34;
+    lantern.add(post, jewel);
+    gardenRing.add(lantern);
+  }
+
+  root.add(gardenRing);
+  return gardenRing;
+}
+
+function addGoldCastlePerimeter(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
+  const castleRing = new THREE.Group();
+  castleRing.name = 'vault-v2-solid-gold-castle-perimeter';
+  const radius = 3.22;
+  const ringY = 2.25;
+
+  for (const [y, tube, material, name] of [
+    [ringY - 0.19, 0.085, materials.darkGold, 'vault-v2-gold-castle-heavy-lower-molding'],
+    [ringY - 0.03, 0.12, materials.royalGold, 'vault-v2-gold-castle-solid-parapet-molding'],
+    [ringY + 0.22, 0.045, materials.gold, 'vault-v2-gold-castle-crown-rail'],
+  ] as const) {
+    const rail = band(radius, tube, material, quality, name);
+    rail.position.y = y;
+    castleRing.add(rail);
+  }
+
+  const panelCount = quality === 'low' ? 12 : quality === 'medium' ? 16 : 20;
+  for (let index = 0; index < panelCount; index += 1) {
+    const angle = (index / panelCount) * Math.PI * 2;
+    const panel = new THREE.Group();
+    panel.name = 'vault-v2-gold-castle-relief-panel';
+    panel.position.set(Math.sin(angle) * radius, ringY, Math.cos(angle) * radius);
+    panel.rotation.y = angle;
+
+    const panelWidth = (Math.PI * 2 * radius) / panelCount * 0.78;
+    panel.add(mesh(new THREE.BoxGeometry(panelWidth, 0.42, 0.13), materials.royalGold, 'vault-v2-gold-castle-solid-wall-panel'));
+    const recess = mesh(new THREE.BoxGeometry(panelWidth * 0.62, 0.2, 0.022), materials.darkGold, 'vault-v2-gold-castle-hammered-recess');
+    recess.position.z = 0.087;
+    panel.add(recess);
+    const medallion = cylinder(0.092, 0.092, 0.035, 16, materials.royalGold, 'vault-v2-gold-castle-relief-medallion');
+    medallion.rotation.x = Math.PI / 2;
+    medallion.position.z = 0.12;
+    panel.add(medallion);
+    const rosette = mesh(new THREE.OctahedronGeometry(0.055, 0), index % 5 === 0 ? materials.ruby : materials.gold, 'vault-v2-gold-castle-sun-rosette');
+    rosette.position.z = 0.15;
+    panel.add(rosette);
+
+    for (const side of [-1, 1] as const) {
+      const scroll = mesh(new THREE.TorusGeometry(0.115, 0.018, 7, 20, Math.PI * 1.45), materials.gold, 'vault-v2-gold-castle-filigree-scroll');
+      scroll.position.set(side * panelWidth * 0.24, 0, 0.12);
+      scroll.rotation.z = side < 0 ? 0.55 : Math.PI + 0.55;
+      panel.add(scroll);
+    }
+    for (let merlon = -1; merlon <= 1; merlon += 1) {
+      const battlement = mesh(new THREE.BoxGeometry(panelWidth * 0.19, 0.14, 0.14), materials.royalGold, 'vault-v2-gold-castle-crenellated-merlon');
+      battlement.position.set(merlon * panelWidth * 0.29, 0.27, 0);
+      panel.add(battlement);
+    }
+    castleRing.add(panel);
+  }
+
+  for (let index = 0; index < 8; index += 1) {
+    const angle = (index / 8) * Math.PI * 2 + Math.PI / 8;
+    const tower = new THREE.Group();
+    tower.name = 'vault-v2-gold-castle-ornamental-tower';
+    tower.position.set(Math.sin(angle) * (radius + 0.02), ringY + 0.12, Math.cos(angle) * (radius + 0.02));
+    const body = cylinder(0.13, 0.16, 0.56, 12, materials.royalGold, 'vault-v2-gold-castle-solid-tower-body');
+    tower.add(body);
+    const crown = cylinder(0.2, 0.17, 0.12, 12, materials.darkGold, 'vault-v2-gold-castle-tower-crown');
+    crown.position.y = 0.34;
+    tower.add(crown);
+    for (let merlon = 0; merlon < 6; merlon += 1) {
+      const merlonAngle = (merlon / 6) * Math.PI * 2;
+      const battlement = mesh(new THREE.BoxGeometry(0.065, 0.12, 0.065), materials.royalGold, 'vault-v2-gold-castle-tower-merlon');
+      battlement.position.set(Math.sin(merlonAngle) * 0.15, 0.45, Math.cos(merlonAngle) * 0.15);
+      tower.add(battlement);
+    }
+    const spire = mesh(new THREE.ConeGeometry(0.1, 0.3, 8), materials.royalGold, 'vault-v2-gold-castle-filigree-spire');
+    spire.position.y = 0.62;
+    tower.add(spire);
+    const finial = mesh(new THREE.OctahedronGeometry(0.055, 0), index % 2 === 0 ? materials.ruby : materials.cyan, 'vault-v2-gold-castle-jeweled-finial');
+    finial.position.y = 0.82;
+    tower.add(finial);
+    castleRing.add(tower);
+  }
+
+  root.add(castleRing);
+  return castleRing;
 }
 
 function addTree(root: THREE.Group, materials: Materials, x: number, z: number, scale: number) {
@@ -706,23 +1400,162 @@ function addGarden(root: THREE.Group, materials: Materials, quality: VaultIsland
   }
 }
 
+function addCeremonialGardenAxis(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
+  const axis = new THREE.Group();
+  axis.name = 'vault-v2-source-led-ceremonial-garden-axis';
+  const sectorCount = quality === 'low' ? 8 : 12;
+  const sectorAngle = (Math.PI * 2) / sectorCount;
+  for (let index = 0; index < sectorCount; index += 1) {
+    const angle = index * sectorAngle + sectorAngle * 0.14;
+    const parterre = mesh(
+      new THREE.RingGeometry(1.63, 2.27, segments(quality, 12, 18, 24), 1, angle, sectorAngle * 0.7),
+      index % 3 === 0 ? materials.marble : index % 2 === 0 ? materials.garden : materials.gardenDark,
+      'vault-v2-radial-formal-garden-parterre',
+    );
+    parterre.rotation.x = -Math.PI / 2;
+    parterre.position.y = GARDEN_Y + 0.065;
+    axis.add(parterre);
+  }
+  const forecourt = mesh(
+    new THREE.CircleGeometry(0.5, segments(quality, 24, 36, 52)),
+    materials.marble,
+    'vault-v2-fountain-radial-marble-forecourt',
+  );
+  forecourt.rotation.x = -Math.PI / 2;
+  forecourt.position.set(0, GARDEN_Y + 0.075, 2.02);
+  axis.add(forecourt);
+  const forecourtRing = mesh(
+    new THREE.TorusGeometry(0.5, 0.025, 7, segments(quality, 28, 40, 56)),
+    materials.gold,
+    'vault-v2-fountain-forecourt-gold-compass-ring',
+  );
+  forecourtRing.rotation.x = Math.PI / 2;
+  forecourtRing.position.set(0, GARDEN_Y + 0.105, 2.02);
+  axis.add(forecourtRing);
+  for (let ray = 0; ray < 8; ray += 1) {
+    const angle = (ray / 8) * Math.PI * 2;
+    const rayInlay = mesh(new THREE.BoxGeometry(0.025, 0.012, 0.42), materials.gold, 'vault-v2-fountain-forecourt-gold-ray-inlay');
+    rayInlay.position.set(Math.sin(angle) * 0.21, GARDEN_Y + 0.09, 2.02 + Math.cos(angle) * 0.21);
+    rayInlay.rotation.y = angle;
+    axis.add(rayInlay);
+  }
+  if (quality !== 'low') {
+    const pathZ = [0.82, 1.16, 1.5];
+    pathZ.forEach((z, row) => {
+      for (const side of [-1, 1] as const) {
+        const marker = mesh(new THREE.SphereGeometry(0.032, 10, 7), materials.warmGlow, 'vault-v2-ceremonial-axis-warm-lantern-marker');
+        marker.position.set(side * (0.34 + row * 0.035), GARDEN_Y + 0.16, z);
+        marker.castShadow = false;
+        axis.add(marker);
+      }
+      if (quality === 'high' && row !== 1) {
+        const pathLight = new THREE.PointLight('#ffd080', row === 0 ? 0.58 : 0.46, 1.05, 2);
+        pathLight.name = 'vault-v2-ceremonial-axis-warm-path-light';
+        pathLight.position.set(0, GARDEN_Y + 0.28, z);
+        axis.add(pathLight);
+      }
+    });
+  }
+  const hedgeCount = quality === 'low' ? 8 : 14;
+  for (let index = 0; index < hedgeCount; index += 1) {
+    const angle = (index / hedgeCount) * Math.PI * 2 + 0.1;
+    if (Math.cos(angle) > 0.66) continue;
+    const hedge = mesh(new THREE.CapsuleGeometry(0.065, 0.34, 4, 8), materials.gardenDark, 'vault-v2-clipped-curved-parterre-hedge');
+    hedge.rotation.z = Math.PI / 2;
+    hedge.rotation.y = angle;
+    hedge.position.set(Math.sin(angle) * 1.86, GARDEN_Y + 0.16, Math.cos(angle) * 1.86);
+    axis.add(hedge);
+  }
+  for (const angle of [-0.72, 0.72] as const) {
+    const x = Math.sin(angle) * 1.88;
+    const z = Math.cos(angle) * 1.88;
+    const pedestal = cylinder(0.13, 0.17, 0.28, 12, materials.marble, 'vault-v2-garden-guardian-marble-pedestal');
+    pedestal.position.set(x, GARDEN_Y + 0.16, z);
+    axis.add(pedestal);
+    const guardian = mesh(new THREE.ConeGeometry(0.11, 0.36, 10), materials.gold, 'vault-v2-garden-gilded-guardian-statue');
+    guardian.position.set(x, GARDEN_Y + 0.48, z);
+    axis.add(guardian);
+    const head = mesh(new THREE.SphereGeometry(0.07, 12, 8), materials.royalGold, 'vault-v2-garden-gilded-guardian-head');
+    head.position.set(x, GARDEN_Y + 0.7, z);
+    axis.add(head);
+    const crown = mesh(new THREE.ConeGeometry(0.075, 0.14, 8), angle < 0 ? materials.purple : materials.cyan, 'vault-v2-garden-guardian-jewel-crown');
+    crown.position.set(x, GARDEN_Y + 0.82, z);
+    axis.add(crown);
+  }
+  root.add(axis);
+}
+
 function addFountain(root: THREE.Group, materials: Materials, quality: VaultIslandQuality) {
   const fountain = new THREE.Group();
   fountain.name = 'vault-v2-front-crystal-fountain';
-  fountain.position.set(0, GARDEN_Y + 0.09, 1.58);
-  const basin = mesh(new THREE.TorusGeometry(0.36, 0.07, 10, segments(quality, 32, 48, 64)), materials.gold, 'vault-v2-fountain-gold-basin');
+  fountain.position.set(0, GARDEN_Y + 0.09, 2.02);
+  const basin = mesh(new THREE.TorusGeometry(0.42, 0.08, 10, segments(quality, 32, 48, 64)), materials.gold, 'vault-v2-fountain-gold-basin');
   basin.rotation.x = Math.PI / 2;
   fountain.add(basin);
-  const water = mesh(new THREE.CircleGeometry(0.31, 36), materials.cyan, 'vault-v2-fountain-water');
+  const water = mesh(new THREE.CircleGeometry(0.36, 36), materials.fountainWater, 'vault-v2-fountain-water');
   water.rotation.x = -Math.PI / 2;
   water.position.y = 0.01;
   fountain.add(water);
-  const crystal = mesh(new THREE.ConeGeometry(0.16, 0.65, 6), materials.cyan, 'vault-v2-fountain-crystal-spire');
-  crystal.position.y = 0.34;
-  fountain.add(crystal);
-  const base = cylinder(0.17, 0.22, 0.17, 10, materials.marble, 'vault-v2-fountain-marble-base');
+  const base = cylinder(0.19, 0.24, 0.19, 10, materials.marble, 'vault-v2-fountain-marble-base');
   base.position.y = 0.08;
   fountain.add(base);
+  const crystalCrown = new THREE.Group();
+  crystalCrown.name = 'vault-v2-fountain-radial-prismatic-crystal-crown';
+  crystalCrown.position.y = 0.18;
+  const addPrismaticCrystal = (
+    height: number,
+    radius: number,
+    position: THREE.Vector3,
+    material: THREE.Material,
+    name: string,
+  ) => {
+    const crystal = new THREE.Group();
+    crystal.name = name;
+    const bodyHeight = height * 0.68;
+    const body = mesh(new THREE.CylinderGeometry(radius, radius * 0.92, bodyHeight, 6, 1, false), material, `${name}-hexagonal-body`);
+    body.position.y = bodyHeight * 0.5;
+    crystal.add(body);
+    const point = mesh(new THREE.ConeGeometry(radius, height - bodyHeight, 6, 1, false), material, `${name}-faceted-point`);
+    point.position.y = bodyHeight + (height - bodyHeight) * 0.5;
+    crystal.add(point);
+    crystal.position.copy(position);
+    crystal.rotation.y = Math.atan2(position.x, position.z) + Math.PI / 6;
+    crystalCrown.add(crystal);
+  };
+  addPrismaticCrystal(0.92, 0.16, new THREE.Vector3(0, 0, 0), materials.fountainCrystal, 'vault-v2-fountain-central-prismatic-crystal');
+  for (let index = 0; index < 5; index += 1) {
+    const angle = (index / 5) * Math.PI * 2 + Math.PI / 10;
+    const distance = 0.145;
+    addPrismaticCrystal(
+      0.48 + (index % 2) * 0.09,
+      0.085,
+      new THREE.Vector3(Math.sin(angle) * distance, 0, Math.cos(angle) * distance),
+      index % 2 === 0 ? materials.fountainCobalt : materials.fountainCrystal,
+      'vault-v2-fountain-radial-secondary-prismatic-crystal',
+    );
+  }
+  const crystalCore = mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.52, 6), materials.fountainCore, 'vault-v2-fountain-luminous-inner-crystal-core');
+  crystalCore.position.y = 0.36;
+  crystalCrown.add(crystalCore);
+  fountain.add(crystalCrown);
+  if (quality !== 'low') {
+    const crystalLight = new THREE.PointLight('#5de9ff', quality === 'high' ? 0.72 : 0.5, 1.7, 2);
+    crystalLight.name = 'vault-v2-fountain-cyan-heart-light';
+    crystalLight.position.set(0, 0.58, 0);
+    crystalLight.userData.baseIntensity = crystalLight.intensity;
+    fountain.add(crystalLight);
+  }
+  for (let jet = 0; jet < 4; jet += 1) {
+    const angle = (jet / 4) * Math.PI * 2;
+    const curve = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(Math.sin(angle) * 0.08, 0.23, Math.cos(angle) * 0.08),
+      new THREE.Vector3(Math.sin(angle) * 0.24, 0.72, Math.cos(angle) * 0.24),
+      new THREE.Vector3(Math.sin(angle) * 0.33, 0.13, Math.cos(angle) * 0.33),
+    );
+    const waterJet = mesh(new THREE.TubeGeometry(curve, 18, 0.009, 6, false), materials.fountainWater, 'vault-v2-fountain-arched-crystalline-water-jet');
+    waterJet.castShadow = false;
+    fountain.add(waterJet);
+  }
   root.add(fountain);
 }
 
@@ -801,7 +1634,7 @@ function addPalacePodium(root: THREE.Group, materials: Materials, quality: Vault
   root.add(podiumBand);
   for (let index = 0; index < 12; index += 1) {
     const t = index / 11;
-    const step = mesh(new THREE.BoxGeometry(0.9 + t * 0.7, 0.055, 0.2), materials.marble, 'vault-v2-palace-grand-marble-step');
+    const step = mesh(new THREE.BoxGeometry(1.05 + t * 0.9, 0.055, 0.2), materials.marble, 'vault-v2-palace-grand-marble-step');
     step.position.set(0, PALACE_Y + 0.02 - t * 0.27, 0.84 + t * 1.02);
     root.add(step);
   }
@@ -1162,7 +1995,7 @@ function addPalaceFamily2(root: THREE.Group, materials: Materials, quality: Vaul
 
 function addWarmLights(root: THREE.Group, quality: VaultIslandQuality) {
   if (quality === 'low') return;
-  const positions = [[0, 1.05, 3.25, 1.45], [-1.35, 1.2, 2.65, 0.85], [1.35, 1.2, 2.65, 0.85], [0, 3.65, 1.1, 1.15]] as const;
+  const positions = [[0, 1.05, 3.25, 2.25], [-1.35, 1.2, 2.65, 1.05], [1.35, 1.2, 2.65, 1.05], [0, 3.65, 1.1, 1.55], [-1.4, 3.0, 1.0, 0.72], [1.4, 3.0, 1.0, 0.72]] as const;
   positions.forEach(([x, y, z, intensity], index) => {
     const light = new THREE.PointLight(index === 3 ? '#ffd38a' : '#ffc86c', intensity, index === 3 ? 4.2 : 2.8, 2);
     light.name = 'vault-v2-warm-architectural-light';
@@ -1200,15 +2033,30 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
   root.userData.palaceReady = false;
   const materialSet = createMaterials();
   const { materials, textures } = materialSet;
-  addEnvironment(root, materials, quality);
+  const environment = addEnvironment(root, materials, quality);
   addRockAndMasonry(root, materials, quality);
   addInhabitedGalleries(root, materials, quality);
   addGrandVaultPortal(root, materials, quality);
   addMarinaApproach(root, materials);
   addGarden(root, materials, quality);
+  addCeremonialGardenAxis(root, materials, quality);
   addFountain(root, materials, quality);
   addGardenPavilions(root, materials, quality);
-  addBracelet(root, materials, quality);
+  const perimeterStyles: Record<VaultIslandPerimeterStyle, THREE.Group> = {
+    charms: addBracelet(root, materials, quality),
+    garden: addGardenPerimeter(root, materials, quality),
+    'gold-castle': addGoldCastlePerimeter(root, materials, quality),
+  };
+  let selectedPerimeterStyle: VaultIslandPerimeterStyle = 'charms';
+  const setPerimeterStyle = (style: VaultIslandPerimeterStyle) => {
+    const selectedStyle: VaultIslandPerimeterStyle = style in perimeterStyles ? style : 'charms';
+    selectedPerimeterStyle = selectedStyle;
+    Object.entries(perimeterStyles).forEach(([id, group]) => {
+      group.visible = id === selectedStyle;
+    });
+    root.userData.perimeterStyle = selectedStyle;
+  };
+  setPerimeterStyle(options.perimeterStyle ?? 'charms');
   addPalacePodium(root, materials, quality);
   const palaceMount = new THREE.Group();
   palaceMount.name = 'vault-v2-blender-palace-mount';
@@ -1221,7 +2069,7 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
       '/assets/islands/special/vault-island/vault-palace.glb',
       (gltf) => {
         loadedPalace = gltf.scene;
-        loadedPalace.name = 'vault-v2-blender-palace-v015';
+        loadedPalace.name = 'vault-v2-blender-palace-v016';
         loadedPalace.traverse((child) => {
           child.castShadow = true;
           child.receiveShadow = true;
@@ -1231,27 +2079,38 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
             if (!(palaceMaterial instanceof THREE.MeshStandardMaterial)) return;
             const materialName = palaceMaterial.name.toLowerCase();
             if (materialName.includes('white-marble')) {
-              palaceMaterial.color.set('#e5dfd1');
-              palaceMaterial.roughness = 0.29;
-              palaceMaterial.bumpMap = textures[1];
-              palaceMaterial.bumpScale = 0.024;
-              palaceMaterial.envMapIntensity = 1.12;
+              palaceMaterial.name = 'vault-palace-dressed-honey-limestone';
+              palaceMaterial.color.set('#e0cdaa');
+              palaceMaterial.roughness = 0.5;
+              palaceMaterial.roughnessMap = textures[2];
+              palaceMaterial.metalness = 0;
+              palaceMaterial.bumpMap = textures[2];
+              palaceMaterial.bumpScale = 0.048;
+              palaceMaterial.envMapIntensity = 0.74;
+            } else if (materialName.includes('shadow-stone')) {
+              palaceMaterial.color.set('#b29c78');
+              palaceMaterial.roughness = 0.7;
+              palaceMaterial.roughnessMap = textures[2];
+              palaceMaterial.metalness = 0;
+              palaceMaterial.bumpMap = textures[2];
+              palaceMaterial.bumpScale = 0.055;
+              palaceMaterial.envMapIntensity = 0.52;
             } else if (materialName.includes('polished-gold')) {
-              palaceMaterial.color.set('#d7a029');
+              palaceMaterial.color.set('#e2ad31');
               palaceMaterial.metalness = 1;
               palaceMaterial.roughness = 0.1;
               palaceMaterial.bumpMap = textures[0];
               palaceMaterial.bumpScale = 0.006;
-              palaceMaterial.envMapIntensity = 2.15;
+              palaceMaterial.envMapIntensity = 2.5;
             } else if (materialName.includes('midnight-enamel')) {
               palaceMaterial.color.set('#062c70');
               palaceMaterial.roughness = 0.1;
               palaceMaterial.envMapIntensity = 1.7;
             } else if (materialName.includes('warm-glass')) {
-              palaceMaterial.color.set('#100e08');
-              palaceMaterial.emissive.set('#a14f09');
-              palaceMaterial.emissiveIntensity = 0.3;
-              palaceMaterial.roughness = 0.18;
+              palaceMaterial.color.set('#24170c');
+              palaceMaterial.emissive.set('#d86b1f');
+              palaceMaterial.emissiveIntensity = 0.46;
+              palaceMaterial.roughness = 0.24;
             } else if (materialName.includes('cyan-gem')) {
               palaceMaterial.color.set('#55d6e8');
               palaceMaterial.emissive.set('#073844');
@@ -1279,23 +2138,120 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
     );
   }
   addWarmLights(root, quality);
-  const ocean = root.getObjectByName('vault-v2-ocean');
   const bracelet = root.getObjectByName('vault-v2-articulated-charm-bracelet');
+  const gigaCharm = root.getObjectByName('vault-v2-giga-charm-sovereign-medallion');
+  const gigaCharmJewels: THREE.Object3D[] = [];
+  const gigaCharmLights: THREE.PointLight[] = [];
   const charms: THREE.Object3D[] = [];
+  const boats: THREE.Object3D[] = [];
+  const clouds: THREE.Object3D[] = [];
+  const waveArcs: THREE.Mesh[] = [];
+  const fountainLights: THREE.PointLight[] = [];
+  let fountainCrystalCrown: THREE.Object3D | null = null;
   root.traverse((child) => {
     if (child.name === 'vault-v2-hanging-faceted-charm') charms.push(child);
+    if (child.name === 'vault-v2-giga-charm-orbiting-cut-jewel') gigaCharmJewels.push(child);
+    if (child instanceof THREE.PointLight && child.name === 'vault-v2-giga-charm-aquamarine-jewelry-light') gigaCharmLights.push(child);
+    if (child.name === 'vault-v2-sailboat') boats.push(child);
+    if (child.name === 'vault-v2-animated-three-dimensional-cloud-bank') clouds.push(child);
+    if (child instanceof THREE.PointLight && child.name === 'vault-v2-fountain-cyan-heart-light') fountainLights.push(child);
+    if (child.name === 'vault-v2-fountain-radial-prismatic-crystal-crown') fountainCrystalCrown = child;
+    if (child instanceof THREE.Mesh && child.name === 'vault-v2-natural-ocean-wave-arc') {
+      child.userData.baseRotationZ = child.rotation.z;
+      child.userData.baseOpacity = (child.material as THREE.MeshBasicMaterial).opacity;
+      waveArcs.push(child);
+    }
   });
+
+  const clampFill = (value: number | undefined, fallback = 100) => Math.min(100, Math.max(0, Number.isFinite(value) ? Number(value) : fallback));
+  let exteriorFill = clampFill(options.exteriorFill);
+  let gigaCharmFill = clampFill(options.gigaCharmFill);
+  const exteriorThreshold = (object: THREE.Object3D) => {
+    if (object instanceof THREE.Light) return 0;
+    const name = object.name.toLowerCase();
+    if (Object.values(perimeterStyles).includes(object as THREE.Group)) return null;
+    if (name.includes('ocean') || name.includes('sky') || name.includes('cloud') || name.includes('rock') || name.includes('cliff')) return 0;
+    if (name.includes('palace')) return 76;
+    if (name.includes('garden') || name.includes('fountain') || name.includes('pavilion')) return 48;
+    if (name.includes('gallery') || name.includes('portal') || name.includes('marina') || name.includes('vault')) return 28;
+    if (name.includes('jewel') || name.includes('lantern') || name.includes('gold')) return 66;
+    return 18;
+  };
+  const setExteriorFill = (value: number) => {
+    exteriorFill = clampFill(value);
+    root.children.forEach((child) => {
+      const threshold = exteriorThreshold(child);
+      if (threshold === null) return;
+      child.visible = exteriorFill >= threshold;
+    });
+    root.userData.exteriorFill = exteriorFill;
+    setPerimeterStyle(selectedPerimeterStyle);
+  };
+  const setGigaCharmFill = (value: number) => {
+    gigaCharmFill = clampFill(value);
+    if (gigaCharm) {
+      gigaCharm.traverse((child) => {
+        if (child === gigaCharm) return;
+        const threshold = Number(child.userData.gigaCharmFillThreshold ?? 0);
+        child.visible = gigaCharmFill >= threshold;
+      });
+      const scale = 0.72 + gigaCharmFill * 0.0028;
+      gigaCharm.scale.setScalar(scale);
+    }
+    root.userData.gigaCharmFill = gigaCharmFill;
+  };
+  setExteriorFill(exteriorFill);
+  setGigaCharmFill(gigaCharmFill);
   return {
     root,
+    setPerimeterStyle,
+    setExteriorFill,
+    setGigaCharmFill,
     update: (elapsedSeconds: number) => {
       if (!options.animated) return;
-      if (ocean) ocean.rotation.z = elapsedSeconds * 0.008;
+      (environment.ocean.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds * 0.18;
+      (environment.sky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
+      (environment.goldenSky.material as THREE.ShaderMaterial).uniforms.time.value = elapsedSeconds;
       if (bracelet) bracelet.rotation.y = Math.sin(elapsedSeconds * 0.25) * 0.008;
       if (loadedPalace) loadedPalace.rotation.y = Math.sin(elapsedSeconds * 0.16) * 0.005;
       charms.forEach((charm, index) => {
         const baseY = Number(charm.userData.baseY) || charm.position.y;
         charm.position.y = baseY + Math.sin(elapsedSeconds * 1.1 + Number(charm.userData.phase || index)) * 0.018;
         charm.rotation.y = elapsedSeconds * 0.22 + index * 0.4;
+      });
+      if (gigaCharm) {
+        const baseY = Number(gigaCharm.userData.baseY) || gigaCharm.position.y;
+        gigaCharm.position.y = baseY + Math.sin(elapsedSeconds * 0.72 + Number(gigaCharm.userData.phase)) * 0.025;
+        gigaCharm.rotation.z = Math.sin(elapsedSeconds * 0.54) * 0.035;
+      }
+      gigaCharmJewels.forEach((jewel, index) => {
+        jewel.rotation.y = elapsedSeconds * (0.32 + index * 0.018);
+        jewel.rotation.z = Math.sin(elapsedSeconds * 0.8 + index) * 0.16;
+      });
+      gigaCharmLights.forEach((light, index) => {
+        light.intensity = Number(light.userData.baseIntensity) * (0.86 + Math.sin(elapsedSeconds * 1.4 + index) * 0.14);
+      });
+      boats.forEach((boat, index) => {
+        const base = boat.userData.basePosition as THREE.Vector3;
+        const phase = Number(boat.userData.phase || index);
+        boat.position.y = base.y + Math.sin(elapsedSeconds * 0.72 + phase) * 0.028;
+        boat.position.x = base.x + Math.sin(elapsedSeconds * 0.08 + phase) * 0.055;
+        boat.rotation.z = Math.sin(elapsedSeconds * 0.64 + phase) * 0.025;
+      });
+      clouds.forEach((cloud, index) => {
+        const base = cloud.userData.basePosition as THREE.Vector3;
+        const phase = Number(cloud.userData.phase || index);
+        cloud.position.x = base.x + Math.sin(elapsedSeconds * 0.018 + phase) * 0.34;
+        cloud.position.y = base.y + Math.sin(elapsedSeconds * 0.024 + phase) * 0.045;
+      });
+      if (fountainCrystalCrown) fountainCrystalCrown.rotation.y = elapsedSeconds * 0.08;
+      fountainLights.forEach((light, index) => {
+        light.intensity = Number(light.userData.baseIntensity) * (0.88 + Math.sin(elapsedSeconds * 1.2 + index) * 0.12);
+      });
+      waveArcs.forEach((wave, index) => {
+        const phase = Number(wave.userData.phase || index);
+        wave.rotation.z = Number(wave.userData.baseRotationZ) + Math.sin(elapsedSeconds * 0.11 + phase) * 0.014;
+        (wave.material as THREE.MeshBasicMaterial).opacity = Number(wave.userData.baseOpacity) * (0.8 + Math.sin(elapsedSeconds * 0.34 + phase) * 0.2);
       });
     },
     dispose: () => {
@@ -1313,6 +2269,9 @@ export function createVaultTreasureIslandModelV2(options: VaultTreasureIslandOpt
         });
       });
       ownedMaterials.forEach((material) => material.dispose());
+      environment.waterNormals.dispose();
+      const reflectionTexture = (environment.ocean.material as THREE.ShaderMaterial).uniforms.mirrorSampler?.value as THREE.Texture | undefined;
+      reflectionTexture?.dispose();
       materialSet.textures.forEach((texture) => texture.dispose());
     },
   };

@@ -74,7 +74,10 @@ import {
 } from '../../dev/Island2CelestialThreeWorld';
 import {
   buildIsland3FrostmoonLandmark,
+  createIsland3FrostmoonLivingAmbience,
   createIsland3FrostmoonMaterials,
+  getIsland3FrostmoonLandmarkPalette,
+  resolveIsland3FrostmoonAmbienceState,
 } from '../../dev/Island3FrostmoonThreeWorld';
 import {
   createFrostwellIceworks,
@@ -84,6 +87,19 @@ import {
 import {
   buildIsland6MoonveilLandmark,
   createIsland6MoonveilMaterials,
+} from '../../dev/Island6MoonveilThreeWorld';
+import {
+  createFrostmoonSeafoodTrade,
+  FROSTMOON_FREIGHT_CART_CLEARANCE_RADIUS,
+  FROSTMOON_FREIGHT_CART_POSITION,
+  FROSTMOON_KITE_COURIER_CLEARANCE_RADIUS,
+  FROSTMOON_KITE_COURIER_POSITION,
+  FROSTMOON_LOADING_YARD_CLEARANCE_RADIUS,
+  FROSTMOON_LOADING_YARD_POSITION,
+  FROSTMOON_PUPPY_HOMES,
+  isFrostmoonSeafoodTradeRouteClear,
+} from '../../dev/FrostmoonSeafoodTradeThreeModel';
+import {
   isIsland6RouteCorridorClear,
   ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS,
   ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS,
@@ -1411,6 +1427,263 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
+    name: 'sequences Frostmoon from day through a short blizzard into cozy night without aurora',
+    run: () => {
+      assertEqual(resolveIsland3FrostmoonAmbienceState(0, 'day').phase, 'day', 'Frostmoon must start in clear daylight');
+      assert(resolveIsland3FrostmoonAmbienceState(0, 'blizzard').blizzard > 0.9, 'the late-day blizzard needs a deterministic evidence phase');
+      assert(resolveIsland3FrostmoonAmbienceState(0, 'dusk').dusk > 0.5, 'the storm must clear through ordinary dusk');
+      const night = resolveIsland3FrostmoonAmbienceState(0, 'night');
+      assert(night.night > 0.9 && night.hearth > 0.9, 'night must activate the moonlit sky and cozy contained hearths together');
+    },
+  },
+  {
+    name: 'gives every Frostmoon landmark a distinct occupational palette while keeping all roof metal warm copper',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const landmarkIds = ['boss', 'hatchery', 'habit', 'wisdom', 'event'] as const;
+      const palettes = landmarkIds.map((landmarkId) => getIsland3FrostmoonLandmarkPalette(materials, landmarkId));
+      assertEqual(new Set(palettes.map((palette) => palette.timber.color.getHex())).size, 5, 'the five landmarks need visibly different timber/facade families');
+      assertEqual(new Set(palettes.map((palette) => palette.banner.color.getHex())).size, 5, 'occupational banners and trim must not collapse into one village color');
+      palettes.forEach((palette) => {
+        [palette.indigo, palette.indigoLight].forEach((roofMaterial) => {
+          assert(
+            roofMaterial.color.r > roofMaterial.color.g && roofMaterial.color.r > roofMaterial.color.b,
+            'every roof-family material must remain warm copper rather than returning to blue',
+          );
+        });
+      });
+      const snowfeather = getIsland3FrostmoonLandmarkPalette(materials, 'hatchery');
+      const hearthguard = getIsland3FrostmoonLandmarkPalette(materials, 'habit');
+      const moonwell = getIsland3FrostmoonLandmarkPalette(materials, 'event');
+      assert(snowfeather.timber.color.r > hearthguard.timber.color.r, 'Snowfeather must read as the lighter honey-and-cream hatchery');
+      assert(hearthguard.banner.color.r > hearthguard.banner.color.g * 1.5, 'Hearthguard needs a restrained oxblood training-yard identity');
+      assert(moonwell.accent.color.g > moonwell.accent.color.r, 'Moonwell may use subdued patina only on instrument accents');
+
+      const seen = new Set<THREE.Material>();
+      [
+        ...Object.values(materials),
+        ...palettes.flatMap((palette) => Object.values(palette)),
+      ].forEach((material) => {
+        if (seen.has(material)) return;
+        seen.add(material);
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'casts restrained warm hearth spill onto Frostmoon snow at night',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xc7d9ee);
+      scene.fog = new THREE.FogExp2(0xdbe5f3, 0.0068);
+      scene.add(new THREE.HemisphereLight(), new THREE.DirectionalLight());
+      const ocean = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshPhysicalMaterial({ transparent: true }),
+      );
+      const runtime = createIsland3FrostmoonLivingAmbience(scene, ISLAND_3D_QUALITY_PROFILES.low, materials, ocean);
+      runtime.animate(0.87 * 480);
+      const spill = runtime.root.getObjectByName('ISLAND_3_HEARTH_SNOW_LIGHT_POOL_1') as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial> | undefined;
+      assert(Boolean(spill) && spill!.material.opacity > 0.08, 'night needs a visible but restrained warm light pool outside the Keep');
+      assert(
+        getIsland3FrostmoonLandmarkPalette(materials, 'hatchery').windowGlow.emissiveIntensity > 4,
+        'the distinct satellite-window materials must brighten with the shared night ambience clock',
+      );
+      runtime.root.traverse((object) => {
+        if (object instanceof THREE.Mesh || object instanceof THREE.Points) object.geometry.dispose();
+      });
+      ocean.geometry.dispose();
+      (ocean.material as THREE.Material).dispose();
+    },
+  },
+  {
+    name: 'builds Snowfeather Roost as an additive all-angle hatchery with a compact copper Level 3 silhouette',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const definition = {
+        id: 'hatchery' as const,
+        label: 'Snowfeather Roost',
+        subtitle: 'Heated winter hatchery',
+        position: [0, 0, 0] as const,
+        accent: 0xa95f38,
+      };
+      const level1 = buildIsland3FrostmoonLandmark(definition, 1, 'high', materials);
+      const level2 = buildIsland3FrostmoonLandmark(definition, 2, 'high', materials);
+      const level3 = buildIsland3FrostmoonLandmark(definition, 3, 'high', materials);
+
+      assert(level1.getObjectByName('ISLAND_3_SNOWFEATHER_FOUNDATION_FRAME'), 'L1 must establish the recognizable paired hatchery foundation frame');
+      assert(level2.getObjectByName('ISLAND_3_SNOWFEATHER_MAIN_LODGE'), 'L2 must add the operational dark-timber lodge');
+      assert(!level2.getObjectByName('ISLAND_3_SNOWFEATHER_FEATHER_CROWN'), 'the restored feather crown must remain a Level 3 identity reward');
+      assert(level3.getObjectByName('ISLAND_3_SNOWFEATHER_FEATHER_CROWN'), 'L3 must carry the tall copper feather crown');
+      assert(level3.getObjectByName('ISLAND_3_SNOWFEATHER_HEATED_NEST_BAY_LEFT'), 'L3 must expose the left heated egg nest');
+      assert(level3.getObjectByName('ISLAND_3_SNOWFEATHER_HEATED_NEST_BAY_RIGHT'), 'L3 must expose the right heated egg nest');
+      assert(level3.getObjectByName('ISLAND_3_SNOWFEATHER_WIDE_ENTRY'), 'L3 must have a legible centered entrance');
+      assert(level3.getObjectByName('ISLAND_3_SNOWFEATHER_REAR_SERVICE_HATCH'), 'L3 must have an authored rear service elevation');
+
+      const level2Size = new THREE.Box3().setFromObject(level2).getSize(new THREE.Vector3());
+      const level3Size = new THREE.Box3().setFromObject(level3).getSize(new THREE.Vector3());
+      assert(level3Size.y > level2Size.y, 'L3 crown and chimney must create a stronger restored vertical silhouette');
+      assert(level3Size.x <= 3.7 && level3Size.z <= 3.7, 'Snowfeather must stay inside its compact satellite-landmark envelope');
+      assert(materials.indigo.color.r > materials.indigo.color.b, 'the Snowfeather roof family must remain warm copper rather than blue');
+
+      [level1, level2, level3].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'builds Hearthguard Yard as an additive all-angle training court with a compact Level 3 silhouette',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const definition = {
+        id: 'habit' as const,
+        label: 'Hearthguard Yard',
+        subtitle: 'Winter training court',
+        position: [0, 0, 0] as const,
+        accent: 0xa95f38,
+      };
+      const level1 = buildIsland3FrostmoonLandmark(definition, 1, 'high', materials);
+      const level2 = buildIsland3FrostmoonLandmark(definition, 2, 'high', materials);
+      const level3 = buildIsland3FrostmoonLandmark(definition, 3, 'high', materials);
+
+      assert(level1.getObjectByName('ISLAND_3_HEARTHGUARD_OPEN_COURT'), 'L1 must establish the recognizable open oval court');
+      assert(level1.getObjectByName('ISLAND_3_HEARTHGUARD_FRONT_GATE'), 'L1 must establish the paired front gate');
+      assert(level1.getObjectByName('ISLAND_3_HEARTHGUARD_PERIMETER_SYSTEM'), 'L1 must establish the protected training perimeter');
+      assert(level1.getObjectByName('ISLAND_3_HEARTHGUARD_SHIELD_TARGET_SYSTEM'), 'L1 must introduce shield training');
+      assert(!level1.getObjectByName('ISLAND_3_HEARTHGUARD_CLIMBING_FRAME'), 'the climbing frame must remain an L2 operational upgrade');
+      assert(level2.getObjectByName('ISLAND_3_HEARTHGUARD_CLIMBING_FRAME'), 'L2 must add a grounded climbing frame');
+      assert(level2.getObjectByName('ISLAND_3_HEARTHGUARD_RECOVERY_HUT'), 'L2 must add the recovery shelter');
+      assert(!level2.getObjectByName('ISLAND_3_HEARTHGUARD_FEATHER_CROWN'), 'the feather crown must remain an L3 identity reward');
+      assert(level3.getObjectByName('ISLAND_3_HEARTHGUARD_FEATHER_CROWN'), 'L3 must carry the copper feather crown');
+      assert(level3.getObjectByName('ISLAND_3_HEARTHGUARD_RING_LEFT'), 'L3 must expose the left hanging ring');
+      assert(level3.getObjectByName('ISLAND_3_HEARTHGUARD_RING_RIGHT'), 'L3 must expose the right hanging ring');
+      assert(level3.getObjectByName('ISLAND_3_HEARTHGUARD_RECOVERY_HEARTH'), 'L3 must have a visible warm recovery hearth');
+      assert(level3.getObjectByName('ISLAND_3_HEARTHGUARD_REAR_SERVICE_DRESSING'), 'L3 must have an authored rear service elevation');
+      assert(level3.getObjectByName('ISLAND_3_HEARTHGUARD_BANNER_AND_LANTERNS'), 'L3 must receive the civic banner-and-lantern finish');
+
+      const level1Size = new THREE.Box3().setFromObject(level1).getSize(new THREE.Vector3());
+      const level2Size = new THREE.Box3().setFromObject(level2).getSize(new THREE.Vector3());
+      const level3Size = new THREE.Box3().setFromObject(level3).getSize(new THREE.Vector3());
+      assert(level2Size.y > level1Size.y, 'L2 rig and shelter must create a stronger operational silhouette');
+      assert(level3Size.y > level2Size.y, 'L3 feather gate and chimney must create the final restored silhouette');
+      assert(level3Size.x <= 3.7 && level3Size.z <= 3.7, 'Hearthguard must stay inside its compact satellite-landmark envelope');
+      assert(materials.indigo.color.r > materials.indigo.color.b, 'the Hearthguard roof family must remain warm copper rather than blue');
+
+      [level1, level2, level3].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'builds Frostfire Archive as an additive octagonal library with a warm copper roof and working service rear',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const definition = {
+        id: 'wisdom' as const,
+        label: 'Frostfire Archive',
+        subtitle: 'Winter archive and library',
+        position: [0, 0, 0] as const,
+        accent: 0xa95f38,
+      };
+      const level1 = buildIsland3FrostmoonLandmark(definition, 1, 'high', materials);
+      const level2 = buildIsland3FrostmoonLandmark(definition, 2, 'high', materials);
+      const level3 = buildIsland3FrostmoonLandmark(definition, 3, 'high', materials);
+
+      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_OCTAGONAL_STONE_AND_TIMBER_SHELL'), 'L1 must establish the squat octagonal stone-and-timber archive shell');
+      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_DARK_TIMBER_BUTTRESS_SYSTEM'), 'L1 must establish grounded heavy timber buttresses');
+      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_FRONT_STAIR_AND_ARCHIVE_DOOR'), 'L1 must establish a broad front entry');
+      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST'), 'L1 must already read as an archive through its open-book crest');
+      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF'), 'L1 must start with the approved low warm-copper roof family');
+      assert(!level1.getObjectByName('ISLAND_3_FROSTFIRE_READING_WINDOW_SYSTEM'), 'paired reading windows remain an L2 operational upgrade');
+      assert(level2.getObjectByName('ISLAND_3_FROSTFIRE_READING_WINDOW_SYSTEM'), 'L2 must add paired warm reading windows');
+      assert(level2.getObjectByName('ISLAND_3_FROSTFIRE_EXTERIOR_READING_ALCOVE'), 'L2 must add the sheltered public reading alcove');
+      assert(level2.getObjectByName('ISLAND_3_FROSTFIRE_ARCHIVE_SHELVES_BOOKS_AND_CHARTS'), 'L2 must add visible archive shelves and books');
+      assert(!level2.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_LANTERN_STACK'), 'the open frostfire cage remains the L3 identity reward');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_LANTERN_STACK'), 'L3 must carry the open central frostfire stack');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_STACK_FLAME'), 'L3 frostfire must have a named effect-ready flame socket');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_REAR_FURNACE_AND_CAPPED_FLUE'), 'L3 must have an authored heating and flue rear elevation');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_REAR_DOCUMENT_CHESTS'), 'L3 must have rear document storage');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_REAR_TOOLS_AND_SPLIT_LOGS'), 'L3 must have grounded winter tools and firewood');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_ROOF_RIBS_BRACKETS_SNOW_SEAMS_AND_ICICLES'), 'L3 must complete the radial roof construction and winter finish');
+      assert(!level3.getObjectByName('ISLAND_3_FROSTFIRE_TELESCOPE'), 'the archive may not regress into the old observatory-like telescope silhouette');
+
+      const level1Size = new THREE.Box3().setFromObject(level1).getSize(new THREE.Vector3());
+      const level2Size = new THREE.Box3().setFromObject(level2).getSize(new THREE.Vector3());
+      const level3Size = new THREE.Box3().setFromObject(level3).getSize(new THREE.Vector3());
+      assert(level2Size.y > level1Size.y, 'L2 chimney and fuller shell must create a stronger operational silhouette');
+      assert(level3Size.y > level2Size.y, 'L3 open frostfire stack must complete the restored vertical silhouette');
+      assert(level3Size.x <= 3.7 && level3Size.z <= 3.7, 'Frostfire Archive must stay inside its compact satellite-landmark envelope');
+      assert(materials.indigoLight.color.r > materials.indigoLight.color.b, 'Frostfire roof metal must remain warm copper rather than blue');
+
+      [level1, level2, level3].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'builds Moonwell Observatory as an additive open-frame instrument with a working rear elevation',
+    run: () => {
+      const materials = createIsland3FrostmoonMaterials();
+      const definition = {
+        id: 'event' as const,
+        label: 'Moonwell Observatory',
+        subtitle: 'Winter observatory',
+        position: [0, 0, 0] as const,
+        accent: 0xa95f38,
+      };
+      const level1 = buildIsland3FrostmoonLandmark(definition, 1, 'high', materials);
+      const level2 = buildIsland3FrostmoonLandmark(definition, 2, 'high', materials);
+      const level3 = buildIsland3FrostmoonLandmark(definition, 3, 'high', materials);
+
+      assert(level1.getObjectByName('ISLAND_3_MOONWELL_CIRCULAR_FOUNDATION'), 'L1 must establish the circular frost-stone plinth');
+      assert(level1.getObjectByName('ISLAND_3_MOONWELL_BASIN'), 'L1 must establish the physical moonwell basin');
+      assert(level1.getObjectByName('ISLAND_3_MOONWELL_ICE_WATER_AND_MOON_DISC'), 'L1 must establish pale ice-water and its moon disc');
+      assert(level1.getObjectByName('ISLAND_3_MOONWELL_FRONT_STAIR_AND_ENTRY'), 'L1 must establish the front entry hierarchy');
+      assert(!level1.getObjectByName('ISLAND_3_MOONWELL_RADIAL_TIMBER_FRAME'), 'the grounded open ribs must remain an L2 structural upgrade');
+      assert(level2.getObjectByName('ISLAND_3_MOONWELL_RADIAL_TIMBER_FRAME'), 'L2 must add the open radial timber frame');
+      assert(level2.getObjectByName('ISLAND_3_MOONWELL_BRASS_TELESCOPE_AND_TRIPOD'), 'L2 must become a working observatory with a grounded telescope');
+      assert(level2.getObjectByName('ISLAND_3_MOONWELL_REAR_CHART_CABINET'), 'L2 must add a rear chart workspace');
+      assert(!level2.getObjectByName('ISLAND_3_MOONWELL_ARMILLARY_PRIMARY_RINGS'), 'the complete armillary must remain an L3 identity reward');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_COPPER_RIB_CLADDING'), 'L3 must add warm copper rib cladding');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_CROWN_HUB_AND_FINIAL'), 'L3 must complete the open-frame crown');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_ARMILLARY_PRIMARY_RINGS'), 'L3 must carry the nested armillary rings');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_ARMILLARY_AXIS_AND_COUNTERWEIGHTS'), 'L3 must ground the armillary on a visible axis');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_ENTRY_LANTERN_SYSTEM'), 'L3 must add paired warm entry lanterns');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_REAR_SERVICE_DOOR'), 'L3 must have an authored rear access door');
+      assert(level3.getObjectByName('ISLAND_3_MOONWELL_SERVICE_VENT_AND_TOOLS'), 'L3 must have rear vent and tool dressing');
+
+      const level1Size = new THREE.Box3().setFromObject(level1).getSize(new THREE.Vector3());
+      const level2Size = new THREE.Box3().setFromObject(level2).getSize(new THREE.Vector3());
+      const level3Size = new THREE.Box3().setFromObject(level3).getSize(new THREE.Vector3());
+      assert(level2Size.y > level1Size.y, 'L2 ribs must create a stronger working-observatory silhouette');
+      assert(level3Size.y > level2Size.y, 'L3 crown must complete the restored vertical silhouette');
+      assert(level3Size.x <= 3.7 && level3Size.z <= 3.7, 'Moonwell must stay inside its compact satellite-landmark envelope');
+      assert(materials.indigo.color.r > materials.indigo.color.b, 'Moonwell copper cladding must remain warm rather than blue');
+
+      [level1, level2, level3].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
     name: 'keeps Frostwell Iceworks north in the ocean, route-clear, clickable, and state-driven',
     run: async () => {
       assertEqual(FROSTWELL_OFFSHORE_POSITION.x, 0, 'the Iceworks should stay centred on the north sightline');
@@ -1425,8 +1698,96 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(runtime.hitTarget.userData.signatureMissionId, 'frostwell-iceworks', 'the forgiving hit target must route to the Frostwell mission');
       const operating = runtime.root.getObjectByName('FROSTWELL_OPERATING_FISHERY_AND_RESERVOIR');
       assert(Boolean(operating) && !operating!.visible, 'the fishery machinery must remain hidden while drilling');
+      runtime.setPresentation({ metersDrilled: 235, built: false, constructionSequence: 0 });
+      const cutaway = runtime.root.getObjectByName('FROSTWELL_UNDER_ICE_CUTAWAY_STAGE');
+      assert(Boolean(cutaway?.visible), 'committed drill progress must reveal the volumetric under-ice cutaway');
+      assert(runtime.root.getObjectByName('FROSTWELL_VOLUMETRIC_HELICAL_FLIGHTS') !== undefined, 'the side cutaway needs a real helical auger volume');
+      assert(runtime.root.getObjectByName('FROSTWELL_BORE_SCORE_HELIX') !== undefined, 'the refined bore needs a visible helical score instead of an unmarked dark tube');
+      assert(runtime.root.getObjectByName('FROSTWELL_ICE_CHIP_DEBRIS_SYSTEM') !== undefined, 'the cutter needs bounded ice chips that originate at its working face');
+      assert(runtime.root.getObjectByName('FROSTWELL_BREAKTHROUGH_BURST_SYSTEM') !== undefined, 'the 500m contact needs a bounded presentation-only water breakthrough system');
+      assert(runtime.root.getObjectByName('FROSTWELL_FRESHWATER_LENS') !== undefined, 'the side cutaway needs a visible freshwater destination');
+      assert(runtime.getCutawayCameraPose() !== null, 'active drilling must expose a stable side-camera socket');
+      const canonicalEvidenceCamera = runtime.getCutawayCameraPose()!;
+      runtime.setPresentation({
+        metersDrilled: 235,
+        built: false,
+        constructionSequence: 0,
+        cutawayEvidenceView: 'rear',
+      });
+      const rearEvidenceCamera = runtime.getCutawayCameraPose()!;
+      assert(
+        canonicalEvidenceCamera.position.distanceTo(rearEvidenceCamera.position) > 8,
+        'the dev evidence route must expose a meaningfully different rear review angle',
+      );
+      const augerBit = runtime.root.getObjectByName('FROSTWELL_HELICAL_AUGER_BIT');
+      const startY = augerBit?.position.y ?? 0;
+      runtime.animate(10);
+      runtime.setPresentation({ metersDrilled: 450, built: false, constructionSequence: 0 });
+      assertEqual(augerBit?.position.y, startY, 'new canonical progress must begin an eased presentation transition without visually jumping ahead');
+      runtime.animate(10.9);
+      const midwayY = augerBit?.position.y ?? startY;
+      assert(midwayY < startY && midwayY > 0.1 - 0.9 * 4.88, 'the auger should visibly descend between the committed start and target depths');
+      runtime.animate(11.8);
+      assert(Math.abs((augerBit?.position.y ?? 0) - (0.1 - 0.9 * 4.88)) < 0.001, 'the eased drill presentation must land exactly on committed 450m progress');
+      const preCommissionY = augerBit?.position.y ?? 0;
       runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
-      assert(Boolean(operating?.visible), 'funding must reveal the operating fishery and freshwater reservoir');
+      assert(Boolean(operating?.visible), 'automatic commissioning must reveal the operating fishery immediately');
+      assertEqual(augerBit?.position.y, preCommissionY, 'automatic commissioning must preserve the final eased drill descent instead of jumping the auger');
+      runtime.animate(12.7);
+      assert(
+        (augerBit?.position.y ?? 0) < preCommissionY && (augerBit?.position.y ?? 0) > 0.1 - 4.88,
+        'the commissioned final spin must still animate visibly from 450m toward the water layer',
+      );
+      runtime.animate(14.1);
+      const automaticBreakthroughSystem = runtime.root.getObjectByName('FROSTWELL_BREAKTHROUGH_BURST_SYSTEM');
+      assert(
+        automaticBreakthroughSystem?.children.some((child) => ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity > 0),
+        'automatic commissioning must retain the visible water-contact breakthrough burst',
+      );
+      runtime.setPresentation({
+        metersDrilled: 450,
+        built: false,
+        constructionSequence: 0,
+        cutawayPreview: true,
+        cutawayPreviewTimeSeconds: 1.7,
+      });
+      runtime.animate(14.2);
+      const evidenceY = augerBit?.position.y ?? 0;
+      assert(evidenceY < 0.1 - 0.9 * 4.88 && evidenceY > 0.1 - 4.88, 'the frozen motion-evidence clock must show the auger between 450m and 500m');
+      runtime.setPresentation({
+        metersDrilled: 450,
+        built: false,
+        constructionSequence: 0,
+        cutawayPreview: true,
+        cutawayPreviewTimeSeconds: 3.1,
+      });
+      runtime.animate(14.3);
+      const breakthroughSystem = runtime.root.getObjectByName('FROSTWELL_BREAKTHROUGH_BURST_SYSTEM');
+      assert(
+        breakthroughSystem?.children.some((child) => ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity > 0),
+        'the deterministic water-contact frame must expose a readable 500m breakthrough burst',
+      );
+      runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
+      assert(Boolean(operating?.visible), 'the commissioned 500m state must reveal the operating fishery and freshwater reservoir');
+      const deepFishery = runtime.root.getObjectByName('FROSTWELL_DEEP_FISHERY_PROCESSING_HALL');
+      const peopleLift = runtime.root.getObjectByName('FROSTWELL_PEOPLE_LIFT_CAGE');
+      const fishLift = runtime.root.getObjectByName('FROSTWELL_FISH_CARGO_LIFT_CAGE');
+      const fishingNet = runtime.root.getObjectByName('FROSTWELL_UNDERICE_FISHING_NET');
+      assert(Boolean(deepFishery), 'the working fishery must sit beside the water at the bottom of the cutaway');
+      assert(Boolean(peopleLift) && Boolean(fishLift), 'people and wet fish cargo need separate full-depth lift cages');
+      assert(Boolean(fishingNet), 'the completed lower fishery needs a working under-ice fishing net');
+      runtime.setInspectionActive(false);
+      assert(!cutaway?.visible, 'the completed deep fishery must stay hidden from the ordinary board overview');
+      assert(runtime.getCutawayCameraPose() !== null && Boolean(cutaway?.visible), 'opening Frostwell inspection must reveal the completed lower fishery');
+      const peopleLiftStartY = peopleLift?.position.y ?? 0;
+      const fishLiftStartY = fishLift?.position.y ?? 0;
+      const fishingNetStartY = fishingNet?.position.y ?? 0;
+      runtime.animate(0);
+      runtime.animate(2.5);
+      assert((peopleLift?.position.y ?? 0) !== peopleLiftStartY, 'the people lift must visibly travel between the surface and lower fishery');
+      assert((fishLift?.position.y ?? 0) !== fishLiftStartY, 'the wet-catch lift must visibly travel on its own cage');
+      assert((peopleLift?.position.y ?? 0) < (fishLift?.position.y ?? 0), 'the two cages should counterbalance rather than overlap');
+      assert((fishingNet?.position.y ?? 0) !== fishingNetStartY, 'the fishing winch must dip and recover its net at the water line');
       runtime.animate(123.4);
       assert(runtime.root.getObjectByName('FROSTWELL_BORE_OPENING') !== undefined, 'the 50m bore needs a readable physical opening');
       assert(runtime.root.getObjectByName('FROSTWELL_CATCH_SORTING_BIN') !== undefined, 'the completed mission needs a visible fish output');
@@ -1434,8 +1795,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const templateKitSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx', 'utf8');
       assert(pilotSource.includes('clickableSignatureMissions') && pilotSource.includes('onSignatureMissionClickRef.current?.()'), 'Iceworks ray hits must open the signature mission UI');
-      assert(pilotSource.includes("applyPreset('frostwell', 0.9)") && pilotSource.includes("activeInspectionPreset === 'frostwell'"), 'Frostwell needs its own camera and central-landmark fade');
+      assert(
+        pilotSource.includes("applyPreset('frostwell', 0.9)")
+          && pilotSource.includes("activeInspectionPreset === 'frostwell'")
+          && pilotSource.includes('isReducedMotion || frostwellDeterministicEvidence'),
+        'Frostwell needs its own camera, central-landmark fade, and deterministic evidence framing',
+      );
       assert(
         boardSource.includes('isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10')
           && boardSource.includes("islandArtPreviewNumber === 3\n                      ? openFrostwellMission"),
@@ -1444,9 +1811,119 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('Deliberately keep the special Frostwell inspection camera active'), 'closing the tray must leave the rig available for unobstructed 3D inspection');
       assert(boardSource.includes('frostwell-mission-modal__wheel-hub') && boardSource.includes('spinFrostwellDrillWheel'), 'the lower half-wheel hub must route through canonical wheel authority');
       assert(boardSource.includes("params.get('frostwellMissionState')") && boardSource.includes("frostwellMissionState === 'constructing'"), 'development proof mode must cover the construction POOF without creating gameplay state');
+      assert(
+        templateKitSource.includes("params.get('frostwellDepth')")
+          && templateKitSource.includes("params.get('frostwellCutawayLoop')")
+          && templateKitSource.includes("params.get('frostwellCutawayTime')")
+          && templateKitSource.includes("params.get('frostwellCutawayView')")
+          && templateKitSource.includes("params.get('frostwellBuilt')")
+          && templateKitSource.includes('cutawayPreviewTimeSeconds: initialState.frostwellCutawayTimeSeconds'),
+        'the 3D evidence kit must expose deterministic 0m through 500m cutaway states and frozen motion frames without creating gameplay authority',
+      );
       runtime.root.traverse((object) => {
         if (object instanceof THREE.Mesh) object.geometry.dispose();
       });
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'adds the approved Frostmoon seafood loading yard and wheel-ski freighter outside the playable route',
+    run: () => {
+      assert(
+        isFrostmoonSeafoodTradeRouteClear(
+          FROSTMOON_FREIGHT_CART_POSITION.x,
+          FROSTMOON_FREIGHT_CART_POSITION.z,
+          FROSTMOON_FREIGHT_CART_CLEARANCE_RADIUS,
+        ),
+        'the full freight-cart envelope must remain beyond the protected route corridor',
+      );
+      assert(
+        isFrostmoonSeafoodTradeRouteClear(
+          FROSTMOON_LOADING_YARD_POSITION.x,
+          FROSTMOON_LOADING_YARD_POSITION.z,
+          FROSTMOON_LOADING_YARD_CLEARANCE_RADIUS,
+        ),
+        'the seafood loading yard must remain beyond the protected route corridor',
+      );
+      assert(
+        isFrostmoonSeafoodTradeRouteClear(
+          FROSTMOON_KITE_COURIER_POSITION.x,
+          FROSTMOON_KITE_COURIER_POSITION.z,
+          FROSTMOON_KITE_COURIER_CLEARANCE_RADIUS,
+        ),
+        'the kite-dog courier must remain beyond the playable route',
+      );
+      assert(
+        FROSTMOON_PUPPY_HOMES.every((home) => isFrostmoonSeafoodTradeRouteClear(home.x, home.z, 0.68)),
+        'the puppy play loops must remain beyond the playable route even at full motion envelope',
+      );
+      assert(
+        Math.hypot(
+          FROSTMOON_FREIGHT_CART_POSITION.x - FROSTWELL_OFFSHORE_POSITION.x,
+          FROSTMOON_FREIGHT_CART_POSITION.z - FROSTWELL_OFFSHORE_POSITION.z,
+        ) > FROSTMOON_FREIGHT_CART_CLEARANCE_RADIUS + FROSTWELL_PLATFORM_RADIUS,
+        'the freight cart must not cross the Frostwell mission platform',
+      );
+      assert(
+        Math.hypot(
+          FROSTMOON_LOADING_YARD_POSITION.x - FROSTWELL_OFFSHORE_POSITION.x,
+          FROSTMOON_LOADING_YARD_POSITION.z - FROSTWELL_OFFSHORE_POSITION.z,
+        ) > FROSTMOON_LOADING_YARD_CLEARANCE_RADIUS + FROSTWELL_PLATFORM_RADIUS,
+        'the loading yard must remain visually separate from the Frostwell mission platform',
+      );
+      const materials = createIsland3FrostmoonMaterials();
+      const runtime = createFrostmoonSeafoodTrade('high', materials);
+      assert(runtime.root.userData.sculptRuntime.visualOnly, 'the trade layer must remain presentation-only');
+      assert(runtime.root.userData.sculptRuntime.routeClearance.cart, 'runtime metadata must record cart clearance');
+      assert(runtime.root.userData.sculptRuntime.routeClearance.loadingYard, 'runtime metadata must record loading-yard clearance');
+      assert(runtime.root.getObjectByName('FROSTMOON_SEAFOOD_TRADE_ICE_SPUR_SNOW') !== undefined, 'the freight family needs a grounded ice spur instead of floating over water');
+      assert(runtime.freightCart.getObjectByName('FROSTMOON_FREIGHT_LEFT_RUNNER_BODY') !== undefined, 'the freighter needs real paired ski geometry');
+      assert(runtime.freightCart.getObjectByName('FROSTMOON_FREIGHT_WHEEL_FRONT_LEFT_HUB') !== undefined, 'the freighter needs independently addressable wheel hubs');
+      assert(runtime.freightCart.getObjectByName('FROSTMOON_FREIGHT_DOUBLE_SIDED_CREAM_SAIL') !== undefined, 'the freighter needs the approved cream sail rather than a blue roof or flat card');
+      assert(runtime.freightCart.getObjectByName('FROSTMOON_FREIGHT_REAR_LOADING_GATE') !== undefined, 'the rear survey must retain designed service construction');
+      assert(runtime.freightCart.getObjectByName('FROSTMOON_PREMIUM_SILVER_FISH') !== undefined, 'seafood cargo must remain readable as fish rather than generic boxes');
+      assert(runtime.freightCart.getObjectByName('FROSTMOON_PREMIUM_SEAFOOD_BASKET_FRONT') !== undefined, 'the freighter should carry a readable premium seafood basket silhouette');
+      const freighterSize = new THREE.Box3().setFromObject(runtime.freightCart).getSize(new THREE.Vector3());
+      assert(freighterSize.y > 3.25, 'the wind sail must retain a tall long-haul silhouette after phone-scale fitting');
+      assert(runtime.kiteCourier.getObjectByName('FROSTMOON_KITE_COURIER_CREAM_WIND_KITE') !== undefined, 'the small courier needs a real cream kite rather than a flat icon');
+      assert(runtime.kiteCourier.getObjectByName('FROSTMOON_WOLF_COURIER_1_HEAD_PIVOT') !== undefined, 'the courier dog team must be independently animation-ready');
+      assert(runtime.puppyPack.getObjectByName('FROSTMOON_WOLF_PUPPY_1_TAIL_PIVOT') !== undefined, 'the board puppies need independently animated tails');
+      const puppyBefore = runtime.puppyPack.getObjectByName('FROSTMOON_WOLF_PUPPY_1')?.position.clone();
+      const mast = runtime.freightCart.getObjectByName('FROSTMOON_FREIGHT_SAIL_PIVOT');
+      const before = mast?.rotation.z ?? 0;
+      runtime.animate(9.25, 1);
+      assert((mast?.rotation.z ?? 0) !== before, 'the approved blizzard state should drive bounded sail flex');
+      const puppyAfter = runtime.puppyPack.getObjectByName('FROSTMOON_WOLF_PUPPY_1')?.position;
+      assert(puppyBefore?.distanceTo(puppyAfter ?? puppyBefore) !== 0, 'puppies should run inside bounded visual-only play loops');
+      const freightDockPosition = runtime.freightCart.position.clone();
+      runtime.setFishingActive(true);
+      runtime.animate(10, 0);
+      runtime.animate(20, 0);
+      assert(
+        runtime.freightCart.position.distanceTo(freightDockPosition) > 2,
+        'canonical Frostwell operation should trigger a visible loaded-freighter departure',
+      );
+      runtime.animate(40, 0);
+      assert(
+        runtime.backgroundTraffic.children.some((skimmer) => skimmer.visible),
+        'post-Frostwell ambience should occasionally show distant wind-ice trade traffic',
+      );
+      runtime.setFishingActive(false);
+      assert(
+        runtime.freightCart.visible && runtime.freightCart.position.distanceTo(freightDockPosition) < 0.001,
+        'presentation reset must return the freighter to its loading dock without touching gameplay state',
+      );
+      const objectMaterials = new Set<THREE.Material>();
+      runtime.root.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        object.geometry.dispose();
+        const entries = Array.isArray(object.material) ? object.material : [object.material];
+        entries.forEach((material) => objectMaterials.add(material));
+      });
+      objectMaterials.forEach((material) => material.dispose());
       Object.values(materials).forEach((material) => {
         material.map?.dispose();
         material.dispose();
@@ -2397,7 +2874,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(celestialSource.includes('function createDistantSkyIslet') && celestialSource.includes('const archetype = index % 6'), 'Island 002 distant sky islands must use varied authored silhouettes rather than one repeated islet');
       assert(frostmoonSource.includes("boss: 'Aurora Keep'") && frostmoonSource.includes("hatchery: 'Snowfeather Roost'"), 'Island 003 must retain its alpine keep and snowy hatchery identities');
       assert(frostmoonSource.includes('function createAuroraKeep') && frostmoonSource.includes('function createSnowfeatherRoost') && frostmoonSource.includes('function createMoonwellObservatory'), 'Island 003 needs distinct procedural landmark families');
-      assert(frostmoonSource.includes("snowPoints.name = 'ISLAND_3_FALLING_SNOW'") && frostmoonSource.includes("ribbon.name = 'ISLAND_3_AURORA_RIBBON'"), 'Island 003 must carry living snowfall and aurora ambience');
+      assert(
+        frostmoonSource.includes("snowPoints.name = 'ISLAND_3_FALLING_SNOW'")
+          && frostmoonSource.includes("stars.name = 'ISLAND_3_STARRY_NIGHT_SKY'")
+          && frostmoonSource.includes("moon.name = 'ISLAND_3_ORDINARY_WINTER_MOON'")
+          && !frostmoonSource.includes("ribbon.name = 'ISLAND_3_AURORA_RIBBON'"),
+        'Island 003 must carry its day-blizzard-night ambience without northern lights',
+      );
       assert(moonveilSource.includes('boss: "Noctyra\'s Moon Gate"') && moonveilSource.includes("hatchery: 'Moon-Nest Conservatory'"), 'Island 006 must retain its Noctyra/Moon Gate and moon-nest identities');
       assert(moonveilSource.includes('function createMoonGate') && moonveilSource.includes('function createMoonNest') && moonveilSource.includes('function createVioletRift'), 'Island 006 needs distinct procedural landmark families');
       assert(moonveilSource.includes("root.name = 'ISLAND_6_MOONVEIL_LIVING_AMBIENCE'") && moonveilSource.includes("nebula.name = 'ISLAND_6_VIOLET_NEBULA'"), 'Island 006 must carry its dark-neon living void and spiral-nebula ambience');

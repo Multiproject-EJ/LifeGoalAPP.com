@@ -1,0 +1,12 @@
+[
+  {"id":"offshore-read","score":0.96,"notes":"Quality scaling preserves the complete offshore silhouette."},
+  {"id":"board-clear","score":0.97,"notes":"Optimization does not modify board geometry or clickable route semantics."},
+  {"id":"drill-read","score":0.95,"notes":"All quality tiers retain the drill tower, shaft, collars and helical cutter."},
+  {"id":"operating-read","score":0.93,"notes":"Completed seafood systems remain named and independently visible."},
+  {"id":"construction-read","score":0.91,"notes":"Particle counts scale down while construction and breakthrough timing remain intact."},
+  {"id":"triangle-budget","score":0.96,"notes":"Measured full scene remains well below the 45k target triangle budget."},
+  {"id":"quality-scaling","score":0.95,"notes":"Segments, inclusions, chips, droplets, snow and ambient counts scale deterministically by quality tier."},
+  {"id":"lighting-cost","score":0.94,"notes":"Local cutaway lights are shadowless, bounded and quality-scaled."},
+  {"id":"cinematic-culling","score":0.93,"notes":"Existing visibility handoff hides nonessential surrounding world content during the close cutaway."},
+  {"id":"phone-readability","score":0.94,"notes":"The high-value drill, strata, cutter and water cues survive the phone viewport."}
+]

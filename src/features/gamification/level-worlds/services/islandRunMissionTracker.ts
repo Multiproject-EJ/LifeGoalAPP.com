@@ -176,18 +176,15 @@ export function resolveIslandMissionTrackerPresentation(options: {
         islandNumber,
       });
       const drilledFraction = clampProgress(progress.metersDrilled, FROSTWELL_DEPTH_METERS) / FROSTWELL_DEPTH_METERS;
-      const missionValue = Math.round(drilledFraction * 9_000) + (progress.builtAtMs === null ? 0 : 1_000);
-      const drillingComplete = progress.metersDrilled >= FROSTWELL_DEPTH_METERS;
+      const missionValue = Math.round(drilledFraction * 10_000);
       objectives = [
         objective(
-          drillingComplete ? 'Build Iceworks' : 'Drill to Water',
+          progress.builtAtMs !== null ? 'Fishery Online' : 'Drill to Water',
           missionValue,
           10_000,
           progress.builtAtMs !== null
             ? 'Done'
-            : drillingComplete
-              ? 'Ready'
-              : `${progress.metersDrilled} / ${FROSTWELL_DEPTH_METERS}m`,
+            : `${progress.metersDrilled} / ${FROSTWELL_DEPTH_METERS}m`,
         ),
         objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
       ];

@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
 import {
   getJourneyDiscArenaFighterStats,
+  JOURNEY_DISC_ARENA_FREEZE_READY,
   JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS,
   JOURNEY_DISC_ARENA_OPENING_TICKS,
   JOURNEY_DISC_ARENA_SURGE_READY,
+  resolveJourneyDiscArenaEncounter,
   scoreJourneyDiscArenaRound,
 } from '../../level-worlds/services/journeyDiscArenaGame';
 import { buildJourneyDiscArenaRewardTrack } from '../../level-worlds/services/journeyDiscArenaProgression';
@@ -76,6 +78,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   }), []);
   const audio = useMemo(() => new JourneyDiscArenaAudio(), []);
   const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [showCollection, setShowCollection] = useState(false);
   useEffect(() => () => {
     controller.dispose();
     audio.dispose();
@@ -83,6 +86,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   useEffect(() => {
     audio.playEvents(snapshot.recentEvents);
     if (snapshot.recentEvents.some((event) => event.type === 'knockout')) triggerIslandRunHaptic('boss_trial_resolve');
+    else if (snapshot.recentEvents.some((event) => event.type === 'freeze' || event.type === 'drive_off')) triggerIslandRunHaptic('encounter_resolve');
     else if (snapshot.recentEvents.some((event) => event.type === 'shield_break')) triggerIslandRunHaptic('encounter_resolve');
     else if (snapshot.recentEvents.some((event) => event.type === 'impact' && event.strength >= 8)) triggerIslandRunHaptic('stop_land');
     else if (snapshot.recentEvents.some((event) => event.type === 'surge')) triggerIslandRunHaptic('roll');
@@ -99,6 +103,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   const playerAlive = battle?.fighters.filter((fighter) => fighter.team === 'player' && fighter.active && !fighter.isEcho).length ?? snapshot.deployedDiscCount;
   const rivalAlive = battle?.fighters.filter((fighter) => fighter.team === 'rival' && fighter.active && !fighter.isEcho).length ?? encounter.rivalCount;
   const surgePercent = Math.round(battle?.playerSurge ?? 100);
+  const freezePercent = Math.round(battle?.playerFreezeCharge ?? 100);
   const permanentRank = Math.max(snapshot.progress.rank, snapshot.armory.rank);
   const openingLabel = battle && snapshot.mode === 'battle'
     ? battle.openingTicksRemaining > 0
@@ -134,22 +139,30 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   const scoreReport = battle ? scoreJourneyDiscArenaRound(battle) : null;
   const nextMilestone = rewardTrack.milestones.find((milestone) => milestone.state !== 'claimed');
   const campaign = resolveJourneyDiscArenaCampaign(snapshot.progress.eventPoints);
+  const nextEncounter = resolveJourneyDiscArenaEncounter({
+    eventPoints: snapshot.progress.eventPoints,
+    deployedDiscs: Math.max(1, snapshot.deployedDiscCount),
+    roundsStarted: snapshot.progress.roundsStarted,
+  });
+  const stageAdvanced = snapshot.mode === 'result' && nextEncounter.id !== encounter.id;
   const rivalRoster = buildJourneyDiscArenaRivalRoster(encounter);
   const nextPrizeLabel = nextMilestone
     ? nextMilestone.state === 'claimable'
       ? `Claim ${nextMilestone.label}`
       : `${Math.max(0, nextMilestone.points - rewardTrack.points)} to ${nextMilestone.label}`
     : 'All prizes claimed';
+  const claimableMilestone = rewardTrack.milestones.find((milestone) => milestone.state === 'claimable');
   const campaignStageNumber = campaign.stages.findIndex((stage) => stage.state === 'current') + 1;
+  const journeyTargetPoints = campaign.next?.points ?? rewardTrack.maximum;
+  const journeyFloorPoints = campaign.current.points;
+  const journeyProgressPercent = Math.min(100, Math.max(0,
+    (rewardTrack.points - journeyFloorPoints) / Math.max(1, journeyTargetPoints - journeyFloorPoints) * 100,
+  ));
   const activeFormation = snapshot.playerLineup.filter((_, index) => snapshot.formationSlots[index]);
   const selectedRosterFighter = snapshot.playerLineup.find((fighter) => fighter.id === snapshot.selectedFighterId) ?? snapshot.playerLineup[0] ?? null;
-  const selectedRosterIndex = selectedRosterFighter ? snapshot.playerLineup.findIndex((fighter) => fighter.id === selectedRosterFighter.id) : -1;
-  const selectedRosterIsActive = selectedRosterIndex >= 0 && snapshot.formationSlots[selectedRosterIndex] === true;
   const selectedRosterStats = selectedRosterFighter ? getJourneyDiscArenaFighterStats(selectedRosterFighter) : null;
   const selectedRosterWeapon = selectedRosterFighter?.moduleId ? JOURNEY_DISC_WEAPON_NAMES[selectedRosterFighter.moduleId] : 'Resonance Core';
-  const canAddSelected = Boolean(selectedRosterFighter)
-    && !selectedRosterIsActive
-    && snapshot.deployedDiscCount < JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS
+  const canAddAnother = snapshot.deployedDiscCount < JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS
     && snapshot.deployedDiscCount < snapshot.tickets;
 
   return (
@@ -227,78 +240,57 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
 
       {snapshot.mode === 'prep' ? (
         <section className="journey-disc-arena__prep-panel" aria-label="Choose your active Journey Disc battle team">
-          <div className="journey-disc-arena__reward-track" aria-label="Journey Disc multi reward track">
-            <div><strong>REWARDS · {rewardTrack.points}/{rewardTrack.maximum}</strong><span>{nextPrizeLabel}</span></div>
-            <i><b style={{ width: `${rewardTrack.fillPercent}%` }} /></i>
-            <ol>
+          <div className="journey-disc-arena__next-battle" aria-label={`Stage ${campaignStageNumber} of ${campaign.stages.length}. ${nextPrizeLabel}.`}>
+            <div className="journey-disc-arena__next-battle-heading">
+              <span>NEXT BATTLE · STAGE {campaignStageNumber}/{campaign.stages.length}</span>
+              <b>{matchupLabel}</b>
+            </div>
+            <h2>{encounter.label}</h2>
+            <p>Win battles → earn Disc Points → claim rewards.</p>
+            <div className="journey-disc-arena__journey-progress-copy">
+              <strong>{rewardTrack.points} Disc Points</strong>
+              <span>{campaign.next ? `${campaign.pointsToNext} to ${campaign.next.shortLabel}` : 'Final Guardian reached'}</span>
+            </div>
+            <i className="journey-disc-arena__journey-progress"><b style={{ width: `${journeyProgressPercent}%` }} /></i>
+            {nextMilestone ? (
+              <div className="journey-disc-arena__next-reward" data-state={nextMilestone.state}>
+                <span aria-hidden="true">{nextMilestone.icon}</span>
+                <p><small>{nextMilestone.state === 'claimable' ? 'REWARD READY' : `NEXT REWARD · ${nextMilestone.points} POINTS`}</small><strong>{nextMilestone.label}</strong></p>
+                {nextMilestone.state === 'claimable' ? (
+                  <button type="button" onClick={() => controller.claimMilestone(nextMilestone.id)}>CLAIM</button>
+                ) : <b>{Math.max(0, nextMilestone.points - rewardTrack.points)} away</b>}
+              </div>
+            ) : null}
+          </div>
+
+          <details className="journey-disc-arena__roadmap">
+            <summary><span>View journey & rewards</span><small>How stages and upgrades work</small></summary>
+            <div className="journey-disc-arena__campaign" aria-label={`Journey Disc campaign stage ${campaignStageNumber} of ${campaign.stages.length}`}>
+              <div><strong>FIGHT PATH</strong><span>More points unlock harder rivals</span></div>
+              <ol>
+                {campaign.stages.map((stage, index) => (
+                  <li key={stage.id} data-state={stage.state}><i>{stage.state === 'cleared' ? '✓' : index + 1}</i><small>{stage.shortLabel}</small></li>
+                ))}
+              </ol>
+            </div>
+            <ol className="journey-disc-arena__reward-list" aria-label="Journey Disc reward milestones">
               {rewardTrack.milestones.map((milestone) => (
-                <li key={milestone.id} data-state={milestone.state} style={{ left: `${milestone.positionPercent}%` }}>
+                <li key={milestone.id} data-state={milestone.state}>
                   <button type="button" disabled={milestone.state !== 'claimable'} onClick={() => controller.claimMilestone(milestone.id)} aria-label={`${milestone.state === 'claimable' ? 'Claim' : milestone.state} ${milestone.label}`}>{milestone.icon}</button>
-                  <small>{milestone.points}</small>
+                  <span><strong>{milestone.points} points</strong><small>{milestone.label}</small></span>
+                  <b>{milestone.state === 'claimed' ? 'CLAIMED' : milestone.state === 'claimable' ? 'CLAIM' : 'LOCKED'}</b>
                 </li>
               ))}
             </ol>
-          </div>
-
-          <div className="journey-disc-arena__setup-heading">
-            <strong>MY DISCS <b>{snapshot.playerLineup.length}</b></strong>
-            <span>Tap to inspect · Rank {permanentRank}</span>
-          </div>
-          <div className="journey-disc-arena__collection" role="listbox" aria-label={`${snapshot.playerLineup.length} owned Journey Discs`}>
-            {snapshot.playerLineup.map((fighter, index) => {
-              const active = snapshot.formationSlots[index] === true;
-              const selected = fighter.id === selectedRosterFighter?.id;
-              const weaponName = fighter.moduleId ? JOURNEY_DISC_WEAPON_NAMES[fighter.moduleId] : 'Core';
-              return (
-                <button
-                  type="button"
-                  role="option"
-                  key={fighter.id}
-                  data-selected={selected}
-                  data-active={active}
-                  aria-selected={selected}
-                  onClick={() => { audio.prime(); triggerIslandRunHaptic('stop_land'); controller.selectFighter(fighter.id); }}
-                >
-                  <JourneyDiscMiniature fighter={fighter} compact />
-                  <span><strong>{fighter.name}</strong><small>Rank {fighter.rank} · {weaponName}</small></span>
-                  {active ? <b>ACTIVE</b> : null}
-                </button>
-              );
-            })}
-          </div>
-
-          {selectedRosterFighter && selectedRosterStats ? (
-            <div className="journey-disc-arena__selected-disc" data-active={selectedRosterIsActive}>
-              <JourneyDiscMiniature fighter={selectedRosterFighter} />
-              <div className="journey-disc-arena__selected-copy">
-                <span>SELECTED DISC</span>
-                <strong>{selectedRosterFighter.name}</strong>
-                <small>Rank {selectedRosterFighter.rank} · {selectedRosterWeapon} L{selectedRosterFighter.weaponLevel}</small>
-              </div>
-              <div className="journey-disc-arena__selected-bars" aria-label="Selected disc stats">
-                <span>Shield<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.maxShield / 2.6))}%` }} /></i></span>
-                <span>Speed<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.maxSpeed * 9))}%` }} /></i></span>
-                <span>Impact<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.impact * 36))}%` }} /></i></span>
-              </div>
-              <button
-                type="button"
-                className="journey-disc-arena__add-team"
-                disabled={!canAddSelected}
-                onClick={() => { audio.prime(); audio.playPlacement(true); triggerIslandRunHaptic('build_part'); controller.addSelectedFighterToFormation(); }}
-              >
-                {selectedRosterIsActive ? 'IN ACTIVE TEAM' : snapshot.deployedDiscCount >= JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS ? 'TEAM FULL' : snapshot.deployedDiscCount >= snapshot.tickets ? 'NEED 1 TICKET' : 'ADD TO TEAM'}
-              </button>
-            </div>
-          ) : null}
+            <p className="journey-disc-arena__upgrade-guide"><b>Upgrades are automatic.</b> Claim a glowing reward and its rank or weapon level is applied—there is nothing extra to buy or equip.</p>
+          </details>
 
           <div className="journey-disc-arena__setup-heading journey-disc-arena__setup-heading--team">
-            <strong>ACTIVE TEAM <b>{snapshot.deployedDiscCount}/{JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS}</b></strong>
-            <span>{snapshot.deployedDiscCount > 0 ? `${matchupLabel} · ${Math.round(playerPower)} vs ${Math.round(rivalPower)}` : 'Choose at least one disc'}</span>
+            <div><strong>YOUR TEAM <b>{snapshot.deployedDiscCount}/{JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS}</b></strong><small>{snapshot.deployedDiscCount > 0 ? `${matchupLabel} against this rival squad` : 'Add at least one disc'}</small></div>
+            <button type="button" aria-expanded={showCollection} onClick={() => setShowCollection((visible) => !visible)}>{showCollection ? 'DONE' : 'CHANGE TEAM'}</button>
           </div>
           <div className="journey-disc-arena__active-team" aria-label={`${snapshot.deployedDiscCount} of ${JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS} active team slots filled`}>
-            {Array.from({ length: JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS }, (_, slotIndex) => {
-              const fighter = activeFormation[slotIndex];
-              return fighter ? (
+            {activeFormation.map((fighter, slotIndex) => (
                 <button
                   type="button"
                   key={fighter.id}
@@ -310,26 +302,57 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
                   <span><strong>{fighter.name}</strong><small>Slot {slotIndex + 1}</small></span>
                   <b aria-hidden="true">−</b>
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  key={`empty-${slotIndex + 1}`}
-                  className="journey-disc-arena__empty-team-slot"
-                  disabled={!canAddSelected}
-                  onClick={() => { audio.prime(); audio.playPlacement(true); triggerIslandRunHaptic('build_part'); controller.addSelectedFighterToFormation(); }}
-                  aria-label={`Add selected disc to active team slot ${slotIndex + 1}`}
-                >
-                  <i>+</i><span><strong>ADD</strong><small>Slot {slotIndex + 1}</small></span>
-                </button>
-              );
-            })}
+            ))}
+            {snapshot.deployedDiscCount < JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS ? (
+              <button type="button" className="journey-disc-arena__empty-team-slot" disabled={!canAddAnother} onClick={() => setShowCollection(true)} aria-label="Add a disc to your team">
+                <i>+</i><span><strong>ADD A DISC</strong><small>{canAddAnother ? 'Open collection' : 'Need 1 ticket'}</small></span>
+              </button>
+            ) : null}
           </div>
+
+          {showCollection ? (
+            <section className="journey-disc-arena__collection-drawer" aria-label="Your Journey Disc collection">
+              <div className="journey-disc-arena__collection-heading"><strong>YOUR DISCS</strong><span>Choose Add or Remove</span></div>
+              <div className="journey-disc-arena__collection" role="listbox" aria-label={`${snapshot.playerLineup.length} owned Journey Discs`}>
+                {snapshot.playerLineup.map((fighter, index) => {
+                  const active = snapshot.formationSlots[index] === true;
+                  const selected = fighter.id === selectedRosterFighter?.id;
+                  const weaponName = fighter.moduleId ? JOURNEY_DISC_WEAPON_NAMES[fighter.moduleId] : 'Core';
+                  const canAdd = !active && canAddAnother;
+                  return (
+                    <div key={fighter.id} data-selected={selected} data-active={active}>
+                      <button type="button" role="option" aria-selected={selected} onClick={() => { audio.prime(); triggerIslandRunHaptic('stop_land'); controller.selectFighter(fighter.id); }}>
+                        <JourneyDiscMiniature fighter={fighter} compact />
+                        <span><strong>{fighter.name}</strong><small>Rank {fighter.rank} · {weaponName} Lv. {fighter.weaponLevel}</small></span>
+                      </button>
+                      <button type="button" className="journey-disc-arena__collection-action" disabled={!active && !canAdd} onClick={() => {
+                        audio.prime(); audio.playPlacement(!active); triggerIslandRunHaptic('build_part');
+                        if (active) controller.removeFormationFighter(fighter.id);
+                        else controller.addSelectedFighterToFormation(fighter.id);
+                      }}>{active ? 'REMOVE' : canAdd ? 'ADD' : snapshot.deployedDiscCount >= snapshot.tickets ? 'NEED TICKET' : 'TEAM FULL'}</button>
+                    </div>
+                  );
+                })}
+              </div>
+              {selectedRosterFighter && selectedRosterStats ? (
+                <details className="journey-disc-arena__disc-details">
+                  <summary>Inspect {selectedRosterFighter.name} · Rank {selectedRosterFighter.rank} · {selectedRosterWeapon} Lv. {selectedRosterFighter.weaponLevel}</summary>
+                  <div className="journey-disc-arena__selected-bars" aria-label="Selected disc stats">
+                    <span>Shield<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.maxShield / 2.6))}%` }} /></i></span>
+                    <span>Speed<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.maxSpeed * 9))}%` }} /></i></span>
+                    <span>Impact<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.impact * 36))}%` }} /></i></span>
+                  </div>
+                </details>
+              ) : null}
+              <p className="journey-disc-arena__upgrade-guide"><b>Current team rank: {permanentRank}.</b> Rank and weapon upgrades come from claimed rewards above.</p>
+            </section>
+          ) : null}
 
           <div className="journey-disc-arena__prep-actions">
             <button type="button" className="journey-disc-arena__launch" disabled={snapshot.deployedDiscCount < 1 || snapshot.tickets < snapshot.deployedDiscCount} onClick={() => { audio.prime(); audio.playLaunch(); triggerIslandRunHaptic('roll'); controller.launchRound(); }}>
-              {snapshot.deployedDiscCount > 0 ? `START BATTLE · ${snapshot.deployedDiscCount} DISCS · ${snapshot.deployedDiscCount} TICKETS` : 'ADD A DISC TO START'} <span>→</span>
+              {snapshot.deployedDiscCount > 0 ? `START NEXT BATTLE · ${snapshot.deployedDiscCount} TICKET${snapshot.deployedDiscCount === 1 ? '' : 'S'}` : 'ADD A DISC TO START'} <span>→</span>
             </button>
-            <small>Tickets are spent only when battle starts.</small>
+            <small>{snapshot.deployedDiscCount} disc{snapshot.deployedDiscCount === 1 ? '' : 's'} deploy · 1 ticket each · points bank automatically</small>
           </div>
           <p className="journey-disc-arena__notice" role="status">{snapshot.notice}</p>
         </section>
@@ -357,19 +380,33 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
               );
             })}
           </div>
-          <button
-            type="button"
-            className="journey-disc-arena__surge"
-            data-ready={surgePercent >= JOURNEY_DISC_ARENA_SURGE_READY}
-            data-max={surgePercent >= 100}
-            disabled={surgePercent < JOURNEY_DISC_ARENA_SURGE_READY || Boolean(battle?.openingTicksRemaining)}
-            onClick={() => { audio.prime(); controller.triggerSurge(); }}
-            style={{ '--surge': `${surgePercent}%` } as React.CSSProperties}
-          >
-            <span>{battle?.openingTicksRemaining ? 'HOLD FORMATION' : surgePercent >= 100 ? `${selectedLineupEntry?.name ?? 'CAPTAIN'} · MAX POWER` : surgePercent >= JOURNEY_DISC_ARENA_SURGE_READY ? `${selectedWeaponName} · STRIKE READY` : `CHARGING · READY AT ${JOURNEY_DISC_ARENA_SURGE_READY}`}</span>
-            <strong>{selectedActionName}</strong>
-            <i>{surgePercent}%</i>
-          </button>
+          <div className="journey-disc-arena__battle-actions">
+            <button
+              type="button"
+              className="journey-disc-arena__freeze"
+              data-ready={freezePercent >= JOURNEY_DISC_ARENA_FREEZE_READY}
+              disabled={freezePercent < JOURNEY_DISC_ARENA_FREEZE_READY || Boolean(battle?.openingTicksRemaining)}
+              onClick={() => { audio.prime(); controller.triggerFreezeAttack(); }}
+              style={{ '--freeze': `${freezePercent}%` } as React.CSSProperties}
+            >
+              <span>{battle?.openingTicksRemaining ? 'HOLD' : freezePercent >= JOURNEY_DISC_ARENA_FREEZE_READY ? 'ICE LOCK READY' : 'RECHARGING'}</span>
+              <strong>❄ Freeze Pulse</strong>
+              <i>{freezePercent}%</i>
+            </button>
+            <button
+              type="button"
+              className="journey-disc-arena__surge"
+              data-ready={surgePercent >= JOURNEY_DISC_ARENA_SURGE_READY}
+              data-max={surgePercent >= 100}
+              disabled={surgePercent < JOURNEY_DISC_ARENA_SURGE_READY || Boolean(battle?.openingTicksRemaining)}
+              onClick={() => { audio.prime(); controller.triggerSurge(); }}
+              style={{ '--surge': `${surgePercent}%` } as React.CSSProperties}
+            >
+              <span>{battle?.openingTicksRemaining ? 'HOLD FORMATION' : surgePercent >= 100 ? `${selectedLineupEntry?.name ?? 'CAPTAIN'} · MAX POWER` : surgePercent >= JOURNEY_DISC_ARENA_SURGE_READY ? `${selectedWeaponName} · STRIKE READY` : `CHARGING · READY AT ${JOURNEY_DISC_ARENA_SURGE_READY}`}</span>
+              <strong>{selectedActionName}</strong>
+              <i>{surgePercent}%</i>
+            </button>
+          </div>
           <div className="journey-disc-arena__notice">{snapshot.notice}</div>
         </section>
       ) : null}
@@ -386,12 +423,24 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
           <div className="journey-disc-arena__result-stats">
             <span><b>{scoreReport?.survivors ?? playerAlive}</b> Survivors</span>
             <span><b>{scoreReport?.shieldPercent ?? 0}%</b> Shield</span>
-            <span><b>{nextMilestone?.points ?? rewardTrack.maximum}</b> Next reward</span>
+            <span><b>{nextMilestone?.state === 'claimable' ? 'READY' : nextMilestone?.points ?? rewardTrack.maximum}</b> {nextMilestone?.state === 'claimable' ? 'Claim reward' : 'Next reward'}</span>
           </div>
           <span>{snapshot.progress.eventPoints} total · Best {snapshot.progress.bestRoundScore}</span>
+          <div className="journey-disc-arena__result-progress" data-advanced={stageAdvanced || undefined}>
+            <small>{stageAdvanced ? 'NEW CAMPAIGN STAGE UNLOCKED' : 'CAMPAIGN PROGRESS'}</small>
+            <strong>{stageAdvanced ? nextEncounter.label : campaign.current.label}</strong>
+            <span>{campaign.next ? `${campaign.pointsToNext} more Disc Points to ${campaign.next.label}` : 'Final Guardian reached · finish the 1350-point prize track'}</span>
+          </div>
+          {claimableMilestone ? (
+            <button type="button" className="journey-disc-arena__claim" onClick={() => controller.claimMilestone(claimableMilestone.id)}>
+              Claim reward · {claimableMilestone.label}
+            </button>
+          ) : null}
           <div className="journey-disc-arena__result-actions">
-            <button type="button" className="journey-disc-arena__secondary" onClick={controller.prepareNextRound}>Formation bay</button>
-            <button type="button" className="journey-disc-arena__launch" onClick={() => { audio.prime(); controller.launchRematch(); }}>Instant rematch →</button>
+            <button type="button" className="journey-disc-arena__secondary" onClick={controller.prepareNextRound}>Adjust team</button>
+            <button type="button" className="journey-disc-arena__launch" onClick={() => { audio.prime(); controller.launchRematch(); }}>
+              {stageAdvanced ? `Continue to ${nextEncounter.label} →` : campaign.next ? 'Next campaign battle →' : 'Replay final Guardian →'}
+            </button>
           </div>
           <button type="button" className="journey-disc-arena__bank" onClick={() => onComplete({ completed: battle?.winner === 'player', arenaPerformance: {
               gameId: 'journey_disc_arena',
@@ -401,7 +450,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
               durationMs: Math.round((battle?.elapsedSeconds ?? 0) * 1000),
               mistakes: Math.max(0, snapshot.deployedDiscCount - playerAlive),
               hintsUsed: 0,
-            } })}>Return to Island Run</button>
+            } })}>Return to Island Run · progress saved</button>
         </section>
       ) : null}
 

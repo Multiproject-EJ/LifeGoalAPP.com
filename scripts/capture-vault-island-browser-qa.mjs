@@ -8,6 +8,10 @@ const OUT_DIR = process.env.VAULT_ISLAND_QA_OUT_DIR || 'docs/visual-references/i
 const EXTERNAL_CDP_PORT = process.env.VAULT_ISLAND_QA_EXTERNAL_CDP_PORT;
 const PORT = Number(EXTERNAL_CDP_PORT || process.env.VAULT_ISLAND_QA_CDP_PORT || 9334);
 const USE_EXTERNAL_CDP = Boolean(EXTERNAL_CDP_PORT);
+const INTERIOR_ONLY = process.env.VAULT_ISLAND_QA_INTERIOR_ONLY === '1';
+const EXTERIOR_ONLY = process.env.VAULT_ISLAND_QA_EXTERIOR_ONLY === '1';
+const CHARM_ONLY = process.env.VAULT_ISLAND_QA_CHARM_ONLY === '1';
+const ATRIUM_TIMEOUT_MS = Number(process.env.VAULT_ISLAND_QA_ATRIUM_TIMEOUT_MS || 240000);
 const USER_DATA_DIR = join('/tmp', `vault-island-browser-qa-${process.pid}-${Date.now()}`);
 const PHONE = { width: 390, height: 844, deviceScaleFactor: 1, mobile: false };
 
@@ -268,17 +272,38 @@ async function main() {
     await client.send('Log.enable').catch(() => null);
     logStep(`CDP ready on port ${PORT}`);
 
+    if (!INTERIOR_ONLY) {
     logStep('navigating exterior route');
     await navigate(client, '/dev/vault-island-lab?quality=high&yaw=-0.08');
     logStep('waiting for exterior QA hook');
     const exteriorQa = await waitForExpression(
       client,
       '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.frameCount >= 45 && qa.variedPixelPairs >= 2 && qa.palaceReady === true ? JSON.parse(JSON.stringify(qa)) : null; })()',
-      120000,
+      ATRIUM_TIMEOUT_MS,
     );
     manifest.qaSnapshots.push({ label: 'exterior-ready', snapshot: exteriorQa });
+    if (!CHARM_ONLY) {
     logStep('capturing exterior screenshot');
     manifest.captures.push({ label: 'exterior', path: await screenshot(client, 'exterior-390x844.png') });
+
+    for (const perimeter of [
+      { label: 'Garden', id: 'garden', capture: 'exterior-garden-ring' },
+      { label: 'Gold', id: 'gold-castle', capture: 'exterior-gold-castle' },
+    ]) {
+      logStep(`selecting ${perimeter.capture}`);
+      const selection = await clickButtonContaining(client, perimeter.label, '.vault-island-lab__perimeter-selector button');
+      manifest.interactions.push({ label: `click-${perimeter.capture}`, result: selection });
+      const perimeterQa = await waitForExpression(
+        client,
+        `(() => { const qa = window.__vaultIslandLabQa; return qa && qa.perimeterStyle === ${JSON.stringify(perimeter.id)} ? JSON.parse(JSON.stringify(qa)) : null; })()`,
+      );
+      manifest.qaSnapshots.push({ label: `${perimeter.capture}-ready`, snapshot: perimeterQa });
+      manifest.captures.push({ label: perimeter.capture, path: await screenshot(client, `${perimeter.capture}-390x844.png`) });
+    }
+
+    const restoreCharms = await clickButtonContaining(client, 'Charms', '.vault-island-lab__perimeter-selector button');
+    manifest.interactions.push({ label: 'click-exterior-charms-restore', result: restoreCharms });
+    await waitForExpression(client, '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.perimeterStyle === "charms" ? JSON.parse(JSON.stringify(qa)) : null; })()');
 
     const exteriorOrbitViews = [
       { label: 'exterior-left-three-quarter', yaw: -0.78, camera: 'phone' },
@@ -305,24 +330,63 @@ async function main() {
       });
       manifest.captures.push({ label: orbitView.label, path: await screenshot(client, `${orbitView.label}-390x844.png`) });
     }
+    }
+
+    for (const charmView of ['front', 'left', 'right']) {
+      logStep(`capturing giga-charm-${charmView}`);
+      await evaluate(
+        client,
+        `(() => { const controls = window.__vaultIslandLabQaControls; if (!controls?.setCharmCamera) return false; controls.setCharmCamera(${JSON.stringify(charmView)}); return true; })()`,
+      );
+      await sleep(900);
+      manifest.captures.push({
+        label: `giga-charm-${charmView}`,
+        path: await screenshot(client, `giga-charm-${charmView}-390x844.png`),
+      });
+    }
 
     await evaluate(
       client,
       '(() => { const controls = window.__vaultIslandLabQaControls; if (!controls) return false; controls.setYaw(-0.08); controls.setCamera("phone"); return true; })()',
     );
     await sleep(1100);
+    }
 
+    if (!EXTERIOR_ONLY) {
     logStep('entering palace atrium');
-    const enterPalace = await clickButtonContaining(client, 'Enter palace', '.vault-island-lab__hud--bottom button');
-    manifest.interactions.push({ label: 'click-enter-palace', result: enterPalace });
+    if (INTERIOR_ONLY) {
+      await navigate(client, '/dev/vault-island-lab?quality=high&view=atrium&clean=1');
+    } else {
+      const enterPalace = await clickButtonContaining(client, 'Enter palace', '.vault-island-lab__hud--bottom button');
+      manifest.interactions.push({ label: 'click-enter-palace', result: enterPalace });
+    }
     const atriumQa = await waitForExpression(
       client,
       '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "atrium" && qa.frameCount >= 45 && qa.variedPixelPairs >= 2 ? JSON.parse(JSON.stringify(qa)) : null; })()',
-      120000,
+      ATRIUM_TIMEOUT_MS,
     );
     manifest.qaSnapshots.push({ label: 'atrium-ready', snapshot: atriumQa });
     logStep('capturing palace atrium screenshot');
     manifest.captures.push({ label: 'atrium', path: await screenshot(client, 'atrium-390x844.png') });
+
+    logStep('entering palace garden gallery');
+    const enterGardens = await clickButtonContaining(client, 'Gardens', '.vault-island-lab__hud--bottom button');
+    manifest.interactions.push({ label: 'click-enter-gardens', result: enterGardens });
+    const gardenQa = await waitForExpression(
+      client,
+      '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "garden" && qa.frameCount >= 45 && qa.variedPixelPairs >= 2 ? JSON.parse(JSON.stringify(qa)) : null; })()',
+      120000,
+    );
+    manifest.qaSnapshots.push({ label: 'garden-gallery-ready', snapshot: gardenQa });
+    manifest.captures.push({ label: 'garden-gallery', path: await screenshot(client, 'garden-gallery-390x844.png') });
+    for (const gardenView of ['left', 'right']) {
+      await evaluate(client, `(() => { window.__vaultIslandLabQaControls?.setInteriorCamera?.(${JSON.stringify(gardenView)}); return true; })()`);
+      await sleep(900);
+      manifest.captures.push({ label: `garden-gallery-${gardenView}`, path: await screenshot(client, `garden-gallery-${gardenView}-390x844.png`) });
+    }
+    const returnToAtrium = await clickButtonContaining(client, 'Palace atrium', '.vault-island-lab__hud--bottom button');
+    manifest.interactions.push({ label: 'click-gardens-return-atrium', result: returnToAtrium });
+    await waitForExpression(client, '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "atrium" && qa.frameCount >= 30 ? JSON.parse(JSON.stringify(qa)) : null; })()', 120000);
 
     logStep('descending from atrium to vault');
     const descendToVault = await clickButtonContaining(client, 'Descend to vault', '.vault-island-lab__hud--bottom button');
@@ -336,6 +400,29 @@ async function main() {
     manifest.qaSnapshots.push({ label: 'vault-ready', snapshot: interiorQa });
     logStep('capturing initial vault screenshot');
     manifest.captures.push({ label: 'vault-initial', path: await screenshot(client, 'vault-initial-390x844.png') });
+
+    for (const interiorView of ['left', 'right']) {
+      logStep(`capturing vault-${interiorView}-wing`);
+      await evaluate(
+        client,
+        `(() => { const controls = window.__vaultIslandLabQaControls; if (!controls?.setInteriorCamera) return false; controls.setInteriorCamera(${JSON.stringify(interiorView)}); return true; })()`,
+      );
+      await sleep(1000);
+      manifest.captures.push({
+        label: `vault-${interiorView}-wing`,
+        path: await screenshot(client, `vault-${interiorView}-wing-390x844.png`),
+      });
+    }
+    await evaluate(client, '(() => { window.__vaultIslandLabQaControls?.setInteriorCamera?.("front"); return true; })()');
+    await sleep(700);
+
+    logStep('capturing initial Crown inspection reveal');
+    const crownRevealClick = await clickButtonContaining(client, 'Reveal', '.vault-island-lab__treasure-card button');
+    manifest.interactions.push({ label: 'click-crown-inspection-reveal', result: crownRevealClick });
+    await waitForExpression(client, '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.selectedTreasureId === "crown" && qa.revealRun >= 1 ? JSON.parse(JSON.stringify(qa)) : null; })()');
+    await sleep(1000);
+    manifest.qaSnapshots.push({ label: 'vault-crown-inspection-reveal', snapshot: await snapshotVaultQa(client) });
+    manifest.captures.push({ label: 'vault-crown-inspection-reveal', path: await screenshot(client, 'vault-crown-inspection-reveal-390x844.png') });
 
     logStep('clicking first discovery button');
     const firstDiscovery = await clickDiscoveryAt(client, 1);
@@ -359,6 +446,7 @@ async function main() {
     logStep('capturing vault reveal screenshot');
     manifest.captures.push({ label: 'vault-after-reveal', path: await screenshot(client, 'vault-after-reveal-390x844.png') });
 
+    if (!INTERIOR_ONLY) {
     for (const collectionState of [
       { label: 'production-collection-empty', owned: 0 },
       { label: 'production-collection-partial', owned: 3 },
@@ -367,7 +455,7 @@ async function main() {
       await navigate(client, `/dev/vault-island-collection-preview?owned=${collectionState.owned}`);
       await waitForExpression(
         client,
-        '(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "exterior" && qa.frameCount >= 30 ? JSON.parse(JSON.stringify(qa)) : null; })()',
+        `(() => { const qa = window.__vaultIslandLabQa; return qa && qa.view === "exterior" && qa.frameCount >= 30 && qa.route.includes("owned=${collectionState.owned}") ? JSON.parse(JSON.stringify(qa)) : null; })()`,
         120000,
       );
       const previewEnter = await clickButtonContaining(client, 'Enter palace', '.vault-island-lab__hud--bottom button');
@@ -550,6 +638,8 @@ async function main() {
     manifest.interactions.push({ label: 'click-treasure-lab-chalice-reveal', result: chaliceRevealClick });
     await sleep(750);
     manifest.captures.push({ label: 'treasure-lab-chalice', path: await screenshot(client, 'treasure-lab-chalice-390x844.png') });
+    }
+    }
 
     const failedInteractions = manifest.interactions.filter((interaction) => interaction.result?.ok === false);
     if (failedInteractions.length > 0) {

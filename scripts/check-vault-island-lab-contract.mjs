@@ -25,6 +25,7 @@ const files = {
   board: 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
   productionModal: 'src/features/gamification/level-worlds/components/VaultIslandCollectionModal.tsx',
   productionModalStyles: 'src/features/gamification/level-worlds/components/VaultIslandCollectionModal.css',
+  customization: 'src/features/gamification/level-worlds/services/islandRunVaultCustomization.ts',
   exteriorV2: 'src/features/gamification/level-worlds/dev/VaultTreasureIslandModelV2.ts',
   main: 'src/main.tsx',
   handoff: 'docs/visual-references/island-special-vault-treasure/integration-handoff.v1.json',
@@ -109,10 +110,13 @@ for (const check of [
 }
 
 assert(handoff.browserQaHook?.globalName === 'window.__vaultIslandLabQa', 'Integration handoff must document window.__vaultIslandLabQa.');
-for (const field of ['view', 'quality', 'isReady', 'frameCount', 'canvasWidth', 'canvasHeight', 'sampledPixels', 'variedPixelPairs', 'clickableDisplays', 'selectedTreasureId', 'revealRun', 'inspectedDisplay', 'collectionValue', 'lastPointerHit', 'route']) {
+for (const field of ['view', 'quality', 'isReady', 'frameCount', 'canvasWidth', 'canvasHeight', 'sampledPixels', 'variedPixelPairs', 'clickableDisplays', 'selectedTreasureId', 'revealRun', 'inspectedDisplay', 'collectionValue', 'perimeterStyle', 'lastPointerHit', 'route']) {
   assert(handoff.browserQaHook?.expectedFields?.includes(field), `Integration handoff QA hook is missing expected field: ${field}.`);
 }
 assert(handoff.treasureLabQaHook?.globalName === 'window.__vaultTreasureLabQa', 'Integration handoff must document window.__vaultTreasureLabQa.');
+assert(source.islandLab.includes('vault-island-lab__perimeter-selector'), 'Vault Island lab must expose the perimeter customization control.');
+assert(source.islandLab.includes('saveVaultIslandPerimeterStyle'), 'Vault Island lab must persist the selected cosmetic through the presentation service.');
+assert(source.customization.includes("['charms', 'garden', 'gold-castle']"), 'Vault Island customization service must define all three perimeter styles.');
 for (const field of ['selectedTreasureId', 'inspectMode', 'revealRun', 'frameCount', 'canvasWidth', 'canvasHeight', 'treasureCount', 'museumValue']) {
   assert(handoff.treasureLabQaHook?.expectedFields?.includes(field), `Integration handoff Treasure Lab QA hook is missing expected field: ${field}.`);
 }
@@ -224,6 +228,20 @@ assert(source.productionModalStyles.includes('position: fixed') && source.produc
 assert(source.contract.includes("entrySurface: 'island-run-board-menu'"), 'Vault Island contract must record the production Board menu entry.');
 assert(source.contract.includes("collectionMode: 'read-only-authored-preview'"), 'Vault Island production presentation must remain a read-only authored preview.');
 assert(source.exteriorV2.includes("'/assets/islands/special/vault-island/vault-palace.glb'"), 'Exterior v2 must load the stable production palace GLB.');
+for (const exteriorDetail of [
+  'vault-v2-source-led-ceremonial-garden-axis',
+  'vault-v2-ceremonial-axis-warm-lantern-marker',
+  'vault-v2-fountain-radial-prismatic-crystal-crown',
+  'vault-v2-fountain-luminous-inner-crystal-core',
+  'vault-v2-fountain-cyan-heart-light',
+  'vault-v2-marina-gate-curved-gilded-wing-rail',
+  'vault-v2-wet-natural-shoreline-rock',
+  'vault-v2-rock-contact-foam-ribbon',
+  'vault-v2-horizon-island-limestone-villa',
+  'vault-v2-blender-palace-v016',
+]) {
+  assert(source.exteriorV2.includes(exteriorDetail), `Exterior v2 is missing accepted source-fidelity detail: ${exteriorDetail}.`);
+}
 
 for (const nodeName of socketNodeNames) {
   const appearsInModel = source.interior.includes(nodeName) || source.exterior.includes(nodeName);

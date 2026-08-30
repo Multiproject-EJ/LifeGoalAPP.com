@@ -42,3 +42,25 @@ Ship the approved Vault Island v073 exterior, palace atrium, museum interior, an
 - Canonical Island Run suite: 1896 passed, 0 failed.
 - Island Run architecture guard: 0 violations.
 - Vite production bundle: passed.
+
+## 2026-08-29 interior luxury refinement
+
+- Added eight individually framed navy velvet, polished onyx, and true-gold relic alcoves with accession plaques and crown gems.
+- Added jeweled stair newels, a double-metal descent halo, and five dome rosettes to strengthen the palace atrium hierarchy.
+- Reduced broad interior exposure and fill so gold, glass, gems, velvet, and marble no longer collapse into one bright value range.
+- Rejected the first segmented stair-runner treatment after phone captures made it read as blue teeth; retained only details that improved the silhouette.
+- Fixed the browser gauntlet's collection-preview readiness race by requiring the requested ownership route before interaction.
+- Accepted evidence: `docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v085-interior-luxury-final/capture-manifest.v1.json`.
+- Quality review: `docs/visual-references/island-special-vault-treasure/gauntlet/qa/reviews/v085-interior-luxury-quality-lord.md`.
+- Browser gauntlet: 24 captures, 22 interactions, 18 QA snapshots, 0 diagnostics.
+
+## 2026-08-29 three-dimensional atmosphere baseline
+
+- Removed the borrowed static Island 004 background from the Vault exterior.
+- Added real-time Three.js `Sky` and reflective `Water` with animated normal flow, calm distortion, turquoise subsurface color, and sunset response.
+- Added a submerged seabed with six reef patches, three animated 3D cloud banks, physical sun and halo geometry, four horizon islets, four nearer islets, and three bobbing sailboats.
+- Corrected the exterior camera/orbit clamp so the authored phone composition is also the player's initial frame.
+- Preserved the full v085 atrium and museum luxury pass without changing canonical gameplay or collection writes.
+- Accepted evidence: `docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v100-physical-sunset-cloud-world-final/capture-manifest.v1.json`.
+- Quality review: `docs/visual-references/island-special-vault-treasure/gauntlet/qa/reviews/v100-three-dimensional-atmosphere-quality-lord.md`.
+- Browser gauntlet: 24 captures, 22 interactions, 18 QA snapshots, 0 diagnostics.

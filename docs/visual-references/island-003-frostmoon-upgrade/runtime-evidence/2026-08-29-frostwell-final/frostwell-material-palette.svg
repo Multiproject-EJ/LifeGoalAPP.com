@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#172431"/>
+  <text x="54" y="72" fill="#f4fbff" font-family="system-ui, sans-serif" font-size="34" font-weight="700">FROSTWELL ICEWORKS · MATERIAL PASS</text>
+  <text x="54" y="112" fill="#a9c7d8" font-family="system-ui, sans-serif" font-size="20">Phone-scale procedural palette · no blue roofs</text>
+  <g transform="translate(50 155)">
+    <g>
+      <rect width="210" height="410" rx="20" fill="#79ddf5"/>
+      <path d="M0 290 C45 255 83 322 128 282 S185 254 210 275 V410 H0Z" fill="#54d8f4"/>
+      <text x="20" y="352" fill="#102634" font-family="system-ui, sans-serif" font-size="22" font-weight="700">GLACIAL ICE</text>
+      <text x="20" y="384" fill="#244a5c" font-family="system-ui, sans-serif" font-size="17">transmission · seams</text>
+    </g>
+    <g transform="translate(220 0)">
+      <rect width="210" height="410" rx="20" fill="#223343"/>
+      <path d="M24 42 H186 M24 88 H186 M24 134 H186" stroke="#86a8bd" stroke-width="9" opacity=".72"/>
+      <text x="20" y="352" fill="#e7f3f8" font-family="system-ui, sans-serif" font-size="22" font-weight="700">POLAR STEEL</text>
+      <text x="20" y="384" fill="#9bb2c0" font-family="system-ui, sans-serif" font-size="17">rough · clearcoat</text>
+    </g>
+    <g transform="translate(440 0)">
+      <rect width="210" height="410" rx="20" fill="#4a332d"/>
+      <path d="M22 54 C72 35 128 75 188 48 M22 98 C76 80 132 119 188 92 M22 142 C72 125 135 162 188 136" fill="none" stroke="#6e4d40" stroke-width="9"/>
+      <text x="20" y="352" fill="#f7eae0" font-family="system-ui, sans-serif" font-size="22" font-weight="700">DARK TIMBER</text>
+      <text x="20" y="384" fill="#cfb4a4" font-family="system-ui, sans-serif" font-size="17">grain · cavity wear</text>
+    </g>
+    <g transform="translate(660 0)">
+      <rect width="210" height="410" rx="20" fill="#cf7734"/>
+      <path d="M22 50 L188 170 M22 118 L188 238" stroke="#f5b96d" stroke-width="13" opacity=".52"/>
+      <text x="20" y="352" fill="#26150b" font-family="system-ui, sans-serif" font-size="22" font-weight="700">AGED COPPER</text>
+      <text x="20" y="384" fill="#522b16" font-family="system-ui, sans-serif" font-size="17">cutter · roof · bands</text>
+    </g>
+    <g transform="translate(880 0)">
+      <rect width="210" height="410" rx="20" fill="#f4ddb0"/>
+      <circle cx="105" cy="105" r="54" fill="#ffcf7a"/>
+      <circle cx="105" cy="105" r="82" fill="none" stroke="#f4fbff" stroke-width="9" opacity=".72"/>
+      <text x="20" y="352" fill="#3b2a1b" font-family="system-ui, sans-serif" font-size="22" font-weight="700">SNOW + HEARTH</text>
+      <text x="20" y="384" fill="#6a5138" font-family="system-ui, sans-serif" font-size="17">soft snow · warm light</text>
+    </g>
+  </g>
+  <g transform="translate(54 620)" fill="#b9d4e2" font-family="system-ui, sans-serif" font-size="18">
+    <text>Macro: ice / steel / timber</text>
+    <text x="390">Meso: seams / bands / roof facets</text>
+    <text x="805">Micro: inclusions / chips / edge response</text>
+  </g>
+</svg>
