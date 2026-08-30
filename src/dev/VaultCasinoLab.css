@@ -1,0 +1,1304 @@
+:root {
+  --vault-casino-gold: #f2c75c;
+  --vault-casino-gold-dark: #835319;
+  --vault-casino-ivory: #f4efe1;
+  --vault-casino-navy: #071a39;
+  --vault-casino-blue: #0d3159;
+}
+
+.vault-casino-lab,
+.vault-casino-lab * {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+.vault-casino-lab {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden;
+  color: var(--vault-casino-ivory);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(67, 217, 255, 0.16), transparent 24%),
+    linear-gradient(145deg, #04111f 0%, #071a2b 52%, #02080f 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.vault-casino-lab.is-inspect {
+  min-height: 100%;
+  padding: 0;
+  background: #020b17;
+}
+
+.vault-casino-lab__phone {
+  position: relative;
+  isolation: isolate;
+  width: min(390px, 100vw);
+  height: min(844px, calc(100dvh - 32px));
+  min-height: 640px;
+  overflow: hidden;
+  border: 1px solid rgba(244, 239, 225, 0.24);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(25, 104, 143, 0.34), transparent 33%),
+    linear-gradient(180deg, #081d3a 0%, #06162e 56%, #020a16 100%);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52), inset 0 0 80px rgba(0, 0, 0, 0.26);
+}
+
+.vault-casino-lab.is-inspect .vault-casino-lab__phone {
+  width: min(390px, 100vw);
+  height: 100dvh;
+  min-height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.vault-casino-lab__architecture {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vault-casino-lab__ceiling {
+  position: absolute;
+  left: 50%;
+  top: -116px;
+  width: 460px;
+  height: 248px;
+  transform: translateX(-50%);
+  border: 3px solid rgba(242, 199, 92, 0.54);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgba(5, 28, 58, 0.9),
+    0 0 0 31px rgba(242, 199, 92, 0.38),
+    0 34px 72px rgba(58, 215, 255, 0.08);
+}
+
+.vault-casino-lab__ceiling i {
+  position: absolute;
+  left: 50%;
+  top: 88%;
+  width: 5px;
+  height: 126px;
+  transform-origin: 50% 0;
+  background: linear-gradient(90deg, #805319, #ffe79a, #805319);
+}
+
+.vault-casino-lab__ceiling i:nth-child(1) { transform: rotate(0deg); }
+.vault-casino-lab__ceiling i:nth-child(2) { transform: rotate(55deg); }
+.vault-casino-lab__ceiling i:nth-child(3) { transform: rotate(-55deg); }
+
+.vault-casino-lab__column {
+  position: absolute;
+  top: 116px;
+  bottom: 128px;
+  width: 22px;
+  border: 1px solid #d7cbb0;
+  background: linear-gradient(90deg, #928670 0%, #fbf7ea 35%, #d9cfb9 66%, #857862 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.24), 0 0 0 3px rgba(183, 132, 40, 0.36);
+  opacity: 0.78;
+}
+
+.vault-casino-lab__column::before,
+.vault-casino-lab__column::after {
+  content: "";
+  position: absolute;
+  left: -7px;
+  width: 34px;
+  height: 14px;
+  border: 1px solid #e4d9bd;
+  background: linear-gradient(#fff9e7, #c2b393);
+  box-shadow: inset 0 -3px 0 #a97629;
+}
+
+.vault-casino-lab__column::before { top: -3px; }
+.vault-casino-lab__column::after { bottom: -3px; transform: rotate(180deg); }
+.vault-casino-lab__column.is-left { left: 8px; }
+.vault-casino-lab__column.is-right { right: 8px; }
+
+.vault-casino-lab__floor {
+  position: absolute;
+  left: 50%;
+  bottom: -210px;
+  width: 650px;
+  height: 520px;
+  transform: translateX(-50%) rotateX(64deg);
+  border: 3px solid #c78a2d;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 9deg, rgba(244, 206, 101, 0.48) 0deg 1deg, transparent 1deg 36deg),
+    radial-gradient(circle, #102f5a 0 9%, #d7a13e 9.2% 10%, #071d42 10.2% 26%, #c58a2e 26.2% 27%, #061530 27.2% 100%);
+  box-shadow: 0 -80px 120px rgba(46, 201, 238, 0.1);
+  opacity: 0.88;
+}
+
+.vault-casino-lab__topbar {
+  position: absolute;
+  z-index: 20;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px 8px 14px;
+  border: 1px solid rgba(248, 225, 158, 0.52);
+  border-radius: 8px;
+  color: #0a1830;
+  background: rgba(247, 242, 227, 0.96);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.26);
+}
+
+.vault-casino-lab__topbar > div {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.vault-casino-lab__topbar span {
+  overflow: hidden;
+  color: #5f6873;
+  font-size: 10px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vault-casino-lab__topbar strong {
+  overflow: hidden;
+  font: 700 15px/1.1 Georgia, serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-casino-lab__topbar .vault-casino-lab__wallet {
+  min-width: 62px;
+  display: grid;
+  justify-items: end;
+  gap: 0;
+  padding-right: 3px;
+  border-right: 1px solid rgba(95, 104, 115, 0.24);
+}
+
+.vault-casino-lab__topbar .vault-casino-lab__wallet span {
+  font-size: 8px;
+}
+
+.vault-casino-lab__topbar .vault-casino-lab__wallet strong {
+  color: #815b16;
+  font: 900 14px/1 Georgia, serif;
+}
+
+.vault-casino-lab__topbar button,
+.vault-casino-lab__footer button {
+  min-width: 42px;
+  min-height: 36px;
+  border: 1px solid #9f752e;
+  border-radius: 6px;
+  color: #f9f3df;
+  background: #102a4c;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.vault-casino-lab__footer button.is-cash-out {
+  min-width: 68px;
+  color: #201705;
+  background: linear-gradient(#ffe88d, #dba23a);
+  box-shadow: 0 0 16px rgba(242, 199, 92, 0.22);
+}
+
+.vault-casino-lab__footer button:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.vault-casino-lab__topbar button.is-active {
+  color: #1b1508;
+  background: #f4ca5d;
+}
+
+.vault-casino-lab__topbar .vault-casino-lab__close {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.vault-casino-lab__games {
+  position: absolute;
+  z-index: 20;
+  top: 78px;
+  left: 16px;
+  right: 16px;
+  height: 62px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid rgba(244, 214, 127, 0.32);
+  border-radius: 8px;
+  background: rgba(3, 15, 32, 0.84);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.vault-casino-lab__games button {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  justify-self: center;
+  padding: 0;
+  overflow: visible;
+  border: 2px solid rgba(246, 222, 151, 0.6);
+  border-radius: 50%;
+  color: var(--game-accent);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(51, 103, 156, 0.62), transparent 28%),
+    #071c3d;
+  box-shadow: inset 0 0 0 2px #93651e, 0 3px 12px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.vault-casino-lab__games button.is-selected {
+  border-color: #fff1ad;
+  transform: translateY(-2px) scale(1.07);
+  box-shadow: inset 0 0 0 2px #e7b448, 0 0 0 2px color-mix(in srgb, var(--game-accent) 58%, transparent), 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.vault-casino-lab__availability {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #fff2ce;
+  border-radius: 50%;
+  background: #ef334d;
+  box-shadow: 0 0 9px #ff2a4a;
+  animation: vault-casino-availability 1.8s ease-in-out infinite;
+}
+
+.vault-casino-lab__complete {
+  position: absolute;
+  right: -2px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #fff0b0;
+  border-radius: 50%;
+  color: #09251f;
+  background: #6ce8b4;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+@keyframes vault-casino-availability {
+  50% { transform: scale(1.2); box-shadow: 0 0 15px #ff3753; }
+}
+
+.vault-casino-icon__vault,
+.vault-casino-icon__dice,
+.vault-casino-icon__orrery,
+.vault-casino-icon__prism,
+.vault-casino-icon__organ {
+  position: absolute;
+  inset: 7px;
+  display: block;
+}
+
+.vault-casino-icon__vault i {
+  position: absolute;
+  bottom: 2px;
+  width: 10px;
+  height: 24px;
+  border: 2px solid #eebf52;
+  border-radius: 6px 6px 2px 2px;
+  background: #122c53;
+}
+
+.vault-casino-icon__vault i:nth-child(1) { left: 0; height: 19px; }
+.vault-casino-icon__vault i:nth-child(2) { left: 10px; z-index: 1; }
+.vault-casino-icon__vault i:nth-child(3) { right: 0; height: 19px; }
+.vault-casino-icon__vault i:nth-child(2)::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  width: 3px;
+  height: 7px;
+  border-radius: 50% 50% 2px 2px;
+  background: #54dfff;
+  box-shadow: 0 0 5px #54dfff;
+}
+
+.vault-casino-icon__dice i {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f8d676;
+  border-radius: 5px;
+  color: #fff5ce;
+  background: #9f2640;
+  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.22);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.vault-casino-icon__dice i:first-child { left: 0; top: 7px; transform: rotate(-10deg); }
+.vault-casino-icon__dice i:last-child { right: 0; top: 4px; transform: rotate(11deg); background: #0876a2; }
+
+.vault-casino-icon__orrery {
+  inset: 5px;
+  border: 2px solid #f2c75c;
+  border-radius: 50%;
+}
+
+.vault-casino-icon__orrery::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid #e9ba4f;
+  border-radius: 50%;
+}
+
+.vault-casino-icon__orrery i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: #ffc83d;
+  box-shadow: 0 0 8px #ffc83d;
+}
+
+.vault-casino-icon__orrery b {
+  position: absolute;
+  right: -2px;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #42cfff;
+}
+
+.vault-casino-icon__prism i {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 13px;
+  height: 27px;
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0, 100% 24%, 77% 84%, 50% 100%, 22% 84%, 0 24%);
+  background: linear-gradient(100deg, #47bed9, #efffff 46%, #35e8df);
+  filter: drop-shadow(0 0 5px #46e6f7);
+}
+
+.vault-casino-icon__prism b {
+  position: absolute;
+  top: 13px;
+  width: 12px;
+  height: 3px;
+  border-radius: 3px;
+  background: #f2c75c;
+}
+
+.vault-casino-icon__prism b:nth-of-type(1) { left: 0; transform: rotate(20deg); }
+.vault-casino-icon__prism b:nth-of-type(2) { right: 0; transform: rotate(-20deg); }
+
+.vault-casino-icon__organ {
+  inset: 7px 8px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.vault-casino-icon__organ i {
+  width: 4px;
+  border: 1px solid #fff0a0;
+  border-radius: 3px 3px 1px 1px;
+  background: #d89422;
+}
+
+.vault-casino-icon__organ i:nth-child(1) { height: 11px; }
+.vault-casino-icon__organ i:nth-child(2) { height: 16px; }
+.vault-casino-icon__organ i:nth-child(3) { height: 21px; }
+.vault-casino-icon__organ i:nth-child(4) { height: 26px; }
+.vault-casino-icon__organ i:nth-child(5) { height: 31px; }
+
+.vault-casino-lab__machine-stage {
+  position: absolute;
+  z-index: 5;
+  top: 148px;
+  left: 27px;
+  right: 27px;
+  bottom: 104px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vault-casino-lab__machine-heading {
+  min-height: 55px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: 4px 12px 8px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.72);
+}
+
+.vault-casino-lab__machine-heading span {
+  color: color-mix(in srgb, var(--game-accent) 72%, #fff);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-casino-lab__machine-heading h1 {
+  margin: 2px 0 0;
+  color: #fff7dd;
+  font: 700 23px/1.08 Georgia, serif;
+}
+
+.vault-casino-machine {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: 8px 8px 72px;
+  overflow: hidden;
+  border-top: 1px solid rgba(242, 199, 92, 0.42);
+  border-bottom: 1px solid rgba(242, 199, 92, 0.36);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--game-accent) 18%, transparent), transparent 44%),
+    linear-gradient(180deg, rgba(2, 10, 24, 0.16), rgba(2, 9, 21, 0.72));
+}
+
+.vault-casino-machine::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  width: 280px;
+  height: 72px;
+  transform: translateX(-50%) rotateX(63deg);
+  border: 2px solid rgba(242, 199, 92, 0.64);
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--game-accent) 18%, #07162e), #07142a 66%);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--game-accent) 20%, transparent);
+}
+
+.vault-casino-machine__prompt,
+.vault-casino-machine__actions,
+.vault-casino-result,
+.vault-casino-inspect-state {
+  position: absolute;
+  z-index: 8;
+  left: 8px;
+  right: 8px;
+  bottom: 12px;
+}
+
+.vault-casino-machine__prompt {
+  margin: 0;
+  color: #e7e2d5;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.vault-casino-machine__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vault-casino-machine__actions--single {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.vault-casino-machine__actions button {
+  min-height: 39px;
+  padding: 6px 8px;
+  border: 1px solid #b7822e;
+  border-radius: 6px;
+  color: #efe9d9;
+  background: rgba(9, 33, 63, 0.96);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.vault-casino-machine__actions button.is-primary {
+  color: #161004;
+  background: linear-gradient(#ffe387, #dba33c);
+}
+
+.vault-casino-machine__actions button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.vault-casino-machine__status {
+  min-width: 140px;
+  padding: 9px 16px;
+  border: 1px solid rgba(244, 208, 111, 0.52);
+  border-radius: 6px;
+  color: #f4edda;
+  background: rgba(3, 16, 34, 0.88);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.vault-casino-result,
+.vault-casino-inspect-state {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 227, 137, 0.72);
+  border-radius: 6px;
+  color: #f7f1df;
+  background: rgba(3, 16, 34, 0.94);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
+}
+
+.vault-casino-result span,
+.vault-casino-result small,
+.vault-casino-inspect-state small {
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.vault-casino-result span { color: #f2c75c; font-weight: 900; }
+.vault-casino-result strong,
+.vault-casino-inspect-state strong { min-width: 0; font: 700 13px/1.1 Georgia, serif; }
+.vault-casino-result small,
+.vault-casino-inspect-state small { color: #bfc9d3; font-weight: 800; }
+.vault-casino-result.is-sovereign { box-shadow: 0 0 26px rgba(255, 214, 92, 0.24); }
+.vault-casino-result.is-grand { border-color: rgba(84, 221, 255, 0.72); }
+
+.vault-casino-inspect-state {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+}
+
+.vault-casino-inspect-state__lamp {
+  grid-row: 1 / 3;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffe6bd;
+  border-radius: 50%;
+  background: #8e2539;
+  box-shadow: 0 0 9px rgba(255, 49, 79, 0.66);
+}
+
+.vault-casino-inspect-state small { text-transform: none; }
+
+.vault-rush-prototype__arch {
+  position: absolute;
+  top: 9%;
+  width: 276px;
+  height: 360px;
+  border: 6px solid #c69134;
+  border-bottom-width: 12px;
+  border-radius: 140px 140px 18px 18px;
+  background: radial-gradient(circle at 50% 16%, rgba(45, 96, 151, 0.45), #031127 58%);
+  box-shadow: inset 0 0 0 4px #f7de89, 0 0 34px rgba(67, 217, 255, 0.14);
+}
+
+.vault-rush-prototype__doors {
+  position: relative;
+  z-index: 2;
+  width: 244px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.vault-rush-prototype__doors button {
+  position: relative;
+  aspect-ratio: 0.78;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #e7bd5d;
+  border-radius: 10px 10px 3px 3px;
+  background: #071a38;
+  box-shadow: inset 0 0 0 2px #734a18, 0 3px 7px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  perspective: 180px;
+}
+
+.vault-rush-prototype__door-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform-origin: 0 50%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 50% 46%, transparent 0 5px, #e5bd59 6px 7px, transparent 8px),
+    linear-gradient(145deg, #12335f, #06152f);
+  box-shadow: inset 0 0 0 3px #a47125;
+  transition: transform 420ms cubic-bezier(.2,.7,.2,1);
+}
+
+.vault-rush-prototype__door-face i {
+  width: 7px;
+  height: 7px;
+  border: 2px solid #ffe78f;
+  border-radius: 50%;
+  background: #3dddf7;
+  box-shadow: 0 0 7px #3dddf7;
+}
+
+.vault-rush-prototype__figure {
+  position: absolute;
+  inset: 8px;
+  display: grid;
+  place-items: center;
+  transform: scale(0.6);
+  opacity: 0;
+  transition: transform 340ms 150ms ease, opacity 240ms 150ms ease;
+}
+
+.vault-rush-prototype__figure img { width: 100%; max-height: 100%; object-fit: contain; }
+.vault-rush-prototype__doors button.is-revealed .vault-rush-prototype__door-face { transform: rotateY(-96deg); }
+.vault-rush-prototype__doors button.is-revealed .vault-rush-prototype__figure { transform: scale(1); opacity: 1; }
+
+.crown-dice__crown {
+  position: absolute;
+  top: 26px;
+  width: 238px;
+  height: 118px;
+  clip-path: polygon(0 16%, 21% 58%, 38% 2%, 54% 58%, 74% 0, 100% 22%, 88% 100%, 10% 100%);
+  background: linear-gradient(110deg, #86511a 0%, #f9dc79 25%, #c48424 48%, #ffe69a 70%, #815016 100%);
+  filter: drop-shadow(0 12px 15px rgba(0, 0, 0, 0.42));
+}
+
+.crown-dice__crown i {
+  position: absolute;
+  bottom: 18px;
+  width: 16px;
+  height: 24px;
+  transform: rotate(45deg);
+  border: 2px solid #fff0a3;
+  background: #7d285f;
+  box-shadow: 0 0 9px #d851bd;
+}
+
+.crown-dice__crown i:nth-child(1) { left: 35px; }
+.crown-dice__crown i:nth-child(2) { left: 76px; background: #168ab5; }
+.crown-dice__crown i:nth-child(3) { left: 111px; background: #d94357; }
+.crown-dice__crown i:nth-child(4) { right: 76px; background: #37aa8f; }
+.crown-dice__crown i:nth-child(5) { right: 35px; }
+
+.crown-dice__bowl {
+  position: relative;
+  z-index: 2;
+  width: 292px;
+  height: 198px;
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  align-content: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 26px;
+  border: 5px solid #e5b851;
+  border-radius: 48% 48% 44% 44% / 24% 24% 58% 58%;
+  background: radial-gradient(ellipse at 50% 33%, #173f6a 0%, #07182f 52%, #020812 100%);
+  box-shadow: inset 0 8px 20px rgba(255, 223, 129, 0.15), 0 16px 24px rgba(0, 0, 0, 0.44);
+}
+
+.crown-dice__bowl button {
+  width: 56px;
+  height: 56px;
+  border: 3px solid #f8dc82;
+  border-radius: 12px;
+  color: #fff4d2;
+  background: linear-gradient(145deg, #ae2c4a, #661630);
+  box-shadow: inset 7px 7px 12px rgba(255, 255, 255, 0.12), 0 7px 10px rgba(0, 0, 0, 0.35);
+  font: 900 24px/1 Georgia, serif;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.crown-dice__bowl button:nth-child(even) { background: linear-gradient(145deg, #1288ae, #064867); }
+.crown-dice__bowl button.is-held { box-shadow: inset 7px 7px 12px rgba(255, 255, 255, 0.12), 0 0 0 3px #5ce7d6, 0 0 15px #24a996; }
+.crown-dice__bowl button.is-selected { transform: translateY(-4px); }
+
+.solar-orrery {
+  position: relative;
+  width: 286px;
+  height: 286px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 208, 75, 0.12), transparent 60%);
+}
+
+.solar-orrery__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 4px solid #dba537;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #fff0a3, 0 0 11px rgba(255, 202, 70, 0.23);
+}
+
+.solar-orrery__ring--1 { --target-radius: -128px; width: 280px; height: 280px; margin: -140px; animation: vault-orrery-cw 8s linear infinite; }
+.solar-orrery__ring--2 { --target-radius: -93px; width: 210px; height: 210px; margin: -105px; animation: vault-orrery-ccw 6.4s linear infinite; }
+.solar-orrery__ring--3 { --target-radius: -58px; width: 140px; height: 140px; margin: -70px; animation: vault-orrery-cw 4.8s linear infinite; }
+.solar-orrery__ring.is-stopped { animation: none; transform: rotate(var(--stopped-angle)); }
+
+.solar-orrery__ring i {
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 15px;
+  height: 15px;
+  margin-left: -7px;
+  border: 2px solid #fff0a3;
+  border-radius: 50%;
+  background: #28bada;
+  box-shadow: 0 0 10px #25caeb;
+}
+
+.solar-orrery__ring b {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%) rotate(var(--target-angle)) translateY(var(--target-radius));
+  border-radius: 50%;
+  background: #ffdf6b;
+  opacity: 0.5;
+}
+
+.solar-orrery__sun {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  clip-path: polygon(50% 0, 61% 27%, 85% 15%, 73% 39%, 100% 50%, 73% 61%, 85% 85%, 61% 73%, 50% 100%, 39% 73%, 15% 85%, 27% 61%, 0 50%, 27% 39%, 15% 15%, 39% 27%);
+  background: #f2b92f;
+  filter: drop-shadow(0 0 18px #ffbc34);
+}
+
+.solar-orrery__sun i {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8be, #f5bd2d 58%, #a96213);
+}
+
+@keyframes vault-orrery-cw { to { transform: rotate(360deg); } }
+@keyframes vault-orrery-ccw { to { transform: rotate(-360deg); } }
+
+.prism-cascade {
+  position: relative;
+  width: 220px;
+  height: 332px;
+  overflow: hidden;
+  border: 4px solid #d7a33c;
+  border-radius: 100px 100px 24px 24px;
+  background:
+    linear-gradient(90deg, rgba(53, 218, 232, 0.08), rgba(235, 255, 255, 0.2) 50%, rgba(46, 218, 210, 0.06)),
+    rgba(3, 30, 51, 0.72);
+  box-shadow: inset 0 0 0 3px rgba(217, 249, 255, 0.24), 0 0 24px rgba(60, 221, 225, 0.18);
+}
+
+.prism-cascade__crystal {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 24px;
+  width: 32px;
+  height: 62px;
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0, 100% 22%, 76% 82%, 50% 100%, 22% 82%, 0 22%);
+  background: linear-gradient(100deg, #26a7ca, #f2ffff 48%, #32dfd1 72%, #086685);
+  filter: drop-shadow(0 0 10px #39e8ed);
+}
+
+.prism-cascade.is-released .prism-cascade__crystal {
+  animation: prism-drop 700ms cubic-bezier(.4,.05,.8,.5) forwards;
+}
+
+@keyframes prism-drop {
+  45% { transform: translateX(calc(-50% + var(--prism-mid))) translateY(112px) rotate(80deg); }
+  100% { transform: translateX(calc(-50% + var(--prism-finish))) translateY(228px) rotate(180deg); }
+}
+
+.prism-cascade__mirror {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  width: 92px;
+  height: 34px;
+  padding: 0;
+  transform: translateX(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.prism-cascade__mirror:nth-of-type(1) { top: 103px; }
+.prism-cascade__mirror:nth-of-type(2) { top: 165px; }
+.prism-cascade__mirror:nth-of-type(3) { top: 227px; }
+
+.prism-cascade__mirror i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 13px;
+  height: 8px;
+  border: 2px solid #fff1a5;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #76521b, #ffd765 46%, #faffff 54%, #8b601b);
+  box-shadow: 0 0 10px rgba(255, 213, 87, 0.28);
+  transition: transform 180ms ease;
+}
+
+.prism-cascade__mirror.is-left i { transform: rotate(-20deg); }
+.prism-cascade__mirror.is-right i { transform: rotate(20deg); }
+
+.prism-cascade__vault {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.prism-cascade__vault i {
+  height: 22px;
+  border: 1px solid #e8bd58;
+  border-radius: 3px 3px 0 0;
+  background: #0c2d50;
+}
+
+.treasury-organ {
+  position: relative;
+  width: 292px;
+  height: 310px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 20px 64px;
+  border: 4px solid #d09a34;
+  border-radius: 130px 130px 20px 20px;
+  background: radial-gradient(circle at 50% 24%, #173c63, #06142a 66%);
+  box-shadow: inset 0 0 0 3px rgba(255, 235, 166, 0.18), 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.treasury-organ > button {
+  position: relative;
+  width: 38px;
+  padding: 0;
+  border: 2px solid #fff0a6;
+  border-radius: 18px 18px 5px 5px;
+  background: linear-gradient(90deg, #86541a, #f7cf63 35%, #fff0a6 52%, #bd7c1d 72%, #6f4314);
+  box-shadow: 0 7px 12px rgba(0, 0, 0, 0.38);
+  cursor: default;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.treasury-organ > button:nth-child(1) { height: 122px; }
+.treasury-organ > button:nth-child(2) { height: 150px; }
+.treasury-organ > button:nth-child(3) { height: 182px; }
+.treasury-organ > button:nth-child(4) { height: 214px; }
+.treasury-organ > button:nth-child(5) { height: 242px; }
+.treasury-organ > button.is-playable { cursor: pointer; }
+.treasury-organ > button.is-lit { transform: translateY(-8px); filter: brightness(1.7) drop-shadow(0 0 12px #d98cff); }
+
+.treasury-organ > button i {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 14px;
+  aspect-ratio: 1;
+  transform: rotate(45deg);
+  border: 2px solid #fff1aa;
+  background: #814cc2;
+  box-shadow: 0 0 8px #a16bea;
+}
+
+.treasury-organ > button:nth-child(1) i { background: #3ab5e8; }
+.treasury-organ > button:nth-child(2) i { background: #43bd8b; }
+.treasury-organ > button:nth-child(3) i { background: #f0a52e; }
+.treasury-organ > button:nth-child(4) i { background: #d94261; }
+
+.treasury-organ > button b {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%);
+  border: 3px solid #7a4a16;
+  border-radius: 50%;
+  background: #07182e;
+}
+
+.treasury-organ__keys {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 20px;
+  height: 40px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 3px;
+  border: 2px solid #bc8227;
+  border-radius: 5px;
+  background: #ad7928;
+}
+
+.treasury-organ__keys i {
+  border-radius: 2px;
+  background: #f4eedc;
+  box-shadow: inset 0 -5px 0 #c8bca4;
+}
+
+.vault-casino-lab__footer {
+  position: absolute;
+  z-index: 20;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(245, 214, 130, 0.52);
+  border-radius: 8px;
+  background: rgba(3, 15, 32, 0.94);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(12px);
+}
+
+.vault-casino-grand-coffer {
+  position: absolute;
+  z-index: 18;
+  top: 148px;
+  left: 27px;
+  right: 27px;
+  bottom: 104px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+  align-items: end;
+  justify-items: center;
+  gap: 4px;
+  overflow: hidden;
+  padding: 24px 16px 18px;
+  border-top: 1px solid rgba(255, 229, 144, 0.72);
+  border-bottom: 1px solid rgba(255, 229, 144, 0.72);
+  color: #fff6d8;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 210, 69, 0.34), transparent 34%),
+    radial-gradient(circle at 50% 70%, rgba(55, 214, 226, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(4, 17, 39, 0.98), rgba(2, 8, 20, 0.99));
+  animation: vault-coffer-stage-in 420ms ease-out both;
+}
+
+.vault-casino-grand-coffer > span {
+  color: #e4bc5a;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-casino-grand-coffer h2 {
+  margin: 0;
+  font: 700 29px/1 Georgia, serif;
+}
+
+.vault-casino-grand-coffer > strong {
+  color: #dfe8e9;
+  font-size: 12px;
+}
+
+.vault-casino-grand-coffer > button {
+  min-width: 112px;
+  min-height: 38px;
+  margin-top: 10px;
+  border: 1px solid #fff0a5;
+  border-radius: 6px;
+  color: #211706;
+  background: linear-gradient(#ffe991, #dba33b);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.vault-casino-grand-coffer__rays {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 1px;
+  height: 1px;
+}
+
+.vault-casino-grand-coffer__rays i {
+  position: absolute;
+  left: -2px;
+  bottom: 0;
+  width: 4px;
+  height: 230px;
+  transform: rotate(var(--ray-angle));
+  transform-origin: 50% 100%;
+  background: linear-gradient(transparent, rgba(255, 221, 104, 0.62), transparent);
+  animation: vault-coffer-ray 2.4s ease-in-out infinite;
+}
+
+.vault-casino-grand-coffer__rays i:nth-child(1) { --ray-angle: 0deg; }
+.vault-casino-grand-coffer__rays i:nth-child(2) { --ray-angle: 45deg; }
+.vault-casino-grand-coffer__rays i:nth-child(3) { --ray-angle: 90deg; }
+.vault-casino-grand-coffer__rays i:nth-child(4) { --ray-angle: 135deg; }
+.vault-casino-grand-coffer__rays i:nth-child(5) { --ray-angle: 180deg; }
+.vault-casino-grand-coffer__rays i:nth-child(6) { --ray-angle: 225deg; }
+.vault-casino-grand-coffer__rays i:nth-child(7) { --ray-angle: 270deg; }
+.vault-casino-grand-coffer__rays i:nth-child(8) { --ray-angle: 315deg; }
+
+.vault-casino-grand-coffer__chest {
+  position: relative;
+  align-self: center;
+  width: 236px;
+  height: 190px;
+  perspective: 600px;
+  filter: drop-shadow(0 20px 22px rgba(0, 0, 0, 0.52));
+}
+
+.vault-casino-grand-coffer__chest .is-vault,
+.vault-casino-grand-coffer__chest .is-lid {
+  position: absolute;
+  left: 20px;
+  width: 196px;
+  border: 4px solid #ffe681;
+  background: linear-gradient(135deg, #8d5919, #e6ad3d 42%, #75420f 76%);
+  box-shadow: inset 0 0 0 4px #52300d, inset 0 0 22px rgba(255, 245, 181, 0.3);
+}
+
+.vault-casino-grand-coffer__chest .is-vault {
+  bottom: 10px;
+  height: 104px;
+  border-radius: 8px 8px 20px 20px;
+}
+
+.vault-casino-grand-coffer__chest .is-lid {
+  z-index: 2;
+  top: 36px;
+  height: 62px;
+  transform: translateY(-30px) rotateX(-42deg);
+  transform-origin: 50% 100%;
+  border-radius: 48px 48px 7px 7px;
+  animation: vault-coffer-lid-open 700ms 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.vault-casino-grand-coffer__chest .is-vault > i {
+  position: absolute;
+  top: 24px;
+  bottom: 20px;
+  width: 5px;
+  border-radius: 3px;
+  background: #4a2a0b;
+}
+
+.vault-casino-grand-coffer__chest .is-vault > i:nth-child(1) { left: 42px; }
+.vault-casino-grand-coffer__chest .is-vault > i:nth-child(2) { left: 92px; }
+.vault-casino-grand-coffer__chest .is-vault > i:nth-child(3) { right: 42px; }
+
+.vault-casino-grand-coffer__chest .is-lid > i {
+  position: absolute;
+  top: 21px;
+  width: 20px;
+  height: 20px;
+  transform: rotate(45deg);
+  border: 2px solid #fff2ad;
+  background: #173d63;
+  box-shadow: 0 0 9px #55dff0;
+}
+
+.vault-casino-grand-coffer__chest .is-lid > i:nth-child(1) { left: 20px; }
+.vault-casino-grand-coffer__chest .is-lid > i:nth-child(2) { left: 56px; background: #9f2e4c; }
+.vault-casino-grand-coffer__chest .is-lid > i:nth-child(3) { left: 86px; background: #dba72d; }
+.vault-casino-grand-coffer__chest .is-lid > i:nth-child(4) { right: 56px; background: #167b75; }
+.vault-casino-grand-coffer__chest .is-lid > i:nth-child(5) { right: 20px; background: #7042a7; }
+
+.vault-casino-grand-coffer__chest .is-treasure {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 78px;
+  width: 132px;
+  height: 82px;
+  transform: translateX(-50%);
+}
+
+.vault-casino-grand-coffer__chest .is-treasure i {
+  position: absolute;
+  bottom: 0;
+  width: 29px;
+  height: 29px;
+  transform: rotate(45deg) scale(0);
+  border: 2px solid #fff6c1;
+  background: #48cfe3;
+  box-shadow: 0 0 15px currentColor;
+  animation: vault-coffer-jewel-rise 700ms 520ms cubic-bezier(.2,.9,.2,1.3) forwards;
+}
+
+.vault-casino-grand-coffer__chest .is-treasure i:nth-child(1) { left: 3px; color: #50dff0; }
+.vault-casino-grand-coffer__chest .is-treasure i:nth-child(2) { left: 29px; bottom: 24px; color: #ff5f7c; background: #ad2b4a; animation-delay: 610ms; }
+.vault-casino-grand-coffer__chest .is-treasure i:nth-child(3) { left: 53px; bottom: 39px; color: #ffe074; background: #d89e22; animation-delay: 700ms; }
+.vault-casino-grand-coffer__chest .is-treasure i:nth-child(4) { right: 27px; bottom: 22px; color: #51edd7; background: #188b82; animation-delay: 790ms; }
+.vault-casino-grand-coffer__chest .is-treasure i:nth-child(5) { right: 3px; color: #c994ff; background: #7240ad; animation-delay: 880ms; }
+
+@keyframes vault-coffer-stage-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes vault-coffer-lid-open {
+  from { transform: translateY(0) rotateX(0); }
+  to { transform: translateY(-30px) rotateX(-42deg); }
+}
+
+@keyframes vault-coffer-jewel-rise {
+  from { transform: translateY(36px) rotate(45deg) scale(0); }
+  to { transform: translateY(0) rotate(45deg) scale(1); }
+}
+
+@keyframes vault-coffer-ray {
+  50% { opacity: 0.32; transform: rotate(calc(var(--ray-angle) + 12deg)) scaleY(0.82); }
+}
+
+.vault-casino-lab__footer > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.vault-casino-lab__footer span {
+  color: #d7ae52;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-casino-lab__footer strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #ece7da;
+  font-size: 11px;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.vault-casino-lab__coffer {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  place-items: center;
+  gap: 1px;
+  padding: 10px 6px;
+  border: 2px solid #e3b44e;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1a3961, #07162e 70%);
+  box-shadow: inset 0 0 0 2px #79501b;
+}
+
+.vault-casino-lab__coffer i {
+  width: 6px;
+  height: 18px;
+  transform: skewY(-18deg);
+  border: 1px solid #b08433;
+  border-radius: 4px;
+  background: #152942;
+  transition: background 220ms ease, box-shadow 220ms ease;
+}
+
+.vault-casino-lab__coffer i.is-lit {
+  background: #ffe071;
+  box-shadow: 0 0 8px #ffca39;
+}
+
+.vault-casino-lab button:focus-visible {
+  outline: 3px solid #62e5ff;
+  outline-offset: 2px;
+}
+
+@media (max-height: 710px) {
+  .vault-casino-lab { padding: 0; }
+  .vault-casino-lab__phone { height: 100dvh; min-height: 600px; border-radius: 0; }
+  .vault-casino-lab__machine-stage { top: 142px; bottom: 95px; }
+  .vault-casino-lab__footer { min-height: 70px; bottom: 8px; }
+  .vault-casino-lab__machine-heading { min-height: 46px; }
+  .vault-casino-lab__machine-heading h1 { font-size: 20px; }
+  .vault-rush-prototype__doors { width: 218px; }
+  .crown-dice__bowl { transform: scale(0.88); }
+  .solar-orrery { transform: scale(0.84); }
+  .prism-cascade { transform: scale(0.86); }
+  .treasury-organ { transform: scale(0.82); }
+}
+
+@media (max-width: 360px) {
+  .vault-casino-lab__topbar,
+  .vault-casino-lab__games,
+  .vault-casino-lab__footer { left: 8px; right: 8px; }
+  .vault-casino-lab__machine-stage { left: 16px; right: 16px; }
+  .vault-casino-lab__games { gap: 2px; padding-inline: 4px; }
+  .vault-casino-lab__games button { width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vault-casino-lab *,
+  .vault-casino-lab *::before,
+  .vault-casino-lab *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

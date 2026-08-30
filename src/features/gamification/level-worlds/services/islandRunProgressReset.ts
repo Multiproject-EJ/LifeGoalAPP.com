@@ -107,6 +107,7 @@ export function buildFreshIslandRunRecord(
     companionBonusLastVisitKey: null,
     completedStopsByIsland: {},
     vaultRushClaimsByIsland: {},
+    vaultIslandProgress: { purchasedUpgradeIds: [] },
     stopTicketsPaidByIsland: {},
     bonusTileChargeByIsland: {},
     techCollectionByIsland: {},

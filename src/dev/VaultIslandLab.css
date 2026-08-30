@@ -394,6 +394,225 @@
   box-shadow: 0 10px 24px rgba(8, 24, 38, 0.2);
 }
 
+.vault-island-lab__casino-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vault-island-lab__casino-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid rgba(255, 231, 150, 0.8);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 36%, #ffe99a 0 18%, #d99b24 20% 44%, #5f3510 46% 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 249, 205, 0.2), 0 0 7px rgba(255, 197, 61, 0.38);
+}
+
+.vault-island-lab__casino-icon i {
+  position: absolute;
+  bottom: 3px;
+  width: 3px;
+  border-radius: 2px 2px 0 0;
+  background: #fff3bf;
+}
+
+.vault-island-lab__casino-icon i:nth-child(1) { left: 4px; height: 5px; }
+.vault-island-lab__casino-icon i:nth-child(2) { left: 8px; height: 9px; }
+.vault-island-lab__casino-icon i:nth-child(3) { left: 12px; height: 6px; }
+
+.vault-island-lab__casino-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff4d3;
+  border-radius: 50%;
+  background: #e93043;
+  box-shadow: 0 0 7px rgba(255, 55, 78, 0.82);
+}
+
+.vault-island-lab__develop-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vault-island-lab__develop-button span {
+  min-width: 25px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(255, 232, 151, 0.18);
+  color: #ffe99d;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.vault-island-lab__development {
+  position: absolute;
+  z-index: 13;
+  inset: 110px 14px 86px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 220, 122, 0.58);
+  border-radius: 8px;
+  background: rgba(8, 18, 25, 0.94);
+  color: #fff4d2;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.56), inset 0 1px rgba(255, 245, 201, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.vault-island-lab__development > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px 10px;
+  border-bottom: 1px solid rgba(255, 222, 135, 0.2);
+}
+
+.vault-island-lab__development > header div {
+  display: grid;
+  gap: 2px;
+}
+
+.vault-island-lab__development > header span {
+  color: #d5b96c;
+  font-size: 0.59rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vault-island-lab__development > header strong {
+  font-size: 1rem;
+}
+
+.vault-island-lab__development > header button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 232, 169, 0.24);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff6dd;
+  font-size: 1.25rem;
+}
+
+.vault-island-lab__development-balance {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(202, 147, 33, 0.1);
+  color: #f0d68e;
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.vault-island-lab__development-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 10px 12px;
+  scrollbar-width: thin;
+}
+
+.vault-island-lab__development-group h2 {
+  margin: 11px 4px 5px;
+  color: #d9bd73;
+  font-size: 0.64rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.vault-island-lab__development-group > button {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 58px;
+  padding: 7px 6px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 238, 191, 0.11);
+  border-radius: 0;
+  background: transparent;
+  color: #fff6df;
+  text-align: left;
+}
+
+.vault-island-lab__development-group > button:not(:disabled):active {
+  background: rgba(255, 211, 89, 0.1);
+}
+
+.vault-island-lab__development-group > button:disabled {
+  opacity: 0.53;
+}
+
+.vault-island-lab__development-group > button.is-owned {
+  opacity: 0.72;
+}
+
+.vault-island-lab__development-mark {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(255, 218, 110, 0.48);
+  border-radius: 50%;
+  color: #f8cf5f;
+  font-size: 0.66rem;
+}
+
+.vault-island-lab__development-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.vault-island-lab__development-copy strong {
+  font-size: 0.74rem;
+}
+
+.vault-island-lab__development-copy small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: rgba(255, 245, 219, 0.62);
+  font-size: 0.58rem;
+  line-height: 1.28;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.vault-island-lab__development-price {
+  display: grid;
+  gap: 2px;
+  color: #ffd96f;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-align: right;
+}
+
+.vault-island-lab__development-price small {
+  color: #ff9d8c;
+  font-size: 0.52rem;
+}
+
+.vault-island-lab__development-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 222, 135, 0.2);
+  color: #fff0bc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .vault-island-lab__panel {
   width: min(320px, calc(100vw - 32px));
   padding: 20px;

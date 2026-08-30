@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createVaultTreasureIslandModelV2 } from './VaultTreasureIslandModelV2';
 import type { VaultIslandPerimeterStyle } from '../services/islandRunVaultCustomization';
+import type { VaultIslandUpgradeId } from '../services/islandRunVaultProgress';
 
 export type VaultIslandQuality = 'low' | 'medium' | 'high';
 
@@ -10,6 +11,7 @@ export interface VaultTreasureIslandOptions {
   perimeterStyle?: VaultIslandPerimeterStyle;
   exteriorFill?: number;
   gigaCharmFill?: number;
+  ownedUpgradeIds?: readonly VaultIslandUpgradeId[];
 }
 
 export interface VaultTreasureIslandRuntime {
@@ -18,6 +20,7 @@ export interface VaultTreasureIslandRuntime {
   setPerimeterStyle?: (style: VaultIslandPerimeterStyle) => void;
   setExteriorFill?: (value: number) => void;
   setGigaCharmFill?: (value: number) => void;
+  setOwnedUpgradeIds?: (upgradeIds: readonly VaultIslandUpgradeId[]) => void;
   dispose: () => void;
 }
 

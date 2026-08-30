@@ -104,7 +104,7 @@ function collectNames(rootObject) {
 function countNamed(rootObject, name) {
   let count = 0;
   rootObject.traverse((child) => {
-    if (child.name === name) count += 1;
+    if (child.name === name) count += child.isInstancedMesh ? child.count : 1;
   });
   return count;
 }
@@ -209,6 +209,9 @@ for (const treasureId of ['compass', 'obelisk', 'egg', 'hourglass', 'key', 'meda
 }
 
 const exterior = exteriorModule.createVaultTreasureIslandModel({ quality: 'high', animated: true });
+exterior.setPerimeterStyle?.('garden');
+exterior.setPerimeterStyle?.('gold-castle');
+exterior.setPerimeterStyle?.('charms');
 const exteriorNames = collectNames(exterior.root);
 const exteriorMaterialNames = collectMaterialNames(exterior.root);
 assert(exterior.root.userData.sculptRuntime?.id === 'vault-island-exterior-v2', 'Exterior model is missing v2 sculptRuntime id.');

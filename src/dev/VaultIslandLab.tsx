@@ -29,6 +29,17 @@ import {
   type VaultTreasureId,
 } from '../features/gamification/level-worlds/dev/VaultTreasureModels';
 import type { VaultIslandCollectionEntry } from '../features/gamification/level-worlds/services/islandRunVaultCollection';
+import type { VaultCasinoGameId } from '../features/gamification/level-worlds/services/islandRunVaultCasino';
+import type { PurchaseVaultIslandUpgradeResult } from '../features/gamification/level-worlds/services/islandRunVaultProgressAction';
+import {
+  VAULT_ISLAND_UPGRADES,
+  areVaultIslandUpgradePrerequisitesMet,
+  getVaultIslandTotalInvested,
+  resolveVaultIslandExteriorFill,
+  sanitizeVaultIslandProgress,
+  type VaultIslandProgress,
+  type VaultIslandUpgradeId,
+} from '../features/gamification/level-worlds/services/islandRunVaultProgress';
 import {
   loadVaultIslandPerimeterStyle,
   normalizeVaultIslandPerimeterStyle,
@@ -51,6 +62,10 @@ export interface VaultIslandLabProps {
   featuredTreasureId?: VaultTreasureId;
   featuredSourceIslandNumber?: number;
   holdingsValue?: number;
+  casinoAvailableGameId?: VaultCasinoGameId | null;
+  onOpenCasino?: () => void;
+  vaultProgress?: VaultIslandProgress;
+  onPurchaseVaultUpgrade?: (upgradeId: VaultIslandUpgradeId) => PurchaseVaultIslandUpgradeResult;
 }
 
 interface VaultIslandLabQaSnapshot {
@@ -119,6 +134,10 @@ function readCleanPresentationMode() {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('clean') === '1';
 }
 
+function readQaStillMode() {
+  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('still') === '1';
+}
+
 function readBuildTunerMode() {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('dev') === '1';
 }
@@ -149,6 +168,10 @@ export default function VaultIslandLab({
   featuredTreasureId,
   featuredSourceIslandNumber,
   holdingsValue,
+  casinoAvailableGameId = null,
+  onOpenCasino,
+  vaultProgress,
+  onPurchaseVaultUpgrade,
 }: VaultIslandLabProps = {}) {
   const unlockedTreasureKey = unlockedTreasureIds?.join('|') ?? 'all';
   const availableTreasureIds = useMemo(
@@ -181,6 +204,8 @@ export default function VaultIslandLab({
   const [autoOrbit, setAutoOrbit] = useState(true);
   const [showReference, setShowReference] = useState(false);
   const [isMuseumCardExpanded, setIsMuseumCardExpanded] = useState(false);
+  const [showDevelopment, setShowDevelopment] = useState(false);
+  const [developmentNotice, setDevelopmentNotice] = useState<string | null>(null);
   const [perimeterStyle, setPerimeterStyle] = useState<VaultIslandPerimeterStyle>(() => perimeterStyleRef.current);
   const [isReady, setIsReady] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
@@ -190,6 +215,7 @@ export default function VaultIslandLab({
   const [gigaCharmFill, setGigaCharmFill] = useState(() => readBuildFill('charmFill'));
   const requestedYaw = useMemo(() => (embedded ? -0.08 : readRequestedYaw()), [embedded]);
   const cleanPresentationMode = useMemo(() => embedded || readCleanPresentationMode(), [embedded]);
+  const qaStillMode = useMemo(() => !embedded && readQaStillMode(), [embedded]);
   const buildTunerMode = useMemo(() => !embedded && readBuildTunerMode(), [embedded]);
   const cameraPreset = useMemo(() => (embedded ? 'phone' : readCameraPreset()), [embedded]);
   const qualityOptions = useMemo<VaultIslandQuality[]>(() => ['low', 'medium', 'high'], []);
@@ -206,6 +232,18 @@ export default function VaultIslandLab({
   const effectiveHoldingsValue = buildTunerMode
     ? wealthFromBuildFill(vaultInteriorFill)
     : normalizedHoldingsValue;
+  const normalizedVaultProgress = useMemo(
+    () => sanitizeVaultIslandProgress(vaultProgress),
+    [vaultProgress],
+  );
+  const ownedUpgradeKey = normalizedVaultProgress.purchasedUpgradeIds.join('|');
+  const effectiveExteriorFill = buildTunerMode
+    ? exteriorFill
+    : vaultProgress === undefined
+      ? exteriorFill
+      : resolveVaultIslandExteriorFill(normalizedVaultProgress);
+  const vaultTotalInvested = getVaultIslandTotalInvested(normalizedVaultProgress);
+  const ownedVaultUpgradeIds = new Set(normalizedVaultProgress.purchasedUpgradeIds);
   const collectionValue = useMemo(
     () => VAULT_TREASURE_DEFINITIONS
       .filter((treasure) => availableTreasureIds.includes(treasure.id))
@@ -217,6 +255,28 @@ export default function VaultIslandLab({
     const selectedIndex = availableTreasureIds.indexOf(selectedTreasureId);
     setSelectedTreasureId(availableTreasureIds[(selectedIndex + 1) % availableTreasureIds.length]);
     setIsMuseumCardExpanded(false);
+  };
+  const openCasino = () => {
+    if (onOpenCasino) {
+      onOpenCasino();
+      return;
+    }
+    window.location.href = '/dev/vault-casino-lab?mode=inspect';
+  };
+  const purchaseUpgrade = (upgradeId: VaultIslandUpgradeId) => {
+    if (!onPurchaseVaultUpgrade) return;
+    const upgrade = VAULT_ISLAND_UPGRADES.find((candidate) => candidate.id === upgradeId);
+    const result = onPurchaseVaultUpgrade(upgradeId);
+    const notice = result.status === 'purchased'
+      ? `${upgrade?.name ?? 'Upgrade'} constructed`
+      : result.status === 'insufficient_essence'
+        ? 'More Essence is required'
+        : result.status === 'prerequisite_locked'
+          ? 'Complete the earlier works first'
+          : result.status === 'already_owned'
+            ? 'Already installed'
+            : 'Complete Island 004 to receive the Vault';
+    setDevelopmentNotice(notice);
   };
 
   useEffect(() => {
@@ -239,8 +299,13 @@ export default function VaultIslandLab({
   }, [perimeterStyle]);
 
   useEffect(() => {
-    modelRef.current?.setExteriorFill?.(exteriorFill);
-  }, [exteriorFill]);
+    modelRef.current?.setExteriorFill?.(effectiveExteriorFill);
+  }, [effectiveExteriorFill]);
+
+  useEffect(() => {
+    if (vaultProgress === undefined) return;
+    modelRef.current?.setOwnedUpgradeIds?.(normalizedVaultProgress.purchasedUpgradeIds);
+  }, [ownedUpgradeKey, vaultProgress]);
 
   useEffect(() => {
     modelRef.current?.setGigaCharmFill?.(gigaCharmFill);
@@ -308,7 +373,11 @@ export default function VaultIslandLab({
       setRenderError('Interactive 3D is unavailable on this device.');
       return undefined;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.5));
+    const phoneSizedViewport = mount.clientWidth <= 480 || window.innerWidth <= 480;
+    const pixelRatioCap = phoneSizedViewport
+      ? quality === 'high' ? 1.35 : quality === 'medium' ? 1.2 : 1
+      : quality === 'high' ? 2 : 1.5;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = view === 'atrium' ? 0.68 : view === 'garden' ? 0.69 : isInteriorView ? 0.78 : 0.9;
@@ -327,7 +396,8 @@ export default function VaultIslandLab({
     const sun = new THREE.DirectionalLight(isInteriorView ? '#ffc56d' : '#ffb13f', view === 'atrium' ? 1.08 : view === 'garden' ? 1.42 : isInteriorView ? 1.52 : 3.3);
     sun.position.set(isInteriorView ? -3.8 : 7.2, view === 'atrium' ? 9.4 : isInteriorView ? 7.2 : 7.6, isInteriorView ? 7.8 : -8.8);
     sun.castShadow = quality !== 'low';
-    sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
+    const shadowMapSize = quality === 'high' && !phoneSizedViewport ? 2048 : 1024;
+    sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);
     sun.shadow.camera.near = 1;
     sun.shadow.camera.far = 18;
     sun.shadow.camera.left = -5;
@@ -362,14 +432,17 @@ export default function VaultIslandLab({
           quality,
           animated: true,
           perimeterStyle: perimeterStyleRef.current,
-          exteriorFill,
+          exteriorFill: effectiveExteriorFill,
           gigaCharmFill,
+          ownedUpgradeIds: vaultProgress === undefined
+            ? undefined
+            : normalizedVaultProgress.purchasedUpgradeIds,
         });
     model.root.rotation.y = view === 'exterior' ? -0.08 : 0;
     scene.add(model.root);
     modelRef.current = model;
 
-    const composer = quality === 'high' ? new EffectComposer(renderer) : null;
+    const composer = quality === 'high' && isInteriorView ? new EffectComposer(renderer) : null;
     if (composer) {
       composer.addPass(new RenderPass(scene, camera));
       const ssao = new SSAOPass(scene, camera, 390, 844);
@@ -538,6 +611,7 @@ export default function VaultIslandLab({
 
     const clock = new THREE.Clock();
     let raf = 0;
+    let stagedFrameTimer = 0;
     let lastRevealRun = revealRunRef.current;
     let revealStartedAt = -10;
     let frameCount = 0;
@@ -819,7 +893,15 @@ export default function VaultIslandLab({
       else renderer.render(scene, camera);
       frameCount += 1;
       if (frameCount === 2 || frameCount % 45 === 0) sampleCanvas();
-      raf = window.requestAnimationFrame(render);
+      if (qaStillMode) {
+        if (frameCount < 3) {
+          stagedFrameTimer = window.setTimeout(() => {
+            raf = window.requestAnimationFrame(render);
+          }, frameCount === 2 ? 1_200 : 180);
+        }
+      } else {
+        raf = window.requestAnimationFrame(render);
+      }
     };
     // Let React finish committing the view transition before the first heavy shader compile.
     raf = window.requestAnimationFrame(render);
@@ -827,6 +909,7 @@ export default function VaultIslandLab({
 
     return () => {
       window.cancelAnimationFrame(raf);
+      window.clearTimeout(stagedFrameTimer);
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown);
       observer.disconnect();
       controls.dispose();
@@ -853,7 +936,7 @@ export default function VaultIslandLab({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [autoOrbit, availableTreasureIds, cameraPreset, effectiveHoldingsValue, hasOwnershipFilter, quality, requestedYaw, view]);
+  }, [autoOrbit, availableTreasureIds, cameraPreset, effectiveExteriorFill, effectiveHoldingsValue, hasOwnershipFilter, ownedUpgradeKey, qaStillMode, quality, requestedYaw, vaultProgress, view]);
 
   return (
     <main className={`vault-island-lab${embedded ? ' vault-island-lab--embedded' : ''}${cleanPresentationMode ? ' vault-island-lab--clean' : ''}`}>
@@ -905,12 +988,80 @@ export default function VaultIslandLab({
             ))}
           </div>
         ) : null}
+        {view === 'exterior' && showDevelopment && vaultProgress !== undefined ? (
+          <section className="vault-island-lab__development" aria-label="Develop Vault Island">
+            <header>
+              <div>
+                <span>Estate ledger</span>
+                <strong>Develop the Vault</strong>
+              </div>
+              <button type="button" aria-label="Close development ledger" onClick={() => setShowDevelopment(false)}>×</button>
+            </header>
+            <div className="vault-island-lab__development-balance">
+              <span>{effectiveHoldingsValue?.toLocaleString() ?? 0} Essence available</span>
+              <span>{vaultTotalInvested.toLocaleString()} invested</span>
+            </div>
+            <div className="vault-island-lab__development-list">
+              {(['construction', 'security'] as const).map((category) => (
+                <div key={category} className="vault-island-lab__development-group">
+                  <h2>{category === 'construction' ? 'Palace works' : 'Royal security'}</h2>
+                  {VAULT_ISLAND_UPGRADES.filter((upgrade) => upgrade.category === category).map((upgrade) => {
+                    const owned = ownedVaultUpgradeIds.has(upgrade.id);
+                    const prerequisitesMet = areVaultIslandUpgradePrerequisitesMet(normalizedVaultProgress, upgrade.id);
+                    const affordable = (effectiveHoldingsValue ?? 0) >= upgrade.cost;
+                    return (
+                      <button
+                        key={upgrade.id}
+                        type="button"
+                        className={owned ? 'is-owned' : ''}
+                        disabled={owned || !prerequisitesMet || !onPurchaseVaultUpgrade}
+                        onClick={() => purchaseUpgrade(upgrade.id)}
+                      >
+                        <span className="vault-island-lab__development-mark" aria-hidden="true">{owned ? '✓' : category === 'security' ? '◆' : '▲'}</span>
+                        <span className="vault-island-lab__development-copy">
+                          <strong>{upgrade.name}</strong>
+                          <small>{upgrade.description}</small>
+                        </span>
+                        <span className="vault-island-lab__development-price">
+                          {owned ? 'Built' : prerequisitesMet ? `${upgrade.cost.toLocaleString()} E` : 'Locked'}
+                          {!owned && prerequisitesMet && !affordable ? <small>Need more</small> : null}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            {developmentNotice ? <p className="vault-island-lab__development-notice" aria-live="polite">{developmentNotice}</p> : null}
+          </section>
+        ) : null}
         {!renderError ? <div className="vault-island-lab__hud vault-island-lab__hud--bottom">
           <button type="button" onClick={() => setView((value) => (value === 'exterior' ? 'atrium' : value === 'atrium' ? 'vault' : 'atrium'))}>
             {view === 'exterior' ? 'Enter palace' : view === 'atrium' ? 'Descend to vault' : 'Palace atrium'}
           </button>
           {view === 'atrium' ? <button type="button" onClick={() => setView('garden')}>Gardens</button> : null}
           {view !== 'exterior' ? <button type="button" onClick={() => setView('exterior')}>Exterior</button> : null}
+          <button
+            type="button"
+            className="vault-island-lab__casino-button"
+            onClick={openCasino}
+            aria-label={casinoAvailableGameId ? 'Casino, a Vault game is available' : 'Casino'}
+          >
+            <span className="vault-island-lab__casino-icon" aria-hidden="true"><i /><i /><i /></span>
+            Casino
+            {casinoAvailableGameId ? <span className="vault-island-lab__casino-dot" aria-hidden="true" /> : null}
+          </button>
+          {view === 'exterior' && vaultProgress !== undefined ? (
+            <button
+              type="button"
+              className="vault-island-lab__develop-button"
+              aria-expanded={showDevelopment}
+              onClick={() => setShowDevelopment((value) => !value)}
+            >
+              Develop
+              <span>{normalizedVaultProgress.purchasedUpgradeIds.length}/7</span>
+            </button>
+          ) : null}
           {!cleanPresentationMode ? <button type="button" onClick={() => setAutoOrbit((value) => !value)}>
             {autoOrbit ? 'Orbit on' : 'Orbit off'}
           </button> : null}
@@ -928,6 +1079,16 @@ export default function VaultIslandLab({
           <div className="vault-island-lab__hud vault-island-lab__hud--bottom vault-island-lab__hud--fallback">
             <button type="button" onClick={() => setView((value) => (value === 'vault' ? 'exterior' : 'vault'))}>
               {view === 'vault' ? 'Back to palace' : 'Collection register'}
+            </button>
+            <button
+              type="button"
+              className="vault-island-lab__casino-button"
+              onClick={openCasino}
+              aria-label={casinoAvailableGameId ? 'Casino, a Vault game is available' : 'Casino'}
+            >
+              <span className="vault-island-lab__casino-icon" aria-hidden="true"><i /><i /><i /></span>
+              Casino
+              {casinoAvailableGameId ? <span className="vault-island-lab__casino-dot" aria-hidden="true" /> : null}
             </button>
           </div>
         )}

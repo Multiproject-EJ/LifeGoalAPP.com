@@ -115,6 +115,7 @@ import {
   resolveVaultIslandCollection,
   type VaultIslandCollectionEntry,
 } from '../services/islandRunVaultCollection';
+import { purchaseVaultIslandUpgrade } from '../services/islandRunVaultProgressAction';
 import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
@@ -6151,6 +6152,11 @@ export function IslandRunBoardPrototype({
     runtimeState.vaultRushClaimsByIsland,
     effectiveIslandNumber,
   );
+  const vaultCasinoAvailableGameId = isVaultRushUnlocked(
+    runtimeState.completedStopsByIsland?.[String(effectiveIslandNumber)] ?? [],
+  ) && vaultRushClaimCount < VAULT_RUSH_MAX_CLAIMS_PER_ISLAND
+    ? 'vault-rush' as const
+    : null;
 
   const handleDormantDoorSelect = useCallback((doorIndex: number) => {
     if (!dormantDoorMiniGame || dormantDoorReward) return;
@@ -20103,8 +20109,22 @@ export function IslandRunBoardPrototype({
             unlockedTreasureIds={vaultIslandCollection.unlockedTreasureIds}
             collectionEntries={vaultIslandCollection.entries}
             holdingsValue={runtimeState.essence}
+            vaultProgress={runtimeState.vaultIslandProgress}
+            casinoAvailableGameId={vaultCasinoAvailableGameId}
             initialView={vaultIslandFeaturedTreasure ? 'vault' : undefined}
             featuredTreasure={vaultIslandFeaturedTreasure}
+            onPurchaseVaultUpgrade={(upgradeId) => {
+              const result = purchaseVaultIslandUpgrade({
+                session,
+                client,
+                upgradeId,
+              });
+              if (result.status === 'purchased') {
+                runtimeStateRef.current = result.record;
+                setRuntimeState(result.record);
+              }
+              return result;
+            }}
             onClose={() => {
               setShowVaultIslandCollection(false);
               setVaultIslandFeaturedTreasure(null);

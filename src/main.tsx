@@ -55,6 +55,7 @@ const EXPEDITION_SHIP_THREE_LAB_PATH = '/dev/expedition-ship-3d';
 const EXPEDITION_SHIP_GARAGE_PREVIEW_PATH = '/dev/expedition-ship-garage';
 const VAULT_ISLAND_LAB_PATH = '/dev/vault-island-lab';
 const VAULT_TREASURE_LAB_PATH = '/dev/vault-treasure-lab';
+const VAULT_CASINO_LAB_PATH = '/dev/vault-casino-lab';
 const VAULT_ISLAND_COLLECTION_PREVIEW_PATH = '/dev/vault-island-collection-preview';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const COMPASS_BOOK_PROFILER_BUILD_ENABLED = import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true';
@@ -371,6 +372,20 @@ function VaultIslandLabRoute() {
   return VaultIslandLab ? <VaultIslandLab /> : null;
 }
 
+function VaultCasinoLabRoute() {
+  const [VaultCasinoLab, setVaultCasinoLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/VaultCasinoLab').then((module) => {
+      if (isMounted) setVaultCasinoLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return VaultCasinoLab ? <VaultCasinoLab /> : null;
+}
+
 function VaultTreasureLabRoute() {
   const [VaultTreasureLab, setVaultTreasureLab] = useState<ComponentType | null>(null);
 
@@ -518,6 +533,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === VAULT_ISLAND_LAB_PATH;
+  const isVaultCasinoLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === VAULT_CASINO_LAB_PATH;
   const isVaultTreasureLabRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -705,6 +724,10 @@ function Root() {
 
   if (isVaultIslandLabRoute) {
     return <VaultIslandLabRoute />;
+  }
+
+  if (isVaultCasinoLabRoute) {
+    return <VaultCasinoLabRoute />;
   }
 
   if (isVaultTreasureLabRoute) {

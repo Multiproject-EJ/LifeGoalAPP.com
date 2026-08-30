@@ -59,6 +59,7 @@ export const islandRunProgressResetTests: TestCase[] = [
       });
 
       assertDeepEqual(record.completedStopsByIsland, {}, 'Expected empty completedStopsByIsland');
+      assertDeepEqual(record.vaultIslandProgress, { purchasedUpgradeIds: [] }, 'Expected empty Vault Island progress');
       assertDeepEqual(record.stopTicketsPaidByIsland, {}, 'Expected empty stopTicketsPaidByIsland');
       assertDeepEqual(record.techCollectionByIsland, {}, 'Expected empty techCollectionByIsland');
       assertDeepEqual(record.techCollectionRewardedLinesByIsland, {}, 'Expected empty techCollectionRewardedLinesByIsland');
@@ -142,6 +143,7 @@ export const islandRunProgressResetTests: TestCase[] = [
         onboardingDisplayNameLoopCompleted: true,
       });
       current.currentIslandNumber = 9;
+      current.vaultIslandProgress = { purchasedUpgradeIds: ['limestone-works', 'grand-palace'] };
       current.techCollectionByIsland = { '1': [3] };
       current.technologyUnlocksById = { concord: { unlockedAtMs: 123 } } as never;
       current.activeEggTier = 'rare';
@@ -165,6 +167,7 @@ export const islandRunProgressResetTests: TestCase[] = [
       const reset = buildIslandRunResetRecord(current, { resetCreaturesAndEggs: false });
 
       assertEqual(reset.currentIslandNumber, 1, 'reset should always return to island 1');
+      assertDeepEqual(reset.vaultIslandProgress, { purchasedUpgradeIds: [] }, 'reset should clear Vault Island development');
       assertDeepEqual(reset.techCollectionByIsland, {}, 'reset should always clear Concord fragments');
       assertDeepEqual(reset.technologyUnlocksById, {}, 'reset should always clear Concord unlocks');
       assertEqual(reset.activeEggTier, 'rare', 'egg incubation should be preserved when unchecked');

@@ -321,6 +321,8 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       // Vault claims are owned by the canonical Vault Rush action. Legacy
       // compatibility patches preserve the ledger without becoming a writer.
       vaultRushClaimsByIsland: current.vaultRushClaimsByIsland,
+      // Vault estate purchases are owned by the dedicated canonical action.
+      vaultIslandProgress: current.vaultIslandProgress,
       stopTicketsPaidByIsland:
         patch.stopTicketsPaidByIsland !== null && typeof patch.stopTicketsPaidByIsland === 'object' && !Array.isArray(patch.stopTicketsPaidByIsland)
           ? {
