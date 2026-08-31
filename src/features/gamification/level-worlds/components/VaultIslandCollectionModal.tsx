@@ -21,8 +21,8 @@ export interface VaultIslandCollectionModalProps {
   featuredTreasure?: VaultIslandCollectionEntry | null;
   holdingsValue?: number;
   casinoAvailableGameId?: VaultCasinoGameId | null;
-  vaultProgress: VaultIslandProgress;
-  onPurchaseVaultUpgrade: (upgradeId: VaultIslandUpgradeId) => PurchaseVaultIslandUpgradeResult;
+  vaultProgress?: VaultIslandProgress;
+  onPurchaseVaultUpgrade?: (upgradeId: VaultIslandUpgradeId) => PurchaseVaultIslandUpgradeResult;
 }
 
 export default function VaultIslandCollectionModal({
