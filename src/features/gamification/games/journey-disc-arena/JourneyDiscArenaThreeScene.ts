@@ -799,6 +799,14 @@ export class JourneyDiscArenaThreeScene {
           const visual = this.fighterVisuals.get(fighter.id);
           if (!visual) continue;
           const stats = getJourneyDiscArenaFighterStats(fighter);
+          if (fighter.active && visual.knockoutAt !== null) {
+            // A rematch reuses stable fighter ids. Clear the previous round's
+            // fall/flip pose before this active fighter returns to the board.
+            visual.knockoutAt = null;
+            visual.root.rotation.set(0, 0, 0);
+            visual.root.visible = true;
+            visual.root.scale.setScalar(visual.baseScale);
+          }
           const knockoutAge = visual.knockoutAt === null ? -1 : elapsed - visual.knockoutAt;
           if (!fighter.active && knockoutAge >= 0) {
             visual.trail.visible = false;
@@ -833,8 +841,11 @@ export class JourneyDiscArenaThreeScene {
           } else {
             visual.trail.visible = false;
           }
-          visual.spinner.rotation.y += (frozen ? 0.005 : this.reducedMotion ? 0.025 : 0.06 + speed * 0.018) * (fighter.team === 'player' ? 1 : -1);
-          visual.root.rotation.z = THREE.MathUtils.lerp(visual.root.rotation.z, fighter.active ? clampTilt(fighter.velocity.z * -0.025) : 0.55, 0.08);
+          if (!frozen) {
+            visual.spinner.rotation.y += (this.reducedMotion ? 0.025 : 0.06 + speed * 0.018) * (fighter.team === 'player' ? 1 : -1);
+          }
+          visual.root.rotation.x = THREE.MathUtils.lerp(visual.root.rotation.x, 0, frozen ? 0.24 : 0.12);
+          visual.root.rotation.z = THREE.MathUtils.lerp(visual.root.rotation.z, frozen ? 0 : fighter.active ? clampTilt(fighter.velocity.z * -0.025) : 0.55, frozen ? 0.24 : 0.08);
           const shieldRatio = fighter.shield / stats.maxShield;
           visual.lifeFill.scale.x = Math.max(0.02, shieldRatio * 1.84);
           visual.lifeFill.position.x = -(1 - shieldRatio) * 0.92;

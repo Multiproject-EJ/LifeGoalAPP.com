@@ -673,8 +673,7 @@ export function triggerJourneyDiscArenaFreezeAttack(
   if (!source || !target) return { accepted: false, failureReason: 'no_target', state, events: [] };
 
   target.frozenUntilTick = state.tick + JOURNEY_DISC_ARENA_FREEZE_TICKS;
-  target.velocity.x *= 0.18;
-  target.velocity.z *= 0.18;
+  target.velocity = { x: 0, z: 0 };
   return {
     accepted: true,
     failureReason: null,
@@ -773,8 +772,10 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
     if (!fighter.active) continue;
     const stats = getJourneyDiscArenaFighterStats(fighter);
     if (fighter.frozenUntilTick > state.tick) {
-      fighter.velocity.x *= 0.82;
-      fighter.velocity.z *= 0.82;
+      // Freeze is a complete combat lock, not a steering slowdown. Collision
+      // handling below also treats this fighter as immovable and unable to
+      // return damage while still allowing opponents to damage it.
+      fighter.velocity = { x: 0, z: 0 };
       continue;
     }
     const target = nearestOpponent(fighter, fighters);
@@ -841,7 +842,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
   for (const powerup of powerups) {
     if (!powerup.active) continue;
     const collector = fighters
-      .filter((fighter) => fighter.active && !fighter.isEcho)
+      .filter((fighter) => fighter.active && !fighter.isEcho && fighter.frozenUntilTick <= state.tick)
       .map((fighter) => ({
         fighter,
         distance: Math.hypot(fighter.position.x - powerup.position.x, fighter.position.z - powerup.position.z),
@@ -854,8 +855,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       const target = nearestOpponent(collector, fighters.filter((fighter) => !fighter.isEcho));
       if (target) {
         target.frozenUntilTick = state.tick + JOURNEY_DISC_ARENA_FREEZE_TICKS;
-        target.velocity.x *= 0.28;
-        target.velocity.z *= 0.28;
+        target.velocity = { x: 0, z: 0 };
         events.push({ type: 'freeze', collectorFighterId: collector.id, targetFighterId: target.id, untilTick: target.frozenUntilTick });
       }
       continue;
@@ -893,6 +893,8 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       if (!right.active) continue;
       const leftStats = getJourneyDiscArenaFighterStats(left);
       const rightStats = getJourneyDiscArenaFighterStats(right);
+      const leftFrozen = left.frozenUntilTick > state.tick;
+      const rightFrozen = right.frozenUntilTick > state.tick;
       const delta = { x: right.position.x - left.position.x, z: right.position.z - left.position.z };
       const distance = length(delta);
       const minimumDistance = leftStats.radius + rightStats.radius;
@@ -903,10 +905,18 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
         : normalize({ x: ((stableHash(left.id) ^ stableHash(right.id)) & 1) === 0 ? 1 : -1, z: 0.2 });
       const overlap = minimumDistance - distance;
       const totalMass = leftStats.mass + rightStats.mass;
-      left.position.x -= normal.x * overlap * (rightStats.mass / totalMass);
-      left.position.z -= normal.z * overlap * (rightStats.mass / totalMass);
-      right.position.x += normal.x * overlap * (leftStats.mass / totalMass);
-      right.position.z += normal.z * overlap * (leftStats.mass / totalMass);
+      if (leftFrozen && !rightFrozen) {
+        right.position.x += normal.x * overlap;
+        right.position.z += normal.z * overlap;
+      } else if (rightFrozen && !leftFrozen) {
+        left.position.x -= normal.x * overlap;
+        left.position.z -= normal.z * overlap;
+      } else {
+        left.position.x -= normal.x * overlap * (rightStats.mass / totalMass);
+        left.position.z -= normal.z * overlap * (rightStats.mass / totalMass);
+        right.position.x += normal.x * overlap * (leftStats.mass / totalMass);
+        right.position.z += normal.z * overlap * (leftStats.mass / totalMass);
+      }
 
       const leftVelocityBefore = { ...left.velocity };
       const rightVelocityBefore = { ...right.velocity };
@@ -914,36 +924,51 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
         + (right.velocity.z - left.velocity.z) * normal.z;
       if (relativeNormalSpeed >= 0) continue;
       const impactSpeed = -relativeNormalSpeed;
-      const inverseMassSum = 1 / leftStats.mass + 1 / rightStats.mass;
+      const inverseLeftMass = leftFrozen ? 0 : 1 / leftStats.mass;
+      const inverseRightMass = rightFrozen ? 0 : 1 / rightStats.mass;
+      const inverseMassSum = inverseLeftMass + inverseRightMass;
+      if (inverseMassSum <= 0) continue;
       const impulse = (1.82 * impactSpeed) / inverseMassSum;
-      left.velocity.x -= (impulse / leftStats.mass) * normal.x;
-      left.velocity.z -= (impulse / leftStats.mass) * normal.z;
-      right.velocity.x += (impulse / rightStats.mass) * normal.x;
-      right.velocity.z += (impulse / rightStats.mass) * normal.z;
+      if (!leftFrozen) {
+        left.velocity.x -= impulse * inverseLeftMass * normal.x;
+        left.velocity.z -= impulse * inverseLeftMass * normal.z;
+      }
+      if (!rightFrozen) {
+        right.velocity.x += impulse * inverseRightMass * normal.x;
+        right.velocity.z += impulse * inverseRightMass * normal.z;
+      }
+      if (leftFrozen) left.velocity = { x: 0, z: 0 };
+      if (rightFrozen) right.velocity = { x: 0, z: 0 };
 
       if (left.team === right.team || impactSpeed < 0.28) continue;
       // Even small opposing clashes chip shields; high-speed hits retain the
       // dramatic damage band and the livelier rebound carries into the hunt.
-      const leftDamage = Math.max(1, Math.round((impactSpeed - 0.18) * 3.45 * rightStats.impact / leftStats.stability));
-      const rightDamage = Math.max(1, Math.round((impactSpeed - 0.18) * 3.45 * leftStats.impact / rightStats.stability));
+      const leftDamage = rightFrozen
+        ? 0
+        : Math.max(1, Math.round((impactSpeed - 0.18) * 3.45 * rightStats.impact / leftStats.stability));
+      const rightDamage = leftFrozen
+        ? 0
+        : Math.max(1, Math.round((impactSpeed - 0.18) * 3.45 * leftStats.impact / rightStats.stability));
       const leftWasShielded = left.shield > 0;
       const rightWasShielded = right.shield > 0;
       left.shield = Math.max(0, left.shield - leftDamage);
       right.shield = Math.max(0, right.shield - rightDamage);
       left.spin = Math.max(0, left.spin - leftDamage * 0.18);
       right.spin = Math.max(0, right.spin - rightDamage * 0.18);
-      left.lastHitBy = right.id;
-      right.lastHitBy = left.id;
+      if (leftDamage > 0) left.lastHitBy = right.id;
+      if (rightDamage > 0) right.lastHitBy = left.id;
       events.push({ type: 'impact', fighterAId: left.id, fighterBId: right.id, strength: impactSpeed });
 
       const leftEdgeRatio = length(left.position) / state.arenaRadius;
       const rightEdgeRatio = length(right.position) / state.arenaRadius;
       const driveTarget = leftEdgeRatio >= rightEdgeRatio ? left : right;
       const driveAttacker = driveTarget === left ? right : left;
+      const driveTargetFrozen = driveTarget.frozenUntilTick > state.tick;
+      const driveAttackerFrozen = driveAttacker.frozenUntilTick > state.tick;
       const attackerVelocity = driveAttacker === left ? leftVelocityBefore : rightVelocityBefore;
       const outward = normalize(driveTarget.position);
       const outwardDrive = attackerVelocity.x * outward.x + attackerVelocity.z * outward.z;
-      if (Math.max(leftEdgeRatio, rightEdgeRatio) >= 0.62 && impactSpeed >= 2.35 && outwardDrive >= 1.05) {
+      if (!driveTargetFrozen && !driveAttackerFrozen && Math.max(leftEdgeRatio, rightEdgeRatio) >= 0.62 && impactSpeed >= 2.35 && outwardDrive >= 1.05) {
         const succeeded = doesJourneyDiscDriveOffSucceed({
           seed: state.seed,
           attemptIndex: state.tick,

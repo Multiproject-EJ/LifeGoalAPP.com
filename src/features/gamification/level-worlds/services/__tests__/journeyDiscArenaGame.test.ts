@@ -219,6 +219,36 @@ export const journeyDiscArenaGameTests: TestCase[] = [
     },
   },
   {
+    name: 'frozen rivals stay fixed, receive collision damage, and return no damage',
+    run: () => {
+      const state = createJourneyDiscArenaState({
+        seed: 621,
+        arenaRadius: 50,
+        durationSeconds: 20,
+        fighters: [
+          { id: 'captain', pieceId: 'explorer_ship', team: 'player', rank: 1, position: { x: -1.2, z: 4 }, velocity: { x: 4.5, z: 0 } },
+          { id: 'frozen-rival', pieceId: 'fallen_star', team: 'rival', rank: 1, position: { x: 0, z: 4 }, velocity: { x: -3, z: 0 } },
+        ],
+      });
+      const fired = triggerJourneyDiscArenaFreezeAttack(state, 'captain');
+      const frozenBefore = fired.state.fighters.find((fighter) => fighter.id === 'frozen-rival')!;
+      const captainBefore = fired.state.fighters.find((fighter) => fighter.id === 'captain')!;
+      assertDeepEqual(frozenBefore.velocity, { x: 0, z: 0 }, 'freeze immediately stops all target velocity');
+
+      const collision = stepJourneyDiscArena(fired.state);
+      const frozenAfter = collision.state.fighters.find((fighter) => fighter.id === 'frozen-rival')!;
+      const captainAfter = collision.state.fighters.find((fighter) => fighter.id === 'captain')!;
+      assertDeepEqual(frozenAfter.position, frozenBefore.position, 'collision resolution cannot slide a frozen target around the board');
+      assertDeepEqual(frozenAfter.velocity, { x: 0, z: 0 }, 'collision impulses cannot restart a frozen target');
+      assert(frozenAfter.shield < frozenBefore.shield, 'a frozen target still receives incoming damage');
+      assertEqual(captainAfter.shield, captainBefore.shield, 'a frozen target returns no collision damage');
+      assertEqual(frozenAfter.lastHitBy, 'captain', 'incoming damage attribution remains intact');
+      assertEqual(captainAfter.lastHitBy, null, 'zero returned damage cannot claim a hit');
+      assert(collision.events.some((event) => event.type === 'impact'), 'the one-way frozen collision remains visibly authored');
+      assertDeepEqual(collision, stepJourneyDiscArena(fired.state), 'the complete frozen collision rule replays exactly');
+    },
+  },
+  {
     name: 'echo pickup spawns one temporary helper, expires, and cannot inflate terminal score',
     run: () => {
       const state = createJourneyDiscArenaState({
