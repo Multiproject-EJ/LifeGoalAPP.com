@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-30",
+  "supersedes": "../final/manifest.v1.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative; this manifest records reproducible evidence and hard gates only."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "visibleWorkbenchDrawCalls": 165,
+    "visibleWorkbenchTriangles": "175k (rounded renderer HUD)",
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1910,
+      "failed": 0
+    }
+  },
+  "implementedVisualSystems": [
+    "stepped lost-city temple with guardian-mask crown",
+    "carved ivory, violet, and azure route-panel language",
+    "edge-city ruin skyline and floating cliff shelves",
+    "temple friezes, banners, rubble, niches, balconies, and stair network",
+    "animated jungle canopy, birds, luminous motes, waterfalls, and sky-depth backdrop",
+    "five-stage Living Compass mission culminating in Emerald Zenith",
+    "staged stone-levitation construction and Zenith commissioning"
+  ],
+  "evidence": [
+    "lost-city-clean-detail-final-v003.png",
+    "workbench-overview-final-v001.png",
+    "emerald-zenith-cinematic-final-v005.png",
+    "../final/build-living-scaffold.png"
+  ],
+  "knownCaptureNotes": [
+    "The workbench renderer includes authoring UI overhead and is not the in-game frame-rate profile.",
+    "Fresh mission recapture tabs were rejected when their backdrop failed to load; the listed Zenith frame is the last valid cinematic evidence capture."
+  ]
+}

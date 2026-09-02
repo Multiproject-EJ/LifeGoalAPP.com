@@ -6929,6 +6929,28 @@ export function IslandRunBoardPrototype({
     islandArtManifest,
     discountRate: activeBuildDiscountRate,
   }), [__storeState.essence, activeBuildDiscountRate, buildModalStopBuildStateByIndex, islandArtManifest, islandStopPlan]);
+  const buildModalPresentationViewModel = useMemo(() => {
+    if (!isIslandVisualPreview || islandArtPreviewNumber !== 18 || !buildModalV2ViewModel.activeLandmark) {
+      return buildModalV2ViewModel;
+    }
+    const jungleLandmarkTitles = [
+      'Explorer Nest',
+      'Jungle Path',
+      'Survival Trials',
+      "Explorer's Camp",
+      'Lost City Temple',
+    ] as const;
+    const activeTitle = jungleLandmarkTitles[buildModalV2ViewModel.activeLandmark.stopIndex]
+      ?? buildModalV2ViewModel.activeLandmark.title;
+    return {
+      ...buildModalV2ViewModel,
+      activeLandmark: {
+        ...buildModalV2ViewModel.activeLandmark,
+        title: activeTitle,
+        imageAlt: `${activeTitle} construction preview`,
+      },
+    };
+  }, [buildModalV2ViewModel, islandArtPreviewNumber, isIslandVisualPreview]);
 
   const buildModalLevelReview = useMemo<BuildModalV2LevelReview | null>(() => (
     buildLevelCompletion
@@ -6945,6 +6967,22 @@ export function IslandRunBoardPrototype({
         }
       : null
   ), [buildLevelCompletion, buildModalV2ViewModel.activeLandmark]);
+  const buildModalPresentationLevelReview = useMemo<BuildModalV2LevelReview | null>(() => {
+    if (!buildModalLevelReview || !isIslandVisualPreview || islandArtPreviewNumber !== 18) {
+      return buildModalLevelReview;
+    }
+    const jungleTitleByStopId: Readonly<Record<string, string>> = {
+      hatchery: 'Explorer Nest',
+      habit: 'Jungle Path',
+      mystery: 'Survival Trials',
+      wisdom: "Explorer's Camp",
+      boss: 'Lost City Temple',
+    };
+    return {
+      ...buildModalLevelReview,
+      title: jungleTitleByStopId[buildModalLevelReview.stopId] ?? buildModalLevelReview.title,
+    };
+  }, [buildModalLevelReview, islandArtPreviewNumber, isIslandVisualPreview]);
 
   useEffect(() => {
     if (hasRemainingIslandBuilds || buildDiscountExpiresAtMs === null) return;
@@ -6956,9 +6994,9 @@ export function IslandRunBoardPrototype({
     isBuildHoldActive,
     isBuildBurstActive,
     isCameraLocked: isBuildCameraCooldownActive,
-    viewModel: buildModalV2ViewModel,
-    levelReview: buildModalLevelReview,
-  }), [buildModalLevelReview, buildModalV2ViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
+    viewModel: buildModalPresentationViewModel,
+    levelReview: buildModalPresentationLevelReview,
+  }), [buildModalPresentationLevelReview, buildModalPresentationViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
 
   const activeBuildCameraStopId = showBuildPanel
     ? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
@@ -15119,7 +15157,7 @@ export function IslandRunBoardPrototype({
                     <button
                       type="button"
                       className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}`}
-                      aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+                      aria-label={`Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
                       title="Mission tracker"
                       onClick={() => setShowMissionPhoneBriefing(true)}
                     >
@@ -17798,20 +17836,20 @@ export function IslandRunBoardPrototype({
       {ISLAND_RUN_CONTRACT_V2_ENABLED && (
         <BuildModalV2
           isOpen={showBuildPanel}
-          islandNumber={islandNumber}
+          islandNumber={isIslandVisualPreview ? islandArtPreviewNumber : islandNumber}
           essenceAvailable={__storeState.essence}
           onClose={() => setShowBuildPanel(false)}
-          viewModel={buildModalV2ViewModel}
+          viewModel={buildModalPresentationViewModel}
           isBuildHoldActive={isBuildHoldActive}
           isBuildInteractionLocked={isBuildSequenceActive || isBuildCameraHandoffActive || isBuildCameraHandoffPending}
           buildInteractionLockLabel={isBuildCameraHandoffActive || isBuildCameraHandoffPending
-            ? `🎥 Moving to ${buildModalV2ViewModel.activeLandmark?.title ?? 'the next landmark'}…`
+            ? `🎥 Moving to ${buildModalPresentationViewModel.activeLandmark?.title ?? 'the next landmark'}…`
             : '⚒️ Finishing the current construction beat…'}
           buildHoldFeedbackLabel={buildHoldFeedbackLabel}
           isBuildModalHatcheryGuidanceActive={isBuildModalHatcheryGuidanceActive}
           discountRate={activeBuildDiscountRate}
           discountExpiresAtMs={buildDiscountExpiresAtMs}
-          levelReview={buildModalLevelReview}
+          levelReview={buildModalPresentationLevelReview}
           onAdvanceLevelReview={handleAdvanceBuildLevelReview}
           onBuildPartChoice={handleBuildPartChoice}
           onStartBuildHold={startBuildHold}

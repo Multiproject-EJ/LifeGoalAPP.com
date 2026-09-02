@@ -184,6 +184,7 @@ import { islandRun3DWorldRoutingTests } from './islandRun3DWorldRouting.test';
 import { island22WaterDragonMissionTests } from './island22WaterDragonMission.test';
 import { island5ThreePilotContractTests } from './island5ThreePilotContract.test';
 import { island10RootheartThreeWorldContractTests } from './island10RootheartThreeWorldContract.test';
+import { island18JungleExpeditionThreeWorldContractTests } from './island18JungleExpeditionThreeWorldContract.test';
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
 import { eggHatchThreePresentationTests } from './eggHatchThreePresentation.test';
 import { eggHatchThreeContractTests } from './eggHatchThreeContract.test';
@@ -212,6 +213,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'island22WaterDragonMission', tests: island22WaterDragonMissionTests },
   { label: 'island5ThreePilotContract', tests: island5ThreePilotContractTests },
   { label: 'island10RootheartThreeWorldContract', tests: island10RootheartThreeWorldContractTests },
+  { label: 'island18JungleExpeditionThreeWorldContract', tests: island18JungleExpeditionThreeWorldContractTests },
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
   { label: 'eggHatchThreePresentation', tests: eggHatchThreePresentationTests },
   { label: 'eggHatchThreeContract', tests: eggHatchThreeContractTests },

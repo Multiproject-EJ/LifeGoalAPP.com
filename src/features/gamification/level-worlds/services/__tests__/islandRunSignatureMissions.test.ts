@@ -952,7 +952,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
-      [4, 6, 7, 8, 9].forEach((islandNumber) => {
+      [4, 6, 7, 8, 9, 18].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;
@@ -1034,6 +1034,51 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(second.status, 'no_charges', 'repeat action cannot spend unavailable charges');
       assertEqual(progress?.activatedStages, 1, 'one stage persists');
       assertEqual(progress?.chargesSpent, 2, 'the descriptor cost is spent exactly once');
+    },
+  },
+  {
+    name: 'Living Compass commits the fifth seal and Emerald Zenith completion through the canonical action',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const key = getIslandRunSignatureMissionKey(base.cycleIndex, 18);
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...base,
+          currentIslandNumber: 18,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'jungle-expedition-living-compass',
+              version: 1,
+              claimedPickupTileIndices: [2, 9, 16, 25, 34],
+              chargesEarned: 5,
+              chargesSpent: 4,
+              activatedStages: 4,
+              lastActivatedStage: 4,
+              completedAtMs: null,
+              updatedAtMs: 10,
+            },
+          },
+        },
+      });
+      refreshIslandRunStateFromLocal(session);
+      const result = await activateStagedRestorationMissionStage({ session, client: null });
+      const after = readIslandRunGameStateRecord(session);
+      const progress = resolveStagedRestorationMissionProgress({
+        ledger: after.signatureMissionProgressByIsland,
+        islandNumber: 18,
+        cycleIndex: base.cycleIndex,
+      });
+      assertEqual(result.status, 'ok', 'the fifth Wayfinder Glyph activates through the action mutex');
+      assertEqual(progress?.activatedStages, 5, 'all five Living Compass seals persist');
+      assertEqual(progress?.chargesSpent, 5, 'the finale spends exactly one authored glyph charge');
+      assert(progress?.completedAtMs !== null, 'Emerald Zenith completion receives a canonical timestamp');
     },
   },
   {

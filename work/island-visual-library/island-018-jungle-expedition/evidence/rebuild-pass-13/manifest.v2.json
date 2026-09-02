@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-31",
+  "supersedes": "../rebuild-pass-12/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. Pass 13 deepens the procedural daylight-to-storm-to-sunbreak cycle, adds weighted one-to-five lightning events, and makes every amber practical respond naturally to storm darkness while preserving all Pass 12 residents and earlier world systems."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "weatherCycle": {
+      "durationSeconds": 180,
+      "phases": [
+        "clear-rest",
+        "cloud-gathering",
+        "storm-darkening",
+        "rain-and-lightning",
+        "sunbreak",
+        "clear-recovery"
+      ],
+      "flashCountRange": [1, 5],
+      "flashCountWeights": [0.46, 0.33, 0.12, 0.06, 0.03],
+      "normalOneOrTwoProbability": 0.79,
+      "defaultEvidenceFlashCount": 2,
+      "rareEvidenceCycleIndex": 27,
+      "rareEvidenceFlashCount": 5
+    },
+    "practicalLightNetwork": {
+      "batched3dHaloSites": 9,
+      "additionalDrawCalls": 1,
+      "localNoShadowPoolsByQuality": {
+        "low": 1,
+        "medium": 2,
+        "high": 4
+      },
+      "respondingMaterial": "shared amber lantern, torch, beacon, and lit-interior material",
+      "presentationOnly": true
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1913,
+      "failed": 0
+    },
+    "typescriptProjectCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "8.38s bundle phase",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the production bundle completed successfully."
+    },
+    "visualProductionBriefValidator": "pass (5 briefs)"
+  },
+  "implementedVisualSystems": [
+    "the clear-rest and clear-recovery phases now use a lighter cyan-blue procedural dome gradient, with no image-mapped sky or 2D weather asset",
+    "cloud gathering progressively lowers and darkens the cloud depth sectors before the rain begins, while the procedural canopy and primary world lights dim with the same weather exposure",
+    "each 180-second storm deterministically selects one to five lightning events from an authored weighted distribution; one or two events own 79 percent of the probability mass",
+    "lightning origins shift across the sky per event and briefly illuminate the dome, clouds, hemisphere, key light, turquoise bounce, and rain-line bolt together",
+    "nine solid 3D halo volumes batch into one InstancedMesh around the temple and landmark practicals",
+    "up to four short-range, no-shadow warm light pools illuminate the Explorer Nest, Jungle Path, Explorer's Camp, and Survival Trials according to the active mobile quality profile",
+    "the shared amber material for lanterns, torches, beacons, doors, and lit interiors strengthens only after the mission emissive choreography has run, so weather never overwrites Emerald Zenith",
+    "multi-frequency flame flicker is restrained in daylight, gains warmth and local spill in storm darkness, and settles to a stable pose in reduced-motion mode",
+    "post-rain sun shafts open gradually before the light-blue sky returns, followed by a long calm interval before cloud gathering starts the cycle again",
+    "canvas QA telemetry exposes phase, storm cycle, selected flash count, practical-light exposure, and daylight-blue strength without adding gameplay authority"
+  ],
+  "evidence": [
+    {
+      "file": "weather-clear-daylight-v001.png",
+      "sha256": "aed3d0483a0e3b782d8f437d0ff6d89e29ef4e948805e407e9fd55b546523c6d",
+      "proves": "the long calm phase reads as open cyan-blue daylight over the layered jungle and resident promenade"
+    },
+    {
+      "file": "weather-storm-practical-lights-v001.png",
+      "sha256": "c226bf1aaa0c02db968d49c1ea2c98a20b1058d7f808f245c7a3bfd789f09098",
+      "proves": "the full storm materially darkens the sky, temple, canopy, and water while warm lantern, doorway, beacon, and torch accents remain readable"
+    },
+    {
+      "file": "weather-lightning-rare-cycle-v001.png",
+      "sha256": "b31543e100d269d161c1237a04297c72c7009272ac032f38f7c7955e4ceb9ded",
+      "proves": "the deterministic rare five-event cycle captures an active displaced bolt and its synchronized world-light flash"
+    },
+    {
+      "file": "weather-storm-practical-lights-close-v001.png",
+      "sha256": "fc18e1add48379fda7ade320b48771044084df929f2b61e1be8179f292c579e5",
+      "proves": "the phone-only crop keeps the warm temple windows, torches, beacons, and landmark pools readable against the dark storm canopy"
+    },
+    {
+      "file": "weather-sunbreak-recovery-v001.png",
+      "sha256": "a3b488fababab7949df115a889e552b0f9ce10d9956222bc9c8186666c1876da",
+      "proves": "warm volumetric sun lines return gradually across the wet jungle before the clear blue recovery"
+    }
+  ],
+  "knownCaptureNotes": [
+    "The source image remains a visual reference only and is not rendered in Island 018.",
+    "The captures retain the real workbench chrome because they verify the production narrow-phone authoring surface and its 7/7 release gate.",
+    "Pass 13 inherits Pass 12 resident evidence and the complete Pass 11 pack for landmarks, tunnels, construction, wildlife, water, and Emerald Zenith.",
+    "The active 10/10 production goal remains open until player visual judgment validates the island."
+  ]
+}

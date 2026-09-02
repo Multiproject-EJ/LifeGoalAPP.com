@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "goal": {
+    "path": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+    "sha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
+    "authority": "exact-source"
+  },
+  "currentBaseline": {
+    "kind": "failed-generated-blockout",
+    "salvageDecision": "retain as pipeline evidence; replace geometry family",
+    "visualScore": 0.34,
+    "dominantFailure": "Gray stacked boxes do not represent the lost-city silhouette, board corridor, waterfalls, jungle depth or landmark identities.",
+    "captures": [
+      {"view": "hero", "path": "../evidence/captures/blockout/hero.png", "sha256": "b3abf4c7dbcf1fc1a6f4602fc5601fa2ec7c112c611b222a0b29ba78aa88c312"},
+      {"view": "left", "path": "../evidence/captures/blockout/orbit-minus35.png", "sha256": "9c81128039030441b3a7ae86c48918b307e6230495ce79143d6ee9aff77bd2b0"},
+      {"view": "right", "path": "../evidence/captures/blockout/orbit-plus35.png", "sha256": "d233177b158b76257e6d9cddbf1272002b68976dd5c040b6cf56b14f01e09b08"},
+      {"view": "profile", "path": "../evidence/captures/blockout/profile.png", "sha256": "a56166c1516d77502bc1ab2d62de96afbce0e79b143483a1386547b5c8abd9c4"},
+      {"view": "rear", "path": "../evidence/captures/blockout/rear.png", "sha256": "12c73171032705d741d690cdc12288c55bef4fe1aff747274b7f81016379aafa"}
+    ]
+  },
+  "matchedCaptureContract": {
+    "nextVersion": "representative-macro-v001",
+    "requiredViews": ["overview", "left", "right", "rear", "map-stripped"],
+    "requiredState": "all five landmark silhouettes at L1 and complete route visible"
+  }
+}

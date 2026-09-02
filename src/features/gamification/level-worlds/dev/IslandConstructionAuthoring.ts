@@ -40,6 +40,7 @@ const WORLD_LANDMARK_LABELS: Readonly<Record<number, Readonly<Record<Island5Land
   9: { boss: 'Heartshaft Crucible', hatchery: 'Blastglass Incubator', habit: 'The Great Fuse', wisdom: 'Memory Press', event: 'Seismic Switchyard' },
   10: { boss: 'Rootheart Arena', hatchery: 'Acorn Cradle Hatchery', habit: 'Canopy Rhythm Lodge', wisdom: 'Spiralwood Library', event: 'Firefly Pulley Workshop' },
   14: { boss: 'Royal Honeycomb Palace', hatchery: "Queen's Nursery Hatchery", habit: 'Pollinator Yard', wisdom: 'Hive Archives', event: 'Nectar Trials Pavilion' },
+  18: { boss: 'Lost City Temple', hatchery: 'Explorer Nest', habit: 'Jungle Path', wisdom: "Explorer's Camp", event: 'Survival Trials' },
 };
 
 const LANDMARK_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
@@ -96,6 +97,47 @@ const HONEYCOMB_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionCho
     phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
     phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'clamp', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'measuring-laser', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
     phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+};
+
+const JUNGLE_EXPEDITION_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
+  hatchery: ['mossy perch and woven nest bed', 'branch cradle and emerald egg', 'leaf canopy and incubation ring', 'beacon frame and climate lanterns', 'guardian crest, vines, and hatch glow'],
+  habit: ['ascending ruin terraces', 'torch pylons and path walls', 'guardian gate and vine arch', 'rhythm wheel and lookout works', 'signal crystal, living vines, and path lights'],
+  event: ['trial dais and relic floor', 'carved totems and chest vault', 'crossbeam and rope gantry', 'skybridge winch and trial mechanism', 'raised bridge, emerald trial core, and victory light'],
+  wisdom: ['timber map deck and camp footing', 'map table, desks, and archive crates', 'leaf pavilion and weather posts', 'astrolabe pedestal and index rings', 'lantern network, garden, and aligned wayfinder optics'],
+  boss: ['processional court and lower stair', 'lost-city lower temple and amber door', 'middle chambers, buttresses, and side stair', 'crown tower, guardian mask, and compass frame', 'emerald crystals, hanging vines, and Zenith commissioning'],
+};
+
+const JUNGLE_EXPEDITION_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
+  hatchery: {
+    styleId: 'jungle-explorer-nest-vine-cradle', stationOffset: 0, stationStep: 1, relocationSeconds: 1.54,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'circular-saw', 'project-manager': 'clamp', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'timber-stack', 'bolt-crate'], frame: ['timber-stack', 'beam-stack', 'cable-coil'], assemble: ['timber-stack', 'panel-stack', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  habit: {
+    styleId: 'jungle-path-stone-rise-and-vine-lash', stationOffset: 2, stationStep: -1, relocationSeconds: 1.46,
+    phaseStationOffsets: { foundation: 0, frame: 1, assemble: 3, finish: 2 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'circular-saw' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['island-blocks', 'timber-stack', 'cable-coil'], assemble: ['timber-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  event: {
+    styleId: 'jungle-survival-skybridge-tension-rig', stationOffset: 5, stationStep: 1, relocationSeconds: 1.38,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 3, finish: 1 },
+    phaseTools: { foundation: { 'heavy-worker': 'drill', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'timber-stack', 'cable-coil'], assemble: ['timber-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  wisdom: {
+    styleId: 'jungle-explorer-camp-astrolabe-lift', stationOffset: 3, stationStep: -1, relocationSeconds: 1.66,
+    phaseStationOffsets: { foundation: 0, frame: 1, assemble: 2, finish: 0 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'circular-saw', 'project-manager': 'clamp', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['timber-stack', 'island-blocks', 'bolt-crate'], frame: ['timber-stack', 'beam-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  boss: {
+    styleId: 'jungle-lost-city-stone-levitation-commissioning', stationOffset: 4, stationStep: 1, relocationSeconds: 1.58,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'clamp', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'measuring-laser', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['island-blocks', 'beam-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
   },
 };
 
@@ -642,6 +684,7 @@ function resolveConstructionChoreography(
   if (worldSourceNumber === 9) return HEARTSHAFT_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 10) return ROOTHEART_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 14) return HONEYCOMB_CHOREOGRAPHY[landmarkId];
+  if (worldSourceNumber === 18) return JUNGLE_EXPEDITION_CHOREOGRAPHY[landmarkId];
   return {
     styleId: `world-${worldSourceNumber}-${landmarkId}-${rigKind}`,
     stationOffset: (['boss', 'hatchery', 'habit', 'wisdom', 'event'] as Island5LandmarkId[]).indexOf(landmarkId),
@@ -673,6 +716,8 @@ export const ISLAND_LANDMARK_CONSTRUCTION_PROFILES: readonly IslandLandmarkConst
                       ? ROOTHEART_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 14
                       ? HONEYCOMB_STAGE_STORIES[landmarkId]
+                    : Number(worldSourceNumber) === 18
+                      ? JUNGLE_EXPEDITION_STAGE_STORIES[landmarkId]
                       : LANDMARK_STAGE_STORIES[landmarkId],
       choreography: resolveConstructionChoreography(
         Number(worldSourceNumber),
@@ -832,22 +877,28 @@ function createCompactLandmarkRig(options: {
 
   const size = targetBounds.getSize(new THREE.Vector3());
   const center = targetBounds.getCenter(new THREE.Vector3());
-  const width = Math.max(0.9, size.x * (profile.landmarkId === 'boss' ? 0.42 : 0.52));
-  const height = Math.max(0.9, size.y * (profile.landmarkId === 'boss' ? 0.55 : 0.68));
+  const isJungleTempleRig = profile.worldSourceNumber === 18 && profile.landmarkId === 'boss';
+  const width = Math.max(0.9, size.x * (isJungleTempleRig ? 0.32 : profile.landmarkId === 'boss' ? 0.42 : 0.52));
+  const height = Math.max(0.9, size.y * (isJungleTempleRig ? 0.46 : profile.landmarkId === 'boss' ? 0.55 : 0.68));
   const frontZ = targetBounds.max.z + Math.max(0.08, size.z * 0.035);
   const sideX = center.x + size.x * 0.32;
   const floorY = targetBounds.min.y;
-  const beamRadius = Math.max(0.018, Math.min(size.x, size.z) * 0.012);
+  const beamRadius = Math.max(0.018, Math.min(size.x, size.z) * (isJungleTempleRig ? 0.0065 : 0.012));
   const segments = options.quality === 'high' ? 8 : 6;
   const primary = new THREE.MeshStandardMaterial({
     color: scaffoldProfile.primary,
     roughness: scaffoldProfile.metallic ? 0.3 : 0.68,
     metalness: scaffoldProfile.metallic ? 0.66 : 0.03,
+    transparent: isJungleTempleRig,
+    opacity: isJungleTempleRig ? 0.72 : 1,
   });
   const secondary = new THREE.MeshStandardMaterial({
     color: scaffoldProfile.secondary,
     roughness: scaffoldProfile.metallic ? 0.38 : 0.74,
     metalness: scaffoldProfile.metallic ? 0.38 : 0.02,
+    transparent: isJungleTempleRig,
+    opacity: isJungleTempleRig ? 0.54 : 1,
+    depthWrite: !isJungleTempleRig,
   });
   const accent = new THREE.MeshStandardMaterial({
     color: scaffoldProfile.accent,

@@ -29,6 +29,7 @@ export const ISLAND_CONSTRUCTION_SCAFFOLD_PROFILES: Readonly<Record<number, Isla
   8: { id: 'everblossom-vineframe', label: 'Living vine, pale wood, and blossom knots', primary: 0x477c49, secondary: 0xcaa86d, accent: 0xff8fc8, motif: 'bloom', metallic: false },
   9: { id: 'heartshaft-forgeframe', label: 'Black iron and ember-gold forge staging', primary: 0x30333a, secondary: 0x8f5b2d, accent: 0xff713c, motif: 'forge', metallic: true },
   10: { id: 'rootheart-living-frame', label: 'Rootwood and saplight bindings', primary: 0x5e4630, secondary: 0x4f7d4a, accent: 0x7cf2ae, motif: 'root', metallic: false },
+  18: { id: 'jungle-ruin-vineworks', label: 'Dark rootwood, moss bronze, and emerald vine lashings', primary: 0x3d321d, secondary: 0x748044, accent: 0x55e89a, motif: 'root', metallic: false },
 };
 
 export interface IslandConstructionScaffold {

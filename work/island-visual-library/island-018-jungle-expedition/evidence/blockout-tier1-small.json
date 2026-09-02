@@ -1,0 +1,131 @@
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 0.9714,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0,
+    "colorDelta": {
+      "checked": 26,
+      "maxDeltaE": 68.58,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 68.58
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.7
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 57.65
+        },
+        {
+          "componentId": null,
+          "deltaE": 44.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 44.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 44.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 32.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.7
+        },
+        {
+          "componentId": null,
+          "deltaE": 54.8
+        },
+        {
+          "componentId": null,
+          "deltaE": 57.65
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [
+    "silhouette evidence is unusable: the foreground mask fell back to whole-frame coverage (subject under 3.5% of the frame), so IoU and proportion are not measuring the subject; re-capture with the subject filling more of the frame",
+    "blockout requires --map-stripped-render evidence"
+  ],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: foreground mask is tiny; material extraction is likely unreliable",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "f9212d5462b4870d",
+  "passId": "blockout"
+}

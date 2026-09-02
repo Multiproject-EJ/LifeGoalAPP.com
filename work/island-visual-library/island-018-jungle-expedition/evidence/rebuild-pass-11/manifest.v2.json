@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-30",
+  "supersedes": "../rebuild-pass-10/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. Pass 11 adds a deeper river ecosystem, volumetric canopy shading, deterministic weather lighting, three captured Emerald Zenith beats, and a jungle-specific Lost City construction rig, but does not self-certify the active 10/10 goal."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "interactiveOverviewObserved": {
+      "drawCalls": 176,
+      "triangles": 179934,
+      "nonBlank": true,
+      "notes": "The live high-quality clear overview includes the interactive route and actors while keeping the enriched five-step river cascade and layered jungle below 180k triangles."
+    },
+    "interactiveStormObserved": {
+      "drawCalls": 177,
+      "triangles": 179934,
+      "nonBlank": true,
+      "notes": "The active storm adds one bounded rain and sunray field draw call; named sky and sun lights darken the complete island between deterministic lightning flashes."
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1912,
+      "failed": 0
+    },
+    "focusedTypeScriptCompile": "pass",
+    "projectTypeScriptBuild": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "48.27s",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the production bundle completed successfully."
+    }
+  },
+  "implementedVisualSystems": [
+    "the grounded hero river now descends through five readable cascade lips into a broad turquoise foreground pool, with compact foam, submerged pebbles, wet lost-city relics, strangler roots, reeds, orchids, and planted banks folded into existing batches",
+    "procedural canopy crowns use faux surface normals, depth, directional diffuse light, facets, and vein shading instead of flat fluorescent discs, preserving a multilayer 3D forest from foreground understory to the distant jungle wall",
+    "the retained ecology contains eight grounded exotic species and eighteen animated aerial individuals spanning birds, butterflies, hummingbirds, and dragonflies",
+    "the 180-second weather story exposes deterministic clear, gathering, storm, lightning, sunbreak, and recovery evidence states while animating cloud cover, rain, sky fill, key sunlight, turquoise bounce, wet-water response, and recovery rays",
+    "Emerald Zenith now has separately evidenced ruin ascension, waterfall reversal, and sky opening beats with a living vine helix, temple beam, compass glyph wave, water crown, jungle pulse rings, and camera choreography",
+    "the Lost City construction preview preserves its monumental authored scale while using a dedicated dark-rootwood, moss-bronze, and emerald vineworks profile with slimmer translucent temple crane geometry",
+    "five additive landmark construction stories, all five L3 landmark identities, east and west route tunnels, and the canonical five-stage Living Compass mission remain intact",
+    "all new scenery is procedural Three.js geometry, instancing, generated shader detail, light, or in-memory generated texture; the supplied 2D source is never rendered in the island"
+  ],
+  "evidence": [
+    {
+      "file": "river-canopy-clear-overview-v001.png",
+      "sha256": "ed2d0d16e644c167aff3dc771304f175d65714ded7a3c696378100e8c325970a",
+      "proves": "the clear high-quality overview with grounded basin, five-step hero cascade, broad pool, shaded volumetric canopy, lost-city terraces, temple silhouette, layered sky, and moving fauna"
+    },
+    {
+      "file": "weather-storm-rain-v001.png",
+      "sha256": "bbf555f5321db08040be44e2dc56019e93e128fec24abfb6f60514b26b9b5df8",
+      "proves": "the genuinely dark and cool rain phase with readable water, temple windows, cloud massing, and bounded weather geometry"
+    },
+    {
+      "file": "weather-lightning-flash-v001.png",
+      "sha256": "6ec86aaa76074aef74536fe5442b2c1cfe05acc38d778b408f1d935bdb0dbbfc",
+      "proves": "the deterministic lightning beat relighting the wet jungle and Lost City without flattening the scene"
+    },
+    {
+      "file": "weather-sunbreak-v001.png",
+      "sha256": "b2e679bcec659d4e3b25ae8630580c4e206221b867aeebac2c3600977863e9af",
+      "proves": "the gradual post-rain sunbreak with warm key-light recovery, clearing sky, and rays over the river basin"
+    },
+    {
+      "file": "emerald-zenith-ruin-ascension-v001.png",
+      "sha256": "7d644c6e913da41919baa152321667efe85e8dee0af6c3dd44bde5f5d4857498",
+      "proves": "the opening Emerald Zenith ascension beat with temple energy, rising ruin movement, vine helix, and mission camera choreography"
+    },
+    {
+      "file": "emerald-zenith-waterfall-reversal-v001.png",
+      "sha256": "91a31f50e3a097b5269da5c01e7d2c06cdebb3a8e7aeec41bbce48a75dfb03a7",
+      "proves": "the signature waterfall-reversal climax with emerald beam, wayfinder geometry, luminous water crown, and jungle pulse response"
+    },
+    {
+      "file": "emerald-zenith-sky-opening-v001.png",
+      "sha256": "5646da6050e5fceac564eeb61fe3f8755f56876b58b3a2ea777b2462cdfb87f8",
+      "proves": "the sky-opening resolution settling the climax into the completed Living Compass crown"
+    },
+    {
+      "file": "lost-city-build-assembly-balanced-v001.png",
+      "sha256": "d69773308d436d08e76b7076dd69541e4479b033c244b3a38f6db1c5cf582701",
+      "proves": "the mobile mid-build Lost City assembly with a readable partial temple, active workers and material effects, and jungle-toned temporary crane"
+    },
+    {
+      "file": "lost-city-build-commissioning-balanced-v001.png",
+      "sha256": "1e188af91583a6e768bf6de10ad2e15f3a7bd4eabce199dcdb76b4fb62663416",
+      "proves": "the mobile commissioning stage with the full monumental temple, emerald completion helix, and slim dark-rootwood vineworks rig"
+    },
+    {
+      "file": "../rebuild-pass-10/lost-city-temple-portrait-v001.jpg",
+      "sha256": "9a0e519e9f561e9c2531db323a575b814a7a9d15fa4e5864ef5b9f728af62780",
+      "proves": "the complete Lost City Temple crown, guardian facade, stair, planted forecourt, and public approach"
+    },
+    {
+      "file": "../rebuild-pass-10/explorer-nest-portrait-v001.jpg",
+      "sha256": "6157b58c6922ae0917d57d7a578e04739eb9da03cf4f9b76c6e5f2cd79d9260e",
+      "proves": "the Explorer Nest emerald egg, brass halo, shrine, canopy, and bridge approach"
+    },
+    {
+      "file": "../rebuild-pass-10/jungle-path-portrait-v001.jpg",
+      "sha256": "8a0597f29d14cf4476054bae6eb4d0e26219f3a4dde5157f0c2c72fbb6cb65af",
+      "proves": "the Jungle Path gate, rhythm apparatus, vine growth, lookout structure, and route approach"
+    },
+    {
+      "file": "../rebuild-pass-10/explorers-camp-portrait-v001.jpg",
+      "sha256": "cb1a4b25bc8742959f28d9ad966aada4a767c7d7e616952dc559a2bc70c2c3e1",
+      "proves": "the Explorer's Camp pavilion, astrolabe, map station, archive details, and garden"
+    },
+    {
+      "file": "../rebuild-pass-10/survival-trials-portrait-v001.jpg",
+      "sha256": "dda31e224792182ba01aeacde9b8b41f212f6306da9e5e85a054aa78231250d2",
+      "proves": "the Survival Trials portal rings, relic platform, torches, skybridge approach, and trial silhouette"
+    },
+    {
+      "file": "../rebuild-pass-07/lost-city-route-tunnel-orbit-final-v001.png",
+      "sha256": "d7fda60b2d0e2222673c24324ba59e9a039103fc3c65a808df24103192ffa976",
+      "proves": "the east and west route tunnels preserving the board surface through the Level 3 Lost City temple"
+    }
+  ],
+  "knownCaptureNotes": [
+    "The source image is a visual reference only and is not rendered in Island 018.",
+    "The construction captures retain the workbench chrome because they verify the actual mobile authoring surface and its 7/7 geometry release gate.",
+    "The active 10/10 production goal remains open until player visual judgment validates the island."
+  ]
+}

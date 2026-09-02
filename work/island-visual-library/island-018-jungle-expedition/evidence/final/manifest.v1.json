@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "sourceSha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
+  "capturedAt": "2026-08-30",
+  "phoneViewport": [390, 844],
+  "quality": "high",
+  "review": {
+    "overall": 0.888,
+    "composition": 0.9,
+    "silhouetteAndVolume": 0.88,
+    "biomeAndMaterials": 0.9,
+    "landmarkDifferentiation": 0.86,
+    "sourceMotifFidelity": 0.86,
+    "motionAndCinematic": 0.93,
+    "mobileLegibility": 0.88,
+    "canyonParity": "pass"
+  },
+  "performance": {
+    "overview": { "drawCalls": 147, "triangles": 124434 },
+    "orbitLeft": { "drawCalls": 148, "triangles": 124050 },
+    "orbitRight": { "drawCalls": 148, "triangles": 124722 },
+    "mapStripped": { "drawCalls": 169, "triangles": 132368 },
+    "emeraldZenithPeak": { "drawCalls": 162, "triangles": 128574 },
+    "timedProfile": {
+      "rating": "pass",
+      "averageFps": 56.9,
+      "p95FrameMs": 18.5,
+      "slowFramePercent": 4.4,
+      "maxDrawCalls": 147,
+      "maxTriangles": 123000
+    }
+  },
+  "files": [
+    { "path": "build-living-scaffold.png", "sha256": "9fb1baae7eafa70b977a5e85349143b5f0256e2280a3e0a167c61e0a14fe0940" },
+    { "path": "emerald-zenith.png", "sha256": "146b605e71666d023cd9546fb5745c1eb23dec4357f1af6668254a188815ce3b" },
+    { "path": "lost-city-temple-focus.png", "sha256": "c3d72aec0bdb4bd2d0f4e0fd43f4568480409252229cfc734683c908dc36a86f" },
+    { "path": "map-stripped.png", "sha256": "09f9ad390f4a763fc6e77fa0e809832a757f1e9485d11663765ec236aac68f27" },
+    { "path": "orbit-left.png", "sha256": "421d8c095e5aca23c6fd14dfe9bd8952919cfe46c3613dda479351b25e1c562a" },
+    { "path": "orbit-right.png", "sha256": "5e119a8e63b795fca3fc35b9329030437b84250fe4e90211bf08213226bc7d9b" },
+    { "path": "performance-profile.json", "sha256": "0b2658911157282279cb9bd6fce840cf79e6e2983d63b2013616ccbcefc27752" },
+    { "path": "phone-overview.png", "sha256": "988ac964fb9ad30951ac9172fea0211bb181a1d4d24e97fc3b9600abc05ecda4" },
+    { "path": "rear.png", "sha256": "20f3fed554d1f7a4e197b4ba7ab6c44234ba2733f430fbf773e050dbaba8d28d" }
+  ]
+}

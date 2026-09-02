@@ -23,7 +23,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');

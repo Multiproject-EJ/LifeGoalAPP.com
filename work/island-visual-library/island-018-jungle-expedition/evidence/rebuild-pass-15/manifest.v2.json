@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-09-01",
+  "supersedes": "../rebuild-pass-14/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. Pass 15 makes the weather cycle visibly phase-specific: clear daylight now opens into a crisp blue jungle vista, cloud and fog density accumulate into the established storm, and the sunbreak clears the air without removing the Pass 14 ecology or any prior route, landmark, construction, mission, resident, water, or practical-light systems."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "weatherAtmosphere": {
+      "clearCloudOpacity": 0.2,
+      "maximumStormCloudOpacity": 0.68,
+      "clearFogDensity": 0.003,
+      "maximumStormFogDensity": 0.0093,
+      "clearMistOpacity": 0.1,
+      "phaseSpecificFogColor": true,
+      "presentationOnly": true
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1913,
+      "failed": 0
+    },
+    "typescriptProjectCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "1m 19s",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the production bundle completed successfully."
+    },
+    "visualProductionBriefValidator": "pass (5 briefs)",
+    "browserConsole": "pass (0 warnings, 0 errors)"
+  },
+  "implementedVisualSystems": [
+    "clear weather reduces the authored cloud field to 0.2 opacity so the bright blue sky, distant jungle depth, and Lost City silhouette read immediately instead of beginning under a permanent gray veil",
+    "cloud opacity now follows storm cover continuously from 0.2 to a maximum of 0.68, with a small sunbreak clearance response after the rain",
+    "exponential scene fog now changes color and density with the weather: turquoise daylight becomes deep green-gray during the storm and a warm pale jungle haze during the sunbreak",
+    "fog density expands from 0.003 in clear daylight to a capped 0.0093 at peak storm, then recedes below the storm value during recovery",
+    "ambient mist starts at a restrained 0.1 opacity in clear weather and gathers with rain so stream depth remains readable before the storm arrives",
+    "the established 180-second clear, gathering-cloud, storm, rain, weighted lightning, sunray, blue-sky recovery, and long-break cycle remains intact",
+    "the Pass 13 practical-light system still intensifies lanterns, torches, halos, and light pools naturally as the weather darkens",
+    "the Pass 14 twelve-species ground ecology, animated fauna families, branch habitats, lily pads, lotus buds, ripples, and improved canopy crowns remain intact",
+    "all prior route tunnels, five landmark builds, resident work loops, Living Compass mission choreography, and Emerald Zenith finale remain intact"
+  ],
+  "evidence": [
+    {
+      "file": "island-018-pass-15-clear-atmosphere.png",
+      "sha256": "b27c4cea7e3f1976607c9195286ed6e11ff49da951718eb751409e3ef468c598",
+      "proves": "the ordinary clear-day production framing now presents a bright blue sky, crisp Lost City hierarchy, legible layered canopy, open river corridor, water garden, residents, and foreground ecology together on the narrow-phone workbench surface"
+    }
+  ],
+  "knownCaptureNotes": [
+    "The source image remains a visual reference only and is not rendered in Island 018.",
+    "The capture retains the real workbench chrome because it verifies the production narrow-phone authoring surface and its 7/7 release gate.",
+    "A new Pass 15 storm capture timed out in the browser harness; Pass 15 therefore inherits the valid Pass 13 storm, weighted-lightning, practical-light, and sunbreak evidence instead of listing a file that was not written.",
+    "Pass 15 inherits the Pass 14 ecology evidence and all earlier landmark, tunnel, construction, mission, resident, water, weather, and Emerald Zenith proof.",
+    "The active 10/10 production goal remains open until player visual judgment validates the island."
+  ]
+}

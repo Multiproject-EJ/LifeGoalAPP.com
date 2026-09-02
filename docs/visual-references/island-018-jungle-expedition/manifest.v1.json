@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "island": {
+    "runtimeNumber": 18,
+    "slug": "jungle-expedition",
+    "title": "Jungle Expedition",
+    "embeddedConceptLabel": "ISLAND 039",
+    "runtimeNumberDecision": "Eivind explicitly started this supplied Jungle Expedition source as runtime Island 018."
+  },
+  "updated": "2026-08-30",
+  "status": "active-rebuild-after-user-visual-review",
+  "sourceInbox": {
+    "folder": "/Users/ejmac/Library/CloudStorage/OneDrive-Personal/Projects - sites LEVELup/Habit game UI/011-120 islands HERE/",
+    "userSuppliedFile": "new 018.png",
+    "userSuppliedSha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
+    "ledgerCopyPath": "docs/visual-references/island-018-jungle-expedition/source-inbox-status-2026-08-30.json",
+    "ledgerMismatch": "The copied OneDrive ledger references 018-source.png with sha256 48e70bfb175950947662b32e47a0b85f5b725ebea31ab48bc09d25b334f31cdd, but that file was not present during intake. The active packet source is Eivind's attached new 018.png."
+  },
+  "authorityOrder": [
+    "exact-source",
+    "exact-derived-crop",
+    "secondary-inferred"
+  ],
+  "assets": [
+    {
+      "id": "island-018-jungle-expedition-source",
+      "path": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "sha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
+      "authority": "exact-source",
+      "purpose": "Immutable user-supplied whole-island visual goal and source-fidelity target for runtime Island 018",
+      "status": "active"
+    },
+    {
+      "id": "jungle-expedition-board-and-lost-city-source-crop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/derived-crops/jungle-expedition-board-and-lost-city-source-crop-v001.png",
+      "sha256": "26eae67aae7e465f36152aabd495311801d28262e60148c37888f8fbee2ad600",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "landmark": "overview",
+      "purpose": "Board corridor, central lost-city temple, waterfalls, cliff stack, rope bridge and jungle-density composition reference",
+      "status": "active"
+    },
+    {
+      "id": "lost-city-temple-boss-source-crop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/derived-crops/lost-city-temple-boss-source-crop-v001.png",
+      "sha256": "a56dd8d56acb9b8e612c3348ec714379be554c8d6ee9a991ce32d049391e8c53",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "landmark": "lost-city-temple",
+      "stopId": "boss",
+      "purpose": "Visible stepped ruin-temple silhouette, staircases, green/gold glow, vines, waterfalls and guardian-stone identity",
+      "status": "active"
+    },
+    {
+      "id": "explorer-nest-hatchery-source-crop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/derived-crops/explorer-nest-hatchery-source-crop-v001.png",
+      "sha256": "ca2a47c203d4d4bbb28c71c95b30ddb2fd1c4b3decb504793e1c5a1042911719",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "landmark": "explorer-nest",
+      "stopId": "hatchery",
+      "purpose": "Visible green egg shrine, mossy hidden nest, wet stone perch and waterfall-side hatchery identity",
+      "status": "active"
+    },
+    {
+      "id": "jungle-path-habit-source-crop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/derived-crops/jungle-path-habit-source-crop-v001.png",
+      "sha256": "e8c055d92bc339a2456f567bc593e5aa781712090d0860135e04a289bc46f2b3",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "landmark": "jungle-path",
+      "stopId": "habit",
+      "purpose": "Visible elevated jungle path/platform, torchlight, vines and daily-expedition habit identity",
+      "status": "active"
+    },
+    {
+      "id": "survival-trials-mystery-source-crop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/derived-crops/survival-trials-mystery-source-crop-v001.png",
+      "sha256": "e31a8e1c98c2c9d00cd2cebd3039fae4d38bae64a87cf3fecff999d2211980ba",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "landmark": "survival-trials",
+      "stopId": "mystery",
+      "purpose": "Visible ruin-trial platform, carved totem, explorer chest and survival-test visual language",
+      "status": "active-with-adaptation",
+      "adaptation": "Source label says Arena, but runtime Island 018 is ordinary; use this as Mystery landmark presentation unless gameplay is separately approved."
+    },
+    {
+      "id": "explorers-camp-wisdom-source-crop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/derived-crops/explorers-camp-wisdom-source-crop-v001.png",
+      "sha256": "ea9c3c9b5d4645e4df4c2c38553467ee7f793061f180a5c4a2d004a9104ceb52",
+      "authority": "exact-derived-crop",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "landmark": "explorers-camp",
+      "stopId": "wisdom",
+      "purpose": "Visible explorer camp, maps-and-lessons motif, lantern warmth, small platforms and jungle knowledge identity",
+      "status": "active"
+    },
+    {
+      "id": "jungle-sky-depth-backdrop-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/secondary-inferred/jungle-sky-depth-backdrop-v001.png",
+      "sha256": "fbcfbca8578722bec45e5aabe86982ad90278db27317d59bc70d304d5b93751c",
+      "authority": "secondary-inferred",
+      "derivedFrom": "island-018-jungle-expedition-source",
+      "purpose": "Generated cloud-canyon and distant floating-jungle depth aid for the source-faithful runtime backdrop",
+      "provenance": "docs/visual-references/island-018-jungle-expedition/secondary-inferred/jungle-sky-depth-backdrop-v001.provenance.json",
+      "runtimeDerivative": "public/assets/islands/island-018/background/jungle-sky-depth-backdrop-v1.jpg",
+      "status": "active-with-exact-source-subordination"
+    },
+    {
+      "id": "mossy-ruin-stone-seamless-v001",
+      "path": "docs/visual-references/island-018-jungle-expedition/secondary-inferred/mossy-ruin-stone-seamless-v001.png",
+      "sha256": "0258b48df0fb45d320cf4cb4b591bc497706183f75f7960bcb1ec588694d4a04",
+      "authority": "secondary-inferred",
+      "derivedFrom": "lost-city-temple-boss-source-crop-v001",
+      "purpose": "Generated damp mossy masonry relief aid for authored ruin surfaces",
+      "provenance": "docs/visual-references/island-018-jungle-expedition/secondary-inferred/mossy-ruin-stone-seamless-v001.provenance.json",
+      "runtimeDerivative": "public/assets/islands/island-018/materials/mossy-ruin-stone-v1.jpg",
+      "status": "active-as-relief-only"
+    }
+  ],
+  "intakeEvidence": {
+    "technicalProbe": {
+      "width": 853,
+      "height": 1844,
+      "format": "png",
+      "bytes": 3366025,
+      "technicalSuitability": "pass"
+    },
+    "referenceAdmission": ".img2threejs/island-018-jungle-expedition/reference-admission.json",
+    "imageAnalysis": ".img2threejs/island-018-jungle-expedition/image-analysis.md",
+    "referenceSuitability": ".img2threejs/island-018-jungle-expedition/reference-suitability.md",
+    "preSpecAssessment": ".img2threejs/island-018-jungle-expedition/pre-spec-assessment.json",
+    "detailInventory": ".img2threejs/island-018-jungle-expedition/detail-inventory.json",
+    "projectionRoute": ".img2threejs/island-018-jungle-expedition/projection-route.md"
+  },
+  "productionPointers": {
+    "gauntlet": "docs/gauntlets/2026-08-30-island-018-jungle-expedition.md",
+    "sourceLock": "work/island-visual-library/island-018-jungle-expedition/SOURCE_LOCK.md",
+    "stateRoot": ".img2threejs/island-018-jungle-expedition/",
+    "evidenceRoot": "work/island-visual-library/island-018-jungle-expedition/evidence/",
+    "runtimeFactory": "src/features/gamification/level-worlds/dev/Island18JungleExpeditionThreeWorld.ts",
+    "runtimeAssetRoot": "public/assets/islands/island-018/"
+  },
+  "rules": {
+    "referencePacketIsRuntimePayload": false,
+    "temporaryOnlyReferencesAllowed": false,
+    "generatedReferencesMayOverrideVisibleSource": false,
+    "runtimeNumberOverridesEmbeddedConceptNumber": true,
+    "bakedUiIsGameplayAuthority": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "rating": "pass",
+  "averageFps": 56.9,
+  "p95FrameMs": 18.5,
+  "refreshNormalizedP95Ms": 18.5,
+  "worstFrameMs": 316.1,
+  "slowFramePercent": 4.4,
+  "maxDrawCalls": 147,
+  "maxTriangles": 123000,
+  "quality": "high",
+  "renderSizePx": [
+    566,
+    1247
+  ],
+  "recordedAt": "2026-08-30"
+}

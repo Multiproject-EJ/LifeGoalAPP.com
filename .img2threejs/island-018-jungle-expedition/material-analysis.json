@@ -1,0 +1,3175 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-analysis",
+  "referenceId": "island-018-jungle-expedition-source",
+  "manifest": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-regions.json",
+  "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+  "targetThreshold": 0.68,
+  "notObservedMaterials": [
+    {
+      "id": "hidden-rear-temple-stone",
+      "status": "probe",
+      "reason": "Rear and side faces are not visible in the single source view."
+    },
+    {
+      "id": "underside-cliff-wet-rock",
+      "status": "probe",
+      "reason": "Floating-island undersides are partially occluded by UI and cloud mist."
+    }
+  ],
+  "unresolvedNotObservedMaterials": [
+    {
+      "id": "hidden-rear-temple-stone",
+      "status": "probe",
+      "reason": "Rear and side faces are not visible in the single source view."
+    },
+    {
+      "id": "underside-cliff-wet-rock",
+      "status": "probe",
+      "reason": "Floating-island undersides are partially occluded by UI and cloud mist."
+    }
+  ],
+  "regions": [
+    {
+      "componentId": "lostCityTemple",
+      "regionId": "mossy-stone-blocks",
+      "materialSpecId": "mossyRuinStone",
+      "hypothesis": {
+        "componentId": "lostCityTemple",
+        "regionId": "mossy-stone-blocks",
+        "materialId": "stone.natural",
+        "family": "stone",
+        "subtype": "natural",
+        "finish": "rough-or-polished",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "source-crop"
+      },
+      "assignment": {
+        "materialId": "stone.natural",
+        "status": "proceed",
+        "source": "source-crop",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/00-mossy-stone-blocks.png",
+            "bbox": {
+              "x": 285,
+              "y": 430,
+              "width": 245,
+              "height": 260
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0405
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "mossyRuinStone",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/00-mossy-stone-blocks.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks",
+            "palette": [
+              "#2F2F0B",
+              "#111404",
+              "#64591D",
+              "#B2962E",
+              "#AFBA98"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_albedo.png",
+                "url": "mossyruinstone_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_roughness.png",
+                "url": "mossyruinstone_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_height.png",
+                "url": "mossyruinstone_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_normal.png",
+                "url": "mossyruinstone_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_ao.png",
+                "url": "mossyruinstone_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 245,
+              "sourceHeight": 260,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 245,
+                "height": 260
+              },
+              "mask": {
+                "backgroundColor": "#765E3F",
+                "backgroundNoise": 176.63,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9803
+              },
+              "mapStats": {
+                "valueRange": 0.7232,
+                "heightP90Gradient": 0.20976,
+                "roughnessBase": 0.836,
+                "roughnessVariation": 0.167,
+                "normalStrength": 0.402,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#2F2F0B",
+                "#111404",
+                "#64591D",
+                "#B2962E",
+                "#AFBA98"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#384E38",
+              "#443A0D",
+              "#43471E",
+              "#5A4C1E",
+              "#54542B"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 75.3,
+              "meanSaturation": 0.726,
+              "gradientStrength": 0.367,
+              "mottle": 0.157,
+              "streakRatio": 1.02,
+              "hueSpread": 0.131,
+              "specularFraction": 0.012
+            }
+          }
+        },
+        "profileId": "stone.natural",
+        "family": "stone",
+        "subtype": "natural",
+        "finish": "rough-or-polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.78,
+          "clearcoat": 0.0
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "displacementMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "multi-scale mineral pattern",
+          "fracture or pore relief",
+          "polished stone retains dielectric reflection"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/00-mossy-stone-blocks.png",
+        "bbox": {
+          "x": 285,
+          "y": 430,
+          "width": 245,
+          "height": 260
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0405
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#384E38",
+          "#443A0D",
+          "#43471E",
+          "#5A4C1E",
+          "#54542B"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 75.3,
+          "meanSaturation": 0.726,
+          "gradientStrength": 0.367,
+          "mottle": 0.157,
+          "streakRatio": 1.02,
+          "hueSpread": 0.131,
+          "specularFraction": 0.012
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "mossyRuinStone",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/00-mossy-stone-blocks.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks",
+        "palette": [
+          "#2F2F0B",
+          "#111404",
+          "#64591D",
+          "#B2962E",
+          "#AFBA98"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_albedo.png",
+            "url": "mossyruinstone_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_roughness.png",
+            "url": "mossyruinstone_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_height.png",
+            "url": "mossyruinstone_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_normal.png",
+            "url": "mossyruinstone_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_ao.png",
+            "url": "mossyruinstone_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 260,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 260
+          },
+          "mask": {
+            "backgroundColor": "#765E3F",
+            "backgroundNoise": 176.63,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9803
+          },
+          "mapStats": {
+            "valueRange": 0.7232,
+            "heightP90Gradient": 0.20976,
+            "roughnessBase": 0.836,
+            "roughnessVariation": 0.167,
+            "normalStrength": 0.402,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#2F2F0B",
+            "#111404",
+            "#64591D",
+            "#B2962E",
+            "#AFBA98"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/00-mossy-stone-blocks.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_albedo.png",
+            "url": "mossyruinstone_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_roughness.png",
+            "url": "mossyruinstone_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_height.png",
+            "url": "mossyruinstone_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_normal.png",
+            "url": "mossyruinstone_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_ao.png",
+            "url": "mossyruinstone_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 260,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 260
+          },
+          "mask": {
+            "backgroundColor": "#765E3F",
+            "backgroundNoise": 176.63,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9803
+          },
+          "mapStats": {
+            "valueRange": 0.7232,
+            "heightP90Gradient": 0.20976,
+            "roughnessBase": 0.836,
+            "roughnessVariation": 0.167,
+            "normalStrength": 0.402,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#2F2F0B",
+            "#111404",
+            "#64591D",
+            "#B2962E",
+            "#AFBA98"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_albedo.png",
+          "url": "mossyruinstone_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_roughness.png",
+          "url": "mossyruinstone_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_height.png",
+          "url": "mossyruinstone_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_normal.png",
+          "url": "mossyruinstone_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-00-mossy-stone-blocks/mossyruinstone_ao.png",
+          "url": "mossyruinstone_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "jungleFoliage",
+      "regionId": "emerald-leaf-canopy",
+      "materialSpecId": "emeraldLeafCards",
+      "hypothesis": {
+        "componentId": "jungleFoliage",
+        "regionId": "emerald-leaf-canopy",
+        "materialId": "fabric.woven-matte",
+        "family": "fabric",
+        "subtype": "woven",
+        "finish": "matte",
+        "aliases": [
+          "leaf cards",
+          "matte foliage"
+        ],
+        "confidence": 0.72,
+        "source": "adapted-registry-prior"
+      },
+      "assignment": {
+        "materialId": "fabric.woven-matte",
+        "status": "proceed",
+        "source": "adapted-registry-prior",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/01-emerald-leaf-canopy.png",
+            "bbox": {
+              "x": 210,
+              "y": 315,
+              "width": 360,
+              "height": 190
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0435
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "emeraldLeafCards",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/01-emerald-leaf-canopy.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy",
+            "palette": [
+              "#21270C",
+              "#91C5D3",
+              "#516140",
+              "#B2A74C",
+              "#62969C"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_albedo.png",
+                "url": "emeraldleafcards_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_roughness.png",
+                "url": "emeraldleafcards_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_height.png",
+                "url": "emeraldleafcards_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_normal.png",
+                "url": "emeraldleafcards_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_ao.png",
+                "url": "emeraldleafcards_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 360,
+              "sourceHeight": 190,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 360,
+                "height": 190
+              },
+              "mask": {
+                "backgroundColor": "#6F986C",
+                "backgroundNoise": 157.369,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9342
+              },
+              "mapStats": {
+                "valueRange": 0.7128,
+                "heightP90Gradient": 0.19854,
+                "roughnessBase": 0.84,
+                "roughnessVariation": 0.173,
+                "normalStrength": 0.389,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#21270C",
+                "#91C5D3",
+                "#516140",
+                "#B2A74C",
+                "#62969C"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#2A2816",
+              "#6C9589",
+              "#6C7E65",
+              "#646E47",
+              "#61663F"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 111.4,
+              "meanSaturation": 0.517,
+              "gradientStrength": 0.514,
+              "mottle": 0.164,
+              "streakRatio": 1.28,
+              "hueSpread": 0.428,
+              "specularFraction": 0.011
+            }
+          }
+        },
+        "profileId": "fabric.woven-matte",
+        "family": "fabric",
+        "subtype": "woven",
+        "finish": "matte",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.85,
+          "sheen": 0.65,
+          "sheenRoughness": 0.75
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "sheenColorMap",
+          "sheenRoughnessMap",
+          "aoMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.texture",
+          "khronos.sheen",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "diffuse body with grazing-angle sheen",
+          "woven directional microstructure",
+          "soft broad highlights"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/01-emerald-leaf-canopy.png",
+        "bbox": {
+          "x": 210,
+          "y": 315,
+          "width": 360,
+          "height": 190
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0435
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#2A2816",
+          "#6C9589",
+          "#6C7E65",
+          "#646E47",
+          "#61663F"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 111.4,
+          "meanSaturation": 0.517,
+          "gradientStrength": 0.514,
+          "mottle": 0.164,
+          "streakRatio": 1.28,
+          "hueSpread": 0.428,
+          "specularFraction": 0.011
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "emeraldLeafCards",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/01-emerald-leaf-canopy.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy",
+        "palette": [
+          "#21270C",
+          "#91C5D3",
+          "#516140",
+          "#B2A74C",
+          "#62969C"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_albedo.png",
+            "url": "emeraldleafcards_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_roughness.png",
+            "url": "emeraldleafcards_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_height.png",
+            "url": "emeraldleafcards_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_normal.png",
+            "url": "emeraldleafcards_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_ao.png",
+            "url": "emeraldleafcards_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 360,
+          "sourceHeight": 190,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 360,
+            "height": 190
+          },
+          "mask": {
+            "backgroundColor": "#6F986C",
+            "backgroundNoise": 157.369,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9342
+          },
+          "mapStats": {
+            "valueRange": 0.7128,
+            "heightP90Gradient": 0.19854,
+            "roughnessBase": 0.84,
+            "roughnessVariation": 0.173,
+            "normalStrength": 0.389,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#21270C",
+            "#91C5D3",
+            "#516140",
+            "#B2A74C",
+            "#62969C"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/01-emerald-leaf-canopy.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_albedo.png",
+            "url": "emeraldleafcards_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_roughness.png",
+            "url": "emeraldleafcards_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_height.png",
+            "url": "emeraldleafcards_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_normal.png",
+            "url": "emeraldleafcards_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_ao.png",
+            "url": "emeraldleafcards_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 360,
+          "sourceHeight": 190,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 360,
+            "height": 190
+          },
+          "mask": {
+            "backgroundColor": "#6F986C",
+            "backgroundNoise": 157.369,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9342
+          },
+          "mapStats": {
+            "valueRange": 0.7128,
+            "heightP90Gradient": 0.19854,
+            "roughnessBase": 0.84,
+            "roughnessVariation": 0.173,
+            "normalStrength": 0.389,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#21270C",
+            "#91C5D3",
+            "#516140",
+            "#B2A74C",
+            "#62969C"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_albedo.png",
+          "url": "emeraldleafcards_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_roughness.png",
+          "url": "emeraldleafcards_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_height.png",
+          "url": "emeraldleafcards_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_normal.png",
+          "url": "emeraldleafcards_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-01-emerald-leaf-canopy/emeraldleafcards_ao.png",
+          "url": "emeraldleafcards_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "waterfallSystem",
+      "regionId": "turquoise-waterfall-and-pool",
+      "materialSpecId": "turquoiseWater",
+      "hypothesis": {
+        "componentId": "waterfallSystem",
+        "regionId": "turquoise-waterfall-and-pool",
+        "materialId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "aliases": [
+          "transparent water",
+          "waterfall sheet"
+        ],
+        "confidence": 0.7,
+        "source": "adapted-registry-prior"
+      },
+      "assignment": {
+        "materialId": "glass.clear",
+        "status": "proceed",
+        "source": "adapted-registry-prior",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/02-turquoise-waterfall-and-pool.png",
+            "bbox": {
+              "x": 100,
+              "y": 730,
+              "width": 170,
+              "height": 230
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0249
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "turquoiseWater",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/02-turquoise-waterfall-and-pool.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool",
+            "palette": [
+              "#161F11",
+              "#AF9348",
+              "#52481F",
+              "#416576",
+              "#EBDDAB"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_albedo.png",
+                "url": "turquoisewater_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_roughness.png",
+                "url": "turquoisewater_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_height.png",
+                "url": "turquoisewater_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_normal.png",
+                "url": "turquoisewater_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_ao.png",
+                "url": "turquoisewater_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 170,
+              "sourceHeight": 230,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 170,
+                "height": 230
+              },
+              "mask": {
+                "backgroundColor": "#1A3E24",
+                "backgroundNoise": 126.661,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9754
+              },
+              "mapStats": {
+                "valueRange": 0.8614,
+                "heightP90Gradient": 0.20709,
+                "roughnessBase": 0.818,
+                "roughnessVariation": 0.185,
+                "normalStrength": 0.399,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#161F11",
+                "#AF9348",
+                "#52481F",
+                "#416576",
+                "#EBDDAB"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#394940",
+              "#596344",
+              "#77654E",
+              "#646C56",
+              "#4C3E15"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 98.2,
+              "meanSaturation": 0.59,
+              "gradientStrength": 0.366,
+              "mottle": 0.168,
+              "streakRatio": 0.91,
+              "hueSpread": 0.477,
+              "specularFraction": 0.04
+            }
+          }
+        },
+        "profileId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.05,
+          "transmission": 1.0,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "background distortion",
+          "bright interface reflection",
+          "visible thickness or absorption"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/02-turquoise-waterfall-and-pool.png",
+        "bbox": {
+          "x": 100,
+          "y": 730,
+          "width": 170,
+          "height": 230
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0249
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#394940",
+          "#596344",
+          "#77654E",
+          "#646C56",
+          "#4C3E15"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 98.2,
+          "meanSaturation": 0.59,
+          "gradientStrength": 0.366,
+          "mottle": 0.168,
+          "streakRatio": 0.91,
+          "hueSpread": 0.477,
+          "specularFraction": 0.04
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "turquoiseWater",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/02-turquoise-waterfall-and-pool.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool",
+        "palette": [
+          "#161F11",
+          "#AF9348",
+          "#52481F",
+          "#416576",
+          "#EBDDAB"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_albedo.png",
+            "url": "turquoisewater_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_roughness.png",
+            "url": "turquoisewater_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_height.png",
+            "url": "turquoisewater_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_normal.png",
+            "url": "turquoisewater_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_ao.png",
+            "url": "turquoisewater_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 170,
+          "sourceHeight": 230,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 170,
+            "height": 230
+          },
+          "mask": {
+            "backgroundColor": "#1A3E24",
+            "backgroundNoise": 126.661,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9754
+          },
+          "mapStats": {
+            "valueRange": 0.8614,
+            "heightP90Gradient": 0.20709,
+            "roughnessBase": 0.818,
+            "roughnessVariation": 0.185,
+            "normalStrength": 0.399,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#161F11",
+            "#AF9348",
+            "#52481F",
+            "#416576",
+            "#EBDDAB"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/02-turquoise-waterfall-and-pool.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_albedo.png",
+            "url": "turquoisewater_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_roughness.png",
+            "url": "turquoisewater_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_height.png",
+            "url": "turquoisewater_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_normal.png",
+            "url": "turquoisewater_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_ao.png",
+            "url": "turquoisewater_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 170,
+          "sourceHeight": 230,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 170,
+            "height": 230
+          },
+          "mask": {
+            "backgroundColor": "#1A3E24",
+            "backgroundNoise": 126.661,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9754
+          },
+          "mapStats": {
+            "valueRange": 0.8614,
+            "heightP90Gradient": 0.20709,
+            "roughnessBase": 0.818,
+            "roughnessVariation": 0.185,
+            "normalStrength": 0.399,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#161F11",
+            "#AF9348",
+            "#52481F",
+            "#416576",
+            "#EBDDAB"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_albedo.png",
+          "url": "turquoisewater_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_roughness.png",
+          "url": "turquoisewater_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_height.png",
+          "url": "turquoisewater_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_normal.png",
+          "url": "turquoisewater_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-02-turquoise-waterfall-and-pool/turquoisewater_ao.png",
+          "url": "turquoisewater_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "ropeBridge",
+      "regionId": "rope-and-aged-wood",
+      "materialSpecId": "ropeAndAgedWood",
+      "hypothesis": {
+        "componentId": "ropeBridge",
+        "regionId": "rope-and-aged-wood",
+        "materialId": "wood.unfinished",
+        "family": "wood",
+        "subtype": "generic",
+        "finish": "unfinished",
+        "aliases": [
+          "rope",
+          "aged wood",
+          "bridge planks"
+        ],
+        "confidence": 0.76,
+        "source": "source-crop"
+      },
+      "assignment": {
+        "materialId": "wood.unfinished",
+        "status": "proceed",
+        "source": "source-crop",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/03-rope-and-aged-wood.png",
+            "bbox": {
+              "x": 505,
+              "y": 455,
+              "width": 245,
+              "height": 145
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0226
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "ropeAndAgedWood",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/03-rope-and-aged-wood.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood",
+            "palette": [
+              "#182010",
+              "#55796C",
+              "#4F481E",
+              "#8FBEB1",
+              "#B39F43"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_albedo.png",
+                "url": "ropeandagedwood_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_roughness.png",
+                "url": "ropeandagedwood_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_height.png",
+                "url": "ropeandagedwood_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_normal.png",
+                "url": "ropeandagedwood_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_ao.png",
+                "url": "ropeandagedwood_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 245,
+              "sourceHeight": 145,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 245,
+                "height": 145
+              },
+              "mask": {
+                "backgroundColor": "#181C12",
+                "backgroundNoise": 174.84,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9587
+              },
+              "mapStats": {
+                "valueRange": 0.7017,
+                "heightP90Gradient": 0.20376,
+                "roughnessBase": 0.816,
+                "roughnessVariation": 0.198,
+                "normalStrength": 0.395,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#182010",
+                "#55796C",
+                "#4F481E",
+                "#8FBEB1",
+                "#B39F43"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#857F46",
+              "#5C785A",
+              "#4C7370",
+              "#4C4415",
+              "#2A3322"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 92.1,
+              "meanSaturation": 0.512,
+              "gradientStrength": 0.471,
+              "mottle": 0.155,
+              "streakRatio": 1.43,
+              "hueSpread": 0.365,
+              "specularFraction": 0.01
+            }
+          }
+        },
+        "profileId": "wood.unfinished",
+        "family": "wood",
+        "subtype": "generic",
+        "finish": "unfinished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.72,
+          "anisotropy": 0.12
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "anisotropyMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.texture",
+          "adobe.pbr-guide-1",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "directional grain",
+          "pores and growth rings",
+          "roughness follows grain and wear"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/03-rope-and-aged-wood.png",
+        "bbox": {
+          "x": 505,
+          "y": 455,
+          "width": 245,
+          "height": 145
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0226
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#857F46",
+          "#5C785A",
+          "#4C7370",
+          "#4C4415",
+          "#2A3322"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 92.1,
+          "meanSaturation": 0.512,
+          "gradientStrength": 0.471,
+          "mottle": 0.155,
+          "streakRatio": 1.43,
+          "hueSpread": 0.365,
+          "specularFraction": 0.01
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "ropeAndAgedWood",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/03-rope-and-aged-wood.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood",
+        "palette": [
+          "#182010",
+          "#55796C",
+          "#4F481E",
+          "#8FBEB1",
+          "#B39F43"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_albedo.png",
+            "url": "ropeandagedwood_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_roughness.png",
+            "url": "ropeandagedwood_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_height.png",
+            "url": "ropeandagedwood_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_normal.png",
+            "url": "ropeandagedwood_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_ao.png",
+            "url": "ropeandagedwood_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 145,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 145
+          },
+          "mask": {
+            "backgroundColor": "#181C12",
+            "backgroundNoise": 174.84,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9587
+          },
+          "mapStats": {
+            "valueRange": 0.7017,
+            "heightP90Gradient": 0.20376,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.198,
+            "normalStrength": 0.395,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#182010",
+            "#55796C",
+            "#4F481E",
+            "#8FBEB1",
+            "#B39F43"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/03-rope-and-aged-wood.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_albedo.png",
+            "url": "ropeandagedwood_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_roughness.png",
+            "url": "ropeandagedwood_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_height.png",
+            "url": "ropeandagedwood_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_normal.png",
+            "url": "ropeandagedwood_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_ao.png",
+            "url": "ropeandagedwood_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 145,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 145
+          },
+          "mask": {
+            "backgroundColor": "#181C12",
+            "backgroundNoise": 174.84,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9587
+          },
+          "mapStats": {
+            "valueRange": 0.7017,
+            "heightP90Gradient": 0.20376,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.198,
+            "normalStrength": 0.395,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#182010",
+            "#55796C",
+            "#4F481E",
+            "#8FBEB1",
+            "#B39F43"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_albedo.png",
+          "url": "ropeandagedwood_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_roughness.png",
+          "url": "ropeandagedwood_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_height.png",
+          "url": "ropeandagedwood_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_normal.png",
+          "url": "ropeandagedwood_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-03-rope-and-aged-wood/ropeandagedwood_ao.png",
+          "url": "ropeandagedwood_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "ruinTrimAndRelics",
+      "regionId": "aged-gold-brass-trim",
+      "materialSpecId": "agedBrassTrim",
+      "hypothesis": {
+        "componentId": "ruinTrimAndRelics",
+        "regionId": "aged-gold-brass-trim",
+        "materialId": "metal.brass",
+        "family": "metal",
+        "subtype": "brass-bronze",
+        "finish": "polished-or-aged",
+        "aliases": [],
+        "confidence": 0.78,
+        "source": "source-crop"
+      },
+      "assignment": {
+        "materialId": "metal.brass",
+        "status": "proceed",
+        "source": "source-crop",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/04-aged-gold-brass-trim.png",
+            "bbox": {
+              "x": 350,
+              "y": 560,
+              "width": 150,
+              "height": 165
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0157
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "agedBrassTrim",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/04-aged-gold-brass-trim.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim",
+            "palette": [
+              "#252706",
+              "#0D0F02",
+              "#4A4810",
+              "#957F24",
+              "#D7C66E"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_albedo.png",
+                "url": "agedbrasstrim_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_roughness.png",
+                "url": "agedbrasstrim_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_height.png",
+                "url": "agedbrasstrim_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_normal.png",
+                "url": "agedbrasstrim_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_ao.png",
+                "url": "agedbrasstrim_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 150,
+              "sourceHeight": 165,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 150,
+                "height": 165
+              },
+              "mask": {
+                "backgroundColor": "#413104",
+                "backgroundNoise": 65.123,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9912
+              },
+              "mapStats": {
+                "valueRange": 0.7149,
+                "heightP90Gradient": 0.18907,
+                "roughnessBase": 0.805,
+                "roughnessVariation": 0.18,
+                "normalStrength": 0.378,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#252706",
+                "#0D0F02",
+                "#4A4810",
+                "#957F24",
+                "#D7C66E"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#48430D",
+              "#50430C",
+              "#474F20",
+              "#4B4112",
+              "#373A0E"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 62.8,
+              "meanSaturation": 0.804,
+              "gradientStrength": 0.317,
+              "mottle": 0.132,
+              "streakRatio": 1.04,
+              "hueSpread": 0.076,
+              "specularFraction": 0.008
+            }
+          }
+        },
+        "profileId": "metal.brass",
+        "family": "metal",
+        "subtype": "brass-bronze",
+        "finish": "polished-or-aged",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.3
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "warm yellow-to-brown conductor reflection",
+          "aged recesses darken and roughen"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/04-aged-gold-brass-trim.png",
+        "bbox": {
+          "x": 350,
+          "y": 560,
+          "width": 150,
+          "height": 165
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0157
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#48430D",
+          "#50430C",
+          "#474F20",
+          "#4B4112",
+          "#373A0E"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 62.8,
+          "meanSaturation": 0.804,
+          "gradientStrength": 0.317,
+          "mottle": 0.132,
+          "streakRatio": 1.04,
+          "hueSpread": 0.076,
+          "specularFraction": 0.008
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "agedBrassTrim",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/04-aged-gold-brass-trim.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim",
+        "palette": [
+          "#252706",
+          "#0D0F02",
+          "#4A4810",
+          "#957F24",
+          "#D7C66E"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_albedo.png",
+            "url": "agedbrasstrim_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_roughness.png",
+            "url": "agedbrasstrim_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_height.png",
+            "url": "agedbrasstrim_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_normal.png",
+            "url": "agedbrasstrim_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_ao.png",
+            "url": "agedbrasstrim_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 150,
+          "sourceHeight": 165,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 150,
+            "height": 165
+          },
+          "mask": {
+            "backgroundColor": "#413104",
+            "backgroundNoise": 65.123,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9912
+          },
+          "mapStats": {
+            "valueRange": 0.7149,
+            "heightP90Gradient": 0.18907,
+            "roughnessBase": 0.805,
+            "roughnessVariation": 0.18,
+            "normalStrength": 0.378,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#252706",
+            "#0D0F02",
+            "#4A4810",
+            "#957F24",
+            "#D7C66E"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/04-aged-gold-brass-trim.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_albedo.png",
+            "url": "agedbrasstrim_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_roughness.png",
+            "url": "agedbrasstrim_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_height.png",
+            "url": "agedbrasstrim_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_normal.png",
+            "url": "agedbrasstrim_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_ao.png",
+            "url": "agedbrasstrim_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 150,
+          "sourceHeight": 165,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 150,
+            "height": 165
+          },
+          "mask": {
+            "backgroundColor": "#413104",
+            "backgroundNoise": 65.123,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9912
+          },
+          "mapStats": {
+            "valueRange": 0.7149,
+            "heightP90Gradient": 0.18907,
+            "roughnessBase": 0.805,
+            "roughnessVariation": 0.18,
+            "normalStrength": 0.378,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#252706",
+            "#0D0F02",
+            "#4A4810",
+            "#957F24",
+            "#D7C66E"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_albedo.png",
+          "url": "agedbrasstrim_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_roughness.png",
+          "url": "agedbrasstrim_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_height.png",
+          "url": "agedbrasstrim_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_normal.png",
+          "url": "agedbrasstrim_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-04-aged-gold-brass-trim/agedbrasstrim_ao.png",
+          "url": "agedbrasstrim_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "ruinLight",
+      "regionId": "amber-window-and-torch-glow",
+      "materialSpecId": "amberRuinLight",
+      "hypothesis": {
+        "componentId": "ruinLight",
+        "regionId": "amber-window-and-torch-glow",
+        "materialId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "aliases": [
+          "emissive amber glass",
+          "torch glow"
+        ],
+        "confidence": 0.74,
+        "source": "adapted-registry-prior"
+      },
+      "assignment": {
+        "materialId": "glass.clear",
+        "status": "proceed",
+        "source": "adapted-registry-prior",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/05-amber-window-and-torch-glow.png",
+            "bbox": {
+              "x": 330,
+              "y": 505,
+              "width": 150,
+              "height": 150
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0143
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "amberRuinLight",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/05-amber-window-and-torch-glow.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow",
+            "palette": [
+              "#252808",
+              "#0F1103",
+              "#46400B",
+              "#89731B",
+              "#CEBA57"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_albedo.png",
+                "url": "amberruinlight_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_roughness.png",
+                "url": "amberruinlight_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_height.png",
+                "url": "amberruinlight_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_normal.png",
+                "url": "amberruinlight_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_ao.png",
+                "url": "amberruinlight_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 150,
+              "sourceHeight": 150,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 150,
+                "height": 150
+              },
+              "mask": {
+                "backgroundColor": "#91711D",
+                "backgroundNoise": 145.942,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9877
+              },
+              "mapStats": {
+                "valueRange": 0.6677,
+                "heightP90Gradient": 0.1839,
+                "roughnessBase": 0.803,
+                "roughnessVariation": 0.177,
+                "normalStrength": 0.372,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#252808",
+                "#0F1103",
+                "#46400B",
+                "#89731B",
+                "#CEBA57"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#46380D",
+              "#4B4307",
+              "#424C1C",
+              "#35320B",
+              "#8A7B31"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 62.2,
+              "meanSaturation": 0.801,
+              "gradientStrength": 0.388,
+              "mottle": 0.126,
+              "streakRatio": 1.1,
+              "hueSpread": 0.063,
+              "specularFraction": 0.006
+            }
+          }
+        },
+        "profileId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.05,
+          "transmission": 1.0,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "background distortion",
+          "bright interface reflection",
+          "visible thickness or absorption"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/05-amber-window-and-torch-glow.png",
+        "bbox": {
+          "x": 330,
+          "y": 505,
+          "width": 150,
+          "height": 150
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0143
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#46380D",
+          "#4B4307",
+          "#424C1C",
+          "#35320B",
+          "#8A7B31"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 62.2,
+          "meanSaturation": 0.801,
+          "gradientStrength": 0.388,
+          "mottle": 0.126,
+          "streakRatio": 1.1,
+          "hueSpread": 0.063,
+          "specularFraction": 0.006
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "amberRuinLight",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/05-amber-window-and-torch-glow.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow",
+        "palette": [
+          "#252808",
+          "#0F1103",
+          "#46400B",
+          "#89731B",
+          "#CEBA57"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_albedo.png",
+            "url": "amberruinlight_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_roughness.png",
+            "url": "amberruinlight_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_height.png",
+            "url": "amberruinlight_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_normal.png",
+            "url": "amberruinlight_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_ao.png",
+            "url": "amberruinlight_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 150,
+          "sourceHeight": 150,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 150,
+            "height": 150
+          },
+          "mask": {
+            "backgroundColor": "#91711D",
+            "backgroundNoise": 145.942,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9877
+          },
+          "mapStats": {
+            "valueRange": 0.6677,
+            "heightP90Gradient": 0.1839,
+            "roughnessBase": 0.803,
+            "roughnessVariation": 0.177,
+            "normalStrength": 0.372,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#252808",
+            "#0F1103",
+            "#46400B",
+            "#89731B",
+            "#CEBA57"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/05-amber-window-and-torch-glow.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_albedo.png",
+            "url": "amberruinlight_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_roughness.png",
+            "url": "amberruinlight_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_height.png",
+            "url": "amberruinlight_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_normal.png",
+            "url": "amberruinlight_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_ao.png",
+            "url": "amberruinlight_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 150,
+          "sourceHeight": 150,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 150,
+            "height": 150
+          },
+          "mask": {
+            "backgroundColor": "#91711D",
+            "backgroundNoise": 145.942,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9877
+          },
+          "mapStats": {
+            "valueRange": 0.6677,
+            "heightP90Gradient": 0.1839,
+            "roughnessBase": 0.803,
+            "roughnessVariation": 0.177,
+            "normalStrength": 0.372,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#252808",
+            "#0F1103",
+            "#46400B",
+            "#89731B",
+            "#CEBA57"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_albedo.png",
+          "url": "amberruinlight_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_roughness.png",
+          "url": "amberruinlight_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_height.png",
+          "url": "amberruinlight_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_normal.png",
+          "url": "amberruinlight_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-05-amber-window-and-torch-glow/amberruinlight_ao.png",
+          "url": "amberruinlight_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "explorerNest",
+      "regionId": "green-egg-and-emerald-crystal",
+      "materialSpecId": "emeraldEggCrystal",
+      "hypothesis": {
+        "componentId": "explorerNest",
+        "regionId": "green-egg-and-emerald-crystal",
+        "materialId": "gemstone.quartz",
+        "family": "gemstone",
+        "subtype": "quartz-like",
+        "finish": "polished",
+        "aliases": [
+          "emerald egg",
+          "green crystal"
+        ],
+        "confidence": 0.82,
+        "source": "source-crop"
+      },
+      "assignment": {
+        "materialId": "gemstone.quartz",
+        "status": "proceed",
+        "source": "source-crop",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/06-green-egg-and-emerald-crystal.png",
+            "bbox": {
+              "x": 35,
+              "y": 1200,
+              "width": 95,
+              "height": 185
+            },
+            "sourceWidth": 853,
+            "sourceHeight": 1844,
+            "loaderWarnings": [],
+            "coverage": 0.0112
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.68,
+            "materialId": "emeraldEggCrystal",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/06-green-egg-and-emerald-crystal.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal",
+            "palette": [
+              "#0C170B",
+              "#5C5D23",
+              "#2E3111",
+              "#9C8D31",
+              "#C9C38D"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_albedo.png",
+                "url": "emeraldeggcrystal_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_roughness.png",
+                "url": "emeraldeggcrystal_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_height.png",
+                "url": "emeraldeggcrystal_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_normal.png",
+                "url": "emeraldeggcrystal_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_ao.png",
+                "url": "emeraldeggcrystal_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 95,
+              "sourceHeight": 185,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 95,
+                "height": 185
+              },
+              "mask": {
+                "backgroundColor": "#2C3612",
+                "backgroundNoise": 59.414,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9854
+              },
+              "mapStats": {
+                "valueRange": 0.6972,
+                "heightP90Gradient": 0.19718,
+                "roughnessBase": 0.825,
+                "roughnessVariation": 0.203,
+                "normalStrength": 0.387,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#0C170B",
+                "#5C5D23",
+                "#2E3111",
+                "#9C8D31",
+                "#C9C38D"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#283E1C",
+              "#605B3A",
+              "#626736",
+              "#4D471F",
+              "#404230"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 71.5,
+              "meanSaturation": 0.637,
+              "gradientStrength": 0.382,
+              "mottle": 0.112,
+              "streakRatio": 0.72,
+              "hueSpread": 0.219,
+              "specularFraction": 0.007
+            }
+          }
+        },
+        "profileId": "gemstone.quartz",
+        "family": "gemstone",
+        "subtype": "quartz-like",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.06,
+          "transmission": 0.9,
+          "ior": 1.54,
+          "dispersion": 0.0
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "faceted interface reflections",
+          "transmitted or internally varied colour",
+          "thickness-dependent appearance"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/06-green-egg-and-emerald-crystal.png",
+        "bbox": {
+          "x": 35,
+          "y": 1200,
+          "width": 95,
+          "height": 185
+        },
+        "sourceWidth": 853,
+        "sourceHeight": 1844,
+        "loaderWarnings": [],
+        "coverage": 0.0112
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#283E1C",
+          "#605B3A",
+          "#626736",
+          "#4D471F",
+          "#404230"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 71.5,
+          "meanSaturation": 0.637,
+          "gradientStrength": 0.382,
+          "mottle": 0.112,
+          "streakRatio": 0.72,
+          "hueSpread": 0.219,
+          "specularFraction": 0.007
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "materialId": "emeraldEggCrystal",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/06-green-egg-and-emerald-crystal.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal",
+        "palette": [
+          "#0C170B",
+          "#5C5D23",
+          "#2E3111",
+          "#9C8D31",
+          "#C9C38D"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_albedo.png",
+            "url": "emeraldeggcrystal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_roughness.png",
+            "url": "emeraldeggcrystal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_height.png",
+            "url": "emeraldeggcrystal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_normal.png",
+            "url": "emeraldeggcrystal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_ao.png",
+            "url": "emeraldeggcrystal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 95,
+          "sourceHeight": 185,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 95,
+            "height": 185
+          },
+          "mask": {
+            "backgroundColor": "#2C3612",
+            "backgroundNoise": 59.414,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9854
+          },
+          "mapStats": {
+            "valueRange": 0.6972,
+            "heightP90Gradient": 0.19718,
+            "roughnessBase": 0.825,
+            "roughnessVariation": 0.203,
+            "normalStrength": 0.387,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0C170B",
+            "#5C5D23",
+            "#2E3111",
+            "#9C8D31",
+            "#C9C38D"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/06-green-egg-and-emerald-crystal.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.68,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_albedo.png",
+            "url": "emeraldeggcrystal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_roughness.png",
+            "url": "emeraldeggcrystal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_height.png",
+            "url": "emeraldeggcrystal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_normal.png",
+            "url": "emeraldeggcrystal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_ao.png",
+            "url": "emeraldeggcrystal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 95,
+          "sourceHeight": 185,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 95,
+            "height": 185
+          },
+          "mask": {
+            "backgroundColor": "#2C3612",
+            "backgroundNoise": 59.414,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9854
+          },
+          "mapStats": {
+            "valueRange": 0.6972,
+            "heightP90Gradient": 0.19718,
+            "roughnessBase": 0.825,
+            "roughnessVariation": 0.203,
+            "normalStrength": 0.387,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0C170B",
+            "#5C5D23",
+            "#2E3111",
+            "#9C8D31",
+            "#C9C38D"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_albedo.png",
+          "url": "emeraldeggcrystal_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_roughness.png",
+          "url": "emeraldeggcrystal_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_height.png",
+          "url": "emeraldeggcrystal_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_normal.png",
+          "url": "emeraldeggcrystal_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-evidence/pbr-06-green-egg-and-emerald-crystal/emeraldeggcrystal_ao.png",
+          "url": "emeraldeggcrystal_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "status": "probe",
+  "limitations": [
+    "PBR extraction is reference-derived inference, not inverse rendering.",
+    "A crop must be checked against the component visible footprint before accepting material scores."
+  ],
+  "artifact": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/material-analysis.json"
+}

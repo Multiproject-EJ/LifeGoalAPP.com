@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-30",
+  "supersedes": "../rebuild-pass-07/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. This atmosphere and ecology pass does not close the active 10/10 Island 018 goal."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "lockedClearOverview": {
+      "drawCalls": 140,
+      "triangles": 177664,
+      "renderSizePx": [565, 1246],
+      "nonBlank": true
+    },
+    "activeWeatherMaximumObservedDrawCalls": 141,
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1912,
+      "failed": 0
+    },
+    "focusedTypeScriptCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "6m 54s",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the build completed successfully."
+    },
+    "liveBrowserConsole": {
+      "newWarnings": 0,
+      "newErrors": 0
+    }
+  },
+  "implementedVisualSystems": [
+    "raised continuous jungle floor that surrounds the preserved Lost City crag and reads as a rooted temple mesa",
+    "six procedural river branches with authored bank/current/shallow vertex colours and animated in-memory water texture",
+    "3.45-unit camera-facing stream, 2.55-unit reflective lagoon, broadened hero cascade, reactive foam and rain roughness",
+    "eight route-clear procedural ground species: red-eyed tree frog, emerald iguana, lowland tapir, white-faced capuchin, keel-billed toucan, Amazon river turtle, golden poison dart frog, and ring-tailed coati",
+    "eighteen animated aerial animals spanning scarlet macaws, toucans, hummingbirds, blue morphos, golden parakeets, and dragonflies",
+    "180-second weather story with long clear rest, gradual cloud gathering, storm darkening, rain, two lightning beats, sunbreak, and slow clear recovery",
+    "rounded world-space procedural cloud volumes plus one reusable rain, lightning, and parallel sun-shaft line field",
+    "weather-reactive sky, canopy, mist, foam, water, sunlight, wildlife sheltering, and reduced-motion clear-rest behavior"
+  ],
+  "evidence": [
+    {
+      "file": "grounded-stream-exotic-fauna-clear-final-v003.png",
+      "sha256": "8fca2dc20c95d604469caa59a1cfc0de05088ee416ef7dfad418ea87c66c6c14",
+      "proves": "clear overview, broadened cascade, grounded foreground, readable ground wildlife, and active aerial fauna"
+    },
+    {
+      "file": "weather-rain-rounded-clouds-final-v002.png",
+      "sha256": "0202d0aadf2d7e6bdd39ddd10184f1118946dba9027b8f3330fd67051ffc5ded",
+      "proves": "dark rain state, rounded cloud massing, preserved temple readability, and fauna remaining alive during weather"
+    },
+    {
+      "file": "weather-clear-recovery-fauna-final-v003.png",
+      "sha256": "a5e0a367b97b9dd030e4f6d976ae51569a8e424dc8d22290931befcf5e2e97f9",
+      "proves": "clear blue recovery and a multi-height flock crossing the Lost City crown"
+    }
+  ],
+  "knownCaptureNotes": [
+    "All added sky, clouds, fauna, rain, lightning, sun shafts, rivers, and lagoon surfaces are procedural Three.js geometry or in-memory textures; no new image-mapped scenery was introduced.",
+    "The weather field is hidden during clear rest, so the clear overview avoids its draw call.",
+    "Earlier pass-08 captures are retained as iteration evidence but are not listed as final proof.",
+    "The persistent 10/10 production goal remains active for further whole-island refinement and player judgment."
+  ]
+}

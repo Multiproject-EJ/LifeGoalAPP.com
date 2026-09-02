@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-30",
+  "supersedes": "../rebuild-pass-06/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative; this manifest records reproducible evidence and hard gates only."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "lockedOverviewDrawCalls": 175,
+    "lockedOverviewTriangles": 179740,
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1911,
+      "failed": 0
+    },
+    "typescriptCompile": "pass",
+    "liveBuildBurst": {
+      "drawCalls": 258,
+      "triangles": 328116,
+      "note": "Temporary active-construction presentation measured in the real Island Run Build flow."
+    }
+  },
+  "implementedVisualSystems": [
+    "continuous procedural jungle basin beneath and beyond the preserved Lost City crag",
+    "six physical stone-and-root buttresses connecting the central cliff to the valley",
+    "six procedural river branches, turquoise catch pools, waterfalls, and low mist bands",
+    "six-ring geometric canopy blanket with emergent trees and world-space shader foliage volume",
+    "east and west temple route tunnels with arched mouths, route floors, guide lights, and explicit clearance metadata",
+    "preserved stepped Lost City temple, Guardian Crown, carved route panels, ruin skyline, and layered procedural sky",
+    "five-stage Living Compass mission culminating in Emerald Zenith",
+    "staged stone-levitation construction, scaffold motion, working detail, and Zenith commissioning"
+  ],
+  "evidence": [
+    "grounded-jungle-overview-final-v001.png",
+    "lost-city-route-tunnel-orbit-final-v001.png",
+    "live-build-jungle-scaffold-final-v001.png",
+    "emerald-zenith-grounded-jungle-final-v001.png"
+  ],
+  "knownCaptureNotes": [
+    "The dense canopy volume is procedural Three.js geometry and shader points positioned at real world-space depths; it is not a 2D image or backdrop.",
+    "The live Build burst is temporary cinematic geometry and is intentionally reported separately from the locked overview production budget.",
+    "The existing floating-cliff forms remain as elevated Lost City geology, but the new continuous jungle basin visually and physically grounds the complete scene."
+  ]
+}

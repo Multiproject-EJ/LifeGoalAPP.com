@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-09-01",
+  "supersedes": "../rebuild-pass-13/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. Pass 14 expands the grounded river ecology, redistributes fauna through the foreground depth corridor, improves close-range canopy readability, and adds authored water-garden detail without removing the resident network, route tunnels, landmarks, construction, mission finale, or weather cycle."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "groundFaunaEcology": {
+      "distinctSpeciesHigh": 12,
+      "distinctSpeciesMedium": 8,
+      "distinctSpeciesLow": 6,
+      "minimumRouteRadius": 7,
+      "motionFamilies": 8,
+      "batchedInto": "ISLAND_18_CONTINUOUS_JUNGLE_BASIN_MESH",
+      "additionalDrawCalls": 0,
+      "presentationOnly": true
+    },
+    "foregroundRiverGarden": {
+      "lilyPadsHigh": 12,
+      "lotusBudsHigh": 5,
+      "surfaceRipples": 9,
+      "additionalDrawCalls": 0,
+      "presentationOnly": true
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1913,
+      "failed": 0
+    },
+    "typescriptProjectCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "27.77s bundle phase",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the production bundle completed successfully."
+    },
+    "visualProductionBriefValidator": "pass (5 briefs)",
+    "browserConsole": "pass (0 warnings, 0 errors)"
+  },
+  "implementedVisualSystems": [
+    "the ground ecology expands from eight to twelve distinct high-quality species: red-eyed tree frog, emerald iguana, lowland tapir, white-faced capuchin, keel-billed toucan, Amazon river turtle, golden poison-dart frog, ring-tailed coati, golden jaguar, greater capybara, spectacled caiman, and brown-throated sloth",
+    "fauna are redistributed from the inner promenade through the middle river banks and out toward the catch pool, preserving a seven-unit minimum radius around the protected route",
+    "frog hops, basking turns, forest-floor gait, branch sway, perch hops, river drift, predator prowl, and wetland wading run in the shared terrain shader and settle into authored poses under reduced-motion settings",
+    "monkey, toucan, and sloth receive real branch and moss-perch geometry so elevated species read as habitat residents rather than suspended props",
+    "fauna receive a restrained shader-only visibility lift while remaining vertex-colored geometry inside the existing basin mesh",
+    "the procedural canopy-volume crowns use smaller mobile point footprints and brighter leaf response, reducing dark close-camera occlusion without removing jungle density",
+    "twelve solid lily pads, five raised lotus buds, and nine nested torus ripples layer the foreground catch pool with no image cards and no additional draw calls",
+    "deterministic fauna-left, fauna-right, broad-fauna, motion-a, and motion-b QA states expose placement and movement for repeatable phone-scale review",
+    "all prior resident work loops, route tunnels, landmark builds, Living Compass mission choreography, Emerald Zenith finale, weather phases, weighted lightning, and storm practical lighting remain intact"
+  ],
+  "evidence": [
+    {
+      "file": "island-018-pass-14-clear-overview.png",
+      "sha256": "3579c6a6f8c11d67a6fbc00c04fe2384ca56fbf82307d607d06b3def3502c79f",
+      "proves": "the ordinary clear-day gameplay framing retains the Lost City hierarchy while the stream, catch pool, lily field, ripples, residents, and layered jungle remain readable together on the production narrow-phone surface"
+    },
+    {
+      "file": "island-018-pass-14-fauna-right-motion-b.png",
+      "sha256": "a29ffa57dcbf09cc63ebbc77fb0fbd5f941045adffd68c4ea26a3f57ffd5f1b9",
+      "proves": "the deterministic right-bank ecology view shows fauna distributed from the inhabited ruin edge into the outer foreground rather than overlapping in one inner-ring cluster"
+    }
+  ],
+  "knownCaptureNotes": [
+    "The source image remains a visual reference only and is not rendered in Island 018.",
+    "The captures retain the real workbench chrome because they verify the production narrow-phone authoring surface and its 7/7 release gate.",
+    "Pass 14 inherits the complete Pass 13 weather and practical-light evidence plus earlier landmark, tunnel, construction, mission, resident, water, and Emerald Zenith proof.",
+    "The active 10/10 production goal remains open until player visual judgment validates the island."
+  ]
+}

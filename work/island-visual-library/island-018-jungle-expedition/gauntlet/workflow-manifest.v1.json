@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "subject": {
+    "runtimeIslandNumber": 18,
+    "slug": "jungle-expedition",
+    "title": "Jungle Expedition",
+    "delivery": "new-base",
+    "role": "ordinary"
+  },
+  "goal": {
+    "sourcePath": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+    "sha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
+    "authority": "exact-source",
+    "embeddedConceptLabel": "ISLAND 039",
+    "runtimeNumberDecision": "Explicit user instruction makes this runtime Island 018."
+  },
+  "production": {
+    "branch": "codex/island-018-jungle-expedition",
+    "worktree": "worktrees/island-018-jungle-expedition",
+    "representation": "procedural-threejs",
+    "partInventory": "part-inventory.v1.json",
+    "baseline": "baseline.v1.json",
+    "assembly": "assembly-manifest.v1.json",
+    "status": "complete",
+    "currentMilestone": "final-evidence-approved",
+    "finalEvidence": "../evidence/final/manifest.v1.json"
+  },
+  "renderProfile": {
+    "phoneViewport": [390, 844],
+    "reviewViewports": [[620, 1000], [390, 844]],
+    "requiredViews": ["overview", "left", "right", "rear", "map-stripped", "hatchery", "habit", "event", "wisdom", "boss"],
+    "toneMapping": "ACESFilmicToneMapping",
+    "colorSpace": "sRGB",
+    "cameraAuthority": "shared Island5ThreePilot with Island 018 overrides"
+  },
+  "gates": {
+    "sourceFidelity": {"overallMin": 0.85, "dimensionMin": 0.8, "criticalMismatchAllowed": false},
+    "partReview": {"requiredViewAndCategoryMin": 0.85, "worstViewGoverns": true},
+    "mobile": {"highMaxDrawCalls": 175, "highMaxTriangles": 180000, "averageFpsMin": 50, "p95FrameMsMax": 29, "slowFramePercentMax": 15},
+    "mission": {"canonicalCommitBeforeCinematic": true, "interruptSafe": true, "reducedMotionRequired": true, "deterministicReplayRequired": true},
+    "gameplay": {"boardProfile": "spark36_ring", "tileCount": 36, "uiGameplayWritesAllowed": false}
+  },
+  "roles": {
+    "root": "Codex current task",
+    "builder": "Codex current task, serialized geometry ownership",
+    "qualityLord": "independent read-only visual gate before assembly approval",
+    "userApproval": "Recorded in user-decisions.v1.jsonl"
+  },
+  "updatedAt": "2026-08-30T05:55:00Z"
+}

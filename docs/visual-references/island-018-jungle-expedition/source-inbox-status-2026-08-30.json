@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "islandNumber": 18,
+  "status": "source-ready",
+  "source": {
+    "file": "018-source.png",
+    "sha256": "48e70bfb175950947662b32e47a0b85f5b725ebea31ab48bc09d25b334f31cdd",
+    "immutable": true
+  },
+  "latestCheckpoint": null,
+  "done": [],
+  "history": [
+    {
+      "event": "source-intake",
+      "at": "2026-08-21T19:20:19Z",
+      "file": "018-source.png"
+    }
+  ],
+  "updatedAt": "2026-08-21T19:20:19Z"
+}

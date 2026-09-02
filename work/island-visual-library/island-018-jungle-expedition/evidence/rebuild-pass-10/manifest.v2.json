@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-30",
+  "supersedes": "../rebuild-pass-09/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. Pass 10 materially improves the grounded lost-city river and all five landmark portraits, but does not self-certify the active 10/10 Island 018 goal."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "interactiveOverviewObserved": {
+      "drawCalls": 176,
+      "triangles": 179548,
+      "nonBlank": true,
+      "notes": "Live high-quality overview includes interactive board actors and the workbench presentation while remaining below 180k triangles."
+    },
+    "focusedLandmarkObserved": {
+      "drawCalls": 59,
+      "triangles": 125384,
+      "renderBufferPx": [300, 664],
+      "nonBlank": true,
+      "notes": "All five L3 portrait presets were inspected after the camera-authoring correction; six retained screenshots include the temple and four satellite landmarks plus the final overview."
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1912,
+      "failed": 0
+    },
+    "focusedTypeScriptCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "1m 9s",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the build completed successfully."
+    }
+  },
+  "implementedVisualSystems": [
+    "ten descending lost-city garden terraces flank the hero current, with moss caps, irregular rubble, and a broken river gate whose open central channel remains outside the protected board route",
+    "dedicated low-frequency procedural surface water replaces the prior diagonal noise pattern, while waterfalls retain their separately tiled faster-moving texture",
+    "the broad foreground river, planted banks, reflective catch pool, foam rim, six-branch stream network, and real 3D waterfalls remain continuous through the grounded jungle basin",
+    "high-quality foliage density was rebalanced across canopy, palm, understory, and temple-overgrowth batches to preserve the lush silhouette while returning the fully interactive overview to 179,548 triangles",
+    "all five portrait cameras now hold complete L3 landmark silhouettes and their public approaches instead of clipping through canopy, pylons, or roof geometry",
+    "the retained ecology contains eight distinct grounded exotic species and eighteen animated aerial individuals spanning six bird, butterfly, hummingbird, and dragonfly identities",
+    "the retained 180-second weather story moves from a long clear rest through gathering clouds, rain and lightning, sunbreak rays, and clear recovery",
+    "the retained Living Compass, Emerald Zenith climax, five landmark construction stories, route tunnels, and weather systems remain canonical and additive"
+  ],
+  "evidence": [
+    {
+      "file": "grounded-river-terraces-overview-v001.jpg",
+      "sha256": "ed2350fab0c42ecb7f0f21fb34f6c6464b49ffaf6ffa62bf03b1f19303b59c85",
+      "proves": "final high-quality phone overview with the clean reflective catch pool, continuous central current, terrace descent, river gate, layered jungle basin, temple, clouds, and aerial fauna"
+    },
+    {
+      "file": "lost-city-temple-portrait-v001.jpg",
+      "sha256": "9a0e519e9f561e9c2531db323a575b814a7a9d15fa4e5864ef5b9f728af62780",
+      "proves": "the complete Lost City Temple crown, guardian facade, stair, planted forecourt, stream approach, and unclipped portrait framing"
+    },
+    {
+      "file": "explorer-nest-portrait-v001.jpg",
+      "sha256": "6157b58c6922ae0917d57d7a578e04739eb9da03cf4f9b76c6e5f2cd79d9260e",
+      "proves": "the Explorer Nest's emerald egg, brass halo, shrine, canopy, bridge approach, and complete satellite silhouette"
+    },
+    {
+      "file": "jungle-path-portrait-v001.jpg",
+      "sha256": "8a0597f29d14cf4476054bae6eb4d0e26219f3a4dde5157f0c2c72fbb6cb65af",
+      "proves": "the Jungle Path gate, rhythm apparatus, vine growth, lookout structure, route approach, and corrected unclipped camera distance"
+    },
+    {
+      "file": "explorers-camp-portrait-v001.jpg",
+      "sha256": "cb1a4b25bc8742959f28d9ad966aada4a767c7d7e616952dc559a2bc70c2c3e1",
+      "proves": "the Explorer's Camp pavilion, astrolabe, map station, archive details, and restored center-facing portrait composition"
+    },
+    {
+      "file": "survival-trials-portrait-v001.jpg",
+      "sha256": "dda31e224792182ba01aeacde9b8b41f212f6306da9e5e85a054aa78231250d2",
+      "proves": "the Survival Trials portal rings, relic platform, torches, bridge approach, and fully visible trial silhouette"
+    },
+    {
+      "file": "../rebuild-pass-09/emerald-zenith-jungle-pulse-climax-final-v001.png",
+      "sha256": "5810d4982754f93b1d093b1bbfcd9866d42489739d835cc3d823c4757c4f511d",
+      "proves": "the retained Emerald Zenith waterfall-reversal climax, levitating temple composition, vine helix, wayfinder crown, sky beam, and measured climax geometry"
+    },
+    {
+      "file": "../rebuild-pass-08/weather-rain-rounded-clouds-final-v002.png",
+      "sha256": "0202d0aadf2d7e6bdd39ddd10184f1118946dba9027b8f3330fd67051ffc5ded",
+      "proves": "the retained rain and lightning state with rounded 3D cloud massing and readable temple silhouette"
+    },
+    {
+      "file": "../rebuild-pass-07/live-build-jungle-scaffold-final-v001.png",
+      "sha256": "d688095d084b6ad8fb4fbb54f44a4aba9d1d79a6a36cb86a12d52c44451023c0",
+      "proves": "the retained five-part jungle construction workflow, temporary rig, progress HUD, workers, material motion, and level switching"
+    },
+    {
+      "file": "../rebuild-pass-07/lost-city-route-tunnel-orbit-final-v001.png",
+      "sha256": "d7fda60b2d0e2222673c24324ba59e9a039103fc3c65a808df24103192ffa976",
+      "proves": "the retained east and west route tunnels preserving the board surface through the L3 Lost City temple"
+    }
+  ],
+  "knownCaptureNotes": [
+    "Every pass-10 visual is procedural Three.js geometry, instancing, vertex colour, light, or an in-memory generated texture; no 2D scenery image was introduced.",
+    "The supplied source image remains a visual reference only and is not rendered in the Island 018 world.",
+    "The browser screenshot service returned JPEG payloads; evidence files use the matching .jpg extension.",
+    "The persistent 10/10 production goal remains active until player visual judgment confirms the island."
+  ]
+}

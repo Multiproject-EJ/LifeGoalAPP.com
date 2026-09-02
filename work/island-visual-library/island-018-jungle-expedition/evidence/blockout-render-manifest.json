@@ -1,0 +1,434 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-30T01:00:08.819347Z",
+  "runtime": {
+    "url": "http://127.0.0.1:5188/work/island-visual-library/island-018-jungle-expedition/evidence/blockout-harness.html",
+    "route": "http://127.0.0.1:5188/work/island-visual-library/island-018-jungle-expedition/evidence/blockout-harness.html",
+    "viewport": [
+      620,
+      1000
+    ],
+    "devicePixelRatio": 1.0,
+    "renderer": "WebGLRenderer",
+    "threeVersion": "project-pinned",
+    "readySignal": "window.__IMG2THREEJS_READY__",
+    "captureContract": "window.__IMG2THREEJS_CAPTURE__"
+  },
+  "reference": {
+    "kind": "image",
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-018-jungle-expedition/018-source.png",
+    "sha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
+    "image": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "type": "png",
+      "bytes": 3366025,
+      "width": 853,
+      "height": 1844,
+      "aspectRatio": 0.4625813449023861,
+      "technicalSuitability": "pass",
+      "warnings": [],
+      "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+    },
+    "comparisonBasis": "source-image",
+    "renderRequired": false
+  },
+  "captures": [
+    {
+      "id": "hero",
+      "role": "reference-match",
+      "azimuthDegrees": 0,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/hero.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/hero/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/hero/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/hero/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/hero/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/hero/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/hero/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:34.074637Z",
+      "readySignal": "true",
+      "screenshotSha256": "b3abf4c7dbcf1fc1a6f4602fc5601fa2ec7c112c611b222a0b29ba78aa88c312",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/hero.png",
+        "type": "png",
+        "bytes": 56544,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    },
+    {
+      "id": "orbit-plus35",
+      "role": "orbit",
+      "azimuthDegrees": 35,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/orbit-plus35.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/orbit-plus35/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/orbit-plus35/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/orbit-plus35/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/orbit-plus35/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/orbit-plus35/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/orbit-plus35/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:34.923572Z",
+      "readySignal": "true",
+      "screenshotSha256": "d233177b158b76257e6d9cddbf1272002b68976dd5c040b6cf56b14f01e09b08",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/orbit-plus35.png",
+        "type": "png",
+        "bytes": 65678,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    },
+    {
+      "id": "orbit-minus35",
+      "role": "orbit",
+      "azimuthDegrees": -35,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/orbit-minus35.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/orbit-minus35/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/orbit-minus35/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/orbit-minus35/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/orbit-minus35/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/orbit-minus35/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/orbit-minus35/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:38.317462Z",
+      "readySignal": "true",
+      "screenshotSha256": "9c81128039030441b3a7ae86c48918b307e6230495ce79143d6ee9aff77bd2b0",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/orbit-minus35.png",
+        "type": "png",
+        "bytes": 65419,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    },
+    {
+      "id": "profile",
+      "role": "orbit",
+      "azimuthDegrees": 78,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/profile.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/profile/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/profile/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/profile/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/profile/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/profile/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/profile/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:39.848768Z",
+      "readySignal": "true",
+      "screenshotSha256": "a56166c1516d77502bc1ab2d62de96afbce0e79b143483a1386547b5c8abd9c4",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/profile.png",
+        "type": "png",
+        "bytes": 48634,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    },
+    {
+      "id": "rear",
+      "role": "orbit",
+      "azimuthDegrees": 180,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/rear.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/rear/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/rear/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/rear/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/rear/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/rear/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/rear/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:41.540885Z",
+      "readySignal": "true",
+      "screenshotSha256": "12c73171032705d741d690cdc12288c55bef4fe1aff747274b7f81016379aafa",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/rear.png",
+        "type": "png",
+        "bytes": 14302,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    },
+    {
+      "id": "head-hero",
+      "role": "head-closeup",
+      "azimuthDegrees": 0,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/head-hero.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/head-hero/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/head-hero/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/head-hero/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/head-hero/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/head-hero/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/head-hero/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:43.208291Z",
+      "readySignal": "true",
+      "screenshotSha256": "4a3f4f32ecdc6759b771ae6e16f93ed7e300aa174f79572ddffe842693a903b6",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/head-hero.png",
+        "type": "png",
+        "bytes": 60759,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    },
+    {
+      "id": "head-threequarter",
+      "role": "head-closeup",
+      "azimuthDegrees": 35,
+      "elevationDegrees": 0,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "near": 0.01,
+      "far": 100,
+      "path": "captures/blockout/head-threequarter.png",
+      "status": "recorded",
+      "passes": {
+        "beauty": {
+          "path": "captures/blockout/head-threequarter/beauty.png",
+          "status": "pending"
+        },
+        "alpha-silhouette": {
+          "path": "captures/blockout/head-threequarter/alpha-silhouette.png",
+          "status": "pending"
+        },
+        "semantic-id": {
+          "path": "captures/blockout/head-threequarter/semantic-id.png",
+          "status": "pending"
+        },
+        "depth": {
+          "path": "captures/blockout/head-threequarter/depth.png",
+          "status": "pending"
+        },
+        "normal": {
+          "path": "captures/blockout/head-threequarter/normal.png",
+          "status": "pending"
+        },
+        "roughness-material-id": {
+          "path": "captures/blockout/head-threequarter/roughness-material-id.png",
+          "status": "pending"
+        }
+      },
+      "recordedAt": "2026-08-30T01:40:44.822383Z",
+      "readySignal": "true",
+      "screenshotSha256": "3e7a09c4ad2dd9e665e2b7c32266c8caea1cd029c4b58daa9730467eb6c98867",
+      "image": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout/head-threequarter.png",
+        "type": "png",
+        "bytes": 88058,
+        "width": 620,
+        "height": 1000,
+        "aspectRatio": 0.62,
+        "technicalSuitability": "pass",
+        "warnings": [],
+        "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+      },
+      "consoleErrors": []
+    }
+  ],
+  "evidence": {
+    "browser": null,
+    "diagnostics": [],
+    "comparisonSheet": null
+  }
+}

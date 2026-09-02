@@ -175,6 +175,10 @@ import {
   createIsland14HoneycombLivingAmbience,
   createIsland14HoneycombMaterials,
 } from '../../dev/Island14HoneycombKingdomThreeWorld';
+import {
+  buildIsland18JungleExpeditionLandmark,
+  createIsland18JungleExpeditionMaterials,
+} from '../../dev/Island18JungleExpeditionThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { createIslandStagedRestorationThreePresentation } from '../../dev/IslandStagedRestorationThreePresentation';
 import {
@@ -233,7 +237,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'gives every staged restoration mission three construction robots, pop stages, sparkles, and a finale',
+    name: 'gives generic staged restorations robots and finales while Island 018 delegates visuals to its authored world',
     run: () => {
       const missions = [
         { islandNumber: 4 as const, stageCount: 3 },
@@ -262,6 +266,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
         assert(finale?.visible === true, `Island ${islandNumber} must reveal its completed-mission finale`);
         assert(Array.from({ length: stageCount }, (_, index) => runtime.root.getObjectByName(`ISLAND_${islandNumber}_MISSION_STAGE_${index + 1}`)?.visible).every(Boolean), `Island ${islandNumber} must retain every completed construction stage`);
       });
+
+      const jungleRuntime = createIslandStagedRestorationThreePresentation({ islandNumber: 18, stageCount: 5, quality: 'low' });
+      assert(jungleRuntime.root.userData.presentationOnly === true, 'Island 018 mission projection must remain read-only');
+      assert(Boolean(jungleRuntime.missionHitTarget), 'Island 018 still needs the canonical mission hit target');
+      assert(!jungleRuntime.root.getObjectByName('ISLAND_MISSION_CONSTRUCTION_ROBOT_1'), 'Island 018 must not duplicate its authored Living Compass with generic mission robots');
+      assert(!jungleRuntime.root.getObjectByName('ISLAND_18_MISSION_FINALE'), 'Island 018 must render the Emerald Zenith only through the authored Jungle Expedition world');
     },
   },
   {
@@ -436,9 +446,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'requires authored five-stage landmark construction across Islands 002 through 010 and Island 014',
+    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, and 018',
     run: () => {
-      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 50, 'ten authored worlds need five landmark construction profiles each');
+      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 55, 'eleven authored worlds need five landmark construction profiles each');
       const frostmoonProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(3, landmark.id)
       ));
@@ -556,6 +566,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(honeycombProfiles.some((profile) => profile?.choreography.stationStep === -1) && honeycombProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Honeycomb Kingdom needs clockwise and counter-clockwise routes');
       assert(honeycombProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Honeycomb landmarks need phase-shaped relocation routes');
       assert(honeycombProfiles.every((profile) => profile?.stageNames.some((name) => /honey|hive|bee|nectar|pollinator|brood|queen/i.test(name))), 'Honeycomb reveal stories must use the actual bee-civilization construction language');
+      const jungleProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(18, landmark.id));
+      assert(jungleProfiles.every(Boolean), 'Jungle Expedition needs a construction choreography for every landmark');
+      assertEqual(new Set(jungleProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Jungle Expedition landmarks must not share one generic robot choreography');
+      assert(new Set(jungleProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Jungle Expedition must use at least four collision-tested base routes');
+      assert(jungleProfiles.some((profile) => profile?.choreography.stationStep === -1) && jungleProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Jungle Expedition needs clockwise and counter-clockwise routes');
+      assert(jungleProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Jungle Expedition landmarks need phase-shaped relocation routes');
+      assert(jungleProfiles.every((profile) => profile?.stageNames.some((name) => /jungle|vine|temple|compass|glyph|bridge|ruin|canopy|emerald|leaf|map|astrolabe/i.test(name))), 'Jungle Expedition reveal stories must use the actual lost-city construction language');
       const levels = [[0, 1], [1, 2], [2, 3]] as const;
       const island2Materials = createIsland2CelestialMaterials();
       const island3Materials = createIsland3FrostmoonMaterials();
@@ -567,6 +584,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const island9Materials = createIsland9HeartshaftMaterials();
       const island10Materials = createIsland10RootheartMaterials();
       const island14Materials = createIsland14HoneycombMaterials();
+      const island18Materials = createIsland18JungleExpeditionMaterials();
       const worldFactories = [
         {
           world: 2,
@@ -626,6 +644,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
           world: 14,
           build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
             buildIsland14HoneycombLandmark(landmark, level, 'low', island14Materials, { constructionPreview: mode })
+          ),
+        },
+        {
+          world: 18,
+          build: (landmark: (typeof ISLAND_5_LANDMARKS)[number], level: 0 | 1 | 2 | 3, mode?: 'current' | 'target') => (
+            buildIsland18JungleExpeditionLandmark(landmark, level, 'low', island18Materials, { constructionPreview: mode })
           ),
         },
       ];
@@ -2218,8 +2242,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom;'),
-        'Islands 007, 012, 013, 014 and runtime 016 should use the proven per-material instanced route path',
+        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition;'),
+        'Islands 007, 012, 013, 014, 018 and runtime 016 should use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
       assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
@@ -2856,7 +2880,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].includes(islandParam)'), 'the workbench should expose every authored runtime world, including preserved Island 011 and promoted Island 016');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18].includes(islandParam)'), 'the workbench should expose every authored runtime world, including preserved Island 011, promoted Island 016, and Jungle Expedition');
       assert(pageSource.includes('assembly-crater-preview-controls') && pageSource.includes('Blast next'), 'the workbench must replay Assembly Crater sectors without writing a real gameplay save');
       assert(pageSource.includes('Play full 20') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of all twenty detonations');
       assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');

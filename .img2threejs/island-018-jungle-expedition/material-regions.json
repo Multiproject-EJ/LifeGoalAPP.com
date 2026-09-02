@@ -1,0 +1,113 @@
+{
+  "referenceId": "island-018-jungle-expedition-source",
+  "regions": [
+    {
+      "componentId": "lostCityTemple",
+      "regionId": "mossy-stone-blocks",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 285, "y": 430, "width": 245, "height": 260 },
+      "materialId": "stone.natural",
+      "family": "stone",
+      "subtype": "natural",
+      "finish": "rough-or-polished",
+      "materialSpecId": "mossyRuinStone",
+      "source": "source-crop",
+      "confidence": 0.86
+    },
+    {
+      "componentId": "jungleFoliage",
+      "regionId": "emerald-leaf-canopy",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 210, "y": 315, "width": 360, "height": 190 },
+      "materialId": "fabric.woven-matte",
+      "family": "fabric",
+      "subtype": "woven",
+      "finish": "matte",
+      "aliases": ["leaf cards", "matte foliage"],
+      "materialSpecId": "emeraldLeafCards",
+      "source": "adapted-registry-prior",
+      "confidence": 0.72
+    },
+    {
+      "componentId": "waterfallSystem",
+      "regionId": "turquoise-waterfall-and-pool",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 100, "y": 730, "width": 170, "height": 230 },
+      "materialId": "glass.clear",
+      "family": "glass",
+      "subtype": "clear",
+      "finish": "polished",
+      "aliases": ["transparent water", "waterfall sheet"],
+      "materialSpecId": "turquoiseWater",
+      "source": "adapted-registry-prior",
+      "confidence": 0.7
+    },
+    {
+      "componentId": "ropeBridge",
+      "regionId": "rope-and-aged-wood",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 505, "y": 455, "width": 245, "height": 145 },
+      "materialId": "wood.unfinished",
+      "family": "wood",
+      "subtype": "generic",
+      "finish": "unfinished",
+      "aliases": ["rope", "aged wood", "bridge planks"],
+      "materialSpecId": "ropeAndAgedWood",
+      "source": "source-crop",
+      "confidence": 0.76
+    },
+    {
+      "componentId": "ruinTrimAndRelics",
+      "regionId": "aged-gold-brass-trim",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 350, "y": 560, "width": 150, "height": 165 },
+      "materialId": "metal.brass",
+      "family": "metal",
+      "subtype": "brass-bronze",
+      "finish": "polished-or-aged",
+      "materialSpecId": "agedBrassTrim",
+      "source": "source-crop",
+      "confidence": 0.78
+    },
+    {
+      "componentId": "ruinLight",
+      "regionId": "amber-window-and-torch-glow",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 330, "y": 505, "width": 150, "height": 150 },
+      "materialId": "glass.clear",
+      "family": "glass",
+      "subtype": "clear",
+      "finish": "polished",
+      "aliases": ["emissive amber glass", "torch glow"],
+      "materialSpecId": "amberRuinLight",
+      "source": "adapted-registry-prior",
+      "confidence": 0.74
+    },
+    {
+      "componentId": "explorerNest",
+      "regionId": "green-egg-and-emerald-crystal",
+      "sourceImage": "../../docs/visual-references/island-018-jungle-expedition/018-source.png",
+      "bbox": { "x": 35, "y": 1200, "width": 95, "height": 185 },
+      "materialId": "gemstone.quartz",
+      "family": "gemstone",
+      "subtype": "quartz-like",
+      "finish": "polished",
+      "aliases": ["emerald egg", "green crystal"],
+      "materialSpecId": "emeraldEggCrystal",
+      "source": "source-crop",
+      "confidence": 0.82
+    }
+  ],
+  "notObservedMaterials": [
+    {
+      "id": "hidden-rear-temple-stone",
+      "status": "probe",
+      "reason": "Rear and side faces are not visible in the single source view."
+    },
+    {
+      "id": "underside-cliff-wet-rock",
+      "status": "probe",
+      "reason": "Floating-island undersides are partially occluded by UI and cloud mist."
+    }
+  ]
+}

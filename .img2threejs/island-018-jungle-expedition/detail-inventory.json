@@ -1,0 +1,187 @@
+{
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "zonesDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 16,
+    "details": [
+      {
+        "id": "guardian-mask-crown",
+        "kind": "carved-stone-silhouette",
+        "description": "Top guardian mask has rectangular stone crown blocks, glowing green eyes, leaf fringe, and a narrow vertical nose ridge.",
+        "region": { "x": 0.23, "y": 0.0, "width": 0.54, "height": 0.22, "units": "normalized" },
+        "scale": "meso",
+        "affects": "boss guardian identity and island motif",
+        "mapsTo": { "type": "component.localFeatures", "ref": "guardianMask.crownAndEyes" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/top-title-and-mask.png",
+        "confidence": 0.76
+      },
+      {
+        "id": "vine-framed-title-ignored-ui",
+        "kind": "baked-ui-boundary",
+        "description": "The title plaque, text and progress bar are baked UI; only the vine-wrapped stone-and-gold material language may inform noninteractive scenery.",
+        "region": { "x": 0.23, "y": 0.0, "width": 0.54, "height": 0.22, "units": "normalized" },
+        "scale": "macro",
+        "affects": "runtime exclusion rules",
+        "mapsTo": { "type": "qualityContract.failureModes", "ref": "bakedUiCopiedIntoRuntime" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/top-title-and-mask.png",
+        "confidence": 0.95
+      },
+      {
+        "id": "stepped-temple-tier-stack",
+        "kind": "architectural-mass",
+        "description": "Central temple is made of stacked cuboid stone tiers with offset terraces, visible block seams, moss caps and vertical stair runs.",
+        "region": { "x": 0.2, "y": 0.2, "width": 0.56, "height": 0.34, "units": "normalized" },
+        "scale": "macro",
+        "affects": "main temple silhouette",
+        "mapsTo": { "type": "component.localFeatures", "ref": "lostCityTemple.steppedTierStack" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/central-lost-city.png",
+        "confidence": 0.9
+      },
+      {
+        "id": "temple-stair-network",
+        "kind": "repeated-geometry",
+        "description": "Multiple narrow staircases climb the front and side faces, with shallow risers, darker side walls and gold-lit doorway endpoints.",
+        "region": { "x": 0.2, "y": 0.2, "width": 0.56, "height": 0.34, "units": "normalized" },
+        "scale": "meso",
+        "affects": "temple navigation readability",
+        "mapsTo": { "type": "component.localFeatures", "ref": "lostCityTemple.stairNetwork" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/central-lost-city.png",
+        "confidence": 0.86
+      },
+      {
+        "id": "amber-glowing-entries",
+        "kind": "emissive-material",
+        "description": "Warm amber windows and doorways glow from cavities in the stone, contrasting with the green jungle and teal water.",
+        "region": { "x": 0.2, "y": 0.2, "width": 0.56, "height": 0.34, "units": "normalized" },
+        "scale": "meso",
+        "affects": "material and lighting response",
+        "mapsTo": { "type": "material.localOverrides", "ref": "amberRuinLight.cavityEmission" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/central-lost-city.png",
+        "confidence": 0.88
+      },
+      {
+        "id": "rope-bridge-suspension",
+        "kind": "attached-curve-assembly",
+        "description": "A sagging rope bridge spans from the upper-right temple area to a distant platform, with rope rails and vertical hanger rhythm.",
+        "region": { "x": 0.2, "y": 0.2, "width": 0.56, "height": 0.34, "units": "normalized" },
+        "scale": "meso",
+        "affects": "background traversal silhouette",
+        "mapsTo": { "type": "component.localFeatures", "ref": "ropeBridge.saggingRailsAndDeck" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/central-lost-city.png",
+        "confidence": 0.82
+      },
+      {
+        "id": "waterfall-tier-system",
+        "kind": "transparent-effect-planes",
+        "description": "Waterfalls appear at left background, temple side ledges and lower front cliffs, with pale vertical sheets and mist at the base.",
+        "region": { "x": 0.08, "y": 0.44, "width": 0.84, "height": 0.22, "units": "normalized" },
+        "scale": "macro",
+        "affects": "terrain background and animation",
+        "mapsTo": { "type": "component.localFeatures", "ref": "waterfallSystem.tieredSheetsAndMist" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/lower-board-waterfalls.png",
+        "confidence": 0.9
+      },
+      {
+        "id": "turquoise-pool-depth",
+        "kind": "water-material",
+        "description": "Pools and channels are saturated cyan/turquoise, brighter at foam edges and darker in basin interiors.",
+        "region": { "x": 0.08, "y": 0.44, "width": 0.84, "height": 0.22, "units": "normalized" },
+        "scale": "meso",
+        "affects": "water material palette",
+        "mapsTo": { "type": "material.localOverrides", "ref": "jungleWater.foamEdgeGradient" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/lower-board-waterfalls.png",
+        "confidence": 0.85
+      },
+      {
+        "id": "quiet-live-board-corridor",
+        "kind": "runtime-ui-adaptation",
+        "description": "The source has painted board tiles and icons; runtime must instead keep a quiet terrain corridor under the live canonical 36-tile ring.",
+        "region": { "x": 0.08, "y": 0.44, "width": 0.84, "height": 0.22, "units": "normalized" },
+        "scale": "macro",
+        "affects": "board readability",
+        "mapsTo": { "type": "qualityContract.failureModes", "ref": "fakeTilesOrTileIconsPaintedIntoRuntime" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/lower-board-waterfalls.png",
+        "confidence": 0.95
+      },
+      {
+        "id": "green-egg-shrine",
+        "kind": "landmark-core-object",
+        "description": "Hatchery area includes a faceted green egg on a gold-and-stone pedestal with leafy patterning and a small glowing base.",
+        "region": { "x": 0.0, "y": 0.56, "width": 0.33, "height": 0.24, "units": "normalized" },
+        "scale": "meso",
+        "affects": "hatchery landmark identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "explorerNest.greenEggShrine" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/hatchery-panel-and-nest.png",
+        "confidence": 0.86
+      },
+      {
+        "id": "moss-hidden-hatchery-perch",
+        "kind": "landmark-platform",
+        "description": "The Hatchery sits on a small wet stone cliff perch with moss, vines, flowers, blue water below and a waterfall dropping off the edge.",
+        "region": { "x": 0.0, "y": 0.56, "width": 0.33, "height": 0.24, "units": "normalized" },
+        "scale": "meso",
+        "affects": "hatchery placement and terrain contact",
+        "mapsTo": { "type": "component.localFeatures", "ref": "explorerNest.mossyPerch" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/hatchery-panel-and-nest.png",
+        "confidence": 0.8
+      },
+      {
+        "id": "habit-torch-platform",
+        "kind": "landmark-lighting",
+        "description": "Habit/Jungle Path area includes a tall torch flame beside a mossy raised platform and hanging vines.",
+        "region": { "x": 0.66, "y": 0.2, "width": 0.34, "height": 0.62, "units": "normalized" },
+        "scale": "meso",
+        "affects": "habit landmark identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "junglePath.torchPlatform" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/habit-trials-wisdom-panels.png",
+        "confidence": 0.72
+      },
+      {
+        "id": "survival-trials-totem-and-chest",
+        "kind": "landmark-prop-cluster",
+        "description": "Survival Trials area shows a carved green-eyed totem, small chest/crate forms, gold trim and a stepped platform edge.",
+        "region": { "x": 0.66, "y": 0.2, "width": 0.34, "height": 0.62, "units": "normalized" },
+        "scale": "meso",
+        "affects": "mystery landmark identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "survivalTrials.totemChestCluster" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/habit-trials-wisdom-panels.png",
+        "confidence": 0.76
+      },
+      {
+        "id": "explorers-camp-map-platform",
+        "kind": "landmark-prop-cluster",
+        "description": "Wisdom/Explorer's Camp area reads as small expedition platforms with map-table/lantern cues and warm gold tent-like accents.",
+        "region": { "x": 0.66, "y": 0.2, "width": 0.34, "height": 0.62, "units": "normalized" },
+        "scale": "meso",
+        "affects": "wisdom landmark identity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "explorersCamp.mapLanternPlatform" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/habit-trials-wisdom-panels.png",
+        "confidence": 0.68
+      },
+      {
+        "id": "dense-jungle-leaf-cards",
+        "kind": "repetition-system",
+        "description": "Vegetation depends on many overlapping leaf cards and palm silhouettes with hue/value variation, not a few isolated shrubs.",
+        "region": { "x": 0.2, "y": 0.2, "width": 0.56, "height": 0.34, "units": "normalized" },
+        "scale": "micro",
+        "affects": "foliage density and source likeness",
+        "mapsTo": { "type": "component.localFeatures", "ref": "jungleFoliage.overlappingLeafCards" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/central-lost-city.png",
+        "confidence": 0.86
+      },
+      {
+        "id": "bottom-controller-ignored-ui",
+        "kind": "baked-ui-boundary",
+        "description": "The roll button, bottom controls, companion labels and market/build buttons are baked UI and must not be recreated in island art.",
+        "region": { "x": 0.05, "y": 0.82, "width": 0.9, "height": 0.17, "units": "normalized" },
+        "scale": "macro",
+        "affects": "runtime exclusion rules",
+        "mapsTo": { "type": "qualityContract.failureModes", "ref": "controllerUiBakedIntoIslandArt" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/.img2threejs/island-018-jungle-expedition/detail-zones/controller-footer.png",
+        "confidence": 0.98
+      }
+    ]
+  },
+  "authoringInstruction": "Each listed detail must map into the eventual sculpt spec as a component.localFeatures entry, material.localOverrides entry, or explicit failure mode. Add more detail entries before implementation if new source crops or generated admitted references reveal additional identity-critical structures."
+}

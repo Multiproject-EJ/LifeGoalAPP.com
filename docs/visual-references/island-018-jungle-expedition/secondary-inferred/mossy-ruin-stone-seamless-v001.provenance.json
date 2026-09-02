@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "assetId": "mossy-ruin-stone-seamless-v001",
+  "path": "docs/visual-references/island-018-jungle-expedition/secondary-inferred/mossy-ruin-stone-seamless-v001.png",
+  "sha256": "0258b48df0fb45d320cf4cb4b591bc497706183f75f7960bcb1ec588694d4a04",
+  "authority": "secondary-inferred",
+  "created": "2026-08-30",
+  "generator": "OpenAI built-in image generation",
+  "sourceReferences": [
+    "docs/visual-references/island-018-jungle-expedition/018-source.png",
+    "docs/visual-references/island-018-jungle-expedition/derived-crops/lost-city-temple-boss-source-crop-v001.png"
+  ],
+  "promptSummary": "Seamless square dark olive jungle-ruin masonry with irregular ancient blocks, chipped edges, hairline cracks, moss seams and damp stone response; no symbols, text or baked lighting direction.",
+  "runtimeDerivative": {
+    "path": "public/assets/islands/island-018/materials/mossy-ruin-stone-v1.jpg",
+    "sha256": "96a4cd532df1970cf6389d68b1a90d4f2d895b93e9baa18329d9fcb0a40be2a5",
+    "bytes": 712176,
+    "conversion": "JPEG quality 84 via macOS sips"
+  },
+  "allowedUse": "Low-amplitude relief evidence for mossy ruin stone on runtime Island 018.",
+  "restrictions": "Used as a relief map, not as source authority or a replacement for authored block geometry and source-visible stone color."
+}

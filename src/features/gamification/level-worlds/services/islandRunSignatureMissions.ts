@@ -68,22 +68,31 @@ export const GREAT_HONEYFALL_NECTAR_TILE_FRACTIONS = Object.freeze([
   2 / 36, 11 / 36, 20 / 36, 29 / 36,
 ] as const);
 
+export const JUNGLE_EXPEDITION_ISLAND_NUMBER = 18;
+export const LIVING_COMPASS_MAX_STAGE = 5;
+/** Five Wayfinder caches, separated from the four landmark-door clusters. */
+export const LIVING_COMPASS_GLYPH_TILE_FRACTIONS = Object.freeze([
+  2 / 36, 9 / 36, 16 / 36, 25 / 36, 34 / 36,
+] as const);
+
 export type StagedRestorationMissionId =
   | 'broken-causeway'
   | 'moon-mirrors'
   | 'breathline'
   | 'great-pollination'
-  | 'ignition-chain';
+  | 'ignition-chain'
+  | 'jungle-expedition-living-compass';
 
 export type StagedRestorationPickupKind =
   | 'causeway_masonry'
   | 'moon_mirror_lens'
   | 'breathline_pressure_pearl'
   | 'pollination_pollen_light'
-  | 'ignition_core';
+  | 'ignition_core'
+  | 'wayfinder_glyph';
 
 export interface StagedRestorationMissionDescriptor {
-  islandNumber: 4 | 6 | 7 | 8 | 9;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18;
   missionId: StagedRestorationMissionId;
   pickupKind: StagedRestorationPickupKind;
   pickupLabel: string;
@@ -124,6 +133,12 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
     pickupLabel: 'Ignition Core', actionLabel: 'Fire Next Mechanism', stageLabel: 'Systems Ignited',
     stageCount: 8, chargeCostPerStage: 1,
     preferredPickupFractions: [0 / 36, 3 / 36, 8 / 36, 11 / 36, 18 / 36, 20 / 36, 26 / 36, 29 / 36],
+  },
+  18: {
+    islandNumber: 18, missionId: 'jungle-expedition-living-compass', pickupKind: 'wayfinder_glyph',
+    pickupLabel: 'Wayfinder Glyph', actionLabel: 'Awaken Next Compass Seal', stageLabel: 'Compass Seals Awakened',
+    stageCount: LIVING_COMPASS_MAX_STAGE, chargeCostPerStage: 1,
+    preferredPickupFractions: LIVING_COMPASS_GLYPH_TILE_FRACTIONS,
   },
 });
 

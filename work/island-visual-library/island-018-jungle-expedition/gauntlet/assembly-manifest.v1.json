@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "assemblyId": "island-018-jungle-expedition",
+  "status": "approved",
+  "coordinateSystem": {"up": "+Y", "forward": "+Z", "origin": "board center"},
+  "approvedParts": [
+    "floating-cliff-and-temple-terraces",
+    "board-route-corridor",
+    "lost-city-temple-shell",
+    "temple-stair-and-door-network",
+    "guardian-mask-crown",
+    "living-compass-mechanism",
+    "explorer-nest",
+    "jungle-path",
+    "survival-trials",
+    "explorers-camp",
+    "rope-skybridges",
+    "waterfall-and-pool-system",
+    "jungle-canopy-and-vines",
+    "stone-relief-and-moss",
+    "brass-emerald-amber-accents",
+    "depth-islands-and-horizon",
+    "sky-cloud-and-sun-system",
+    "living-ambience",
+    "construction-choreography",
+    "emerald-zenith-fx"
+  ],
+  "approval": {
+    "evidence": "../evidence/final/manifest.v1.json",
+    "overallScore": 0.888,
+    "worstDimensionScore": 0.86,
+    "canyonParity": "pass",
+    "approvedAt": "2026-08-30T05:55:00Z"
+  },
+  "sharedSockets": [
+    {"id": "board-origin", "owner": "board-route-corridor"},
+    {"id": "temple-root", "owner": "lost-city-temple-shell"},
+    {"id": "zenith-core", "owner": "living-compass-mechanism"},
+    {"id": "hatchery-plot", "owner": "board-route-corridor"},
+    {"id": "habit-plot", "owner": "board-route-corridor"},
+    {"id": "event-plot", "owner": "board-route-corridor"},
+    {"id": "wisdom-plot", "owner": "board-route-corridor"},
+    {"id": "boss-plot", "owner": "floating-cliff-and-temple-terraces"}
+  ],
+  "invalidationRule": "A parent silhouette or socket change invalidates dependent part approvals and requires new assembly captures."
+}

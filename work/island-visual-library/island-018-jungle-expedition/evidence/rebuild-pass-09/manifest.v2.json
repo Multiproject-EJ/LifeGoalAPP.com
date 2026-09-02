@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-30",
+  "supersedes": "../rebuild-pass-08/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. This grounding, stream, construction, and Emerald Zenith pass does not self-certify the active 10/10 Island 018 goal."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "interactiveOverviewObserved": {
+      "drawCalls": 176,
+      "triangles": 180824,
+      "renderSizePx": [565, 1246],
+      "nonBlank": true,
+      "notes": "Live overview includes interactive board actors and workbench presentation geometry; the authored world budget is measured separately by contract."
+    },
+    "emeraldZenithWaterfallReversalObserved": {
+      "drawCalls": 176,
+      "triangles": 175596,
+      "phase": "waterfall-reversal",
+      "progress": 0.51,
+      "nonBlank": true
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1912,
+      "failed": 0
+    },
+    "focusedTypeScriptCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "1m 59s",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the build completed successfully."
+    }
+  },
+  "implementedVisualSystems": [
+    "nine irregular ruin-to-valley buttress roots, six two-part grounding vines, and front-weighted crown ledges that preserve the existing temple while breaking the floating circular silhouette",
+    "raised 3.45-unit hero current with a fully framed 2.68-unit turquoise catch pool and animated procedural foam rim",
+    "twenty-four authored low-poly bank plants that keep the foreground current readable without turning its banks into an empty lawn",
+    "preserved six-branch river network, layered jungle basin, waterfalls, weather cycle, rounded cloud volumes, and eight ground plus six aerial exotic species",
+    "persistent Living Zenith state with a rotating wayfinder constellation, suspended water crown, luminous water response, and three instanced jungle pulse rings",
+    "fifth-seal cinematic with levitating stone assembly, route-glyph wave, living vine helix, waterfall reversal, shockwave, canopy opening, sky beam, and reduced-motion completion state",
+    "five distinct landmark construction stories with jungle-specific rigs, tools, materials, additive stages, and retained east/west board-route tunnels through the Lost City temple"
+  ],
+  "evidence": [
+    {
+      "file": "grounded-planted-stream-overview-final-v003.png",
+      "sha256": "c3304b1d0bf713c4fb527aa9dc90ed9b633dffd4e3607ea8290f06ddafb97762",
+      "proves": "final normal phone overview, continuous foreground current, fully framed catch pool, grounded root connection, active aerial fauna, and dense procedural jungle depth"
+    },
+    {
+      "file": "emerald-zenith-jungle-pulse-climax-final-v001.png",
+      "sha256": "5810d4982754f93b1d093b1bbfcd9866d42489739d835cc3d823c4757c4f511d",
+      "proves": "live waterfall-reversal timing, levitating temple composition, vine helix, wayfinder crown, sky beam, and measured sub-180k climax geometry"
+    },
+    {
+      "file": "../rebuild-pass-08/weather-rain-rounded-clouds-final-v002.png",
+      "sha256": "0202d0aadf2d7e6bdd39ddd10184f1118946dba9027b8f3330fd67051ffc5ded",
+      "proves": "the retained rain and lightning state with rounded 3D cloud massing and readable temple silhouette"
+    },
+    {
+      "file": "../rebuild-pass-07/live-build-jungle-scaffold-final-v001.png",
+      "sha256": "d688095d084b6ad8fb4fbb54f44a4aba9d1d79a6a36cb86a12d52c44451023c0",
+      "proves": "the retained live five-part jungle construction workflow, temporary rig, progress HUD, workers, material motion, and level switching"
+    },
+    {
+      "file": "../rebuild-pass-07/lost-city-route-tunnel-orbit-final-v001.png",
+      "sha256": "d7fda60b2d0e2222673c24324ba59e9a039103fc3c65a808df24103192ffa976",
+      "proves": "named east and west route tunnels preserving the board surface through the L3 Lost City temple"
+    }
+  ],
+  "knownCaptureNotes": [
+    "Every visual added in pass 09 is procedural Three.js geometry, instancing, vertex colour, light, or an in-memory texture; no 2D scenery image was introduced.",
+    "The supplied source image remains a visual reference only and is not rendered in the Island 018 world.",
+    "Earlier diagnostic pass-09 crops are retained as iteration history but are not listed as final proof.",
+    "The persistent 10/10 production goal remains active until player visual judgment confirms the island."
+  ]
+}

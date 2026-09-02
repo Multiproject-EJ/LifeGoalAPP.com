@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Island3DQuality } from './island5ThreePilotContract';
 
 export interface IslandStagedRestorationPresentation {
-  islandNumber: 4 | 6 | 7 | 8 | 9;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18;
   activatedStages: number;
   stageCount: number;
   constructionSequence?: number;
@@ -18,12 +18,13 @@ export interface IslandStagedRestorationThreeRuntime {
 
 type Palette = { primary: number; secondary: number; glow: number; dark: number };
 
-const PALETTES: Record<4 | 6 | 7 | 8 | 9, Palette> = {
+const PALETTES: Record<4 | 6 | 7 | 8 | 9 | 18, Palette> = {
   4: { primary: 0xf5d083, secondary: 0xb88340, glow: 0xffe9a3, dark: 0x382716 },
   6: { primary: 0xdad8ff, secondary: 0x7d70df, glow: 0xb9f4ff, dark: 0x171237 },
   7: { primary: 0x8df4ff, secondary: 0x3aa8cc, glow: 0xd5ffff, dark: 0x082a3a },
   8: { primary: 0xff8fda, secondary: 0x71d276, glow: 0xfff0a8, dark: 0x17361c },
   9: { primary: 0xffa126, secondary: 0xb83d18, glow: 0xffee8a, dark: 0x341008 },
+  18: { primary: 0x6e8466, secondary: 0xb78b35, glow: 0x54f5a0, dark: 0x172c20 },
 };
 
 function cylinderBetween(start: THREE.Vector3, end: THREE.Vector3, radius: number, material: THREE.Material) {
@@ -132,8 +133,25 @@ function createIgnitionStage(index: number, materials: Record<string, THREE.Mate
   return group;
 }
 
+function createLivingCompassStage(index: number, materials: Record<string, THREE.Material>) {
+  const group = new THREE.Group();
+  const angle = index / 5 * Math.PI * 2 - Math.PI / 2;
+  const radius = index === 4 ? 2.1 : 4.55;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.44, 0.24, 7), materials.dark);
+  base.position.set(Math.cos(angle) * radius, 0.4, Math.sin(angle) * radius);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.045, 6, 22), materials.secondary);
+  ring.position.copy(base.position).add(new THREE.Vector3(0, 0.58, 0));
+  ring.rotation.y = -angle;
+  const glyph = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.055, 6), materials.glow);
+  glyph.position.copy(ring.position);
+  glyph.rotation.x = Math.PI / 2;
+  glyph.rotation.z = angle;
+  group.add(base, ring, glyph);
+  return group;
+}
+
 export function createIslandStagedRestorationThreePresentation(options: {
-  islandNumber: 4 | 6 | 7 | 8 | 9;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18;
   stageCount: number;
   quality: Island3DQuality;
 }): IslandStagedRestorationThreeRuntime {
@@ -147,7 +165,11 @@ export function createIslandStagedRestorationThreePresentation(options: {
     glow: new THREE.MeshBasicMaterial({ color: palette.glow, transparent: true, opacity: 0.78, blending: THREE.AdditiveBlending, depthWrite: false }),
     dark: new THREE.MeshStandardMaterial({ color: palette.dark, roughness: 0.44, metalness: 0.58 }),
   };
-  const stageGroups = Array.from({ length: options.stageCount }, (_, index) => {
+  // Island 018 owns its complete stage/finale sculpture inside the authored
+  // Jungle Expedition world. Retain this runtime only as the canonical mission
+  // hit target so the generic markers do not duplicate the Living Compass.
+  const usesAuthoredWorldPresentation = options.islandNumber === 18;
+  const stageGroups = Array.from({ length: usesAuthoredWorldPresentation ? 0 : options.stageCount }, (_, index) => {
     const stage = options.islandNumber === 4
       ? createCausewayStage(index, materials)
       : options.islandNumber === 6
@@ -156,6 +178,8 @@ export function createIslandStagedRestorationThreePresentation(options: {
           ? createBreathlineStage(index, materials)
           : options.islandNumber === 8
             ? createPollinationStage(index, materials)
+          : options.islandNumber === 18
+            ? createLivingCompassStage(index, materials)
             : createIgnitionStage(index, materials);
     stage.name = `ISLAND_${options.islandNumber}_MISSION_STAGE_${index + 1}`;
     stage.visible = false;
@@ -166,13 +190,13 @@ export function createIslandStagedRestorationThreePresentation(options: {
   const finale = new THREE.Group();
   finale.name = `ISLAND_${options.islandNumber}_MISSION_FINALE`;
   const finaleCore = new THREE.Mesh(new THREE.IcosahedronGeometry(options.islandNumber === 8 ? 0.8 : 0.62, 2), materials.glow);
-  finaleCore.position.y = options.islandNumber === 6 ? 2.4 : 1.45;
+  finaleCore.position.y = options.islandNumber === 6 ? 2.4 : options.islandNumber === 18 ? 7.05 : 1.45;
   const finaleRing = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.075, 8, 28), materials.glow);
   finaleRing.position.copy(finaleCore.position);
   finaleRing.rotation.x = Math.PI / 2;
   finale.add(finaleCore, finaleRing);
   finale.visible = false;
-  root.add(finale);
+  if (!usesAuthoredWorldPresentation) root.add(finale);
 
   const flashPoints = new THREE.Group();
   for (let i = 0; i < (options.quality === 'high' ? 24 : 12); i += 1) {
@@ -183,7 +207,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
     flashPoints.add(flash);
   }
   flashPoints.visible = false;
-  root.add(flashPoints);
+  if (!usesAuthoredWorldPresentation) root.add(flashPoints);
 
   const robots = new THREE.Group();
   for (let i = 0; i < 3; i += 1) {
@@ -193,7 +217,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
     robots.add(robot);
   }
   robots.visible = false;
-  root.add(robots);
+  if (!usesAuthoredWorldPresentation) root.add(robots);
 
   const missionHitTarget = new THREE.Mesh(
     new THREE.SphereGeometry(1.4, 8, 6),

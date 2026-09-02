@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "assetId": "jungle-sky-depth-backdrop-v001",
+  "path": "docs/visual-references/island-018-jungle-expedition/secondary-inferred/jungle-sky-depth-backdrop-v001.png",
+  "sha256": "fbcfbca8578722bec45e5aabe86982ad90278db27317d59bc70d304d5b93751c",
+  "authority": "secondary-inferred",
+  "created": "2026-08-30",
+  "generator": "OpenAI built-in image generation",
+  "sourceReferences": [
+    "docs/visual-references/island-018-jungle-expedition/018-source.png",
+    "docs/visual-references/island-018-jungle-expedition/derived-crops/jungle-expedition-board-and-lost-city-source-crop-v001.png"
+  ],
+  "promptSummary": "Portrait tropical cloud-canyon sky with bright blue depth, distant jungle-covered floating islands, waterfalls and rope bridges; no UI, text, counters, characters or foreground temple.",
+  "runtimeDerivative": {
+    "path": "public/assets/islands/island-018/background/jungle-sky-depth-backdrop-v1.jpg",
+    "sha256": "f5da87edc3daec57abdc4b20d499afd78ef3639f26c669bde9626fe60d82927d",
+    "bytes": 759502,
+    "conversion": "JPEG quality 86 via macOS sips"
+  },
+  "allowedUse": "Background depth and sky ambience for runtime Island 018.",
+  "restrictions": "May fill background depth only. It cannot override visible source composition, landmark identity, gameplay UI or the exact source palette hierarchy."
+}

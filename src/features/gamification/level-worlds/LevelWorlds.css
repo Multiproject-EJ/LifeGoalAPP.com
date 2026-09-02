@@ -984,6 +984,40 @@
   transform: translate3d(0, 0, 0);
 }
 
+/* Emerald Zenith owns the screen while the Living Compass rewrites the city. */
+.island-run-prototype:has(
+  .island-5-three-pilot__canvas[data-jungle-zenith-phase]:not([data-jungle-zenith-phase='complete'])
+) .island-run-prototype__footer {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, calc(100% + 2rem), 0);
+  transition:
+    opacity 180ms ease,
+    transform 420ms cubic-bezier(0.22, 0.8, 0.28, 1);
+}
+
+.island-run-prototype:has(
+  .island-5-three-pilot__canvas[data-jungle-zenith-phase]:not([data-jungle-zenith-phase='complete'])
+) .island-run-board__rewardbar-cluster {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 2rem));
+  transition:
+    opacity 180ms ease,
+    transform 360ms cubic-bezier(0.22, 0.8, 0.28, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-prototype:has(
+    .island-5-three-pilot__canvas[data-jungle-zenith-phase]:not([data-jungle-zenith-phase='complete'])
+  ) .island-run-prototype__footer,
+  .island-run-prototype:has(
+    .island-5-three-pilot__canvas[data-jungle-zenith-phase]:not([data-jungle-zenith-phase='complete'])
+  ) .island-run-board__rewardbar-cluster {
+    transition-duration: 1ms;
+  }
+}
+
 .island-run-prototype__footer-tuck-handle {
   position: absolute;
   left: 50%;

@@ -1,0 +1,32 @@
+{
+  "referenceAreaFraction": 0.0,
+  "angles": [
+    {
+      "path": "work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout-small/orbit-plus35.png",
+      "areaFraction": 0.0,
+      "ratio": 0.0,
+      "degenerate": true
+    },
+    {
+      "path": "work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout-small/orbit-minus35.png",
+      "areaFraction": 0.0,
+      "ratio": 0.0,
+      "degenerate": true
+    },
+    {
+      "path": "work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout-small/profile.png",
+      "areaFraction": 0.0,
+      "ratio": 0.0,
+      "degenerate": true
+    },
+    {
+      "path": "work/island-visual-library/island-018-jungle-expedition/evidence/captures/blockout-small/rear.png",
+      "areaFraction": 0.08814340588988476,
+      "ratio": 0.0,
+      "degenerate": true
+    }
+  ],
+  "degenerate": true,
+  "collapseRatio": 0.15,
+  "note": "deterministic; zero token; a flat-plane-faking-a-volume collapses in silhouette area when orbited"
+}

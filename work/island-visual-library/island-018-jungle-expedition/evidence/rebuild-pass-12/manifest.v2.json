@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 2,
+  "runtimeIslandNumber": 18,
+  "title": "Jungle Expedition",
+  "capturedAt": "2026-08-31",
+  "supersedes": "../rebuild-pass-11/manifest.v2.json",
+  "sourceReference": "docs/visual-references/island-018-jungle-expedition/018-source.png",
+  "reviewPolicy": {
+    "subjectiveScore": null,
+    "reason": "Player visual judgment remains authoritative. Pass 12 adds a lived-in procedural resident community and deterministic work-loop evidence while preserving every Pass 11 environment, weather, construction, tunnel, wildlife, and Emerald Zenith system."
+  },
+  "productionProof": {
+    "workbenchGeometryChecks": "7/7 pass",
+    "residentNetwork": {
+      "roles": [
+        "river-gatherer",
+        "temple-conservator",
+        "expedition-cartographer",
+        "canopy-gardener"
+      ],
+      "individualsByQuality": {
+        "low": 4,
+        "medium": 5,
+        "high": 6
+      },
+      "minimumRouteRadius": 5.34,
+      "canonicalBoardRouteRadius": 3.4,
+      "additionalDrawCalls": 0,
+      "batchedInto": "ISLAND_18_CONTINUOUS_JUNGLE_BASIN_MESH"
+    },
+    "authoredBudgetContract": {
+      "maximumDrawCalls": 175,
+      "maximumTrianglesExclusive": 180000,
+      "qualitiesChecked": ["low", "medium", "high"],
+      "result": "pass"
+    },
+    "islandRunTests": {
+      "passed": 1912,
+      "failed": 0
+    },
+    "focusedTypeScriptCompile": "pass",
+    "islandRunArchitectureGuard": {
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "viteProductionBuild": {
+      "result": "pass",
+      "duration": "1m 30s",
+      "notes": "Existing mixed static/dynamic import and large chunk warnings remain; the production bundle completed successfully."
+    }
+  },
+  "implementedVisualSystems": [
+    "four respectful everyday resident identities make the Lost City feel inhabited: river gatherers, temple conservators, expedition cartographers, and canopy gardeners",
+    "each profession has a distinct stature, skin palette, clothing palette, headwear, working pose, and tool silhouette including water vessels, conservation brushes, map boards, pruning poles, and carrying baskets",
+    "four primary workers occupy separate open riverbank and promenade stations while two additional High-quality residents work deeper in the settlement",
+    "role-specific procedural work rhythms animate gathering, stone tending, map study, and canopy tending through the existing basin material, adding no new draw call",
+    "deterministic work-a and work-b preview beats expose opposite animation phases while reduced-motion mode settles every resident into a readable authored pose",
+    "all four professions remain present on Low quality; Medium and High add residents without changing the community's role identity",
+    "resident geometry is presentation-only, stays outside the protected board route and landmark tunnels, and performs no gameplay writes",
+    "the grounded river, multilayer jungle, exotic wildlife, weather cycle, five landmark stories, build choreography, route tunnels, Living Compass, and Emerald Zenith finale from Pass 11 remain intact"
+  ],
+  "evidence": [
+    {
+      "file": "resident-community-overview-v001.png",
+      "sha256": "1b15942265312e973eb277ccad4eb4360b1eff8fa28979bc97a21bf8166bc92e",
+      "proves": "the normal narrow-phone overview now reads as a lived-in settlement, with distinct workers distributed across the promenade without crowding the board route"
+    },
+    {
+      "file": "resident-riverbank-left-work-a-v001.png",
+      "sha256": "401caf24d7cde409ca5c0c716c24274a92c444808129c980179b2af3a2a14041",
+      "proves": "the red temple conservator works with a long brush beside the turquoise river gatherer, whose broad hat, carrying basket, and water vessel read at close mobile scale"
+    },
+    {
+      "file": "resident-riverbank-left-work-b-v001.png",
+      "sha256": "58307d536ef532b983532dde9a1ac62158f18c9db53fa506360d2790e4cae7d7",
+      "proves": "the same left-bank camera at the opposite deterministic work phase, preserving the authored poses while the resident work shader advances"
+    },
+    {
+      "file": "resident-riverbank-right-work-b-v001.png",
+      "sha256": "954b7ab7b52073a5c68a2240a14daaa964e7475e8aba2da6a62dda09eb7d5b6b",
+      "proves": "the ochre canopy gardener and pruning pole remain distinct from the blue cartographer and pale map board on the right riverbank"
+    }
+  ],
+  "knownCaptureNotes": [
+    "The source image remains a visual reference only and is not rendered in Island 018.",
+    "The resident captures retain the real workbench chrome because they verify the narrow-phone authoring surface and its 7/7 release gate.",
+    "Pass 12 inherits the complete Pass 11 evidence pack for overview, weather, landmarks, tunnels, construction, wildlife, and Emerald Zenith.",
+    "The active 10/10 production goal remains open until player visual judgment validates the island."
+  ]
+}
