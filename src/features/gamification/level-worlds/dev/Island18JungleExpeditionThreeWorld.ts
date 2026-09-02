@@ -88,6 +88,9 @@ export interface Island18JungleExpeditionMaterials {
   waterfall: THREE.MeshPhysicalMaterial;
   foam: THREE.MeshStandardMaterial;
   flower: THREE.MeshStandardMaterial;
+  flowerSun: THREE.MeshStandardMaterial;
+  flowerCyan: THREE.MeshStandardMaterial;
+  biolume: THREE.MeshStandardMaterial;
   basinGround: THREE.MeshStandardMaterial;
   canopyVolume: THREE.ShaderMaterial;
   mist: THREE.MeshBasicMaterial;
@@ -541,8 +544,14 @@ function createRuinSurfaceMaps() {
       const albedoValue = THREE.MathUtils.clamp(228 + broad * 10 + grain * 4 - pit * 20 - hairline * 8, 174, 248);
       const roughnessValue = THREE.MathUtils.clamp(218 + broad * 8 + grain * 12 + pit * 18, 155, 248);
       const reliefValue = THREE.MathUtils.clamp(132 + broad * 8 + grain * 6 - pit * 34 - hairline * 17, 76, 174);
-      [albedo, roughness, relief].forEach((data, channelIndex) => {
-        const value = channelIndex === 0 ? albedoValue : channelIndex === 1 ? roughnessValue : reliefValue;
+      const mineralWarmth = 0.5 + 0.5 * Math.sin(x * 0.028 - y * 0.019 + Math.sin(x * 0.031 + y * 0.017) * 0.9);
+      const mossStain = Math.pow(Math.max(0, Math.sin(x * 0.016 + y * 0.024) * Math.cos(y * 0.011 - x * 0.008)), 3);
+      albedo[offset] = THREE.MathUtils.clamp(albedoValue + mineralWarmth * 8 - mossStain * 20, 0, 255);
+      albedo[offset + 1] = THREE.MathUtils.clamp(albedoValue + 4 + mossStain * 10, 0, 255);
+      albedo[offset + 2] = THREE.MathUtils.clamp(albedoValue - mineralWarmth * 13 - mossStain * 24, 0, 255);
+      albedo[offset + 3] = 255;
+      [roughness, relief].forEach((data, channelIndex) => {
+        const value = channelIndex === 0 ? roughnessValue : reliefValue;
         data[offset] = value;
         data[offset + 1] = value;
         data[offset + 2] = value;
@@ -625,7 +634,10 @@ export function createIsland18JungleExpeditionMaterials(): Island18JungleExpedit
     water: new THREE.MeshPhysicalMaterial({ color: 0x32e5d7, map: waterAlbedo, vertexColors: true, roughness: 0.08, metalness: 0.02, clearcoat: 1, clearcoatRoughness: 0.025, transparent: true, opacity: 0.88, side: THREE.DoubleSide, depthWrite: false, emissive: 0x087f7e, emissiveIntensity: 0.11 }),
     waterfall: new THREE.MeshPhysicalMaterial({ color: 0x86fff0, map: waterfallAlbedo, roughness: 0.07, clearcoat: 0.94, transparent: true, opacity: 0.86, side: THREE.DoubleSide, depthWrite: false, emissive: 0x0d8886, emissiveIntensity: 0.2 }),
     foam: new THREE.MeshStandardMaterial({ color: 0xb8f7ec, roughness: 0.38, transparent: true, opacity: 0.74, depthWrite: false, emissive: 0x4baea6, emissiveIntensity: 0.09 }),
-    flower: new THREE.MeshStandardMaterial({ color: 0xa854b7, roughness: 0.64, emissive: 0x35113c, emissiveIntensity: 0.12 }),
+    flower: new THREE.MeshStandardMaterial({ color: 0xd45bba, roughness: 0.5, emissive: 0x5c164d, emissiveIntensity: 0.2, side: THREE.DoubleSide }),
+    flowerSun: new THREE.MeshStandardMaterial({ color: 0xffc947, roughness: 0.46, emissive: 0x8d4a06, emissiveIntensity: 0.24, side: THREE.DoubleSide }),
+    flowerCyan: new THREE.MeshStandardMaterial({ color: 0x65e6dd, roughness: 0.42, emissive: 0x087f72, emissiveIntensity: 0.28, side: THREE.DoubleSide }),
+    biolume: new THREE.MeshStandardMaterial({ color: 0x9dff9a, roughness: 0.26, emissive: 0x28d76d, emissiveIntensity: 0.72, side: THREE.DoubleSide }),
     basinGround: new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, flatShading: true }),
     canopyVolume: new THREE.ShaderMaterial({
       uniforms: {
@@ -828,15 +840,115 @@ function createStoneBlockWall(
 }
 
 function createBroadLeafGeometry() {
-  const perimeter = [
-    [0, -0.54, 0], [-0.24, -0.28, -0.01], [-0.4, 0.04, 0.01], [-0.3, 0.34, 0.025],
-    [0, 0.62, 0], [0.3, 0.34, 0.025], [0.4, 0.04, 0.01], [0.24, -0.28, -0.01],
-  ] as const;
-  const positions = [0, 0.02, 0.09, ...perimeter.flat()];
-  const uvs = [0.5, 0.5, ...perimeter.flatMap(([x, y]) => [0.5 + x, 0.46 + y * 0.78])];
+  const rows = 5;
+  const positions: number[] = [];
+  const uvs: number[] = [];
   const indices: number[] = [];
-  for (let index = 0; index < perimeter.length; index += 1) {
-    indices.push(0, index + 1, (index + 1) % perimeter.length + 1);
+  for (let row = 0; row < rows; row += 1) {
+    const t = row / (rows - 1);
+    const y = THREE.MathUtils.lerp(-0.56, 0.64, t);
+    const naturalWidth = Math.pow(Math.sin(t * Math.PI), 0.72) * 0.43;
+    const lobing = 0.9 + Math.sin(t * Math.PI * 5.2) * 0.1;
+    const width = naturalWidth * lobing;
+    const cup = Math.sin(t * Math.PI) * 0.105 - t * t * 0.035;
+    positions.push(-width, y, cup - width * 0.08, 0, y, cup + 0.055, width, y, cup - width * 0.08);
+    uvs.push(0, t, 0.5, t, 1, t);
+  }
+  for (let row = 0; row < rows - 1; row += 1) {
+    const base = row * 3;
+    const next = base + 3;
+    indices.push(base, next, base + 1, next, next + 1, base + 1);
+    indices.push(base + 1, next + 1, base + 2, next + 1, next + 2, base + 2);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createFernFrondGeometry() {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  const addBlade = (
+    baseY: number,
+    tipX: number,
+    tipY: number,
+    width: number,
+    lift: number,
+  ) => {
+    const offset = positions.length / 3;
+    const direction = new THREE.Vector2(tipX, tipY - baseY).normalize();
+    const normal = new THREE.Vector2(-direction.y, direction.x).multiplyScalar(width);
+    positions.push(
+      normal.x, baseY + normal.y, 0,
+      tipX, tipY, lift,
+      -normal.x, baseY - normal.y, 0,
+      0, baseY + (tipY - baseY) * 0.48, lift * 0.7,
+    );
+    uvs.push(0, 0, 0.5, 1, 1, 0, 0.5, 0.48);
+    indices.push(offset, offset + 3, offset + 2, offset, offset + 1, offset + 3, offset + 3, offset + 1, offset + 2);
+  };
+  for (let segment = 0; segment < 7; segment += 1) {
+    const t = segment / 7;
+    const baseY = -0.52 + t * 1.02;
+    const reach = (0.42 - t * 0.24) * (0.92 + (segment % 2) * 0.08);
+    [-1, 1].forEach((side) => {
+      addBlade(baseY, side * reach, baseY + 0.2 + t * 0.06, 0.045 + (1 - t) * 0.025, 0.035 + t * 0.035);
+    });
+  }
+  addBlade(-0.42, 0, 0.68, 0.075, 0.11);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createJungleFlowerGeometry(petalCount = 6) {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  for (let petal = 0; petal < petalCount; petal += 1) {
+    const angle = petal / petalCount * Math.PI * 2;
+    const tangentX = -Math.sin(angle);
+    const tangentZ = Math.cos(angle);
+    const radialX = Math.cos(angle);
+    const radialZ = Math.sin(angle);
+    const offset = positions.length / 3;
+    positions.push(
+      radialX * 0.05 - tangentX * 0.07, 0.02, radialZ * 0.05 - tangentZ * 0.07,
+      radialX * 0.34 - tangentX * 0.1, 0.08, radialZ * 0.34 - tangentZ * 0.1,
+      radialX * 0.46, 0.16 + (petal % 2) * 0.025, radialZ * 0.46,
+      radialX * 0.34 + tangentX * 0.1, 0.08, radialZ * 0.34 + tangentZ * 0.1,
+      radialX * 0.05 + tangentX * 0.07, 0.02, radialZ * 0.05 + tangentZ * 0.07,
+    );
+    uvs.push(0, 0, 0.12, 0.62, 0.5, 1, 0.88, 0.62, 1, 0);
+    indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 4, offset + 4, offset + 2, offset + 3);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createLilyPadGeometry() {
+  const segments = 14;
+  const positions = [0, 0.045, 0];
+  const uvs = [0.5, 0.5];
+  const indices: number[] = [];
+  for (let segment = 0; segment <= segments; segment += 1) {
+    const t = segment / segments;
+    const angle = THREE.MathUtils.lerp(0.38, Math.PI * 2 - 0.38, t);
+    const radius = 0.92 + Math.sin(segment * 2.31) * 0.035;
+    positions.push(Math.cos(angle) * radius, Math.sin(t * Math.PI) * 0.055, Math.sin(angle) * radius);
+    uvs.push(0.5 + Math.cos(angle) * 0.5, 0.5 + Math.sin(angle) * 0.5);
+    if (segment > 0) indices.push(0, segment, segment + 1);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -1418,6 +1530,186 @@ function createTempleOvergrowthField(
     return mesh;
   });
   return { root, meshes };
+}
+
+interface Island18JungleDetailGarden {
+  root: THREE.Group;
+  glowSites: THREE.Vector3[];
+}
+
+function createCarvedRelicStoneGeometry() {
+  const base = new THREE.BoxGeometry(1, 0.72, 0.62);
+  base.translate(0, 0.36, 0);
+  const shoulder = new THREE.BoxGeometry(0.82, 0.2, 0.72);
+  shoulder.translate(0, 0.82, 0);
+  const crown = new THREE.BoxGeometry(0.58, 0.18, 0.52);
+  crown.rotateY(Math.PI / 4);
+  crown.translate(0, 0.99, 0);
+  const geometry = mergeGeometries([base, shoulder, crown], false) ?? base;
+  if (geometry !== base) base.dispose();
+  shoulder.dispose();
+  crown.dispose();
+  return geometry;
+}
+
+function createJungleDetailGarden(
+  profile: Island3DQualityProfile,
+  materials: Island18JungleExpeditionMaterials,
+): Island18JungleDetailGarden {
+  const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'botanical-and-stone-detail');
+  root.name = 'ISLAND_18_BOTANICAL_STONE_DETAIL_GARDEN';
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion();
+  const euler = new THREE.Euler();
+  const scale = new THREE.Vector3();
+  const position = new THREE.Vector3();
+  const fernGeometry = createFernFrondGeometry();
+  const flowerGeometry = createJungleFlowerGeometry();
+  const stoneGeometry = createCarvedRelicStoneGeometry();
+  const glyphGeometry = new THREE.OctahedronGeometry(0.5, 0);
+  const mossGeometry = new THREE.SphereGeometry(0.5, 6, 3, 0, Math.PI * 2, 0, Math.PI * 0.52);
+  const mushroomCapGeometry = new THREE.SphereGeometry(0.5, 7, 4, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  const mushroomStemGeometry = new THREE.CylinderGeometry(0.22, 0.34, 1, 6);
+  const fernCount = profile.id === 'high' ? 76 : profile.id === 'medium' ? 56 : 36;
+  const flowerCount = profile.id === 'high' ? 52 : profile.id === 'medium' ? 38 : 24;
+  const stoneCount = profile.id === 'high' ? 34 : profile.id === 'medium' ? 26 : 18;
+  const mushroomCount = profile.id === 'high' ? 22 : profile.id === 'medium' ? 15 : 9;
+  const fernPlacements: THREE.Matrix4[][] = [[], []];
+  const flowerPlacements: THREE.Matrix4[][] = [[], [], []];
+  const stonePlacements: THREE.Matrix4[][] = [[], []];
+  const mossPlacements: THREE.Matrix4[] = [];
+  const glyphPlacements: THREE.Matrix4[] = [];
+  const mushroomCapPlacements: THREE.Matrix4[] = [];
+  const mushroomStemPlacements: THREE.Matrix4[] = [];
+  const glowSites: THREE.Vector3[] = [];
+
+  const sampleGardenPosition = (index: number, count: number, minimumRadius: number, spread: number) => {
+    const streamBiased = index < Math.ceil(count * 0.46);
+    if (streamBiased) {
+      const progress = index / Math.max(1, Math.ceil(count * 0.46) - 1);
+      const side = index % 2 === 0 ? -1 : 1;
+      const z = THREE.MathUtils.lerp(6.35, 15.4, progress) + Math.sin(index * 2.17) * 0.24;
+      const x = side * (1.72 + progress * 1.18 + (index % 3) * 0.16);
+      return new THREE.Vector3(x, 0, z);
+    }
+    const localIndex = index - Math.ceil(count * 0.46);
+    const angle = localIndex * 2.399963 + Math.sin(index * 1.37) * 0.22;
+    const radius = minimumRadius + (index * 17 % 11) / 10 * spread;
+    return new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  };
+
+  for (let index = 0; index < fernCount; index += 1) {
+    position.copy(sampleGardenPosition(index, fernCount, 6.55, 5.8));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.11 + (index % 3) * 0.025;
+    quaternion.setFromEuler(euler.set(-0.26 + (index % 3) * 0.08, -angle + index * 0.17, (index % 2 ? -1 : 1) * 0.09));
+    const size = 0.43 + (index % 5) * 0.065;
+    fernPlacements[index % 5 === 0 ? 1 : 0].push(matrix.compose(
+      position,
+      quaternion,
+      scale.set(size * 0.92, size * 1.58, size),
+    ).clone());
+  }
+
+  for (let index = 0; index < flowerCount; index += 1) {
+    position.copy(sampleGardenPosition(index + 5, flowerCount, 6.75, 5.2));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.25 + (index % 4) * 0.055;
+    quaternion.setFromEuler(euler.set((index % 3 - 1) * 0.08, index * 1.13, (index % 2 ? -1 : 1) * 0.06));
+    const size = 0.27 + (index % 5) * 0.034;
+    flowerPlacements[index % 3].push(matrix.compose(position, quaternion, scale.setScalar(size)).clone());
+  }
+
+  for (let index = 0; index < stoneCount; index += 1) {
+    position.copy(sampleGardenPosition(index + 11, stoneCount, 6.72, 6.6));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.02 + (index % 3) * 0.03;
+    quaternion.setFromEuler(euler.set(index * 0.29, angle + index * 0.51, (index % 3 - 1) * 0.14));
+    const width = 0.38 + (index % 4) * 0.11;
+    const height = 0.24 + (index % 5) * 0.075;
+    stonePlacements[index % 2].push(matrix.compose(
+      position.clone().add(new THREE.Vector3(0, height * 0.38, 0)),
+      quaternion,
+      scale.set(width * 1.28, height, width),
+    ).clone());
+    mossPlacements.push(matrix.compose(
+      position.clone().add(new THREE.Vector3(0, height * 0.72, 0)),
+      quaternion,
+      scale.set(width * 1.06, 0.08 + (index % 2) * 0.025, width * 0.78),
+    ).clone());
+    if (index % 3 === 0) {
+      const glyphPosition = position.clone().add(new THREE.Vector3(0, height + 0.34, 0));
+      glyphPlacements.push(matrix.compose(
+        glyphPosition,
+        quaternion,
+        scale.set(0.13, 0.2, 0.1),
+      ).clone());
+      glowSites.push(glyphPosition.clone().add(new THREE.Vector3(0, 0.08, 0)));
+    }
+  }
+
+  for (let index = 0; index < mushroomCount; index += 1) {
+    position.copy(sampleGardenPosition(index + 19, mushroomCount, 6.8, 4.8));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    const height = 0.15 + (index % 4) * 0.035;
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.08;
+    quaternion.setFromEuler(euler.set(0, index * 1.37, (index % 3 - 1) * 0.08));
+    mushroomStemPlacements.push(matrix.compose(
+      position.clone().add(new THREE.Vector3(0, height * 0.5, 0)),
+      quaternion,
+      scale.set(0.1 + (index % 3) * 0.018, height, 0.1 + ((index + 1) % 3) * 0.015),
+    ).clone());
+    const capRadius = 0.13 + (index % 4) * 0.025;
+    const capPosition = position.clone().add(new THREE.Vector3(0, height, 0));
+    mushroomCapPlacements.push(matrix.compose(
+      capPosition,
+      quaternion,
+      scale.set(capRadius * 1.18, capRadius * 0.62, capRadius),
+    ).clone());
+    if (index % 3 === 0) glowSites.push(capPosition.clone().add(new THREE.Vector3(0, 0.12, 0)));
+  }
+
+  const addBatch = (
+    name: string,
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    matrices: THREE.Matrix4[],
+  ) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
+    mesh.name = name;
+    matrices.forEach((entry, index) => mesh.setMatrixAt(index, entry));
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    root.add(mesh);
+    return mesh;
+  };
+  addBatch('ISLAND_18_FERN_FROND_BATCH_DEEP', fernGeometry, materials.leafDeep, fernPlacements[0]);
+  addBatch('ISLAND_18_FERN_FROND_BATCH_SUNLIT', fernGeometry, materials.leafLight, fernPlacements[1]);
+  addBatch('ISLAND_18_ORCHID_BATCH_MAGENTA', flowerGeometry, materials.flower, flowerPlacements[0]);
+  addBatch('ISLAND_18_ORCHID_BATCH_SUN', flowerGeometry, materials.flowerSun, flowerPlacements[1]);
+  addBatch('ISLAND_18_ORCHID_BATCH_CYAN', flowerGeometry, materials.flowerCyan, flowerPlacements[2]);
+  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT', stoneGeometry, materials.ruinStoneLight, stonePlacements[0]);
+  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_DARK', stoneGeometry, materials.ruinStoneDark, stonePlacements[1]);
+  addBatch('ISLAND_18_RELIC_MOSS_CROWN_BATCH', mossGeometry, materials.moss, mossPlacements);
+  addBatch('ISLAND_18_RELIC_EMERALD_GLYPH_BATCH', glyphGeometry, materials.biolume, glyphPlacements);
+  addBatch('ISLAND_18_BIOLUMINESCENT_MUSHROOM_STEM_BATCH', mushroomStemGeometry, materials.routeIvory, mushroomStemPlacements);
+  const mushroomCaps = addBatch('ISLAND_18_BIOLUMINESCENT_MUSHROOM_CAP_BATCH', mushroomCapGeometry, materials.biolume, mushroomCapPlacements);
+  mushroomCaps.renderOrder = 2;
+  root.userData.detailEcology = {
+    fernCount,
+    orchidCount: flowerCount,
+    mossyRelicCount: stoneCount,
+    glowingRelicGlyphCount: glyphPlacements.length,
+    bioluminescentMushroomCount: mushroomCount,
+    minimumRouteRadius: 6.55,
+    drawCallCount: 11,
+  };
+  return { root, glowSites };
 }
 
 interface Island18AerialFaunaSpec {
@@ -3636,7 +3928,7 @@ function addContinuousJungleBasin(
     ));
   });
   const bankPlantRadii = [7.4, 8.8, 10.2, 11.7, 13.1, 14.4] as const;
-  const bankLeafSource = new THREE.ConeGeometry(0.22, 1, 4);
+  const bankLeafSource = createFernFrondGeometry();
   const bankPlantColors = [new THREE.Color(0x55a83d), new THREE.Color(0x97c84c), new THREE.Color(0x216f3a)] as const;
   bankPlantRadii.forEach((radius, radiusIndex) => {
     [-1, 1].forEach((side, sideIndex) => {
@@ -3669,7 +3961,7 @@ function addContinuousJungleBasin(
   const riverRelicSource = new THREE.TetrahedronGeometry(0.5, 0);
   const riverRootSource = new THREE.CylinderGeometry(0.06, 0.11, 1, 3);
   const riverReedSource = new THREE.ConeGeometry(0.06, 1, 3);
-  const riverBloomSource = new THREE.TetrahedronGeometry(0.12, 0);
+  const riverBloomSource = createJungleFlowerGeometry();
   const heroStreamRelicCount = profile.id === 'high' ? 24 : profile.id === 'medium' ? 20 : 14;
   const heroStreamRootCount = profile.id === 'high' ? 14 : profile.id === 'medium' ? 12 : 8;
   const heroStreamReedCount = profile.id === 'high' ? 28 : profile.id === 'medium' ? 22 : 16;
@@ -3786,7 +4078,7 @@ function addContinuousJungleBasin(
     const radius = Math.hypot(x, z);
     const angle = Math.atan2(z, x);
     quaternion.setFromEuler(new THREE.Euler(index * 0.42, angle + index * 0.58, side * 0.28));
-    const bloomScale = 0.92 + (index % 4) * 0.18;
+    const bloomScale = 0.27 + (index % 4) * 0.045;
     matrix.compose(
       new THREE.Vector3(x, sampleJungleBasinHeight(radius, angle) + 1.55 + (index % 3) * 0.08, z),
       quaternion,
@@ -3902,8 +4194,8 @@ function addContinuousJungleBasin(
       terraceMossColors[sideIndex],
     ));
   });
-  const lilyPadSource = new THREE.CylinderGeometry(1, 1, 0.08, 10, 1);
-  const lotusBudSource = new THREE.OctahedronGeometry(0.5, 0);
+  const lilyPadSource = createLilyPadGeometry();
+  const lotusBudSource = createJungleFlowerGeometry(8);
   const lilyPadCount = profile.id === 'high' ? 12 : profile.id === 'medium' ? 9 : 7;
   const lotusBudCount = profile.id === 'high' ? 5 : profile.id === 'medium' ? 4 : 3;
   const lilyPadColors = [
@@ -4974,6 +5266,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
   root.add(understory.root);
   const templeOvergrowth = createTempleOvergrowthField(profile.id === 'high' ? 32 : profile.id === 'medium' ? 30 : 24, materials);
   root.add(templeOvergrowth.root);
+  const detailGarden = createJungleDetailGarden(profile, materials);
+  root.add(detailGarden.root);
 
   const hangingVines = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   hangingVines.name = 'ISLAND_18_HANGING_VINES';
@@ -5128,6 +5422,37 @@ export function createIsland18JungleExpeditionLivingAmbience(
   practicalHaloField.userData.siteCount = practicalHaloSites.length;
   registerIsland18RuntimePart('living-ambience', practicalHaloField, 'storm-responsive-practical-halos');
   root.add(practicalHaloField);
+  const emeraldHaloMaterial = new THREE.MeshBasicMaterial({
+    color: 0x65f49a,
+    transparent: true,
+    opacity: 0.018,
+    depthWrite: false,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const emeraldHaloField = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(1, 7, 5),
+    emeraldHaloMaterial,
+    detailGarden.glowSites.length,
+  );
+  emeraldHaloField.name = 'ISLAND_18_BIOLUMINESCENT_GARDEN_HALO_FIELD';
+  detailGarden.glowSites.forEach((site, index) => {
+    practicalHaloMatrix.compose(
+      site,
+      practicalHaloQuaternion,
+      practicalHaloScale.setScalar(0.34 + (index % 3) * 0.08),
+    );
+    emeraldHaloField.setMatrixAt(index, practicalHaloMatrix);
+  });
+  emeraldHaloField.instanceMatrix.needsUpdate = true;
+  emeraldHaloField.castShadow = false;
+  emeraldHaloField.receiveShadow = false;
+  emeraldHaloField.renderOrder = 5;
+  emeraldHaloField.userData.presentationOnly = true;
+  emeraldHaloField.userData.siteCount = detailGarden.glowSites.length;
+  registerIsland18RuntimePart('living-ambience', emeraldHaloField, 'weather-responsive-bioluminescent-gardens');
+  root.add(emeraldHaloField);
   const practicalPoolSpecs = [
     { id: 'EXPLORER_NEST', position: new THREE.Vector3(-4.36, 1.42, -3.46), distance: 5.2 },
     { id: 'JUNGLE_PATH', position: new THREE.Vector3(4.36, 1.5, -3.5), distance: 5.4 },
@@ -5145,6 +5470,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
   });
   root.userData.practicalLightNetwork = {
     haloSiteCount: practicalHaloSites.length,
+    bioluminescentHaloSiteCount: detailGarden.glowSites.length,
     pooledLightCount: practicalPoolLights.length,
     quality: profile.id,
     presentationOnly: true,
@@ -5911,6 +6237,25 @@ export function createIsland18JungleExpeditionLivingAmbience(
       0.02,
       0.28,
     );
+    const livingGardenPulse = reducedMotion ? 0 : 0.5 + Math.sin(elapsed * 1.36) * 0.5;
+    const zenithGardenLift = missionStage >= 5 ? 0.34 : missionStage >= 3 ? 0.12 : 0;
+    materials.biolume.emissiveIntensity = 0.72
+      + weather.practicalLightExposure * 0.78
+      + zenithGardenLift
+      + livingGardenPulse * (0.08 + weather.practicalLightExposure * 0.07);
+    emeraldHaloMaterial.opacity = THREE.MathUtils.clamp(
+      0.018
+      + weather.practicalLightExposure * 0.115
+      + zenithGardenLift * 0.12
+      + livingGardenPulse * 0.012,
+      0.015,
+      0.19,
+    );
+    moteMaterial.opacity = THREE.MathUtils.clamp(
+      0.58 + weather.practicalLightExposure * 0.24 + zenithGardenLift * 0.32,
+      0.5,
+      0.96,
+    );
     templeLanternLight.intensity = 0.74
       + weather.practicalLightExposure * 1.62
       + practicalFlicker * (0.045 + weather.practicalLightExposure * 0.14);
@@ -5925,6 +6270,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
     root.userData.practicalLighting = {
       exposure: weather.practicalLightExposure,
       haloOpacity: practicalHaloMaterial.opacity,
+      bioluminescentHaloOpacity: emeraldHaloMaterial.opacity,
+      bioluminescentEmissiveIntensity: materials.biolume.emissiveIntensity,
       amberEmissiveIntensity: materials.amber.emissiveIntensity,
       templePoolIntensity: templeLanternLight.intensity,
       satellitePoolIntensities: practicalPoolLights.map((light) => light.intensity),

@@ -70,6 +70,12 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const basinRivers = runtime.root.getObjectByName('ISLAND_18_BASIN_RIVER_NETWORK');
       const basinFauna = runtime.root.getObjectByName('ISLAND_18_EXOTIC_BASIN_FAUNA_ECOLOGY');
       const residentNetwork = runtime.root.getObjectByName('ISLAND_18_JUNGLE_RESIDENT_WORK_NETWORK');
+      const detailGarden = runtime.root.getObjectByName('ISLAND_18_BOTANICAL_STONE_DETAIL_GARDEN');
+      const fernBatch = runtime.root.getObjectByName('ISLAND_18_FERN_FROND_BATCH_DEEP');
+      const orchidBatch = runtime.root.getObjectByName('ISLAND_18_ORCHID_BATCH_MAGENTA');
+      const mossyRelicBatch = runtime.root.getObjectByName('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT');
+      const mushroomBatch = runtime.root.getObjectByName('ISLAND_18_BIOLUMINESCENT_MUSHROOM_CAP_BATCH');
+      const gardenHalos = runtime.root.getObjectByName('ISLAND_18_BIOLUMINESCENT_GARDEN_HALO_FIELD');
       const aerialFauna = runtime.root.getObjectByName('ISLAND_18_EXOTIC_AERIAL_FAUNA_BATCH');
       const weatherField = runtime.root.getObjectByName('ISLAND_18_WEATHER_RAIN_LIGHTNING_AND_SUNRAY_FIELD');
       const frontDepthSector = runtime.root.getObjectByName('ISLAND_18_FRONT_DEPTH_SECTOR');
@@ -129,6 +135,17 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       assert(Number(residentNetwork?.userData.minimumRouteRadius ?? 0) >= 5, 'resident work stations remain outside the protected board route');
       assertEqual(residentNetwork?.userData.batchedInto, basinMesh?.name, 'resident geometry adds no separate scenery draw call');
       assert(Array.isArray(residentNetwork?.userData.workLoops) && residentNetwork.userData.workLoops.length === 4, 'each resident role owns a readable everyday work loop');
+      assert(detailGarden instanceof THREE.Group, 'the jungle adds a dedicated procedural botanical and stone detail garden');
+      assert(Number(detailGarden?.userData.detailEcology?.fernCount ?? 0) >= 76, 'high quality layers at least seventy-six curved fern fronds around the basin');
+      assert(Number(detailGarden?.userData.detailEcology?.orchidCount ?? 0) >= 52, 'high quality punctuates the jungle with a dense field of real petaled orchids');
+      assert(Number(detailGarden?.userData.detailEcology?.mossyRelicCount ?? 0) >= 34, 'the outer basin carries a readable procession of moss-capped lost-city stones');
+      assert(Number(detailGarden?.userData.detailEcology?.bioluminescentMushroomCount ?? 0) >= 22, 'the detail garden includes a low-cost luminous mushroom ecology');
+      assert(Number(detailGarden?.userData.detailEcology?.minimumRouteRadius ?? 0) >= 6.5, 'all added botanical and stone detail remains outside the protected route corridor');
+      assert(fernBatch instanceof THREE.InstancedMesh && fernBatch.count > 40, 'curved fern leaves are instanced rather than emitted as individual meshes');
+      assert(orchidBatch instanceof THREE.InstancedMesh && orchidBatch.geometry.getAttribute('position')?.count >= 30, 'orchids use cupped multi-petal procedural geometry rather than tetrahedron placeholders');
+      assert(mossyRelicBatch instanceof THREE.InstancedMesh, 'mossy relic stones stay in a batched mobile-friendly field');
+      assert(mushroomBatch instanceof THREE.InstancedMesh, 'the bioluminescent mushroom caps share one instanced draw call');
+      assert(gardenHalos instanceof THREE.InstancedMesh && gardenHalos.count >= 7, 'one batched emerald halo field connects the luminous garden sites');
       runtime.animate(9, false);
       assertEqual((materials.basinGround.userData.residentWorkTime as { value?: number } | undefined)?.value, 9, 'the resident work network receives the live ambience clock');
       assertEqual((materials.basinGround.userData.residentWorkMotion as { value?: number } | undefined)?.value, 1, 'resident work motion stays active in the ordinary world');
@@ -195,6 +212,7 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const clearSunIntensity = primarySun.intensity;
       const clearSkyDomeLuminance = ((skyDome?.material as THREE.MeshBasicMaterial | undefined)?.color.getHSL({ h: 0, s: 0, l: 0 }).l ?? 0);
       const clearAmberIntensity = materials.amber.emissiveIntensity;
+      const clearBiolumeIntensity = materials.biolume.emissiveIntensity;
       const clearCloudOpacity = materials.cloud.opacity;
       const clearFogDensity = weatherFog.density;
       const clearHaloOpacity = (practicalHalos?.material as THREE.MeshBasicMaterial | undefined)?.opacity ?? 0;
@@ -216,6 +234,7 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       assert(weatherFog.density > clearFogDensity * 2, 'the storm grows a materially deeper teal rain atmosphere around the jungle layers');
       assert(Number(runtime.root.userData.weatherMix?.daylightBlue ?? 1) < 0.1, 'the daylight blue recedes before the rain reaches full strength');
       assert(materials.amber.emissiveIntensity > clearAmberIntensity + 0.9, 'lanterns torches and lit interiors strengthen their emissive response in storm darkness');
+      assert(materials.biolume.emissiveIntensity > clearBiolumeIntensity + 0.45, 'the botanical bioluminescence grows naturally as the storm darkens the jungle');
       assert(((practicalHalos?.material as THREE.MeshBasicMaterial | undefined)?.opacity ?? 0) > clearHaloOpacity + 0.14, 'the 3D practical halos bloom naturally as the sky darkens');
       assert((junglePathPool?.intensity ?? 0) > clearPracticalPoolIntensity + 0.75, 'the landmark practical pool throws more warm light during the storm');
       assert(((skyDome?.material as THREE.MeshBasicMaterial | undefined)?.color.getHSL({ h: 0, s: 0, l: 0 }).l ?? 1) < clearSkyDomeLuminance * 0.7, 'the procedural sky dome darkens materially before rainfall');
