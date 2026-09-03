@@ -14,6 +14,7 @@ import {
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 
 type BuildLevel = 0 | 1 | 2 | 3;
+type BossTempleVisualLevel = 1 | 2 | 3 | 4;
 type ConstructionStage = 1 | 2 | 3 | 4 | 5;
 
 export const ISLAND_18_JUNGLE_EXPEDITION_WORLD_NAME = 'Jungle Expedition';
@@ -21,6 +22,11 @@ export const ISLAND_18_LIVING_COMPASS_MISSION_ID = 'jungle-expedition-living-com
 export const ISLAND_18_LIVING_COMPASS_MAX_STAGE = 5;
 export const ISLAND_18_WEATHER_CYCLE_SECONDS = 180;
 export const ISLAND_18_STORM_FLASH_COUNT_WEIGHTS = [0.46, 0.33, 0.12, 0.06, 0.03] as const;
+
+const ISLAND_18_BOSS_SCALE = 1.52;
+const ISLAND_18_TEMPLE_TUNNEL_OPENING_WIDTH = 1.08;
+const ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_WIDTH = 1.62;
+const ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_HEIGHT = 1.82;
 
 const ISLAND_18_STORM_FLASH_CENTERS = [
   [113.2],
@@ -1057,33 +1063,33 @@ function addOpenRouteTunnelMouth(
   mouth.name = prefix;
   mouth.position.set(...position);
   mouth.rotation.y = rotationY;
-  const openingWidth = 0.78;
-  const pierHeight = 0.66;
+  const openingWidth = ISLAND_18_TEMPLE_TUNNEL_OPENING_WIDTH;
+  const pierHeight = 0.82;
   [-1, 1].forEach((side) => {
     const pier = box(
-      0.18,
+      0.15,
       pierHeight,
       0.22,
       side < 0 ? materials.ruinStone : materials.ruinStoneLight,
       `${prefix}_${side < 0 ? 'LEFT' : 'RIGHT'}_JAMB`,
       3,
     );
-    pier.position.set(side * openingWidth * 0.56, pierHeight * 0.5, 0);
+    pier.position.set(side * openingWidth * 0.57, pierHeight * 0.5, 0);
     mouth.add(pier);
   });
   for (let index = 0; index < 7; index += 1) {
     const angle = index / 6 * Math.PI;
     const voussoir = box(
-      0.18,
-      0.22,
+      0.16,
+      0.2,
       0.24,
       index === 3 ? materials.brass : index % 2 === 0 ? materials.ruinStoneLight : materials.ruinStone,
       `${prefix}_ARCH_STONE_${index + 1}`,
       3,
     );
     voussoir.position.set(
-      Math.cos(angle) * openingWidth * 0.52,
-      pierHeight + Math.sin(angle) * 0.34,
+      Math.cos(angle) * openingWidth * 0.57,
+      pierHeight + Math.sin(angle) * 0.38,
       0,
     );
     voussoir.rotation.z = Math.PI * 0.5 - angle;
@@ -1095,7 +1101,7 @@ function addOpenRouteTunnelMouth(
       `${prefix}_AMBER_GUIDE_${side < 0 ? 'LEFT' : 'RIGHT'}`,
       3,
     );
-    guideLight.position.set(side * openingWidth * 0.33, 0.48, -0.035);
+    guideLight.position.set(side * openingWidth * 0.34, 0.74, -0.035);
     mouth.add(guideLight);
   });
   root.add(mouth);
@@ -1113,52 +1119,39 @@ function addTempleRouteTunnel(
   const tunnelCenterX = side * 2.24;
   tunnel.userData.routeClearance = {
     axis: 'z',
-    width: 1.18,
-    height: 1.48,
+    width: ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_WIDTH,
+    height: ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_HEIGHT,
     boardRadius: 3.4,
-    includesRouteFloor: true,
+    includesRouteFloor: false,
+    canonicalTileSurfaceExposed: true,
   };
 
   addOpenRouteTunnelMouth(
     tunnel,
     `${tunnel.name}_FRONT_ENTRY`,
-    [tunnelCenterX, 0.45, 0.84],
+    [tunnelCenterX, 0.45, 0.7],
     materials,
   );
   addOpenRouteTunnelMouth(
     tunnel,
     `${tunnel.name}_REAR_EXIT`,
-    [tunnelCenterX, 0.45, -1.17],
+    [tunnelCenterX, 0.45, -0.7],
     materials,
     Math.PI,
   );
 
   const routeFloor = markStage(new THREE.Group(), 2);
   routeFloor.name = `${tunnel.name}_ROUTE_FLOOR`;
-  const routeMaterials = side < 0
-    ? [materials.routeAzure, materials.routeIvory, materials.routeViolet]
-    : [materials.routeViolet, materials.routeIvory, materials.routeAzure];
-  [-0.76, -0.18, 0.4].forEach((z, index) => {
-    const panel = box(
-      0.7,
-      0.045,
-      0.56,
-      routeMaterials[index],
-      `${routeFloor.name}_PANEL_${index + 1}`,
-      2,
-    );
-    panel.position.set(tunnelCenterX, 0.44, z);
-    routeFloor.add(panel);
-  });
+  routeFloor.userData.canonicalTileSurfaceExposed = true;
   const ceiling = box(
-    0.78,
+    1.14,
     0.08,
-    1.86,
+    2.02,
     materials.ruinStoneDark,
     `${tunnel.name}_VAULTED_CEILING`,
     3,
   );
-  ceiling.position.set(tunnelCenterX, 1.32, -0.17);
+  ceiling.position.set(tunnelCenterX, 1.5, -0.17);
   tunnel.add(routeFloor, ceiling);
   root.add(tunnel);
   return tunnel;
@@ -2105,7 +2098,7 @@ function addLostCityOrnamentPass(
 
   for (let index = 0; index < 12; index += 1) {
     const angle = index / 12 * Math.PI * 2 + 0.18;
-    const radius = 1.68 + (index % 3) * 0.17;
+    const radius = 1.46 + (index % 3) * 0.08;
     addGeometry(
       stone,
       new THREE.DodecahedronGeometry(0.08 + (index % 4) * 0.018, 0),
@@ -2541,12 +2534,12 @@ function createExplorersCamp(level: 1 | 2 | 3, materials: Island18JungleExpediti
   return registerIsland18RuntimePart('explorers-camp', root, 'landmark');
 }
 
-function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpeditionMaterials) {
+function createLostCityTemple(level: BossTempleVisualLevel, materials: Island18JungleExpeditionMaterials) {
   const root = new THREE.Group();
   root.name = 'ISLAND_18_LOST_CITY_TEMPLE';
-  const court = cylinder(2.04, 2.3, 0.38, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_PROCESSIONAL_COURT', 1, 12);
+  const court = cylinder(1.7, 1.84, 0.38, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_PROCESSIONAL_COURT', 1, 12);
   court.position.y = 0.19;
-  const courtCap = cylinder(1.92, 2.04, 0.1, materials.ruinStone, 'ISLAND_18_TEMPLE_COURT_STONE_CAP', 1, 12);
+  const courtCap = cylinder(1.7, 1.78, 0.1, materials.ruinStone, 'ISLAND_18_TEMPLE_COURT_STONE_CAP', 1, 12);
   courtCap.position.y = 0.44;
   const courtMossInlay = torus(1.62, 0.055, materials.moss, 'ISLAND_18_TEMPLE_COURT_MOSS_INLAY', 5, 6, 42);
   courtMossInlay.rotation.x = Math.PI / 2;
@@ -2555,7 +2548,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   addStoneStairFlight(
     root,
     'ISLAND_18_TEMPLE_FRONT_PROCESSIONAL',
-    new THREE.Vector3(0, 0.42, 2.18),
+    new THREE.Vector3(0, 0.42, 1.62),
     new THREE.Vector3(0, 1.24, 0.84),
     1.72,
     11,
@@ -2564,7 +2557,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   );
   [-0.52, 0, 0.52].forEach((x, index) => {
     const runeRunner = beamBetween(
-      new THREE.Vector3(x, 0.53, 2.08),
+      new THREE.Vector3(x, 0.53, 1.72),
       new THREE.Vector3(x, 1.34, 0.78),
       index === 1 ? 0.028 : 0.022,
       index === 1 ? materials.brass : materials.brassDark,
@@ -2576,7 +2569,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   });
   [-1, 1].forEach((side) => {
     const rail = beamBetween(
-      new THREE.Vector3(side * 0.94, 0.72, 2.08),
+      new THREE.Vector3(side * 0.8, 0.72, 1.64),
       new THREE.Vector3(side * 0.94, 1.58, 0.78),
       0.06,
       materials.ruinStoneDark,
@@ -2586,7 +2579,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     );
     root.add(rail);
     [0.18, 0.52, 0.86].forEach((t, index) => {
-      const z = THREE.MathUtils.lerp(2.08, 0.78, t);
+      const z = THREE.MathUtils.lerp(1.64, 0.78, t);
       const y = THREE.MathUtils.lerp(0.48, 1.34, t);
       const post = cylinder(
         0.035,
@@ -2597,7 +2590,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
         3,
         7,
       );
-      post.position.set(side * 0.94, y + 0.16, z);
+      post.position.set(side * THREE.MathUtils.lerp(0.8, 0.94, t), y + 0.16, z);
       root.add(post);
     });
     const serpentHead = presentMesh(
@@ -2630,7 +2623,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     root.add(flame);
   });
 
-  const lowerPlinth = box(3.28, 0.46, 2.02, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_PLINTH', 2);
+  const lowerPlinth = box(3.08, 0.46, 1.86, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_PLINTH', 2);
   lowerPlinth.position.set(0, 0.72, -0.02);
   const lowerSanctuary = box(1.72, 1.18, 1.42, materials.ruinStone, 'ISLAND_18_TEMPLE_LOWER_SANCTUARY', 2);
   lowerSanctuary.position.set(0, 1.26, -0.12);
@@ -2641,14 +2634,14 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   const lowerCornice = box(3.08, 0.11, 1.76, materials.brassDark, 'ISLAND_18_TEMPLE_LOWER_CORNICE', 2);
   lowerCornice.position.set(0, 1.7, -0.08);
   root.add(lowerPlinth, lowerSanctuary, leftPylon, rightPylon, lowerCornice);
-  const lowerWingLeft = roundedBox(0.82, 0.72, 1.68, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT', 2, 0.065, 2);
-  lowerWingLeft.position.set(-1.68, 0.9, -0.12);
-  const lowerWingRight = roundedBox(0.72, 0.92, 1.58, materials.ruinStone, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT', 2, 0.055, 2);
-  lowerWingRight.position.set(1.7, 1.0, -0.1);
-  const lowerWingLeftCap = roundedBox(0.98, 0.12, 1.82, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT_CAP', 2, 0.035);
-  lowerWingLeftCap.position.set(-1.68, 1.3, -0.12);
-  const lowerWingRightCap = roundedBox(0.9, 0.12, 1.72, materials.brassDark, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT_CAP', 2, 0.035);
-  lowerWingRightCap.position.set(1.7, 1.5, -0.1);
+  const lowerWingLeft = roundedBox(0.52, 0.72, 1.36, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT', 2, 0.065, 2);
+  lowerWingLeft.position.set(-1.38, 0.9, -0.12);
+  const lowerWingRight = roundedBox(0.52, 0.92, 1.34, materials.ruinStone, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT', 2, 0.055, 2);
+  lowerWingRight.position.set(1.38, 1.0, -0.1);
+  const lowerWingLeftCap = roundedBox(0.62, 0.12, 1.48, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT_CAP', 2, 0.035);
+  lowerWingLeftCap.position.set(-1.38, 1.3, -0.12);
+  const lowerWingRightCap = roundedBox(0.62, 0.12, 1.46, materials.brassDark, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT_CAP', 2, 0.035);
+  lowerWingRightCap.position.set(1.38, 1.5, -0.1);
   root.add(lowerWingLeft, lowerWingRight, lowerWingLeftCap, lowerWingRightCap);
   addStonePortal(root, 'ISLAND_18_TEMPLE_MAIN_PORTAL', [0, 1.24, 0.69], 0.94, 1.18, materials, 2);
   addGuardianMask(root, 'ISLAND_18_TEMPLE_MAIN_GUARDIAN_RELIEF', [0, 2.08, 0.77], 0.5, materials, 3);
@@ -2656,14 +2649,14 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   rearPortal.position.z = -0.87;
   addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_FACADE_LEFT', [-1.12, 1.28, 0.71], 0.92, 1.18, 5, 3, materials, 2);
   addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_FACADE_RIGHT', [1.12, 1.3, 0.7], 0.92, 1.28, 5, 3, materials, 2);
-  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_LEFT', [-1.78, 1.1, -0.1], 1.42, 0.7, 3, 5, materials, 3, -Math.PI / 2);
-  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_RIGHT', [1.79, 1.2, -0.1], 1.36, 0.82, 4, 5, materials, 3, Math.PI / 2);
+  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_LEFT', [-1.58, 1.1, -0.1], 1.3, 0.7, 3, 5, materials, 3, -Math.PI / 2);
+  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_RIGHT', [1.58, 1.2, -0.1], 1.28, 0.82, 4, 5, materials, 3, Math.PI / 2);
   addTempleBalustrade(root, 'ISLAND_18_TEMPLE_LOWER_BALUSTRADE_LEFT', [-1.13, 1.76, 0.82], 0.92, materials, 3);
   addTempleBalustrade(root, 'ISLAND_18_TEMPLE_LOWER_BALUSTRADE_RIGHT', [1.13, 1.78, 0.82], 0.92, materials, 3);
-  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_LEFT_WING_STAIR', new THREE.Vector3(-1.76, 0.45, 1.02), new THREE.Vector3(-1.55, 1.36, 0.12), 0.62, 8, materials.ruinStone, 2);
-  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_RIGHT_WING_STAIR', new THREE.Vector3(1.78, 0.45, 1.08), new THREE.Vector3(1.58, 1.54, 0.05), 0.62, 9, materials.ruinStoneLight, 2);
-  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_LEFT', [-1.67, 0.96, 0.76], 0.52, materials, 3);
-  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_RIGHT', [1.69, 1.12, 0.72], 0.48, materials, 3);
+  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_LEFT_WING_STAIR', new THREE.Vector3(-1.38, 0.45, 0.78), new THREE.Vector3(-1.28, 1.36, 0.08), 0.5, 8, materials.ruinStone, 2);
+  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_RIGHT_WING_STAIR', new THREE.Vector3(1.38, 0.45, 0.8), new THREE.Vector3(1.28, 1.54, 0.04), 0.5, 9, materials.ruinStoneLight, 2);
+  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_LEFT', [-1.45, 0.96, 0.62], 0.5, materials, 3);
+  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_RIGHT', [1.45, 1.12, 0.6], 0.46, materials, 3);
   for (let index = 0; index < 7; index += 1) {
     const rearStep = box(
       1.4 - index * 0.04,
@@ -2711,8 +2704,8 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     relief.rotation.z = index % 2 === 0 ? Math.PI / 4 : 0;
     root.add(relief);
   }
-  [-1.66, -1.14, 1.14, 1.66].forEach((x, index) => {
-    addAmberNiche(root, `ISLAND_18_TEMPLE_LOWER_LAMP_NICHE_${index + 1}`, [x, 1.04 + (index % 2) * 0.16, 0.81], materials, 3, 0.78);
+  [-1.48, -1.02, 1.02, 1.48].forEach((x, index) => {
+    addAmberNiche(root, `ISLAND_18_TEMPLE_LOWER_LAMP_NICHE_${index + 1}`, [x, 1.04 + (index % 2) * 0.16, 0.72], materials, 3, 0.78);
   });
   addMossFringe(root, 'ISLAND_18_TEMPLE_LOWER_MOSS_FRINGE_LEFT', [-1.2, 1.77, 0.72], 1.18, 0.2, materials, 5);
   addMossFringe(root, 'ISLAND_18_TEMPLE_LOWER_MOSS_FRINGE_RIGHT', [1.18, 1.8, 0.72], 1.12, 0.2, materials, 5);
@@ -2727,25 +2720,19 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     const precinct = markStage(new THREE.Group(), 2);
     precinct.name = `ISLAND_18_TEMPLE_${sideName}_PRECINCT_TERRACE`;
     const precinctCenterX = side * 2.46;
-    const tunnelCenterX = side * 2.24;
-    const precinctMinX = precinctCenterX - 0.64;
-    const precinctMaxX = precinctCenterX + 0.64;
-    const openingMinX = tunnelCenterX - 0.39;
-    const openingMaxX = tunnelCenterX + 0.39;
     [
-      { min: precinctMinX, max: openingMinX, material: materials.ruinStoneDark },
-      { min: openingMaxX, max: precinctMaxX, material: materials.ruinStone },
+      { centerX: side * 1.66, material: materials.ruinStoneDark },
+      { centerX: side * 2.86, material: materials.ruinStone },
     ].forEach((support, supportIndex) => {
-      const width = Math.max(0.18, support.max - support.min);
       const pier = box(
-        width,
+        0.34,
         0.9,
-        1.92,
+        supportIndex === 0 ? 0.8 : 1.92,
         support.material,
         `${precinct.name}_TUNNEL_SUPPORT_${supportIndex + 1}`,
         2,
       );
-      pier.position.set((support.min + support.max) * 0.5, 0.86, -0.18);
+      pier.position.set(support.centerX, 0.86, -0.18);
       precinct.add(pier);
     });
     const bridgeDeck = box(
@@ -3101,10 +3088,97 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     addLostCityOrnamentPass(root, materials);
   }
 
+  if (level >= 4) {
+    const observatory = markStage(new THREE.Group(), 1);
+    observatory.name = 'ISLAND_18_TEMPLE_ZENITH_OBSERVATORY';
+    const summitDeck = cylinder(0.76, 0.9, 0.18, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_ZENITH_SUMMIT_DECK', 1, 10);
+    summitDeck.position.set(0.02, 5.08, -0.17);
+    const summitCap = cylinder(0.72, 0.78, 0.08, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_ZENITH_SUMMIT_CAP', 1, 10);
+    summitCap.position.set(0.02, 5.2, -0.17);
+    const summitMoss = torus(0.62, 0.045, materials.moss, 'ISLAND_18_TEMPLE_ZENITH_SUMMIT_MOSS_RING', 1, 4, 12);
+    summitMoss.rotation.x = Math.PI / 2;
+    summitMoss.position.set(0.02, 5.255, -0.17);
+    observatory.add(summitDeck, summitCap, summitMoss);
+
+    ([-1, 1] as const).forEach((xSide) => {
+      ([-1, 1] as const).forEach((zSide) => {
+        const column = cylinder(
+          0.065,
+          0.09,
+          0.78,
+          xSide === zSide ? materials.brassDark : materials.ruinStoneLight,
+          `ISLAND_18_TEMPLE_ZENITH_COLUMN_${xSide < 0 ? 'LEFT' : 'RIGHT'}_${zSide < 0 ? 'REAR' : 'FRONT'}`,
+          2,
+          7,
+        );
+        column.position.set(xSide * 0.48, 5.62, -0.17 + zSide * 0.34);
+        const capital = box(
+          0.2,
+          0.1,
+          0.2,
+          materials.brass,
+          `${column.name}_CAPITAL`,
+          2,
+        );
+        capital.position.set(xSide * 0.48, 6.02, -0.17 + zSide * 0.34);
+        observatory.add(column, capital);
+      });
+    });
+
+    const canopyLower = roundedBox(1.46, 0.14, 1.14, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_ZENITH_CANOPY_LOWER', 3, 0.035);
+    canopyLower.position.set(0.02, 6.1, -0.17);
+    const canopyMiddle = cylinder(0.54, 0.72, 0.22, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_ZENITH_CANOPY_MIDDLE', 3, 8);
+    canopyMiddle.position.set(0.02, 6.26, -0.17);
+    const canopyCrown = cone(0.35, 0.72, materials.brassDark, 'ISLAND_18_TEMPLE_ZENITH_CANOPY_CROWN', 3, 7);
+    canopyCrown.position.set(0.02, 6.68, -0.17);
+    observatory.add(canopyLower, canopyMiddle, canopyCrown);
+
+    const compassFrame = markStage(new THREE.Group(), 4);
+    compassFrame.name = 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS';
+    compassFrame.position.set(0.02, 5.76, 0.46);
+    const outerCompassRing = torus(0.5, 0.055, materials.brass, 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_OUTER_RING', 4, 4, 12);
+    const innerCompassRing = torus(0.33, 0.03, materials.emerald, 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_INNER_RING', 4, 4, 12);
+    const compassCore = sphere(0.13, materials.emerald, 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_CORE', 4, 6);
+    compassCore.scale.set(0.7, 1, 0.42);
+    compassCore.position.z = 0.035;
+    compassFrame.add(outerCompassRing, innerCompassRing, compassCore);
+    [
+      [new THREE.Vector3(-0.4, 0, 0), new THREE.Vector3(0.4, 0, 0)],
+      [new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(0, 0.4, 0)],
+    ].forEach(([start, end], index) => {
+      compassFrame.add(beamBetween(start, end, 0.025, materials.brassDark, `ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_NEEDLE_${index + 1}`, 4, 6));
+    });
+    observatory.add(compassFrame);
+
+    [-1, 1].forEach((side) => {
+      const beacon = cone(0.13, 0.72, materials.emerald, `ISLAND_18_TEMPLE_ZENITH_BEACON_${side < 0 ? 'LEFT' : 'RIGHT'}`, 5, 6);
+      beacon.position.set(side * 0.72, 5.66, -0.04);
+      const lamp = sphere(0.08, materials.amber, `ISLAND_18_TEMPLE_ZENITH_LAMP_${side < 0 ? 'LEFT' : 'RIGHT'}`, 5, 6);
+      lamp.scale.set(0.72, 1.35, 0.72);
+      lamp.position.set(side * 0.5, 5.5, 0.42);
+      observatory.add(beacon, lamp);
+    });
+    for (let index = 0; index < 7; index += 1) {
+      const offset = index - 3;
+      const crownRay = cone(
+        0.055 + (3 - Math.abs(offset)) * 0.008,
+        0.42 + (3 - Math.abs(offset)) * 0.09,
+        index === 3 ? materials.emerald : index % 2 === 0 ? materials.brass : materials.ruinStoneLight,
+        `ISLAND_18_TEMPLE_ZENITH_CROWN_RAY_${index + 1}`,
+        5,
+        5,
+      );
+      crownRay.position.set(offset * 0.16, 6.54 + (3 - Math.abs(offset)) * 0.07, -0.2);
+      crownRay.rotation.z = -offset * 0.14;
+      observatory.add(crownRay);
+    }
+    root.add(observatory);
+  }
+
   registerIsland18RuntimePart('lost-city-temple-shell', root, 'landmark');
   const focus = new THREE.Object3D();
   focus.name = 'ISLAND_18_BOSS_FOCUS_SOCKET';
-  focus.position.set(0, level >= 3 ? 2.75 : 1.7, 0.2);
+  focus.position.set(0, level >= 4 ? 3.45 : level >= 3 ? 2.75 : 1.7, 0.2);
   root.add(focus);
   return root;
 }
@@ -3145,10 +3219,11 @@ export function buildIsland18JungleExpeditionLandmark(
   materials: Island18JungleExpeditionMaterials,
   options: IslandConstructionFactoryOptions = {},
 ) {
-  if (level === 0) return createFoundationPlot(definition, materials);
+  if (level === 0 && definition.id !== 'boss') return createFoundationPlot(definition, materials);
   const resolvedLevel = Math.max(1, level) as 1 | 2 | 3;
+  const bossTempleVisualLevel = Math.min(4, level + 1) as BossTempleVisualLevel;
   const architecture = definition.id === 'boss'
-    ? createLostCityTemple(resolvedLevel, materials)
+    ? createLostCityTemple(bossTempleVisualLevel, materials)
     : definition.id === 'hatchery'
       ? createExplorerNest(resolvedLevel, materials)
       : definition.id === 'habit'
@@ -3164,10 +3239,11 @@ export function buildIsland18JungleExpeditionLandmark(
     architecture.position.x += outward.x * offset;
     architecture.position.z += outward.y * offset;
   } else {
-    // L1 establishes the final temple envelope; L2/L3 add chambers, crown and
-    // relic detail without rescaling already funded stonework.
-    const bossScale = 1.52;
-    architecture.scale.set(bossScale, bossScale * 1.1, bossScale);
+    // The first lost-city precinct is ancient island fabric and is therefore
+    // already present at gameplay L0. L1/L2 restore the middle city and crown;
+    // L3 commissions the new Zenith Observatory without moving the footprint.
+    architecture.scale.set(ISLAND_18_BOSS_SCALE, ISLAND_18_BOSS_SCALE * 1.1, ISLAND_18_BOSS_SCALE);
+    architecture.userData.bossTempleVisualLevel = bossTempleVisualLevel;
   }
   architecture.userData.landmarkId = definition.id;
   architecture.userData.buildLevel = level;
@@ -3193,7 +3269,7 @@ export function buildIsland18JungleExpeditionLandmark(
   };
   const focus = new THREE.Object3D();
   focus.name = `ISLAND_18_${definition.id.toUpperCase()}_FOCUS_SOCKET`;
-  focus.position.y = definition.id === 'boss' ? 2.8 : 1.45;
+  focus.position.y = definition.id === 'boss' ? (level >= 3 ? 3.45 : 2.8) : 1.45;
   architecture.add(focus);
   return architecture;
 }

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import {
   ISLAND_3D_QUALITY_PROFILES,
+  ISLAND_3D_ROUTE_RADIUS,
+  ISLAND_3D_TILE_RADIAL_DEPTH,
   ISLAND_5_LANDMARKS,
 } from '../../dev/island5ThreePilotContract';
 import {
@@ -43,6 +45,35 @@ function measureVisibleRuntime(roots: THREE.Object3D[]) {
     });
   });
   return { drawCalls, triangles };
+}
+
+function findLowRouteCorridorObstructions(root: THREE.Object3D) {
+  const innerRadius = ISLAND_3D_ROUTE_RADIUS - ISLAND_3D_TILE_RADIAL_DEPTH * 0.5;
+  const outerRadius = ISLAND_3D_ROUTE_RADIUS + ISLAND_3D_TILE_RADIAL_DEPTH * 0.5;
+  const obstructions: string[] = [];
+  root.updateMatrixWorld(true);
+  root.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const position = object.geometry.getAttribute('position');
+    if (!position) return;
+    const vertex = new THREE.Vector3();
+    let minimumRadius = Number.POSITIVE_INFINITY;
+    let maximumRadius = 0;
+    let minimumY = Number.POSITIVE_INFINITY;
+    let maximumY = Number.NEGATIVE_INFINITY;
+    for (let index = 0; index < position.count; index += 1) {
+      vertex.fromBufferAttribute(position, index).applyMatrix4(object.matrixWorld);
+      const radius = Math.hypot(vertex.x, vertex.z);
+      minimumRadius = Math.min(minimumRadius, radius);
+      maximumRadius = Math.max(maximumRadius, radius);
+      minimumY = Math.min(minimumY, vertex.y);
+      maximumY = Math.max(maximumY, vertex.y);
+    }
+    const crossesRoute = minimumRadius < outerRadius + 0.02 && maximumRadius > innerRadius - 0.02;
+    const crossesPlayerVolume = maximumY > 0.1 && minimumY < 1.72;
+    if (crossesRoute && crossesPlayerVolume) obstructions.push(object.name || '(unnamed mesh)');
+  });
+  return obstructions;
 }
 
 export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
@@ -296,6 +327,29 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
     },
   },
   {
+    name: 'starts with the ancient boss precinct and grows through a new Zenith Observatory at L3',
+    run: () => {
+      const materials = createIsland18JungleExpeditionMaterials();
+      const boss = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'boss');
+      assert(Boolean(boss), 'boss landmark definition is available');
+      const levels = ([0, 1, 2, 3] as const).map((level) => (
+        buildIsland18JungleExpeditionLandmark(boss!, level, 'low', materials, { constructionPreview: 'current' })
+      ));
+      assert(Boolean(levels[0].getObjectByName('ISLAND_18_TEMPLE_PROCESSIONAL_COURT')), 'the former L1 temple precinct is permanent island fabric at gameplay L0');
+      assert(!levels[0].getObjectByName('ISLAND_18_TEMPLE_MIDDLE_TERRACE'), 'the middle city still waits for the first funded boss build');
+      assert(Boolean(levels[1].getObjectByName('ISLAND_18_TEMPLE_MIDDLE_TERRACE')), 'boss L1 now restores the former middle-city L2');
+      assert(Boolean(levels[2].getObjectByName('ISLAND_18_TEMPLE_CROWN_TOWER')), 'boss L2 now restores the former crown L3');
+      assert(Boolean(levels[3].getObjectByName('ISLAND_18_TEMPLE_ZENITH_OBSERVATORY')), 'boss L3 adds the new summit observatory');
+      assert(Boolean(levels[3].getObjectByName('ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS')), 'the new L3 owns a readable sky-compass identity mechanism');
+      levels.forEach((root, level) => {
+        assertEqual(root.userData.buildLevel, level, `boss gameplay level ${level} remains the canonical progression value`);
+        assertEqual(root.userData.bossTempleVisualLevel, level + 1, `boss gameplay level ${level} resolves to the next authored temple tier`);
+        disposeRoot(root);
+      });
+      Object.values(materials).forEach((material) => material.dispose());
+    },
+  },
+  {
     name: 'stages the Living Compass as five readable beats and reserves Emerald Zenith motion for the finale',
     run: () => {
       const materials = createIsland18JungleExpeditionMaterials();
@@ -364,6 +418,8 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
         'ISLAND_18_TEMPLE_GUARDIAN_CROWN_CENTRAL_CROWN_RAY_3',
         'ISLAND_18_TEMPLE_REAR_PROCESSIONAL_GALLERY',
         'ISLAND_18_TEMPLE_REAR_LEFT_ARCHIVE_TOWER',
+        'ISLAND_18_TEMPLE_ZENITH_OBSERVATORY',
+        'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_CORE',
       ].forEach((name) => {
         assert(Boolean(root.getObjectByName(name)), `${name} remains a named construction-stage element`);
       });
@@ -380,14 +436,30 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       ['EAST', 'WEST'].forEach((side) => {
         const tunnel = productionRoot.getObjectByName(`ISLAND_18_TEMPLE_${side}_ROUTE_TUNNEL`);
         const floor = productionRoot.getObjectByName(`ISLAND_18_TEMPLE_${side}_ROUTE_TUNNEL_ROUTE_FLOOR`);
-        const clearance = tunnel?.userData.routeClearance as { axis?: string; width?: number; height?: number; includesRouteFloor?: boolean } | undefined;
+        const clearance = tunnel?.userData.routeClearance as {
+          axis?: string;
+          width?: number;
+          height?: number;
+          includesRouteFloor?: boolean;
+          canonicalTileSurfaceExposed?: boolean;
+        } | undefined;
         assert(tunnel instanceof THREE.Group, `${side.toLowerCase()} precinct keeps a named open route tunnel after production batching`);
         assert(floor instanceof THREE.Group, `${side.toLowerCase()} tunnel preserves the board surface through the structure`);
         assertEqual(clearance?.axis, 'z', `${side.toLowerCase()} tunnel follows the board tangent through the precinct`);
-        assert((clearance?.width ?? 0) >= 1.1 && (clearance?.height ?? 0) >= 1.4, `${side.toLowerCase()} tunnel reserves visible route clearance`);
-        assertEqual(clearance?.includesRouteFloor, true, `${side.toLowerCase()} tunnel explicitly carries the route floor`);
+        assert((clearance?.width ?? 0) >= 1.6 && (clearance?.height ?? 0) >= 1.8, `${side.toLowerCase()} tunnel reserves widened player-piece clearance`);
+        assertEqual(clearance?.includesRouteFloor, false, `${side.toLowerCase()} tunnel does not replace the playable tile tops with scenery panels`);
+        assertEqual(clearance?.canonicalTileSurfaceExposed, true, `${side.toLowerCase()} tunnel explicitly leaves the canonical board visible`);
+        assertEqual(floor?.children.length, 0, `${side.toLowerCase()} tunnel floor is an empty clearance socket around the real tiles`);
       });
       disposeRoot(productionRoot);
+      const clearanceRoot = buildIsland18JungleExpeditionLandmark(boss!, 3, 'high', materials, { constructionPreview: 'current' });
+      const routeObstructions = findLowRouteCorridorObstructions(clearanceRoot);
+      assertEqual(
+        routeObstructions.length,
+        0,
+        `the restored boss keeps every tile and the player-piece volume clear; obstructions: ${routeObstructions.join(', ')}`,
+      );
+      disposeRoot(clearanceRoot);
       Object.values(materials).forEach((material) => material.dispose());
     },
   },
