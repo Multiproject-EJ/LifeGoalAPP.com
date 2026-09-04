@@ -5622,6 +5622,99 @@ export function createIsland18JungleExpeditionLivingAmbience(
 
   const compass = createLivingCompassMechanism(materials);
   root.add(compass.root);
+  const buildupFx = registerIsland18RuntimePart('construction-choreography', new THREE.Group(), 'mission-fx');
+  buildupFx.name = 'ISLAND_18_LIVING_COMPASS_BUILDUP_FX';
+  root.add(buildupFx);
+
+  const sealSourcePositions = [1, 2, 4, 6, 7].map((beaconIndex) => {
+    const angle = beaconIndex / 8 * Math.PI * 2 + Math.PI / 8;
+    return new THREE.Vector3(
+      Math.cos(angle) * (2.72 + (beaconIndex % 2) * 0.16),
+      1.48 + (beaconIndex % 3) * 0.14,
+      Math.sin(angle) * (2.72 + (beaconIndex % 2) * 0.16),
+    );
+  });
+  const sealTargetPositions = Array.from({ length: 5 }, (_, index) => {
+    const angle = index / 5 * Math.PI * 2 - Math.PI / 2;
+    return new THREE.Vector3(
+      Math.cos(angle) * 0.64,
+      compass.root.position.y + Math.sin(angle) * 0.64,
+      compass.root.position.z + 0.08,
+    );
+  });
+  const conduitMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe4ff7b,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const sealConduits = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.042, 0.068, 1, 6, 1, true),
+    conduitMaterial,
+    5,
+  );
+  sealConduits.name = 'ISLAND_18_BUILDUP_SEAL_CONDUIT_BATCH';
+  sealConduits.visible = false;
+  sealConduits.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  [0xffd45a, 0x72ff7c, 0x63f4e4, 0xb8ff67, 0xffed83].forEach((color, index) => {
+    sealConduits.setColorAt(index, new THREE.Color(color));
+  });
+  if (sealConduits.instanceColor) sealConduits.instanceColor.needsUpdate = true;
+  buildupFx.add(sealConduits);
+
+  const sealBloomMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffe46d,
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const sealBloomRings = new THREE.InstancedMesh(
+    new THREE.TorusGeometry(0.42, 0.038, 5, 28),
+    sealBloomMaterial,
+    10,
+  );
+  sealBloomRings.name = 'ISLAND_18_BUILDUP_SEAL_BLOOM_RING_BATCH';
+  sealBloomRings.visible = false;
+  sealBloomRings.renderOrder = 7;
+  sealBloomRings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  buildupFx.add(sealBloomRings);
+
+  const buildupSparkCount = profile.id === 'low' ? 24 : profile.id === 'medium' ? 32 : 40;
+  const buildupSparkSize = profile.id === 'low' ? 0.09 : 0.12;
+  const buildupSparkPositions = new Float32Array(buildupSparkCount * 3);
+  const buildupSparkGeometry = new THREE.BufferGeometry();
+  buildupSparkGeometry.setAttribute('position', new THREE.BufferAttribute(buildupSparkPositions, 3));
+  const buildupSparkMaterial = new THREE.PointsMaterial({
+    color: 0xffdc68,
+    size: buildupSparkSize,
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const buildupSparks = new THREE.Points(buildupSparkGeometry, buildupSparkMaterial);
+  buildupSparks.name = 'ISLAND_18_BUILDUP_TRAVELING_SPARK_FIELD';
+  buildupSparks.visible = false;
+  buildupSparks.renderOrder = 8;
+  buildupFx.add(buildupSparks);
+  root.userData.livingCompassBuildup = {
+    stageCount: 4,
+    drawCalls: 3,
+    stages: [
+      { stage: 1, id: 'seal-discovery', durationSeconds: 4.2, visualBeat: 'golden seal bloom and temple tracing light' },
+      { stage: 2, id: 'vine-release', durationSeconds: 4.8, visualBeat: 'spiraling vine release, rising canopy ripples, and emerald fireflies' },
+      { stage: 3, id: 'bridge-reconnection', durationSeconds: 5.4, visualBeat: 'sequential bridge tension and turquoise thread sparks' },
+      { stage: 4, id: 'compass-forging', durationSeconds: 6.2, visualBeat: 'four-beam convergence and staggered ring forging' },
+    ],
+  };
+
   const zenithFx = registerIsland18RuntimePart('emerald-zenith-fx', new THREE.Group(), 'mission-fx');
   zenithFx.name = 'ISLAND_18_EMERALD_ZENITH_FX';
   root.add(zenithFx);
@@ -5864,6 +5957,14 @@ export function createIsland18JungleExpeditionLivingAmbience(
   const compassGlyphMatrix = new THREE.Matrix4();
   const compassGlyphQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
   const compassGlyphScale = new THREE.Vector3();
+  const buildupMatrix = new THREE.Matrix4();
+  const buildupPosition = new THREE.Vector3();
+  const buildupDirection = new THREE.Vector3();
+  const buildupQuaternion = new THREE.Quaternion();
+  const buildupScale = new THREE.Vector3();
+  const buildupUp = new THREE.Vector3(0, 1, 0);
+  const buildupBloomQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+  const buildupIdentityQuaternion = new THREE.Quaternion();
   const faunaMatrix = new THREE.Matrix4();
   const faunaPosition = new THREE.Vector3();
   const faunaScale = new THREE.Vector3();
@@ -5881,6 +5982,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
   const lightningColor = new THREE.Color(0xf2fbff);
   const sunrayColor = new THREE.Color(0xffefaa);
   const weatherColor = new THREE.Color();
+  const missionReplayDurationSeconds = [0, 4.2, 4.8, 5.4, 6.2, 8.8] as const;
 
   const applyMissionState = (stage: number, progress: number, reducedMotion: boolean) => {
     const zenithReplayActive = stage >= 5 && !reducedMotion && progress < 1;
@@ -5910,34 +6012,191 @@ export function createIsland18JungleExpeditionLivingAmbience(
       compass.glyphs.setMatrixAt(index, compassGlyphMatrix);
     }
     compass.glyphs.instanceMatrix.needsUpdate = true;
+    const buildupVisible = stage > 0 && stage < 5;
+    const buildupTransition = buildupVisible && !reducedMotion && progress < 1;
+    const buildupPulse = buildupTransition ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.02, 0.96)) : 0;
+    const buildupStageLift = buildupVisible ? stage / 4 : 0;
+    buildupFx.visible = buildupVisible;
+    sealConduits.visible = buildupVisible;
+    sealBloomRings.visible = buildupVisible;
+    for (let index = 0; index < 5; index += 1) {
+      const isNewSeal = index === stage - 1;
+      const conduitReveal = stage > index + 1 || reducedMotion
+        ? (stage > index ? 1 : 0)
+        : isNewSeal
+          ? THREE.MathUtils.smoothstep(progress, 0.04, 0.78)
+          : 0;
+      const source = sealSourcePositions[index];
+      const target = sealTargetPositions[index];
+      buildupDirection.subVectors(target, source);
+      const conduitLength = buildupDirection.length();
+      buildupQuaternion.setFromUnitVectors(buildupUp, buildupDirection.normalize());
+      buildupPosition.lerpVectors(source, target, conduitReveal * 0.5);
+      buildupScale.set(1, Math.max(0.001, conduitLength * conduitReveal), 1);
+      buildupMatrix.compose(buildupPosition, buildupQuaternion, buildupScale);
+      sealConduits.setMatrixAt(index, buildupMatrix);
+
+      const bloomReveal = stage > index + 1 || reducedMotion
+        ? (stage > index ? 1 : 0)
+        : isNewSeal
+          ? THREE.MathUtils.smoothstep(progress, 0.02, 0.46)
+          : 0;
+      const bloomFlare = isNewSeal && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.02, 0.72))
+        : 0;
+      const bloomBreath = reducedMotion ? 0 : Math.sin(lastElapsed * 1.8 + index * 1.17) * 0.055;
+      buildupPosition.copy(source).addScaledVector(buildupUp, 0.035);
+      buildupScale.setScalar(Math.max(0.001, bloomReveal * (0.78 + bloomBreath + bloomFlare * 1.16)));
+      buildupMatrix.compose(buildupPosition, buildupBloomQuaternion, buildupScale);
+      sealBloomRings.setMatrixAt(index, buildupMatrix);
+    }
+    for (let index = 0; index < 2; index += 1) {
+      const gate = vineGates[index];
+      const gateBloom = stage === 2
+        ? (reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.08 + index * 0.05, 0.58 + index * 0.08))
+        : 0;
+      const gateFlare = stage === 2 && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.08, 0.82))
+        : 0;
+      buildupPosition.set(gate.position.x, gate.position.y + 0.88, gate.position.z + 0.04);
+      buildupScale.setScalar(Math.max(0.001, gateBloom * (1.02 + gateFlare * 0.72)));
+      buildupMatrix.compose(buildupPosition, buildupIdentityQuaternion, buildupScale);
+      sealBloomRings.setMatrixAt(5 + index, buildupMatrix);
+    }
+    for (let index = 0; index < 3; index += 1) {
+      const canopyRipple = stage === 2
+        ? (reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.1 + index * 0.1, 0.58 + index * 0.1))
+        : 0;
+      const rippleTravel = reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.08 + index * 0.08, 0.78 + index * 0.06);
+      const rippleFlare = stage === 2 && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.08 + index * 0.06, 0.84))
+        : 0;
+      buildupPosition.set((index - 1) * 0.22, 2.15 + index * 2.08 + rippleTravel * 0.76, -0.18);
+      buildupScale.setScalar(Math.max(0.001, canopyRipple * (2.72 + index * 0.5 + rippleFlare * 1.52)));
+      buildupMatrix.compose(buildupPosition, buildupIdentityQuaternion, buildupScale);
+      sealBloomRings.setMatrixAt(7 + index, buildupMatrix);
+    }
+    sealConduits.instanceMatrix.needsUpdate = true;
+    sealBloomRings.instanceMatrix.needsUpdate = true;
+    conduitMaterial.opacity = buildupVisible ? 0.24 + buildupPulse * 0.68 : 0;
+    sealBloomMaterial.opacity = buildupVisible ? 0.24 + buildupPulse * 0.72 : 0;
+    sealBloomMaterial.color.set(stage === 1
+      ? 0xffe46d
+      : stage === 2
+        ? 0x79ff79
+        : stage === 3
+          ? 0x62f3e8
+          : 0xe8ff77);
+
+    buildupSparks.visible = buildupTransition;
+    buildupSparkMaterial.opacity = buildupTransition
+      ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.02, 0.98)) * 0.92
+      : 0;
+    buildupSparkMaterial.size = stage === 2 ? buildupSparkSize * 1.5 : buildupSparkSize;
+    if (buildupTransition) {
+      buildupSparkMaterial.color.set(stage === 1
+        ? 0xffd85f
+        : stage === 2
+          ? 0x7cff78
+          : stage === 3
+            ? 0x62f3e8
+            : 0xeaff76);
+      const sparkAttribute = buildupSparkGeometry.getAttribute('position') as THREE.BufferAttribute;
+      for (let index = 0; index < buildupSparkCount; index += 1) {
+        const localT = (lastElapsed * (stage === 3 ? 0.62 : 0.48) + index / buildupSparkCount * 2.4) % 1;
+        if (stage === 2) {
+          const gateLift = THREE.MathUtils.smoothstep(progress, 0.08, 0.78);
+          if (index < Math.floor(buildupSparkCount * 0.35)) {
+            const gate = vineGates[index % vineGates.length];
+            const phase = localT * Math.PI * 4 + index * 1.37;
+            const radius = (0.42 - localT * 0.16) * (0.45 + gateLift * 0.55);
+            sparkAttribute.setXYZ(
+              index,
+              gate.position.x + Math.cos(phase) * radius,
+              Number(gate.userData.closedY ?? 0.35) + 0.28 + localT * (1.82 + gateLift * 0.72),
+              gate.position.z + Math.sin(phase) * radius,
+            );
+          } else {
+            const canopyT = (localT + progress * 0.16) % 1;
+            const phase = canopyT * Math.PI * 6 + index * 0.71;
+            const radius = (2.42 - canopyT * 1.18) * (0.58 + gateLift * 0.42);
+            sparkAttribute.setXYZ(
+              index,
+              Math.cos(phase) * radius,
+              1.45 + canopyT * (6.7 + gateLift * 0.72),
+              -0.18 + Math.sin(phase) * radius * 0.72,
+            );
+          }
+        } else if (stage === 3) {
+          const [start, end] = bridgePairs[index % bridgePairs.length];
+          buildupPosition.lerpVectors(start, end, localT);
+          buildupPosition.y += Math.sin(localT * Math.PI) * 0.38
+            + Math.sin(lastElapsed * 3.2 + index) * 0.035;
+          sparkAttribute.setXYZ(index, buildupPosition.x, buildupPosition.y, buildupPosition.z);
+        } else {
+          const pathIndex = stage === 1 ? 0 : index % 5;
+          const source = sealSourcePositions[pathIndex];
+          const target = sealTargetPositions[pathIndex];
+          const travel = localT * THREE.MathUtils.smoothstep(progress, 0.02, 0.82);
+          buildupPosition.lerpVectors(source, target, travel);
+          const spiral = Math.sin(localT * Math.PI * 5 + index * 0.73) * (1 - travel) * 0.18;
+          buildupPosition.x += spiral;
+          buildupPosition.z += Math.cos(localT * Math.PI * 4 + index) * (1 - travel) * 0.14;
+          sparkAttribute.setXYZ(index, buildupPosition.x, buildupPosition.y, buildupPosition.z);
+        }
+      }
+      sparkAttribute.needsUpdate = true;
+    }
     const vineOpen = stage >= 2
       ? (reducedMotion || stage > 2 ? 1 : THREE.MathUtils.smoothstep(progress, 0.12, 0.72))
       : 0;
     vineGates.forEach((gate, index) => {
+      const releaseFlourish = stage === 2 && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.08, 0.82))
+        : 0;
       gate.position.y = Number(gate.userData.closedY ?? 0.35) + vineOpen * (1.18 + index * 0.12);
-      gate.rotation.z = (index === 0 ? -1 : 1) * vineOpen * 0.42;
-      gate.scale.y = 1 - vineOpen * 0.34;
+      gate.rotation.y = (index === 0 ? -1 : 1) * releaseFlourish * 0.28;
+      gate.rotation.z = (index === 0 ? -1 : 1) * (vineOpen * 0.48 + releaseFlourish * 0.16);
+      gate.scale.set(1 + releaseFlourish * 0.09, 1 - vineOpen * 0.38, 1 + releaseFlourish * 0.06);
     });
     const bridgeTension = stage >= 3
       ? (reducedMotion || stage > 3 ? 1 : THREE.MathUtils.smoothstep(progress, 0.08, 0.7))
       : 0;
     ropeBridges.forEach((bridge, index) => {
-      bridge.position.y = Number(bridge.userData.restY ?? 0.42) + bridgeTension * (0.1 + index * 0.012);
-      bridge.scale.y = 0.82 + bridgeTension * 0.18;
-      bridge.rotation.z = reducedMotion ? 0 : Math.sin(lastElapsed * 1.6 + index) * 0.006 * bridgeTension;
+      const localTension = stage < 3
+        ? 0
+        : stage > 3 || reducedMotion
+          ? bridgeTension
+          : THREE.MathUtils.smoothstep(progress, 0.05 + index * 0.08, 0.55 + index * 0.07);
+      const snap = stage === 3 && !reducedMotion
+        ? Math.sin(localTension * Math.PI * 3) * (1 - localTension) * 0.045
+        : 0;
+      bridge.position.y = Number(bridge.userData.restY ?? 0.42) + localTension * (0.1 + index * 0.012) + snap;
+      bridge.scale.y = 0.82 + localTension * 0.18;
+      bridge.scale.z = 0.96 + localTension * 0.04;
+      bridge.rotation.x = snap * (index % 2 === 0 ? 0.7 : -0.7);
+      bridge.rotation.z = reducedMotion ? 0 : Math.sin(lastElapsed * 1.6 + index) * 0.008 * localTension;
     });
     compass.rings.forEach((ring, index) => {
       ring.visible = stage >= 4 && (stage < 5 || progress < 1);
       const reveal = stage > 4 || reducedMotion
         ? (stage >= 4 ? 1 : 0)
         : THREE.MathUtils.smoothstep(progress, 0.12 + index * 0.06, 0.48 + index * 0.08);
-      ring.scale.setScalar(Math.max(0.001, reveal));
+      const revealOffset = reveal - 1;
+      const forgedScale = reveal <= 0
+        ? 0.001
+        : Math.min(1.16, 1 + 2.70158 * revealOffset * revealOffset * revealOffset + 1.70158 * revealOffset * revealOffset);
+      ring.scale.setScalar(Math.max(0.001, forgedScale));
+      ring.position.y = (1 - reveal) * (index === 1 ? -0.82 : 0.72 + index * 0.12);
+      ring.position.z = (1 - reveal) * (0.34 + index * 0.11);
       const direction = index % 2 === 0 ? 1 : -1;
-      ring.rotation.z = index * 0.36 + (reducedMotion ? 0 : lastElapsed * 0.26 * direction);
-      ring.rotation.y = (index === 2 ? Math.PI / 2 : index * 0.45) + (reducedMotion ? 0 : lastElapsed * 0.17 * -direction);
+      const forgingSpin = stage === 4 && !reducedMotion ? (1 - reveal) * Math.PI * (1.7 + index * 0.35) : 0;
+      ring.rotation.z = index * 0.36 + forgingSpin * direction + (reducedMotion ? 0 : lastElapsed * 0.26 * direction);
+      ring.rotation.y = (index === 2 ? Math.PI / 2 : index * 0.45) + forgingSpin * -direction + (reducedMotion ? 0 : lastElapsed * 0.17 * -direction);
     });
     compass.core.visible = stage >= 4;
     const coreScale = stage > 4 || reducedMotion ? (stage >= 4 ? 1 : 0.001) : THREE.MathUtils.smoothstep(progress, 0.28, 0.62);
+    compass.core.position.y = (1 - coreScale) * -0.58;
     compass.core.scale.setScalar(Math.max(0.001, coreScale) * (1 + Math.sin(lastElapsed * 3.2) * 0.08));
     floatingSlabMesh.visible = zenithReplayActive;
     floatingSlabs.forEach(({ rest, orbit, width }, index) => {
@@ -6069,17 +6328,30 @@ export function createIsland18JungleExpeditionLivingAmbience(
       ? 0.72 + Math.sin(lastElapsed * 5.4) * (progress < 1 ? 0.34 : 0.12)
       : stage >= 4
         ? 0.58 + Math.sin(lastElapsed * 2.6) * 0.12
-        : 0.46;
+        : 0.46 + buildupStageLift * 0.1 + buildupPulse * 0.2;
     materials.amber.emissiveIntensity = stage >= 5
       ? 0.56 + Math.sin(lastElapsed * 4.1 + 0.8) * 0.2
-      : 0.44;
+      : 0.44 + buildupStageLift * 0.06 + buildupPulse * 0.15;
     materials.water.emissiveIntensity = stage >= 5
       ? 0.28 + Math.sin(lastElapsed * 2.8) * (progress < 1 ? 0.12 : 0.045)
       : 0.16;
     materials.waterfall.emissiveIntensity = stage >= 5
       ? 0.36 + Math.sin(lastElapsed * 3.3 + 0.6) * (progress < 1 ? 0.16 : 0.055)
       : 0.2;
-    zenithLight.intensity = stage >= 5 ? (progress >= 1 ? 2.1 + Math.sin(lastElapsed * 2.4) * 0.28 : progress * 4.2) : stage >= 4 ? 0.42 : 0;
+    zenithLight.color.set(stage >= 5
+      ? 0x52ff9a
+      : stage === 1
+        ? 0xffd45a
+        : stage === 2
+          ? 0x72ff7c
+          : stage === 3
+            ? 0x63f4e4
+            : 0xd9ff71);
+    zenithLight.intensity = stage >= 5
+      ? (progress >= 1 ? 2.1 + Math.sin(lastElapsed * 2.4) * 0.28 : progress * 4.2)
+      : buildupVisible
+        ? 0.14 + buildupStageLift * 0.38 + buildupPulse * (0.92 + buildupStageLift * 0.54)
+        : 0;
     waterfallInstances.forEach((fall, index) => {
       const reversal = reducedMotion || stage < 5 ? 0 : Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.34, 0.7));
       waterfallSheetPosition.copy(fall.position);
@@ -6337,7 +6609,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
     const weather = updateWeather(elapsed, reducedMotion);
     guardianCrownLight.intensity = missionStage >= 4
       ? 0.62 + (reducedMotion ? 0 : Math.sin(elapsed * 2.7) * 0.14)
-      : 0.42 + (reducedMotion ? 0 : Math.sin(elapsed * 1.4) * 0.06);
+      : 0.42 + missionStage * 0.035 + (reducedMotion ? 0 : Math.sin(elapsed * 1.4) * 0.06);
     if (!reducedMotion) {
       depthIslands.position.y = Math.sin(elapsed * 0.12) * 0.1;
       depthIslands.rotation.y = Math.sin(elapsed * 0.075) * 0.004;
@@ -6359,7 +6631,9 @@ export function createIsland18JungleExpeditionLivingAmbience(
     }
     const replayProgress = replayStartedAt === null
       ? 1
-      : THREE.MathUtils.clamp((elapsed - replayStartedAt) / (reducedMotion ? 0.45 : missionStage >= 5 ? 8.8 : 3.4), 0, 1);
+      : THREE.MathUtils.clamp((elapsed - replayStartedAt) / (
+        reducedMotion ? 0.45 : missionReplayDurationSeconds[missionStage]
+      ), 0, 1);
     applyMissionState(missionStage, replayProgress, reducedMotion);
     const practicalFlicker = reducedMotion
       ? 0
@@ -6375,7 +6649,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
       0.28,
     );
     const livingGardenPulse = reducedMotion ? 0 : 0.5 + Math.sin(elapsed * 1.36) * 0.5;
-    const zenithGardenLift = missionStage >= 5 ? 0.34 : missionStage >= 3 ? 0.12 : 0;
+    const zenithGardenLift = missionStage >= 5 ? 0.34 : missionStage > 0 ? missionStage / 4 * 0.15 : 0;
     materials.biolume.emissiveIntensity = 0.72
       + weather.practicalLightExposure * 0.78
       + zenithGardenLift

@@ -376,11 +376,20 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const wayfinder = runtime.root.getObjectByName('ISLAND_18_ZENITH_WAYFINDER_CONSTELLATION');
       const waterCrown = runtime.root.getObjectByName('ISLAND_18_ZENITH_SUSPENDED_WATER_CROWN');
       const junglePulseRings = runtime.root.getObjectByName('ISLAND_18_ZENITH_JUNGLE_PULSE_RING_BATCH');
+      const buildupFx = runtime.root.getObjectByName('ISLAND_18_LIVING_COMPASS_BUILDUP_FX');
+      const sealConduits = runtime.root.getObjectByName('ISLAND_18_BUILDUP_SEAL_CONDUIT_BATCH');
+      const sealBlooms = runtime.root.getObjectByName('ISLAND_18_BUILDUP_SEAL_BLOOM_RING_BATCH');
+      const travelingSparks = runtime.root.getObjectByName('ISLAND_18_BUILDUP_TRAVELING_SPARK_FIELD');
       assert(Boolean(glyph1 && vineGate && bridge && compassRing && shockwave && beam && wayfinder && waterCrown && junglePulseRings), 'all five mission animation systems expose stable named roots');
+      assert(Boolean(buildupFx && sealConduits && sealBlooms && travelingSparks), 'the four intermediate seals expose their authored buildup effects');
+      assertEqual(runtime.root.userData.livingCompassBuildup?.drawCalls, 3, 'the richer buildup stays inside a three-draw-call mobile budget');
+      assertEqual(runtime.root.userData.livingCompassBuildup?.stages?.length, 4, 'all four pre-finale stages declare a distinct visual beat');
 
       runtime.setLivingCompassStage({ activatedStages: 1, constructionSequence: 1 }, true);
       runtime.animate(1.2, false);
       assertEqual(glyph1?.visible, true, 'the first Wayfinder Glyph wakes on stage one');
+      assertEqual(buildupFx?.visible, true, 'stage one opens the authored buildup layer');
+      assertEqual(travelingSparks?.visible, true, 'stage one traces the discovered seal toward the temple');
       assertEqual(compassRing?.visible, false, 'compass rings remain reserved until stage four');
       assertEqual(shockwave?.visible, false, 'the Emerald Zenith shockwave cannot leak into an ordinary seal activation');
 
@@ -388,17 +397,25 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       runtime.setLivingCompassStage({ activatedStages: 2, constructionSequence: 2 }, true);
       runtime.animate(2.8, false);
       assert((vineGate?.position.y ?? 0) > closedVineY, 'stage two physically parts the Jungle Path vine gate');
+      assert(Math.abs(vineGate?.rotation.y ?? 0) > 0.01, 'stage two spirals the vine crowns outward instead of only translating them');
       const slackBridgeY = bridge?.position.y ?? 0;
       runtime.setLivingCompassStage({ activatedStages: 3, constructionSequence: 3 }, true);
       runtime.animate(4.4, false);
       assert((bridge?.position.y ?? 0) > slackBridgeY, 'stage three tensions the rope skybridge');
+      assertEqual(travelingSparks?.visible, true, 'stage three runs turquoise thread sparks across the bridge network');
       runtime.setLivingCompassStage({ activatedStages: 4, constructionSequence: 4 }, true);
       runtime.animate(6.1, false);
       assertEqual(compassRing?.visible, true, 'stage four assembles the Living Compass rings');
+      const fourthConduitMatrix = new THREE.Matrix4();
+      const fourthConduitScale = new THREE.Vector3();
+      (sealConduits as THREE.InstancedMesh).getMatrixAt(3, fourthConduitMatrix);
+      fourthConduitMatrix.decompose(new THREE.Vector3(), new THREE.Quaternion(), fourthConduitScale);
+      assert(fourthConduitScale.y > 0.1, 'stage four visibly draws the fourth convergence beam into the compass');
       assertEqual(beam?.visible, false, 'the sky beam still waits for the fifth seal');
 
       runtime.setLivingCompassStage({ activatedStages: 5, constructionSequence: 5, completed: true }, true);
       runtime.animate(11, false);
+      assertEqual(buildupFx?.visible, false, 'the buildup layer yields cleanly when Emerald Zenith begins');
       assertEqual(shockwave?.visible, true, 'the fifth seal unleashes the Emerald Zenith shockwave');
       assertEqual(beam?.visible, true, 'the fifth seal opens the emerald sky beam');
       runtime.animate(12, true);

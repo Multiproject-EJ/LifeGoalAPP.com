@@ -4341,6 +4341,18 @@ export default function Island5ThreePilot({
     let jungleZenithStartedAtMs = Number.NEGATIVE_INFINITY;
     let jungleZenithCameraWasActive = false;
     let jungleZenithCameraOrigin: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+    let jungleBuildupStartedAtMs = Number.NEGATIVE_INFINITY;
+    let jungleBuildupStage = 0;
+    let jungleBuildupCameraWasActive = false;
+    let jungleBuildupCameraOrigin: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+    const jungleBuildupCameraShots = [
+      null,
+      { position: new THREE.Vector3(9.8, 10.2, 18.6), target: new THREE.Vector3(0, 7.35, -0.2) },
+      { position: new THREE.Vector3(11.8, 11.2, 19.8), target: new THREE.Vector3(0.55, 4.6, -0.1) },
+      { position: new THREE.Vector3(0, 14.5, 20.5), target: new THREE.Vector3(0, 0.92, 0.1) },
+      { position: new THREE.Vector3(10.6, 11.6, 18.4), target: new THREE.Vector3(0, 8.35, -0.2) },
+    ] as const;
+    const jungleBuildupDurationMs = [0, 4_200, 4_800, 5_400, 6_200] as const;
     const cactusCanyonBlastPreviewEnabled = typeof window !== 'undefined'
       && new URLSearchParams(window.location.search).get('island13BlastPreview') === '1';
     const cactusCanyonBlastPreviewSegment = typeof window !== 'undefined'
@@ -4353,6 +4365,16 @@ export default function Island5ThreePilot({
     const jungleZenithPreviewEnabled = isJungleExpedition
       && typeof window !== 'undefined'
       && new URLSearchParams(window.location.search).get('island18ZenithPreview') === '1';
+    const jungleMissionPreviewStageParam = isJungleExpedition && typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('island18MissionPreview')
+      : null;
+    const jungleMissionPreviewStage = jungleMissionPreviewStageParam !== null
+      && Number.isFinite(Number(jungleMissionPreviewStageParam))
+      ? THREE.MathUtils.clamp(Math.floor(Number(jungleMissionPreviewStageParam)), 1, 4)
+      : null;
+    const jungleMissionPreviewReplay = jungleMissionPreviewStage !== null
+      && typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('island18MissionReplay') === '1';
     const jungleWeatherPreview = isJungleExpedition && typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('island18WeatherPreview')
       : null;
@@ -4614,6 +4636,14 @@ export default function Island5ThreePilot({
             constructionSequence: 10_000 + Math.floor(elapsed / 11.4),
             claimedPickupTileIndices: [2, 9, 16, 25, 34],
           }
+        : jungleMissionPreviewStage !== null
+          ? {
+              islandNumber: 18,
+              activatedStages: jungleMissionPreviewStage,
+              stageCount: 5,
+              constructionSequence: 20_000 + (jungleMissionPreviewReplay ? Math.floor(elapsed / 7.5) : 0),
+              claimedPickupTileIndices: [2, 9, 16, 25, 34].slice(0, jungleMissionPreviewStage),
+            }
         : stagedRestorationPresentationRef.current ?? null
     );
     const stagedRestorationInitial = resolveStagedRestorationPresentation();
@@ -4634,7 +4664,7 @@ export default function Island5ThreePilot({
         activatedStages: stagedRestorationInitial.activatedStages,
         constructionSequence: stagedRestorationInitial.constructionSequence,
         completed: stagedRestorationInitial.activatedStages >= stagedRestorationInitial.stageCount,
-      }, jungleZenithPreviewEnabled);
+      }, jungleZenithPreviewEnabled || jungleMissionPreviewStage !== null);
     }
     let stagedRestorationPresentationKey = stagedRestorationInitial
       ? `${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}:${(stagedRestorationInitial.claimedPickupTileIndices ?? []).join(',')}`
@@ -6958,6 +6988,7 @@ export default function Island5ThreePilot({
         canvas.dataset.ambientCameraMode = 'build-recent-cooldown';
       }
       let cactusCanyonBlastCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+      let jungleBuildupCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       let jungleZenithCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
@@ -7008,6 +7039,8 @@ export default function Island5ThreePilot({
           if (requestedSequence > jungleZenithLastConstructionSequence) {
             jungleZenithLastConstructionSequence = requestedSequence;
             if (nextPresentation.activatedStages >= nextPresentation.stageCount) {
+              jungleBuildupCameraWasActive = false;
+              jungleBuildupCameraOrigin = null;
               jungleZenithStartedAtMs = now;
               jungleZenithCameraOrigin = {
                 position: camera.position.clone(),
@@ -7020,6 +7053,20 @@ export default function Island5ThreePilot({
                 controls.enabled = false;
                 setActivePreset('manual');
               }
+            } else if (nextPresentation.activatedStages > 0) {
+              jungleBuildupStage = THREE.MathUtils.clamp(Math.floor(nextPresentation.activatedStages), 1, 4);
+              jungleBuildupStartedAtMs = now;
+              jungleBuildupCameraOrigin = {
+                position: camera.position.clone(),
+                target: controls.target.clone(),
+              };
+              if (!isReducedMotion) {
+                jungleBuildupCameraWasActive = true;
+                transition = null;
+                idleOverviewAt = null;
+                controls.enabled = false;
+                setActivePreset('manual');
+              }
             }
           }
           livingAmbience.setLivingCompassStage?.({
@@ -7027,6 +7074,36 @@ export default function Island5ThreePilot({
             constructionSequence: nextPresentation.constructionSequence,
             completed: nextPresentation.activatedStages >= nextPresentation.stageCount,
           });
+          const buildupDuration = jungleBuildupDurationMs[jungleBuildupStage] || 4_200;
+          const buildupProgress = Number.isFinite(jungleBuildupStartedAtMs)
+            ? THREE.MathUtils.clamp((now - jungleBuildupStartedAtMs) / (isReducedMotion ? 450 : buildupDuration), 0, 1)
+            : 1;
+          canvas.dataset.jungleBuildupStage = String(jungleBuildupStage);
+          canvas.dataset.jungleBuildupProgress = buildupProgress.toFixed(3);
+          if (jungleBuildupCameraWasActive && jungleBuildupCameraOrigin && buildupProgress < 1) {
+            const shot = jungleBuildupCameraShots[jungleBuildupStage];
+            if (shot) {
+              const position = new THREE.Vector3();
+              const target = new THREE.Vector3();
+              const approach = THREE.MathUtils.smoothstep(buildupProgress, 0, 0.22);
+              position.lerpVectors(jungleBuildupCameraOrigin.position, shot.position, approach);
+              target.lerpVectors(jungleBuildupCameraOrigin.target, shot.target, approach);
+              if (buildupProgress >= 0.22) {
+                const survey = THREE.MathUtils.smoothstep(buildupProgress, 0.22, 0.88);
+                const lateralDirection = jungleBuildupStage === 3 ? 1 : jungleBuildupStage % 2 === 0 ? -1 : 1;
+                const lateralTravel = jungleBuildupStage === 3 ? 2.35 : 0.72;
+                position.x += Math.sin(survey * Math.PI) * lateralTravel * lateralDirection;
+                position.y += Math.sin(survey * Math.PI) * (jungleBuildupStage === 4 ? 0.92 : 0.42);
+                target.y += Math.sin(survey * Math.PI) * (jungleBuildupStage === 3 ? 0.18 : 0.36);
+              }
+              jungleBuildupCameraPose = { position, target };
+            }
+          } else if (jungleBuildupCameraWasActive) {
+            jungleBuildupCameraWasActive = false;
+            jungleBuildupCameraOrigin = null;
+            controls.enabled = true;
+            applyPreset('overview', 0.54);
+          }
           const zenithDurationMs = isReducedMotion ? 450 : 8_800;
           const zenithProgress = Number.isFinite(jungleZenithStartedAtMs)
             ? THREE.MathUtils.clamp((now - jungleZenithStartedAtMs) / zenithDurationMs, 0, 1)
@@ -7882,6 +7959,12 @@ export default function Island5ThreePilot({
         transition = null;
         camera.position.copy(cactusCanyonBlastCameraPose.position);
         controls.target.copy(cactusCanyonBlastCameraPose.target);
+        camera.lookAt(controls.target);
+      }
+      if (jungleBuildupCameraPose) {
+        transition = null;
+        camera.position.copy(jungleBuildupCameraPose.position);
+        controls.target.copy(jungleBuildupCameraPose.target);
         camera.lookAt(controls.target);
       }
       if (jungleZenithCameraPose) {
