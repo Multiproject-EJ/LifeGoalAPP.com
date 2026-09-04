@@ -102,9 +102,11 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const basinFauna = runtime.root.getObjectByName('ISLAND_18_EXOTIC_BASIN_FAUNA_ECOLOGY');
       const residentNetwork = runtime.root.getObjectByName('ISLAND_18_JUNGLE_RESIDENT_WORK_NETWORK');
       const detailGarden = runtime.root.getObjectByName('ISLAND_18_BOTANICAL_STONE_DETAIL_GARDEN');
+      const canopyLeafBatches = [1, 2, 3].map((index) => runtime.root.getObjectByName(`ISLAND_18_CANOPY_LEAF_BATCH_${index}`));
       const fernBatch = runtime.root.getObjectByName('ISLAND_18_FERN_FROND_BATCH_DEEP');
       const orchidBatch = runtime.root.getObjectByName('ISLAND_18_ORCHID_BATCH_MAGENTA');
       const mossyRelicBatch = runtime.root.getObjectByName('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT');
+      const fracturedRelicBatch = runtime.root.getObjectByName('ISLAND_18_MOSSY_RELIC_STONE_BATCH_DARK');
       const mushroomBatch = runtime.root.getObjectByName('ISLAND_18_BIOLUMINESCENT_MUSHROOM_CAP_BATCH');
       const gardenHalos = runtime.root.getObjectByName('ISLAND_18_BIOLUMINESCENT_GARDEN_HALO_FIELD');
       const aerialFauna = runtime.root.getObjectByName('ISLAND_18_EXOTIC_AERIAL_FAUNA_BATCH');
@@ -172,9 +174,19 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       assert(Number(detailGarden?.userData.detailEcology?.mossyRelicCount ?? 0) >= 34, 'the outer basin carries a readable procession of moss-capped lost-city stones');
       assert(Number(detailGarden?.userData.detailEcology?.bioluminescentMushroomCount ?? 0) >= 22, 'the detail garden includes a low-cost luminous mushroom ecology');
       assert(Number(detailGarden?.userData.detailEcology?.minimumRouteRadius ?? 0) >= 6.5, 'all added botanical and stone detail remains outside the protected route corridor');
+      const leafSilhouettes = canopyLeafBatches.map((batch) => (
+        batch instanceof THREE.InstancedMesh ? batch.geometry.userData.botanicalSilhouette : undefined
+      ));
+      assertEqual(new Set(leafSilhouettes).size, 3, 'the near canopy uses three genuinely different procedural leaf silhouettes');
+      ['banana', 'monstera', 'heartleaf'].forEach((silhouette) => {
+        assert(leafSilhouettes.includes(silhouette), `the canopy includes the ${silhouette} leaf family`);
+      });
       assert(fernBatch instanceof THREE.InstancedMesh && fernBatch.count > 40, 'curved fern leaves are instanced rather than emitted as individual meshes');
       assert(orchidBatch instanceof THREE.InstancedMesh && orchidBatch.geometry.getAttribute('position')?.count >= 30, 'orchids use cupped multi-petal procedural geometry rather than tetrahedron placeholders');
-      assert(mossyRelicBatch instanceof THREE.InstancedMesh, 'mossy relic stones stay in a batched mobile-friendly field');
+      assertEqual((orchidBatch as THREE.InstancedMesh).geometry.userData.botanicalSilhouette, 'cupped-orchid', 'orchids retain a raised cupped silhouette at runtime');
+      assert(mossyRelicBatch instanceof THREE.InstancedMesh && fracturedRelicBatch instanceof THREE.InstancedMesh, 'mossy relic stones stay in two batched mobile-friendly families');
+      assertEqual((mossyRelicBatch as THREE.InstancedMesh).geometry.userData.relicProfile, 'tapered', 'sunlit relics use the tapered weathered profile');
+      assertEqual((fracturedRelicBatch as THREE.InstancedMesh).geometry.userData.relicProfile, 'fractured', 'dark relics use the broken asymmetric profile');
       assert(mushroomBatch instanceof THREE.InstancedMesh, 'the bioluminescent mushroom caps share one instanced draw call');
       assert(gardenHalos instanceof THREE.InstancedMesh && gardenHalos.count >= 7, 'one batched emerald halo field connects the luminous garden sites');
       runtime.animate(9, false);

@@ -616,9 +616,9 @@ export function createIsland18JungleExpeditionMaterials(): Island18JungleExpedit
     ruinStoneDark: ruinMaterial(0x293d2c, 0.9, 0.09),
     ruinStoneWet: ruinMaterial(0x1f6152, 0.38, 0.078),
     moss: new THREE.MeshStandardMaterial({ color: 0x3f8f25, roughness: 0.86, metalness: 0, side: THREE.DoubleSide }),
-    leaf: new THREE.MeshStandardMaterial({ color: 0x197536, roughness: 0.7, side: THREE.DoubleSide }),
-    leafLight: new THREE.MeshStandardMaterial({ color: 0x70bf43, roughness: 0.66, side: THREE.DoubleSide }),
-    leafDeep: new THREE.MeshStandardMaterial({ color: 0x093b25, roughness: 0.76, side: THREE.DoubleSide }),
+    leaf: new THREE.MeshStandardMaterial({ color: 0x167343, roughness: 0.68, side: THREE.DoubleSide }),
+    leafLight: new THREE.MeshStandardMaterial({ color: 0x86c957, roughness: 0.62, side: THREE.DoubleSide }),
+    leafDeep: new THREE.MeshStandardMaterial({ color: 0x07382b, roughness: 0.78, side: THREE.DoubleSide }),
     vine: new THREE.MeshStandardMaterial({ color: 0x2d621b, roughness: 0.86 }),
     rope: new THREE.MeshStandardMaterial({ color: 0x795128, roughness: 0.96 }),
     wood: new THREE.MeshStandardMaterial({ color: 0x71431f, roughness: 0.82, metalness: 0.01 }),
@@ -640,9 +640,9 @@ export function createIsland18JungleExpeditionMaterials(): Island18JungleExpedit
     water: new THREE.MeshPhysicalMaterial({ color: 0x32e5d7, map: waterAlbedo, vertexColors: true, roughness: 0.08, metalness: 0.02, clearcoat: 1, clearcoatRoughness: 0.025, transparent: true, opacity: 0.88, side: THREE.DoubleSide, depthWrite: false, emissive: 0x087f7e, emissiveIntensity: 0.11 }),
     waterfall: new THREE.MeshPhysicalMaterial({ color: 0x86fff0, map: waterfallAlbedo, roughness: 0.07, clearcoat: 0.94, transparent: true, opacity: 0.86, side: THREE.DoubleSide, depthWrite: false, emissive: 0x0d8886, emissiveIntensity: 0.2 }),
     foam: new THREE.MeshStandardMaterial({ color: 0xb8f7ec, roughness: 0.38, transparent: true, opacity: 0.74, depthWrite: false, emissive: 0x4baea6, emissiveIntensity: 0.09 }),
-    flower: new THREE.MeshStandardMaterial({ color: 0xd45bba, roughness: 0.5, emissive: 0x5c164d, emissiveIntensity: 0.2, side: THREE.DoubleSide }),
-    flowerSun: new THREE.MeshStandardMaterial({ color: 0xffc947, roughness: 0.46, emissive: 0x8d4a06, emissiveIntensity: 0.24, side: THREE.DoubleSide }),
-    flowerCyan: new THREE.MeshStandardMaterial({ color: 0x65e6dd, roughness: 0.42, emissive: 0x087f72, emissiveIntensity: 0.28, side: THREE.DoubleSide }),
+    flower: new THREE.MeshStandardMaterial({ color: 0xed64c6, roughness: 0.46, emissive: 0x71175d, emissiveIntensity: 0.26, side: THREE.DoubleSide }),
+    flowerSun: new THREE.MeshStandardMaterial({ color: 0xffd452, roughness: 0.42, emissive: 0x9b5607, emissiveIntensity: 0.28, side: THREE.DoubleSide }),
+    flowerCyan: new THREE.MeshStandardMaterial({ color: 0x6cf1e5, roughness: 0.38, emissive: 0x09897d, emissiveIntensity: 0.32, side: THREE.DoubleSide }),
     biolume: new THREE.MeshStandardMaterial({ color: 0x9dff9a, roughness: 0.26, emissive: 0x28d76d, emissiveIntensity: 0.72, side: THREE.DoubleSide }),
     basinGround: new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, flatShading: true }),
     canopyVolume: new THREE.ShaderMaterial({
@@ -845,7 +845,11 @@ function createStoneBlockWall(
   }
 }
 
-function createBroadLeafGeometry() {
+type JungleLeafSilhouette = 'banana' | 'monstera' | 'heartleaf';
+
+const JUNGLE_LEAF_SILHOUETTES = ['banana', 'monstera', 'heartleaf'] as const satisfies readonly JungleLeafSilhouette[];
+
+function createBroadLeafGeometry(silhouette: JungleLeafSilhouette = 'banana') {
   const rows = 5;
   const positions: number[] = [];
   const uvs: number[] = [];
@@ -853,11 +857,25 @@ function createBroadLeafGeometry() {
   for (let row = 0; row < rows; row += 1) {
     const t = row / (rows - 1);
     const y = THREE.MathUtils.lerp(-0.56, 0.64, t);
-    const naturalWidth = Math.pow(Math.sin(t * Math.PI), 0.72) * 0.43;
-    const lobing = 0.9 + Math.sin(t * Math.PI * 5.2) * 0.1;
+    const naturalWidth = silhouette === 'heartleaf'
+      ? (1 - t) * 0.105 + Math.pow(Math.sin(t * Math.PI), 0.56) * 0.4
+      : Math.pow(Math.sin(t * Math.PI), silhouette === 'monstera' ? 0.58 : 0.72)
+        * (silhouette === 'monstera' ? 0.46 : 0.4);
+    const lobing = silhouette === 'monstera'
+      ? 0.78 + Math.sin(t * Math.PI * 6.15 + 0.4) * 0.2
+      : silhouette === 'heartleaf'
+        ? 0.94 + Math.sin(t * Math.PI * 3.2) * 0.055
+        : 0.96 + Math.sin(t * Math.PI * 4.2) * 0.04;
     const width = naturalWidth * lobing;
-    const cup = Math.sin(t * Math.PI) * 0.105 - t * t * 0.035;
-    positions.push(-width, y, cup - width * 0.08, 0, y, cup + 0.055, width, y, cup - width * 0.08);
+    const cup = Math.sin(t * Math.PI) * (silhouette === 'heartleaf' ? 0.14 : 0.105)
+      - t * t * (silhouette === 'banana' ? 0.065 : 0.035);
+    const heartNotch = silhouette === 'heartleaf' && row === 0 ? 0.14 : 0;
+    const sideCurl = silhouette === 'monstera' ? width * 0.15 : width * 0.09;
+    positions.push(
+      -width, y, cup - sideCurl,
+      0, y + heartNotch, cup + (silhouette === 'monstera' ? 0.09 : 0.06),
+      width, y, cup - sideCurl,
+    );
     uvs.push(0, t, 0.5, t, 1, t);
   }
   for (let row = 0; row < rows - 1; row += 1) {
@@ -871,6 +889,8 @@ function createBroadLeafGeometry() {
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
+  geometry.name = `ISLAND_18_${silhouette.toUpperCase()}_LEAF_GEOMETRY`;
+  geometry.userData.botanicalSilhouette = silhouette;
   return geometry;
 }
 
@@ -925,12 +945,15 @@ function createJungleFlowerGeometry(petalCount = 6) {
     const radialX = Math.cos(angle);
     const radialZ = Math.sin(angle);
     const offset = positions.length / 3;
+    const petalLift = 0.04 + (petal % 2) * 0.025;
+    const shoulderRadius = 0.28 + (petal % 3) * 0.012;
+    const tipRadius = 0.43 + (petal % 2) * 0.025;
     positions.push(
-      radialX * 0.05 - tangentX * 0.07, 0.02, radialZ * 0.05 - tangentZ * 0.07,
-      radialX * 0.34 - tangentX * 0.1, 0.08, radialZ * 0.34 - tangentZ * 0.1,
-      radialX * 0.46, 0.16 + (petal % 2) * 0.025, radialZ * 0.46,
-      radialX * 0.34 + tangentX * 0.1, 0.08, radialZ * 0.34 + tangentZ * 0.1,
-      radialX * 0.05 + tangentX * 0.07, 0.02, radialZ * 0.05 + tangentZ * 0.07,
+      radialX * 0.055 - tangentX * 0.055, 0.07, radialZ * 0.055 - tangentZ * 0.055,
+      radialX * shoulderRadius - tangentX * 0.12, 0.17 + petalLift, radialZ * shoulderRadius - tangentZ * 0.12,
+      radialX * tipRadius, 0.11 + petalLift * 0.34, radialZ * tipRadius,
+      radialX * shoulderRadius + tangentX * 0.12, 0.17 + petalLift, radialZ * shoulderRadius + tangentZ * 0.12,
+      radialX * 0.055 + tangentX * 0.055, 0.07, radialZ * 0.055 + tangentZ * 0.055,
     );
     uvs.push(0, 0, 0.12, 0.62, 0.5, 1, 0.88, 0.62, 1, 0);
     indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 4, offset + 4, offset + 2, offset + 3);
@@ -940,6 +963,9 @@ function createJungleFlowerGeometry(petalCount = 6) {
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
+  geometry.name = `ISLAND_18_CUPPED_${petalCount}_PETAL_ORCHID_GEOMETRY`;
+  geometry.userData.botanicalSilhouette = petalCount === 8 ? 'raised-lotus' : 'cupped-orchid';
+  geometry.userData.petalCount = petalCount;
   return geometry;
 }
 
@@ -1281,7 +1307,11 @@ function addLeafCluster(
       : materials.leafDeep;
   for (let index = 0; index < 7; index += 1) {
     const angle = index / 7 * Math.PI * 2 + (index % 2) * 0.22;
-    const leaf = presentMesh(new THREE.Mesh(createBroadLeafGeometry(), clusterMaterial), `${prefix}_LEAF_${index + 1}`, stage);
+    const leaf = presentMesh(
+      new THREE.Mesh(createBroadLeafGeometry(JUNGLE_LEAF_SILHOUETTES[index % JUNGLE_LEAF_SILHOUETTES.length]), clusterMaterial),
+      `${prefix}_LEAF_${index + 1}`,
+      stage,
+    );
     leaf.scale.set(0.72, 0.82, 0.72);
     leaf.position.set(Math.cos(angle) * 0.24, 0.18 + Math.sin(angle) * 0.12, Math.sin(angle) * 0.24);
     leaf.rotation.z = -angle + Math.PI / 2;
@@ -1305,7 +1335,7 @@ function createInstancedCanopyField(
 ) {
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_INSTANCED_JUNGLE_CANOPY_FIELD';
-  const leafGeometry = createBroadLeafGeometry();
+  const leafGeometries = JUNGLE_LEAF_SILHOUETTES.map((silhouette) => createBroadLeafGeometry(silhouette));
   const materialList = [materials.leafLight, materials.leaf, materials.leafDeep] as const;
   const placements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], [], []];
   const euler = new THREE.Euler();
@@ -1340,7 +1370,7 @@ function createInstancedCanopyField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(leafGeometry, materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(leafGeometries[materialIndex], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_CANOPY_LEAF_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -1364,7 +1394,7 @@ function createInstancedPalmGrove(
   root.name = 'ISLAND_18_INSTANCED_PALM_GROVE';
   root.userData.windPhase = 2.17;
   const trunkGeometry = new THREE.CylinderGeometry(0.085, 0.14, 1, 7);
-  const frondGeometry = createBroadLeafGeometry();
+  const frondGeometry = createBroadLeafGeometry('banana');
   const trunkPlacements: Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }> = [];
   const frondPlacements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], []];
   const euler = new THREE.Euler();
@@ -1431,7 +1461,11 @@ function createInstancedUnderstoryField(
 ) {
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_INSTANCED_UNDERSTORY_FIELD';
-  const geometry = createBroadLeafGeometry();
+  const geometries = [
+    createBroadLeafGeometry('monstera'),
+    createBroadLeafGeometry('heartleaf'),
+    createBroadLeafGeometry('banana'),
+  ] as const;
   const materialList = [materials.leafDeep, materials.leaf, materials.leafLight] as const;
   const placements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], [], []];
   const euler = new THREE.Euler();
@@ -1459,7 +1493,7 @@ function createInstancedUnderstoryField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(geometry, materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(geometries[materialIndex], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_UNDERSTORY_LEAF_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -1480,7 +1514,11 @@ function createTempleOvergrowthField(
 ) {
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_TEMPLE_OVERGROWTH_FIELD';
-  const geometry = createBroadLeafGeometry();
+  const geometries = [
+    createBroadLeafGeometry('heartleaf'),
+    createBroadLeafGeometry('monstera'),
+    createBroadLeafGeometry('banana'),
+  ] as const;
   const materialList = [materials.leafDeep, materials.leaf, materials.leafLight] as const;
   const anchors = [
     [-2.25, 1.45, 0.3], [2.28, 1.68, -0.18], [-1.9, 2.8, -0.2], [1.94, 3.0, -0.18],
@@ -1510,7 +1548,7 @@ function createTempleOvergrowthField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(geometry, materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(geometries[materialIndex], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_TEMPLE_OVERGROWTH_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -1530,7 +1568,7 @@ interface Island18JungleDetailGarden {
   glowSites: THREE.Vector3[];
 }
 
-function createCarvedRelicStoneGeometry() {
+function createCarvedRelicStoneGeometry(profile: 'tapered' | 'fractured') {
   const base = new THREE.BoxGeometry(1, 0.72, 0.62);
   base.translate(0, 0.36, 0);
   const shoulder = new THREE.BoxGeometry(0.82, 0.2, 0.72);
@@ -1542,6 +1580,26 @@ function createCarvedRelicStoneGeometry() {
   if (geometry !== base) base.dispose();
   shoulder.dispose();
   crown.dispose();
+  const positions = geometry.getAttribute('position') as THREE.BufferAttribute;
+  for (let index = 0; index < positions.count; index += 1) {
+    const x = positions.getX(index);
+    const y = positions.getY(index);
+    const z = positions.getZ(index);
+    const height = THREE.MathUtils.clamp(y / 1.08, 0, 1);
+    const weathering = Math.sin(x * 5.7 + y * 11.3 + z * 7.9);
+    const taper = 1 - height * (profile === 'fractured' ? 0.2 : 0.13);
+    const fracture = profile === 'fractured' && weathering > 0.42 ? 0.91 : 1;
+    positions.setXYZ(
+      index,
+      x * taper * fracture + (profile === 'fractured' ? height * 0.075 : 0) + weathering * 0.012,
+      y + Math.sin(x * 8.1 + z * 6.4) * 0.012 * height,
+      z * (1 - height * 0.08) * fracture + Math.cos(y * 9.2 + x * 4.3) * 0.01,
+    );
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  geometry.name = `ISLAND_18_${profile.toUpperCase()}_RELIC_STONE_GEOMETRY`;
+  geometry.userData.relicProfile = profile;
   return geometry;
 }
 
@@ -1558,7 +1616,10 @@ function createJungleDetailGarden(
   const position = new THREE.Vector3();
   const fernGeometry = createFernFrondGeometry();
   const flowerGeometry = createJungleFlowerGeometry();
-  const stoneGeometry = createCarvedRelicStoneGeometry();
+  const stoneGeometries = [
+    createCarvedRelicStoneGeometry('tapered'),
+    createCarvedRelicStoneGeometry('fractured'),
+  ] as const;
   const glyphGeometry = new THREE.OctahedronGeometry(0.5, 0);
   const mossGeometry = new THREE.SphereGeometry(0.5, 6, 3, 0, Math.PI * 2, 0, Math.PI * 0.52);
   const mushroomCapGeometry = new THREE.SphereGeometry(0.5, 7, 4, 0, Math.PI * 2, 0, Math.PI * 0.5);
@@ -1611,7 +1672,7 @@ function createJungleDetailGarden(
     const angle = Math.atan2(position.z, position.x);
     position.y = sampleJungleBasinHeight(radius, angle) + 1.25 + (index % 4) * 0.055;
     quaternion.setFromEuler(euler.set((index % 3 - 1) * 0.08, index * 1.13, (index % 2 ? -1 : 1) * 0.06));
-    const size = 0.27 + (index % 5) * 0.034;
+    const size = 0.32 + (index % 5) * 0.04;
     flowerPlacements[index % 3].push(matrix.compose(position, quaternion, scale.setScalar(size)).clone());
   }
 
@@ -1686,8 +1747,8 @@ function createJungleDetailGarden(
   addBatch('ISLAND_18_ORCHID_BATCH_MAGENTA', flowerGeometry, materials.flower, flowerPlacements[0]);
   addBatch('ISLAND_18_ORCHID_BATCH_SUN', flowerGeometry, materials.flowerSun, flowerPlacements[1]);
   addBatch('ISLAND_18_ORCHID_BATCH_CYAN', flowerGeometry, materials.flowerCyan, flowerPlacements[2]);
-  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT', stoneGeometry, materials.ruinStoneLight, stonePlacements[0]);
-  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_DARK', stoneGeometry, materials.ruinStoneDark, stonePlacements[1]);
+  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT', stoneGeometries[0], materials.ruinStoneLight, stonePlacements[0]);
+  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_DARK', stoneGeometries[1], materials.ruinStoneDark, stonePlacements[1]);
   addBatch('ISLAND_18_RELIC_MOSS_CROWN_BATCH', mossGeometry, materials.moss, mossPlacements);
   addBatch('ISLAND_18_RELIC_EMERALD_GLYPH_BATCH', glyphGeometry, materials.biolume, glyphPlacements);
   addBatch('ISLAND_18_BIOLUMINESCENT_MUSHROOM_STEM_BATCH', mushroomStemGeometry, materials.routeIvory, mushroomStemPlacements);
@@ -4154,7 +4215,7 @@ function addContinuousJungleBasin(
     const radius = Math.hypot(x, z);
     const angle = Math.atan2(z, x);
     quaternion.setFromEuler(new THREE.Euler(index * 0.42, angle + index * 0.58, side * 0.28));
-    const bloomScale = 0.27 + (index % 4) * 0.045;
+    const bloomScale = 0.32 + (index % 4) * 0.052;
     matrix.compose(
       new THREE.Vector3(x, sampleJungleBasinHeight(radius, angle) + 1.55 + (index % 3) * 0.08, z),
       quaternion,
@@ -4304,7 +4365,7 @@ function addContinuousJungleBasin(
       matrix.compose(
         new THREE.Vector3(x + 0.06, waterY + 0.12, z - 0.04),
         quaternion,
-        scale.set(0.18, 0.24, 0.18),
+        scale.set(0.22, 0.29, 0.22),
       );
       combinedGeometry.push(cloneColoredBasinGeometry(
         lotusBudSource,
