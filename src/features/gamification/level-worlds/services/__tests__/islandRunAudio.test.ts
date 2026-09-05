@@ -134,6 +134,23 @@ export const islandRunAudioTests: TestCase[] = [
     },
   },
   {
+    name: 'core board loop uses distinct paid candidate SFX instead of shared placeholders',
+    run: () => {
+      const expectedCandidatePaths = {
+        token_move: '/assets/audio/sfx/sfx_board_token_hop_candidate_v1.mp3',
+        stop_land: '/assets/audio/sfx/sfx_tile_land_candidate_v1.mp3',
+        build_upgrade: '/assets/audio/sfx/sfx_build_upgrade_candidate_v1.mp3',
+        reward_bar_claim_burst: '/assets/audio/sfx/sfx_reward_bar_claim_burst_candidate_v1.mp3',
+      } as const;
+
+      for (const [eventId, expectedPath] of Object.entries(expectedCandidatePaths)) {
+        const assetPath = getIslandRunSoundAssetPath(eventId as keyof typeof expectedCandidatePaths);
+        assertEqual(assetPath, expectedPath, `expected ${eventId} to use its dedicated paid candidate`);
+        assert(!isPlaceholderSoundAsset(assetPath), `${eventId} should not be reported as a placeholder`);
+      }
+    },
+  },
+  {
     name: 'canonical hatch reveal sound plays once per stable reveal identity',
     run: () => {
       const restoreAudio = installMockAudio();
@@ -167,9 +184,10 @@ export const islandRunAudioTests: TestCase[] = [
         assertEqual(MockAudioElement.created.length, 1, 'expected one SFX audio element');
         assertEqual(
           MockAudioElement.created[0].src,
-          '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
+          '/assets/audio/sfx/sfx_dice_roll.mp3',
           'expected roll SFX asset path',
         );
+        assert(!isPlaceholderSoundAsset(MockAudioElement.created[0].src), 'expected the roll SFX to use the licensed candidate');
         assertEqual(MockAudioElement.created[0].playCount, 1, 'expected SFX playback');
         assertEqual(getIslandRunAudioDiagnostics().lastSoundPlaybackStatus, 'play_requested', 'expected diagnostics to record requested playback');
         assertEqual(getIslandRunAudioDiagnostics().lastSoundEventId, 'roll', 'expected diagnostics to record last event');
