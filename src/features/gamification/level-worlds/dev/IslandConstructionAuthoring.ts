@@ -41,6 +41,7 @@ const WORLD_LANDMARK_LABELS: Readonly<Record<number, Readonly<Record<Island5Land
   10: { boss: 'Rootheart Arena', hatchery: 'Acorn Cradle Hatchery', habit: 'Canopy Rhythm Lodge', wisdom: 'Spiralwood Library', event: 'Firefly Pulley Workshop' },
   14: { boss: 'Royal Honeycomb Palace', hatchery: "Queen's Nursery Hatchery", habit: 'Pollinator Yard', wisdom: 'Hive Archives', event: 'Nectar Trials Pavilion' },
   18: { boss: 'Lost City Temple', hatchery: 'Explorer Nest', habit: 'Jungle Path', wisdom: "Explorer's Camp", event: 'Survival Trials' },
+  20: { boss: 'Crucible Citadel', hatchery: 'Magma Crucible Hatchery', habit: 'Fire Path Sanctum', wisdom: 'Obsidian Archive', event: 'Ashen Trialworks' },
 };
 
 const LANDMARK_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
@@ -670,6 +671,22 @@ const ROOTHEART_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionCho
   },
 };
 
+const LAVA_LABYRINTH_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
+  hatchery: ['buried furnace bed and slag channel', 'black-iron egg cradle and heat ribs', 'magma egg shell and vent crown', 'incubation bellows, gauges, and handling rail', 'hatch flame, crack glow, and brass commissioning seal'],
+  habit: ['fire-path court and choice markers', 'obsidian columns and open arch ring', 'iron shelter crown and smoke vents', 'practice braziers and calm-focus stations', 'steady flame halo and discipline banners'],
+  event: ['trial floor and ash drainage bed', 'vent towers and participant frame', 'iron rail canopy and heat shields', 'trial gate, pressure drums, and focus mechanism', 'Blaze Trials standards and calibrated forge lights'],
+  wisdom: ['archive plinth and cooled threshold', 'obsidian vault and reading recesses', 'stepped keep and iron crown', 'wisdom steles, index wheel, and book lift', 'brass archive seal and ember-script illumination'],
+  boss: ['buried arena plinth and four gate landings', 'curtain labyrinth, buttresses, and lower keep', 'Crucible tower, gate arches, and flame crown', 'Iron Skiff davit, navigation gatehouses, and molten escape channel', 'Pyre Sentinel socket, magnetic extraction cradle, and victory beacon'],
+};
+
+const LAVA_LABYRINTH_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
+  hatchery: { styleId: 'lava-labyrinth-magma-crucible-hoist', stationOffset: 0, stationStep: 1, relocationSeconds: 1.46, phaseStationOffsets: { foundation: 0, frame: 1, assemble: 3, finish: 2 }, phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'welder', 'project-manager': 'clamp', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } }, phaseMaterials: { foundation: ['island-blocks','beam-stack','bolt-crate'], frame: ['beam-stack','pipe-bundle','cable-coil'], assemble: ['panel-stack','pipe-bundle','cable-coil'], finish: ['panel-stack','cable-coil','bolt-crate'] } },
+  habit: { styleId: 'lava-labyrinth-fire-path-forgeframe', stationOffset: 2, stationStep: -1, relocationSeconds: 1.38, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 }, phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'welder', 'project-manager': 'clamp', 'mini-artist': 'drill' }, assemble: { 'heavy-worker': 'wrench', 'project-manager': 'cable-reel', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } }, phaseMaterials: { foundation: ['island-blocks','beam-stack','bolt-crate'], frame: ['beam-stack','panel-stack','cable-coil'], assemble: ['panel-stack','pipe-bundle','cable-coil'], finish: ['panel-stack','cable-coil','bolt-crate'] } },
+  event: { styleId: 'lava-labyrinth-ashen-trialworks-rail', stationOffset: 5, stationStep: 1, relocationSeconds: 1.34, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 3, finish: 1 }, phaseTools: { foundation: { 'heavy-worker': 'drill', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'welder', 'project-manager': 'clamp', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'wrench', 'project-manager': 'cable-reel', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'welder' } }, phaseMaterials: { foundation: ['island-blocks','beam-stack','bolt-crate'], frame: ['beam-stack','pipe-bundle','cable-coil'], assemble: ['panel-stack','pipe-bundle','cable-coil'], finish: ['panel-stack','cable-coil','bolt-crate'] } },
+  wisdom: { styleId: 'lava-labyrinth-obsidian-archive-lift', stationOffset: 3, stationStep: -1, relocationSeconds: 1.58, phaseStationOffsets: { foundation: 0, frame: 1, assemble: 2, finish: 0 }, phaseTools: { foundation: { 'heavy-worker': 'drill', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'welder', 'project-manager': 'clamp', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } }, phaseMaterials: { foundation: ['island-blocks','beam-stack','bolt-crate'], frame: ['beam-stack','panel-stack','cable-coil'], assemble: ['panel-stack','pipe-bundle','cable-coil'], finish: ['panel-stack','cable-coil','bolt-crate'] } },
+  boss: { styleId: 'lava-labyrinth-crucible-citadel-commissioning', stationOffset: 4, stationStep: 1, relocationSeconds: 1.44, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 }, phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'clamp', 'mini-artist': 'measuring-laser' }, frame: { 'heavy-worker': 'welder', 'project-manager': 'measuring-laser', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'welder' } }, phaseMaterials: { foundation: ['island-blocks','beam-stack','bolt-crate'], frame: ['beam-stack','pipe-bundle','cable-coil'], assemble: ['panel-stack','pipe-bundle','cable-coil'], finish: ['panel-stack','cable-coil','bolt-crate'] } },
+};
+
 function resolveConstructionChoreography(
   worldSourceNumber: number,
   landmarkId: Island5LandmarkId,
@@ -685,6 +702,7 @@ function resolveConstructionChoreography(
   if (worldSourceNumber === 10) return ROOTHEART_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 14) return HONEYCOMB_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 18) return JUNGLE_EXPEDITION_CHOREOGRAPHY[landmarkId];
+  if (worldSourceNumber === 20) return LAVA_LABYRINTH_CHOREOGRAPHY[landmarkId];
   return {
     styleId: `world-${worldSourceNumber}-${landmarkId}-${rigKind}`,
     stationOffset: (['boss', 'hatchery', 'habit', 'wisdom', 'event'] as Island5LandmarkId[]).indexOf(landmarkId),
@@ -718,6 +736,8 @@ export const ISLAND_LANDMARK_CONSTRUCTION_PROFILES: readonly IslandLandmarkConst
                       ? HONEYCOMB_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 18
                       ? JUNGLE_EXPEDITION_STAGE_STORIES[landmarkId]
+                    : Number(worldSourceNumber) === 20
+                      ? LAVA_LABYRINTH_STAGE_STORIES[landmarkId]
                       : LANDMARK_STAGE_STORIES[landmarkId],
       choreography: resolveConstructionChoreography(
         Number(worldSourceNumber),

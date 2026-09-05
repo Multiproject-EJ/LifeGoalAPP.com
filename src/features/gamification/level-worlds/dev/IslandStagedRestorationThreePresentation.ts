@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Island3DQuality } from './island5ThreePilotContract';
 
 export interface IslandStagedRestorationPresentation {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 20;
   activatedStages: number;
   stageCount: number;
   constructionSequence?: number;

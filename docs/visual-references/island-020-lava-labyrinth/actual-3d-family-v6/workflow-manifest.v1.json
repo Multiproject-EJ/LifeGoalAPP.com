@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "family": "island-020-silhouette-first-modular-city-glb-v6",
+  "representation": "Blender-authored semantic multipart GLB using a circular clipped orthogonal city mesh, cruciform Gothic keep, exposed canal deck, and integrated cliff waterfalls",
+  "approval": {
+    "status": "approved",
+    "basis": "inherits the user's explicit approval for the materially different Blender/multipart-GLB production route",
+    "decision_record": "../actual-3d-family-v5/user-decisions.v1.jsonl"
+  },
+  "why_distinct_from_v5": [
+    "city mass is formed by clipped orthogonal wall ribbons and flat-roof basalt blocks rather than repeated cone-roof primitives",
+    "lava canals are primary negative-space/navigation bands authored before secondary structures",
+    "terrain is an asymmetric cliff crown fused directly to the city footprint rather than concentric empty terraces",
+    "the keep uses a cruciform stepped footprint and narrow buttressed tower hierarchy instead of a stacked square tower"
+  ],
+  "blockout_gate": {
+    "required_views": ["front", "left-45", "right-45", "rear", "top", "front-cliff-low"],
+    "continuation_floor": 0.75,
+    "promotion_threshold": 0.85,
+    "max_bounded_corrections": 1,
+    "hard_vetoes": [
+      "flat environment plate",
+      "rear-view collapse",
+      "non-navigable or occluded escape route",
+      "fused single-mesh export",
+      "spiky forest silhouette replacing the orthogonal city"
+    ]
+  },
+  "semantic_parts_required": [
+    "closed volcanic terrain and underside",
+    "city foundation deck",
+    "connected orthogonal labyrinth walls",
+    "flat-roof maze city masses",
+    "cruciform crucible keep",
+    "four cardinal gatehouses and approach stairs",
+    "recessed navigation lava canals",
+    "front Iron Skiff escape chute",
+    "cliff lava waterfalls"
+  ],
+  "runtime_rule": "Do not replace the current runtime world until the naked v6 blockout passes its six-view gate."
+}

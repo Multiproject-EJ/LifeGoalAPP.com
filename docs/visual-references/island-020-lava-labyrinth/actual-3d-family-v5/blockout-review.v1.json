@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "family": "island-020-authored-multipart-glb-v5",
+  "stage": "naked-blockout",
+  "decision": "bounded-correction-authorized",
+  "reviewed_views": [
+    "front",
+    "left-45",
+    "right-45",
+    "rear",
+    "top",
+    "front-cliff-low"
+  ],
+  "scores": {
+    "source_identity": 0.58,
+    "phone_scale_silhouette": 0.62,
+    "cross_view_coherence": 0.79,
+    "maze_city_readability": 0.61,
+    "keep_identity": 0.55,
+    "terrain_and_cliff_depth": 0.57,
+    "lava_path_dominance": 0.52,
+    "worst_required_view": 0.52
+  },
+  "hard_vetoes": [],
+  "critical_defects": [
+    "The city sits on a broad empty platter instead of a steep volcanic crown.",
+    "The maze reads as thin square fencing rather than a dense inhabited labyrinth-city.",
+    "The central keep reads as a generic stacked tower rather than the tall buttressed crucible citadel in the source.",
+    "The authored escape flow and tributaries are visually subordinate and fail to illuminate the route through the city.",
+    "The low-front evidence crops the crown and does not prove the complete island silhouette."
+  ],
+  "correction_hypothesis": "If the flat mesa is replaced by a steep multi-tier crater crown, the maze is widened and densified with tiered bastions, the keep is reshaped into a taller narrower buttressed crucible, and the major lava channels are enlarged and exposed through the city, source identity and phone-scale silhouette will improve by at least 0.10 without reducing cross-view coherence.",
+  "allowed_correction_scope": [
+    "terrain and cliff macro silhouette",
+    "maze-city scale and massing",
+    "crucible keep proportions and buttressing",
+    "lava channel width, height and route visibility",
+    "review camera framing"
+  ],
+  "forbidden_at_this_stage": [
+    "micro-detail polish",
+    "final material polish",
+    "animation polish",
+    "runtime replacement"
+  ]
+}

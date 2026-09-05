@@ -1,0 +1,976 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped",
+  "profile": "generic",
+  "currentStep": "stopped",
+  "currentPass": "iron-skiff-escape-v4",
+  "checklist": [
+    {
+      "id": "image-analysis",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/image-analysis.md"
+      ],
+      "reason": "Inherited immutable exact-source analysis.",
+      "command": "Read grimoire/intake/image_analysis.md and analyze {reference}"
+    },
+    {
+      "id": "reference-suitability",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/reference-suitability.md"
+      ],
+      "reason": "Existing conditional single-view suitability remains valid.",
+      "command": "Read grimoire/intake/validation_rubric.md and record a pass, conditional, or reject verdict for {reference}"
+    },
+    {
+      "id": "reference-admission",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/reference-admission.json"
+      ],
+      "reason": "Exact source was admitted and hash-locked.",
+      "command": "python3 forge/stage1_intake/check_reference_admission.py {reference}"
+    },
+    {
+      "id": "local-spec-search",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/pre-spec-assessment.json"
+      ],
+      "reason": "Inherited local core-3d evidence bundle.",
+      "command": "Run the local evidence search before authoring the assessment"
+    },
+    {
+      "id": "pre-spec-assessment",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/pre-spec-assessment.json"
+      ],
+      "reason": "Inherited source assessment and quality contract.",
+      "command": "python3 forge/stage2_spec/new_pre_spec_assessment.py \"<name>\" --image {reference} --out assessment.json"
+    },
+    {
+      "id": "detail-inventory",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/detail-inventory.json"
+      ],
+      "reason": "Inherited exact-source 3x3 inventory.",
+      "command": "python3 forge/stage1_intake/build_detail_inventory.py {reference} --mode grid-3x3 --out-dir detail-inventory --out di.json"
+    },
+    {
+      "id": "projection-route",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/projection-route.md",
+        "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/prompt-lineage.v1.md"
+      ],
+      "reason": "User-approved source-led final-angle hybrid route is frozen.",
+      "command": "Record whether projection is required; if required run solve_camera_pose.py, delight_albedo.py, and bake_projected_texture.py, otherwise skip with a reason"
+    },
+    {
+      "id": "spec-authoring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/hybrid-sculpt-spec.json"
+      ],
+      "reason": "Hybrid spec is active.",
+      "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
+    },
+    {
+      "id": "material-evidence",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/material-analysis.json",
+        "../island-020-lava-labyrinth/material-evidence/04-molten-magma-flow.png"
+      ],
+      "reason": "Existing exact-source magma and basalt evidence is reused; no new authority is introduced.",
+      "command": "python3 forge/stage1_intake/material_region_analysis.py --manifest material-regions.json --out-dir material-evidence --out material-analysis.json"
+    },
+    {
+      "id": "material-spec-wiring",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/hybrid-sculpt-spec.json"
+      ],
+      "reason": "The hybrid spec owns the bounded lava/heat-lighting correction contract.",
+      "command": "python3 forge/stage2_spec/apply_material_analysis.py {spec} material-analysis.json --in-place"
+    },
+    {
+      "id": "strict-validation",
+      "scope": "setup",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/hybrid-sculpt-spec.json"
+      ],
+      "reason": "Existing family passed its production contract; this pass does not change hierarchy or representation.",
+      "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
+    },
+    {
+      "id": "build-current-pass",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+    },
+    {
+      "id": "render-capture",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+    },
+    {
+      "id": "review-contract-read",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+    },
+    {
+      "id": "tier1-diagnostics",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Run deterministic visual diagnostics against the fixed review captures"
+    },
+    {
+      "id": "multi-angle-review",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Review meaningful alternate views when the representation supports them"
+    },
+    {
+      "id": "pass-gate-check",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Run the Island 020 contract tests and full Island Run service suite"
+    },
+    {
+      "id": "ai-review-recorded",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Create comparison evidence, inspect it, and append exactly one review action"
+    },
+    {
+      "id": "pipeline-sync",
+      "scope": "pass",
+      "status": "pending",
+      "evidence": [],
+      "reason": "",
+      "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+    },
+    {
+      "id": "part-coverage",
+      "scope": "final",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/review/island-020-part-coverage-v002.json"
+      ],
+      "reason": "No hierarchy or part ownership changes are authorized in this look-development pass.",
+      "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
+    },
+    {
+      "id": "action-ready",
+      "scope": "final",
+      "status": "done",
+      "evidence": [
+        "../island-020-lava-labyrinth/review/island-020-runtime-part-manifest-v001.json"
+      ],
+      "reason": "Live route, mission, token, rewards, hit targets, pivots, and sockets remain frozen.",
+      "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
+    }
+  ],
+  "loops": {
+    "perPass": {
+      "lava-lookdev-v2": 1,
+      "iron-skiff-escape-v4": 1
+    },
+    "total": 2,
+    "maxPerPass": 2,
+    "maxTotal": 2
+  },
+  "artifacts": {
+    "reference": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "spec": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/hybrid-sculpt-spec.json",
+    "runtimePlate": "public/assets/islands/island-020/background/lava-labyrinth-environment-plate-v001.webp",
+    "runtimeFactory": "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts"
+  },
+  "passHistory": [
+    {
+      "pass": "blockout",
+      "result": "bounded-correction",
+      "reason": "Removed duplicate retired-family masses and constrained the source-led final-angle camera."
+    },
+    {
+      "pass": "final",
+      "result": "pass",
+      "reason": "Independent Quality-Lord accepted hybrid family v2 with 0.98 fixed-final-angle stability."
+    },
+    {
+      "pass": "lava-lookdev-v2",
+      "result": "user-authorized-refinement",
+      "reason": "Eivind requested proper flowing lava and heat-driven illumination through the Quality-Lord/Gauntlet loop."
+    },
+    {
+      "passId": "lava-lookdev-v2",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "Implement only proper elapsed-time lava flow and heat-driven illumination while keeping the approved final angle and live gameplay layers frozen.",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "Capture phone-stage beauty evidence at two elapsed times plus reduced motion.",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/self_correction.md",
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/feedback/shading_realism.md"
+          ],
+          "reason": "Read completely before this correction pass.",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "Verify no blowout, crushed heat halo, or route readability regression.",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-final.v1.json"
+          ],
+          "reason": "The user-approved source-led hybrid is a strict final-angle representation; the new pass changes only live layered effects and cannot unlock orbit cameras.",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "Require phone readability, proper directional flow, heat illumination, reduced-motion safety, and mobile budget.",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "Independent Quality-Lord must emit exactly one action.",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "Synchronize manifests and Gauntlet after the final review.",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "blockout",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "lava-lookdev-v2",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "lava-lookdev-v2",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "Island20LavaLabyrinthThreeWorld.ts; Island5ThreePilot.tsx; island20LavaLabyrinthThreeWorldContract.test.ts"
+          ],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "review/island-020-lava-lookdev-t0-v002.jpg; review/island-020-lava-lookdev-t6-v002.jpg; review/island-020-lava-lookdev-reduced-motion-v002.jpg"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "shading_realism.md; gates_reference.md; self_correction.md read completely by the main agent"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-lookdev-v2-tier1-diagnostics.json"
+          ],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [],
+          "reason": "The approved source-led 2.5D representation and lava shader are registered to one strict final camera; orbiting would invalidate the representation contract rather than reveal a meaningful alternate view.",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "1918/1918 Island Run tests; camera-kit validator PASS; architecture guard PASS with 0 violations; git diff --check PASS; 163 calls and 31k triangles under budget"
+          ],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "hybrid-family-v2/quality-lord-lava-lookdev-v2.json; hybrid-sculpt-spec reviewHistory ACTION PASS/APPROVE"
+          ],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "hybrid-sculpt-spec.json; family-manifest.v1.json; workflow-manifest.v1.json; manifest.v1.json; README.md; dated Gauntlet; quality-lord-lava-lookdev-v2.json"
+          ],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "complete",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "lava-volume-integration-v3",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts"
+          ],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-comparison-v003.jpg"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/island-020-lava-labyrinth-hybrid-v2/hybrid-sculpt-spec.json"
+          ],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "lava-volume-integration-v3",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "lava-volume-integration-v3",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts"
+          ],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-comparison-v003.jpg"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "/Users/ejmac/.codex/skills/img2threejs/grimoire/review/gates_reference.md"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-volume-v3-tier1-diagnostics.json"
+          ],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-volume-v3-tier1-diagnostics.json"
+          ],
+          "reason": "The approved source-led plate and lava shader are registered to one strict final camera; orbiting invalidates the representation.",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-volume-v3.json"
+          ],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-volume-v3.json"
+          ],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "docs/visual-references/island-020-lava-labyrinth/workflow-manifest.v1.json"
+          ],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "complete",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    },
+    {
+      "passId": "iron-skiff-escape-v4",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Refine the existing Island 020 runtime factory for {pass_id}; do not regenerate or change frozen representation geometry"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view at t0, t6, and reduced-motion"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run deterministic visual diagnostics against the fixed review captures"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Review meaningful alternate views when the representation supports them"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Run the Island 020 contract tests and full Island Run service suite"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create comparison evidence, inspect it, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Update the hybrid state, spec reviewHistory, manifests, and dated Gauntlet"
+        }
+      ]
+    }
+  ],
+  "reviewCursor": 5,
+  "iterationAction": "refine-spec",
+  "stopReason": "max-total-correction-loops-reached:2/2"
+}

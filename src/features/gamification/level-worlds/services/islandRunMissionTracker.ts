@@ -20,6 +20,8 @@ import {
   getGreatHoneyfallAvailableNectar,
   getStagedRestorationAvailableCharges,
   getStagedRestorationMissionDescriptor,
+  isLavaLabyrinthEscapeMissionComplete,
+  isLavaLabyrinthEscapeMissionStarted,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveFirstLightAssemblyCraterProgress,
@@ -309,6 +311,37 @@ export function resolveIslandMissionTrackerPresentation(options: {
       if (!descriptor || !progress) {
         usesLiveSignatureProgress = false;
         objectives = resolveStandardObjectives({ islandNumber, state, landmarkCount });
+        break;
+      }
+      if (descriptor.islandNumber === 20) {
+        const started = isLavaLabyrinthEscapeMissionStarted(progress);
+        const extracted = isLavaLabyrinthEscapeMissionComplete(progress);
+        const pickupTarget = descriptor.stageCount * descriptor.chargeCostPerStage;
+        const escapeValue = Math.min(pickupTarget, progress.chargesEarned)
+          + Math.min(descriptor.stageCount, progress.activatedStages)
+          + (extracted ? 1 : 0);
+        const escapeTarget = pickupTarget + descriptor.stageCount + 1;
+        objectives = [
+          objective(
+            !started
+              ? 'Escape Mission Locked'
+              : progress.chargesEarned < pickupTarget
+                ? 'Recover Heatshield Plates'
+                : progress.activatedStages < descriptor.stageCount
+                  ? 'Forge Iron Skiff'
+                  : extracted ? 'Reach Expedition Ship' : 'Launch Iron Skiff',
+            escapeValue,
+            escapeTarget,
+            !started
+              ? 'Solve the labyrinth first'
+              : progress.chargesEarned < pickupTarget
+                ? `${progress.chargesEarned} / ${pickupTarget} plates`
+                : progress.activatedStages < descriptor.stageCount
+                  ? `${progress.activatedStages} / ${descriptor.stageCount} systems`
+                  : extracted ? 'Extracted' : 'Skiff ready',
+          ),
+          objective('Solve Level-3 Labyrinth', landmarkProgress.fullyRestored, landmarkCount),
+        ];
         break;
       }
       const chargesReady = getStagedRestorationAvailableCharges(progress);

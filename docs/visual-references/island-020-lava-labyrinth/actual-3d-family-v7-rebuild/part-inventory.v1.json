@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "family": "island-020-monumental-fortress-maze-v7",
+  "part_count": 20,
+  "root_axis": "Y-up, fortress front and escape chute toward +Z",
+  "detail_firewall": "No ornamental props, particles, texture polish or animation work before the hero wedge and complete naked macro assembly each pass 0.85 in every required view.",
+  "review_units": [
+    {
+      "id": "volcanic-foundation",
+      "parts": ["molten-sea", "tiered-island-cliff", "front-lavafall-cliff"],
+      "reason": "The sea, cliff silhouette and falling lava form one continuous depth cue."
+    },
+    {
+      "id": "fortress-maze-city",
+      "parts": ["central-crucible-keep", "forge-spine", "outer-fortress-wall", "four-maze-districts", "cardinal-gatehouses", "grand-stairs"],
+      "reason": "The keep and fortified maze must read as one monumental city rather than disconnected blocks."
+    },
+    {
+      "id": "gameplay-circulation",
+      "parts": ["canonical-route-ring", "walkable-maze-floor", "lava-canal-network", "navigation-beacons"],
+      "reason": "The traversable route, maze choices and hazardous channels must remain visually separable at phone scale."
+    },
+    {
+      "id": "satellite-districts",
+      "parts": ["hatchery-crucible", "fire-path-sanctum", "obsidian-archive", "blaze-trialworks"],
+      "reason": "The four landmarks need distinct silhouettes but a shared fortress language."
+    },
+    {
+      "id": "escape-chain",
+      "parts": ["iron-skiff-and-dock", "escape-chute", "extraction-ship"],
+      "reason": "The mission reads only when launch, descent and extraction form one clear spatial chain."
+    }
+  ],
+  "parts": [
+    {"id":"molten-sea","parent":null,"owns":"continuous irregular magma surface below the island","excludes":["cliff","skiff"],"dependencies":[],"views":["front-hero","front-cliff-low"],"confidence":"high","acceptance":"deep moving molten field with cooled crust plates; never a flat checker"},
+    {"id":"tiered-island-cliff","parent":null,"owns":"continuous volcanic island mass and deep underside","excludes":["maze walls","route tiles"],"dependencies":["molten-sea"],"views":["front-hero","left-45","right-45","rear","front-cliff-low"],"confidence":"high","acceptance":"three or more irregular vertical basalt strata with no horizontal belt seam"},
+    {"id":"front-lavafall-cliff","parent":"tiered-island-cliff","owns":"front gorge, lavafall lip, contact basin and cliff glow","excludes":["escape-chute"],"dependencies":["molten-sea"],"views":["front-hero","front-cliff-low"],"confidence":"high","acceptance":"source-dominant lavafall visibly exits the city and strikes the sea below"},
+    {"id":"central-crucible-keep","parent":"tiered-island-cliff","owns":"monumental central tower, buttresses and crown","excludes":["forge spine","maze districts"],"dependencies":[],"views":["front-hero","left-45","right-45","rear"],"confidence":"high","acceptance":"tallest form by a clear margin; occupies the visual center and remains recognizable in silhouette"},
+    {"id":"forge-spine","parent":"central-crucible-keep","owns":"north-south axial forge halls and molten core aperture","excludes":["lava canals"],"dependencies":["central-crucible-keep"],"views":["front-hero","top-maze"],"confidence":"high","acceptance":"creates an architectural axis from rear gate through keep to front lavafall"},
+    {"id":"outer-fortress-wall","parent":"tiered-island-cliff","owns":"continuous crenellated perimeter and corner bastions","excludes":["cardinal gates","tile ring"],"dependencies":["four-maze-districts"],"views":["front-hero","left-45","right-45","rear","top-maze"],"confidence":"high","acceptance":"fortress perimeter is continuous, layered and clearly taller than interior maze walls"},
+    {"id":"four-maze-districts","parent":"outer-fortress-wall","owns":"four independently readable multi-level labyrinth quadrants","excludes":["walkable floor","lava canals"],"dependencies":["central-crucible-keep"],"views":["front-hero","left-45","right-45","rear","top-maze"],"confidence":"high","acceptance":"each quadrant contains one broad route, one risky shortcut and vertical bridges; never uniform wall noise"},
+    {"id":"cardinal-gatehouses","parent":"outer-fortress-wall","owns":"four gate towers, portcullis frames and bridge collars","excludes":["grand stairs"],"dependencies":["outer-fortress-wall"],"views":["front-hero","left-45","right-45","rear","top-maze"],"confidence":"high","acceptance":"four gates orient the maze and front gate frames the mission exit"},
+    {"id":"grand-stairs","parent":"cardinal-gatehouses","owns":"route-to-fortress stairs and elevated internal stair runs","excludes":["route tiles"],"dependencies":["cardinal-gatehouses","four-maze-districts"],"views":["front-hero","left-45","right-45"],"confidence":"medium","acceptance":"stairs visibly explain every major level change"},
+    {"id":"canonical-route-ring","parent":"tiered-island-cliff","owns":"36 gameplay tile foundations and outer circulation band","excludes":["reward props","maze floor"],"dependencies":["outer-fortress-wall"],"views":["front-hero","top-maze","phone-proof"],"confidence":"high","acceptance":"readable but subordinate; no more than one fifth of fortress-plus-ring apparent area"},
+    {"id":"walkable-maze-floor","parent":"four-maze-districts","owns":"navigable floor plates, bridges and junction pads","excludes":["walls","lava"],"dependencies":["four-maze-districts"],"views":["top-maze","phone-proof"],"confidence":"high","acceptance":"continuous player route is legible at 351-pixel width without outlines"},
+    {"id":"lava-canal-network","parent":"four-maze-districts","owns":"recessed branching channels, falls and keep apertures","excludes":["molten sea","front cliff fall"],"dependencies":["walkable-maze-floor","forge-spine"],"views":["front-hero","top-maze","phone-proof"],"confidence":"high","acceptance":"lava is visibly recessed, directional and locally illuminates adjacent masonry"},
+    {"id":"navigation-beacons","parent":"walkable-maze-floor","owns":"three junction cues and extraction alignment lights","excludes":["controller UI"],"dependencies":["walkable-maze-floor","escape-chute"],"views":["top-maze","phone-proof"],"confidence":"high","acceptance":"choices remain readable without becoming oversized glowing markers"},
+    {"id":"hatchery-crucible","parent":"tiered-island-cliff","owns":"egg crucible tower and nursery terrace","excludes":["other satellites"],"dependencies":["canonical-route-ring"],"views":["left-45","front-hero"],"confidence":"medium","acceptance":"distinct open crucible silhouette with contained magma glow"},
+    {"id":"fire-path-sanctum","parent":"tiered-island-cliff","owns":"processional flame sanctuary and oath brazier","excludes":["other satellites"],"dependencies":["canonical-route-ring"],"views":["right-45","front-hero"],"confidence":"medium","acceptance":"long axial silhouette visibly differs from archive and arena"},
+    {"id":"obsidian-archive","parent":"tiered-island-cliff","owns":"vaulted library keep and black-glass crown","excludes":["other satellites"],"dependencies":["canonical-route-ring"],"views":["rear","left-45"],"confidence":"medium","acceptance":"layered vault silhouette and warm slit windows signal an archive"},
+    {"id":"blaze-trialworks","parent":"tiered-island-cliff","owns":"open arena, furnace towers and trial floor","excludes":["other satellites"],"dependencies":["canonical-route-ring"],"views":["rear","right-45"],"confidence":"medium","acceptance":"clearly open playable arena rather than another closed tower"},
+    {"id":"iron-skiff-and-dock","parent":"front-lavafall-cliff","owns":"armoured skiff, heat shields, launch rails and dock socket","excludes":["escape chute"],"dependencies":["escape-chute"],"views":["front-hero","front-cliff-low","phone-proof"],"confidence":"high","acceptance":"boat silhouette and launch direction remain obvious at phone scale"},
+    {"id":"escape-chute","parent":"front-lavafall-cliff","owns":"navigable molten descent, three steering gates and terminal wake","excludes":["decorative front lavafall"],"dependencies":["iron-skiff-and-dock","extraction-ship"],"views":["front-hero","front-cliff-low","phone-proof"],"confidence":"high","acceptance":"continuous route visibly connects fortress top to the extraction basin"},
+    {"id":"extraction-ship","parent":"molten-sea","owns":"distant hovering spaceship, boarding cradle and approach lights","excludes":["skiff"],"dependencies":["escape-chute"],"views":["front-hero","front-cliff-low","phone-proof"],"confidence":"medium","acceptance":"recognizable ship silhouette that does not eclipse the fortress"}
+  ],
+  "worker_grouping": [
+    {"order":1,"group":"hero-wedge","mode":"serialized-geometry","parts":["central-crucible-keep","forge-spine","cardinal-gatehouses","grand-stairs","four-maze-districts","front-lavafall-cliff"]},
+    {"order":2,"group":"foundation-and-circulation","mode":"serialized-geometry","parts":["molten-sea","tiered-island-cliff","outer-fortress-wall","canonical-route-ring","walkable-maze-floor","lava-canal-network"]},
+    {"order":3,"group":"satellite-districts","mode":"serialized-geometry","parts":["hatchery-crucible","fire-path-sanctum","obsidian-archive","blaze-trialworks"]},
+    {"order":4,"group":"escape-chain","mode":"serialized-geometry","parts":["iron-skiff-and-dock","escape-chute","extraction-ship","navigation-beacons"]}
+  ]
+}

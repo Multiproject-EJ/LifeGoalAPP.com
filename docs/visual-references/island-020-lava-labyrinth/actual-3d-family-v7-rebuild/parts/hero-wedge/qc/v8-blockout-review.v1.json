@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-08-31",
+  "asset_id": "island-020-v8-hero-wedge-blockout-v001",
+  "family": "island-020-industrial-basalt-crucible-v8",
+  "scores": {
+    "silhouette_and_volume": 0.66,
+    "source_identity": 0.52,
+    "architectural_attachment": 0.68,
+    "cross_view_consistency": 0.84,
+    "assembly_readiness": 0.63,
+    "intended_scale": 0.71
+  },
+  "hard_vetoes": [],
+  "decision": "correct-once",
+  "bounded_correction": [
+    "Compress the visually empty plateau with attached basalt terraces inside the representative wedge.",
+    "Increase southwest maze density and wrap it visibly toward the keep.",
+    "Broaden the visible molten route without reverting to a flat ribbon.",
+    "Replace repeated clean cylinders with stepped forge machinery and irregular rock massing.",
+    "Raise neutral-clay visibility while retaining heat illumination as the principal light source."
+  ],
+  "correction_ceiling": "One corrected blockout only; if any required score remains below 0.85, stop expansion and report the failed gate."
+}

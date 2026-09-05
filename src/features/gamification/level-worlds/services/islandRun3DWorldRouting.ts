@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 18 | 22;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 18 | 20 | 22;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -37,6 +37,9 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   // runtime Island 016. Source 022 remains an internal visual-pack identity;
   // runtime progression, story, persistence and PWA copy all use Island 016.
   { runtimeIslandNumber: 16, worldSourceNumber: 22, role: 'ordinary' },
+  // The supplied concept image contains a baked Island 043 label, but runtime
+  // Island 020 owns this authored Lava Labyrinth world and its Arena cadence.
+  { runtimeIslandNumber: 20, worldSourceNumber: 20, role: 'arena' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

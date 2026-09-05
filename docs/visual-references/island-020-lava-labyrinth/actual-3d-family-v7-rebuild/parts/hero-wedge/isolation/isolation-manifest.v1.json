@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "part_group": "hero-wedge",
+  "family": "island-020-monumental-fortress-maze-v7",
+  "authority": [
+    {
+      "rank": 1,
+      "kind": "immutable-supplied-goal-pixels",
+      "path": "../../../../../020-source.png",
+      "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8"
+    },
+    {
+      "rank": 2,
+      "kind": "explicit-user-direction",
+      "decision": "monumental fortress maze with Iron Skiff escape down the front lava stream"
+    }
+  ],
+  "included_parts": [
+    "central-crucible-keep",
+    "forge-spine",
+    "front-gate-and-grand-stair",
+    "southwest-maze-district",
+    "front-lavafall-cliff"
+  ],
+  "parent_context": {
+    "origin": [0, 0, 0],
+    "axis": "Y-up runtime; Blender Z-up authoring; front toward negative Blender Y",
+    "island_radius": 6.4,
+    "fortress_radius": 4.65,
+    "route_ring_radius": 5.45,
+    "keep_socket": [0, 0, 1.15],
+    "front_gate_socket": [0, -4.55, 0.95],
+    "lavafall_socket": [0, -5.15, 0.45]
+  },
+  "visible_features": [
+    "a very tall narrow central tower with four heavy buttress shoulders",
+    "dense but readable multi-level fortress blocks around the keep",
+    "an axial molten channel leaving the keep through the front gate",
+    "broad masonry stairs descending from the fortress to the route ring",
+    "deep fractured volcanic cliffs with a bright central lavafall"
+  ],
+  "secondary_inferred": [
+    "rear keep service volumes",
+    "hidden interior bridge supports",
+    "underside continuation behind the front cliff"
+  ],
+  "confidence": {
+    "front_silhouette": "high",
+    "keep_proportions": "high",
+    "maze_topology": "medium",
+    "rear_volume": "low",
+    "underside": "medium"
+  },
+  "phone_scale_cues": [
+    "keep height must remain at least 24 percent of the playable canvas",
+    "hero wedge must fill at least 58 percent of portrait height when assembled with the route ring",
+    "front gate opening must remain at least 12 pixels wide on the 351-pixel canvas",
+    "maze corridors must remain at least 6 pixels wide at the hero camera"
+  ],
+  "forbidden_shapes": [
+    "low square keep",
+    "uniform repeated cube maze",
+    "thin flat terrain disc",
+    "painted orange ribbon without channel depth",
+    "oversized tile ring",
+    "empty upper portrait"
+  ],
+  "generated_hypotheses": []
+}

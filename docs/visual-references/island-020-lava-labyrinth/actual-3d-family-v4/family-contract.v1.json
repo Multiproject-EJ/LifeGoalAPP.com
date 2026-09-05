@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "familyId": "island-020-actual-3d-family-v4",
+  "status": "retired-after-bounded-correction",
+  "approvedAt": "2026-08-30",
+  "approval": "Eivind approved continued Island 020 work and asked for a plan, implementation, and notification only at 10/10.",
+  "representation": "code-native-threejs-irregular-terrain-orthogonal-maze-city",
+  "goal": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8"
+  },
+  "inheritedAttemptHistory": [
+    "procedural-radial-v1",
+    "source-led-hybrid-v2",
+    "actual-3d-procedural-v3"
+  ],
+  "familyDelta": [
+    "closed irregular multi-lobed terrain and terrace volumes",
+    "deterministic connected 9x9 orthogonal Level-3 maze",
+    "narrower taller central keep with readable maze field",
+    "irregular lava catchbasins instead of an outer molten ring",
+    "flat recessed lava feed ribbons and a summit-to-ship Iron Skiff sluice",
+    "localized forge and underglow lighting"
+  ],
+  "runtimeRules": {
+    "environmentPlateAllowed": false,
+    "canonicalBoardUnchanged": true,
+    "gameplayWritesRemainCanonical": true,
+    "oneBlockoutPlusOneCorrectionUsed": true
+  },
+  "requiredViews": [
+    "canonical-phone",
+    "left-45",
+    "right-45",
+    "rear-180",
+    "top-clearance",
+    "front-cliff-low"
+  ],
+  "postCorrectionDecision": {
+    "minimumRequired": 0.85,
+    "weakestScore": 0.58,
+    "dominantFailure": "The macro still reads as a dark toy castle/block mass; lava and heat illumination do not create the source's branching molten depth.",
+    "liveMetrics": {
+      "fps": 53,
+      "drawCalls": 238,
+      "triangles": 247000,
+      "viewport": "566x1247"
+    },
+    "tests": "1919 passed, 0 failed",
+    "nextAuthorityRequired": "Approve a third materially different representation family, preferably an authored/imported GLB asset workflow rather than another procedural-primitive correction."
+  },
+  "evidenceDirectory": ".img2threejs/island-020-actual-3d-v4/review"
+}

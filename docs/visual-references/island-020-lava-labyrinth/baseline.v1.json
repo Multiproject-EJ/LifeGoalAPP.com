@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-30",
+  "goal_authority": {
+    "path": "020-source.png",
+    "dimensions": "1023x1537",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8"
+  },
+  "current_state": {
+    "routeExists": false,
+    "factoryExists": false,
+    "island20NameBeforeWork": "Golden Sands",
+    "island20ChampionshipBeforeWork": "Golden Winds Cup",
+    "matchedBlankCapture": {
+      "view": "portrait-overview",
+      "path": "baseline/current-v001/blank-assembly.svg",
+      "sha256": "9085bae8d1ec2f9f33f619a82f11b79025c3b02babed13e939eae191fd61808e",
+      "role": "explicit blank assembly; absence evidence, not a likeness target"
+    }
+  },
+  "salvage_decision": {
+    "decision": "blank-new-base-world",
+    "retain": ["shared renderer", "canonical 36-tile topology", "camera language", "caretaker system", "quality tiers", "build-mode integration", "canonical Arena and action-service architecture"],
+    "author_new": ["island shell", "volcanic horizon", "central Crucible Citadel/Arena", "four L1-L3 landmarks", "lava/material systems", "mission infrastructure", "ambient and construction animation"],
+    "reason": "No Island 020 authored world route or Three.js factory exists on current main."
+  },
+  "baseline_score": 0,
+  "largest_risks": [
+    "keeping the dense citadel legible while the complete canonical route remains visible on phone",
+    "building deep cross-view fortress volume from a single front three-quarter source",
+    "making lava emissive without flattening black-stone form or obscuring tile readability",
+    "reconciling the explicit Lava Labyrinth source with existing Golden Sands/Golden Winds Island 020 catalogue copy"
+  ]
+}

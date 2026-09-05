@@ -2,6 +2,7 @@ import {
   ISLAND_RUN_3D_WORLD_ROUTES,
   resolveIslandRun3DWorldRoute,
 } from '../islandRun3DWorldRouting';
+import { getIslandDisplayName } from '../islandNames';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const islandRun3DWorldRoutingTests: TestCase[] = [
@@ -36,15 +37,23 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(18)?.role, 'ordinary', 'Island 018 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(16)?.worldSourceNumber, 22, 'runtime Island 016 owns the Fisherman\'s Village world');
       assertEqual(resolveIslandRun3DWorldRoute(16)?.role, 'ordinary', 'Island 016 remains an ordinary mission island');
+      assertEqual(resolveIslandRun3DWorldRoute(20)?.worldSourceNumber, 20, 'runtime Island 020 owns the Lava Labyrinth world');
+      assertEqual(resolveIslandRun3DWorldRoute(20)?.role, 'arena', 'runtime Island 020 owns the arena role');
       assertEqual(resolveIslandRun3DWorldRoute(22), null, 'runtime Island 022 stays free after the explicit reassignment to 016');
     },
   },
   {
     name: 'keeps every runtime island on an explicit authored source identity',
     run: () => {
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 16, 'sixteen authored world packs are currently routed');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 16, 'runtime islands are unique');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 16, 'visual source packs are unique');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 17, 'seventeen authored world packs are currently routed');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 17, 'runtime islands are unique');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 17, 'visual source packs are unique');
+    },
+  },
+  {
+    name: 'keeps runtime Island 020 on the approved Lava Labyrinth identity',
+    run: () => {
+      assertEqual(getIslandDisplayName(20), 'Lava Labyrinth', 'Island 020 should use the approved source-led name');
     },
   },
 ];

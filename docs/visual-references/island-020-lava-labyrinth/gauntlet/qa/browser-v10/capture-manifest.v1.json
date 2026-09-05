@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-09-02T10:20:16.367Z",
+  "url": "http://127.0.0.1:5182/dev/island-template-kit?island=20&mode=3d&level=3&firebridgeMissionStage=4&firebridgeEscape=1&island3dEvidence=1&island3dQuality=medium&family=v10-rectilinear-city",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 1,
+    "mobile": false
+  },
+  "runtime": {
+    "canvas": {
+      "width": 390,
+      "height": 844,
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "island20RuntimePartManifest": "{\"model\":\"island-020-lava-labyrinth\",\"parts\":[{\"id\":\"p01\",\"name\":\"p01\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_ACTUAL_3D_CONTINUOUS_VOLCANIC_WORLD\",\"module\":\"world-shell\",\"triangles\":3900},{\"id\":\"p02\",\"name\":\"p02\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_VOLCANIC_HORIZON\",\"module\":\"horizon\",\"triangles\":190},{\"id\":\"p03\",\"name\":\"p03\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_ACTUAL_3D_RECESSED_LAVA_NETWORK\",\"module\":\"lava-network\",\"triangles\":558},{\"id\":\"p04\",\"name\":\"p04\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_STONE_CIRCULATION_NETWORK\",\"module\":\"circulation\",\"triangles\":6000},{\"id\":\"p05\",\"name\":\"p05\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CANONICAL_ROUTE_CONTEXT\",\"module\":\"route-context\",\"triangles\":1152},{\"id\":\"p06\",\"name\":\"p06\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_EMBER_ASH_ATMOSPHERE\",\"module\":\"atmosphere\",\"triangles\":0},{\"id\":\"p21\",\"name\":\"p21\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_IRON_SKIFF_STAGE_2\",\"module\":\"mission-heatshields\",\"triangles\":1200},{\"id\":\"p22\",\"name\":\"p22\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_NAVIGATION_GATE_CUE_INSTANCES\",\"module\":\"mission-navigation-beacons\",\"triangles\":48},{\"id\":\"p23\",\"name\":\"p23\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_IRON_SKIFF\",\"module\":\"mission-iron-skiff\",\"triangles\":2412},{\"id\":\"p24\",\"name\":\"p24\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_IRON_SKIFF_ESCAPE_MISSION\",\"module\":\"mission-escape-channel\",\"triangles\":7232},{\"id\":\"p25\",\"name\":\"p25\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_EXPEDITION_EXTRACTION_SHIP\",\"module\":\"mission-extraction-finale\",\"triangles\":1736},{\"id\":\"p26\",\"name\":\"p26\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CARETAKER_AND_CONSTRUCTION_STATION\",\"module\":\"caretaker\",\"triangles\":600},{\"id\":\"p27\",\"name\":\"p27\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_FORGE_INHABITANTS\",\"module\":\"inhabitants\",\"triangles\":420},{\"id\":\"p28\",\"name\":\"p28\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_EMBER_DEPTH_FIELD\",\"module\":\"ambient-fx\",\"triangles\":0},{\"id\":\"p29\",\"name\":\"p29\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_MATERIAL_NETWORK\",\"module\":\"materials\",\"triangles\":0},{\"id\":\"p30\",\"name\":\"p30\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_ADDITIVE_CONSTRUCTION_CONTRACT\",\"module\":\"construction-contract\",\"triangles\":0},{\"id\":\"p31\",\"name\":\"p31\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CARETAKER_AND_CONSTRUCTION_STATION\",\"module\":\"construction-theatre\",\"triangles\":600},{\"id\":\"p32\",\"name\":\"p32\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_ACTION_READY_RUNTIME_CONTRACT\",\"module\":\"runtime-contract\",\"triangles\":0},{\"id\":\"p07\",\"name\":\"p07\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CRUCIBLE_CITADEL_ARCHITECTURE\",\"module\":\"citadel-foundation\",\"triangles\":85920},{\"id\":\"p08\",\"name\":\"p08\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CRUCIBLE_KEEP_TOWER\",\"module\":\"citadel-tower\",\"triangles\":14100},{\"id\":\"p09\",\"name\":\"p09\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CONNECTED_CURTAIN_LABYRINTH\",\"module\":\"citadel-maze\",\"triangles\":56040},{\"id\":\"p10\",\"name\":\"p10\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_FOUR_CITADEL_GATES\",\"module\":\"citadel-gates\",\"triangles\":10800},{\"id\":\"p11\",\"name\":\"p11\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_CITADEL_FORGE_SURFACES\",\"module\":\"citadel-forge\",\"triangles\":2080},{\"id\":\"p12\",\"name\":\"p12\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_PYRE_SENTINEL\",\"module\":\"arena-guardian\",\"triangles\":800},{\"id\":\"p13\",\"name\":\"p13\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_MAGMA_CRUCIBLE_HATCHERY\",\"module\":\"landmark-macro\",\"triangles\":4066},{\"id\":\"p14\",\"name\":\"p14\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_HATCHERY_CROWN_BRAZIER_FLAME\",\"module\":\"landmark-growth\",\"triangles\":32},{\"id\":\"p15\",\"name\":\"p15\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_FIRE_PATH_SANCTUM\",\"module\":\"landmark-macro\",\"triangles\":3850},{\"id\":\"p16\",\"name\":\"p16\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_HABIT_CHOICE_RING\",\"module\":\"landmark-growth\",\"triangles\":288},{\"id\":\"p19\",\"name\":\"p19\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_OBSIDIAN_ARCHIVE\",\"module\":\"landmark-macro\",\"triangles\":2172},{\"id\":\"p20\",\"name\":\"p20\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_ARCHIVE_OBSIDIAN_CROWN\",\"module\":\"landmark-growth\",\"triangles\":24},{\"id\":\"p17\",\"name\":\"p17\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_ASHEN_TRIALWORKS\",\"module\":\"landmark-macro\",\"triangles\":780},{\"id\":\"p18\",\"name\":\"p18\",\"kind\":\"part\",\"nodeName\":\"ISLAND_20_MYSTERY_TRIAL_FRAME\",\"module\":\"landmark-growth\",\"triangles\":336}],\"unnamedMeshes\":0,\"integralMeshes\":737}",
+        "island20RuntimePartCount": "32",
+        "island20ScenePerformanceInventory": "{\"topLevel\":[{\"name\":\"ISLAND_20_LAVA_LABYRINTH_WORLD\",\"family\":\"ISLAND_20_LAVA_LABYRINTH_WORLD\",\"renderables\":40,\"estimatedCalls\":40,\"logicalInstances\":45,\"shadowCasters\":19,\"transparentRenderables\":3},{\"name\":\"ISLAND_20_BOSS_ROOT\",\"family\":\"ISLAND_20_BOSS_ROOT\",\"renderables\":15,\"estimatedCalls\":15,\"logicalInstances\":15,\"shadowCasters\":9,\"transparentRenderables\":4},{\"name\":\"ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS\",\"family\":\"canonical-tile-rewards\",\"renderables\":9,\"estimatedCalls\":9,\"logicalInstances\":9,\"shadowCasters\":0,\"transparentRenderables\":0},{\"name\":\"ISLAND_20_HABIT_ROOT\",\"family\":\"ISLAND_20_HABIT_ROOT\",\"renderables\":5,\"estimatedCalls\":5,\"logicalInstances\":5,\"shadowCasters\":2,\"transparentRenderables\":1},{\"name\":\"ISLAND_20_HATCHERY_ROOT\",\"family\":\"ISLAND_20_HATCHERY_ROOT\",\"renderables\":5,\"estimatedCalls\":5,\"logicalInstances\":5,\"shadowCasters\":2,\"transparentRenderables\":2},{\"name\":\"ISLAND_20_EVENT_ROOT\",\"family\":\"ISLAND_20_EVENT_ROOT\",\"renderables\":4,\"estimatedCalls\":4,\"logicalInstances\":4,\"shadowCasters\":2,\"transparentRenderables\":0},{\"name\":\"ISLAND_20_WISDOM_ROOT\",\"family\":\"ISLAND_20_WISDOM_ROOT\",\"renderables\":4,\"estimatedCalls\":4,\"logicalInstances\":4,\"shadowCasters\":3,\"transparentRenderables\":0},{\"name\":\"ISLAND_5_PLAYER_TOKEN\",\"family\":\"player-token\",\"renderables\":2,\"estimatedCalls\":2,\"logicalInstances\":2,\"shadowCasters\":2,\"transparentRenderables\":1},{\"name\":\"ISLAND_20_TILE_SURFACE_BATCH_1\",\"family\":\"canonical-route-tiles\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":12,\"shadowCasters\":0,\"transparentRenderables\":0},{\"name\":\"ISLAND_20_TILE_SURFACE_BATCH_2\",\"family\":\"canonical-route-tiles\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":18,\"shadowCasters\":0,\"transparentRenderables\":0},{\"name\":\"ISLAND_20_TILE_SURFACE_BATCH_3\",\"family\":\"canonical-route-tiles\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":6,\"shadowCasters\":0,\"transparentRenderables\":0},{\"name\":\"ISLAND_5_CARETAKER_HIT_TARGET\",\"family\":\"caretaker\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"name\":\"ISLAND_5_PLAYER_TOKEN_SHADOW\",\"family\":\"player-token\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"name\":\"ISLAND_SHARED_BOSS_HIT_TARGET\",\"family\":\"ISLAND_SHARED_BOSS_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"name\":\"ISLAND_SHARED_EVENT_HIT_TARGET\",\"family\":\"ISLAND_SHARED_EVENT_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"name\":\"ISLAND_SHARED_HABIT_HIT_TARGET\",\"family\":\"ISLAND_SHARED_HABIT_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"name\":\"ISLAND_SHARED_HATCHERY_HIT_TARGET\",\"family\":\"ISLAND_SHARED_HATCHERY_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"name\":\"ISLAND_SHARED_WISDOM_HIT_TARGET\",\"family\":\"ISLAND_SHARED_WISDOM_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1}],\"families\":[{\"family\":\"ISLAND_20_LAVA_LABYRINTH_WORLD\",\"renderables\":40,\"estimatedCalls\":40,\"logicalInstances\":45,\"shadowCasters\":19,\"transparentRenderables\":3},{\"family\":\"ISLAND_20_BOSS_ROOT\",\"renderables\":15,\"estimatedCalls\":15,\"logicalInstances\":15,\"shadowCasters\":9,\"transparentRenderables\":4},{\"family\":\"canonical-tile-rewards\",\"renderables\":9,\"estimatedCalls\":9,\"logicalInstances\":9,\"shadowCasters\":0,\"transparentRenderables\":0},{\"family\":\"ISLAND_20_HABIT_ROOT\",\"renderables\":5,\"estimatedCalls\":5,\"logicalInstances\":5,\"shadowCasters\":2,\"transparentRenderables\":1},{\"family\":\"ISLAND_20_HATCHERY_ROOT\",\"renderables\":5,\"estimatedCalls\":5,\"logicalInstances\":5,\"shadowCasters\":2,\"transparentRenderables\":2},{\"family\":\"ISLAND_20_EVENT_ROOT\",\"renderables\":4,\"estimatedCalls\":4,\"logicalInstances\":4,\"shadowCasters\":2,\"transparentRenderables\":0},{\"family\":\"ISLAND_20_WISDOM_ROOT\",\"renderables\":4,\"estimatedCalls\":4,\"logicalInstances\":4,\"shadowCasters\":3,\"transparentRenderables\":0},{\"family\":\"canonical-route-tiles\",\"renderables\":3,\"estimatedCalls\":3,\"logicalInstances\":36,\"shadowCasters\":0,\"transparentRenderables\":0},{\"family\":\"player-token\",\"renderables\":3,\"estimatedCalls\":3,\"logicalInstances\":3,\"shadowCasters\":2,\"transparentRenderables\":2},{\"family\":\"caretaker\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"family\":\"ISLAND_SHARED_BOSS_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"family\":\"ISLAND_SHARED_EVENT_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"family\":\"ISLAND_SHARED_HABIT_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"family\":\"ISLAND_SHARED_HATCHERY_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1},{\"family\":\"ISLAND_SHARED_WISDOM_HIT_TARGET\",\"renderables\":1,\"estimatedCalls\":1,\"logicalInstances\":1,\"shadowCasters\":0,\"transparentRenderables\":1}],\"totals\":{\"renderables\":94,\"estimatedCalls\":94,\"logicalInstances\":132,\"shadowCasters\":39,\"transparentRenderables\":18}}",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "island20IronSkiffStage": "4",
+        "island20IronSkiffMission": "escape-lava-labyrinth",
+        "island20SkiffNavigation": "active",
+        "island20AuthoredCityStatus": "loaded",
+        "island20AuthoredCityAsset": "/assets/islands/island-020/models/lava-labyrinth-v10-rectilinear-city.glb",
+        "island20AuthoredCityParts": "9",
+        "island20RepresentationFamily": "rectilinear-terraced-lava-city-glb-v10",
+        "island20LavaFlowTime": "4.772",
+        "island20LavaFlow": "gravity-down-and-centre-outward-plus-multi-scale-hot-core-depth",
+        "island20HeatIllumination": "physical-lava-contact-plus-live-forge-lights-and-tile-emissive-response",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    "bodyText": "ACTUAL 3D PILOT\nLava Labyrinth · Island 020\nQUALITY\nAuto (medium)\nLow\nMedium\nHigh\n60 FPS\n135 calls\n141k tris\n390×844 px\nDEVICE PROFILE\n30 SEC\nRun 30s profile\n\nKeep this tab visible during the run.\n\nOverview\nHigh survey\nLeft orbit\nRight orbit\nFocus landmark…\nCrucible Citadel\nMagma Crucible Hatchery\nFire Path Sanctum\nObsidian Archive\nAshen Trialworks\nPlay cinematic tourHide overlays for evidenceGeometry proof\n0°\n45°\n90°\n135°\n180°\n225°\n270°\n315°\nPOV authoring\n\nDrag to orbit · pinch to zoom · tap a building to focus",
+    "size": [
+      390,
+      844
+    ],
+    "readyState": "complete",
+    "resources": []
+  },
+  "captures": [
+    {
+      "label": "overview",
+      "path": "docs/visual-references/island-020-lava-labyrinth/gauntlet/qa/browser-v10/island-020-v10-runtime-overview-390x844.png"
+    },
+    {
+      "label": "high-survey",
+      "path": "docs/visual-references/island-020-lava-labyrinth/gauntlet/qa/browser-v10/island-020-v10-runtime-high-survey-390x844.png"
+    },
+    {
+      "label": "left-orbit",
+      "path": "docs/visual-references/island-020-lava-labyrinth/gauntlet/qa/browser-v10/island-020-v10-runtime-left-orbit-390x844.png"
+    },
+    {
+      "label": "right-orbit",
+      "path": "docs/visual-references/island-020-lava-labyrinth/gauntlet/qa/browser-v10/island-020-v10-runtime-right-orbit-390x844.png"
+    }
+  ],
+  "logs": [
+    {
+      "method": "Log.entryAdded",
+      "params": {
+        "entry": {
+          "source": "javascript",
+          "level": "warning",
+          "text": "The resource http://127.0.0.1:5182/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "timestamp": 1788344399116.64,
+          "url": "http://127.0.0.1:5182/dev/island-template-kit?island=20&mode=3d&level=3&firebridgeMissionStage=4&firebridgeEscape=1&island3dEvidence=1&island3dQuality=medium&family=v10-rectilinear-city"
+        }
+      }
+    }
+  ],
+  "chromeErrors": [
+    "[87076:2235531:0902/121943.428629:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121943.429123:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235531:0902/121943.435099:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121943.435207:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235531:0902/121943.435448:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121943.435513:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235531:0902/121943.435825:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121943.435902:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235531:0902/121943.436087:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121943.436131:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121944.245444:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121944.245549:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121947.455097:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121947.455242:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87048:2235491:0902/121947.855187:ERROR:google_apis/gcm/engine/registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT\n",
+    "[87076:2235531:0902/121948.054513:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121948.054691:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87048:2235491:0902/121948.062823:ERROR:google_apis/gcm/engine/mcs_client.cc:702]   Error code: 401  Error message: Authentication Failed: wrong_secret\n[87048:2235491:0902/121948.062838:ERROR:google_apis/gcm/engine/mcs_client.cc:704] Failed to log in to GCM, resetting connection.\n",
+    "[87076:2235531:0902/121948.303532:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121948.303682:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121948.687113:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121948.687171:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121948.852925:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121948.852984:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121949.312714:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121949.312871:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121949.589826:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121949.589900:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87076:2235531:0902/121952.410147:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n[87076:2235659:0902/121952.410229:ERROR:ui/display/mac/cv_display_link_mac.mm:195] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670\n",
+    "[87168:2236885:0902/121957.278775:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/ejmac/Library/Application Support/Google/RLZ/Crashpad/settings.dat: No such file or directory (2)\n",
+    "[87168:2236885:0902/121957.278910:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/ejmac/Library/Application Support/Google/ChromeForTesting/Crashpad/settings.dat: No such file or directory (2)\n",
+    "[87168:2236885:0902/121957.278933:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/ejmac/Library/Application Support/Google/Chrome-headless/Crashpad/settings.dat: No such file or directory (2)\n",
+    "[87171:2236901:0902/121957.325387:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/ejmac/Library/Application Support/Google/RLZ/Crashpad/settings.dat: No such file or directory (2)\n",
+    "[87171:2236901:0902/121957.325506:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/ejmac/Library/Application Support/Google/ChromeForTesting/Crashpad/settings.dat: No such file or directory (2)\n",
+    "[87171:2236901:0902/121957.325553:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/ejmac/Library/Application Support/Google/Chrome-headless/Crashpad/settings.dat: No such file or directory (2)\n"
+  ]
+}

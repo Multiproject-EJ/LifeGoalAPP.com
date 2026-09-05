@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-08-30",
+  "status": "authorized-representative-slice",
+  "family": "procedural-radial-fortress-v1",
+  "worker": "root serialized geometry owner",
+  "allowlist": ["src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts","src/features/gamification/level-worlds/dev/Island20LavaLabyrinthLab.tsx","island-020-lava-labyrinth.html","vite.island020.config.ts","docs/visual-references/island-020-lava-labyrinth/parts/crucible-citadel/**","work/island-visual-library/island-020-lava-labyrinth/evidence/representative-slice/**"],
+  "frozen_dependencies": ["020-source.png hash","canonical 36-tile transforms","shared overview camera language","p01/p05 context-only scope","all p11-p32 production locked"],
+  "parts": ["p07","p08","p09","p10"],
+  "owned_collars": ["p07-citadel-burial","p07-four-gate-landings"],
+  "nodes": ["island020-citadel-root","p07-foundation","p08-tower","p09-maze","p10-gates-arena"],
+  "pivots": ["p10-portcullis-north","p10-portcullis-east","p10-portcullis-south","p10-portcullis-west"],
+  "sockets": ["p07-tower-core","p07-curtain-maze","p07-four-gate-landings","p08-buttresses","p10-four-firebridges","p10-arena-focus"],
+  "budgets": {"triangles":45000,"draw_calls":55,"family_reviews":2,"corrections":1},
+  "thresholds": {"silhouette_volume":0.85,"identity":0.85,"attachment":0.85,"cross_view_coherence":0.85,"assembly":0.85,"intended_scale_readability":0.85,"worst_view_governs":true},
+  "required_captures": ["source-angle","left-45","right-45","rear-180","top-clearance","portrait-phone","clay","semantic-id"],
+  "forbidden_edits": ["gameplay actions/state","world routing","catalogue copy","materials and lighting polish","guardian","other landmarks","thresholds or cameras"]
+}

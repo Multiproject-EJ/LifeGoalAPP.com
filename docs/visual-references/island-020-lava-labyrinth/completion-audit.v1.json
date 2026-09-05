@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "audited_at": "2026-09-03",
+  "objective": "A source-faithful, fully playable 3D Island 020 Lava Labyrinth with a navigable multi-level maze, heat-illuminated flowing lava, Iron Skiff escape mission, animations, canonical gameplay integration, tests, and visual evidence.",
+  "status": "passed",
+  "requirements": [
+    {
+      "id": "source-faithful-actual-3d",
+      "status": "passed",
+      "evidence": [
+        "020-source.png sha256 ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+        "actual-3d-family-v9-architectural-kit/parts/macro-slice/qc/v10-review.v2.json",
+        "gauntlet/qa/browser-v10/capture-manifest.v1.json"
+      ],
+      "result": "All six scored visual categories exceed 0.85, no hard veto remains, and overview, high-survey, left-orbit, and right-orbit phone captures preserve the circular island, dense orthogonal forge-city, central cathedral, lava outlet, and extraction silhouette."
+    },
+    {
+      "id": "navigable-multi-level-maze",
+      "status": "passed",
+      "evidence": [
+        "scripts/blender/island020_build_v10_rectilinear_city.py:64",
+        "scripts/blender/island020_build_v10_rectilinear_city.py:166",
+        "scripts/blender/island020_build_v10_rectilinear_city.py:179",
+        "src/features/gamification/level-worlds/services/__tests__/island20LavaLabyrinthThreeWorldContract.test.ts"
+      ],
+      "result": "The deterministic maze preserves 115 graph links, includes three elevated crossovers and two stepped traversal flights, and leaves the canonical 36-tile route contract unchanged."
+    },
+    {
+      "id": "flowing-lava-and-heat-light",
+      "status": "passed",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts:297",
+        "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts:453",
+        "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts:2095",
+        "gauntlet/qa/browser-v10/capture-manifest.v1.json"
+      ],
+      "result": "Physical recessed rivers, city channels, hot cores, cliff falls, animated directional shaders, local canal lights, forge key light, sea bounce, and cool separation rim all render in the live Three.js scene; reduced motion resolves to a deterministic thermal pose."
+    },
+    {
+      "id": "iron-skiff-escape-mission",
+      "status": "passed",
+      "evidence": [
+        "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts:128",
+        "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts:59",
+        "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts:1655",
+        "src/features/gamification/level-worlds/components/LavaSkiffControllerAdapter.tsx:13"
+      ],
+      "result": "Eight Heatshield Plates fund four cumulative systems at two plates each; the completed iron skiff descends the summit channel through three steering gates, crosses the cliff fall, and is caught by the magnetic extraction ship. Touch and keyboard controls provide left/right steering and hold-forward throttle with guaranteed extraction safety."
+    },
+    {
+      "id": "canonical-gameplay-integration",
+      "status": "passed",
+      "evidence": [
+        "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts:59",
+        "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx:13442",
+        "Island Run architecture guard: 0 violations, 3 pre-existing allowlisted warnings"
+      ],
+      "result": "Mission spending is mutex-protected and committed through the canonical state store. React owns only navigation presentation; no new UI gameplay write path or tile-index progression coupling was added."
+    },
+    {
+      "id": "animation-and-build-presentation",
+      "status": "passed",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts:2062",
+        "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts:2131",
+        "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx:13442"
+      ],
+      "result": "The nine-part authored city assembles with staggered vertical emergence before batching, molten shaders and lights animate continuously, and the skiff follows the escape spline with steering, banking, tether, and completion presentation."
+    },
+    {
+      "id": "mobile-performance-and-runtime-asset",
+      "status": "passed",
+      "evidence": [
+        "public/assets/islands/island-020/models/lava-labyrinth-v10-rectilinear-city.glb sha256 76172c84eeb6713b97ea4fb43e3f80a27c4cf7b3c2fb237ff0028e9a7e8d13dc",
+        "scripts/blender/island020_optimize_v10_runtime.py",
+        "gauntlet/qa/browser-v10/capture-manifest.v1.json"
+      ],
+      "result": "The sole public Island 020 model is a 2.35 MB nine-part V10 GLB with 30,888 triangles. The complete 390x844 medium scene recorded 60 FPS, 135 draw calls, and 141k triangles against the 180k-triangle / 175-call contract. Retired V5/V6 GLBs are stored outside public runtime assets."
+    },
+    {
+      "id": "verification",
+      "status": "passed",
+      "evidence": [
+        "Island Run service suite: 1919 passed, 0 failed",
+        "Island Run architecture guard: PASS, 0 violations",
+        "TypeScript project build: PASS, 0 diagnostics",
+        "Vite production build: PASS, 1367 modules transformed"
+      ],
+      "result": "Fresh checks passed after the final palette, performance, skyline, and camera changes. Production build emitted only existing chunk-size and dynamic/static import advisories."
+    }
+  ]
+}

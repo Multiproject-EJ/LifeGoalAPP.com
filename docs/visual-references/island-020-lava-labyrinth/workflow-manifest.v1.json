@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "subject": "HabitGame Island 020 — Lava Labyrinth complete visual, mission, and animation production",
+  "created_at": "2026-08-30",
+  "status": "production-complete-quality-lord-pass-hybrid-v2-lava-volume-v3",
+  "goal_authority": [
+    {
+      "rank": 1,
+      "path": "020-source.png",
+      "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+      "role": "exact visible whole-island authority"
+    }
+  ],
+  "render_profile": {
+    "runtime": "source-led final-angle environment plate with live Three.js route, rewards, mission machinery, token, hit targets and camera transitions",
+    "deliveryClass": "new-base",
+    "packTier": "standard-island",
+    "target": "premium source-faithful obsidian-and-magma fortress island with interactive layered depth",
+    "primaryDevice": "390x844 portrait phone",
+    "performanceCeiling": {"drawCalls": 175, "triangles": 180000, "averageFps": 50, "p95FrameMs": 29, "slowFramePercent": 15}
+  },
+  "required_cameras": [
+    "portrait-overview-matched", "fixed-orbit-left", "fixed-orbit-right", "rear-sanity", "top-clearance",
+    "hatchery-focus", "habit-focus", "mystery-focus", "wisdom-focus", "arena-focus", "mission-stage-wide", "construction-working", "construction-resting"
+  ],
+  "quality_gates": {
+    "nakedMacroMinimum": 0.85,
+    "sourceCriticalViewMinimum": 0.85,
+    "finalSourceOverallMinimum": 0.80,
+    "finalSourceDimensionMinimum": 0.75,
+    "worstRequiredViewGoverns": true,
+    "oneBlockoutAndOneBoundedCorrectionPerFamily": true,
+    "noDetailBeforeMacroGate": true,
+    "explicitUserApprovalBeforeGenerationOrGeometry": true
+  },
+  "roles": {
+    "creativeAuthority": "Eivind",
+    "root": "Codex owns manifests, integration, user communication, invalidation, and commits",
+    "productionWorkers": "bounded part/group workers only after approval",
+    "qualityLord": "independent read-only visual reviewer with veto authority"
+  },
+  "budgets": {
+    "partCount": 32,
+    "representativeFirstSlice": ["p07", "p08", "p09", "p10"],
+    "geometryPolicy": "continuous macro masses remain continuous; repeated masonry, spikes, chains, braziers, and embers may be instanced",
+    "detailFirewall": "no runes, cracks, chains, trim, particles, creature polish, or animation polish before the owning macro silhouette and attachment gate passes"
+  },
+  "non_negotiables": [
+    "Preserve the exact attached source and its hash.",
+    "Runtime Island 020 overrides the baked Island 043 label.",
+    "Preserve the canonical 36-tile route, external landmarks, rewards, Arena cadence, and gameplay authority.",
+    "Do not paint source HUD, text, counters, or fake tiles into runtime assets.",
+    "All gameplay progress writes use canonical mutex-protected action services.",
+    "Every landmark ships coherent additive L1, L2, and L3 meshes plus resting, working, commissioning, and reduced-motion behavior.",
+    "No merge, publish, deployment, OneDrive rewrite, or phone installation is authorized by this admission checkpoint."
+  ],
+  "production_evidence": {
+    "representation_family_2": {
+      "status": "quality-lord-pass-production-complete",
+      "family_manifest": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/family-manifest.v1.json",
+      "source_led_plate": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/raw/lava-labyrinth-environment-plate-v001.png",
+      "runtime_plate": "public/assets/islands/island-020/background/lava-labyrinth-environment-plate-v001.webp",
+      "state": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/state.json",
+      "spec": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/hybrid-sculpt-spec.json",
+      "camera_mode": "strict-fixed-final-angle",
+      "live_layers": ["canonical-route", "tile-rewards", "player-token", "landmark-hit-targets", "four-firebridges", "arena-finale", "mission-effects"],
+      "quality_lord_verdict": {
+        "result": "pass",
+        "source_identity": 0.91,
+        "composition": 0.89,
+        "materials_atmosphere": 0.92,
+        "phone_readability": 0.87,
+        "live_tile_mission_separation": 0.92,
+        "hybrid_depth": 0.88,
+        "animation_mission_integrity": 0.95,
+        "runtime_budget": 0.90,
+        "fixed_final_angle_stability": 0.98,
+        "review_note": "Independent re-review verified that Overview is the only enabled presentation and all rotation, zoom, focus, tour, POV, and non-overview programmatic paths are locked. No representation regression was observed."
+      },
+      "lava_lookdev_v2": {
+        "result": "pass",
+        "flow": "gravity-down-and-centre-outward",
+        "heat": "plate-local-bounce-plus-live-forge-lights",
+        "reduced_motion": "frozen-reduced-motion",
+        "observed_calls": 163,
+        "observed_triangles": 31000,
+        "overlay_delta": {"draw_calls": 1, "triangles": 2, "new_texture_bytes": 0},
+        "quality_lord": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-lookdev-v2.json"
+      },
+      "lava_volume_v3": {
+        "result": "pass-after-hard-budget-correction",
+        "flow": "gravity-down-and-centre-outward-plus-multi-scale-hot-core-depth",
+        "heat": "plate-local-bounce-plus-live-forge-lights-and-existing-tile-emissive-response",
+        "reduced_motion": "frozen-reduced-motion",
+        "high_observed_calls": 173,
+        "high_observed_triangles": 45000,
+        "low_observed_calls": 163,
+        "low_observed_triangles": 31000,
+        "v3_geometry_delta": {"draw_calls": 0, "triangles": 0, "new_texture_bytes": 0},
+        "quality_lord": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-volume-v3.json",
+        "tier_1_diagnostics": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-volume-v3-tier1-diagnostics.json"
+      }
+    },
+    "retired_representation_family_1": {
+      "status": "retired-after-bounded-correction",
+      "evidence_root": ".img2threejs/island-020-lava-labyrinth/review/",
+      "final_capture_version": "v021"
+    },
+    "runtime_part_manifest": ".img2threejs/island-020-lava-labyrinth/review/island-020-runtime-part-manifest-v001.json",
+    "portrait_overview": ".img2threejs/island-020-lava-labyrinth/review/island-020-overview-stage4-v021.png",
+    "matched_orbits": [
+      ".img2threejs/island-020-lava-labyrinth/review/island-020-orbit-000-stage4-v021.png",
+      ".img2threejs/island-020-lava-labyrinth/review/island-020-orbit-090-stage4-v021.png",
+      ".img2threejs/island-020-lava-labyrinth/review/island-020-orbit-180-stage4-v021.png"
+    ],
+    "runtime_structure": {"parts": 32, "unnamed_meshes": 0, "integral_meshes": 557},
+    "scene_budget": {"family_1_estimated_calls": 164, "family_1_logical_instances": 197, "family_2_observed_calls": 163, "family_2_visible_triangles": 31000, "lava_lookdev_overlay_calls": 1, "lava_lookdev_overlay_triangles": 2, "lava_volume_v3_high_calls": 173, "lava_volume_v3_high_triangles": 45000, "lava_volume_v3_added_calls": 0, "lava_volume_v3_added_triangles": 0},
+    "test_result": "1918 passed, 0 failed",
+    "typechecks": "test and application TypeScript projects pass",
+    "ceremony_art": "public/assets/story/championships/circuit-cups/blaze-trials/opening-ceremony-portrait.webp",
+    "retired_family_1_quality_lord_verdict": {
+      "result": "fail-retire-family",
+      "identity": 0.70,
+      "structure_assembly": 0.77,
+      "materials_lighting": 0.58,
+      "phone_readability": 0.73,
+      "cross_view_coherence": 0.84,
+      "runtime_mission_integrity": 0.95,
+      "decision_needed": "Approve a materially different visual representation, or explicitly relax the strict source-likeness target."
+    }
+  }
+}

@@ -217,6 +217,15 @@ import {
   ISLAND_18_WEATHER_CYCLE_SECONDS,
   type Island18LivingCompassPresentation,
 } from './Island18JungleExpeditionThreeWorld';
+import {
+  buildIsland20LavaLabyrinthLandmark,
+  collectIsland20RuntimePartManifest,
+  createIsland20LavaLabyrinthLivingAmbience,
+  createIsland20LavaLabyrinthMaterials,
+  ISLAND_20_LAVA_LABYRINTH_LANDMARK_LABELS,
+  ISLAND_20_LAVA_LABYRINTH_WORLD_NAME,
+  type Island20SkiffNavigationPresentation,
+} from './Island20LavaLabyrinthThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -275,6 +284,8 @@ interface Island5ThreePilotProps {
   firstLightAssemblyCraterPresentation?: Island1AssemblyCraterPresentation;
   greatHoneyfallPresentation?: Island14GreatHoneyfallPresentation;
   stagedRestorationPresentation?: IslandStagedRestorationPresentation;
+  island20SkiffNavigation?: Island20SkiffNavigationPresentation;
+  onIsland20SkiffRunComplete?: () => void;
   fishermansFishingPresentation?: Island22WaterDragonPresentation & {
     fishingInteraction?: Island22FishingInteractionPresentation;
   };
@@ -503,6 +514,8 @@ const CROWN_DRIFTER_BOARD_SCALE = 0.38;
 
 function readDeviceSignals(): Island3DDeviceSignals {
   const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
+  const reducedMotionEvidence = import.meta.env.DEV
+    && new URLSearchParams(window.location.search).get('island3dReducedMotion') === '1';
   return {
     deviceMemoryGb: navigatorWithMemory.deviceMemory,
     hardwareConcurrency: navigator.hardwareConcurrency,
@@ -515,7 +528,8 @@ function readDeviceSignals(): Island3DDeviceSignals {
     platform: navigator.platform,
     userAgent: navigator.userAgent,
     runtimeProtocol: window.location.protocol.replace(':', ''),
-    prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    prefersReducedMotion: reducedMotionEvidence
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   };
 }
 
@@ -2312,6 +2326,7 @@ const ISLAND_5_SKY_DOME_SRC = '/assets/islands/island-005/background/sky-dome-v2
 interface Island5AmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number, reducedMotion?: boolean) => void;
+  dispose?: () => void;
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
   registerRedockingLandmark?: (landmarkId: Island5LandmarkDefinition['id'], root: THREE.Object3D) => void;
@@ -2326,6 +2341,9 @@ interface Island5AmbienceRuntime {
   updateSpiralRail?: (presentation: Island13CactusCanyonSpiralPresentation) => void;
   setGreatHoneyfallStage?: (stage: number, replay?: boolean) => void;
   setLivingCompassStage?: (presentation: Island18LivingCompassPresentation, replay?: boolean) => void;
+  setIronSkiffStage?: (stage: number, replay?: boolean) => void;
+  updateIronSkiffNavigation?: (presentation: Island20SkiffNavigationPresentation) => void;
+  consumeIronSkiffCompletion?: () => boolean;
   updateWaterDragonMission?: (presentation: Island22WaterDragonPresentation) => void;
   updateFishingInteraction?: (presentation: Island22FishingInteractionPresentation) => void;
   getFishingInteractionCameraPose?: () => { position: THREE.Vector3; target: THREE.Vector3; shake: number };
@@ -3383,6 +3401,8 @@ export default function Island5ThreePilot({
   firstLightAssemblyCraterPresentation = { chargesDetonated: 0, targetCharges: 20, completed: false },
   greatHoneyfallPresentation = readInitialGreatHoneyfallPresentation(),
   stagedRestorationPresentation,
+  island20SkiffNavigation = { active: false, steering: 0, throttle: 0, sequence: 0 },
+  onIsland20SkiffRunComplete,
   fishermansFishingPresentation = {
     fishCaughtKg: 0,
     previewElapsedSeconds: 0,
@@ -3425,6 +3445,7 @@ export default function Island5ThreePilot({
   // Honeycomb Kingdom owns a dedicated procedural world factory and evidence route.
   const isHoneycombKingdom = resolvedWorldSourceNumber === 14;
   const isJungleExpedition = resolvedWorldSourceNumber === 18;
+  const isLavaLabyrinth = resolvedWorldSourceNumber === 20;
   const worldName = isAssemblyCraterFirstLight
     ? ISLAND_1_ASSEMBLY_CRATER_NAME
     : isFirstLightKingdom
@@ -3453,6 +3474,8 @@ export default function Island5ThreePilot({
                         ? ISLAND_14_HONEYCOMB_WORLD_NAME
                       : isJungleExpedition
                         ? ISLAND_18_JUNGLE_EXPEDITION_WORLD_NAME
+                        : isLavaLabyrinth
+                          ? ISLAND_20_LAVA_LABYRINTH_WORLD_NAME
                         : isFishermansVillage
                           ? ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME
               : 'Crown of Tides';
@@ -3465,6 +3488,13 @@ export default function Island5ThreePilot({
     typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('island3dMapStripped') === '1'
   ));
+  const lavaLookdevEvidenceTime = (() => {
+    if (!isLavaLabyrinth || typeof window === 'undefined') return null;
+    const rawValue = new URLSearchParams(window.location.search).get('island20LavaTime');
+    if (rawValue === null || rawValue.trim() === '') return null;
+    const value = Number(rawValue);
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  })();
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
   const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(null);
   const sustainedQualityMissesRef = useRef(0);
@@ -3536,6 +3566,10 @@ export default function Island5ThreePilot({
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
   const stagedRestorationPresentationRef = useRef(stagedRestorationPresentation);
   stagedRestorationPresentationRef.current = stagedRestorationPresentation;
+  const island20SkiffNavigationRef = useRef(island20SkiffNavigation);
+  island20SkiffNavigationRef.current = island20SkiffNavigation;
+  const onIsland20SkiffRunCompleteRef = useRef(onIsland20SkiffRunComplete);
+  onIsland20SkiffRunCompleteRef.current = onIsland20SkiffRunComplete;
   const fishermansFishingPresentationRef = useRef(fishermansFishingPresentation);
   fishermansFishingPresentationRef.current = fishermansFishingPresentation;
   const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
@@ -3787,10 +3821,12 @@ export default function Island5ThreePilot({
                       ? 0xdfbd7d
                       : isCactusCanyon
                         ? 0xd98a58
-                      : isHoneycombKingdom
+                        : isHoneycombKingdom
                         ? 0x148ac8
                       : isJungleExpedition
                         ? 0x1397bd
+                        : isLavaLabyrinth
+                          ? 0x120706
               : 0x91d7e8;
     const fogColor = isFirstLightKingdom
       ? 0xbdebf5
@@ -3818,6 +3854,8 @@ export default function Island5ThreePilot({
                         ? 0x83d4ee
                       : isJungleExpedition
                         ? 0x8edbd3
+                        : isLavaLabyrinth
+                          ? 0x35100b
               : 0x8ecdda;
     const fogDensity = isFirstLightKingdom
       ? 0.0038
@@ -3845,6 +3883,8 @@ export default function Island5ThreePilot({
                         ? 0.0034
                       : isJungleExpedition
                         ? 0.0042
+                        : isLavaLabyrinth
+                          ? 0.0062
               : 0.0048;
     let rootheartDayBackdrop: THREE.Texture | null = null;
     let rootheartNightBackdrop: THREE.Texture | null = null;
@@ -3885,7 +3925,7 @@ export default function Island5ThreePilot({
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
-    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isCactusCanyon ? 1.06 : isHoneycombKingdom ? 1.16 : isJungleExpedition ? 0.98 : isFirstLightKingdom ? 1.03 : 1;
+    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isCactusCanyon ? 1.06 : isHoneycombKingdom ? 1.16 : isJungleExpedition ? 0.98 : isLavaLabyrinth ? 1.2 : isFirstLightKingdom ? 1.03 : 1;
     camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
     const firstLightInitialOverview = {
@@ -3961,6 +4001,13 @@ export default function Island5ThreePilot({
           ? [0, 0.18, 0.1] as const
           : [0, 0.38, -0.18] as const,
     };
+    const lavaLabyrinthInitialOverview = {
+      // The labyrinth is gameplay, not a façade: keep enough pitch to read its
+      // connected top-down paths while the keep, board ring and lavafall still
+      // form the source image's strong portrait silhouette.
+      position: [0, 14.8, 19.6] as const,
+      target: [0, 0.18, -0.18] as const,
+    };
     const restoredCameraPose = cameraPoseSnapshotRef.current;
     const initialOverviewPosition = isFirstLightKingdom
       ? firstLightInitialOverview.position
@@ -3974,6 +4021,8 @@ export default function Island5ThreePilot({
               ? honeycombInitialOverview.position
             : isJungleExpedition
               ? jungleExpeditionInitialOverview.position
+            : isLavaLabyrinth
+              ? lavaLabyrinthInitialOverview.position
         : overview.position;
     const initialOverviewTarget = isFirstLightKingdom
       ? firstLightInitialOverview.target
@@ -3987,6 +4036,8 @@ export default function Island5ThreePilot({
               ? honeycombInitialOverview.target
             : isJungleExpedition
               ? jungleExpeditionInitialOverview.target
+            : isLavaLabyrinth
+              ? lavaLabyrinthInitialOverview.target
         : overview.target;
     camera.position.set(...(restoredCameraPose?.position ?? initialOverviewPosition));
     camera.lookAt(...(restoredCameraPose?.target ?? initialOverviewTarget));
@@ -4022,6 +4073,8 @@ export default function Island5ThreePilot({
                           ? 0.98
                         : isJungleExpedition
                           ? 1.03
+                        : isLavaLabyrinth
+                          ? 1.08
               : 1.06;
     // The underwater scene carries multiple full-screen transparent water and
     // light layers. A 1.4 DPR ceiling remains crisp at the phone viewport while
@@ -4036,7 +4089,8 @@ export default function Island5ThreePilot({
     // ruin structures keep readable stair and balcony depth without shadowing
     // every leaf, tile reward, controller prop or ambient effect.
     const sceneUsesRealtimeShadows = qualityProfile.shadows
-      && !isAbyssalPearlKingdom;
+      && !isAbyssalPearlKingdom
+      && !isLavaLabyrinth;
     renderer.shadowMap.enabled = sceneUsesRealtimeShadows;
     renderer.shadowMap.type = isSunkenSands ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
@@ -4052,6 +4106,8 @@ export default function Island5ThreePilot({
     controls.maxDistance = 72;
     controls.minPolarAngle = THREE.MathUtils.degToRad(28);
     controls.maxPolarAngle = THREE.MathUtils.degToRad(69);
+    controls.enableRotate = true;
+    controls.enableZoom = true;
     controls.rotateSpeed = 0.56;
     controls.zoomSpeed = 0.78;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
@@ -4074,6 +4130,7 @@ export default function Island5ThreePilot({
     let fishermansVillageEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let honeycombEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let jungleExpeditionEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
+    let lavaLabyrinthEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     if (isArchiveEnvironmentLookdev || isArchiveBacklightLookdev) {
       const roomEnvironment = new RoomEnvironment();
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -4089,7 +4146,7 @@ export default function Island5ThreePilot({
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
       honeycombEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.06);
       scene.environment = honeycombEnvironmentTarget.texture;
-      scene.environmentIntensity = 0.42;
+      scene.environmentIntensity = 0.52;
       roomEnvironment.dispose();
       pmremGenerator.dispose();
     }
@@ -4107,6 +4164,15 @@ export default function Island5ThreePilot({
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
       fishermansVillageEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.08);
       scene.environment = fishermansVillageEnvironmentTarget.texture;
+      scene.environmentIntensity = 0.34;
+      roomEnvironment.dispose();
+      pmremGenerator.dispose();
+    }
+    if (isLavaLabyrinth) {
+      const roomEnvironment = new RoomEnvironment();
+      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+      lavaLabyrinthEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.05);
+      scene.environment = lavaLabyrinthEnvironmentTarget.texture;
       scene.environmentIntensity = 0.34;
       roomEnvironment.dispose();
       pmremGenerator.dispose();
@@ -4147,6 +4213,8 @@ export default function Island5ThreePilot({
                           ? 0x91531d
                         : isJungleExpedition
                           ? 0x173b26
+                        : isLavaLabyrinth
+                          ? 0x0c1016
               : 0x28566a;
     const hemisphereIntensity = isArchiveNeutralLookdev
       ? 1.18
@@ -4184,6 +4252,8 @@ export default function Island5ThreePilot({
                           ? 1.7
                         : isJungleExpedition
                           ? 1.58
+                        : isLavaLabyrinth
+                          ? 1.15
               : 2.25;
     const hemisphere = new THREE.HemisphereLight(
       isArchiveNeutralLookdev
@@ -4194,7 +4264,7 @@ export default function Island5ThreePilot({
             ? 0xd9eaff
             : isArchiveBacklightLookdev
               ? 0x7d9bc2
-          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : isJungleExpedition ? 0xdaf6d8 : 0xeefcff,
+          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : isJungleExpedition ? 0xdaf6d8 : isLavaLabyrinth ? 0xc5d2e4 : 0xeefcff,
       hemisphereGroundColor,
       hemisphereIntensity,
     );
@@ -4236,6 +4306,8 @@ export default function Island5ThreePilot({
                           ? 3.45
                         : isJungleExpedition
                           ? 3.75
+                        : isLavaLabyrinth
+                          ? 2.45
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
       isArchiveNeutralLookdev
@@ -4246,14 +4318,14 @@ export default function Island5ThreePilot({
             ? 0xe8f2ff
             : isArchiveBacklightLookdev
               ? 0x83c7ff
-          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isJungleExpedition ? 0xffdda6 : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
+          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isJungleExpedition ? 0xffdda6 : isLavaLabyrinth ? 0xffd9c2 : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     if (isJungleExpedition) sunlight.name = 'ISLAND_18_PRIMARY_SUN_LIGHT';
     sunlight.position.set(
-      isArchiveGrazingLookdev ? -14 : isArchiveEnvironmentLookdev ? -6 : isArchiveBacklightLookdev ? 5 : isSunkenSands ? 6 : isCactusCanyon ? 8 : isFishermansVillage ? -12 : isHoneycombKingdom ? -10 : isJungleExpedition ? -10 : -9,
-      isArchiveGrazingLookdev ? 3.4 : isArchiveEnvironmentLookdev ? 10 : isArchiveBacklightLookdev ? 6 : isSunkenSands ? 16 : isCactusCanyon ? 18 : isFishermansVillage ? 11 : isHoneycombKingdom ? 17 : isJungleExpedition ? 17 : 15,
-      isArchiveGrazingLookdev ? 8 : isArchiveEnvironmentLookdev ? 7 : isArchiveBacklightLookdev ? -14 : isSunkenSands ? -12 : isCactusCanyon ? -14 : isFishermansVillage ? -8 : isHoneycombKingdom ? 11 : isJungleExpedition ? 10 : 10,
+      isArchiveGrazingLookdev ? -14 : isArchiveEnvironmentLookdev ? -6 : isArchiveBacklightLookdev ? 5 : isSunkenSands ? 6 : isCactusCanyon ? 8 : isFishermansVillage ? -12 : isHoneycombKingdom ? -10 : isJungleExpedition ? -10 : isLavaLabyrinth ? -7 : -9,
+      isArchiveGrazingLookdev ? 3.4 : isArchiveEnvironmentLookdev ? 10 : isArchiveBacklightLookdev ? 6 : isSunkenSands ? 16 : isCactusCanyon ? 18 : isFishermansVillage ? 11 : isHoneycombKingdom ? 17 : isJungleExpedition ? 17 : isLavaLabyrinth ? 12 : 15,
+      isArchiveGrazingLookdev ? 8 : isArchiveEnvironmentLookdev ? 7 : isArchiveBacklightLookdev ? -14 : isSunkenSands ? -12 : isCactusCanyon ? -14 : isFishermansVillage ? -8 : isHoneycombKingdom ? 11 : isJungleExpedition ? 10 : isLavaLabyrinth ? 9 : 10,
     );
     sunlight.castShadow = sceneUsesRealtimeShadows;
     sunlight.shadow.mapSize.set(qualityProfile.shadowMapSize, qualityProfile.shadowMapSize);
@@ -4305,6 +4377,21 @@ export default function Island5ThreePilot({
       jungleBounce.name = 'ISLAND_18_TURQUOISE_SKY_BOUNCE_LIGHT';
       jungleBounce.position.set(11, 7, 13);
       scene.add(jungleBounce);
+    }
+    if (isLavaLabyrinth) {
+      const forgeKey = new THREE.PointLight(0xff6a24, 9.6, 8.8, 2.05);
+      forgeKey.name = 'ISLAND_20_CRUCIBLE_FORGE_KEY_LIGHT';
+      forgeKey.position.set(0, 4.2, 0.2);
+      const underglow = new THREE.PointLight(0xff2705, 5.8, 7.2, 2.1);
+      underglow.name = 'ISLAND_20_LAVA_UNDERGLOW_LIGHT';
+      underglow.position.set(0, -1.1, 0);
+      const lavaSeaBounce = new THREE.PointLight(0xff3b08, 4.2, 8.5, 2.1);
+      lavaSeaBounce.name = 'ISLAND_20_MAGMA_SEA_BOUNCE_LIGHT';
+      lavaSeaBounce.position.set(0, -3.35, 2.4);
+      const coolRim = new THREE.DirectionalLight(0x91abd0, 1.6);
+      coolRim.name = 'ISLAND_20_OBSIDIAN_SEPARATION_RIM_LIGHT';
+      coolRim.position.set(10, 7, 12);
+      scene.add(forgeKey, underglow, lavaSeaBounce, coolRim);
     }
     const rootheartDaySky = new THREE.Color(0xffedc2);
     const rootheartEveningSky = new THREE.Color(0x52647a);
@@ -4415,6 +4502,7 @@ export default function Island5ThreePilot({
     const island22FishermansVillageMaterials = isFishermansVillage ? createIsland22FishermansVillageMaterials() : null;
     const island14HoneycombMaterials = isHoneycombKingdom ? createIsland14HoneycombMaterials() : null;
     const island18JungleExpeditionMaterials = isJungleExpedition ? createIsland18JungleExpeditionMaterials() : null;
+    const island20LavaLabyrinthMaterials = isLavaLabyrinth ? createIsland20LavaLabyrinthMaterials(qualityProfile.id) : null;
     const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom || isEverblossomKingdom || isSunkenSands;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
@@ -4461,13 +4549,13 @@ export default function Island5ThreePilot({
     water.rotation.x = -Math.PI / 2;
     water.position.y = isFirstLightKingdom ? ISLAND_1_OCEAN_SURFACE_Y : -0.62;
     water.receiveShadow = true;
-    if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition) scene.add(water);
+    if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isLavaLabyrinth) scene.add(water);
 
     const assemblySurfaceCutawayRoots: THREE.Object3D[] = [];
 
     // Island 007 owns a dedicated seabed/root system. Do not construct and then
     // hide the generic coastal plates, bridges and lagoon underneath it.
-    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition) {
+    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isLavaLabyrinth) {
       const firstLightMainDepth = 3.4;
       const island = isAssemblyCraterFirstLight && island1Materials
         ? createIsland1AssemblyCraterTerrain(qualityProfile.id, {
@@ -4557,6 +4645,8 @@ export default function Island5ThreePilot({
               ? createIsland14HoneycombLivingAmbience(scene, qualityProfile, island14HoneycombMaterials)
             : isJungleExpedition && island18JungleExpeditionMaterials
               ? createIsland18JungleExpeditionLivingAmbience(scene, qualityProfile, island18JungleExpeditionMaterials)
+            : isLavaLabyrinth && island20LavaLabyrinthMaterials
+              ? createIsland20LavaLabyrinthLivingAmbience(scene, qualityProfile, island20LavaLabyrinthMaterials, buildLevel)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
     const jungleInspectionOccluders = isJungleExpedition
       ? [
@@ -4600,6 +4690,10 @@ export default function Island5ThreePilot({
     if (isHoneycombKingdom) {
       livingAmbience.setGreatHoneyfallStage?.(greatHoneyfallPresentationRef.current.activatedReservoirs, false);
     }
+    if (isLavaLabyrinth) {
+      livingAmbience.setIronSkiffStage?.(stagedRestorationPresentationRef.current?.activatedStages ?? 0, false);
+      livingAmbience.updateIronSkiffNavigation?.(island20SkiffNavigationRef.current);
+    }
     if (isFishermansVillage) {
       livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
       const fishing = fishermansFishingPresentationRef.current.fishingInteraction;
@@ -4618,7 +4712,7 @@ export default function Island5ThreePilot({
     );
     const stagedRestorationInitial = resolveStagedRestorationPresentation();
     const stagedRestorationRuntime = stagedRestorationInitial
-      && [4, 6, 7, 8, 9, 18].includes(stagedRestorationInitial.islandNumber)
+      && stagedRestorationInitial.islandNumber !== 20
       ? createIslandStagedRestorationThreePresentation({
           islandNumber: stagedRestorationInitial.islandNumber,
           stageCount: stagedRestorationInitial.stageCount,
@@ -4638,6 +4732,9 @@ export default function Island5ThreePilot({
     }
     let stagedRestorationPresentationKey = stagedRestorationInitial
       ? `${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}:${(stagedRestorationInitial.claimedPickupTileIndices ?? []).join(',')}`
+      : '';
+    let ironSkiffPresentationKey = isLavaLabyrinth && stagedRestorationInitial
+      ? `${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}`
       : '';
     const clickableSignatureMissions = stagedRestorationRuntime
       ? [stagedRestorationRuntime.missionHitTarget]
@@ -4663,6 +4760,10 @@ export default function Island5ThreePilot({
             )
         : isHoneycombKingdom
           ? [livingAmbience.root.getObjectByName('ISLAND_14_GREAT_HONEYFALL_MISSION_HIT_TARGET')].filter(
+              (candidate): candidate is THREE.Object3D => Boolean(candidate),
+            )
+        : isLavaLabyrinth
+          ? [livingAmbience.root.getObjectByName('ISLAND_20_IRON_SKIFF_ESCAPE_MISSION')].filter(
               (candidate): candidate is THREE.Object3D => Boolean(candidate),
             )
         : [];
@@ -4792,12 +4893,18 @@ export default function Island5ThreePilot({
             new THREE.MeshPhysicalMaterial({ color: 0x6745a8, roughness: 0.42, metalness: 0.12, clearcoat: 0.32, emissive: 0x25145b, emissiveIntensity: 0.24 }),
             new THREE.MeshPhysicalMaterial({ color: 0x35d47e, roughness: 0.22, metalness: 0.42, clearcoat: 0.76, emissive: 0x087747, emissiveIntensity: 0.52 }),
           ]
+      : isLavaLabyrinth
+        ? [
+            new THREE.MeshStandardMaterial({ color: 0x312b2a, roughness: 0.78, metalness: 0.08, emissive: 0x2a0702, emissiveIntensity: 0.13 }),
+            new THREE.MeshStandardMaterial({ color: 0x171313, roughness: 0.7, metalness: 0.16, emissive: 0x3a0c03, emissiveIntensity: 0.12 }),
+            new THREE.MeshStandardMaterial({ color: 0xb96f2e, roughness: 0.3, metalness: 0.72, emissive: 0x7d1904, emissiveIntensity: 0.32 }),
+          ]
       : [
           new THREE.MeshStandardMaterial({ color: 0xf3e4bd, roughness: 0.7 }),
           new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
           new THREE.MeshStandardMaterial({ color: 0xf2c861, roughness: 0.42, metalness: 0.18 }),
         ];
-    if (isCactusCanyon || isFishermansVillage || isJungleExpedition) {
+    if (isCactusCanyon || isFishermansVillage || isJungleExpedition || isLavaLabyrinth) {
       // The canyon tiles sit very close to the sandy mesa cap. A stable depth
       // bias prevents their coplanar fragments from alternating while the
       // camera or tile-impact animation moves, without changing board logic.
@@ -4867,7 +4974,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition;
+    const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth;
     const instancedTileCounts = [0, 0, 0];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -4887,6 +4994,8 @@ export default function Island5ThreePilot({
                 ? `ISLAND_14_TILE_SURFACE_BATCH_${materialIndex + 1}`
               : isJungleExpedition
                 ? `ISLAND_18_JUNGLE_ROUTE_TILE_BATCH_${materialIndex + 1}`
+              : isLavaLabyrinth
+                ? `ISLAND_20_TILE_SURFACE_BATCH_${materialIndex + 1}`
               : `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
           if (isAbyssalPearlKingdom && materialIndex === 0) {
             mesh.userData.sculptRuntime = {
@@ -4956,7 +5065,7 @@ export default function Island5ThreePilot({
       // coastal cap. Lift only the rendered blocks so the canonical 36 stop
       // coordinates and progression semantics stay unchanged while every
       // individual tile face and gilded joint remains visible.
-      const tileVisualY = transform.position[1] + (isHoneycombKingdom ? 0.08 : isJungleExpedition ? 0.06 : 0);
+      const tileVisualY = transform.position[1] + (isHoneycombKingdom ? 0.08 : isJungleExpedition ? 0.06 : isLavaLabyrinth ? 0.05 : 0);
       const tileMaterial = transform.isKeyTile ? tileMaterials[2] : tileMaterials[transform.index % 2];
       const tile = new THREE.Mesh(tileGeometry, tileMaterial);
       tile.position.set(transform.position[0], tileVisualY, transform.position[2]);
@@ -5020,7 +5129,8 @@ export default function Island5ThreePilot({
       tileMap: resolvedTileMap,
       tileTransforms,
       quality: qualityProfile.id,
-      compactCollectibles: isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition,
+      compactCollectibles: isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
+      staticBatchNonMissionRewards: isLavaLabyrinth,
     });
     tileRewardObjects.setFirstLightClaimedDynamiteTiles(
       firstLightAssemblyCraterPresentationRef.current.claimedDynamiteTileIndices ?? [],
@@ -5028,9 +5138,32 @@ export default function Island5ThreePilot({
     tileRewardObjects.setStagedRestorationClaimedTiles(
       stagedRestorationPresentationRef.current?.claimedPickupTileIndices ?? [],
     );
+    if (isLavaLabyrinth) {
+      tileRewardObjects.root.children.forEach((reward) => {
+        reward.scale.multiplyScalar(0.72);
+        reward.userData.island20CompactScale = 0.72;
+      });
+    }
     scene.add(tileRewardObjects.root);
 
     const playerPiece = createIslandPlayerPiece(qualityProfile.id);
+    if (isLavaLabyrinth) {
+      // Keep the canonical token and all movement semantics, but stop the
+      // generic violet/blue hero from overpowering a source-faithful lava city.
+      playerPiece.root.children.forEach((child) => {
+        child.position.multiplyScalar(0.46);
+        child.scale.multiplyScalar(0.46);
+      });
+      playerPiece.shadow.scale.setScalar(0.46);
+      playerPiece.root.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        object.material = object.name === 'ISLAND_5_PLAYER_TOKEN_LIGHT'
+          ? island20LavaLabyrinthMaterials!.emberGlass
+          : island20LavaLabyrinthMaterials!.blackIron;
+      });
+      compactStaticGeometry(playerPiece.root, 'ISLAND_20_PLAYER_TOKEN_RUNTIME_BATCH');
+      playerPiece.root.userData.island20ThemedScale = 0.46;
+    }
     const startingTokenPosition = getIsland5TokenGroundPosition(tileTransforms, tokenIndexRef.current);
     playerPiece.root.position.set(...startingTokenPosition);
     playerPiece.shadow.position.set(startingTokenPosition[0], startingTokenPosition[1] + 0.012, startingTokenPosition[2]);
@@ -5090,6 +5223,11 @@ export default function Island5ThreePilot({
     boardCaretaker.setAnimation('idle', 0, true);
     boardCaretaker.setEmotion('calm');
     scene.add(caretakerFootplate, caretakerContactShadow, caretakerHitTarget, boardCaretaker.root);
+    if (isLavaLabyrinth) {
+      boardCaretaker.root.visible = false;
+      caretakerFootplate.visible = false;
+      caretakerContactShadow.visible = false;
+    }
     const clickableCaretaker: THREE.Object3D[] = [caretakerHitTarget, caretakerFootplate, caretakerContactShadow, boardCaretaker.root];
     let encounterCaretaker: CaretakerModel | null = null;
     let wasCaretakerEncounterOpen = false;
@@ -5193,6 +5331,14 @@ export default function Island5ThreePilot({
                     resolvedBuildLevel,
                     qualityProfile.id,
                     island18JungleExpeditionMaterials,
+                    { constructionPreview },
+                  )
+              : isLavaLabyrinth && island20LavaLabyrinthMaterials
+                ? buildIsland20LavaLabyrinthLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island20LavaLabyrinthMaterials,
                     { constructionPreview },
                   )
               : buildLandmark(
@@ -5861,8 +6007,18 @@ export default function Island5ThreePilot({
       canvas.dataset.island18RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
       canvas.dataset.island18ScenePerformanceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
     }
+    if (isLavaLabyrinth) {
+      const partManifest = collectIsland20RuntimePartManifest([
+        livingAmbience.root,
+        ...landmarkRootsById.values(),
+        ...instancedTileMeshes,
+      ]);
+      canvas.dataset.island20RuntimePartManifest = JSON.stringify(partManifest);
+      canvas.dataset.island20RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
+      canvas.dataset.island20ScenePerformanceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
+    }
     const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevel;
-    const crownDrifter = !isRootheartCanopyCity && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
+    const crownDrifter = !isRootheartCanopyCity && !isLavaLabyrinth && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
       ? createCrownDrifterModel({ lod: 'board', quality: qualityProfile.id })
       : null;
     const crownDrifterPresentationRoot = crownDrifter ? new THREE.Group() : null;
@@ -5875,7 +6031,7 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
@@ -5904,6 +6060,8 @@ export default function Island5ThreePilot({
                 ? 0xffc94f
               : isJungleExpedition
                 ? 0x53e68f
+              : isLavaLabyrinth
+                ? 0xff7a2f
               : 0xffdb8c;
     const routeGlowEmissive = isFirstLightKingdom
       ? 0x247bb2
@@ -5931,6 +6089,8 @@ export default function Island5ThreePilot({
                 ? 0xa94b08
               : isJungleExpedition
                 ? 0x087d53
+              : isLavaLabyrinth
+                ? 0xa51f05
               : 0xa96f18;
     const routeGlow = new THREE.Mesh(
       new THREE.TorusGeometry(3.4, 0.055, 8, 96),
@@ -5945,7 +6105,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition)
+    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)
       && isMapStrippedEvidenceEnabled;
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -5957,6 +6117,10 @@ export default function Island5ThreePilot({
       scene.background = new THREE.Color(0x17242d);
       scene.environment = null;
       scene.traverse((object) => {
+        if (object.name === 'ISLAND_20_LAVA_FLOW_AND_HEAT_OVERLAY') {
+          object.visible = false;
+          return;
+        }
         if (object instanceof THREE.Points) {
           object.visible = false;
           return;
@@ -6085,9 +6249,9 @@ export default function Island5ThreePilot({
       const visible = !isLandmarkInspection;
       playerPiece.root.visible = visible;
       playerPiece.shadow.visible = visible;
-      boardCaretaker.root.visible = visible;
-      caretakerFootplate.visible = visible;
-      caretakerContactShadow.visible = visible;
+      boardCaretaker.root.visible = visible && !isLavaLabyrinth;
+      caretakerFootplate.visible = visible && !isLavaLabyrinth;
+      caretakerContactShadow.visible = visible && !isLavaLabyrinth;
       caretakerHitTarget.visible = visible;
       const showAssemblyCutaway = isAssemblyCraterFirstLight && preset === 'boss';
       const showPlayableRoute = preset !== 'powerworks' && !showAssemblyCutaway;
@@ -6439,6 +6603,15 @@ export default function Island5ThreePilot({
         wisdom: { position: [-4.4, 6.5, -4.1], target: [-4.36, 1.78, 3.9] },
         event: { position: [4.4, 6.5, -4.1], target: [4.36, 1.82, 3.9] },
       };
+      const lavaLabyrinthFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number];
+        target: readonly [number, number, number];
+      }>> = {
+        overview: { position: [0, 14.8, 19.6], target: [0, 0.18, -0.18] },
+        survey: { position: [0, 18.5, 20.1], target: [0, 0.1, -0.14] },
+        'orbit-left': { position: [-19.5, 14.5, 20.5], target: [0, 0.2, -0.12] },
+        'orbit-right': { position: [19.5, 14.5, 20.5], target: [0, 0.2, -0.12] },
+      };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
       const underwaterOverride = isAbyssalPearlKingdom ? underwaterFocusOverrides[id] : undefined;
@@ -6451,7 +6624,8 @@ export default function Island5ThreePilot({
       const fishermansVillageOverride = isFishermansVillage ? fishermansVillageFocusOverrides[id] : undefined;
       const honeycombOverride = isHoneycombKingdom ? honeycombFocusOverrides[id] : undefined;
       const jungleExpeditionOverride = isJungleExpedition ? jungleExpeditionFocusOverrides[id] : undefined;
-      const authoredFocusOverride = assemblyCraterFocusOverride ?? fishermansVillageOverride ?? jungleExpeditionOverride ?? honeycombOverride ?? cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
+      const lavaLabyrinthOverride = isLavaLabyrinth ? lavaLabyrinthFocusOverrides[id] : undefined;
+      const authoredFocusOverride = assemblyCraterFocusOverride ?? fishermansVillageOverride ?? jungleExpeditionOverride ?? honeycombOverride ?? lavaLabyrinthOverride ?? cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
       const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       setBoardActorsVisibleForPreset(id);
       setActivePreset(id);
@@ -6478,6 +6652,7 @@ export default function Island5ThreePilot({
       };
     };
     const applyAmbientCameraNudge = (context: 'board' | 'build-modal', now: number) => {
+      if (isLavaLabyrinth) return;
       const offset = camera.position.clone().sub(controls.target);
       const yawDirection = ambientCameraStep % 2 === 0 ? 1 : -1;
       const yaw = yawDirection * (context === 'build-modal' ? 0.105 : 0.145);
@@ -7078,6 +7253,30 @@ export default function Island5ThreePilot({
         canvas.dataset.stagedRestorationStage = String(nextPresentation.activatedStages);
         canvas.dataset.stagedRestorationIsland = String(nextPresentation.islandNumber);
       }
+      if (isLavaLabyrinth && stagedRestorationPresentationRef.current) {
+        const nextPresentation = stagedRestorationPresentationRef.current;
+        const nextKey = `${nextPresentation.activatedStages}:${nextPresentation.constructionSequence ?? 0}`;
+        if (nextKey !== ironSkiffPresentationKey) {
+          const previousSequence = Number(ironSkiffPresentationKey.split(':')[1] ?? 0);
+          const nextSequence = Math.max(0, Math.floor(nextPresentation.constructionSequence ?? 0));
+          livingAmbience.setIronSkiffStage?.(
+            nextPresentation.activatedStages,
+            nextSequence !== previousSequence,
+          );
+          ironSkiffPresentationKey = nextKey;
+          tileRewardObjects.setStagedRestorationClaimedTiles(nextPresentation.claimedPickupTileIndices ?? []);
+        }
+        livingAmbience.updateIronSkiffNavigation?.(island20SkiffNavigationRef.current);
+        canvas.dataset.island20IronSkiffStage = String(nextPresentation.activatedStages);
+        canvas.dataset.island20IronSkiffMission = 'escape-lava-labyrinth';
+        canvas.dataset.island20SkiffNavigation = island20SkiffNavigationRef.current.active ? 'active' : 'docked';
+        const authoredCityEvidence = livingAmbience.root.userData.authoredCity;
+        canvas.dataset.island20AuthoredCityStatus = String(authoredCityEvidence?.status ?? 'unknown');
+        canvas.dataset.island20AuthoredCityAsset = String(authoredCityEvidence?.asset ?? '');
+        canvas.dataset.island20AuthoredCityParts = String(authoredCityEvidence?.semanticPartCount ?? 0);
+        canvas.dataset.island20RepresentationFamily = String(livingAmbience.root.userData.representationFamily ?? 'unknown');
+        if (isReducedMotion && island20SkiffNavigationRef.current.active) livingAmbience.animate(elapsed);
+      }
       if (isHoneycombKingdom) {
         const honeyfallPresentation = greatHoneyfallPresentationRef.current;
         const nextHoneyfallStage = honeyfallPresentation.activatedReservoirs;
@@ -7220,6 +7419,22 @@ export default function Island5ThreePilot({
           scene.fog.color.copy(rootheartLightingScratch.copy(rootheartDayFog).lerp(rootheartEveningFog, nightDepth));
         }
       }
+      const lavaLookdevElapsed = lavaLookdevEvidenceTime ?? elapsed;
+      if (isLavaLabyrinth) {
+        const thermalElapsed = isReducedMotion ? 0 : lavaLookdevElapsed;
+        const thermalContact = 0.5 + 0.5 * (
+          Math.sin(thermalElapsed * 0.73) * 0.7
+          + Math.sin(thermalElapsed * 1.91 + 0.8) * 0.3
+        );
+        tileMaterials.forEach((material, index) => {
+          if (!(material instanceof THREE.MeshStandardMaterial)) return;
+          const base = index === 2 ? 0.32 : index === 1 ? 0.12 : 0.13;
+          material.emissiveIntensity = base + thermalContact * (index === 2 ? 0.13 : 0.1);
+        });
+        canvas.dataset.island20LavaFlowTime = lavaLookdevElapsed.toFixed(3);
+        canvas.dataset.island20LavaFlow = isReducedMotion ? 'frozen-reduced-motion' : 'gravity-down-and-centre-outward-plus-multi-scale-hot-core-depth';
+        canvas.dataset.island20HeatIllumination = 'physical-lava-contact-plus-live-forge-lights-and-tile-emissive-response';
+      }
       if (!isReducedMotion) {
         if (isFrostmoonHaven) {
           livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
@@ -7229,7 +7444,8 @@ export default function Island5ThreePilot({
           const fishing = fishermansFishingPresentationRef.current.fishingInteraction;
           if (fishing) livingAmbience.updateFishingInteraction?.(fishing);
         }
-        livingAmbience.animate(
+        if (isLavaLabyrinth) livingAmbience.animate(lavaLookdevElapsed);
+        else livingAmbience.animate(
           isJungleExpedition && jungleDeterministicPreviewElapsed !== null && !jungleZenithPreviewEnabled
             ? jungleDeterministicPreviewElapsed
             : elapsed,
@@ -7296,6 +7512,11 @@ export default function Island5ThreePilot({
             true,
           );
         }
+      }
+
+      if (isLavaLabyrinth && livingAmbience.consumeIronSkiffCompletion?.()) {
+        canvas.dataset.island20SkiffNavigation = 'extracted';
+        onIsland20SkiffRunCompleteRef.current?.();
       }
 
       updateConstructionPresentation();
@@ -7593,7 +7814,7 @@ export default function Island5ThreePilot({
             encounterCaretaker.dispose();
             encounterCaretaker = null;
           }
-          boardCaretaker.root.visible = true;
+          boardCaretaker.root.visible = !isLavaLabyrinth;
           boardCaretaker.setEmotion('calm');
           boardCaretaker.setAnimation('idle', elapsed, true);
           controls.enabled = true;
@@ -8281,6 +8502,7 @@ export default function Island5ThreePilot({
       }
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
+      livingAmbience.dispose?.();
       const disposedSceneBackground = scene.background;
       if (archiveLookdevEnvironmentTarget) {
         scene.environment = null;
@@ -8297,6 +8519,10 @@ export default function Island5ThreePilot({
       if (fishermansVillageEnvironmentTarget) {
         scene.environment = null;
         fishermansVillageEnvironmentTarget.dispose();
+      }
+      if (lavaLabyrinthEnvironmentTarget) {
+        scene.environment = null;
+        lavaLabyrinthEnvironmentTarget.dispose();
       }
       disposeScene(scene);
       if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
@@ -8330,7 +8556,7 @@ export default function Island5ThreePilot({
       if (activeTrainRide) setTrainRidePhase('idle');
       setCameraAuthoringModeRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isJungleExpedition, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }
@@ -8505,6 +8731,8 @@ export default function Island5ThreePilot({
                               ? ISLAND_14_HONEYCOMB_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_14_HONEYCOMB_LANDMARK_LABELS]
                             : isJungleExpedition
                               ? ISLAND_18_JUNGLE_EXPEDITION_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_18_JUNGLE_EXPEDITION_LANDMARK_LABELS]
+                            : isLavaLabyrinth
+                              ? ISLAND_20_LAVA_LABYRINTH_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_20_LAVA_LABYRINTH_LANDMARK_LABELS]
                           : preset.label}
             </option>
           ))}
@@ -8527,7 +8755,7 @@ export default function Island5ThreePilot({
         <button type="button" onClick={() => setIsEvidenceCapture(true)}>
           Hide overlays for evidence
         </button>
-        {(isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition) ? (
+        {(isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
           <button
             type="button"
             aria-pressed={isMapStrippedEvidenceEnabled}
@@ -8536,7 +8764,7 @@ export default function Island5ThreePilot({
             {isMapStrippedEvidenceEnabled ? 'Show materials' : 'Geometry proof'}
           </button>
         ) : null}
-        {(isHoneycombKingdom || isJungleExpedition) ? (
+        {(isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
           <div className="island-5-three-pilot__camera-row" aria-label={`${worldName} 360 evidence orbit`}>
             {[0, 45, 90, 135, 180, 225, 270, 315].map((degrees) => (
               <button
@@ -8590,7 +8818,9 @@ export default function Island5ThreePilot({
             </>
           ) : null}
         </div>
-        <p>{tourStatus === 'running' ? 'Touring the island and all five landmarks…' : 'Drag to orbit · pinch to zoom · tap a building to focus'}</p>
+        <p>{tourStatus === 'running'
+          ? 'Touring the island and all five landmarks…'
+          : 'Drag to orbit · pinch to zoom · tap a building to focus'}</p>
       </div>
         </>
       ) : null}

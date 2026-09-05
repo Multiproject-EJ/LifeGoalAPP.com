@@ -1,0 +1,3131 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-analysis",
+  "referenceId": "island-020-lava-labyrinth-source",
+  "manifest": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-regions.json",
+  "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+  "targetThreshold": 0.7,
+  "notObservedMaterials": [
+    {
+      "id": "rear-and-underside-surfaces",
+      "status": "inferred",
+      "reason": "Rear faces and much of the underside are hidden; extend the matching visible material family conservatively without claiming exact inverse rendering."
+    }
+  ],
+  "unresolvedNotObservedMaterials": [],
+  "regions": [
+    {
+      "componentId": "p01",
+      "regionId": "obsidian-basalt-cliff",
+      "materialSpecId": "obsidian-basalt",
+      "hypothesis": {
+        "componentId": "p01",
+        "regionId": "obsidian-basalt-cliff",
+        "materialId": "stone.natural",
+        "family": "stone",
+        "subtype": "fractured-obsidian-basalt",
+        "finish": "rough-matte-with-mineral-edge-sheen",
+        "aliases": [],
+        "confidence": 0.86,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "stone.natural",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/00-obsidian-basalt-cliff.png",
+            "bbox": {
+              "x": 80,
+              "y": 790,
+              "width": 270,
+              "height": 310
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0532
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.86,
+            "estimatedFidelity": 0.86,
+            "targetThreshold": 0.7,
+            "materialId": "obsidian-basalt",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/00-obsidian-basalt-cliff.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff",
+            "palette": [
+              "#090506",
+              "#1F0E0D",
+              "#49221B",
+              "#9B3A1B",
+              "#D6AF7D"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_albedo.png",
+                "url": "obsidian-basalt_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_roughness.png",
+                "url": "obsidian-basalt_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_height.png",
+                "url": "obsidian-basalt_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_normal.png",
+                "url": "obsidian-basalt_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_ao.png",
+                "url": "obsidian-basalt_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 270,
+              "sourceHeight": 310,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 270,
+                "height": 310
+              },
+              "mask": {
+                "backgroundColor": "#301B13",
+                "backgroundNoise": 80.876,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.8602
+              },
+              "mapStats": {
+                "valueRange": 0.5511,
+                "heightP90Gradient": 0.16591,
+                "roughnessBase": 0.769,
+                "roughnessVariation": 0.185,
+                "normalStrength": 0.351,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#090506",
+                "#1F0E0D",
+                "#49221B",
+                "#9B3A1B",
+                "#D6AF7D"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#6C4026",
+              "#29130E",
+              "#3B1913",
+              "#2E1D17",
+              "#553628"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 37.8,
+              "meanSaturation": 0.545,
+              "gradientStrength": 0.272,
+              "mottle": 0.086,
+              "streakRatio": 1.01,
+              "hueSpread": 0.15,
+              "specularFraction": 0.003
+            }
+          }
+        },
+        "profileId": "stone.natural",
+        "family": "stone",
+        "subtype": "natural",
+        "finish": "rough-or-polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.78,
+          "clearcoat": 0.0
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "displacementMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "multi-scale mineral pattern",
+          "fracture or pore relief",
+          "polished stone retains dielectric reflection"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/00-obsidian-basalt-cliff.png",
+        "bbox": {
+          "x": 80,
+          "y": 790,
+          "width": 270,
+          "height": 310
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0532
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#6C4026",
+          "#29130E",
+          "#3B1913",
+          "#2E1D17",
+          "#553628"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 37.8,
+          "meanSaturation": 0.545,
+          "gradientStrength": 0.272,
+          "mottle": 0.086,
+          "streakRatio": 1.01,
+          "hueSpread": 0.15,
+          "specularFraction": 0.003
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "materialId": "obsidian-basalt",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/00-obsidian-basalt-cliff.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff",
+        "palette": [
+          "#090506",
+          "#1F0E0D",
+          "#49221B",
+          "#9B3A1B",
+          "#D6AF7D"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_albedo.png",
+            "url": "obsidian-basalt_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_roughness.png",
+            "url": "obsidian-basalt_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_height.png",
+            "url": "obsidian-basalt_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_normal.png",
+            "url": "obsidian-basalt_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_ao.png",
+            "url": "obsidian-basalt_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 270,
+          "sourceHeight": 310,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 270,
+            "height": 310
+          },
+          "mask": {
+            "backgroundColor": "#301B13",
+            "backgroundNoise": 80.876,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8602
+          },
+          "mapStats": {
+            "valueRange": 0.5511,
+            "heightP90Gradient": 0.16591,
+            "roughnessBase": 0.769,
+            "roughnessVariation": 0.185,
+            "normalStrength": 0.351,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#090506",
+            "#1F0E0D",
+            "#49221B",
+            "#9B3A1B",
+            "#D6AF7D"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/00-obsidian-basalt-cliff.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_albedo.png",
+            "url": "obsidian-basalt_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_roughness.png",
+            "url": "obsidian-basalt_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_height.png",
+            "url": "obsidian-basalt_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_normal.png",
+            "url": "obsidian-basalt_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_ao.png",
+            "url": "obsidian-basalt_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 270,
+          "sourceHeight": 310,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 270,
+            "height": 310
+          },
+          "mask": {
+            "backgroundColor": "#301B13",
+            "backgroundNoise": 80.876,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8602
+          },
+          "mapStats": {
+            "valueRange": 0.5511,
+            "heightP90Gradient": 0.16591,
+            "roughnessBase": 0.769,
+            "roughnessVariation": 0.185,
+            "normalStrength": 0.351,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#090506",
+            "#1F0E0D",
+            "#49221B",
+            "#9B3A1B",
+            "#D6AF7D"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_albedo.png",
+          "url": "obsidian-basalt_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_roughness.png",
+          "url": "obsidian-basalt_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_height.png",
+          "url": "obsidian-basalt_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_normal.png",
+          "url": "obsidian-basalt_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-00-obsidian-basalt-cliff/obsidian-basalt_ao.png",
+          "url": "obsidian-basalt_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "p08",
+      "regionId": "worked-basalt-citadel",
+      "materialSpecId": "worked-basalt",
+      "hypothesis": {
+        "componentId": "p08",
+        "regionId": "worked-basalt-citadel",
+        "materialId": "stone.natural",
+        "family": "stone",
+        "subtype": "cut-volcanic-masonry",
+        "finish": "rough-cut-with-chipped-chamfers",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "stone.natural",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/01-worked-basalt-citadel.png",
+            "bbox": {
+              "x": 355,
+              "y": 370,
+              "width": 325,
+              "height": 330
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0682
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "worked-basalt",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/01-worked-basalt-citadel.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel",
+            "palette": [
+              "#130909",
+              "#3C1C15",
+              "#603F37",
+              "#96310F",
+              "#DE7E30"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_albedo.png",
+                "url": "worked-basalt_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_roughness.png",
+                "url": "worked-basalt_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_height.png",
+                "url": "worked-basalt_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_normal.png",
+                "url": "worked-basalt_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_ao.png",
+                "url": "worked-basalt_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 325,
+              "sourceHeight": 330,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 325,
+                "height": 330
+              },
+              "mask": {
+                "backgroundColor": "#643020",
+                "backgroundNoise": 117.813,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9357
+              },
+              "mapStats": {
+                "valueRange": 0.5182,
+                "heightP90Gradient": 0.1811,
+                "roughnessBase": 0.83,
+                "roughnessVariation": 0.167,
+                "normalStrength": 0.368,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#130909",
+                "#3C1C15",
+                "#603F37",
+                "#96310F",
+                "#DE7E30"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#60311E",
+              "#5A2E1C",
+              "#2D120D",
+              "#533125",
+              "#62321F"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 50.1,
+              "meanSaturation": 0.611,
+              "gradientStrength": 0.202,
+              "mottle": 0.116,
+              "streakRatio": 1.07,
+              "hueSpread": 0.099,
+              "specularFraction": 0.001
+            }
+          }
+        },
+        "profileId": "stone.natural",
+        "family": "stone",
+        "subtype": "natural",
+        "finish": "rough-or-polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.78,
+          "clearcoat": 0.0
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "displacementMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "multi-scale mineral pattern",
+          "fracture or pore relief",
+          "polished stone retains dielectric reflection"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/01-worked-basalt-citadel.png",
+        "bbox": {
+          "x": 355,
+          "y": 370,
+          "width": 325,
+          "height": 330
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0682
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#60311E",
+          "#5A2E1C",
+          "#2D120D",
+          "#533125",
+          "#62321F"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 50.1,
+          "meanSaturation": 0.611,
+          "gradientStrength": 0.202,
+          "mottle": 0.116,
+          "streakRatio": 1.07,
+          "hueSpread": 0.099,
+          "specularFraction": 0.001
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "worked-basalt",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/01-worked-basalt-citadel.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel",
+        "palette": [
+          "#130909",
+          "#3C1C15",
+          "#603F37",
+          "#96310F",
+          "#DE7E30"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_albedo.png",
+            "url": "worked-basalt_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_roughness.png",
+            "url": "worked-basalt_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_height.png",
+            "url": "worked-basalt_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_normal.png",
+            "url": "worked-basalt_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_ao.png",
+            "url": "worked-basalt_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 325,
+          "sourceHeight": 330,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 325,
+            "height": 330
+          },
+          "mask": {
+            "backgroundColor": "#643020",
+            "backgroundNoise": 117.813,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9357
+          },
+          "mapStats": {
+            "valueRange": 0.5182,
+            "heightP90Gradient": 0.1811,
+            "roughnessBase": 0.83,
+            "roughnessVariation": 0.167,
+            "normalStrength": 0.368,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#130909",
+            "#3C1C15",
+            "#603F37",
+            "#96310F",
+            "#DE7E30"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/01-worked-basalt-citadel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_albedo.png",
+            "url": "worked-basalt_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_roughness.png",
+            "url": "worked-basalt_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_height.png",
+            "url": "worked-basalt_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_normal.png",
+            "url": "worked-basalt_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_ao.png",
+            "url": "worked-basalt_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 325,
+          "sourceHeight": 330,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 325,
+            "height": 330
+          },
+          "mask": {
+            "backgroundColor": "#643020",
+            "backgroundNoise": 117.813,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9357
+          },
+          "mapStats": {
+            "valueRange": 0.5182,
+            "heightP90Gradient": 0.1811,
+            "roughnessBase": 0.83,
+            "roughnessVariation": 0.167,
+            "normalStrength": 0.368,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#130909",
+            "#3C1C15",
+            "#603F37",
+            "#96310F",
+            "#DE7E30"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_albedo.png",
+          "url": "worked-basalt_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_roughness.png",
+          "url": "worked-basalt_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_height.png",
+          "url": "worked-basalt_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_normal.png",
+          "url": "worked-basalt_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-01-worked-basalt-citadel/worked-basalt_ao.png",
+          "url": "worked-basalt_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "p10",
+      "regionId": "black-iron-gates",
+      "materialSpecId": "black-iron",
+      "hypothesis": {
+        "componentId": "p10",
+        "regionId": "black-iron-gates",
+        "materialId": "metal.steel-brushed",
+        "family": "metal",
+        "subtype": "blackened-forged-iron",
+        "finish": "brushed-oxidized-with-heat-polished-edges",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "metal.steel-brushed",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/02-black-iron-gates.png",
+            "bbox": {
+              "x": 435,
+              "y": 420,
+              "width": 180,
+              "height": 250
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0286
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "black-iron",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/02-black-iron-gates.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates",
+            "palette": [
+              "#110808",
+              "#3C1A12",
+              "#624539",
+              "#A1330A",
+              "#E38B3A"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_albedo.png",
+                "url": "black-iron_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_roughness.png",
+                "url": "black-iron_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_height.png",
+                "url": "black-iron_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_normal.png",
+                "url": "black-iron_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_ao.png",
+                "url": "black-iron_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 180,
+              "sourceHeight": 250,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 180,
+                "height": 250
+              },
+              "mask": {
+                "backgroundColor": "#39190D",
+                "backgroundNoise": 41.569,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.948
+              },
+              "mapStats": {
+                "valueRange": 0.5477,
+                "heightP90Gradient": 0.18954,
+                "roughnessBase": 0.816,
+                "roughnessVariation": 0.176,
+                "normalStrength": 0.378,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#110808",
+                "#3C1A12",
+                "#624539",
+                "#A1330A",
+                "#E38B3A"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#612B12",
+              "#713212",
+              "#2B1C17",
+              "#703319",
+              "#5E3520"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 47.0,
+              "meanSaturation": 0.638,
+              "gradientStrength": 0.257,
+              "mottle": 0.108,
+              "streakRatio": 1.06,
+              "hueSpread": 0.098,
+              "specularFraction": 0.001
+            }
+          }
+        },
+        "profileId": "metal.steel-brushed",
+        "family": "metal",
+        "subtype": "steel",
+        "finish": "brushed",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.35,
+          "anisotropy": 0.85
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap",
+          "anisotropyMap"
+        ],
+        "optionalMaps": [
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "elongated highlight aligned to brushing",
+          "neutral conductor reflection",
+          "parallel micro-scratches"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/02-black-iron-gates.png",
+        "bbox": {
+          "x": 435,
+          "y": 420,
+          "width": 180,
+          "height": 250
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0286
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#612B12",
+          "#713212",
+          "#2B1C17",
+          "#703319",
+          "#5E3520"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 47.0,
+          "meanSaturation": 0.638,
+          "gradientStrength": 0.257,
+          "mottle": 0.108,
+          "streakRatio": 1.06,
+          "hueSpread": 0.098,
+          "specularFraction": 0.001
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "black-iron",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/02-black-iron-gates.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates",
+        "palette": [
+          "#110808",
+          "#3C1A12",
+          "#624539",
+          "#A1330A",
+          "#E38B3A"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_albedo.png",
+            "url": "black-iron_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_roughness.png",
+            "url": "black-iron_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_height.png",
+            "url": "black-iron_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_normal.png",
+            "url": "black-iron_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_ao.png",
+            "url": "black-iron_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 180,
+          "sourceHeight": 250,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 180,
+            "height": 250
+          },
+          "mask": {
+            "backgroundColor": "#39190D",
+            "backgroundNoise": 41.569,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.948
+          },
+          "mapStats": {
+            "valueRange": 0.5477,
+            "heightP90Gradient": 0.18954,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.176,
+            "normalStrength": 0.378,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#110808",
+            "#3C1A12",
+            "#624539",
+            "#A1330A",
+            "#E38B3A"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/02-black-iron-gates.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_albedo.png",
+            "url": "black-iron_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_roughness.png",
+            "url": "black-iron_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_height.png",
+            "url": "black-iron_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_normal.png",
+            "url": "black-iron_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_ao.png",
+            "url": "black-iron_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 180,
+          "sourceHeight": 250,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 180,
+            "height": 250
+          },
+          "mask": {
+            "backgroundColor": "#39190D",
+            "backgroundNoise": 41.569,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.948
+          },
+          "mapStats": {
+            "valueRange": 0.5477,
+            "heightP90Gradient": 0.18954,
+            "roughnessBase": 0.816,
+            "roughnessVariation": 0.176,
+            "normalStrength": 0.378,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#110808",
+            "#3C1A12",
+            "#624539",
+            "#A1330A",
+            "#E38B3A"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_albedo.png",
+          "url": "black-iron_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_roughness.png",
+          "url": "black-iron_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_height.png",
+          "url": "black-iron_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_normal.png",
+          "url": "black-iron_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-02-black-iron-gates/black-iron_ao.png",
+          "url": "black-iron_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "p05",
+      "regionId": "aged-brass-route-hardware",
+      "materialSpecId": "aged-brass",
+      "hypothesis": {
+        "componentId": "p05",
+        "regionId": "aged-brass-route-hardware",
+        "materialId": "metal.brass",
+        "family": "metal",
+        "subtype": "aged-brass",
+        "finish": "polished-rims-with-dark-cavity-patina",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "metal.brass",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/03-aged-brass-route-hardware.png",
+            "bbox": {
+              "x": 210,
+              "y": 560,
+              "width": 270,
+              "height": 250
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0429
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "aged-brass",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/03-aged-brass-route-hardware.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware",
+            "palette": [
+              "#361A14",
+              "#120807",
+              "#663524",
+              "#C04811",
+              "#D7A060"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_albedo.png",
+                "url": "aged-brass_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_roughness.png",
+                "url": "aged-brass_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_height.png",
+                "url": "aged-brass_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_normal.png",
+                "url": "aged-brass_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_ao.png",
+                "url": "aged-brass_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 270,
+              "sourceHeight": 250,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 270,
+                "height": 250
+              },
+              "mask": {
+                "backgroundColor": "#884011",
+                "backgroundNoise": 111.0,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9055
+              },
+              "mapStats": {
+                "valueRange": 0.6366,
+                "heightP90Gradient": 0.16462,
+                "roughnessBase": 0.807,
+                "roughnessVariation": 0.173,
+                "normalStrength": 0.349,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#361A14",
+                "#120807",
+                "#663524",
+                "#C04811",
+                "#D7A060"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#7C4F35",
+              "#533526",
+              "#5C2A14",
+              "#462112",
+              "#7C3617"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 56.0,
+              "meanSaturation": 0.613,
+              "gradientStrength": 0.244,
+              "mottle": 0.117,
+              "streakRatio": 0.99,
+              "hueSpread": 0.085,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "metal.brass",
+        "family": "metal",
+        "subtype": "brass-bronze",
+        "finish": "polished-or-aged",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.3
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "warm yellow-to-brown conductor reflection",
+          "aged recesses darken and roughen"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/03-aged-brass-route-hardware.png",
+        "bbox": {
+          "x": 210,
+          "y": 560,
+          "width": 270,
+          "height": 250
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0429
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#7C4F35",
+          "#533526",
+          "#5C2A14",
+          "#462112",
+          "#7C3617"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 56.0,
+          "meanSaturation": 0.613,
+          "gradientStrength": 0.244,
+          "mottle": 0.117,
+          "streakRatio": 0.99,
+          "hueSpread": 0.085,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "aged-brass",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/03-aged-brass-route-hardware.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware",
+        "palette": [
+          "#361A14",
+          "#120807",
+          "#663524",
+          "#C04811",
+          "#D7A060"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_albedo.png",
+            "url": "aged-brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_roughness.png",
+            "url": "aged-brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_height.png",
+            "url": "aged-brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_normal.png",
+            "url": "aged-brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_ao.png",
+            "url": "aged-brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 270,
+          "sourceHeight": 250,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 270,
+            "height": 250
+          },
+          "mask": {
+            "backgroundColor": "#884011",
+            "backgroundNoise": 111.0,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9055
+          },
+          "mapStats": {
+            "valueRange": 0.6366,
+            "heightP90Gradient": 0.16462,
+            "roughnessBase": 0.807,
+            "roughnessVariation": 0.173,
+            "normalStrength": 0.349,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#361A14",
+            "#120807",
+            "#663524",
+            "#C04811",
+            "#D7A060"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/03-aged-brass-route-hardware.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_albedo.png",
+            "url": "aged-brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_roughness.png",
+            "url": "aged-brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_height.png",
+            "url": "aged-brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_normal.png",
+            "url": "aged-brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_ao.png",
+            "url": "aged-brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 270,
+          "sourceHeight": 250,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 270,
+            "height": 250
+          },
+          "mask": {
+            "backgroundColor": "#884011",
+            "backgroundNoise": 111.0,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9055
+          },
+          "mapStats": {
+            "valueRange": 0.6366,
+            "heightP90Gradient": 0.16462,
+            "roughnessBase": 0.807,
+            "roughnessVariation": 0.173,
+            "normalStrength": 0.349,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#361A14",
+            "#120807",
+            "#663524",
+            "#C04811",
+            "#D7A060"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_albedo.png",
+          "url": "aged-brass_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_roughness.png",
+          "url": "aged-brass_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_height.png",
+          "url": "aged-brass_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_normal.png",
+          "url": "aged-brass_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-03-aged-brass-route-hardware/aged-brass_ao.png",
+          "url": "aged-brass_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "p03",
+      "regionId": "molten-magma-flow",
+      "materialSpecId": "magma",
+      "hypothesis": {
+        "componentId": "p03",
+        "regionId": "molten-magma-flow",
+        "materialId": "glass.clear",
+        "family": "liquid",
+        "subtype": "incandescent-molten-rock",
+        "finish": "glossy-emissive-hot-core-with-cooled-crust",
+        "aliases": [],
+        "confidence": 0.86,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "glass.clear",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/04-molten-magma-flow.png",
+            "bbox": {
+              "x": 395,
+              "y": 720,
+              "width": 245,
+              "height": 350
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0545
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.86,
+            "estimatedFidelity": 0.86,
+            "targetThreshold": 0.7,
+            "materialId": "magma",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/04-molten-magma-flow.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow",
+            "palette": [
+              "#100807",
+              "#3B1E16",
+              "#6E422F",
+              "#D9B07F",
+              "#CA5719"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_albedo.png",
+                "url": "magma_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_roughness.png",
+                "url": "magma_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_height.png",
+                "url": "magma_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_normal.png",
+                "url": "magma_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_ao.png",
+                "url": "magma_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 245,
+              "sourceHeight": 350,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 245,
+                "height": 350
+              },
+              "mask": {
+                "backgroundColor": "#120E0E",
+                "backgroundNoise": 46.497,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.8512
+              },
+              "mapStats": {
+                "valueRange": 0.7231,
+                "heightP90Gradient": 0.19923,
+                "roughnessBase": 0.813,
+                "roughnessVariation": 0.177,
+                "normalStrength": 0.39,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#100807",
+                "#3B1E16",
+                "#6E422F",
+                "#D9B07F",
+                "#CA5719"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#552C18",
+              "#532E1C",
+              "#3E1E13",
+              "#5B311C",
+              "#4F473B"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 55.6,
+              "meanSaturation": 0.515,
+              "gradientStrength": 0.487,
+              "mottle": 0.122,
+              "streakRatio": 0.93,
+              "hueSpread": 0.085,
+              "specularFraction": 0.008
+            }
+          }
+        },
+        "profileId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.05,
+          "transmission": 1.0,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "background distortion",
+          "bright interface reflection",
+          "visible thickness or absorption"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/04-molten-magma-flow.png",
+        "bbox": {
+          "x": 395,
+          "y": 720,
+          "width": 245,
+          "height": 350
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0545
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#552C18",
+          "#532E1C",
+          "#3E1E13",
+          "#5B311C",
+          "#4F473B"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 55.6,
+          "meanSaturation": 0.515,
+          "gradientStrength": 0.487,
+          "mottle": 0.122,
+          "streakRatio": 0.93,
+          "hueSpread": 0.085,
+          "specularFraction": 0.008
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "materialId": "magma",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/04-molten-magma-flow.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow",
+        "palette": [
+          "#100807",
+          "#3B1E16",
+          "#6E422F",
+          "#D9B07F",
+          "#CA5719"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_albedo.png",
+            "url": "magma_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_roughness.png",
+            "url": "magma_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_height.png",
+            "url": "magma_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_normal.png",
+            "url": "magma_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_ao.png",
+            "url": "magma_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 350,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 350
+          },
+          "mask": {
+            "backgroundColor": "#120E0E",
+            "backgroundNoise": 46.497,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8512
+          },
+          "mapStats": {
+            "valueRange": 0.7231,
+            "heightP90Gradient": 0.19923,
+            "roughnessBase": 0.813,
+            "roughnessVariation": 0.177,
+            "normalStrength": 0.39,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100807",
+            "#3B1E16",
+            "#6E422F",
+            "#D9B07F",
+            "#CA5719"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/04-molten-magma-flow.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_albedo.png",
+            "url": "magma_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_roughness.png",
+            "url": "magma_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_height.png",
+            "url": "magma_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_normal.png",
+            "url": "magma_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_ao.png",
+            "url": "magma_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 350,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 350
+          },
+          "mask": {
+            "backgroundColor": "#120E0E",
+            "backgroundNoise": 46.497,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8512
+          },
+          "mapStats": {
+            "valueRange": 0.7231,
+            "heightP90Gradient": 0.19923,
+            "roughnessBase": 0.813,
+            "roughnessVariation": 0.177,
+            "normalStrength": 0.39,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100807",
+            "#3B1E16",
+            "#6E422F",
+            "#D9B07F",
+            "#CA5719"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_albedo.png",
+          "url": "magma_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_roughness.png",
+          "url": "magma_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_height.png",
+          "url": "magma_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_normal.png",
+          "url": "magma_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-04-molten-magma-flow/magma_ao.png",
+          "url": "magma_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "p21",
+      "regionId": "ember-glass-core",
+      "materialSpecId": "ember-glass",
+      "hypothesis": {
+        "componentId": "p21",
+        "regionId": "ember-glass-core",
+        "materialId": "glass.clear",
+        "family": "glass",
+        "subtype": "contained-ember-crystal",
+        "finish": "faceted-glossy-emissive",
+        "aliases": [],
+        "confidence": 0.813,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "glass.clear",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/05-ember-glass-core.png",
+            "bbox": {
+              "x": 742,
+              "y": 238,
+              "width": 170,
+              "height": 205
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0222
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.813,
+            "estimatedFidelity": 0.813,
+            "targetThreshold": 0.7,
+            "materialId": "ember-glass",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/05-ember-glass-core.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core",
+            "palette": [
+              "#2C1B1C",
+              "#502C28",
+              "#100706",
+              "#88402A",
+              "#DE8B4A"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_albedo.png",
+                "url": "ember-glass_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_roughness.png",
+                "url": "ember-glass_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_height.png",
+                "url": "ember-glass_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_normal.png",
+                "url": "ember-glass_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_ao.png",
+                "url": "ember-glass_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 170,
+              "sourceHeight": 205,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 170,
+                "height": 205
+              },
+              "mask": {
+                "backgroundColor": "#100C0B",
+                "backgroundNoise": 72.478,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9603
+              },
+              "mapStats": {
+                "valueRange": 0.4154,
+                "heightP90Gradient": 0.16246,
+                "roughnessBase": 0.768,
+                "roughnessVariation": 0.188,
+                "normalStrength": 0.347,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#2C1B1C",
+                "#502C28",
+                "#100706",
+                "#88402A",
+                "#DE8B4A"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#3E211B",
+              "#673321",
+              "#4B2922",
+              "#37221C",
+              "#2B140F"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 47.7,
+              "meanSaturation": 0.503,
+              "gradientStrength": 0.249,
+              "mottle": 0.066,
+              "streakRatio": 0.9,
+              "hueSpread": 0.103,
+              "specularFraction": 0.002
+            }
+          }
+        },
+        "profileId": "glass.clear",
+        "family": "glass",
+        "subtype": "clear",
+        "finish": "polished",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.05,
+          "transmission": 1.0,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "map",
+          "normalMap",
+          "transmissionMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "background distortion",
+          "bright interface reflection",
+          "visible thickness or absorption"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/05-ember-glass-core.png",
+        "bbox": {
+          "x": 742,
+          "y": 238,
+          "width": 170,
+          "height": 205
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0222
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#3E211B",
+          "#673321",
+          "#4B2922",
+          "#37221C",
+          "#2B140F"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 47.7,
+          "meanSaturation": 0.503,
+          "gradientStrength": 0.249,
+          "mottle": 0.066,
+          "streakRatio": 0.9,
+          "hueSpread": 0.103,
+          "specularFraction": 0.002
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.813,
+        "estimatedFidelity": 0.813,
+        "targetThreshold": 0.7,
+        "materialId": "ember-glass",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/05-ember-glass-core.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core",
+        "palette": [
+          "#2C1B1C",
+          "#502C28",
+          "#100706",
+          "#88402A",
+          "#DE8B4A"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_albedo.png",
+            "url": "ember-glass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_roughness.png",
+            "url": "ember-glass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_height.png",
+            "url": "ember-glass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_normal.png",
+            "url": "ember-glass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_ao.png",
+            "url": "ember-glass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 170,
+          "sourceHeight": 205,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 170,
+            "height": 205
+          },
+          "mask": {
+            "backgroundColor": "#100C0B",
+            "backgroundNoise": 72.478,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9603
+          },
+          "mapStats": {
+            "valueRange": 0.4154,
+            "heightP90Gradient": 0.16246,
+            "roughnessBase": 0.768,
+            "roughnessVariation": 0.188,
+            "normalStrength": 0.347,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#2C1B1C",
+            "#502C28",
+            "#100706",
+            "#88402A",
+            "#DE8B4A"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/05-ember-glass-core.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.813,
+        "estimatedFidelity": 0.813,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_albedo.png",
+            "url": "ember-glass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_roughness.png",
+            "url": "ember-glass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_height.png",
+            "url": "ember-glass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_normal.png",
+            "url": "ember-glass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_ao.png",
+            "url": "ember-glass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 170,
+          "sourceHeight": 205,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 170,
+            "height": 205
+          },
+          "mask": {
+            "backgroundColor": "#100C0B",
+            "backgroundNoise": 72.478,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9603
+          },
+          "mapStats": {
+            "valueRange": 0.4154,
+            "heightP90Gradient": 0.16246,
+            "roughnessBase": 0.768,
+            "roughnessVariation": 0.188,
+            "normalStrength": 0.347,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#2C1B1C",
+            "#502C28",
+            "#100706",
+            "#88402A",
+            "#DE8B4A"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_albedo.png",
+          "url": "ember-glass_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_roughness.png",
+          "url": "ember-glass_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_height.png",
+          "url": "ember-glass_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_normal.png",
+          "url": "ember-glass_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-05-ember-glass-core/ember-glass_ao.png",
+          "url": "ember-glass_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "p06",
+      "regionId": "ash-smoke-horizon",
+      "materialSpecId": "ash-smoke",
+      "hypothesis": {
+        "componentId": "p06",
+        "regionId": "ash-smoke-horizon",
+        "materialId": "glass.frosted",
+        "family": "environment",
+        "subtype": "charcoal-ash-and-smoke",
+        "finish": "volumetric-matte-gradient",
+        "aliases": [],
+        "confidence": 0.806,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "glass.frosted",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/06-ash-smoke-horizon.png",
+            "bbox": {
+              "x": 0,
+              "y": 150,
+              "width": 245,
+              "height": 300
+            },
+            "sourceWidth": 1023,
+            "sourceHeight": 1537,
+            "loaderWarnings": [],
+            "coverage": 0.0467
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.806,
+            "estimatedFidelity": 0.806,
+            "targetThreshold": 0.7,
+            "materialId": "ash-smoke",
+            "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/06-ash-smoke-horizon.png",
+            "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon",
+            "palette": [
+              "#1B1315",
+              "#372222",
+              "#070707",
+              "#77331A",
+              "#CF9458"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_albedo.png",
+                "url": "ash-smoke_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_roughness.png",
+                "url": "ash-smoke_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_height.png",
+                "url": "ash-smoke_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_normal.png",
+                "url": "ash-smoke_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_ao.png",
+                "url": "ash-smoke_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 245,
+              "sourceHeight": 300,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 245,
+                "height": 300
+              },
+              "mask": {
+                "backgroundColor": "#1F181D",
+                "backgroundNoise": 32.265,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.915
+              },
+              "mapStats": {
+                "valueRange": 0.3872,
+                "heightP90Gradient": 0.17807,
+                "roughnessBase": 0.769,
+                "roughnessVariation": 0.197,
+                "normalStrength": 0.365,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#1B1315",
+                "#372222",
+                "#070707",
+                "#77331A",
+                "#CF9458"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#271A1E",
+              "#3B1D16",
+              "#1A1214",
+              "#43281C",
+              "#362620"
+            ],
+            "paletteHueRisk": [],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 35.1,
+              "meanSaturation": 0.455,
+              "gradientStrength": 0.182,
+              "mottle": 0.067,
+              "streakRatio": 0.97,
+              "hueSpread": 0.423,
+              "specularFraction": 0.004
+            }
+          }
+        },
+        "profileId": "glass.frosted",
+        "family": "glass",
+        "subtype": "frosted",
+        "finish": "rough-transmissive",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.52,
+          "transmission": 0.85,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "roughnessMap",
+          "normalMap",
+          "thicknessMap"
+        ],
+        "optionalMaps": [
+          "transmissionMap",
+          "map"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "backlight-transmission",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "khronos.transmission",
+          "khronos.volume",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "blurred transmitted background",
+          "broad interface highlight",
+          "fine etched normal structure"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/06-ash-smoke-horizon.png",
+        "bbox": {
+          "x": 0,
+          "y": 150,
+          "width": 245,
+          "height": 300
+        },
+        "sourceWidth": 1023,
+        "sourceHeight": 1537,
+        "loaderWarnings": [],
+        "coverage": 0.0467
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#271A1E",
+          "#3B1D16",
+          "#1A1214",
+          "#43281C",
+          "#362620"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 35.1,
+          "meanSaturation": 0.455,
+          "gradientStrength": 0.182,
+          "mottle": 0.067,
+          "streakRatio": 0.97,
+          "hueSpread": 0.423,
+          "specularFraction": 0.004
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.806,
+        "estimatedFidelity": 0.806,
+        "targetThreshold": 0.7,
+        "materialId": "ash-smoke",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/06-ash-smoke-horizon.png",
+        "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon",
+        "palette": [
+          "#1B1315",
+          "#372222",
+          "#070707",
+          "#77331A",
+          "#CF9458"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_albedo.png",
+            "url": "ash-smoke_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_roughness.png",
+            "url": "ash-smoke_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_height.png",
+            "url": "ash-smoke_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_normal.png",
+            "url": "ash-smoke_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_ao.png",
+            "url": "ash-smoke_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 300,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 300
+          },
+          "mask": {
+            "backgroundColor": "#1F181D",
+            "backgroundNoise": 32.265,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.915
+          },
+          "mapStats": {
+            "valueRange": 0.3872,
+            "heightP90Gradient": 0.17807,
+            "roughnessBase": 0.769,
+            "roughnessVariation": 0.197,
+            "normalStrength": 0.365,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#1B1315",
+            "#372222",
+            "#070707",
+            "#77331A",
+            "#CF9458"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/06-ash-smoke-horizon.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.806,
+        "estimatedFidelity": 0.806,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_albedo.png",
+            "url": "ash-smoke_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_roughness.png",
+            "url": "ash-smoke_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_height.png",
+            "url": "ash-smoke_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_normal.png",
+            "url": "ash-smoke_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_ao.png",
+            "url": "ash-smoke_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 245,
+          "sourceHeight": 300,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 245,
+            "height": 300
+          },
+          "mask": {
+            "backgroundColor": "#1F181D",
+            "backgroundNoise": 32.265,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.915
+          },
+          "mapStats": {
+            "valueRange": 0.3872,
+            "heightP90Gradient": 0.17807,
+            "roughnessBase": 0.769,
+            "roughnessVariation": 0.197,
+            "normalStrength": 0.365,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#1B1315",
+            "#372222",
+            "#070707",
+            "#77331A",
+            "#CF9458"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_albedo.png",
+          "url": "ash-smoke_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_roughness.png",
+          "url": "ash-smoke_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_height.png",
+          "url": "ash-smoke_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_normal.png",
+          "url": "ash-smoke_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-evidence/pbr-06-ash-smoke-horizon/ash-smoke_ao.png",
+          "url": "ash-smoke_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "status": "proceed",
+  "limitations": [
+    "PBR extraction is reference-derived inference, not inverse rendering.",
+    "A crop must be checked against the component visible footprint before accepting material scores."
+  ],
+  "artifact": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-020-lava-labyrinth/.img2threejs/island-020-lava-labyrinth/material-analysis.json"
+}

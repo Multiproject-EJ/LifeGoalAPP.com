@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-09-04",
+  "island": 20,
+  "family": "rectilinear-terraced-lava-city-glb-v10",
+  "pass": "v11-lava-material-realism",
+  "status": "implemented-awaiting-fresh-runtime-capture",
+  "frozenSystems": [
+    "multipart-v10-city-geometry",
+    "canonical-36-tile-route",
+    "landmark-levels",
+    "iron-skiff-mission-and-controller",
+    "camera-presets",
+    "gameplay-state-and-actions"
+  ],
+  "baseline": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/gauntlet/qa/browser-v10/island-020-v10-runtime-overview-390x844.png",
+    "sha256": "eb11bfe9c21936989a5985a2b1d7b49d3fcb3ad482eeaa1accdff4401a9eb9b9",
+    "largestMismatch": "Lava reads as flat un-tonemapped salmon/orange paint with regular hot strips rather than a material carrying cooled crust, moving molten mass and localized heat response."
+  },
+  "correction": {
+    "group": "materials-and-lighting",
+    "action": "refine-code",
+    "changes": [
+      "Replaced regular authored lava bands with gravity-aware domain-warped macro, meso and micro advection.",
+      "Separated dark cooled crust rafts, deep molten body, orange openings, narrow yellow fissures and sparse white-hot cores.",
+      "Added view-dependent Fresnel and roughness-weighted glints to stop the lava reading as a flat emissive decal.",
+      "Moved authored and sea shaders through renderer tone mapping and output color conversion.",
+      "Replaced the unlit MeshBasicMaterial hot-core strip with a lit, tone-mapped MeshStandardMaterial.",
+      "Increased only localized canal heat-light response and slowed its thermal breathing."
+    ],
+    "performanceDelta": {
+      "drawCalls": 0,
+      "triangles": 0,
+      "textureBytes": 0,
+      "note": "The shader does more fragment work; fresh runtime FPS evidence is still required."
+    }
+  },
+  "implementationHashes": {
+    "worldFactorySha256": "0268b64573e97eb3d39ffe4252233e91c387f576d28cdcc2685dad5e1981dc4d",
+    "contractTestSha256": "65eaa258fe70cbb1367f11a21e9421b0a97e353410c5bfd8d0f1278489a80331",
+    "captureHarnessSha256": "50ef628546b1b62b50b7983073d60299bfcfe7b0853381445262a6b32525df49"
+  },
+  "verification": {
+    "typescript": "passed",
+    "productionBuild": "passed",
+    "islandRunTests": {
+      "passed": 1919,
+      "failed": 0
+    },
+    "architectureGuard": {
+      "violations": 0,
+      "allowlistedLegacyWarnings": 3
+    },
+    "diffCheck": "passed"
+  },
+  "runtimeEvidence": {
+    "captureDirectory": "docs/visual-references/island-020-lava-labyrinth/gauntlet/qa/browser-v11",
+    "status": "missing",
+    "reason": "The automated local-browser capture did not reach its evidence write, and the in-app browser declined further localhost automation. No visual score is recorded from code inspection."
+  },
+  "decision": {
+    "qualityLord": "not-run",
+    "approved": false,
+    "nextAction": "Capture the exact overview, survey and left/right orbit views, inspect the least flattering lava contact first, then either record one bounded correction or approve."
+  }
+}

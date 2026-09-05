@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "subject": "HabitGame Island 020 — Lava Labyrinth",
+  "route": "source-traced-radial-architectural-kit-v9",
+  "admitted_at": "2026-09-01",
+  "goal": {
+    "path": "../020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+    "authority": "immutable-supplied-goal-pixels"
+  },
+  "render_profile": {
+    "macro_authority_view": "elevated-front-three-quarter matching the source island crop",
+    "required_views": ["source-match", "left-45", "right-45", "rear-sanity", "top-maze", "front-cliff-low", "wireframe-source-match"],
+    "materials": "naked semantic basalt, iron, path stone, molten flow",
+    "runtime_tricks_forbidden": ["billboard architecture", "flat lava planes presented as waterfalls", "source image projection", "UI masking of geometry defects"]
+  },
+  "gates": {
+    "minimum_per_required_category": 0.85,
+    "worst_view_governs": true,
+    "blockout_correction_limit": 1,
+    "family_limit_for_new_route": 2
+  },
+  "representative_slice": "full radial macro plan, central cathedral-scale forge keep, one detailed southwest playable sector, outer board ring, front gate, cliff cascade and plunge basin",
+  "status": "v9-retired-v10-runtime-approved"
+}

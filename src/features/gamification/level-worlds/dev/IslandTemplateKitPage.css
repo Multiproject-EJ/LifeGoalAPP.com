@@ -62,6 +62,28 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
   cursor: pointer;
 }
 .island-kit-control-group button[aria-pressed="true"] { color: #07141d; border-color: #70e1ff; background: #70e1ff; font-weight: 800; }
+
+.island-kit-controls .island-run-skiff-controller {
+  width: 100%;
+  grid-template-columns: minmax(46px, 0.8fr) minmax(84px, 1.35fr) minmax(46px, 0.8fr);
+  gap: 5px;
+  padding: 7px;
+  border-radius: 16px 16px 10px 10px;
+}
+
+.island-kit-controls .island-run-skiff-controller__status {
+  display: grid;
+  gap: 1px;
+  font-size: 9px;
+}
+
+.island-kit-controls .island-run-skiff-controller__paddle,
+.island-kit-controls .island-run-skiff-controller__throttle {
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 4px;
+  font-size: 8px;
+}
 .island-kit-toggle { display: flex; gap: 9px; align-items: center; color: #c6dbe6; font-size: 13px; }
 .island-kit-specs { margin: 20px 0 0; font-size: 12px; }
 .island-kit-specs div { display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid rgba(125, 168, 190, .15); }

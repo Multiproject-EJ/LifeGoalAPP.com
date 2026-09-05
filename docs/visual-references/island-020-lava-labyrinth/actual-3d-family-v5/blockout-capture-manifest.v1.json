@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "family": "island-020-authored-multipart-glb-v5",
+  "generator": "scripts/blender/island020_build_v5.py",
+  "blender_version": "5.2.0 LTS",
+  "semantic_export_object_count": 13,
+  "artifacts": {
+    "glb": {
+      "path": "docs/visual-references/island-020-lava-labyrinth/retired-runtime-assets/lava-labyrinth-v5-blockout.glb",
+      "sha256": "780837176d2f1c746153c5f0ac1e152ad8a2eda5d84293cf6767e6cd0e9df82d"
+    },
+    "blend": {
+      "path": ".assetgauntlet/island-020-actual-3d-v5/build/lava-labyrinth-v5-blockout.blend",
+      "sha256": "0c0b279185121253af6f36217fa60e9b0474c7720874a822ca408e5fe206667e"
+    }
+  },
+  "views": [
+    {"name": "front", "sha256": "261524228645f9c442c1ef5deaaf2e43d15695074f213afa67675ca9e2aee991"},
+    {"name": "left-45", "sha256": "9f70964a0d6dbe867fbce94928a2e80fc5dbddf9c9c760439dd7efc2ab5628dc"},
+    {"name": "right-45", "sha256": "17c0328b92325494428b57fb4d6ab2cf230574ee3cc484c7e646d19170f377c0"},
+    {"name": "rear", "sha256": "c4e686dce6c59be74046b882dae9b1184fb2e2e9b4760aff45f04dbc610597f5"},
+    {"name": "top", "sha256": "aa745022f7d4e3c2418cc6ebedeaa5970286720405205138f7e9f06f13b6eab0"},
+    {"name": "front-cliff-low", "sha256": "520cb3791104f70d47f24db3069709463dbdc4e9fc26b6e1b8e4ac3583bb1fc4"}
+  ]
+}

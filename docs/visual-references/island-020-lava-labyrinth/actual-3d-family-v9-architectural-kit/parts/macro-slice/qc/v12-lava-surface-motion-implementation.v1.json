@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-09-05",
+  "island": 20,
+  "family": "rectilinear-terraced-lava-city-glb-v10",
+  "pass": "v12-lava-surface-motion-and-thermal-contact",
+  "status": "implemented-awaiting-fresh-runtime-capture",
+  "userDirection": {
+    "quote": "okay great, keep going",
+    "interpretation": "Approve the V11 lava-material direction and continue bounded surface-motion, heat-lighting and performance refinement without reopening the city geometry."
+  },
+  "frozenSystems": [
+    "multipart-v10-city-geometry",
+    "canonical-36-tile-route",
+    "landmark-levels",
+    "iron-skiff-mission-and-controller",
+    "camera-presets",
+    "gameplay-state-and-actions"
+  ],
+  "baseline": {
+    "implementationRecord": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v9-architectural-kit/parts/macro-slice/qc/v11-lava-lookdev-implementation.v1.json",
+    "runtimeImage": null,
+    "reason": "V11's fresh runtime capture is still unavailable, so V12 is an implementation continuation rather than a visually scored promotion."
+  },
+  "correction": {
+    "group": "materials-lighting-and-bounded-surface-geometry",
+    "action": "refine-code",
+    "changes": [
+      "Added two-frequency normal-direction displacement to the authored horizontal canals and gravity-facing falls.",
+      "Replaced the magma-sea triangle fan with a quality-scaled grid so the molten surface can physically move rather than only scroll color.",
+      "Derived changing magma-sea normals from the wave slopes for camera- and light-responsive surface breakup.",
+      "Preserved the irregular molten-sea silhouette with a shader boundary mask.",
+      "Added small deterministic drift to the four localized canal heat lights so hot reflections travel across nearby masonry.",
+      "Scaled FBM compilation cost to four octaves on High, three on Medium and two on Low.",
+      "Kept reduced-motion output deterministic for displacement, shader advection and thermal lights."
+    ],
+    "performanceDeltaComparedToV11": {
+      "drawCalls": 0,
+      "triangles": {
+        "low": 600,
+        "medium": 1520,
+        "high": 3136
+      },
+      "textureBytes": 0,
+      "shaderOctaves": {
+        "low": 2,
+        "medium": 3,
+        "high": 4
+      },
+      "budgetResult": "passed-complete-scene-gates-at-all-quality-tiers"
+    }
+  },
+  "implementationHashes": {
+    "worldFactorySha256": "b38f53933c919763ce1c190632f1ccf5a5a02f641b0f6f55161a879da8336114",
+    "contractTestSha256": "3959c013370ccd06c1cdff6b6b93f10a8f7008497273690d665608cf35f29516",
+    "captureHarnessSha256": "50ef628546b1b62b50b7983073d60299bfcfe7b0853381445262a6b32525df49"
+  },
+  "verification": {
+    "typescript": "passed",
+    "productionBuild": "passed",
+    "islandRunTests": {
+      "passed": 1919,
+      "failed": 0
+    },
+    "architectureGuard": {
+      "violations": 0,
+      "allowlistedLegacyWarnings": 3
+    },
+    "qualityTierBudgetContract": "passed-low-medium-high",
+    "diffCheck": "passed"
+  },
+  "runtimeEvidence": {
+    "requestedRouteFamily": "v12-lava-surface-motion",
+    "status": "missing",
+    "reason": "The local browser automation boundary remains unavailable. No visual score or approval is inferred from source code and static tests."
+  },
+  "decision": {
+    "qualityLord": "not-run",
+    "approved": false,
+    "nextAction": "Inspect the live V12 overview and moving lava on the existing local preview. When capture authority is available, record fixed overview, survey and weak-side orbit evidence before visual promotion."
+  }
+}

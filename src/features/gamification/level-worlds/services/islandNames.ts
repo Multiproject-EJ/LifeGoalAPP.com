@@ -21,7 +21,7 @@ const ISLAND_NAMES: readonly string[] = [
   'Hidden Lagoon',
   'Shrine of Sands',
   'Bamboo Bay',
-  'Golden Sands',
+  'Lava Labyrinth',
   'Horizon Isle',
   'Calmwater Key',
   'Sunset Cove',

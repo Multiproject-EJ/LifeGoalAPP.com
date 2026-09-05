@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "subject": "HabitGame Island 020 — Lava Labyrinth lava and heat look-development v2",
+  "reviewer": "independent-quality-lord",
+  "reviewed_at": "2026-08-30",
+  "result": "pass",
+  "action": "approve",
+  "scores": {
+    "source_identity": 0.92,
+    "lava_flow_readability_direction": 0.88,
+    "heat_illumination_local_bounce": 0.90,
+    "route_black_stone_readability": 0.91,
+    "reduced_motion_safety": 0.99,
+    "performance": 0.96
+  },
+  "evidence": [
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-baseline-v001.jpg",
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-t0-v002.jpg",
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-t6-v002.jpg",
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-reduced-motion-v002.jpg",
+    "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-lookdev-v2-tier1-diagnostics.json"
+  ],
+  "runtime": {
+    "draw_calls": 163,
+    "triangles": 31000,
+    "overlay_draw_calls": 1,
+    "overlay_triangles": 2,
+    "new_texture_bytes": 0,
+    "draw_call_gate": 175
+  },
+  "verified": [
+    "Cliff streams travel with gravity and the upper molten channels travel centre-outward.",
+    "Heat remains local to molten pixels and preserves basalt and route contrast.",
+    "Reduced motion freezes the flow at a deterministic authored pose.",
+    "The source-led representation, fixed camera, canonical route, mission, token, rewards, hit targets, and landmark hierarchy remain unchanged.",
+    "No shader errors were reported."
+  ],
+  "caveat": "The intentionally restrained t0/t6 motion reads more clearly live than in tall full-page stills; this is non-blocking.",
+  "decision": "production-complete"
+}

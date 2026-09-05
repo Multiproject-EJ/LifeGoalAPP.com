@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-08-31",
+  "asset_id": "island-020-v8-hero-wedge-blockout-v002",
+  "status": "failed-quality-gate",
+  "artifacts": {
+    "glb": {
+      "path": ".assetgauntlet/island-020-actual-3d-v8/parts/hero-wedge/builds/hero-wedge-blockout-v002.glb",
+      "sha256": "09f9fc75e24105c94867c79f28a4d4d61cacbf5a0f0725874c633b5330e58a11"
+    },
+    "blend": {
+      "path": ".assetgauntlet/island-020-actual-3d-v8/parts/hero-wedge/builds/hero-wedge-blockout-v002.blend",
+      "sha256": "eb294ab4adc72aa320fde95755996ff1086aca7fbc2999606f247215fb5fda34"
+    }
+  },
+  "captures": [
+    {"view": "front-hero", "sha256": "eb2b31fc94cf544fa60fcf6e613218abb1284707d86c7c8b286404bb50cfe2ea"},
+    {"view": "left-45", "sha256": "8c8c6f0435cb2d4512ae60e6edb864955be6942474c191f0025076e9cdce2312"},
+    {"view": "right-45", "sha256": "f62f71b1170859aeae152ebb0230e5cfc52a9e31357f68681b4a969ce3401e85"},
+    {"view": "rear-sanity", "sha256": "3fda71021e61672a791ff3b4ec440c90ac85026fc142b93b7e43bc83fed55cab"},
+    {"view": "top-maze", "sha256": "56202e41092439635c6eee8880c30d5ad75fa940e5ebac0311129732677c0f19"},
+    {"view": "front-cliff-low", "sha256": "59fa8491cd6936afd61809cbec4e2c0b32f60a578a90157f6dca7686d3d39d19"},
+    {"view": "wireframe-front", "sha256": "72f28e7a4278d300cc53a41dd278820a221df5d2e70b1bbf5b74c88dd8da0130"}
+  ]
+}

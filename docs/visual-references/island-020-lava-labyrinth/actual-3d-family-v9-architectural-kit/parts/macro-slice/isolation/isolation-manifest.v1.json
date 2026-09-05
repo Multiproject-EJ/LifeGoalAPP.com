@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "part_id": "macro-slice",
+  "authority": ["../../../020-source.png"],
+  "visible_regions": ["entire circular island silhouette", "central keep", "front half of maze", "outer board ring", "front waterfall"],
+  "secondary_inferred": ["rear maze route continuity", "underside cliff strata", "rear keep attachment backs"],
+  "identity_features": ["dense radial ring-city", "industrial-gothic central forge", "lava-lit black basalt", "broad front molten escape axis"],
+  "forbidden_shapes": ["empty plateau", "generic fairytale castle", "isolated chess-piece keep", "flat waterfall ribbon", "decorative maze with no traversable corridor", "low-angle castle portrait"]
+}

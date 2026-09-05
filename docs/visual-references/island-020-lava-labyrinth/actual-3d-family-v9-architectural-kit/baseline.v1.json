@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "goal_authority": "../020-source.png",
+  "rejected_current_result": {
+    "asset_id": "island-020-v8-hero-wedge-blockout-v002",
+    "front_capture_sha256": "eb2b31fc94cf544fa60fcf6e613218abb1284707d86c7c8b286404bb50cfe2ea",
+    "source_identity_score": 0.58,
+    "salvage_decision": "Do not salvage V8 architecture. Preserve only evidence-camera conventions, semantic material roles, and the volumetric curve technique for lava."
+  },
+  "measured_source_cues": [
+    "The island reads as a complete circular radial city before individual buildings.",
+    "The outer board ring is nearly the island diameter and encloses the maze.",
+    "The central keep is roughly one quarter of the island diameter and three to four maze-wall heights tall.",
+    "Dense masonry occupies every quadrant; no broad empty plateau is visible.",
+    "Molten channels weave between buildings and converge on a broad front waterfall.",
+    "The viewing authority is an elevated front three-quarter, not a low castle portrait."
+  ]
+}

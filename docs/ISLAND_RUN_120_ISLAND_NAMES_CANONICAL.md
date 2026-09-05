@@ -22,7 +22,7 @@ Status: **Production-ready naming draft adopted into code** via `getIslandDispla
 17. Hidden Lagoon
 18. Shrine of Sands
 19. Bamboo Bay
-20. Golden Sands
+20. Lava Labyrinth
 21. Horizon Isle
 22. Calmwater Key
 23. Sunset Cove

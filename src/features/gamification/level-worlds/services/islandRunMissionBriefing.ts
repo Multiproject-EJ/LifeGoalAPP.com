@@ -221,6 +221,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'Every 🎣 landing casts into the central pond. The catch only counts after the reel is completed.',
     caretakerSignal: 'The old fishers say the pond has a bottom. None of them sound certain.',
   },
+  20: {
+    progressKind: 'staged_restoration',
+    headline: 'Escape the Lava Labyrinth',
+    missionStatement: 'First solve the restored Level-3 labyrinth. Its final gate triggers an emergency extraction order: recover eight newly revealed Heatshield Plates, forge a compact Iron Skiff at the summit, then ride the molten outflow to the waiting Expedition Ship.',
+    primaryObjective: 'After the labyrinth is solved, recover eight Heatshield Plates and forge all four Iron Skiff systems.',
+    supportingObjective: 'Launch from the summit, steer through three glowing junctions, descend the front lavafall and reach the magnetic extraction cradle.',
+    fieldProtocol: 'The long escape mission remains locked until the ordinary island is fully restored. Once launched: left and right steer, hold forward for speed, and trust the guided current to prevent a failed extraction loop.',
+    caretakerSignal: 'The shortest path burns. The mindful path carries us home.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
@@ -239,6 +248,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   13: 'Cactus Canyon',
   14: 'Honeycomb Kingdom',
   16: "Fisherman's Village",
+  20: 'Lava Labyrinth',
 });
 
 function padIsland(islandNumber: number): string {

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "island": 20,
+  "pass": "lava-lookdev-v2",
+  "camera": "strict-approved-final-angle",
+  "captures": {
+    "baseline": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-baseline-v001.jpg",
+    "time0": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-t0-v002.jpg",
+    "time6": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-t6-v002.jpg",
+    "reducedMotion": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-reduced-motion-v002.jpg"
+  },
+  "motion": {
+    "normal": "gravity-down-and-centre-outward",
+    "normalEvidenceTimeSeconds": 6,
+    "reducedMotion": "frozen-reduced-motion",
+    "reducedMotionShaderTimeSeconds": 0
+  },
+  "illumination": {
+    "mode": "plate-local-bounce-plus-live-forge-lights",
+    "fullFrameTint": false,
+    "moltenNeighbourHalo": true,
+    "liveForgeLightVariation": true
+  },
+  "runtime": {
+    "quality": "low",
+    "viewport": "339x748",
+    "observedDrawCalls": 163,
+    "observedTriangles": 31000,
+    "drawCallBudget": 175,
+    "overlayDrawCalls": 1,
+    "overlayTriangles": 2,
+    "newTextureBytes": 0,
+    "shaderErrors": 0,
+    "browserWarnings": "pre-existing app-wide Three.js texture/blur warnings only"
+  },
+  "contracts": {
+    "sourceRepresentationFrozen": true,
+    "canonicalRouteFrozen": true,
+    "gameplayAuthorityUnchanged": true,
+    "missionSemanticsUnchanged": true,
+    "multiAngleRequired": false,
+    "multiAngleReason": "The approved representation and requested lava treatment are registered to one strict final camera; orbit capture would invalidate the source-led plate contract."
+  },
+  "verification": {
+    "islandRunTests": "1918 passed, 0 failed",
+    "typeScriptBuild": "PASS",
+    "templateKit": "PASS",
+    "architectureGuard": "PASS; 0 violations; 3 allowlisted legacy warnings",
+    "diffCheck": "PASS"
+  },
+  "tier1Decision": "PASS"
+}

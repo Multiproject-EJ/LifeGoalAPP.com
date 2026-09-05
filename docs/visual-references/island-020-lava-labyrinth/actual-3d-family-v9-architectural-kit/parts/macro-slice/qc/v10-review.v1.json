@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-09-01",
+  "asset_id": "island-020-v10-rectilinear-city-v001",
+  "scores": {
+    "silhouette_and_volume": 0.84,
+    "source_identity": 0.80,
+    "architectural_attachment": 0.83,
+    "cross_view_consistency": 0.91,
+    "assembly_readiness": 0.84,
+    "intended_scale": 0.82
+  },
+  "hard_vetoes": [],
+  "decision": "one-bounded-correction",
+  "hypothesis": "The rectilinear city grammar is correct, but the unoccupied annulus, monolithic keep facade, and off-axis source camera suppress the source's continuous dense city and front escape composition.",
+  "controls": ["preserve all 115 maze graph links", "preserve corridor widths", "preserve outer board diameter", "preserve volumetric cascade"],
+  "expected_visible_delta": "Perimeter forge districts fill the annulus, a layered cathedral facade replaces the blank tower body, and a centered elevated camera restores the source's board-city-waterfall hierarchy."
+}

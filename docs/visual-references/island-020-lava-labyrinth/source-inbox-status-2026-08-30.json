@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-30",
+  "runtimeIslandNumber": 20,
+  "requestedSource": {
+    "originalPath": "/Users/ejmac/Library/CloudStorage/OneDrive-Personal/Projects - sites LEVELup/Habit game UI/011-120 islands HERE/New 020.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+    "dimensions": "1023x1537",
+    "authority": "explicit-current-user-input"
+  },
+  "staleLedger": {
+    "path": "/Users/ejmac/Library/CloudStorage/OneDrive-Personal/Projects - sites LEVELup/Habit game UI/011-120 islands HERE/_workflow/020/status.json",
+    "status": "source-ready",
+    "referencedFile": "020-source.png",
+    "referencedSha256": "016daf03bb3a6146c6ab4ba643f15ce3110ec30e33e844bba5a5f7669e447607",
+    "observedIssue": "referenced source file was absent and its hash differs from the explicitly attached source"
+  },
+  "resolution": "Preserve the explicit current attachment as repository source authority and retain the ledger mismatch as provenance. Do not mutate OneDrive during admission."
+}

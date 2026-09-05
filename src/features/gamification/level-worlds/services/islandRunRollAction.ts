@@ -260,7 +260,7 @@ export interface IslandRunRollActionResult {
   cactusCanyonDynamiteCollected?: number;
   /** Canonical sealed Royal Nectar charge collected on this Island 014 landing. */
   greatHoneyfallNectarCollected?: number;
-  /** Collision-safe staged-restoration object secured on Islands 004/006–009. */
+  /** Collision-safe staged-restoration object secured on an authored mission island. */
   stagedRestorationPickup?: {
     kind: StagedRestorationPickupKind;
     tileIndex: number;
