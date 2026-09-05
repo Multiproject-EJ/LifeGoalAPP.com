@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "family": "island-020-silhouette-first-modular-city-glb-v6",
+  "stage": "naked-blockout",
+  "decision": "bounded-correction-authorized",
+  "scores": {
+    "source_identity": 0.76,
+    "phone_scale_silhouette": 0.78,
+    "cross_view_coherence": 0.86,
+    "maze_city_readability": 0.82,
+    "keep_identity": 0.72,
+    "terrain_and_cliff_depth": 0.74,
+    "lava_path_dominance": 0.84,
+    "worst_required_view": 0.72
+  },
+  "hard_vetoes": [],
+  "continuation_floor_result": "pass-by-critical-median; one linked macro correction required before promotion",
+  "critical_defects": [
+    "The low-front and oblique views still read as a clean foundation plateau instead of a lava-cut volcanic cliff city.",
+    "The cruciform keep is coherent but under-articulated compared with the source's buttressed furnace complex.",
+    "The highly legible top-view navigation canals disappear at the cliff edge instead of becoming visible waterfalls."
+  ],
+  "correction_hypothesis": "If the keep gains stepped furnace shoulders and cardinal side towers, and the existing navigation canals extend beyond the terrain radius into illuminated cliff waterfalls, the worst required view will improve by at least 0.10 while retaining the top-view maze clarity.",
+  "allowed_correction_scope": [
+    "keep shoulder and side-tower macro massing",
+    "existing canal endpoint extension",
+    "cliff waterfall geometry",
+    "review-only under-cliff heat lights"
+  ]
+}

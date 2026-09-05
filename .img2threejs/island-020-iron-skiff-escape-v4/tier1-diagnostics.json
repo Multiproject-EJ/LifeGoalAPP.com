@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "passId": "iron-skiff-escape-v4",
+  "capturedAt": "2026-08-30",
+  "route": "source-led-fixed-camera-hybrid-runtime-review",
+  "referenceIntegrity": "pass",
+  "silhouette": "pass-fixed-source-composition-preserved",
+  "missionPartPresence": {
+    "summitLaunchDavit": true,
+    "level3Gatehouses": 3,
+    "navigationGates": 3,
+    "ironSkiffBuildSystems": 4,
+    "frontMoltenEscapeChannel": true,
+    "expeditionShipMagneticCradle": true
+  },
+  "motion": {
+    "flow": "summit-through-three-junctions-to-front-lavafall",
+    "steering": "damped-lateral-response",
+    "throttle": "hold-forward-boost-with-safe-auto-forward",
+    "reducedMotion": "deterministic-immediate-extraction"
+  },
+  "liveRenderer": {
+    "quality": "medium",
+    "drawCalls": 172,
+    "triangles": 42000,
+    "viewport": "351x773",
+    "drawCallCeiling": 175,
+    "passesCeiling": true
+  },
+  "architecture": {
+    "gameplayCommit": "canonical-action-service-before-presentation",
+    "controllerState": "presentation-only",
+    "uiGameplayWrites": 0,
+    "completionCallback": "one-shot-consume"
+  },
+  "result": "pass"
+}

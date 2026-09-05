@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-08-30",
+  "status": "implemented-functional-qc-visual-review-v021",
+  "part_count": 32,
+  "hierarchy": [
+    {"group": "g01-world-envelope", "purpose": "continuous volcanic island, route context, horizon, circulation, and atmosphere", "part_ids": ["p01", "p02", "p03", "p04", "p05", "p06"]},
+    {"group": "g02-crucible-citadel-arena", "purpose": "central source-defining fortress, Arena aperture, forge core, and guardian", "part_ids": ["p07", "p08", "p09", "p10", "p11", "p12"]},
+    {"group": "g03-four-landmark-families", "purpose": "footprint-stable Hatchery, Habit, Mystery, and Wisdom L1-L3 structures", "part_ids": ["p13", "p14", "p15", "p16", "p17", "p18", "p19", "p20"]},
+    {"group": "g04-firebridge-mission", "purpose": "canonical staged pickup/spend loop and four cumulative visible bridge results", "part_ids": ["p21", "p22", "p23", "p24", "p25"]},
+    {"group": "g05-life-build-and-runtime", "purpose": "caretaker, inhabitants, ambience, materials, construction, and action-ready metadata", "part_ids": ["p26", "p27", "p28", "p29", "p30", "p31", "p32"]}
+  ],
+  "global_exclusions": [
+    "No baked HUD, text, counters, fake tile icons, token, or source-image route geometry.",
+    "No change to canonical 36-tile transforms, landmark-stop semantics, rewards, currencies, Arena cadence, or state ownership.",
+    "No generated hidden view may override a visible source contour.",
+    "No detail or motion polish before the owning macro form passes the 0.85 naked multi-view gate.",
+    "No sibling may reshape another part's owned socket or attachment collar.",
+    "No Island 005/007 geometry recolour presented as a new world."
+  ],
+  "ambiguities": [
+    {"id": "a01", "question": "Runtime identity conflicts with existing catalogue copy.", "recommendation": "Approve the explicit source-led retheme from Golden Sands/Golden Winds Cup to Lava Labyrinth/Blaze Trials Cup.", "impact": "catalogue, championship copy, routing tests, and story presentation"},
+    {"id": "a02", "question": "The source shows Island 043.", "recommendation": "Keep runtime 020 authoritative and treat baked 043 as non-runtime pixels.", "impact": "none on geometry; recorded provenance only"},
+    {"id": "a03", "question": "Rear citadel, Arena interior, bridge machinery, and guardian are hidden.", "recommendation": "After approval, create isolated secondary-inferred construction sheets constrained by exact visible silhouettes.", "impact": "rear volume, motion sockets, and guardian design"},
+    {"id": "a04", "question": "The source contains a dense approximate route close to the fortress.", "recommendation": "Adapt fortress terraces around the canonical protected route corridor even where this slightly opens the source composition.", "impact": "phone readability and gameplay clearance"}
+  ],
+  "representative_first_slice": {
+    "part_ids": ["p07", "p08", "p09", "p10"],
+    "context_only": ["p01", "p05"],
+    "reason": "The central Crucible Citadel is the strongest identity feature and highest-risk cross-view volume. A clay island shell and canonical corridor guide are sufficient context; materials, forge effects, guardian, and micro-detail remain locked.",
+    "required_evidence": ["source-angle", "left-45", "right-45", "rear-180", "top-clearance", "portrait-phone", "clay", "semantic-id"]
+  },
+  "parts": [
+    {
+      "id": "p01", "name": "continuous-floating-basalt-island-shell", "owner": "world-envelope", "review_unit": "world-macro", "dependencies": [],
+      "symmetry": "near-radial board plateau with intentionally asymmetric cliff breaks", "sockets": ["canonical-board-center", "four-landmark-terraces", "citadel-burial", "four-lavafall-mouths"],
+      "owned_surfaces": ["upper plateau", "stepped cliff walls", "deep jagged underside", "landmark burial collars"], "motion": "static; bounded finale impact response is animation-only",
+      "authority": "exact visible source; rear and underside inferred", "confidence": "high front / medium rear and underside", "views": ["portrait-overview", "left-45", "right-45", "rear-180", "underside-sanity"],
+      "acceptance_cues": ["one continuous supported island mass", "deep readable underside", "broad front silhouette and lavafall cuts match source"],
+      "exclusions": ["no disconnected floating rock pile", "no route obstruction", "no flat disc underside"], "production_order": 5, "status": "implemented-qc"
+    },
+    {
+      "id": "p02", "name": "volcanic-horizon-and-distant-spire-system", "owner": "world-envelope", "review_unit": "world-depth", "dependencies": [],
+      "symmetry": "asymmetric peak rhythm", "sockets": ["world-space-horizon-band", "smoke-plume-origins"], "owned_surfaces": ["far volcano silhouettes", "distant glowing fissures"],
+      "motion": "slow world-space smoke and rare distant flare", "authority": "exact source front mood; 360 arrangement inferred", "confidence": "high front / medium orbit", "views": ["portrait-overview", "left-45", "right-45", "rear-180"],
+      "acceptance_cues": ["jagged far silhouette remains behind the island", "peaks do not follow camera", "no peak competes with the tower"],
+      "exclusions": ["no camera billboard volcanoes", "no giant opaque background wall"], "production_order": 14, "status": "implemented-qc"
+    },
+    {
+      "id": "p03", "name": "surface-lava-channels-cracks-and-falls", "owner": "world-envelope", "review_unit": "world-lava", "dependencies": ["p01"],
+      "symmetry": "four directional channel families with irregular branching", "sockets": ["citadel-forge-outlets", "four-bridge-crossings", "cliff-fall-mouths"],
+      "owned_surfaces": ["molten channels", "cooled crust borders", "cliff lavafalls", "glow spill masks"], "motion": "elapsed-time flow, crust pulse, and reduced-motion frozen state",
+      "authority": "exact source visible flow placement", "confidence": "high visible / medium hidden continuation", "views": ["portrait-overview", "top-clearance", "front-cliff", "left-45", "right-45"],
+      "acceptance_cues": ["channels read as continuous liquids contained by stone", "falls begin at visible mouths and reach the underside", "emission preserves surface shape"],
+      "exclusions": ["no orange ribbons floating above terrain", "no emissive wash over tiles"], "production_order": 15, "status": "implemented-qc"
+    },
+    {
+      "id": "p04", "name": "stone-stairs-ramps-and-circulation-network", "owner": "world-envelope", "review_unit": "world-macro", "dependencies": ["p01", "p03"],
+      "symmetry": "four primary radial approaches with asymmetric secondary stairs", "sockets": ["four-landmark-entries", "citadel-gates", "bridge-landings"],
+      "owned_surfaces": ["stairs", "ramps", "retaining walls", "safety parapets"], "motion": "static", "authority": "exact source front stairs; hidden approaches inferred", "confidence": "high front / medium rear",
+      "views": ["portrait-overview", "each-landmark-entry", "rear-180", "top-clearance"], "acceptance_cues": ["every visible stair terminates at a real landing", "routes do not dead-end into walls", "protected board corridor stays clear"],
+      "exclusions": ["no floating staircase slabs", "no fake traversal through solid walls"], "production_order": 6, "status": "implemented-qc"
+    },
+    {
+      "id": "p05", "name": "canonical-route-context-rune-plinth-and-clearance-envelope", "owner": "world-envelope", "review_unit": "world-macro", "dependencies": ["p01"],
+      "symmetry": "canonical radial", "sockets": ["36-renderer-owned-tile-transforms", "mission-pickup-anchors", "landmark-door-clearances"],
+      "owned_surfaces": ["quiet support terrain outside tile faces", "route-adjacent rune plinth", "clearance guides"], "motion": "static; tile/token effects remain shared runtime",
+      "authority": "canonical gameplay topology overrides source", "confidence": "high", "views": ["portrait-phone", "map-stripped-overview", "top-clearance"],
+      "acceptance_cues": ["all 36 real tiles fit and remain readable", "no fake substitute tiles", "route corridor and landmark doors stay unobstructed"],
+      "exclusions": ["does not own tiles, token, icons, rewards, or stop logic"], "production_order": 2, "status": "implemented-qc"
+    },
+    {
+      "id": "p06", "name": "ember-sky-ash-smoke-and-key-light-system", "owner": "world-envelope", "review_unit": "world-depth", "dependencies": ["p02"],
+      "symmetry": "asymmetric cloud volumes with upper-left key light", "sockets": ["sky-volume", "ash-field", "heat-haze-zones"], "owned_surfaces": ["sky gradient", "smoke layers", "ash fall", "environment light"],
+      "motion": "slow parallax smoke and sparse ash; reduced motion freezes drift", "authority": "exact source palette and value hierarchy", "confidence": "high", "views": ["portrait-overview", "left-45", "right-45", "rear-180"],
+      "acceptance_cues": ["black forms remain separated", "warm horizon frames tower", "particles never become visual snow"], "exclusions": ["no flat orange sky", "no frame-rate-dependent accumulation"],
+      "production_order": 16, "status": "implemented-qc"
+    },
+    {
+      "id": "p07", "name": "crucible-citadel-buried-foundation-and-arena-plinth", "owner": "crucible-citadel-arena", "review_unit": "citadel-macro", "dependencies": ["p01", "p05"],
+      "symmetry": "radial stepped foundation", "sockets": ["tower-core", "curtain-maze", "four-gate-landings", "arena-aperture"], "owned_surfaces": ["foundation terraces", "arena plinth", "burial collar"],
+      "motion": "static; finale glow only", "authority": "exact source", "confidence": "high front / medium hidden", "views": ["source-angle", "left-45", "right-45", "rear-180", "top-clearance"],
+      "acceptance_cues": ["foundation reads embedded, not placed on top", "citadel leaves complete route visible", "four approaches have usable landings"],
+      "exclusions": ["no oversized solid drum", "no route overlap"], "production_order": 1, "status": "implemented-qc-v021"
+    },
+    {
+      "id": "p08", "name": "crucible-keep-tower-continuous-macro", "owner": "crucible-citadel-arena", "review_unit": "citadel-macro", "dependencies": ["p07"],
+      "symmetry": "four-sided tower with asymmetric damage and attachments", "sockets": ["spire-crown", "forge-windows", "entry-arch", "buttresses", "finale-opening"],
+      "owned_surfaces": ["tower body", "vertical piers", "roof/spire core", "entry mass"], "motion": "tower remains static; crown aperture may articulate at mission finale",
+      "authority": "exact source visible silhouette", "confidence": "high front / medium rear", "views": ["source-angle", "left-45", "right-45", "rear-180", "low-angle"],
+      "acceptance_cues": ["tall narrow forge-tower silhouette dominates", "rear has plausible volume", "entry and windows are true openings/recesses"],
+      "exclusions": ["no stacked boxes", "no paper-thin facade", "no trim before macro approval"], "production_order": 1, "status": "implemented-qc-v021"
+    },
+    {
+      "id": "p09", "name": "connected-curtain-walls-buttresses-and-labyrinth", "owner": "crucible-citadel-arena", "review_unit": "citadel-macro", "dependencies": ["p07", "p08"],
+      "symmetry": "radial logic with asymmetric wall heights", "sockets": ["four-gates", "tower-buttress-contacts", "braziers", "walkways"],
+      "owned_surfaces": ["curtain walls", "buttresses", "maze courts", "parapets"], "motion": "static", "authority": "exact source visible structure; rear inferred", "confidence": "high front / medium rear",
+      "views": ["source-angle", "left-45", "right-45", "rear-180", "top-clearance"], "acceptance_cues": ["walls connect into a believable maze", "height steps frame rather than hide tower", "no wall crosses route"],
+      "exclusions": ["no random loose cuboids", "no impossible sealed courtyards"], "production_order": 1, "status": "implemented-qc-v021"
+    },
+    {
+      "id": "p10", "name": "four-citadel-gates-and-arena-aperture", "owner": "crucible-citadel-arena", "review_unit": "citadel-macro", "dependencies": ["p07", "p09"],
+      "symmetry": "four gate family with source-led front emphasis", "sockets": ["four-firebridges", "portcullises", "arena-focus", "guardian-stage"],
+      "owned_surfaces": ["gate arches", "open throughpasses", "portcullis frames", "arena bowl/aperture"], "motion": "portcullis lift and finale aperture opening",
+      "authority": "visible front gate exact; other gates and interior inferred", "confidence": "high front / medium other sides", "views": ["front-gate", "four-orbits", "arena-focus", "top-clearance"],
+      "acceptance_cues": ["each gate is physically open when active", "bridge swept envelope clears gate", "Arena remains readable from phone"],
+      "exclusions": ["no painted doorway", "no clipping portcullis", "no guardian before macro approval"], "production_order": 1, "status": "implemented-qc-v021"
+    },
+    {
+      "id": "p11", "name": "forge-core-braziers-windows-and-citadel-surface-system", "owner": "crucible-citadel-arena", "review_unit": "citadel-surface", "dependencies": ["p08", "p09", "p10"],
+      "symmetry": "repeated sockets with bounded variation", "sockets": ["window-recesses", "brazier-bowls", "vent-flues", "rune-bands"], "owned_surfaces": ["forge core", "window glow", "braziers", "runes", "iron/brass trim"],
+      "motion": "bellows pulse, flame variation, restrained sparks", "authority": "exact source", "confidence": "high visible / medium hidden", "views": ["citadel-focus", "night-value-check", "four-orbits"],
+      "acceptance_cues": ["three emissive scales read separately", "dark masonry stays dominant", "repetition varies without visual noise"],
+      "exclusions": ["no uniform orange windows", "no surface relief before p08-p10 approval"], "production_order": 18, "status": "implemented-qc-v021"
+    },
+    {
+      "id": "p12", "name": "pyre-sentinel-arena-guardian", "owner": "crucible-citadel-arena", "review_unit": "guardian", "dependencies": ["p10", "p11"],
+      "symmetry": "bilateral creature with intentionally asymmetric molten damage", "sockets": ["arena-stage-root", "head", "arms", "crown", "defeat-break-groups"],
+      "owned_surfaces": ["continuous torso", "head/crown", "limbs", "obsidian plates", "molten seams"], "motion": "idle, challenge, impact, defeat, reduced-motion poses",
+      "authority": "not visible; secondary-inferred only after approval", "confidence": "low until approved study", "views": ["front", "profile", "rear", "three-quarter", "phone-arena"],
+      "acceptance_cues": ["friendly but formidable HabitGame silhouette", "complete volume from every orbit", "fits Arena without hiding tower or route"],
+      "exclusions": ["must not borrow source-invisible details without labels", "no flat cutout", "no boss-state gameplay ownership"], "production_order": 24, "status": "implemented-secondary-inferred-qc"
+    },
+    {
+      "id": "p13", "name": "magma-crucible-hatchery-macro", "owner": "landmarks", "review_unit": "hatchery-family", "dependencies": ["p01", "p04", "p05"],
+      "symmetry": "three-quarter forge nest with asymmetric chimney", "sockets": ["egg-nest", "furnace", "chimney", "l1-l2-l3-additions", "construction-stations"],
+      "owned_surfaces": ["foundation", "forge-nest shell", "furnace body", "chimney mass"], "motion": "static shell; furnace breath and hatch response later",
+      "authority": "source Hatchery panel and island architecture language; exact placement adapted to canonical footprint", "confidence": "medium", "views": ["hatchery-focus", "portrait-overview", "left-45", "rear"],
+      "acceptance_cues": ["reads as egg-forge rather than generic tower", "L1 is finished and readable", "same footprint through L3"],
+      "exclusions": ["no standalone UI panel", "no egg on playable tile"], "production_order": 7, "status": "implemented-qc"
+    },
+    {
+      "id": "p14", "name": "hatchery-egg-furnace-and-growth-system", "owner": "landmarks", "review_unit": "hatchery-family", "dependencies": ["p13"],
+      "symmetry": "nested radial furnace with varied vents", "sockets": ["p13-egg-nest", "p13-furnace", "p13-chimney"], "owned_surfaces": ["magma egg", "heating rings", "vent pipes", "L2 furnace", "L3 crown"],
+      "motion": "egg glow, heat pulse, L1-L3 commissioning", "authority": "source palette and egg motif; construction inferred", "confidence": "medium", "views": ["hatchery-focus", "level-1", "level-2", "level-3", "construction-working"],
+      "acceptance_cues": ["egg remains visible at phone scale", "growth is additive", "hot core does not bleach shell"], "exclusions": ["no structure swap between levels", "no footprint growth"],
+      "production_order": 19, "status": "implemented-qc"
+    },
+    {
+      "id": "p15", "name": "fire-path-habit-sanctum-macro", "owner": "landmarks", "review_unit": "habit-family", "dependencies": ["p01", "p04", "p05"],
+      "symmetry": "long axial path-house with offset brazier tower", "sockets": ["entry-path", "choice-arches", "brazier-tower", "l1-l2-l3-additions", "construction-stations"],
+      "owned_surfaces": ["sanctum shell", "arched path", "brazier tower", "retaining foundation"], "motion": "static shell", "authority": "source Fire Path copy/theme and architecture language", "confidence": "medium",
+      "views": ["habit-focus", "portrait-overview", "right-45", "rear"], "acceptance_cues": ["silhouette reads as a path/threshold, not Hatchery", "visible through-arch", "same footprint through L3"],
+      "exclusions": ["no generic duplicate tower", "no blocked doorway"], "production_order": 8, "status": "implemented-qc"
+    },
+    {
+      "id": "p16", "name": "habit-choice-arches-braziers-and-growth-system", "owner": "landmarks", "review_unit": "habit-family", "dependencies": ["p15"],
+      "symmetry": "paired choice arches with asymmetric flame heights", "sockets": ["p15-entry-path", "p15-choice-arches", "p15-brazier-tower"], "owned_surfaces": ["rune arches", "choice flames", "L2 covered walk", "L3 flame crown"],
+      "motion": "calm flame breathing, choice-light sequence, L1-L3 commissioning", "authority": "source theme; detailed construction inferred", "confidence": "medium", "views": ["habit-focus", "level-1", "level-2", "level-3", "reduced-motion"],
+      "acceptance_cues": ["two routes remain visually clear", "growth reinforces deliberate-path identity", "flames are restrained"], "exclusions": ["no flashing hazard language", "no modal copy baked into geometry"],
+      "production_order": 20, "status": "implemented-qc"
+    },
+    {
+      "id": "p17", "name": "ashen-trialworks-mystery-macro", "owner": "landmarks", "review_unit": "mystery-family", "dependencies": ["p01", "p04", "p05"],
+      "symmetry": "asymmetric puzzle foundry with rotating central frame", "sockets": ["trial-frame", "vent-stack", "sealed-door", "l1-l2-l3-additions", "construction-stations"],
+      "owned_surfaces": ["foundry shell", "trial frame", "vent stack", "door mass"], "motion": "trial frame may rotate only during presentation", "authority": "source Quests/Arena challenge language adapted to canonical Mystery stop", "confidence": "medium-low",
+      "views": ["mystery-focus", "portrait-overview", "left-45", "rear"], "acceptance_cues": ["reads as an experimental trialworks", "silhouette differs from other landmarks", "true openings and supported frame"],
+      "exclusions": ["no question-mark sign as primary identity", "no generic tower"], "production_order": 9, "status": "implemented-qc"
+    },
+    {
+      "id": "p18", "name": "mystery-trial-frame-vents-and-growth-system", "owner": "landmarks", "review_unit": "mystery-family", "dependencies": ["p17"],
+      "symmetry": "offset gear/vent composition", "sockets": ["p17-trial-frame", "p17-vent-stack", "p17-sealed-door"], "owned_surfaces": ["rotor", "pressure valves", "L2 test chamber", "L3 observation crown"],
+      "motion": "bounded rotor, vent puff, commissioning; frozen reduced motion", "authority": "secondary-inferred within source material language", "confidence": "medium-low", "views": ["mystery-focus", "level-1", "level-2", "level-3", "working"],
+      "acceptance_cues": ["mechanical motion has clear pivots", "no collision with shell", "each level remains same foundry"], "exclusions": ["no gameplay outcome calculated in animation", "no frantic perpetual spin"],
+      "production_order": 21, "status": "implemented-qc"
+    },
+    {
+      "id": "p19", "name": "obsidian-archive-wisdom-keep-macro", "owner": "landmarks", "review_unit": "wisdom-family", "dependencies": ["p01", "p04", "p05"],
+      "symmetry": "broad low keep with one offset archive spire", "sockets": ["archive-vault", "story-steles", "spire", "l1-l2-l3-additions", "construction-stations"],
+      "owned_surfaces": ["keep shell", "vault arch", "stele court", "spire mass"], "motion": "static shell", "authority": "source Obsidian Keep wording and architecture language", "confidence": "medium",
+      "views": ["wisdom-focus", "portrait-overview", "right-45", "rear"], "acceptance_cues": ["reads as archive/keep rather than Arena", "broad silhouette balances tower", "vault entrance is physical"],
+      "exclusions": ["no open-book UI panel", "no duplicate citadel tower"], "production_order": 10, "status": "implemented-qc"
+    },
+    {
+      "id": "p20", "name": "wisdom-steles-vault-and-growth-system", "owner": "landmarks", "review_unit": "wisdom-family", "dependencies": ["p19"],
+      "symmetry": "ordered stele rhythm with asymmetric wear", "sockets": ["p19-archive-vault", "p19-story-steles", "p19-spire"], "owned_surfaces": ["rune steles", "archive shelves", "L2 vault wings", "L3 beacon crown"],
+      "motion": "slow sequential rune reveal and commissioning; static reduced motion", "authority": "source motif; hidden interior inferred", "confidence": "medium", "views": ["wisdom-focus", "level-1", "level-2", "level-3", "reduced-motion"],
+      "acceptance_cues": ["steles readable as grouped objects at phone scale", "growth adds archive capacity", "runes never become illegible text texture"],
+      "exclusions": ["no actual prose baked into scene", "no emissive wall"], "production_order": 22, "status": "implemented-qc"
+    },
+    {
+      "id": "p21", "name": "eight-route-relative-ember-core-pickups", "owner": "firebridge-mission", "review_unit": "mission-loop", "dependencies": ["p05"],
+      "symmetry": "distributed collision-free route positions", "sockets": ["resolved-tile-adjacent-presentation-anchors"], "owned_surfaces": ["ember-core mesh", "pickup halo", "claimed-state presentation"],
+      "motion": "slow hover/pulse; reduced motion static glow", "authority": "mission design constrained by canonical reservation service", "confidence": "high after indices resolve", "views": ["portrait-overview", "pickup-closeup", "short-phone"],
+      "acceptance_cues": ["all pickups remain visible without covering tile icons", "claimed pickups disappear exactly once", "immediate board response queues safely behind other modals"],
+      "exclusions": ["no hard-coded collision with doors or Traffic Light", "no local React inventory"], "production_order": 25, "status": "implemented-qc"
+    },
+    {
+      "id": "p22", "name": "four-crucible-gates-and-stage-beacons", "owner": "firebridge-mission", "review_unit": "mission-infrastructure", "dependencies": ["p03", "p07", "p10"],
+      "symmetry": "four radial related gates with unique damage", "sockets": ["bridge-hinges", "chain-drums", "beacons", "gate-landings"], "owned_surfaces": ["gate pylons", "beacon bowls", "stage indicators", "burial collars"],
+      "motion": "one beacon ignition per committed stage", "authority": "source citadel language plus mission design", "confidence": "medium", "views": ["mission-wide", "each-gate-focus", "four-orbits"],
+      "acceptance_cues": ["stage progression accumulates", "beacons remain readable and distinct", "gate identities do not replace landmarks"],
+      "exclusions": ["no parallel completion authority", "no gate inside tile corridor"], "production_order": 11, "status": "implemented-qc"
+    },
+    {
+      "id": "p23", "name": "four-retractable-basalt-firebridges", "owner": "firebridge-mission", "review_unit": "mission-infrastructure", "dependencies": ["p03", "p04", "p10", "p22"],
+      "symmetry": "four related spans with unique fracture lines", "sockets": ["paired-hinges", "chain-clevises", "gate-throughpasses"], "owned_surfaces": ["bridge decks", "hinges", "cooling seams", "parapets"],
+      "motion": "four deterministic raise/lock/cool sequences", "authority": "mission design; visible material language from source", "confidence": "medium", "views": ["before", "ignition", "impact", "complete", "top-clearance", "four-orbits"],
+      "acceptance_cues": ["each span connects real landings", "swept envelope clears route, gates, and L3 landmarks", "completed spans remain visible"],
+      "exclusions": ["no disappearing prior stages", "no decorative painted bridge", "no state commit after cinematic"], "production_order": 12, "status": "implemented-qc"
+    },
+    {
+      "id": "p24", "name": "chain-drums-counterweights-and-forge-machinery", "owner": "firebridge-mission", "review_unit": "mission-infrastructure", "dependencies": ["p22", "p23"],
+      "symmetry": "paired mechanisms per bridge with bounded wear variation", "sockets": ["p22-chain-drums", "p23-chain-clevises", "counterweight-shafts"], "owned_surfaces": ["drums", "chains", "gears", "counterweights", "vent pistons"],
+      "motion": "mechanically coupled rotation/translation during active stage only", "authority": "secondary-inferred engineering", "confidence": "medium-low", "views": ["mechanism-closeup", "side", "rear", "stage-wide"],
+      "acceptance_cues": ["chain endpoints stay attached", "gear motion is coherent", "machinery stops in a stable finished pose"],
+      "exclusions": ["no stretching chain textures", "no perpetual motion", "no geometry intersection"], "production_order": 23, "status": "implemented-qc"
+    },
+    {
+      "id": "p25", "name": "arena-awakening-finale-presentation", "owner": "firebridge-mission", "review_unit": "mission-finale", "dependencies": ["p10", "p11", "p22", "p23", "p24"],
+      "symmetry": "four-beacon ignition converging on tower crown", "sockets": ["four-beacons", "forge-core", "tower-crown", "arena-focus-camera"], "owned_surfaces": ["finale light path", "ember burst", "crown aperture animation", "settled completed pose"],
+      "motion": "large but bounded completion beat; reduced motion one glow then settled state", "authority": "mission design", "confidence": "medium", "views": ["mission-wide", "portrait-phone", "left-45", "right-45", "reduced-motion"],
+      "acceptance_cues": ["all four stages remain visible", "payoff is unobstructed before any dialog", "interruption cannot repeat reward or state"],
+      "exclusions": ["no full-camera spin", "no flash storm", "no gameplay mutation in presentation"], "production_order": 28, "status": "implemented-qc"
+    },
+    {
+      "id": "p26", "name": "ember-caretaker-outfit-and-lod-module", "owner": "life-build-runtime", "review_unit": "inhabitants", "dependencies": ["p01", "p05"],
+      "symmetry": "shared caretaker rig with asymmetric forge tools", "sockets": ["shared-rig", "tool-hand", "backpack", "footplate"], "owned_surfaces": ["heatproof apron", "obsidian helmet", "brass trim", "forge tongs"],
+      "motion": "shared idle/build animations and quality LOD", "authority": "shared caretaker system plus source palette", "confidence": "high", "views": ["portrait-overview", "caretaker-closeup", "construction-working"],
+      "acceptance_cues": ["recognizable at phone scale", "feet stay off tiles", "outfit belongs to Lava Labyrinth without a new rig"],
+      "exclusions": ["no retro sprite", "no HUD collision", "no new gameplay controller"], "production_order": 26, "status": "implemented-qc"
+    },
+    {
+      "id": "p27", "name": "forge-inhabitants-and-sparse-fauna-system", "owner": "life-build-runtime", "review_unit": "inhabitants", "dependencies": ["p01", "p04", "p06"],
+      "symmetry": "asymmetric sparse placement", "sockets": ["safe-work-platforms", "background-walkways", "perches"], "owned_surfaces": ["forge workers", "small ember creatures", "tool carts"],
+      "motion": "short authored loops with culled/instanced background actors", "authority": "source civilization density and palette; identities inferred", "confidence": "medium-low", "views": ["portrait-overview", "landmark-focus", "rear-180"],
+      "acceptance_cues": ["world feels occupied without clutter", "all paths stay outside route", "motion hierarchy remains quiet"],
+      "exclusions": ["no crowd on tiles", "no identical frantic loops", "no guardian-scale actor"], "production_order": 29, "status": "implemented-qc"
+    },
+    {
+      "id": "p28", "name": "ember-ash-smoke-heat-shimmer-and-impact-fx", "owner": "life-build-runtime", "review_unit": "ambience", "dependencies": ["p03", "p06", "p11", "p25"],
+      "symmetry": "volume-distributed with source-led warm focus", "sockets": ["lava-surfaces", "braziers", "chimneys", "mission-impacts"], "owned_surfaces": ["embers", "ash", "smoke wisps", "heat distortion", "dust/spark bursts"],
+      "motion": "elapsed-time deterministic systems; quality-scaled and reduced-motion safe", "authority": "source atmosphere plus runtime constraints", "confidence": "high", "views": ["t0", "t6", "portrait-phone", "reduced-motion"],
+      "acceptance_cues": ["three depth bands", "no particle wall", "effects never hide route or hit targets"],
+      "exclusions": ["no frame-dependent drift", "no flashing", "no effects before geometry/material gate"], "production_order": 30, "status": "implemented-qc"
+    },
+    {
+      "id": "p29", "name": "obsidian-iron-brass-and-magma-material-network", "owner": "life-build-runtime", "review_unit": "materials", "dependencies": ["p01", "p03", "p08", "p13", "p15", "p17", "p19"],
+      "symmetry": "shared civilization materials with local wear overrides", "sockets": ["named-material-slots", "local-heat-masks", "edge-wear-masks"], "owned_surfaces": ["basalt", "worked stone", "black iron", "aged brass", "magma", "soot", "cool utility lights"],
+      "motion": "magma/emissive variation only", "authority": "exact source visible response; PBR values inferred and gated", "confidence": "high palette / medium physical parameters", "views": ["material-closeups", "source-angle", "night-value-check", "phone-overview"],
+      "acceptance_cues": ["stone, iron, and brass separate by response", "hot/cool hierarchy matches source", "macro/meso/micro variation without noisy tiling"],
+      "exclusions": ["no albedo reused as roughness/normal", "no uniform glossy black", "no emissive albedo substitute"], "production_order": 17, "status": "implemented-qc"
+    },
+    {
+      "id": "p30", "name": "l1-l2-l3-additive-construction-mesh-contract", "owner": "life-build-runtime", "review_unit": "construction", "dependencies": ["p13", "p15", "p17", "p19", "p07"],
+      "symmetry": "per-landmark authored additive sets", "sockets": ["five-landmark-level-roots", "retained-mesh-groups", "additive-mesh-groups"], "owned_surfaces": ["L1 foundations", "L2 operational additions", "L3 crowns", "commissioning metadata"],
+      "motion": "overshoot-settle, warm flash, small ember burst; reduced motion glow only", "authority": "canonical build contract and approved landmarks", "confidence": "high after landmark specs", "views": ["all-five-l1", "all-five-l2", "all-five-l3", "commissioning", "reduced-motion"],
+      "acceptance_cues": ["same structure grows without swapping identity", "funded geometry remains solid", "hit targets and footprints never move"],
+      "exclusions": ["no scaling funded structure", "no rectangular scaffold cage", "no local build progress mirror"], "production_order": 31, "status": "implemented-qc"
+    },
+    {
+      "id": "p31", "name": "construction-robots-tools-scaffolds-and-contact-stations", "owner": "life-build-runtime", "review_unit": "construction", "dependencies": ["p26", "p30"],
+      "symmetry": "station-specific asymmetric robot team", "sockets": ["landmark-work-stations", "tool-contact-points", "material-drop-points", "facade-scaffold-anchors"], "owned_surfaces": ["robots", "tools", "materials", "compact facade scaffolds"],
+      "motion": "resting/working/tail states with one transform owner per root", "authority": "canonical construction-modal contract", "confidence": "high", "views": ["resting", "working", "post-click-tail", "settled", "reduced-motion"],
+      "acceptance_cues": ["robots remain outside height-aware shells and each other", "tools reach authored contacts", "no unexplained alternating root displacement"],
+      "exclusions": ["no whole-site scaffold box", "no robot body penetration", "no camera changes during seven-second lock"], "production_order": 32, "status": "implemented-qc"
+    },
+    {
+      "id": "p32", "name": "action-ready-hierarchy-focus-colliders-lod-and-disposal", "owner": "life-build-runtime", "review_unit": "runtime-structure", "dependencies": ["p01", "p07", "p13", "p15", "p17", "p19", "p21", "p22", "p23", "p26", "p30"],
+      "symmetry": "metadata follows authored scene hierarchy", "sockets": ["five-focus-sockets", "mission-controller-hit-target", "guardian-focus", "caretaker-anchor", "quality-tier-roots"],
+      "owned_surfaces": ["named groups", "generous hit colliders", "focus sockets", "explode/pick part metadata", "disposal hooks"],
+      "motion": "presentation state only; canonical actions own progression", "authority": "shared renderer/runtime contracts", "confidence": "high", "views": ["part-picking", "focus-views", "quality-low", "quality-medium", "quality-high", "reduced-motion"],
+      "acceptance_cues": ["every specified part is built and named", "click/explode definitions agree", "quality tiers change real cost", "dispose releases resources"],
+      "exclusions": ["no gameplay state mirror", "no UI direct write", "no anonymous fused landmark mesh"], "production_order": 33, "status": "implemented-qc"
+    }
+  ]
+}

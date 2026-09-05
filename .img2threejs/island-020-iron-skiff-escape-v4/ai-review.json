@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "passId": "iron-skiff-escape-v4",
+  "action": "continue",
+  "globalScore": 0.9,
+  "threshold": 0.8,
+  "layers": {
+    "sourceIdentityAndComposition": 0.92,
+    "level3LabyrinthReadability": 0.89,
+    "ironSkiffAndExtractionSilhouette": 0.88,
+    "lavaFlowAndHeatIllumination": 0.91,
+    "mobileReadability": 0.87,
+    "gameplayAndControllerIntegrity": 0.98,
+    "performance": 0.98
+  },
+  "criticalFeatures": {
+    "summitToShipEscapeStory": 0.9,
+    "threeReadableSteeringJunctions": 0.88,
+    "fourStageSkiffConstruction": 0.94,
+    "noPostCommitFailureLoop": 0.99,
+    "controllerRestoresAfterExtraction": 0.99
+  },
+  "critique": "The escape route reads as a continuous summit-to-front descent and the enlarged extraction ship gives the run a clear destination. The completed skiff was consolidated to a black-iron batch with a separate ember furnace glow, reducing the full live medium scene from 180 to 172 calls. The fixed source-led camera prevents honest orbit scoring of the camera-registered environment plate; non-planar runtime mission geometry is instead covered by named hierarchy, structural tests, and the authored route curve.",
+  "largestRemainingApproximation": "The dense rear labyrinth remains plate-space depth under the approved fixed-camera hybrid; live mission geometry supplies foreground depth and interaction.",
+  "decision": "Accept the bounded pass and proceed to final regression closure."
+}

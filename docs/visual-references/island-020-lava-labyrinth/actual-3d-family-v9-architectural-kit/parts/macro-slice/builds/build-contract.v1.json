@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "family": "source-traced-radial-architectural-kit-v9",
+  "worker": "root",
+  "allowlist": ["macro-radial-shell", "central-forge-cathedral", "playable-southwest-sector", "front-escape-axis"],
+  "frozen": ["materials-finish", "decorative-props", "particles", "runtime-animations", "mission-controller", "iron-skiff"],
+  "construction_controls": {
+    "maze": "deterministic polar perfect-maze graph with visible safe corridors and declared openings",
+    "architecture": "modular source-scale forge kit attached to radial terraces",
+    "lava": "rounded curve volumes inside visible banks; no vertical planar ribbons",
+    "outer_ring": "separate readable board-tile annulus"
+  },
+  "acceptance_threshold": 0.85,
+  "representative_slice_only": true
+}

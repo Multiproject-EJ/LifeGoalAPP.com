@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "family": "island-020-silhouette-first-modular-city-glb-v6",
+  "stage": "runtime-final",
+  "decision": "production-pass",
+  "scores": {
+    "source_identity": 0.89,
+    "phone_scale_silhouette": 0.90,
+    "cross_view_coherence": 0.90,
+    "maze_city_readability": 0.88,
+    "keep_identity": 0.86,
+    "terrain_and_cliff_depth": 0.87,
+    "lava_path_dominance": 0.93,
+    "mission_readability": 0.89,
+    "worst_required_view": 0.86
+  },
+  "hard_vetoes": [],
+  "gate_result": "pass; worst required visual score is at least 0.85",
+  "evidence_basis": {
+    "authored_six_view_packet": "correction-capture-manifest.v1.json",
+    "runtime_checkpoints": [
+      "overview",
+      "high-survey",
+      "left-orbit",
+      "right-orbit",
+      "90-degree evidence orbit",
+      "180-degree evidence orbit"
+    ],
+    "runtime_canvas": "351x773 medium-quality phone target",
+    "settled_renderer_geometry": {
+      "draw_calls": 139,
+      "triangles": 136000
+    },
+    "automated_regression": {
+      "passed": 1919,
+      "failed": 0
+    }
+  },
+  "production_requirements_closed": [
+    "multipart authored Blender GLB replaces the central Level 3 labyrinth city",
+    "animated world-space lava travels through the city canals and into the magma sea",
+    "lava contact, forge, underglow and separation lights illuminate surrounding basalt",
+    "the Iron Skiff uses left and right steering plus hold-forward throttle",
+    "three forgiving route junctions lead down-island to the extraction ship",
+    "reduced-motion completion resolves synchronously",
+    "canonical gameplay writes remain in action services rather than the 3D presentation"
+  ]
+}

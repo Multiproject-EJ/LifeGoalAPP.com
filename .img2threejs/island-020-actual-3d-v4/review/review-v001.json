@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-30",
+  "family": "actual-3d-mesh-first-carved-city-v4",
+  "pass": "bounded-correction",
+  "minimumRequiredEveryCriticalDimension": 0.85,
+  "scores": {
+    "closedGeologicalVolume": 0.72,
+    "macroSilhouette": 0.66,
+    "functionalLabyrinthTopology": 0.78,
+    "labyrinthVisualReadability": 0.61,
+    "lavaFlowReadability": 0.58,
+    "heatIlluminationHierarchy": 0.62,
+    "centralKeepProportion": 0.7,
+    "rearAndSideCoherence": 0.64,
+    "sourceIdentity": 0.6,
+    "phoneComposition": 0.65
+  },
+  "weakestScore": 0.58,
+  "hardFacts": {
+    "tests": {"passed": 1919, "failed": 0},
+    "liveMetrics": {"fps": 53, "drawCalls": 238, "triangles": 247000, "viewport": "566x1247"},
+    "environmentPlatePresent": false,
+    "mazeCells": 81,
+    "missionJunctions": 3
+  },
+  "largestFailure": "The source's illuminated black-stone maze-city is not recovered: the scene reads as a dark stepped castle mass and one pale foreground lava ribbon.",
+  "decision": "retire-and-request-new-representation-authority"
+}

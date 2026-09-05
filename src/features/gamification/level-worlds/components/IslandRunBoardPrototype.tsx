@@ -423,6 +423,10 @@ import {
   type ArenaMinigamePreferences,
 } from '../services/islandRunArenaPreferences';
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
+import {
+  LavaSkiffControllerAdapter,
+  type LavaSkiffControllerState,
+} from './LavaSkiffControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
 import { IslandChampionshipBanner } from './IslandChampionshipBanner';
 import { IslandChampionshipOpeningModal } from './IslandChampionshipOpeningModal';
@@ -481,6 +485,7 @@ import {
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   activateStagedRestorationMissionStage,
+  completeLavaLabyrinthEscapeMission,
   activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
@@ -489,6 +494,7 @@ import {
   releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
   spinFrostwellDrillWheel,
+  startLavaLabyrinthEscapeMission,
 } from '../services/islandRunSignatureMissionAction';
 import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
@@ -514,6 +520,8 @@ import {
   getRootheartPowerworksStageCost,
   getSunkenSandsTreasureRevealProgress,
   isRootheartPowerworksCollectionComplete,
+  isLavaLabyrinthEscapeMissionComplete,
+  isLavaLabyrinthEscapeMissionStarted,
   resolveCactusCanyonSpiralProgress,
   resolveCelestialRedockingProgress,
   resolveFirstLightAssemblyCraterProgress,
@@ -1981,6 +1989,13 @@ export function IslandRunBoardPrototype({
   const [greatHoneyfallConstructionSequence, setGreatHoneyfallConstructionSequence] = useState(0);
   const [isActivatingStagedRestoration, setIsActivatingStagedRestoration] = useState(false);
   const [stagedRestorationConstructionSequence, setStagedRestorationConstructionSequence] = useState(0);
+  const [lavaSkiffNavigation, setLavaSkiffNavigation] = useState<{
+    active: boolean;
+    steering: -1 | 0 | 1;
+    throttle: 0 | 1;
+    sequence: number;
+  }>({ active: false, steering: 0, throttle: 0, sequence: 0 });
+  const [lavaSkiffIslandClearPending, setLavaSkiffIslandClearPending] = useState(false);
   const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
   const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
@@ -2285,6 +2300,12 @@ export function IslandRunBoardPrototype({
    */
   const [trafficLightPassPulse, setTrafficLightPassPulse] = useState(false);
   const [islandNumber, setIslandNumber] = useState(1);
+  useEffect(() => {
+    if (islandNumber === 20) return;
+    setLavaSkiffNavigation((current) => current.active || current.steering !== 0 || current.throttle !== 0
+      ? { ...current, active: false, steering: 0, throttle: 0 }
+      : current);
+  }, [islandNumber]);
   useEffect(() => {
     if (showTopbarMenu && isDevModeEnabled) {
       setDevIslandJumpDigits(islandNumberToDevJumpDigits(islandNumber));
@@ -3269,6 +3290,8 @@ export function IslandRunBoardPrototype({
   const stagedRestorationAvailableCharges = stagedRestorationProgress
     ? getStagedRestorationAvailableCharges(stagedRestorationProgress)
     : 0;
+  const lavaLabyrinthEscapeMissionStarted = islandNumber !== 20
+    || isLavaLabyrinthEscapeMissionStarted(stagedRestorationProgress);
   const currentMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
     islandNumber,
     state: runtimeState,
@@ -3594,6 +3617,7 @@ export function IslandRunBoardPrototype({
   const regenIntervalNoopLogLastAtMsRef = useRef<number>(0);
   const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
   const islandClearCelebrationShownForVisitRef = useRef<string | null>(null);
+  const lavaLabyrinthMissionLaunchPresentedForVisitRef = useRef<string | null>(null);
   const isBuildSpendInFlightRef = useRef(false);
   const buildTapQueueRef = useRef<Array<{ stopIndex: number; targetPartNumber: 1 | 2 | 3 | 4 | 5 }>>([]);
   const isBuildTapQueueProcessingRef = useRef(false);
@@ -5727,12 +5751,17 @@ export function IslandRunBoardPrototype({
         allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
         expandedActiveStopId: expandedActiveLandmarkDoorStopId,
       });
+      if (islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted) {
+        return applied.map((entry) => entry.signatureMissionKind === 'heatshield_plate'
+          ? { ...entry, signatureMissionKind: undefined }
+          : entry);
+      }
       if (islandNumber !== 16 || fishermansFishingProgress.completedAtMs === null) return applied;
       return applied.map((entry) => entry.signatureMissionKind === 'fishermans_rod'
         ? { ...entry, signatureMissionKind: undefined }
         : entry);
     },
-    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, islandNumber, tileMap],
+    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, islandNumber, lavaLabyrinthEscapeMissionStarted, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(__storeState.bonusTileChargeByIsland, islandNumber);
   // Show the optimistic mid-hop charge while a roll is animating so the lights
@@ -6820,13 +6849,17 @@ export function IslandRunBoardPrototype({
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
-  const isCurrentIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
+  const isBaseIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFinishedForDepartureV2({
         stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
         bossDefeated: runtimeState.bossTrialResolvedIslandNumber === islandNumber,
       })
     : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
+  const isLavaLabyrinthFinaleComplete = islandNumber !== 20
+    || isLavaLabyrinthEscapeMissionComplete(stagedRestorationProgress);
+  const isCurrentIslandFinishedForDeparture = isBaseIslandFinishedForDeparture
+    && isLavaLabyrinthFinaleComplete;
   const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
@@ -6991,6 +7024,19 @@ export function IslandRunBoardPrototype({
       setLandingText('Complete the twenty-charge Assembly Crater mission before finishing Island 1.');
       return;
     }
+    if (islandNumber === 20 && source !== 'dev_clear_island') {
+      const latestEscape = resolveStagedRestorationMissionProgress({
+        ledger: runtimeStateRef.current.signatureMissionProgressByIsland,
+        cycleIndex: runtimeStateRef.current.cycleIndex,
+        islandNumber: 20,
+      });
+      if (!isLavaLabyrinthEscapeMissionComplete(latestEscape)) {
+        setShowIslandClearCelebration(false);
+        if (isLavaLabyrinthEscapeMissionStarted(latestEscape)) setShowMissionPhoneBriefing(true);
+        setLandingText('🔥 The Level-3 labyrinth is solved. Complete the Iron Skiff extraction before leaving Island 020.');
+        return;
+      }
+    }
     if (showIslandClearCelebration && islandClearStats?.islandNumber === islandNumber) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
     const existingStats = islandClearStats?.islandNumber === islandNumber ? islandClearStats : null;
@@ -7019,6 +7065,45 @@ export function IslandRunBoardPrototype({
     }
     setShowIslandClearCelebration(true);
   }, [islandClearStats, islandClearVisitKey, islandNumber, session.user.id, showIslandClearCelebration]);
+
+  useEffect(() => {
+    if (
+      islandNumber !== 20
+      || !isCurrentIslandFullyCleared
+      || isLavaLabyrinthFinaleComplete
+    ) return;
+    const launchKey = `${runtimeState.cycleIndex}:20`;
+    if (lavaLabyrinthMissionLaunchPresentedForVisitRef.current === launchKey) return;
+    lavaLabyrinthMissionLaunchPresentedForVisitRef.current = launchKey;
+
+    void startLavaLabyrinthEscapeMission({ session, client }).then((result) => {
+      if (result.status !== 'ok' && result.status !== 'already_started') {
+        lavaLabyrinthMissionLaunchPresentedForVisitRef.current = null;
+        setLandingText('The labyrinth must be fully solved before the Iron Skiff mission can launch.');
+        return;
+      }
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('start_lava_labyrinth_escape_mission', fresh);
+      setShowIslandClearCelebration(false);
+      setShowMissionPhoneBriefing(true);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setLandingText('🔥 Labyrinth solved — emergency extraction launched. Recover eight Heatshield Plates and forge the Iron Skiff.');
+      playIslandRunSound('stop_land');
+      triggerIslandRunHaptic('stop_land');
+    });
+  }, [
+    client,
+    isCurrentIslandFullyCleared,
+    isLavaLabyrinthFinaleComplete,
+    islandNumber,
+    playIslandRunSound,
+    runtimeState.cycleIndex,
+    session,
+    setRuntimeStateWithTrace,
+    triggerIslandRunHaptic,
+  ]);
 
   // Island departure is intentionally surfaced through an explicit Finish Island
   // CTA instead of auto-opening this modal. The departure gate stays narrow:
@@ -10827,6 +10912,8 @@ export function IslandRunBoardPrototype({
     setIsIslandClearRewardClaimed(false);
     setIslandClearStats(null);
     islandClearCelebrationShownForVisitRef.current = null;
+    lavaLabyrinthMissionLaunchPresentedForVisitRef.current = null;
+    setLavaSkiffIslandClearPending(false);
     // M16C: islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, and
     // pendingClaimTierIndex are NOT reset on island travel — they are lifetime-cumulative
     // and persist across islands per docs/13_COLLECTIBLE_PROGRESS_BAR.md §3.
@@ -13420,6 +13507,50 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic,
   ]);
 
+  const beginLavaSkiffEscape = useCallback(() => {
+    setLavaSkiffNavigation((current) => ({
+      active: true,
+      steering: 0,
+      throttle: 0,
+      sequence: current.sequence + 1,
+    }));
+    setIsControllerTucked(false);
+    setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+    setLandingText('🔥 Iron Skiff launched — steer the glowing gates and hold forward for speed!');
+  }, []);
+
+  const handleLavaSkiffControllerChange = useCallback((state: LavaSkiffControllerState) => {
+    setLavaSkiffNavigation((current) => (
+      current.steering === state.steering && current.throttle === state.throttle
+        ? current
+        : { ...current, steering: state.steering, throttle: state.throttle }
+    ));
+  }, []);
+
+  const handleLavaSkiffRunComplete = useCallback(() => {
+    setLavaSkiffNavigation((current) => ({ ...current, active: false, steering: 0, throttle: 0 }));
+    void completeLavaLabyrinthEscapeMission({ session, client }).then((result) => {
+      if (result.status !== 'ok' && result.status !== 'already_complete') {
+        setLandingText(result.status === 'skiff_not_ready'
+          ? 'The Iron Skiff needs all four forged systems before extraction can complete.'
+          : 'The Lava Labyrinth escape mission is not active yet.');
+        return;
+      }
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('complete_lava_labyrinth_escape_mission', fresh);
+      setLandingText('🚀 Extracted! The magnetic cradle caught the Iron Skiff beyond the lavafall.');
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('reward_claim');
+      setLavaSkiffIslandClearPending(true);
+      openWinCelebrationModal([
+        { icon: '🛶', label: 'Iron Skiff', value: 'EXTRACTED' },
+        { icon: '🔥', label: 'Lava Labyrinth', value: 'ESCAPED' },
+      ], 'Mission complete — Escape the Lava Labyrinth');
+    });
+  }, [client, openWinCelebrationModal, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+
   const handleActivateStagedRestoration = useCallback(async () => {
     if (isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
     setShowMissionPhoneBriefing(false);
@@ -13427,7 +13558,8 @@ export function IslandRunBoardPrototype({
       // Canonical completion is immutable; this only replays the world payoff.
       setStagedRestorationConstructionSequence((value) => value + 1);
       setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
-      setLandingText(`✨ ${currentMissionTracker.briefing.headline} finale replaying.`);
+      if (stagedRestorationDescriptor.islandNumber === 20) beginLavaSkiffEscape();
+      else setLandingText(`✨ ${currentMissionTracker.briefing.headline} finale replaying.`);
       playIslandRunSound('reward_bar_claim_burst');
       triggerIslandRunHaptic('reward_claim');
       return;
@@ -13436,6 +13568,9 @@ export function IslandRunBoardPrototype({
     try {
       const result = await activateStagedRestorationMissionStage({ session, client });
       if (result.status !== 'ok') {
+        if (result.status === 'mission_locked') {
+          setLandingText('Solve the complete Level-3 labyrinth before forging the Iron Skiff.');
+        }
         if (result.status === 'no_charges') {
           setLandingText(`Find ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route before activating the next stage.`);
         }
@@ -13457,6 +13592,10 @@ export function IslandRunBoardPrototype({
       playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
       if (completed) {
+        if (stagedRestorationDescriptor.islandNumber === 20) {
+          beginLavaSkiffEscape();
+          return;
+        }
         const completionRewards = [
           { icon: '✨', label: stagedRestorationDescriptor.stageLabel, value: 'COMPLETE' },
           { icon: '🏝️', label: currentMissionTracker.briefing.islandName, value: 'TRANSFORMED' },
@@ -13473,6 +13612,7 @@ export function IslandRunBoardPrototype({
       setIsActivatingStagedRestoration(false);
     }
   }, [
+    beginLavaSkiffEscape,
     client,
     currentMissionTracker.briefing.headline,
     currentMissionTracker.briefing.islandName,
@@ -15251,6 +15391,8 @@ export function IslandRunBoardPrototype({
                   ),
                   claimedPickupTileIndices: stagedRestorationProgress?.claimedPickupTileIndices ?? [],
                 } : undefined}
+                island20SkiffNavigation={lavaSkiffNavigation}
+                onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
                 fishermansFishingPresentation={{
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === 16
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
@@ -15546,7 +15688,9 @@ export function IslandRunBoardPrototype({
           {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
           <div className="island-run-prototype__footer-actions">
-            {isShooterControllerActive ? (
+            {lavaSkiffNavigation.active ? (
+              <LavaSkiffControllerAdapter onChange={handleLavaSkiffControllerChange} />
+            ) : isShooterControllerActive ? (
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
               <div
@@ -16506,7 +16650,9 @@ export function IslandRunBoardPrototype({
                         </p>
                         {isCurrentIslandFullyCleared ? (
                           <p className="island-boss-trial__next-hint">
-                            Island clear is ready. A full-screen travel prompt will appear automatically.
+                            {islandNumber === 20 && !isLavaLabyrinthFinaleComplete
+                              ? 'Labyrinth solved. The emergency Iron Skiff extraction mission will launch next.'
+                              : 'Island clear is ready. A full-screen travel prompt will appear automatically.'}
                           </p>
                         ) : (() => {
                           // The boss is beaten — all that stands between the player and
@@ -19019,6 +19165,10 @@ export function IslandRunBoardPrototype({
         onCollect={() => {
           setShowWinCelebrationModal(false);
           setWinCelebrationRewards([]);
+          if (lavaSkiffIslandClearPending) {
+            setLavaSkiffIslandClearPending(false);
+            window.setTimeout(() => showIslandClearCelebrationFromAnywhere('lava_labyrinth_escape_complete'), 180);
+          }
         }}
       />
 
@@ -19034,7 +19184,13 @@ export function IslandRunBoardPrototype({
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
         primaryActionLabel={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
-          ? stagedRestorationProgress.completedAtMs !== null
+          ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
+            ? 'Solve the Level-3 Labyrinth first'
+            : stagedRestorationDescriptor.islandNumber === 20
+              && stagedRestorationProgress.completedAtMs !== null
+              && !isLavaLabyrinthFinaleComplete
+              ? 'Launch Iron Skiff'
+            : stagedRestorationProgress.completedAtMs !== null
             ? `Replay ${currentMissionTracker.briefing.headline}`
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
               ? `${stagedRestorationDescriptor.actionLabel} · ${stagedRestorationProgress.activatedStages + 1} of ${stagedRestorationDescriptor.stageCount}`
@@ -19047,7 +19203,13 @@ export function IslandRunBoardPrototype({
               : 'Find royal nectar on the route'
           : undefined}
         primaryActionHint={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
-          ? stagedRestorationProgress.completedAtMs !== null
+          ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
+            ? 'Complete all five objectives, resolve the Hatchery egg and restore every landmark to Level 3. The emergency extraction mission launches immediately afterward.'
+            : stagedRestorationDescriptor.islandNumber === 20
+              && stagedRestorationProgress.completedAtMs !== null
+              && !isLavaLabyrinthFinaleComplete
+              ? 'Steer through three Level-3 junctions, descend the lavafall and reach the Expedition Ship.'
+            : stagedRestorationProgress.completedAtMs !== null
             ? 'Replay the completed 3D transformation and island-wide finale.'
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
               ? 'The phone will fold so you can watch the next stage pop, flash and lock into the world.'
@@ -19060,8 +19222,9 @@ export function IslandRunBoardPrototype({
               : 'Land on a glowing honey tile, then return here to pour it.'
           : undefined}
         primaryActionDisabled={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
-          ? stagedRestorationProgress.completedAtMs === null
-            && stagedRestorationAvailableCharges < stagedRestorationDescriptor.chargeCostPerStage
+          ? !lavaLabyrinthEscapeMissionStarted
+            || (stagedRestorationProgress.completedAtMs === null
+              && stagedRestorationAvailableCharges < stagedRestorationDescriptor.chargeCostPerStage)
           : showMissionPhoneBriefing && islandNumber === 14
           ? !greatHoneyfallCompleted && greatHoneyfallAvailableNectar < 1
           : false}

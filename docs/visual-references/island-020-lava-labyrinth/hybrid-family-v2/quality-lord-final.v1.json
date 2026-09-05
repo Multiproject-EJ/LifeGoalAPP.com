@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "subject": "HabitGame Island 020 — Lava Labyrinth source-led hybrid family v2",
+  "reviewer": "independent-quality-lord",
+  "reviewed_at": "2026-08-30",
+  "result": "pass",
+  "scores": {
+    "source_identity": 0.91,
+    "composition": 0.89,
+    "materials_atmosphere": 0.92,
+    "phone_readability": 0.87,
+    "live_tile_mission_separation": 0.92,
+    "hybrid_depth": 0.88,
+    "animation_mission_integrity": 0.95,
+    "runtime_budget": 0.90,
+    "fixed_final_angle_stability": 0.98
+  },
+  "verified": [
+    "Overview is the only enabled preset.",
+    "High Survey and both orbit buttons are disabled.",
+    "Landmark focus, tour presentation, and POV authoring are disabled.",
+    "OrbitControls rotation and zoom are disabled.",
+    "Non-overview programmatic requests synchronously restore the exact overview position and target.",
+    "The live Three.js route, rewards, token, hit targets, mission machinery, and mission effects remain distinct from the source-led environment plate."
+  ],
+  "decision": "production-complete"
+}

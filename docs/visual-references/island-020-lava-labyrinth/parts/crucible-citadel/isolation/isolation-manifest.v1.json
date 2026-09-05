@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-08-30",
+  "status": "approved-source-packet-ready",
+  "part_ids": ["p07", "p08", "p09", "p10"],
+  "review_unit": "citadel-macro",
+  "authority_order": ["exact-source", "exact-source-crop", "explicit-user-decision", "secondary-inferred"],
+  "inputs": [
+    {"path":"../../../020-source.png","sha256":"ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8","authority":"exact-source","role":"whole-island composition and visible silhouette"},
+    {"path":"../../../derived-crops/crucible-citadel-source-crop-v001.png","sha256":"aa068959e992d74facc459a883fd419cbe320e60f38390b479486fb425f08e86","authority":"exact-source-crop","role":"p07-p10 macro form"},
+    {"path":"../../../derived-crops/crucible-citadel-and-route-source-crop-v001.png","sha256":"b1f3d961d94d82daa4fa18eed893f15470921701ab29b872776311f1b31a1495","authority":"exact-source-crop","role":"route/citadel/cliff composition and clearance"}
+  ],
+  "shared_contract": {
+    "axis": "+Y up, route in XZ plane, source camera from +Z/+Y three-quarter",
+    "origin": "canonical world center at citadel foundation",
+    "scale_reference": "canonical tile-ring radius and camera preset, never source pixel tile count",
+    "camera": "existing Island Run overview plus fixed source/left/right/rear/top review cameras",
+    "context": ["minimal p01 clay shell", "p05 canonical route clearance guide"],
+    "detail_firewall": "No materials, braziers, runes, guardian, particles, or animation polish before p07-p10 naked macro approval."
+  },
+  "owned_boundaries": {
+    "p07": "buried foundation, arena plinth, four landings, and tower/maze sockets",
+    "p08": "continuous keep/tower macro and crown/entry/buttress sockets",
+    "p09": "connected curtain walls, buttresses, maze courts, parapets, and walkway sockets",
+    "p10": "four gate arches, physical throughpasses, portcullis pivots, arena aperture, and bridge hinge consumers"
+  },
+  "visible_confidence": {"front_three_quarter":0.96,"left_visible_quarter":0.82,"right_occluded_quarter":0.65,"rear":0.35,"arena_interior":0.30},
+  "inferred_regions": ["rear tower elevation", "rear maze courts", "east gate hidden by source panel", "arena bowl depth", "gate mechanisms"],
+  "construction_hypothesis": "Use a four-sided radial fortress grammar derived from visible front and left structures, but vary wall heights and damage so rear construction is coherent rather than mirrored decoration.",
+  "generated_studies": [],
+  "generated_study_decision": "Not required for the first naked radial blockout. If rear/profile scores fail while source view passes, generate one neutral p07-p10 multi-view hypothesis and record it as secondary-inferred before attempting the single allowed correction.",
+  "acceptance_cues": [
+    "tower remains the dominant vertical mass",
+    "foundation is visibly buried into the island",
+    "maze walls form connected courts rather than loose cubes",
+    "all gates are real throughpasses and every bridge landing is plausible",
+    "rear/profile hold true volume with no facade collapse",
+    "canonical route and top clearance remain unobstructed"
+  ],
+  "forbidden_shapes": ["stacked-box castle","flat one-camera facade","solid drum foundation","random loose cuboid maze","painted door","route-intersecting wall","paper-thin rear"]
+}

@@ -63,6 +63,7 @@ export const CACTUS_CANYON_DYNAMITE_CACHE_AMOUNTS = Object.freeze([1, 1, 3, 1, 1
 
 export const HONEYCOMB_KINGDOM_ISLAND_NUMBER = 14;
 export const GREAT_HONEYFALL_MAX_STAGE = 4;
+export const LAVA_LABYRINTH_ISLAND_NUMBER = 20;
 /** Four royal-nectar landings, offset from the four landmark-door clusters. */
 export const GREAT_HONEYFALL_NECTAR_TILE_FRACTIONS = Object.freeze([
   2 / 36, 11 / 36, 20 / 36, 29 / 36,
@@ -73,17 +74,19 @@ export type StagedRestorationMissionId =
   | 'moon-mirrors'
   | 'breathline'
   | 'great-pollination'
-  | 'ignition-chain';
+  | 'ignition-chain'
+  | 'escape-lava-labyrinth';
 
 export type StagedRestorationPickupKind =
   | 'causeway_masonry'
   | 'moon_mirror_lens'
   | 'breathline_pressure_pearl'
   | 'pollination_pollen_light'
-  | 'ignition_core';
+  | 'ignition_core'
+  | 'heatshield_plate';
 
 export interface StagedRestorationMissionDescriptor {
-  islandNumber: 4 | 6 | 7 | 8 | 9;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 20;
   missionId: StagedRestorationMissionId;
   pickupKind: StagedRestorationPickupKind;
   pickupLabel: string;
@@ -125,6 +128,12 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
     stageCount: 8, chargeCostPerStage: 1,
     preferredPickupFractions: [0 / 36, 3 / 36, 8 / 36, 11 / 36, 18 / 36, 20 / 36, 26 / 36, 29 / 36],
   },
+  20: {
+    islandNumber: 20, missionId: 'escape-lava-labyrinth', pickupKind: 'heatshield_plate',
+    pickupLabel: 'Heatshield Plate', actionLabel: 'Forge Iron Skiff System', stageLabel: 'Escape Systems Ready',
+    stageCount: 4, chargeCostPerStage: 2,
+    preferredPickupFractions: [2 / 36, 7 / 36, 11 / 36, 16 / 36, 20 / 36, 25 / 36, 29 / 36, 35 / 36],
+  },
 });
 
 export function getStagedRestorationMissionDescriptor(
@@ -136,6 +145,10 @@ export function getStagedRestorationMissionDescriptor(
 export function getStagedRestorationMissionDescriptorById(
   missionId: unknown,
 ): StagedRestorationMissionDescriptor | null {
+  // Island 020 shipped briefly under the Firebridges prototype identity. Map
+  // those records into the final Iron Skiff mission so earned pickups and
+  // committed stages can only move forward during hydration/conflict merge.
+  if (missionId === 'forge-four-firebridges') return STAGED_RESTORATION_MISSIONS[20] ?? null;
   return Object.values(STAGED_RESTORATION_MISSIONS).find((descriptor) => descriptor.missionId === missionId) ?? null;
 }
 
@@ -274,6 +287,10 @@ export interface StagedRestorationMissionProgress {
   chargesSpent: number;
   activatedStages: number;
   lastActivatedStage: number | null;
+  /** Island 020 uses this to hold its long escape mission behind the solved labyrinth. */
+  startedAtMs?: number | null;
+  /** Island 020 sets this only after the Iron Skiff reaches the Expedition Ship. */
+  finaleCompletedAtMs?: number | null;
   completedAtMs: number | null;
   updatedAtMs: number;
 }
@@ -353,6 +370,8 @@ export function sanitizeIslandRunSignatureMissionProgress(
         Math.min(chargesEarned, Math.max(0, finiteInteger(record.chargesSpent ?? record.charges_spent))),
       );
       const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
+      const startedAtRaw = record.startedAtMs ?? record.started_at_ms;
+      const finaleCompletedAtRaw = record.finaleCompletedAtMs ?? record.finale_completed_at_ms;
       const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
       result[key] = {
         missionId: stagedDescriptor.missionId,
@@ -362,6 +381,12 @@ export function sanitizeIslandRunSignatureMissionProgress(
         chargesSpent,
         activatedStages,
         lastActivatedStage: activatedStages > 0 ? activatedStages : null,
+        startedAtMs: typeof startedAtRaw === 'number' && Number.isFinite(startedAtRaw)
+          ? Math.max(0, startedAtRaw)
+          : stagedDescriptor.islandNumber === LAVA_LABYRINTH_ISLAND_NUMBER ? null : 0,
+        finaleCompletedAtMs: typeof finaleCompletedAtRaw === 'number' && Number.isFinite(finaleCompletedAtRaw)
+          ? Math.max(0, finaleCompletedAtRaw)
+          : null,
         completedAtMs: typeof completedAtRaw === 'number' && Number.isFinite(completedAtRaw)
           ? Math.max(0, completedAtRaw)
           : activatedStages >= stagedDescriptor.stageCount ? 0 : null,
@@ -811,6 +836,8 @@ export function resolveStagedRestorationMissionProgress(options: {
     chargesSpent: 0,
     activatedStages: 0,
     lastActivatedStage: null,
+    startedAtMs: descriptor.islandNumber === LAVA_LABYRINTH_ISLAND_NUMBER ? null : 0,
+    finaleCompletedAtMs: null,
     completedAtMs: null,
     updatedAtMs: 0,
   };
@@ -818,6 +845,18 @@ export function resolveStagedRestorationMissionProgress(options: {
 
 export function getStagedRestorationAvailableCharges(progress: StagedRestorationMissionProgress): number {
   return Math.max(0, progress.chargesEarned - progress.chargesSpent);
+}
+
+export function isLavaLabyrinthEscapeMissionStarted(
+  progress: StagedRestorationMissionProgress | null,
+): boolean {
+  return progress?.missionId === 'escape-lava-labyrinth' && progress.startedAtMs != null;
+}
+
+export function isLavaLabyrinthEscapeMissionComplete(
+  progress: StagedRestorationMissionProgress | null,
+): boolean {
+  return progress?.missionId === 'escape-lava-labyrinth' && progress.finaleCompletedAtMs != null;
 }
 
 function collectStagedRestorationPickupForLanding(options: {
@@ -835,6 +874,7 @@ function collectStagedRestorationPickupForLanding(options: {
   const pickupTarget = descriptor.stageCount * descriptor.chargeCostPerStage;
   if (
     !current
+    || (descriptor.islandNumber === LAVA_LABYRINTH_ISLAND_NUMBER && !isLavaLabyrinthEscapeMissionStarted(current))
     || current.completedAtMs !== null
     || current.activatedStages >= descriptor.stageCount
     || current.claimedPickupTileIndices.includes(options.tileIndex)
@@ -1468,6 +1508,14 @@ export function mergeIslandRunSignatureMissionProgress(
       const completedAtMs = left.completedAtMs === null
         ? right.completedAtMs
         : right.completedAtMs === null ? left.completedAtMs : Math.min(left.completedAtMs, right.completedAtMs);
+      const startedAtMs = left.startedAtMs == null
+        ? right.startedAtMs ?? null
+        : right.startedAtMs == null ? left.startedAtMs : Math.min(left.startedAtMs, right.startedAtMs);
+      const finaleCompletedAtMs = left.finaleCompletedAtMs == null
+        ? right.finaleCompletedAtMs ?? null
+        : right.finaleCompletedAtMs == null
+          ? left.finaleCompletedAtMs
+          : Math.min(left.finaleCompletedAtMs, right.finaleCompletedAtMs);
       merged[key] = {
         missionId: stagedA.missionId,
         version: 1,
@@ -1476,6 +1524,8 @@ export function mergeIslandRunSignatureMissionProgress(
         chargesSpent,
         activatedStages,
         lastActivatedStage: activatedStages > 0 ? activatedStages : null,
+        startedAtMs,
+        finaleCompletedAtMs,
         completedAtMs,
         updatedAtMs: Math.max(left.updatedAtMs, right.updatedAtMs),
       };

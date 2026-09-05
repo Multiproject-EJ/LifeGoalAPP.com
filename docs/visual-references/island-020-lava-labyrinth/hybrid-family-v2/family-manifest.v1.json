@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "family_id": "island-020-source-led-hybrid-v2",
+  "status": "quality-lord-pass-production-complete-iron-skiff-escape-v4",
+  "approved_at": "2026-08-30",
+  "approval_record": "docs/visual-references/island-020-lava-labyrinth/user-decisions.v1.jsonl",
+  "representation": "source-led-layered-2.5d-threejs-hybrid",
+  "family_ordinal": 2,
+  "family_limit": 2,
+  "source": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8"
+  },
+  "generated_reference": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/raw/lava-labyrinth-environment-plate-v001.png",
+    "sha256": "dd3011fecfe5464287ea56ed98a6b22f4569439da464bc593b785262113e3cc2",
+    "authority": "secondary-inferred-source-led",
+    "runtime_derivative": "public/assets/islands/island-020/background/lava-labyrinth-environment-plate-v001.webp",
+    "runtime_sha256": "b42ea6da0c1c971716269d6c04ce7e50987b82c49e42ccd728bf7af938c267ff"
+  },
+  "frozen_interactive_systems": [
+    "canonical 36-tile route",
+    "player token and reward objects",
+    "landmark hit targets",
+    "Escape the Lava Labyrinth state, Iron Skiff assembly, controller and animation",
+    "canonical action-service writes",
+    "strict fixed-final-angle presentation and reduced-motion behavior"
+  ],
+  "visual_gates": {
+    "first_blockout": 1,
+    "bounded_corrections_remaining": 0,
+    "critical_source_view_minimum": 0.85,
+    "flat_plane_collapse_forbidden": true,
+    "fake_tiles_or_ui_forbidden": true
+  },
+  "prompt_lineage": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/prompt-lineage.v1.md",
+  "quality_lord_final": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-final.v1.json",
+  "lava_lookdev_v2": {
+    "status": "quality-lord-pass",
+    "direction": "gravity-down-and-centre-outward",
+    "heat_illumination": "molten-pixel-local-bounce-plus-live-forge-lights",
+    "reduced_motion": "deterministic-frozen-pose",
+    "runtime_delta": {"draw_calls": 1, "triangles": 2, "new_texture_bytes": 0},
+    "quality_lord": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-lookdev-v2.json",
+    "diagnostics": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-lookdev-v2-tier1-diagnostics.json"
+  },
+  "lava_volume_v3": {
+    "status": "quality-lord-pass",
+    "direction": "gravity-down-and-centre-outward-plus-multi-scale-hot-core-depth",
+    "heat_illumination": "plate-local-bounce-plus-live-forge-lights-and-existing-tile-emissive-response",
+    "reduced_motion": "deterministic-frozen-pose",
+    "retired_experiment": "cliff-tube-volume-and-route-rim-mesh",
+    "runtime_delta": {
+      "draw_calls": 0,
+      "triangles": 0,
+      "new_texture_bytes": 0
+    },
+    "observed_high": {
+      "draw_calls": 173,
+      "triangles": 45000
+    },
+    "quality_lord": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-volume-v3.json",
+    "diagnostics": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-volume-v3-tier1-diagnostics.json"
+  },
+  "iron_skiff_escape_v4": {
+    "status": "quality-lord-pass",
+    "mission": "collect-eight-heatshield-plates-forge-four-skiff-systems-and-escape",
+    "navigation": "hold-left-or-right-steering-plus-hold-forward-throttle-with-guaranteed-auto-forward",
+    "level_3": "summit-launch-davit-three-readable-gatehouse-junctions-front-lavafall-and-expedition-ship-cradle",
+    "gameplay_authority": "canonical-action-commit-before-presentation-only-run",
+    "legacy_migration": "forge-four-firebridges-progress-maps-monotonically-to-escape-lava-labyrinth",
+    "reduced_motion": "immediate-deterministic-extracted-pose",
+    "observed_medium": {
+      "draw_calls": 172,
+      "triangles": 42000,
+      "viewport_px": "351x773"
+    },
+    "hard_draw_call_ceiling": 175,
+    "review": ".img2threejs/island-020-iron-skiff-escape-v4/iron-skiff-escape-v4-review.md",
+    "diagnostics": ".img2threejs/island-020-iron-skiff-escape-v4/tier1-diagnostics.json"
+  }
+}

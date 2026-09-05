@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "family": "island-020-authored-multipart-glb-v5",
+  "stage": "bounded-correction",
+  "decision": "retired-not-for-runtime",
+  "scores": {
+    "source_identity": 0.51,
+    "phone_scale_silhouette": 0.64,
+    "cross_view_coherence": 0.82,
+    "maze_city_readability": 0.58,
+    "keep_identity": 0.61,
+    "terrain_and_cliff_depth": 0.66,
+    "lava_path_dominance": 0.45,
+    "worst_required_view": 0.45
+  },
+  "hypothesis_result": "failed",
+  "findings": [
+    "The silhouette is taller and the city is denser, but the massing now reads as a forest of identical spires instead of an orthogonal lava labyrinth.",
+    "The keep remains a generic stacked tower with oversized emissive slabs.",
+    "The maze is mostly lost in oblique views and the lava canal network is not visible enough to define navigation.",
+    "The crater terraces remain broad empty rings rather than a city fused into volcanic cliffs.",
+    "The front-cliff view proves closed depth but still fails source identity and heat-lit readability."
+  ],
+  "artifacts": {
+    "glb_sha256": "4d29f727b4b98870adaff19df70473d8aaceee5738771a3649c47a48ce379eaa",
+    "blend_sha256": "d8e5d4051140688297e95300e6188c9d1e9ddc24bf68da5cd9e5966b5c90764f"
+  },
+  "retirement_rule": "One naked blockout plus one bounded correction was consumed without reaching the 0.75 continuation floor. No material polish, animation work, or runtime integration is allowed for this representation."
+}

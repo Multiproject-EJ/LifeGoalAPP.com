@@ -18,11 +18,25 @@ export const islandChampionshipPresentationTests: TestCase[] = [
     run: () => {
       assertEqual(ISLAND_CHAMPIONSHIP_NUMBERS.join(','), '10,20,30,40,50,60,70,72,80,90,100,110,117', 'Expected ten Cups and three super levels');
       assertEqual(getIslandChampionshipPresentation(10)?.championshipId, 'lagoon-lantern', 'Island 10 should open the first host Cup');
+      assertEqual(getIslandChampionshipPresentation(20)?.championshipId, 'blaze-trials', 'Island 20 should keep a stable Blaze Trials identity');
       assertEqual(getIslandChampionshipPresentation(30)?.championshipId, 'first-circuit', 'Island 30 should be First Circuit');
       assertEqual(getIslandChampionshipPresentation(72)?.championshipId, '120-worlds', 'Island 72 should be 120 Worlds');
       assertEqual(getIslandChampionshipPresentation(117)?.championshipId, 'universal-117', 'Island 117 should be Universal');
       assertEqual(getIslandChampionshipPresentation(71), null, 'Ordinary islands should not receive a championship banner');
       assertEqual(getIslandChampionshipPresentation(120), null, 'Final Horizon should remain free for the story capstone');
+    },
+  },
+  {
+    name: 'Island 020 presents the approved Lava Labyrinth host Cup',
+    run: () => {
+      const presentation = getIslandChampionshipPresentation(20);
+      assertEqual(presentation?.title, 'Blaze Trials Cup', 'Island 020 should use the approved Cup title');
+      assertEqual(presentation?.theme, 'ember', 'Island 020 should use the volcanic ember theme');
+      assertEqual(presentation?.hostIslandName, 'Lava Labyrinth', 'Island 020 should use the runtime island name');
+      assertEqual(presentation?.ceremonyCallout, 'Launch the Iron Skiff', 'Island 020 should foreshadow the approved escape mission');
+      assertEqual(presentation?.summary.includes('Iron Skiff escape'), true, 'Island 020 summary should be grounded in the approved volcanic mission');
+      assertEqual(presentation?.artSrc.includes('/blaze-trials/'), true, 'Island 020 should use dedicated Blaze Trials artwork');
+      assertEqual(presentation?.artSrc.includes('/golden-winds/'), false, 'Island 020 must not leak the retired Golden Winds desert presentation');
     },
   },
   {

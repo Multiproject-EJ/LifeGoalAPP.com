@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "family": "island-020-monumental-fortress-maze-v7",
+  "goal": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+    "authority": "immutable-supplied-goal-pixels"
+  },
+  "current_result": {
+    "family": "silhouette-first-modular-city-glb-v6",
+    "runtime_url": "http://127.0.0.1:5181/dev/island-template-kit?island=20&mode=3d&level=3&firebridgeMissionStage=4&firebridgeEscape=1&island3dEvidence=1&island3dQuality=medium&family=v6-final-polish",
+    "live_capture_sha256": "78520b6ee58e92b21c21b37d9b3356499c614c127e4c764f79a4e299cc2e0e88",
+    "live_capture_bytes": 91318,
+    "glb_path": "docs/visual-references/island-020-lava-labyrinth/retired-runtime-assets/lava-labyrinth-v6-correction.glb",
+    "glb_sha256": "e13b75474e79cdec2ad151b6184475f7a676dfb391968124ba49afcd2296f7af",
+    "matched_static_capture_manifest": "../actual-3d-family-v6/correction-capture-manifest.v1.json"
+  },
+  "blind_visual_scores": {
+    "silhouette_and_volume": 0.34,
+    "source_identity": 0.23,
+    "architectural_specificity": 0.26,
+    "lava_depth_and_flow": 0.31,
+    "phone_scale_readability": 0.18,
+    "cross_view_coherence": 0.62,
+    "assembly_composition": 0.29,
+    "worst_required_view": 0.18
+  },
+  "hard_vetoes": [
+    "the fortress is too small and low in the portrait",
+    "the central keep does not form the reference's dominant vertical silhouette",
+    "the canonical tile ring overwhelms the authored city",
+    "the lava sea and chute read as flat graphic polygons",
+    "the upper half of the phone is largely empty",
+    "the outer island has a visible horizontal band instead of deep volcanic cliff mass",
+    "the maze reads as generic repeated blocks rather than a fortified multi-level city"
+  ],
+  "salvage_decision": "retire-v6-visual-family",
+  "salvageable_systems": [
+    "canonical gameplay and mission state",
+    "four-stage Iron Skiff progression",
+    "left-right plus hold-forward input adapter",
+    "runtime lava shader concepts",
+    "performance batching utilities",
+    "test coverage"
+  ],
+  "not_salvageable_as_visual_authority": [
+    "v6 macro geometry",
+    "v6 camera composition",
+    "v6 city scale",
+    "v6 material proportions",
+    "v6 claimed final review scores"
+  ]
+}

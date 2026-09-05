@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "familyId": "island-020-actual-3d-family-v3",
+  "status": "approved-for-representative-slice-production",
+  "approvedAt": "2026-08-30",
+  "approval": "Eivind: keep going; show the result only when it has improved from roughly 2/10 to 8/10.",
+  "representation": "procedural-threejs-continuous-volume-environment",
+  "goal": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8"
+  },
+  "runtimeRules": {
+    "environmentPlateAllowed": false,
+    "freeOrbitRequired": true,
+    "rearElevationRequired": true,
+    "realTerrainVolumeRequired": true,
+    "containedVolumetricLavaRequired": true,
+    "functionalLabyrinthRequired": true,
+    "canonicalBoardUnchanged": true,
+    "gameplayWritesRemainCanonical": true
+  },
+  "representativeSlice": ["p01", "p02", "p03", "p07", "p08", "p09", "p10", "p11", "p12"],
+  "reviewViews": ["canonical-phone", "left-45", "right-45", "rear-180", "top-clearance", "front-cliff-low", "clay", "semantic-id", "wireframe"],
+  "gates": {
+    "nakedMacroMinimumEveryView": 0.85,
+    "functionalMazeConnectivity": true,
+    "terrainHasClosedDepth": true,
+    "noPaperThinOrCameraDependentGeometry": true,
+    "routeAndVehicleClearance": true,
+    "highDrawCallsMax": 175,
+    "highTrianglesMax": 180000,
+    "oneBlockoutPlusOneCorrectionPerFamily": true
+  },
+  "pointers": {
+    "baseline": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v3/baseline.v2.json",
+    "inventory": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v3/part-inventory.v2.json",
+    "gauntlet": "docs/gauntlets/2026-08-30-island-020-actual-3d-rebuild.md",
+    "state": ".img2threejs/island-020-actual-3d-v3/state.json"
+  }
+}

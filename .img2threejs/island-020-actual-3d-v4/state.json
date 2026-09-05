@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped",
+  "profile": "generic",
+  "currentStep": "stopped",
+  "currentPass": "blockout",
+  "checklist": [
+    {
+      "id": "representation-authority-required",
+      "scope": "final",
+      "status": "pending",
+      "evidence": [],
+      "reason": "The family ceiling was reached below the visual threshold.",
+      "command": "Request explicit authority for a materially different representation family"
+    }
+  ],
+  "loops": {
+    "perPass": {},
+    "total": 0,
+    "maxPerPass": 1,
+    "maxTotal": 1
+  },
+  "artifacts": {
+    "reference": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "spec": ".img2threejs/island-020-actual-3d-v3/object-sculpt-spec.json"
+  },
+  "passHistory": [
+    {
+      "id": "bounded-correction",
+      "action": "request-input",
+      "evidence": ".img2threejs/island-020-actual-3d-v4/review/review-v001.json"
+    },
+    {
+      "passId": "bounded-correction",
+      "checklist": []
+    }
+  ],
+  "reviewCursor": 2,
+  "iterationAction": "new-pass",
+  "stopReason": "family-ceiling-reached: post-correction weakest visual score 0.58 is below 0.75; approve a materially different representation before further production"
+}

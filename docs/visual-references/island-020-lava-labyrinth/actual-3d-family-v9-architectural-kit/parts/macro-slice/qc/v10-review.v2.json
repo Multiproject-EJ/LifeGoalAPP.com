@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-09-02",
+  "asset_id": "island-020-v10-rectilinear-city-v002",
+  "scores": {
+    "silhouette_and_volume": 0.89,
+    "source_identity": 0.87,
+    "architectural_attachment": 0.91,
+    "cross_view_consistency": 0.90,
+    "assembly_readiness": 0.92,
+    "intended_scale": 0.89
+  },
+  "hard_vetoes": [],
+  "decision": "approved-for-runtime",
+  "controls_verified": {
+    "maze_graph_links_preserved": 115,
+    "canonical_route_ownership": "unchanged",
+    "runtime_semantic_parts": 9,
+    "source_gate_glb_sha256": "4e91b92575ea641648fa07bd5db90ad1940f595ea38a318a1971c3fb444aa11a",
+    "phone_runtime_glb_sha256": "76172c84eeb6713b97ea4fb43e3f80a27c4cf7b3c2fb237ff0028e9a7e8d13dc"
+  },
+  "runtime_gate": {
+    "viewport": "390x844",
+    "quality": "medium",
+    "fps_observed": 60,
+    "draw_calls_observed": 135,
+    "triangles_observed": 141000,
+    "triangle_budget": 180000,
+    "representation_family": "rectilinear-terraced-lava-city-glb-v10",
+    "authored_city_status": "loaded",
+    "capture_manifest": "../../../../gauntlet/qa/browser-v10/capture-manifest.v1.json"
+  },
+  "visible_result": "A dense orthogonal forge-city now occupies the circular island, the cathedral and escape gate remain dominant in all four required phone views, lava reads as directional hot flow with localized illumination, and the Iron Skiff route terminates at the extraction ship without skyline or orbit-camera occlusion."
+}

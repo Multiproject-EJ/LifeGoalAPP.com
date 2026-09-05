@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-09-01",
+  "asset_id": "island-020-v9-macro-slice-v002",
+  "scores": {
+    "silhouette_and_volume": 0.83,
+    "source_identity": 0.76,
+    "architectural_attachment": 0.82,
+    "cross_view_consistency": 0.90,
+    "assembly_readiness": 0.83,
+    "intended_scale": 0.81
+  },
+  "delta_from_v001": {
+    "worst_dimension": 0.04,
+    "required": 0.10
+  },
+  "decision": "retire-family",
+  "dominant_mismatch": "V9 incorrectly projected the circular outer board grammar into the inner maze. The source's inner city is an irregular, predominantly orthogonal terraced labyrinth, not concentric polar fence cells.",
+  "salvageable": ["outer board ring proportions", "volcanic foundation scale", "dark fissured background", "volumetric cascade technique"],
+  "forbidden_to_salvage": ["polar maze panels", "evenly distributed bastion field", "isolated rectangular keep body"],
+  "next_action": "Build the second admitted family as a rectilinear terraced lava-city inside the circular board ring."
+}

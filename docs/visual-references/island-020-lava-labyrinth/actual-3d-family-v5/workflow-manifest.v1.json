@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "familyId": "island-020-authored-multipart-glb-v5",
+  "status": "approved-for-representative-slice",
+  "approvedAt": "2026-08-30",
+  "userDecision": "approve",
+  "decisionContext": "Approval followed the explicit request: Approved: GLB/Blender family.",
+  "representation": "reproducible-headless-blender-authored-multipart-glb",
+  "goal": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8"
+  },
+  "inherits": {
+    "partInventory": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v3/part-inventory.v2.json",
+    "retiredFamilyState": ".img2threejs/island-020-actual-3d-v4/state.json",
+    "retiredFamilyReview": ".img2threejs/island-020-actual-3d-v4/review/review-v001.json"
+  },
+  "representativeSlice": [
+    "terrain-shell",
+    "city-mesa",
+    "maze-walls",
+    "crucible-keep",
+    "gatehouses",
+    "lava-channel-beds",
+    "iron-skiff-escape-bed"
+  ],
+  "semanticExportRequired": true,
+  "fusedSingleMeshForbidden": true,
+  "runtimeRules": {
+    "environmentPlateAllowed": false,
+    "canonicalBoardUnchanged": true,
+    "gameplayWritesRemainCanonical": true,
+    "blenderRuntimeDependencyAllowed": false,
+    "glbLoadedByExistingThreeRuntime": true
+  },
+  "reviewViews": [
+    "front",
+    "left-45",
+    "right-45",
+    "rear",
+    "top",
+    "front-cliff-low"
+  ],
+  "gates": {
+    "minimumEveryCriticalView": 0.85,
+    "closedTerrain": true,
+    "functionalConnectedMaze": true,
+    "sourceSilhouette": true,
+    "crossViewCoherence": true,
+    "highDrawCallsMax": 175,
+    "highTrianglesMax": 180000,
+    "oneBlockoutPlusOneCorrection": true
+  },
+  "authority": {
+    "allowed": [
+      "repository-local Blender Python authoring",
+      "headless .blend and .glb export",
+      "repository-local runtime integration and tests"
+    ],
+    "notAllowed": [
+      "paid or neural generation",
+      "deployment or merge",
+      "removing retired evidence"
+    ]
+  },
+  "pointers": {
+    "authoringScript": "scripts/blender/island020_build_v5.py",
+    "buildRoot": ".assetgauntlet/island-020-actual-3d-v5/build",
+    "evidenceRoot": ".assetgauntlet/island-020-actual-3d-v5/qa/raw",
+    "runtimeGlb": "docs/visual-references/island-020-lava-labyrinth/retired-runtime-assets/lava-labyrinth-v5-blockout.glb"
+  }
+}

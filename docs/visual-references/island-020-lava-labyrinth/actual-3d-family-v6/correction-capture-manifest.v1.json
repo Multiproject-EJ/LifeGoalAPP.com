@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "family": "island-020-silhouette-first-modular-city-glb-v6",
+  "generator": "scripts/blender/island020_build_v6.py",
+  "representation_stage": "bounded-correction",
+  "semantic_export_object_count": 14,
+  "artifacts": {
+    "glb": {
+      "path": "docs/visual-references/island-020-lava-labyrinth/retired-runtime-assets/lava-labyrinth-v6-correction.glb",
+      "sha256": "e13b75474e79cdec2ad151b6184475f7a676dfb391968124ba49afcd2296f7af"
+    },
+    "blend": {
+      "path": ".assetgauntlet/island-020-actual-3d-v6/build/lava-labyrinth-v6-correction.blend",
+      "sha256": "f13a99a5e6049f5bff5319d4f149107d0737c52913e1b0a2fadbe5042e252675"
+    }
+  },
+  "views": [
+    {"name": "front", "sha256": "59027c8a60b94c3e4af5f3cf3249856ffdbac51bf54e5e9e8cd8c290b64a0ed2"},
+    {"name": "left-45", "sha256": "0785315d7d516732341ff75cd1ba5757469abe1b8d78bcd406aa89f94293ee52"},
+    {"name": "right-45", "sha256": "b9ac9e929e956e61d66d615bd7abd5d27e2da8bd1c4477136a17b2383198b1f8"},
+    {"name": "rear", "sha256": "394ea272c18ea2905cd9c18d2795949a51e62ecf90096819611df39805dfa72c"},
+    {"name": "top", "sha256": "8297f2e31d29fb7b6c1b49b8e567745461f5f002cb1792c8690007dd50cdedfb"},
+    {"name": "front-cliff-low", "sha256": "122bb961ae3a3083de1c168ae0219cafe06ccebe7232bb4d0bfa8d4660bc5dee"}
+  ]
+}

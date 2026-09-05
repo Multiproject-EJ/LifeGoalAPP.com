@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-09-01",
+  "asset_id": "island-020-v9-macro-slice-v001",
+  "scores": {
+    "silhouette_and_volume": 0.79,
+    "source_identity": 0.72,
+    "architectural_attachment": 0.75,
+    "cross_view_consistency": 0.88,
+    "assembly_readiness": 0.78,
+    "intended_scale": 0.77
+  },
+  "hard_vetoes": [],
+  "decision": "one-bounded-correction",
+  "hypothesis": "The radial plan is correct, but thin maze partitions, a flat overpowering background field, and insufficient city-attached forge mass prevent the source's dense basalt-city read.",
+  "controls": ["preserve the 112-cell maze graph", "preserve every existing opening", "preserve keep position and outer-ring diameter", "preserve truly volumetric front flow"],
+  "expected_visible_delta": "Dense bastions and attached roofs convert fence panels into architecture; an irregular dark volcanic background restores contrast; added keep transepts and cliff columns establish source-scale hierarchy.",
+  "required_worst_dimension_gain": 0.10
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "subject": "Island 020 Lava Labyrinth",
+  "family": "island-020-monumental-fortress-maze-v7",
+  "status": "awaiting-user-production-approval",
+  "representation": "authored modular Blender environment exported as multipart GLB",
+  "goal_authority": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+    "rank": "immutable-supplied-goal-pixels"
+  },
+  "render_profile": {
+    "primary_phone_canvas": [351, 773],
+    "runtime_phone_canvas": [566, 1247],
+    "camera_projection": "portrait-perspective",
+    "required_views": [
+      "front-hero",
+      "left-45",
+      "right-45",
+      "rear",
+      "top-maze",
+      "front-cliff-low",
+      "phone-proof"
+    ],
+    "orbit_degrees": [0, 45, 90, 135, 180, 225, 270, 315]
+  },
+  "gates": {
+    "macro_silhouette_min": 0.85,
+    "identity_min": 0.85,
+    "cross_view_min": 0.85,
+    "assembly_min": 0.85,
+    "phone_readability_min": 0.85,
+    "worst_required_view_min": 0.85,
+    "hard_vetoes": [
+      "city occupies less than 58 percent of the playable portrait height",
+      "keep fails to dominate every hero three-quarter view",
+      "tile ring visually dominates the fortress",
+      "lava collapses into flat painted polygons",
+      "large empty upper viewport",
+      "visible horizontal terrain seam",
+      "generic block maze without fortified districts"
+    ]
+  },
+  "budgets": {
+    "runtime_triangles_max": 190000,
+    "runtime_draw_calls_max": 170,
+    "authored_semantic_parts_max": 24,
+    "texture_resolution_max": 1024
+  },
+  "family_economics": {
+    "naked_blockouts_allowed": 1,
+    "bounded_corrections_allowed": 1,
+    "reviews_allowed": 2
+  },
+  "representative_vertical_slice": {
+    "id": "hero-wedge",
+    "parts": [
+      "central-crucible-keep",
+      "north-south-forge-spine",
+      "front-gate-and-grand-stair",
+      "southwest-maze-district",
+      "front-lavafall-cliff"
+    ],
+    "purpose": "Falsify the new family's silhouette, architectural scale, navigable maze language and lava depth before completing the remaining quadrants."
+  },
+  "production_order": [
+    "hero-wedge",
+    "continuous-volcanic-foundation",
+    "remaining-maze-districts",
+    "cardinal-gates-and-route-ring",
+    "satellite-landmarks",
+    "iron-skiff-escape-chain",
+    "materials-lighting-atmosphere",
+    "runtime-assembly-and-phone-proof"
+  ]
+}

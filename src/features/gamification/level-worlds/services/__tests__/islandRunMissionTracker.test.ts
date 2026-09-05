@@ -59,12 +59,80 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [12, 'Sunken Sands', 'Find the Sunscarab'],
         [13, 'Cactus Canyon', 'Carve the Canyon Spiral'],
         [14, 'Honeycomb Kingdom', 'Awaken the Great Honeyfall'],
+        [20, 'Lava Labyrinth', 'Escape the Lava Labyrinth'],
       ] as const;
       expected.forEach(([islandNumber, islandName, headline]) => {
         const presentation = getIslandMissionBriefingPresentation(islandNumber);
         assertEqual(presentation.islandName, islandName, `Island ${islandNumber} uses its production world name`);
         assertEqual(presentation.headline, headline, `Island ${islandNumber} uses its approved compact header`);
       });
+    },
+  },
+  {
+    name: 'Lava Labyrinth tracker reveals the long Iron Skiff sequence only after the Level-3 labyrinth',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 20);
+      const solvedState = makeState({
+        currentIslandNumber: 20,
+        bossTrialResolvedIslandNumber: 20,
+        perIslandEggs: { '20': { tier: 'common', setAtMs: 1, hatchAtMs: 2, status: 'collected' } },
+        ...restoredStops(),
+      });
+      const locked = resolveIslandMissionTrackerPresentation({ islandNumber: 20, state: solvedState });
+      assertEqual(locked.objectives[0].label, 'Escape Mission Locked', 'the long mission stays distinct from ordinary labyrinth completion');
+      assertEqual(locked.objectives[0].displayValue, 'Solve the labyrinth first', 'the locked phase explains its launch condition');
+      assertEqual(locked.objectives[1].label, 'Solve Level-3 Labyrinth', 'ordinary island completion remains visible as the prerequisite');
+
+      const collecting = resolveIslandMissionTrackerPresentation({
+        islandNumber: 20,
+        state: makeState({
+          ...solvedState,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'escape-lava-labyrinth', version: 1,
+              claimedPickupTileIndices: [2, 7, 11], chargesEarned: 3, chargesSpent: 0,
+              activatedStages: 0, lastActivatedStage: null, startedAtMs: 10,
+              finaleCompletedAtMs: null, completedAtMs: null, updatedAtMs: 12,
+            },
+          },
+        }),
+      });
+      assertEqual(collecting.objectives[0].label, 'Recover Heatshield Plates', 'mission launch reveals the route collection phase');
+      assertEqual(collecting.objectives[0].displayValue, '3 / 8 plates', 'plate progress stays compact and explicit');
+
+      const launchReady = resolveIslandMissionTrackerPresentation({
+        islandNumber: 20,
+        state: makeState({
+          ...solvedState,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'escape-lava-labyrinth', version: 1,
+              claimedPickupTileIndices: [2, 7, 11, 16, 20, 25, 29, 35], chargesEarned: 8, chargesSpent: 8,
+              activatedStages: 4, lastActivatedStage: 4, startedAtMs: 10,
+              finaleCompletedAtMs: null, completedAtMs: 20, updatedAtMs: 20,
+            },
+          },
+        }),
+      });
+      assertEqual(launchReady.objectives[0].label, 'Launch Iron Skiff', 'forged systems advance the tracker to the playable escape');
+      assertEqual(launchReady.complete, false, 'forging alone cannot mark the Island 020 mission complete');
+
+      const extracted = resolveIslandMissionTrackerPresentation({
+        islandNumber: 20,
+        state: makeState({
+          ...solvedState,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'escape-lava-labyrinth', version: 1,
+              claimedPickupTileIndices: [2, 7, 11, 16, 20, 25, 29, 35], chargesEarned: 8, chargesSpent: 8,
+              activatedStages: 4, lastActivatedStage: 4, startedAtMs: 10,
+              finaleCompletedAtMs: 30, completedAtMs: 20, updatedAtMs: 30,
+            },
+          },
+        }),
+      });
+      assertEqual(extracted.objectives[0].label, 'Reach Expedition Ship', 'successful extraction advances the phone to its terminal objective');
+      assertEqual(extracted.complete, true, 'only the persisted extraction edge completes the long mission');
     },
   },
   {
@@ -100,6 +168,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [7, 'Districts Breathing'],
         [8, 'Gardens Blooming'],
         [9, 'Systems Ignited'],
+        [20, 'Escape Mission Locked'],
       ]);
       expectedStageLabels.forEach((stageLabel, islandNumber) => {
         const tracker = resolveIslandMissionTrackerPresentation({
@@ -109,7 +178,11 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         assertEqual(tracker.usesLiveSignatureProgress, true, `Island ${islandNumber} reads canonical mission state`);
         assertEqual(tracker.objectives[0].label, stageLabel, `Island ${islandNumber} names its authored visual transformation`);
         assertEqual(tracker.objectives[0].value, 0, `Island ${islandNumber} starts with no activated stages`);
-        assertEqual(tracker.objectives[1].label, 'Build Landmarks', 'canonical build progress remains visible');
+        assertEqual(
+          tracker.objectives[1].label,
+          islandNumber === 20 ? 'Solve Level-3 Labyrinth' : 'Build Landmarks',
+          'canonical build progress remains visible',
+        );
       });
     },
   },

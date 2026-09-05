@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "capturedAt": "2026-08-30",
+  "goal": {
+    "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+    "authority": "exact-source"
+  },
+  "currentBaselines": [
+    {
+      "family": "source-led-hybrid-v2",
+      "path": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-final-phone-v003.jpg",
+      "sha256": "0962df0056b6b5b10c1e825c128f61bf0f1142e21a21778b6580efea0251efec",
+      "dimensions": "133x291",
+      "decision": "retire-as-runtime-environment",
+      "largestFailure": "The plate owns almost all terrain, buildings and labyrinth depth; it does not survive orbit or close inspection as actual 3D."
+    },
+    {
+      "family": "procedural-radial-v1",
+      "path": ".img2threejs/island-020-lava-labyrinth/review/island-020-overview-stage4-v021.png",
+      "sha256": "fc03a623bf1ea3683d7688bd29d06448c845f303ad2bf1b44a20d355eb0e0ab3",
+      "dimensions": "393x800",
+      "decision": "retire-geometry-family",
+      "largestFailure": "The island reads as a flat generic disc with repeated primitive walls, weak vertical geology, toy-like tower proportions and no convincing functional labyrinth."
+    }
+  ],
+  "salvage": {
+    "retain": [
+      "canonical 36-tile route and transforms",
+      "mission state/action services and legacy migration",
+      "Iron Skiff controller contract and completion lifecycle",
+      "shared renderer, camera, quality tiers, caretaker and construction interfaces",
+      "source palette and material observations"
+    ],
+    "discardFromVisualAuthority": [
+      "runtime environment plate",
+      "camera lock introduced solely to hide plate-space depth",
+      "old generic radial terrain and labyrinth geometry",
+      "old repeated box-based landmark silhouettes"
+    ],
+    "blankActual3DBaseline": "Disable the plate and retired procedural visual family; begin the new representative slice from a naked continuous terrain and labyrinth blockout."
+  }
+}

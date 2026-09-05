@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "subject": "HabitGame Island 020 — Lava Labyrinth lava-volume integration v3",
+  "reviewer": "independent-quality-lord",
+  "reviewed_at": "2026-08-30",
+  "result": "pass",
+  "action": "approve",
+  "scores": {
+    "lava_flow_direction_readability": 0.90,
+    "multi_scale_hot_core_depth": 0.88,
+    "heat_illumination_local_bounce": 0.91,
+    "no_orange_wash_control": 0.95,
+    "route_black_stone_readability": 0.92,
+    "pipe_spoke_artifact_avoidance": 0.99,
+    "reduced_motion_safety": 0.99,
+    "mobile_performance": 0.98
+  },
+  "evidence": [
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-t0-v003.jpg",
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-t6-v003.jpg",
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-reduced-motion-v003.jpg",
+    ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-comparison-v003.jpg",
+    "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/lava-volume-v3-tier1-diagnostics.json"
+  ],
+  "runtime": {
+    "high_draw_calls": 173,
+    "high_triangles": 45000,
+    "low_draw_calls": 163,
+    "low_triangles": 31000,
+    "v3_added_draw_calls": 0,
+    "v3_added_triangles": 0,
+    "new_texture_bytes": 0,
+    "draw_call_gate": 175
+  },
+  "verified": [
+    "Lava travels gravity-down on falls and centre-outward across the upper molten field.",
+    "Periodic displacement, multi-scale ribbons, hot cores, cooling edges, and local heat halos produce perceptual molten depth without extra geometry.",
+    "Existing route materials provide bounded thermal response without another renderable.",
+    "The failed cliff-tube and route-rim experiment remains retired, eliminating cylindrical pipe and spoke artifacts.",
+    "Reduced motion deterministically freezes the shader and thermal response.",
+    "The source-led representation, fixed camera, canonical route, mission, token, rewards, hit targets, and landmark hierarchy remain unchanged."
+  ],
+  "largest_remaining_mismatch": "Lava depth is perceptual plate-space depth rather than true camera-parallax volume, so the effect remains restrained at phone scale. Under the frozen approved source-led hybrid representation, this is non-blocking.",
+  "decision": "production-complete"
+}

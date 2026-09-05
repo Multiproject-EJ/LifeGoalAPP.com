@@ -1,0 +1,366 @@
+{
+  "targetName": "Island 020 Lava Labyrinth — source-led hybrid family v2",
+  "targetId": "island-020-lava-labyrinth-hybrid-v2",
+  "schemaVersion": "2.1",
+  "sourceImage": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+  "suitability": "conditional",
+  "representation": {
+    "type": "source-led-layered-2.5d-threejs-hybrid",
+    "userApproved": true,
+    "approvalRecord": "docs/visual-references/island-020-lava-labyrinth/user-decisions.v1.jsonl",
+    "finalAngleOnly": true,
+    "layers": [
+      "source-led environment plate: horizon, cliffs, labyrinth and citadel",
+      "live Three.js canonical 36-tile route and rewards",
+      "live Three.js Firebridge mission machinery, finale, token and hit targets"
+    ]
+  },
+  "referenceCamera": {
+    "solved": true,
+    "fovDegrees": 42,
+    "aspect": 0.4621,
+    "orientation": {
+      "yaw": 0,
+      "pitch": -47,
+      "roll": 0
+    },
+    "positionHint": [
+      0,
+      13.2,
+      23.4
+    ],
+    "note": "The final-angle plate is the visible authority. Runtime rotation, zoom, landmark focus, tour, POV authoring, and non-overview presets are intentionally disabled."
+  },
+  "components": [
+    {
+      "id": "hybrid-far",
+      "name": "Volcanic horizon and smoke depth",
+      "authority": "source-led generated plate"
+    },
+    {
+      "id": "hybrid-mid",
+      "name": "Obsidian cliff, lavafalls, labyrinth and Crucible Citadel",
+      "authority": "source-led generated plate"
+    },
+    {
+      "id": "hybrid-route",
+      "name": "Canonical live route and reward projection",
+      "authority": "runtime Three.js"
+    },
+    {
+      "id": "hybrid-mission",
+      "name": "Forge the Four Firebridges",
+      "authority": "runtime Three.js and canonical state"
+    }
+  ],
+  "qualityGates": {
+    "criticalSourceViewMinimum": 0.85,
+    "fakeUiOrTiles": 0,
+    "runtimeMissionIntegrityMinimum": 0.9,
+    "boundedCorrectionLimit": 1,
+    "boundedCorrectionsUsed": 1
+  },
+  "lookDevelopment": {
+    "activePass": "lava-lookdev-v2",
+    "authority": "Eivind's 2026-08-30 request to continue the Quality-Lord/Gauntlet loop and make the lava visibly flow while surrounding surfaces are illuminated by heat.",
+    "frozenSystems": [
+      "source-led environment composition and final camera registration",
+      "canonical 36-tile route, token, rewards and hit targets",
+      "Forge the Four Firebridges gameplay state and mission machinery",
+      "landmark hierarchy and source-led hybrid representation family"
+    ],
+    "flowContract": {
+      "direction": "gravity-down on cliff falls and centre-outward through surface channels",
+      "motion": "elapsed-time GPU advected ribbons with two non-repeating frequencies; no frame accumulation",
+      "locality": "motion and highlight energy are constrained to warm molten pixels from the approved plate",
+      "reducedMotion": "freeze the flow field at a deterministic authored pose"
+    },
+    "heatLightingContract": {
+      "background": "derive a local orange-red halo from neighbouring molten pixels so adjacent basalt receives visible heat bounce without bleaching its black form",
+      "liveGeometry": "animate the existing central forge and under-island point lights with slow bounded thermal variation",
+      "separation": "retain a cool rim and preserve route/reward contrast",
+      "forbidden": [
+        "full-frame orange wash",
+        "strobing",
+        "unmasked UV swimming",
+        "highlight clipping",
+        "camera-dependent geometry"
+      ]
+    },
+    "performanceBudget": {
+      "additionalDrawCalls": 1,
+      "additionalTriangles": 2,
+      "newTextureBytes": 0,
+      "targetAverageFps": 50,
+      "maxDrawCalls": 175
+    }
+  },
+  "lookDevelopmentV3": {
+    "activePass": "lava-volume-integration-v3",
+    "authority": "Eivind's 2026-08-30 direction that the approved v2 is much better but still not there yet, with explicit instruction to continue.",
+    "largestObservedMismatch": "The plate flow reads, but molten material still lacks physical thickness and the live playable layer is too neutrally lit above it.",
+    "falsifiableHypothesis": "Plate-registered surface-river advection, zero-geometry hot-core/cooling-edge depth, bounded emissive response in the existing tile materials, and stronger multi-scale shader cells will make heat visibly belong to the playable layer without changing camera, route, mission, source identity, or the accepted draw-call ceiling.",
+    "frozenSystems": [
+      "source-led environment composition and strict final camera",
+      "canonical 36-tile route transforms and gameplay semantics",
+      "player token, rewards, hit targets, mission state, and landmark hierarchy",
+      "approved basalt silhouette and black-stone readability"
+    ],
+    "implementationContract": {
+      "liveLavaVolume": "Keep the diagnostic lava-network geometry retired after the independent gate proved that extra cliff volume exceeded the complete-pilot budget; express depth through the registered shader field instead.",
+      "flow": "Advect the plate's molten pixels centre-outward and gravity-down with periodic displacement and multi-scale hot-core/cooling-edge separation; no frame accumulation.",
+      "heatContact": "Apply bounded thermal response through the existing three canonical tile materials with no rim mesh or added draw call.",
+      "plate": "Increase multi-scale bright-core/dark-crust separation inside the existing molten mask while preserving local heat halo and avoiding full-frame tint.",
+      "reducedMotion": "Freeze plate advection, shimmer, existing-tile thermal response, and live-light breathing at one deterministic pose."
+    },
+    "performanceBudget": {
+      "additionalDrawCallsMaximum": 0,
+      "additionalTrianglesMaximum": 0,
+      "newTextureBytes": 0,
+      "maxDrawCalls": 175
+    }
+  },
+  "missionNavigationV4": {
+    "activePass": "iron-skiff-escape-v4",
+    "authority": "Eivind explicitly approved replacing the Firebridges mission with an iron-boat escape, requested an impressive Level-3 labyrinth, and approved a temporary left/right plus forward controller mode on 2026-08-30.",
+    "missionId": "escape-lava-labyrinth",
+    "title": "Escape the Lava Labyrinth",
+    "playerOutcome": "Forge a compact Iron Skiff, open the summit sluice, steer through three readable labyrinth junctions, plunge down the front lavafall, and reach the Expedition Ship extraction cradle.",
+    "navigationContract": {
+      "controller": "During the skiff run only, replace the ordinary footer actions with left and right steering paddles plus a hold-forward throttle joystick; restore the ordinary controller immediately after the run.",
+      "difficulty": "Forgiving guided traversal with automatic forward safety, readable left/right junction cues, bounded lateral steering, no death loop, and a guaranteed extraction.",
+      "authority": "The canonical mission stage commits before the presentation run. Steering, throttle, camera, skiff pose, sparks, and route choices are presentation-only and cannot award, spend, or duplicate progress.",
+      "reducedMotion": "Resolve the same committed result through a short summit-to-docked crossfade with one restrained cooling glow and no moving camera or particles."
+    },
+    "levelThreeContract": {
+      "maze": "Three connected concentric wall families, elevated brass-capped junction towers, readable sluice gates, launch rails, moving portcullis silhouettes, and a clear molten escape stream from summit to front cliff.",
+      "skiff": "One phone-readable riveted black-iron escape pod with ceramic heat shield, ember-glass visor, cooling veins, steering fins, and a visible magnetic docking collar.",
+      "ship": "Use a budgeted extraction silhouette/cradle consistent with the approved Expedition Ship; do not introduce a second ship identity or load the full garage model into the island scene.",
+      "forbidden": [
+        "maze walls covering the canonical route",
+        "unreadable random turns",
+        "wooden canoe language",
+        "failure or damage that can invalidate committed mission progress",
+        "new gameplay writes inside React or Three.js",
+        "more than 175 live high-tier draw calls"
+      ]
+    },
+    "performanceBudget": {
+      "maxDrawCalls": 175,
+      "strategy": "Retire the four Firebridge renderables and reuse their mission budget; merge skiff, labyrinth additions, and extraction cradle by existing materials rather than adding unbounded renderables."
+    }
+  },
+  "buildPasses": [
+    {
+      "id": "lava-lookdev-v2",
+      "acceptance": [
+        "lava reads as continuously directional flow in a t0 versus t6 comparison",
+        "adjacent basalt and live route geometry receive restrained heat illumination",
+        "black-stone form, route tiles, rewards and mission state remain readable at phone scale",
+        "reduced motion freezes the flow without changing gameplay state",
+        "the pass remains inside the recorded mobile budget"
+      ]
+    },
+    {
+      "id": "lava-volume-integration-v3",
+      "acceptance": [
+        "molten material has visible hot-core/cooling-edge depth while every river remains registered to the approved source plate",
+        "surface channels travel centre-outward and cliff flows travel downward with readable bright core and darker cooling edges",
+        "route blocks visibly receive heat contact through existing materials while top faces, rewards, token, and mission state remain legible",
+        "reduced motion freezes every new decorative thermal system at one deterministic pose",
+        "the live scene remains at or below 175 draw calls and adds no texture bytes"
+      ]
+    },
+    {
+      "id": "iron-skiff-escape-v4",
+      "acceptance": [
+        "Island 020 uses the save-compatible Escape the Lava Labyrinth mission identity and migrates prior Firebridge progress monotonically",
+        "the Level-3 Crucible Citadel reads as an impressive navigable labyrinth with three clear junction choices and a summit-to-cliff escape stream",
+        "the footer temporarily becomes left/right steering plus hold-forward throttle only during the Iron Skiff run and restores ordinary controls afterward",
+        "the Iron Skiff reaches the Expedition Ship extraction cradle through an interrupt-safe presentation with a deterministic reduced-motion completion",
+        "canonical route, rewards, token, stops, build authority, and gameplay writes remain unchanged",
+        "the complete high-tier scene stays at or below 175 draw calls"
+      ]
+    }
+  ],
+  "reviewHistory": [
+    {
+      "reviewer": "independent-quality-lord",
+      "date": "2026-08-30",
+      "result": "pass",
+      "scores": {
+        "sourceIdentity": 0.91,
+        "composition": 0.89,
+        "materialsAtmosphere": 0.92,
+        "phoneReadability": 0.87,
+        "liveTileMissionSeparation": 0.92,
+        "hybridDepth": 0.88,
+        "animationMissionIntegrity": 0.95,
+        "runtimeBudget": 0.9,
+        "fixedFinalAngleStability": 0.98
+      },
+      "decision": "accept"
+    },
+    {
+      "passId": "lava-lookdev-v2",
+      "reviewer": "root-self-review",
+      "date": "2026-08-30",
+      "action": "refine-spec",
+      "summary": "The approved plate contains strong molten colour but the runtime baseline is static: lava does not show directional travel and existing point lights do not illuminate the plate. Define a masked GPU flow/highlight layer plus bounded thermal light variation without changing the accepted representation.",
+      "renderScreenshot": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-baseline-v001.jpg",
+      "scores": {
+        "lavaFlowReadability": 0.28,
+        "heatIllumination": 0.58,
+        "phoneReadability": 0.88,
+        "sourceIdentity": 0.91
+      }
+    },
+    {
+      "passId": "lava-lookdev-v2",
+      "reviewer": "independent-quality-lord",
+      "date": "2026-08-30",
+      "action": "continue",
+      "result": "pass",
+      "summary": "Directional cliff and labyrinth lava now reads as restrained continuous motion; local heat bounce preserves basalt and route contrast, reduced motion freezes safely, and the pass stays inside the mobile draw-call gate.",
+      "visualEvidence": [
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-t0-v002.jpg",
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-t6-v002.jpg",
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-lookdev-reduced-motion-v002.jpg"
+      ],
+      "aiVisionScore": 0.91,
+      "scores": {
+        "sourceIdentity": 0.92,
+        "lavaFlowReadabilityDirection": 0.88,
+        "heatIlluminationLocalBounce": 0.9,
+        "routeBlackStoneReadability": 0.91,
+        "reducedMotionSafety": 0.99,
+        "performance": 0.96
+      },
+      "decision": "accept"
+    },
+    {
+      "passId": "lava-volume-integration-v3",
+      "reviewer": "independent-quality-lord",
+      "date": "2026-08-30",
+      "action": "continue",
+      "result": "pass",
+      "summary": "The first v3 volume/rim experiment was stopped at 177 projected high-tier calls. The bounded correction retired those renderables, retained periodic multi-scale hot-core/cooling-edge flow, and moved thermal contact into existing tile materials. Final live high-tier evidence is 173 calls and 45k triangles with no pipe/spoke artifact.",
+      "visualEvidence": [
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-t0-v003.jpg",
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-t6-v003.jpg",
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-reduced-motion-v003.jpg",
+        ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-comparison-v003.jpg"
+      ],
+      "aiVisionScore": 0.9,
+      "scores": {
+        "lavaFlowDirectionReadability": 0.9,
+        "multiScaleHotCoreDepth": 0.88,
+        "heatIlluminationLocalBounce": 0.91,
+        "noOrangeWashControl": 0.95,
+        "routeBlackStoneReadability": 0.92,
+        "pipeSpokeArtifactAvoidance": 0.99,
+        "reducedMotionSafety": 0.99,
+        "mobilePerformance": 0.98
+      },
+      "decision": "accept"
+    },
+    {
+      "passId": "iron-skiff-escape-v4",
+      "reviewer": "root-self-review",
+      "date": "2026-08-30",
+      "action": "refine-spec",
+      "summary": "The accepted Firebridges mission lacks a physical traversal climax. Replace it with the approved Iron Skiff escape, preserve legacy progress monotonically, make the Level-3 maze visibly navigable, and temporarily remap the footer to a forgiving steering/throttle controller without adding UI gameplay authority.",
+      "scores": {
+        "missionFantasy": 0.48,
+        "labyrinthPlayability": 0.35,
+        "controllerFit": 0.42,
+        "saveSafety": 0.95,
+        "sourceIdentity": 0.92
+      }
+    },
+    {
+      "passId": "iron-skiff-escape-v4",
+      "reviewer": "quality-lord-final",
+      "date": "2026-08-30",
+      "action": "continue",
+      "result": "pass",
+      "summary": "The final Level-3 labyrinth adds a summit launch davit, three readable junction gatehouses, a guided front lavafall escape channel, four-stage Iron Skiff construction, and an enlarged Expedition Ship cradle. The left/right/forward controller remains presentation-only, auto-forward prevents a post-commit failure loop, reduced motion extracts deterministically, and batching lowers the full medium scene from 180 to 172 calls.",
+      "visualEvidence": [
+        ".img2threejs/island-020-iron-skiff-escape-v4/iron-skiff-escape-v4-review.md",
+        ".img2threejs/island-020-iron-skiff-escape-v4/tier1-diagnostics.json"
+      ],
+      "aiVisionScore": 0.9,
+      "scores": {
+        "sourceIdentityAndComposition": 0.92,
+        "level3LabyrinthReadability": 0.89,
+        "ironSkiffAndExtractionSilhouette": 0.88,
+        "lavaFlowAndHeatIllumination": 0.91,
+        "mobileReadability": 0.87,
+        "gameplayAndControllerIntegrity": 0.98,
+        "performance": 0.98
+      },
+      "decision": "accept"
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8629,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.068,
+        "colorDelta": {
+          "checked": 0,
+          "maxDeltaE": 0.0,
+          "perComponent": [],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "0ad946d2ca538f1a",
+      "passId": "lava-volume-integration-v3"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8638,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0621,
+        "colorDelta": {
+          "checked": 0,
+          "maxDeltaE": 0.0,
+          "perComponent": [],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "0962df0056b6b5b1",
+      "passId": "lava-volume-integration-v3"
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "lava-lookdev-v2",
+      "lava-volume-integration-v3",
+      "iron-skiff-escape-v4"
+    ],
+    "currentPass": "complete",
+    "completedPasses": [
+      "lava-lookdev-v2",
+      "lava-volume-integration-v3",
+      "iron-skiff-escape-v4"
+    ],
+    "lastCompletedPass": "iron-skiff-escape-v4",
+    "blockedReason": "all build passes completed",
+    "nextRequiredEvidence": []
+  }
+}

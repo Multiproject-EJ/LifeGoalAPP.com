@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-08-31",
+  "asset_id": "island-020-v7-hero-wedge-blockout-v001",
+  "review_basis": [
+    "020-source.png",
+    "front-hero",
+    "left-45",
+    "right-45",
+    "rear-sanity",
+    "top-maze",
+    "front-cliff-low"
+  ],
+  "scores": {
+    "silhouette_and_volume": 0.64,
+    "source_identity": 0.43,
+    "architectural_attachment": 0.61,
+    "cross_view_consistency": 0.82,
+    "assembly_readiness": 0.58,
+    "intended_scale": 0.67
+  },
+  "hard_vetoes": [
+    "The front lavafall reads as a flat emissive ribbon rather than a deep, banked, volumetric cascade.",
+    "The dominant silhouette reads as a generic fairytale castle rather than the source image's dense industrial basalt crucible-city."
+  ],
+  "decision": "retire-family",
+  "salvageable": [
+    "camera review rig",
+    "deep cliff context",
+    "semantic clay material convention",
+    "source-scale target"
+  ],
+  "forbidden_to_salvage": [
+    "pyramidal tower crowns",
+    "generic castle keep silhouette",
+    "flat lavafall ribbon",
+    "empty-plateau composition"
+  ],
+  "next_family_brief": "Industrial basalt crucible-city with flat furnace crowns, stepped forge terraces, deep carved lava channels, dense low maze districts, and a banked multi-strand volumetric cascade."
+}

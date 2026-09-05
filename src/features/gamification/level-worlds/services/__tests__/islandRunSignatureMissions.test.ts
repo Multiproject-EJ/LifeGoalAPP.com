@@ -33,6 +33,8 @@ import {
   getStagedRestorationPickupTileIndices,
   grantFrostwellDrillSpinForLanding,
   mergeIslandRunSignatureMissionProgress,
+  isLavaLabyrinthEscapeMissionComplete,
+  isLavaLabyrinthEscapeMissionStarted,
   resolveFrostwellIceworksProgress,
   resolveFirstLightAssemblyCraterProgress,
   resolveFishermansVillageFishingProgress,
@@ -55,6 +57,8 @@ import {
   reelFishermansVillageCatch,
   blastCactusCanyonSpiralSection,
   spinFrostwellDrillWheel,
+  startLavaLabyrinthEscapeMission,
+  completeLavaLabyrinthEscapeMission,
 } from '../islandRunSignatureMissionAction';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
 import {
@@ -71,6 +75,7 @@ import { getIslandMissionBriefingPresentation } from '../islandRunMissionBriefin
 import { getIslandRunBossReward } from '../islandRunBossReward';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 import { findIslandRunReservedTileCollisions } from '../islandRunTileReservations';
+import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 
 const USER_ID = 'signature-mission-test-user';
 const makeSession = () => ({ access_token: 'token', refresh_token: 'refresh', expires_in: 3600, token_type: 'bearer', user: { id: USER_ID, user_metadata: {} } }) as unknown as import('@supabase/supabase-js').Session;
@@ -952,7 +957,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
-      [4, 6, 7, 8, 9].forEach((islandNumber) => {
+      [4, 6, 7, 8, 9, 20].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;
@@ -961,6 +966,230 @@ export const islandRunSignatureMissionTests: TestCase[] = [
         assertEqual(new Set(indices).size, indices.length, `Island ${islandNumber} route objects are unique`);
         assertEqual(findIslandRunReservedTileCollisions({ tileCount: 36, tileIndices: indices }).length, 0, `Island ${islandNumber} route clears every reserved slot`);
       });
+    },
+  },
+  {
+    name: 'Lava Labyrinth authors eight deterministic Heatshield Plates with tile-map and Three-object presentation metadata',
+    run: () => {
+      const descriptor = getStagedRestorationMissionDescriptor(20);
+      assert(Boolean(descriptor), 'Island 020 has a staged mission descriptor');
+      if (!descriptor) return;
+      assertEqual(descriptor.missionId, 'escape-lava-labyrinth', 'mission identity is stable');
+      assertEqual(descriptor.pickupKind, 'heatshield_plate', 'the authored pickup is a Heatshield Plate');
+      assertEqual(descriptor.stageCount, 4, 'four Iron Skiff systems are forged');
+      assertEqual(descriptor.chargeCostPerStage, 2, 'each Iron Skiff system costs two Heatshield Plates');
+
+      const indices = getStagedRestorationPickupTileIndices(20, 36);
+      assertEqual(indices.join(','), '2,7,11,16,20,25,29,35', 'the eight authored fractions resolve deterministically');
+      assertEqual(new Set(indices).size, 8, 'all eight Heatshield Plate tiles are unique');
+      assertEqual(findIslandRunReservedTileCollisions({ tileCount: 36, tileIndices: indices }).length, 0, 'Heatshield Plates clear every reserved route slot');
+
+      const map = applyLandmarkDoorTiles(
+        generateTileMap(20, getIslandRarity(20), 'lava-labyrinth', 2),
+        { expandedActiveStopId: 'hatchery' },
+      );
+      const emberCoreTiles = map.filter((entry) => entry.signatureMissionKind === 'heatshield_plate');
+      assertEqual(emberCoreTiles.length, 8, 'the canonical tile map exposes all eight Heatshield Plates');
+      assert(emberCoreTiles.every((entry) => entry.signatureMissionAmount === 1), 'each route object is one finite Heatshield Plate');
+      assert(emberCoreTiles.every((entry) => entry.tileType !== 'landmark_door'), 'no Heatshield Plate replaces a canonical landmark door');
+      assertEqual(resolveIslandRunTileRewardObjectKind(emberCoreTiles[0]), 'staged_restoration_pickup', 'the authored Three object renderer recognizes Heatshield Plates');
+    },
+  },
+  {
+    name: 'Lava Labyrinth launches its long escape mission only after the complete Level-3 labyrinth is solved',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: { ...base, currentIslandNumber: 20 },
+      });
+      refreshIslandRunStateFromLocal(session);
+      assertEqual(
+        (await startLavaLabyrinthEscapeMission({ session, client: null })).status,
+        'labyrinth_not_solved',
+        'the extended mission stays locked during ordinary island progression',
+      );
+
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...readIslandRunGameStateRecord(session),
+          currentIslandNumber: 20,
+          bossTrialResolvedIslandNumber: 20,
+          stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
+          stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ requiredEssence: 100, spentEssence: 100, buildLevel: 3 })),
+          perIslandEggs: {
+            '20': { tier: 'common', setAtMs: 1, hatchAtMs: 2, status: 'collected' },
+          },
+        },
+      });
+      refreshIslandRunStateFromLocal(session);
+      const started = await startLavaLabyrinthEscapeMission({ session, client: null });
+      assertEqual(started.status, 'ok', 'solving the complete labyrinth launches the emergency extraction mission');
+      const progress = resolveStagedRestorationMissionProgress({
+        ledger: readIslandRunGameStateRecord(session).signatureMissionProgressByIsland,
+        islandNumber: 20,
+        cycleIndex: 0,
+      });
+      assertEqual(isLavaLabyrinthEscapeMissionStarted(progress), true, 'mission launch persists for reload and cross-device merge');
+      assertEqual(
+        (await startLavaLabyrinthEscapeMission({ session, client: null })).status,
+        'already_started',
+        'the solved-labyrinth launch edge is idempotent',
+      );
+      assertEqual(
+        (await completeLavaLabyrinthEscapeMission({ session, client: null })).status,
+        'skiff_not_ready',
+        'extraction cannot complete before all four Iron Skiff systems are forged',
+      );
+    },
+  },
+  {
+    name: 'Lava Labyrinth collects Heatshield Plates on landing or route pass exactly once',
+    run: () => {
+      const pickupTiles = getStagedRestorationPickupTileIndices(20, 36);
+      const key = getIslandRunSignatureMissionKey(0, 20);
+      const lockedPickup = collectStagedRestorationPickupForRoute({
+        ledger: {}, islandNumber: 20, cycleIndex: 0,
+        landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 1,
+      });
+      assertEqual(lockedPickup.pickupCollected, 0, 'Heatshield Plates cannot be collected before the solved-labyrinth launch edge');
+      const startedLedger = sanitizeIslandRunSignatureMissionProgress({
+        [key]: {
+          missionId: 'escape-lava-labyrinth',
+          startedAtMs: 1,
+          updatedAtMs: 1,
+        },
+      });
+      const landing = collectStagedRestorationPickupForRoute({
+        ledger: startedLedger, islandNumber: 20, cycleIndex: 0,
+        landingTileIndex: pickupTiles[1], routeTileIndices: [pickupTiles[0], pickupTiles[1]], tileCount: 36, nowMs: 10,
+      });
+      assertEqual(landing.pickupCollected, 1, 'an exact landing collects one Heatshield Plate');
+      assertEqual(landing.collectedTileIndex, pickupTiles[1], 'exact landing takes priority over an earlier crossed pickup');
+      assertEqual(landing.collectionKind, 'landing', 'landing source remains explicit');
+      assertEqual(landing.pickupKind, 'heatshield_plate', 'the action result identifies a Heatshield Plate');
+
+      const routePass = collectStagedRestorationPickupForRoute({
+        ledger: landing.ledger, islandNumber: 20, cycleIndex: 0,
+        landingTileIndex: 3, routeTileIndices: [pickupTiles[0], 3], tileCount: 36, nowMs: 20,
+      });
+      assertEqual(routePass.pickupCollected, 1, 'a route pass secures one unclaimed Heatshield Plate');
+      assertEqual(routePass.collectedTileIndex, pickupTiles[0], 'the first unclaimed crossed pickup is collected');
+      assertEqual(routePass.collectionKind, 'route_pass', 'route-pity source remains explicit');
+
+      const duplicate = collectStagedRestorationPickupForRoute({
+        ledger: routePass.ledger, islandNumber: 20, cycleIndex: 0,
+        landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 30,
+      });
+      const progress = resolveStagedRestorationMissionProgress({ ledger: duplicate.ledger, islandNumber: 20, cycleIndex: 0 });
+      assertEqual(duplicate.pickupCollected, 0, 'a collected Heatshield Plate cannot be claimed twice');
+      assertEqual(progress?.chargesEarned, 2, 'exactly two unique Heatshield Plates persist');
+      assertEqual(progress?.claimedPickupTileIndices.length, 2, 'the claim ledger remains finite');
+    },
+  },
+  {
+    name: 'Lava Labyrinth migrates legacy Firebridge saves and preserves monotonic Iron Skiff progress',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 20);
+      const sanitized = sanitizeIslandRunSignatureMissionProgress({
+        [key]: {
+          mission_id: 'forge-four-firebridges',
+          claimed_pickup_tile_indices: [2, 7, 11, 16, 20, 25, 29, 35, 99],
+          charges_earned: 99,
+          charges_spent: 99,
+          activated_stages: 99,
+          updated_at_ms: 40,
+        },
+      });
+      const sanitizedProgress = resolveStagedRestorationMissionProgress({ ledger: sanitized, islandNumber: 20, cycleIndex: 0 });
+      assertEqual(sanitizedProgress?.claimedPickupTileIndices.length, 8, 'sanitizer caps the finite pickup ledger at eight');
+      assertEqual(sanitizedProgress?.chargesEarned, 8, 'earned Heatshield Plates cap at the mission target');
+      assertEqual(sanitizedProgress?.chargesSpent, 8, 'spent Heatshield Plates cap at four two-plate stages');
+      assertEqual(sanitizedProgress?.missionId, 'escape-lava-labyrinth', 'the legacy Firebridge save migrates to the Iron Skiff identity');
+      assertEqual(sanitizedProgress?.activatedStages, 4, 'activated Iron Skiff systems cap at four');
+      assertEqual(sanitizedProgress?.completedAtMs, 0, 'sanitizer restores completion for a fully activated legacy record');
+      assertEqual(sanitizedProgress?.startedAtMs, null, 'a legacy forge record does not bypass the new solved-labyrinth launch gate');
+      assertEqual(sanitizedProgress?.finaleCompletedAtMs, null, 'forging alone never fabricates successful extraction');
+
+      const remote = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { mission_id: 'forge-four-firebridges', claimed_pickup_tile_indices: [2, 7, 11, 16], charges_earned: 4, charges_spent: 2, activated_stages: 1, updated_at_ms: 30 },
+      });
+      const local = sanitizeIslandRunSignatureMissionProgress({
+        [key]: { missionId: 'escape-lava-labyrinth', claimedPickupTileIndices: [20, 25, 29, 35], chargesEarned: 4, chargesSpent: 6, activatedStages: 3, updatedAtMs: 20 },
+      });
+      const merged = mergeIslandRunSignatureMissionProgress(remote, local);
+      const mergedProgress = resolveStagedRestorationMissionProgress({ ledger: merged, islandNumber: 20, cycleIndex: 0 });
+      assertEqual(mergedProgress?.claimedPickupTileIndices.length, 8, 'cross-device claim sets merge by union');
+      assertEqual(mergedProgress?.chargesEarned, 8, 'unioned pickups restore the monotonic earned total');
+      assertEqual(mergedProgress?.chargesSpent, 6, 'spent Heatshield Plates cannot regress');
+      assertEqual(mergedProgress?.activatedStages, 3, 'the highest committed Iron Skiff stage wins');
+    },
+  },
+  {
+    name: 'Lava Labyrinth spends two Heatshield Plates per Iron Skiff system, completes four stages, then stays complete',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const key = getIslandRunSignatureMissionKey(base.cycleIndex, 20);
+      const pickupTiles = getStagedRestorationPickupTileIndices(20, 36);
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...base,
+          currentIslandNumber: 20,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'escape-lava-labyrinth', version: 1,
+              claimedPickupTileIndices: pickupTiles, chargesEarned: 8, chargesSpent: 0,
+              activatedStages: 0, lastActivatedStage: null, startedAtMs: 5,
+              finaleCompletedAtMs: null, completedAtMs: null, updatedAtMs: 10,
+            },
+          },
+        },
+      });
+      refreshIslandRunStateFromLocal(session);
+
+      const stages = [];
+      for (let index = 0; index < 4; index += 1) {
+        stages.push(await activateStagedRestorationMissionStage({ session, client: null }));
+      }
+      const fifth = await activateStagedRestorationMissionStage({ session, client: null });
+      const after = readIslandRunGameStateRecord(session);
+      const progress = resolveStagedRestorationMissionProgress({ ledger: after.signatureMissionProgressByIsland, islandNumber: 20, cycleIndex: 0 });
+
+      assert(stages.every((result) => result.status === 'ok'), 'all four funded Iron Skiff activations commit');
+      assertEqual(stages.map((result) => result.status === 'ok' ? result.activatedStages : 0).join(','), '1,2,3,4', 'exactly one durable stage activates per action');
+      assertEqual(stages.map((result) => result.status === 'ok' ? result.chargesRemaining : -1).join(','), '6,4,2,0', 'each activation spends exactly two Heatshield Plates');
+      assertEqual(fifth.status, 'already_complete', 'a fifth activation cannot replay or overspend the finale');
+      assertEqual(progress?.activatedStages, 4, 'all four Iron Skiff systems persist');
+      assertEqual(progress?.chargesSpent, 8, 'the canonical ledger spends all eight Heatshield Plates');
+      assert(progress?.completedAtMs !== null, 'the fourth activation persists mission completion');
+      assertEqual(isLavaLabyrinthEscapeMissionComplete(progress), false, 'forging the skiff is not the same as reaching the Expedition Ship');
+      const extraction = await completeLavaLabyrinthEscapeMission({ session, client: null });
+      assertEqual(extraction.status, 'ok', 'the completed controller run persists the extraction edge');
+      const afterExtraction = readIslandRunGameStateRecord(session);
+      const extractedProgress = resolveStagedRestorationMissionProgress({
+        ledger: afterExtraction.signatureMissionProgressByIsland, islandNumber: 20, cycleIndex: 0,
+      });
+      assertEqual(isLavaLabyrinthEscapeMissionComplete(extractedProgress), true, 'successful extraction survives reload');
+      assertEqual(
+        (await completeLavaLabyrinthEscapeMission({ session, client: null })).status,
+        'already_complete',
+        'extraction completion is idempotent',
+      );
     },
   },
   {

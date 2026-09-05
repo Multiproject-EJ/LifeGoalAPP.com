@@ -83,7 +83,8 @@ export function resolveIslandRunTileRewardObjectKind(
     || entry.signatureMissionKind === 'moon_mirror_lens'
     || entry.signatureMissionKind === 'breathline_pressure_pearl'
     || entry.signatureMissionKind === 'pollination_pollen_light'
-    || entry.signatureMissionKind === 'ignition_core') return 'staged_restoration_pickup';
+    || entry.signatureMissionKind === 'ignition_core'
+    || entry.signatureMissionKind === 'heatshield_plate') return 'staged_restoration_pickup';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -515,6 +516,7 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
       : entry.signatureMissionKind === 'pollination_pollen_light'
         ? materials.violet
         : entry.signatureMissionKind === 'ignition_core'
+          || entry.signatureMissionKind === 'heatshield_plate'
           ? materials.amber
           : materials.gold;
     const core = entry.signatureMissionKind === 'causeway_masonry'
@@ -523,7 +525,9 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
         ? new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.07, segments), material)
         : entry.signatureMissionKind === 'pollination_pollen_light'
           ? new THREE.Mesh(new THREE.OctahedronGeometry(0.23, 1), material)
-          : new THREE.Mesh(new THREE.SphereGeometry(0.2, segments, Math.max(6, segments / 2)), material);
+          : entry.signatureMissionKind === 'heatshield_plate'
+            ? new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 1), material)
+            : new THREE.Mesh(new THREE.SphereGeometry(0.2, segments, Math.max(6, segments / 2)), material);
     if (entry.signatureMissionKind === 'moon_mirror_lens') core.rotation.x = Math.PI / 2;
     const halo = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.035, 6, segments * 2), materials.goldGlow);
     halo.rotation.x = Math.PI / 2;
@@ -548,6 +552,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   tileTransforms: readonly Island5TileTransform[];
   quality: Island3DQuality;
   compactCollectibles?: boolean;
+  staticBatchNonMissionRewards?: boolean;
 }): IslandRunTileRewardThreeRuntime {
   const root = new THREE.Group();
   root.name = 'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS';
@@ -568,7 +573,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
       })
     : null;
   const transformByIndex = new Map(options.tileTransforms.map((transform) => [transform.index, transform]));
-  const entries: RewardVisualEntry[] = [];
+  let entries: RewardVisualEntry[] = [];
 
   options.tileMap.forEach((tileEntry) => {
     const transform = transformByIndex.get(tileEntry.index);
@@ -605,6 +610,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || tileEntry.signatureMissionKind === 'pollination_pollen_light'
         || tileEntry.signatureMissionKind === 'ignition_core'
         ? 1.16
+      : tileEntry.signatureMissionKind === 'heatshield_plate'
+        ? 0.9
       : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'
@@ -639,6 +646,34 @@ export function createIslandRunTileRewardThreeObjects(options: {
     Object.values(materials).forEach((material) => material.dispose());
   }
 
+  if (options.staticBatchNonMissionRewards && compactCollectibleMaterial) {
+    root.updateMatrixWorld(true);
+    const geometries: THREE.BufferGeometry[] = [];
+    const batchedEntries = entries.filter((entry) => !entry.signatureMissionKind);
+    batchedEntries.forEach((entry) => {
+      entry.root.updateMatrix();
+      entry.root.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        child.updateMatrix();
+        const geometry = child.geometry.clone();
+        geometry.applyMatrix4(entry.root.matrix.clone().multiply(child.matrix));
+        geometries.push(geometry);
+      });
+      root.remove(entry.root);
+    });
+    const merged = geometries.length ? mergeGeometries(geometries, false) : null;
+    geometries.forEach((geometry) => geometry.dispose());
+    if (merged) {
+      const batch = new THREE.Mesh(merged, compactCollectibleMaterial);
+      batch.name = 'ISLAND_RUN_TILE_REWARD_NON_MISSION_STATIC_BATCH';
+      batch.userData.presentationOnly = true;
+      batch.userData.authority = 'canonical-island-tile-map';
+      root.add(batch);
+    }
+    entries = entries.filter((entry) => Boolean(entry.signatureMissionKind));
+    root.userData.staticNonMissionRewardBatch = true;
+  }
+
   root.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return;
     child.castShadow = options.quality === 'high';
@@ -662,7 +697,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || entry.signatureMissionKind === 'moon_mirror_lens'
         || entry.signatureMissionKind === 'breathline_pressure_pearl'
         || entry.signatureMissionKind === 'pollination_pollen_light'
-        || entry.signatureMissionKind === 'ignition_core')
+        || entry.signatureMissionKind === 'ignition_core'
+        || entry.signatureMissionKind === 'heatshield_plate')
         && stagedRestorationClaimedTiles.has(entry.tileIndex)) {
         entry.root.visible = false;
         return;

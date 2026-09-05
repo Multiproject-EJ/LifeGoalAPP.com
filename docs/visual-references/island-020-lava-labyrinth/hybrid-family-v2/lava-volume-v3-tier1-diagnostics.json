@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "island": 20,
+  "pass": "lava-volume-integration-v3",
+  "camera": "strict-approved-final-angle",
+  "captures": {
+    "time0": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-t0-v003.jpg",
+    "time6": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-t6-v003.jpg",
+    "reducedMotion": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-reduced-motion-v003.jpg",
+    "phoneCrop": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-final-phone-v003.jpg",
+    "comparison": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/review/island-020-lava-volume-comparison-v003.jpg"
+  },
+  "motion": {
+    "normal": "gravity-down-and-centre-outward-plus-multi-scale-hot-core-depth",
+    "normalEvidenceTimeSeconds": 6,
+    "phoneSceneMeanAbsoluteRgbDelta": [4.542, 3.803, 3.94],
+    "reducedMotion": "deterministic-frozen-pose"
+  },
+  "illumination": {
+    "mode": "plate-local-bounce-plus-live-forge-lights-and-existing-tile-emissive-response",
+    "fullFrameTint": false,
+    "moltenNeighbourHalo": true,
+    "existingTileMaterialResponse": true,
+    "addedRouteRimMesh": false
+  },
+  "runtime": {
+    "low": {
+      "observedDrawCalls": 163,
+      "observedTriangles": 31000
+    },
+    "high": {
+      "observedDrawCalls": 173,
+      "observedTriangles": 45000
+    },
+    "drawCallBudget": 175,
+    "v3AdditionalDrawCalls": 0,
+    "v3AdditionalTriangles": 0,
+    "newTextureBytes": 0,
+    "runtimePartCount": 32
+  },
+  "tier1": {
+    "passed": true,
+    "silhouetteIoU": 0.8638,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0621,
+    "renderHash": "0962df0056b6b5b1",
+    "warning": "The render is not isolated from its background; material evidence uses most pixels."
+  },
+  "contracts": {
+    "sourceRepresentationFrozen": true,
+    "canonicalRouteFrozen": true,
+    "gameplayAuthorityUnchanged": true,
+    "missionSemanticsUnchanged": true,
+    "multiAngleRequired": false,
+    "multiAngleReason": "The approved source-led plate, strengthened molten shader, and thermal response are registered to one strict final camera; orbit capture would invalidate that representation contract."
+  },
+  "tier1Decision": "PASS"
+}

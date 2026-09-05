@@ -2,6 +2,8 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import { MAX_BUILD_LEVEL } from './islandRunContractV2EssenceBuild';
+import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
+import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 import { getIslandRunBossReward } from './islandRunBossReward';
 import {
   ISLAND_RUN_ECONOMY_SOURCES,
@@ -14,6 +16,7 @@ import {
   FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
   GREAT_HONEYFALL_MAX_STAGE,
   HONEYCOMB_KINGDOM_ISLAND_NUMBER,
+  LAVA_LABYRINTH_ISLAND_NUMBER,
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG,
@@ -54,9 +57,109 @@ export type ActivateStagedRestorationMissionResult =
       chargesRemaining: number;
       completedAtMs: number | null;
     }
-  | { status: 'wrong_island' | 'no_charges' | 'already_complete' | 'unsupported_island' };
+  | { status: 'wrong_island' | 'mission_locked' | 'no_charges' | 'already_complete' | 'unsupported_island' };
 
-/** Canonical spend action shared by the five staged restoration missions. */
+export type StartLavaLabyrinthEscapeMissionResult =
+  | { status: 'ok' | 'already_started'; startedAtMs: number }
+  | { status: 'wrong_island' | 'labyrinth_not_solved' };
+
+/**
+ * Starts Island 020's extended mission only after the ordinary island has been
+ * genuinely solved: all five objectives, all five L3 builds and the hatchery
+ * egg are complete. This is the canonical sequencing boundary; the board only
+ * presents the launch that this action commits.
+ */
+export function startLavaLabyrinthEscapeMission(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<StartLavaLabyrinthEscapeMissionResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== LAVA_LABYRINTH_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const labyrinthSolved = isIslandRunFullyClearedV2({
+      stopStatesByIndex: state.stopStatesByIndex,
+      stopBuildStateByIndex: state.stopBuildStateByIndex,
+      hatcheryEggResolved: areAllEggSlotsTerminalForIsland(
+        state.perIslandEggs,
+        LAVA_LABYRINTH_ISLAND_NUMBER,
+      ),
+    });
+    if (!labyrinthSolved) return { status: 'labyrinth_not_solved' };
+    const progress = resolveStagedRestorationMissionProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: LAVA_LABYRINTH_ISLAND_NUMBER,
+    });
+    if (!progress) return { status: 'wrong_island' };
+    if (progress.startedAtMs != null) {
+      return { status: 'already_started', startedAtMs: progress.startedAtMs };
+    }
+
+    const nowMs = Date.now();
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, LAVA_LABYRINTH_ISLAND_NUMBER);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: { ...progress, startedAtMs: nowMs, updatedAtMs: nowMs },
+        },
+      },
+      triggerSource: 'start_lava_labyrinth_escape_mission',
+    });
+    return { status: 'ok', startedAtMs: nowMs };
+  });
+}
+
+export type CompleteLavaLabyrinthEscapeResult =
+  | { status: 'ok' | 'already_complete'; finaleCompletedAtMs: number }
+  | { status: 'wrong_island' | 'mission_locked' | 'skiff_not_ready' };
+
+/** Persists successful extraction before Island 021 travel can be offered. */
+export function completeLavaLabyrinthEscapeMission(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<CompleteLavaLabyrinthEscapeResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== LAVA_LABYRINTH_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const descriptor = getStagedRestorationMissionDescriptor(LAVA_LABYRINTH_ISLAND_NUMBER);
+    const progress = resolveStagedRestorationMissionProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: LAVA_LABYRINTH_ISLAND_NUMBER,
+    });
+    if (!descriptor || !progress || progress.startedAtMs == null) return { status: 'mission_locked' };
+    if (progress.activatedStages < descriptor.stageCount || progress.completedAtMs === null) {
+      return { status: 'skiff_not_ready' };
+    }
+    if (progress.finaleCompletedAtMs != null) {
+      return { status: 'already_complete', finaleCompletedAtMs: progress.finaleCompletedAtMs };
+    }
+
+    const nowMs = Date.now();
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, LAVA_LABYRINTH_ISLAND_NUMBER);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: { ...progress, finaleCompletedAtMs: nowMs, updatedAtMs: nowMs },
+        },
+      },
+      triggerSource: 'complete_lava_labyrinth_escape_mission',
+    });
+    return { status: 'ok', finaleCompletedAtMs: nowMs };
+  });
+}
+
+/** Canonical spend action shared by the staged restoration missions. */
 export function activateStagedRestorationMissionStage(options: {
   session: Session;
   client: SupabaseClient | null;
@@ -71,6 +174,9 @@ export function activateStagedRestorationMissionStage(options: {
       islandNumber: state.currentIslandNumber,
     });
     if (!progress) return { status: 'wrong_island' };
+    if (descriptor.islandNumber === LAVA_LABYRINTH_ISLAND_NUMBER && progress.startedAtMs == null) {
+      return { status: 'mission_locked' };
+    }
     if (progress.completedAtMs !== null || progress.activatedStages >= descriptor.stageCount) {
       return { status: 'already_complete' };
     }

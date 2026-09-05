@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-08-31",
+  "asset_id": "island-020-v7-hero-wedge-blockout-v001",
+  "status": "rejected",
+  "render_directory": ".assetgauntlet/island-020-actual-3d-v7/qa/hero-wedge-blockout-v001",
+  "views": [
+    "island-020-v7-hero-wedge-front-hero-v001.png",
+    "island-020-v7-hero-wedge-left-45-v001.png",
+    "island-020-v7-hero-wedge-right-45-v001.png",
+    "island-020-v7-hero-wedge-rear-sanity-v001.png",
+    "island-020-v7-hero-wedge-top-maze-v001.png",
+    "island-020-v7-hero-wedge-front-cliff-low-v001.png"
+  ],
+  "wireframe_status": "capture-failed-after-all-required-shaded-views; Blender 5.2 removed display.shading.show_wireframes",
+  "immutability_note": "The six shaded V001 captures are retained unchanged as rejected-family evidence."
+}

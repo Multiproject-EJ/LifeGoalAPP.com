@@ -1,0 +1,17 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "portrait-source-overview",
+    "sourcePath": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+    "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+    "width": 1023,
+    "height": 1537,
+    "foregroundCoverage": 0.8903,
+    "largestComponentFraction": 1.0,
+    "pHash": "12146483883422834851",
+    "duplicateOfHash": null,
+    "technicalSuitability": "pass",
+    "semanticSuitability": "conditional"
+  }
+}

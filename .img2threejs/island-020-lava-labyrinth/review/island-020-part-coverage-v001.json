@@ -1,0 +1,136 @@
+{
+  "model": "island-020-lava-labyrinth",
+  "specifiedComponents": 31,
+  "builtParts": 32,
+  "errors": 0,
+  "warnings": 20,
+  "result": "pass",
+  "findings": [
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d01-volcanic-peak-lava-grooves",
+      "detail": "mapsTo 'p02.localFeatures.volcanic-lava-grooves' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d02-far-cliff-strata",
+      "detail": "mapsTo 'p02.localFeatures.stratified-terraces' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d03-flame-crown-aperture",
+      "detail": "mapsTo 'p08.localFeatures.flame-crown-aperture' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d04-tower-pier-bevels",
+      "detail": "mapsTo 'p08.localFeatures.pier-chamfers' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d05-molten-drip-crust",
+      "detail": "mapsTo 'p03.localFeatures.cooled-drip-lips' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d06-brazier-spiked-bowl",
+      "detail": "mapsTo 'p11.localFeatures.spiked-brazier-bowl' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d07-ember-depth-bands",
+      "detail": "mapsTo 'p28.localOverrides.ember-depth-bands' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d08-cliff-column-chipping",
+      "detail": "mapsTo 'p01.localFeatures.cliff-edge-chips' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d09-hanging-chain-links",
+      "detail": "mapsTo 'p24.localFeatures.heavy-chain-links' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d10-cyan-utility-beacon",
+      "detail": "mapsTo 'p29.localOverrides.cyan-utility-beacon' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d11-connected-maze-wall-caps",
+      "detail": "mapsTo 'p09.localFeatures.wall-cap-joints' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d12-tower-window-recesses",
+      "detail": "mapsTo 'p11.localFeatures.deep-window-slits' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d13-lava-channel-crust-border",
+      "detail": "mapsTo 'p03.localFeatures.channel-crust-borders' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d14-stair-tread-bevels",
+      "detail": "mapsTo 'p04.localFeatures.stair-tread-bevels' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d15-route-brass-fasteners",
+      "detail": "mapsTo 'p05.localFeatures.route-rim-fasteners' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d16-broad-cliff-lavafall",
+      "detail": "mapsTo 'p03.localOverrides.lateral-lavafall-gradient' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d17-magma-egg-crack-network",
+      "detail": "mapsTo 'p14.localOverrides.magma-egg-cracks' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d18-front-lavafall-hot-core",
+      "detail": "mapsTo 'p03.localOverrides.front-lavafall-hot-core' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d19-soot-cavity-patina",
+      "detail": "mapsTo 'p29.localOverrides.soot-cavity-patina' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "d20-brass-banner-and-brazier-trim",
+      "detail": "mapsTo 'p29.localOverrides.brass-edgewear-patina' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "p01",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    }
+  ]
+}

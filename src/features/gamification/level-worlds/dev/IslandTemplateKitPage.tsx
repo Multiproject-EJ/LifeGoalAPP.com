@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import {
@@ -9,6 +9,10 @@ import {
 } from '../services/islandRunSignatureMissions';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
+import {
+  LavaSkiffControllerAdapter,
+  type LavaSkiffControllerState,
+} from '../components/LavaSkiffControllerAdapter';
 import type { IslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import './IslandTemplateKitPage.css';
 
@@ -23,7 +27,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 20].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');
@@ -46,6 +50,10 @@ function readInitialPreviewState() {
   const honeyfallMissionStageParam = Number(params.get('honeyfallMissionStage'));
   const honeyfallMissionStage = Number.isFinite(honeyfallMissionStageParam)
     ? Math.max(0, Math.min(4, Math.floor(honeyfallMissionStageParam)))
+    : 0;
+  const firebridgeMissionStageParam = Number(params.get('firebridgeMissionStage'));
+  const firebridgeMissionStage = Number.isFinite(firebridgeMissionStageParam)
+    ? Math.max(0, Math.min(4, Math.floor(firebridgeMissionStageParam)))
     : 0;
   const frostwellDepthParam = Number(params.get('frostwellDepth'));
   const frostwellCutawayPreview = params.has('frostwellDepth');
@@ -81,6 +89,9 @@ function readInitialPreviewState() {
     assemblyReplay,
     honeyfallMissionStage,
     honeyfallReplay: params.get('honeyfallReplay') === '1',
+    firebridgeMissionStage,
+    firebridgeReplay: params.get('firebridgeReplay') === '1',
+    firebridgeEscape: params.get('firebridgeEscape') === '1',
     frostwellDepth,
     frostwellCutawayPreview,
     frostwellCutawayLoop,
@@ -205,6 +216,17 @@ export default function IslandTemplateKitPage() {
   const [assemblyCharges, setAssemblyCharges] = useState(initialState.assemblyCharges);
   const [assemblyConstructionSequence, setAssemblyConstructionSequence] = useState(0);
   const [assemblyReplayActive, setAssemblyReplayActive] = useState(initialState.assemblyReplay);
+  const [firebridgeStage, setFirebridgeStage] = useState(initialState.firebridgeMissionStage);
+  const [firebridgeSequence, setFirebridgeSequence] = useState(initialState.firebridgeReplay ? 1 : 0);
+  const [firebridgeEscape, setFirebridgeEscape] = useState({
+    active: initialState.firebridgeEscape && initialState.firebridgeMissionStage >= 4,
+    steering: 0 as -1 | 0 | 1,
+    throttle: 0 as 0 | 1,
+    sequence: initialState.firebridgeEscape ? 1 : 0,
+  });
+  const updateFirebridgeController = useCallback((state: LavaSkiffControllerState) => {
+    setFirebridgeEscape((current) => ({ ...current, ...state }));
+  }, []);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
   const constructionPresentation = useMemo<IslandRunConstructionPresentation | null>(() => {
@@ -325,6 +347,38 @@ export default function IslandTemplateKitPage() {
               </output>
             </div>
           ) : null}
+          {mode === '3d' && initialState.islandNumber === 20 ? (
+            <div className="island-kit-control-group" data-testid="firebridge-preview-controls">
+              <span>Forge the Iron Skiff</span>
+              <button type="button" onClick={() => {
+                setFirebridgeStage(0);
+                setFirebridgeSequence((value) => value + 1);
+                setFirebridgeEscape((current) => ({ ...current, active: false, steering: 0, throttle: 0 }));
+              }}>Reset</button>
+              <button
+                type="button"
+                disabled={firebridgeStage >= 4}
+                onClick={() => {
+                  setFirebridgeStage((value) => Math.min(4, value + 1));
+                  setFirebridgeSequence((value) => value + 1);
+                }}
+              >Forge next</button>
+              <button
+                type="button"
+                disabled={firebridgeStage < 4 || firebridgeEscape.active}
+                onClick={() => setFirebridgeEscape((current) => ({
+                  active: true,
+                  steering: 0,
+                  throttle: 0,
+                  sequence: current.sequence + 1,
+                }))}
+              >Launch escape</button>
+              <output aria-live="polite">Escape systems {firebridgeStage}/4</output>
+              {firebridgeEscape.active ? (
+                <LavaSkiffControllerAdapter onChange={updateFirebridgeController} />
+              ) : null}
+            </div>
+          ) : null}
           <dl className="island-kit-specs">
             <div><dt>Scene</dt><dd>1400 × 1600</dd></div>
             <div><dt>Board anchor</dt><dd>700, 800</dd></div>
@@ -385,6 +439,17 @@ export default function IslandTemplateKitPage() {
               greatHoneyfallPresentation={initialState.islandNumber === 14 ? {
                 activatedReservoirs: initialState.honeyfallMissionStage as 0 | 1 | 2 | 3 | 4,
                 constructionSequence: initialState.honeyfallReplay ? 1 : 0,
+              } : undefined}
+              stagedRestorationPresentation={initialState.islandNumber === 20 ? {
+                islandNumber: 20,
+                activatedStages: firebridgeStage,
+                stageCount: 4,
+                constructionSequence: firebridgeSequence,
+                claimedPickupTileIndices: [],
+              } : undefined}
+              island20SkiffNavigation={initialState.islandNumber === 20 ? firebridgeEscape : undefined}
+              onIsland20SkiffRunComplete={initialState.islandNumber === 20 ? () => {
+                setFirebridgeEscape((current) => ({ ...current, active: false, steering: 0, throttle: 0 }));
               } : undefined}
             />
           ) : (

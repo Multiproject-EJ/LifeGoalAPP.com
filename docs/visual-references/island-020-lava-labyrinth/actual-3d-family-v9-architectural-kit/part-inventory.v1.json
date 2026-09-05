@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "part_count": 20,
+  "review_units": [
+    {
+      "id": "macro-radial-shell",
+      "parts": ["volcanic-foundation", "cliff-crown", "outer-board-ring", "maze-ground", "radial-maze-walls"],
+      "acceptance": "A complete circular city silhouette with no empty plateau; the radial navigation structure reads from source-match and top views."
+    },
+    {
+      "id": "central-forge-cathedral",
+      "parts": ["keep-foundation", "keep-main-tower", "keep-forge-spire", "keep-buttresses", "keep-attached-workshops", "keep-molten-core"],
+      "acceptance": "The keep is vertically dominant, industrial-gothic, visibly embedded in the city, and not a generic castle chess piece."
+    },
+    {
+      "id": "playable-southwest-sector",
+      "parts": ["southwest-corridors", "southwest-forge-blocks", "southwest-bridges", "southwest-stairs"],
+      "acceptance": "A continuous, human-scale route with at least two elevation changes and two meaningful navigation choices is visible."
+    },
+    {
+      "id": "front-escape-axis",
+      "parts": ["front-furnace-gate", "front-molten-channel", "front-volumetric-cascade", "plunge-basin"],
+      "acceptance": "The route flows visibly from the keep through the gate, down a banked cascade, and into a basin large enough for the later iron skiff."
+    }
+  ],
+  "ownership": {
+    "architecture": "V9 architectural-kit builder",
+    "lava volume": "V9 flow system; never owns masonry banks",
+    "gameplay graph": "canonical Island Run services after visual approval",
+    "runtime animation": "frozen until naked macro approval"
+  },
+  "dependencies": {
+    "central-forge-cathedral": ["macro-radial-shell"],
+    "playable-southwest-sector": ["macro-radial-shell", "central-forge-cathedral"],
+    "front-escape-axis": ["macro-radial-shell", "central-forge-cathedral"]
+  }
+}

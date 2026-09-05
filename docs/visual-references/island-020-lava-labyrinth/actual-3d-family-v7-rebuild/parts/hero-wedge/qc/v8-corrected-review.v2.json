@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-08-31",
+  "asset_id": "island-020-v8-hero-wedge-blockout-v002",
+  "family": "island-020-industrial-basalt-crucible-v8",
+  "scores": {
+    "silhouette_and_volume": 0.73,
+    "source_identity": 0.58,
+    "architectural_attachment": 0.76,
+    "cross_view_consistency": 0.86,
+    "assembly_readiness": 0.71,
+    "intended_scale": 0.74
+  },
+  "hard_vetoes": [],
+  "decision": "fail-gate-stop-expansion",
+  "required_threshold": 0.85,
+  "findings": [
+    "The keep remains a clean isolated tower instead of a cathedral-scale central forge embedded in a dense city.",
+    "The southwest district reads as clustered modules rather than a legible multi-level labyrinth.",
+    "The front gate visually occludes the route instead of revealing a continuous playable escape channel.",
+    "The corrected cascade has real volume and banks, but is still visually secondary to the gate and cliff columns.",
+    "The source image's radial city density and layered monumental hierarchy are not yet present."
+  ],
+  "family_ceiling": "V8 used its one bounded correction. V7 and V8 exhaust the two-family admission ceiling; production expansion is forbidden without an explicit new user decision.",
+  "recommended_pivot": "Retire procedural blockout-as-final production. Begin a newly admitted V9 architectural-kit workflow: source-traced radial plan, hand-authored hero keep kit, modular maze language, then a separately gated volumetric lava system."
+}

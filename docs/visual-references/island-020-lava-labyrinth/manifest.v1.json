@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "island": {
+    "runtimeNumber": 20,
+    "slug": "lava-labyrinth",
+    "workingTitle": "Lava Labyrinth",
+    "role": "arena"
+  },
+  "created": "2026-08-30",
+  "status": "reopened-actual-3d-v3-awaiting-admission-approval",
+  "authorityOrder": ["exact-source", "exact-source-crop", "explicit-user-decision", "secondary-inferred", "runtime-evidence"],
+  "assets": [
+    {
+      "id": "island-020-source-v001",
+      "path": "docs/visual-references/island-020-lava-labyrinth/020-source.png",
+      "sha256": "ed22a7b4b8f1d1a1ab729c982c95898380fd7a2aa3852dfb7cd72d78854f87b8",
+      "dimensions": "1023x1537",
+      "authority": "exact-source",
+      "purpose": "Immutable visible composition, silhouette, palette, materials, terrain, architecture, and atmosphere authority",
+      "status": "active"
+    },
+    {
+      "id": "crucible-citadel-and-route-source-crop-v001",
+      "path": "docs/visual-references/island-020-lava-labyrinth/derived-crops/crucible-citadel-and-route-source-crop-v001.png",
+      "sha256": "b1f3d961d94d82daa4fa18eed893f15470921701ab29b872776311f1b31a1495",
+      "dimensions": "700x790",
+      "authority": "exact-source-crop",
+      "derivedFrom": "island-020-source-v001",
+      "purpose": "Representative slice context: full route, central citadel, cliff edge, lavafalls, and visible source occlusion",
+      "status": "active"
+    },
+    {
+      "id": "crucible-citadel-source-crop-v001",
+      "path": "docs/visual-references/island-020-lava-labyrinth/derived-crops/crucible-citadel-source-crop-v001.png",
+      "sha256": "aa068959e992d74facc459a883fd419cbe320e60f38390b479486fb425f08e86",
+      "dimensions": "620x690",
+      "authority": "exact-source-crop",
+      "derivedFrom": "island-020-source-v001",
+      "purpose": "Representative p07-p10 macro geometry authority without most baked UI",
+      "status": "active"
+    },
+    {
+      "id": "lava-labyrinth-hybrid-environment-plate-v001",
+      "path": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/raw/lava-labyrinth-environment-plate-v001.png",
+      "sha256": "dd3011fecfe5464287ea56ed98a6b22f4569439da464bc593b785262113e3cc2",
+      "dimensions": "1024x1536",
+      "authority": "secondary-inferred-source-led",
+      "derivedFrom": "island-020-source-v001",
+      "purpose": "UI-free final-angle environment plate for the user-approved layered hybrid family",
+      "status": "active"
+    }
+  ],
+  "productionPointers": {
+    "workflowManifest": "docs/visual-references/island-020-lava-labyrinth/workflow-manifest.v1.json",
+    "baseline": "docs/visual-references/island-020-lava-labyrinth/baseline.v1.json",
+    "partInventory": "docs/visual-references/island-020-lava-labyrinth/part-inventory.v1.json",
+    "gauntlet": "docs/gauntlets/2026-08-30-island-020-lava-labyrinth.md",
+    "stateRoot": ".img2threejs/island-020-lava-labyrinth/",
+    "hybridStateRoot": ".img2threejs/island-020-lava-labyrinth-hybrid-v2/",
+    "lavaLookdevQualityLord": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-lookdev-v2.json",
+    "lavaVolumeV3QualityLord": "docs/visual-references/island-020-lava-labyrinth/hybrid-family-v2/quality-lord-lava-volume-v3.json",
+    "actual3DWorkflow": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v3/workflow-manifest.v2.json",
+    "actual3DBaseline": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v3/baseline.v2.json",
+    "actual3DPartInventory": "docs/visual-references/island-020-lava-labyrinth/actual-3d-family-v3/part-inventory.v2.json",
+    "actual3DState": ".img2threejs/island-020-actual-3d-v3/state.json",
+    "evidenceRoot": "work/island-visual-library/island-020-lava-labyrinth/evidence/",
+    "plannedRuntimeFactory": "src/features/gamification/level-worlds/dev/Island20LavaLabyrinthThreeWorld.ts",
+    "plannedRuntimeAssetRoot": "public/assets/islands/island-020/"
+  },
+  "rules": {
+    "referencePacketIsRuntimePayload": false,
+    "generatedReferencesMayOverrideVisibleSource": false,
+    "runtimeNumberOverridesEmbeddedImageNumber": true,
+    "productionRequiresInventoryApproval": true,
+    "deploymentRequiresIndependentQualityGate": true,
+    "actual3DFamilyForbidsEnvironmentPlate": true,
+    "actual3DFamilyRequiresOrbitEvidence": true
+  }
+}

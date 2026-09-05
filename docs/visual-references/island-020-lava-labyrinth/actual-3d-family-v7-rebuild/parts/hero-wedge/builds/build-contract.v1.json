@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "part_group": "hero-wedge",
+  "family": "island-020-monumental-fortress-maze-v7",
+  "builder": "root",
+  "construction_family": "layered-gothic-basalt-fortress",
+  "status": "approved-for-one-naked-blockout",
+  "allowlist": [
+    "central-crucible-keep",
+    "forge-spine",
+    "front-gate-and-grand-stair",
+    "southwest-maze-district",
+    "front-lavafall-cliff",
+    "neutral-context-foundation"
+  ],
+  "frozen": [
+    "canonical gameplay services",
+    "mission state and controller adapter",
+    "remaining three maze districts",
+    "route ring geometry",
+    "satellite landmarks",
+    "Iron Skiff geometry",
+    "extraction ship",
+    "materials and runtime animation"
+  ],
+  "budgets": {
+    "blockout_triangles_max": 65000,
+    "semantic_meshes_max": 12,
+    "materials_max": 4,
+    "naked_blockouts_remaining": 1,
+    "bounded_corrections_remaining": 1
+  },
+  "required_nodes": [
+    "I020_V7_HERO_CONTEXT_FOUNDATION",
+    "I020_V7_CENTRAL_CRUCIBLE_KEEP",
+    "I020_V7_FORGE_SPINE",
+    "I020_V7_FRONT_GATEHOUSE",
+    "I020_V7_GRAND_STAIR",
+    "I020_V7_SOUTHWEST_MAZE_DISTRICT",
+    "I020_V7_FRONT_CLIFF",
+    "I020_V7_FRONT_LAVAFALL"
+  ],
+  "review_cameras": [
+    "front-hero",
+    "left-45",
+    "right-45",
+    "rear-sanity",
+    "top-maze",
+    "front-cliff-low",
+    "wireframe-front"
+  ],
+  "thresholds": {
+    "silhouette_and_volume": 0.85,
+    "identity": 0.85,
+    "attachment": 0.85,
+    "cross_view_coherence": 0.85,
+    "assembly": 0.85,
+    "intended_scale_readability": 0.85
+  }
+}
