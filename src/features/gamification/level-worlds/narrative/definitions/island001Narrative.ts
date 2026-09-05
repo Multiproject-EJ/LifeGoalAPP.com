@@ -63,7 +63,7 @@ export const island001NarrativeDefinition = {
       priority: 'major',
       repeatPolicy: 'once',
       headline: 'FIRST FIELD ORDER',
-      text: 'Roll the dice. Collect the fragments.',
+      text: 'Roll the dice and move. Nothing on Luma has moved on its own in a long time.',
       objectiveText: 'Recover the first Concord fragment',
       displayCtaText: 'Begin mission',
     },
@@ -82,7 +82,7 @@ export const island001NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'Start small. Help us wake one gentle place.',
+      text: 'Start small. Wake one gentle place — then ask why it was ever put to sleep.',
     },
     {
       id: 'I001-B04',
@@ -190,7 +190,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'One cradle light answers — the Hatchery is waking.',
+      text: 'One cradle light answers. It was never broken — only covered.',
     },
     {
       id: 'I001-B07',
@@ -199,7 +199,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Something small is listening.',
+      text: 'Something small is listening. It has been listening the whole time.',
     },
     {
       id: 'I001-B08',
@@ -208,7 +208,7 @@ export const island001NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'The Hatchery feels like a welcome again.',
+      text: 'The Hatchery feels like a welcome again, not a hiding place.',
     },
 
     // Habit (Stop 2) — "Routekeeper Steps"
@@ -219,7 +219,7 @@ export const island001NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'Relight the Routekeeper Steps with one steady action.',
+      text: 'Relight the Routekeeper Steps. One lamp — then we will see who objects.',
     },
     {
       id: 'I001-B10',
@@ -228,7 +228,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'One steady action is enough for today.',
+      text: 'One lamp lit, and nothing came. Nobody here expected that.',
     },
     {
       id: 'I001-B11',
@@ -237,7 +237,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Citizens test the lantern lines again.',
+      text: 'Citizens test the lantern lines, quickly, still glancing at the sky.',
     },
     {
       id: 'I001-B12',
@@ -246,7 +246,7 @@ export const island001NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'They are working together again.',
+      text: 'They are working in the open now, without checking the sky first.',
     },
     {
       id: 'I001-B13',
@@ -255,7 +255,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'The route chime rings clearly.',
+      text: 'The route chime rings clearly. Nobody flinches at it anymore.',
     },
 
     // Mystery (Stop 3) — "Gathering Grounds"
@@ -275,7 +275,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'Citizens add a lantern to the grounds.',
+      text: 'A citizen adds a lantern, and leaves it uncovered.',
     },
     {
       id: 'I001-B16',
@@ -284,7 +284,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Benches and banners return.',
+      text: 'Benches and banners return. The covers stay folded.',
     },
     {
       id: 'I001-B17',
@@ -302,7 +302,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'A festival bell test rings out.',
+      text: 'A festival bell rings out — the first sound here meant to carry.',
     },
 
     // Wisdom (Stop 4) — "Listening Terrace"
@@ -332,7 +332,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Dust covers less of the maps now.',
+      text: 'Dust leaves the maps. The routes were never lost, only hidden.',
     },
     {
       id: 'I001-B22',
@@ -361,7 +361,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'People are coming outside again.',
+      text: 'People are coming outside, and looking up, which is new.',
     },
     {
       id: 'I001-B27',
