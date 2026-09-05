@@ -22,6 +22,15 @@ export const JOURNEY_DISC_ARENA_FREEZE_MAX_CHARGE = 100;
 export const JOURNEY_DISC_ARENA_FREEZE_READY = 100;
 export const JOURNEY_DISC_ARENA_FREEZE_RECHARGE_PER_SECOND = 14;
 export const JOURNEY_DISC_ARENA_FREEZE_TICKS = 180;
+export const JOURNEY_DISC_ARENA_GRAVITY_MAX_CHARGE = 100;
+export const JOURNEY_DISC_ARENA_GRAVITY_READY = 100;
+export const JOURNEY_DISC_ARENA_GRAVITY_RECHARGE_PER_SECOND = 8;
+export const JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS = 30;
+export const JOURNEY_DISC_ARENA_GRAVITY_HUNT_TICKS = 180;
+export const JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS = 36;
+export const JOURNEY_DISC_ARENA_GRAVITY_GULP_RADIUS = 1.32;
+export const JOURNEY_DISC_ARENA_GRAVITY_PULL_RADIUS = 3.4;
+export const JOURNEY_DISC_ARENA_GRAVITY_HUNT_SPEED = 4.8;
 export const JOURNEY_DISC_ARENA_ECHO_TICKS = 360;
 export const JOURNEY_DISC_ARENA_SPEED_BOOST_TICKS = 90;
 export const JOURNEY_DISC_ARENA_SPEED_MULTIPLIER = 1.38;
@@ -143,6 +152,20 @@ export interface JourneyDiscArenaSpeedFieldState {
   radius: number;
 }
 
+export interface JourneyDiscArenaGravityHoleState {
+  sourceFighterId: string;
+  position: JourneyDiscArenaVector;
+  startedAtTick: number;
+  growsUntilTick: number;
+  huntUntilTick: number;
+  collapseStartedAtTick: number | null;
+  returnAtTick: number | null;
+  targetFighterId: string | null;
+  capturedFighterIds: readonly string[];
+  knockedOutFighterIds: readonly string[];
+  gulped: boolean;
+}
+
 export interface JourneyDiscArenaState {
   version: typeof JOURNEY_DISC_ARENA_VERSION;
   seed: number;
@@ -157,6 +180,8 @@ export interface JourneyDiscArenaState {
   openingTicksRemaining: number;
   playerSurge: number;
   playerFreezeCharge: number;
+  playerGravityCharge: number;
+  gravityHole: JourneyDiscArenaGravityHoleState | null;
   fighters: readonly JourneyDiscArenaFighterState[];
   speedField: JourneyDiscArenaSpeedFieldState;
   powerups: readonly JourneyDiscArenaPowerupState[];
@@ -166,12 +191,15 @@ export type JourneyDiscArenaEvent =
   | { type: 'impact'; fighterAId: string; fighterBId: string; strength: number }
   | { type: 'surge'; fighterId: string; targetFighterId: string; power: number; moduleId: JourneyDiscArenaModuleId; shieldRestored: number; speedBoostUntilTick: number }
   | { type: 'shield_break'; fighterId: string; byFighterId: string }
-  | { type: 'knockout'; fighterId: string; byFighterId: string | null }
+  | { type: 'knockout'; fighterId: string; byFighterId: string | null; cause?: 'gravity' }
   | { type: 'speed_field'; fighterId: string }
   | { type: 'freeze'; collectorFighterId: string; targetFighterId: string; untilTick: number }
   | { type: 'drive_off'; attackerFighterId: string; targetFighterId: string; succeeded: boolean; power: number }
   | { type: 'echo_spawn'; collectorFighterId: string; echoFighterId: string; untilTick: number }
   | { type: 'echo_expired'; fighterId: string }
+  | { type: 'gravity_hole_open'; sourceFighterId: string; position: JourneyDiscArenaVector; growsUntilTick: number; huntUntilTick: number }
+  | { type: 'gravity_hole_gulp'; sourceFighterId: string; position: JourneyDiscArenaVector; fighterIds: readonly string[]; knockedOutFighterIds: readonly string[]; protectedFighterIds: readonly string[] }
+  | { type: 'gravity_hole_close'; sourceFighterId: string; position: JourneyDiscArenaVector; returnedFighterIds: readonly string[]; gulped: boolean }
   | { type: 'round_complete'; winner: Exclude<JourneyDiscArenaWinner, null>; reason: 'elimination' | 'timeout' };
 
 export interface JourneyDiscArenaStepResult {
@@ -181,14 +209,21 @@ export interface JourneyDiscArenaStepResult {
 
 export interface JourneyDiscArenaSurgeResult {
   accepted: boolean;
-  failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | null;
+  failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | 'busy' | null;
   state: JourneyDiscArenaState;
   events: readonly JourneyDiscArenaEvent[];
 }
 
 export interface JourneyDiscArenaFreezeAttackResult {
   accepted: boolean;
-  failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | null;
+  failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | 'busy' | null;
+  state: JourneyDiscArenaState;
+  events: readonly JourneyDiscArenaEvent[];
+}
+
+export interface JourneyDiscArenaGravityHoleResult {
+  accepted: boolean;
+  failureReason: 'round_finished' | 'opening' | 'not_ready' | 'no_target' | 'busy' | null;
   state: JourneyDiscArenaState;
   events: readonly JourneyDiscArenaEvent[];
 }
@@ -549,6 +584,8 @@ export function createJourneyDiscArenaState(options: {
     openingTicksRemaining: Math.max(0, Math.floor(options.openingTicks ?? 0)),
     playerSurge: JOURNEY_DISC_ARENA_MAX_SURGE,
     playerFreezeCharge: JOURNEY_DISC_ARENA_FREEZE_MAX_CHARGE,
+    playerGravityCharge: JOURNEY_DISC_ARENA_GRAVITY_MAX_CHARGE,
+    gravityHole: null,
     fighters,
     speedField: { position: { x: 0, z: 0 }, radius: 1.75 },
     powerups: [
@@ -584,6 +621,9 @@ export function triggerJourneyDiscArenaSurge(state: JourneyDiscArenaState, reque
   }
   if (state.openingTicksRemaining > 0) {
     return { accepted: false, failureReason: 'opening', state, events: [] };
+  }
+  if (state.gravityHole) {
+    return { accepted: false, failureReason: 'busy', state, events: [] };
   }
   if (state.playerSurge < JOURNEY_DISC_ARENA_SURGE_READY) {
     return { accepted: false, failureReason: 'not_ready', state, events: [] };
@@ -657,6 +697,9 @@ export function triggerJourneyDiscArenaFreezeAttack(
   if (state.openingTicksRemaining > 0) {
     return { accepted: false, failureReason: 'opening', state, events: [] };
   }
+  if (state.gravityHole) {
+    return { accepted: false, failureReason: 'busy', state, events: [] };
+  }
   if (state.playerFreezeCharge < JOURNEY_DISC_ARENA_FREEZE_READY) {
     return { accepted: false, failureReason: 'not_ready', state, events: [] };
   }
@@ -683,6 +726,67 @@ export function triggerJourneyDiscArenaFreezeAttack(
       collectorFighterId: source.id,
       targetFighterId: target.id,
       untilTick: target.frozenUntilTick,
+    }],
+  };
+}
+
+/**
+ * Turn the selected captain into a temporary gravity hole. The fixed-step
+ * engine owns the entire grow, hunt, single-gulp, collapse, and return cycle.
+ */
+export function triggerJourneyDiscArenaGravityHole(
+  state: JourneyDiscArenaState,
+  requestedFighterId: string | null = null,
+): JourneyDiscArenaGravityHoleResult {
+  if (state.phase !== 'running') {
+    return { accepted: false, failureReason: 'round_finished', state, events: [] };
+  }
+  if (state.openingTicksRemaining > 0) {
+    return { accepted: false, failureReason: 'opening', state, events: [] };
+  }
+  if (state.gravityHole) {
+    return { accepted: false, failureReason: 'busy', state, events: [] };
+  }
+  if (state.playerGravityCharge < JOURNEY_DISC_ARENA_GRAVITY_READY) {
+    return { accepted: false, failureReason: 'not_ready', state, events: [] };
+  }
+  const fighters = state.fighters.map((fighter) => ({
+    ...fighter,
+    position: { ...fighter.position },
+    velocity: { ...fighter.velocity },
+  }));
+  const sources = fighters
+    .filter((fighter) => fighter.active && !fighter.isEcho && fighter.team === 'player' && fighter.frozenUntilTick <= state.tick)
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const source = sources.find((fighter) => fighter.id === requestedFighterId) ?? sources[0];
+  const target = source ? nearestOpponent(source, fighters.filter((fighter) => !fighter.isEcho)) : null;
+  if (!source || !target) return { accepted: false, failureReason: 'no_target', state, events: [] };
+
+  source.velocity = { x: 0, z: 0 };
+  const position = { ...source.position };
+  const gravityHole: JourneyDiscArenaGravityHoleState = {
+    sourceFighterId: source.id,
+    position,
+    startedAtTick: state.tick,
+    growsUntilTick: state.tick + JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS,
+    huntUntilTick: state.tick + JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS + JOURNEY_DISC_ARENA_GRAVITY_HUNT_TICKS,
+    collapseStartedAtTick: null,
+    returnAtTick: null,
+    targetFighterId: target.id,
+    capturedFighterIds: [],
+    knockedOutFighterIds: [],
+    gulped: false,
+  };
+  return {
+    accepted: true,
+    failureReason: null,
+    state: { ...state, playerGravityCharge: 0, gravityHole, fighters },
+    events: [{
+      type: 'gravity_hole_open',
+      sourceFighterId: source.id,
+      position,
+      growsUntilTick: gravityHole.growsUntilTick,
+      huntUntilTick: gravityHole.huntUntilTick,
     }],
   };
 }
@@ -760,16 +864,165 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
     velocity: { ...fighter.velocity },
   }));
   const powerups = state.powerups.map((powerup) => ({ ...powerup, position: { ...powerup.position } }));
+  let gravityHole: JourneyDiscArenaGravityHoleState | null = state.gravityHole ? {
+    ...state.gravityHole,
+    position: { ...state.gravityHole.position },
+    capturedFighterIds: [...state.gravityHole.capturedFighterIds],
+    knockedOutFighterIds: [...state.gravityHole.knockedOutFighterIds],
+  } : null;
+
+  if (gravityHole) {
+    const source = fighters.find((fighter) => fighter.id === gravityHole?.sourceFighterId);
+    if (!source) {
+      gravityHole = null;
+    } else {
+      const beginCollapse = () => {
+        if (!gravityHole || gravityHole.collapseStartedAtTick !== null) return;
+        gravityHole.collapseStartedAtTick = state.tick;
+        gravityHole.returnAtTick = state.tick + JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS;
+      };
+
+      if (gravityHole.collapseStartedAtTick === null && state.tick >= gravityHole.growsUntilTick) {
+        const eligibleRivals = fighters.filter((fighter) => fighter.active
+          && fighter.team !== source.team
+          && !gravityHole?.capturedFighterIds.includes(fighter.id));
+        const target = eligibleRivals
+          .map((fighter) => ({
+            fighter,
+            distance: Math.hypot(fighter.position.x - gravityHole!.position.x, fighter.position.z - gravityHole!.position.z),
+          }))
+          .sort((left, right) => left.distance - right.distance || left.fighter.id.localeCompare(right.fighter.id))[0]?.fighter ?? null;
+        gravityHole.targetFighterId = target?.id ?? null;
+        if (target) {
+          const direction = normalize({
+            x: target.position.x - gravityHole.position.x,
+            z: target.position.z - gravityHole.position.z,
+          });
+          const distance = Math.hypot(target.position.x - gravityHole.position.x, target.position.z - gravityHole.position.z);
+          const travel = Math.min(distance, JOURNEY_DISC_ARENA_GRAVITY_HUNT_SPEED * dt);
+          gravityHole.position.x += direction.x * travel;
+          gravityHole.position.z += direction.z * travel;
+          const holeDistance = length(gravityHole.position);
+          const holeLimit = Math.max(0.5, state.arenaRadius - JOURNEY_DISC_ARENA_GRAVITY_GULP_RADIUS * 0.45);
+          if (holeDistance > holeLimit) {
+            gravityHole.position.x = gravityHole.position.x / holeDistance * holeLimit;
+            gravityHole.position.z = gravityHole.position.z / holeDistance * holeLimit;
+          }
+        }
+
+        for (const fighter of fighters) {
+          if (!fighter.active || fighter.id === source.id || fighter.frozenUntilTick > state.tick) continue;
+          const dx = gravityHole.position.x - fighter.position.x;
+          const dz = gravityHole.position.z - fighter.position.z;
+          const distance = Math.hypot(dx, dz);
+          if (distance <= 0.0001 || distance >= JOURNEY_DISC_ARENA_GRAVITY_PULL_RADIUS) continue;
+          const pull = (1 - distance / JOURNEY_DISC_ARENA_GRAVITY_PULL_RADIUS) * 8.2;
+          fighter.velocity.x += dx / distance * pull * dt;
+          fighter.velocity.z += dz / distance * pull * dt;
+        }
+
+        const rivalInRange = fighters.some((fighter) => fighter.active
+          && fighter.team !== source.team
+          && Math.hypot(fighter.position.x - gravityHole!.position.x, fighter.position.z - gravityHole!.position.z) <= JOURNEY_DISC_ARENA_GRAVITY_GULP_RADIUS);
+        if (rivalInRange) {
+          const swallowed = fighters
+            .filter((fighter) => fighter.active
+              && fighter.id !== source.id
+              && Math.hypot(fighter.position.x - gravityHole!.position.x, fighter.position.z - gravityHole!.position.z) <= JOURNEY_DISC_ARENA_GRAVITY_GULP_RADIUS)
+            .sort((left, right) => left.id.localeCompare(right.id));
+          const protectedFighterIds: string[] = [];
+          const knockedOutFighterIds: string[] = [];
+          for (const fighter of swallowed) {
+            fighter.velocity = { x: 0, z: 0 };
+            fighter.position = { ...gravityHole.position };
+            if (fighter.team === source.team || fighter.bossTier > 0) {
+              protectedFighterIds.push(fighter.id);
+              if (fighter.team !== source.team && fighter.bossTier > 0) {
+                const stats = getJourneyDiscArenaFighterStats(fighter);
+                const shieldBefore = fighter.shield;
+                fighter.shield = Math.max(0, fighter.shield - Math.round(stats.maxShield * 0.34));
+                fighter.spin = Math.max(0, fighter.spin - stats.maxSpin * 0.22);
+                fighter.lastHitBy = source.id;
+                if (shieldBefore > 0 && fighter.shield === 0) {
+                  fighter.shieldBroken = true;
+                  events.push({ type: 'shield_break', fighterId: fighter.id, byFighterId: source.id });
+                }
+              }
+            } else {
+              fighter.active = false;
+              fighter.lastHitBy = source.id;
+              knockedOutFighterIds.push(fighter.id);
+              events.push({ type: 'knockout', fighterId: fighter.id, byFighterId: source.id, cause: 'gravity' });
+            }
+          }
+          gravityHole.capturedFighterIds = protectedFighterIds;
+          gravityHole.knockedOutFighterIds = knockedOutFighterIds;
+          gravityHole.gulped = true;
+          events.push({
+            type: 'gravity_hole_gulp',
+            sourceFighterId: source.id,
+            position: { ...gravityHole.position },
+            fighterIds: swallowed.map((fighter) => fighter.id),
+            knockedOutFighterIds,
+            protectedFighterIds,
+          });
+          beginCollapse();
+        }
+      }
+
+      if (gravityHole?.collapseStartedAtTick === null && state.tick >= gravityHole.huntUntilTick) beginCollapse();
+      if (gravityHole?.returnAtTick !== null && state.tick >= gravityHole.returnAtTick) {
+        const returnedFighterIds = [source.id, ...gravityHole.capturedFighterIds];
+        const finalPosition = { ...gravityHole.position };
+        for (const [index, fighterId] of returnedFighterIds.entries()) {
+          const fighter = fighters.find((candidate) => candidate.id === fighterId);
+          if (!fighter || !fighter.active) continue;
+          const angle = ((stableHash(fighter.id) ^ state.seed) % 6283) / 1000 + index * 2.17;
+          const offset = index === 0 ? 0 : 0.86 + (index % 2) * 0.38;
+          const stats = getJourneyDiscArenaFighterStats(fighter);
+          const position = {
+            x: finalPosition.x + Math.cos(angle) * offset,
+            z: finalPosition.z + Math.sin(angle) * offset,
+          };
+          const radialDistance = length(position);
+          const safeRadius = Math.max(0.5, state.arenaRadius - stats.radius * 1.2);
+          fighter.position = radialDistance > safeRadius
+            ? { x: position.x / radialDistance * safeRadius, z: position.z / radialDistance * safeRadius }
+            : position;
+          const launchDirection = normalize({ x: -fighter.position.x, z: -fighter.position.z });
+          fighter.velocity = { x: launchDirection.x * 1.25, z: launchDirection.z * 1.25 };
+        }
+        events.push({
+          type: 'gravity_hole_close',
+          sourceFighterId: source.id,
+          position: finalPosition,
+          returnedFighterIds,
+          gulped: gravityHole.gulped,
+        });
+        gravityHole = null;
+      } else if (gravityHole) {
+        const phasedIds = new Set([source.id, ...gravityHole.capturedFighterIds]);
+        for (const fighter of fighters) {
+          if (!phasedIds.has(fighter.id)) continue;
+          fighter.position = { ...gravityHole.position };
+          fighter.velocity = { x: 0, z: 0 };
+        }
+      }
+    }
+  }
+  const gravityPhasedFighterIds = new Set(gravityHole
+    ? [gravityHole.sourceFighterId, ...gravityHole.capturedFighterIds]
+    : []);
 
   for (const fighter of fighters) {
-    if (!fighter.active || fighter.expiresAtTick === null || state.tick < fighter.expiresAtTick) continue;
+    if (!fighter.active || gravityPhasedFighterIds.has(fighter.id) || fighter.expiresAtTick === null || state.tick < fighter.expiresAtTick) continue;
     fighter.active = false;
     fighter.velocity = { x: 0, z: 0 };
     events.push({ type: 'echo_expired', fighterId: fighter.id });
   }
 
   for (const fighter of fighters) {
-    if (!fighter.active) continue;
+    if (!fighter.active || gravityPhasedFighterIds.has(fighter.id)) continue;
     const stats = getJourneyDiscArenaFighterStats(fighter);
     if (fighter.frozenUntilTick > state.tick) {
       // Freeze is a complete combat lock, not a steering slowdown. Collision
@@ -778,7 +1031,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       fighter.velocity = { x: 0, z: 0 };
       continue;
     }
-    const target = nearestOpponent(fighter, fighters);
+    const target = nearestOpponent(fighter, fighters.filter((candidate) => !gravityPhasedFighterIds.has(candidate.id)));
     const radialDistance = length(fighter.position);
     const toCenter = normalize({ x: -fighter.position.x, z: -fighter.position.z });
     const targetDistance = target
@@ -806,7 +1059,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
     }
     const speedMultiplier = fighter.speedBoostUntilTick > state.tick ? JOURNEY_DISC_ARENA_SPEED_MULTIPLIER : 1;
     const allySpacing = fighters.reduce((separation, ally) => {
-      if (!ally.active || ally.id === fighter.id || ally.team !== fighter.team) return separation;
+      if (!ally.active || gravityPhasedFighterIds.has(ally.id) || ally.id === fighter.id || ally.team !== fighter.team) return separation;
       const dx = fighter.position.x - ally.position.x;
       const dz = fighter.position.z - ally.position.z;
       const distance = Math.hypot(dx, dz);
@@ -842,7 +1095,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
   for (const powerup of powerups) {
     if (!powerup.active) continue;
     const collector = fighters
-      .filter((fighter) => fighter.active && !fighter.isEcho && fighter.frozenUntilTick <= state.tick)
+      .filter((fighter) => fighter.active && !fighter.isEcho && !gravityPhasedFighterIds.has(fighter.id) && fighter.frozenUntilTick <= state.tick)
       .map((fighter) => ({
         fighter,
         distance: Math.hypot(fighter.position.x - powerup.position.x, fighter.position.z - powerup.position.z),
@@ -887,10 +1140,10 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
 
   for (let leftIndex = 0; leftIndex < fighters.length; leftIndex += 1) {
     const left = fighters[leftIndex];
-    if (!left.active) continue;
+    if (!left.active || gravityPhasedFighterIds.has(left.id)) continue;
     for (let rightIndex = leftIndex + 1; rightIndex < fighters.length; rightIndex += 1) {
       const right = fighters[rightIndex];
-      if (!right.active) continue;
+      if (!right.active || gravityPhasedFighterIds.has(right.id)) continue;
       const leftStats = getJourneyDiscArenaFighterStats(left);
       const rightStats = getJourneyDiscArenaFighterStats(right);
       const leftFrozen = left.frozenUntilTick > state.tick;
@@ -1003,7 +1256,7 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
   }
 
   for (const fighter of fighters) {
-    if (!fighter.active) continue;
+    if (!fighter.active || gravityPhasedFighterIds.has(fighter.id)) continue;
     const stats = getJourneyDiscArenaFighterStats(fighter);
     const radialDistance = length(fighter.position);
     const knockoutRadius = state.arenaRadius + stats.radius * (fighter.shieldBroken ? 0.08 : 0.34);
@@ -1022,9 +1275,15 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
     JOURNEY_DISC_ARENA_FREEZE_MAX_CHARGE,
     state.playerFreezeCharge + JOURNEY_DISC_ARENA_FREEZE_RECHARGE_PER_SECOND * dt,
   );
-  const eliminationWinner = resolveWinner(fighters);
+  const playerGravityCharge = Math.min(
+    JOURNEY_DISC_ARENA_GRAVITY_MAX_CHARGE,
+    state.playerGravityCharge + (gravityHole ? 0 : JOURNEY_DISC_ARENA_GRAVITY_RECHARGE_PER_SECOND * dt),
+  );
+  // A Gravity Hole owns a complete animation-safe transaction. Do not finish
+  // the round while its captain or protected gulped fighters are off-board.
+  const eliminationWinner = gravityHole ? null : resolveWinner(fighters);
   const timedOut = elapsedSeconds >= state.durationSeconds;
-  const winner = eliminationWinner ?? (timedOut ? resolveTimeoutWinner(fighters) : null);
+  const winner = eliminationWinner ?? (timedOut && !gravityHole ? resolveTimeoutWinner(fighters) : null);
   const phase: JourneyDiscArenaPhase = winner === null ? 'running' : 'finished';
   if (winner !== null) {
     events.push({ type: 'round_complete', winner, reason: eliminationWinner !== null ? 'elimination' : 'timeout' });
@@ -1039,6 +1298,8 @@ export function stepJourneyDiscArena(state: JourneyDiscArenaState): JourneyDiscA
       winner,
       playerSurge,
       playerFreezeCharge,
+      playerGravityCharge,
+      gravityHole,
       fighters,
       powerups,
     },

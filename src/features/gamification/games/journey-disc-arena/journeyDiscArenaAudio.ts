@@ -23,13 +23,25 @@ export class JourneyDiscArenaAudio {
     const shieldBreak = events.some((event) => event.type === 'shield_break');
     const surge = events.some((event) => event.type === 'surge');
     const freeze = events.some((event) => event.type === 'freeze');
+    const gravityOpen = events.some((event) => event.type === 'gravity_hole_open');
+    const gravityGulp = events.some((event) => event.type === 'gravity_hole_gulp');
+    const gravityClose = events.some((event) => event.type === 'gravity_hole_close');
     const echo = events.some((event) => event.type === 'echo_spawn');
     const speed = events.some((event) => event.type === 'speed_field');
     const strongestImpact = events
       .filter((event): event is Extract<JourneyDiscArenaEvent, { type: 'impact' }> => event.type === 'impact')
       .reduce((best, event) => Math.max(best, event.strength), 0);
 
-    if (freeze) {
+    if (gravityGulp) {
+      this.tone(155, 34, 0.44, 0.09, 'sawtooth');
+      this.noise(0.32, 0.09, 0.03);
+      this.tone(48, 118, 0.36, 0.075, 'sine', 0.08);
+    } else if (gravityOpen) {
+      this.tone(420, 52, 0.5, 0.055, 'sine');
+      this.tone(210, 38, 0.46, 0.035, 'triangle', 0.04);
+    } else if (gravityClose) {
+      this.tone(72, 560, 0.24, 0.05, 'triangle');
+    } else if (freeze) {
       this.tone(980, 240, 0.26, 0.04, 'sine');
     } else if (echo) {
       this.tone(310, 820, 0.24, 0.04, 'triangle');

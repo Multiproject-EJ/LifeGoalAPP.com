@@ -8,6 +8,8 @@ import {
   JOURNEY_DISC_ARENA_ECHO_TICKS,
   JOURNEY_DISC_ARENA_FIXED_STEP_SECONDS,
   JOURNEY_DISC_ARENA_FREEZE_TICKS,
+  JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS,
+  JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS,
   JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS,
   JOURNEY_DISC_ARENA_SURGE_READY,
   JOURNEY_DISC_ARENA_SPEED_MULTIPLIER,
@@ -15,6 +17,7 @@ import {
   scoreJourneyDiscArenaRound,
   stepJourneyDiscArena,
   triggerJourneyDiscArenaFreezeAttack,
+  triggerJourneyDiscArenaGravityHole,
   triggerJourneyDiscArenaSurge,
   upgradeJourneyDiscArenaRank,
   type JourneyDiscArenaFighterSeed,
@@ -246,6 +249,108 @@ export const journeyDiscArenaGameTests: TestCase[] = [
       assertEqual(captainAfter.lastHitBy, null, 'zero returned damage cannot claim a hit');
       assert(collision.events.some((event) => event.type === 'impact'), 'the one-way frozen collision remains visibly authored');
       assertDeepEqual(collision, stepJourneyDiscArena(fired.state), 'the complete frozen collision rule replays exactly');
+    },
+  },
+  {
+    name: 'Gravity Hole performs one multi-gulp, protects allies, delays victory, and returns the captain',
+    run: () => {
+      const initial = createJourneyDiscArenaState({
+        seed: 711,
+        arenaRadius: 30,
+        durationSeconds: 20,
+        fighters: [
+          { id: 'captain', pieceId: 'explorer_ship', team: 'player', rank: 2, position: { x: 0, z: 0 }, velocity: { x: 0, z: 0 } },
+          { id: 'ally', pieceId: 'world_seed', team: 'player', rank: 1, position: { x: 0, z: 0.72 }, velocity: { x: 0, z: 0 } },
+          { id: 'rival-a', pieceId: 'fallen_star', team: 'rival', rank: 1, position: { x: 0.88, z: 0 }, velocity: { x: 0, z: 0 } },
+          { id: 'rival-b', pieceId: 'guardian_idol', team: 'rival', rank: 1, position: { x: -0.82, z: 0.24 }, velocity: { x: 0, z: 0 } },
+        ],
+      });
+      const fixedTargets = {
+        ...initial,
+        fighters: initial.fighters.map((fighter) => fighter.id === 'captain' ? fighter : { ...fighter, frozenUntilTick: 1000 }),
+      };
+      const armed = triggerJourneyDiscArenaGravityHole(fixedTargets, 'captain');
+      assertEqual(armed.accepted, true, 'the selected captain can arm Gravity Hole immediately');
+      assertEqual(armed.state.playerGravityCharge, 0, 'arming spends the separate Gravity Hole charge');
+      assertEqual(armed.state.gravityHole?.sourceFighterId, 'captain', 'the exact selected spinner becomes the hole');
+      assertEqual(triggerJourneyDiscArenaFreezeAttack(armed.state, 'captain').failureReason, 'busy', 'other tricks cannot interrupt a live Gravity Hole transaction');
+
+      let state = armed.state;
+      let gulpEvent: Extract<ReturnType<typeof stepJourneyDiscArena>['events'][number], { type: 'gravity_hole_gulp' }> | undefined;
+      for (let index = 0; index < JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS + 3 && !gulpEvent; index += 1) {
+        const result = stepJourneyDiscArena(state);
+        state = result.state;
+        gulpEvent = result.events.find((event) => event.type === 'gravity_hole_gulp');
+      }
+      assert(gulpEvent?.type === 'gravity_hole_gulp', 'the grown hole performs its one visible gulp');
+      assertDeepEqual(gulpEvent?.knockedOutFighterIds, ['rival-a', 'rival-b'], 'every normal rival inside the gulp radius is swallowed simultaneously');
+      assert(gulpEvent?.protectedFighterIds.includes('ally'), 'an allied spinner in the same gulp is explicitly protected');
+      assertEqual(state.fighters.find((fighter) => fighter.id === 'ally')?.active, true, 'the allied spinner remains alive while inside the hole');
+      assertEqual(state.phase, 'running', 'victory waits for the hole collapse and protected returns');
+
+      const allyShield = state.fighters.find((fighter) => fighter.id === 'ally')?.shield;
+      const replayAtGulp = playTicks(armed.state, JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS + 1);
+      assertDeepEqual(state, replayAtGulp, 'the grow, hunt, and simultaneous gulp replay exactly');
+      state = playTicks(state, JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS + 2);
+      assertEqual(state.gravityHole, null, 'the hole always disappears after its bounded collapse');
+      assertEqual(state.fighters.find((fighter) => fighter.id === 'captain')?.active, true, 'the source spinner flips back onto the board');
+      assertEqual(state.fighters.find((fighter) => fighter.id === 'ally')?.active, true, 'the gulped allied spinner pops back onto the board');
+      assertEqual(state.fighters.find((fighter) => fighter.id === 'ally')?.shield, allyShield, 'protected allies return with the same health');
+      assertEqual(state.winner, 'player', 'the delayed elimination resolves only after every protected return');
+    },
+  },
+  {
+    name: 'Gravity Hole damages and returns Guardians instead of instantly defeating them',
+    run: () => {
+      const initial = createJourneyDiscArenaState({
+        seed: 712,
+        arenaRadius: 30,
+        durationSeconds: 20,
+        fighters: [
+          { id: 'captain', pieceId: 'living_compass', team: 'player', rank: 3, position: { x: 0, z: 0 }, velocity: { x: 0, z: 0 } },
+          { id: 'guardian', pieceId: 'guardian_idol', team: 'rival', rank: 3, bossTier: 2, position: { x: 0.9, z: 0 }, velocity: { x: 0, z: 0 } },
+        ],
+      });
+      const prepared = { ...initial, fighters: initial.fighters.map((fighter) => fighter.id === 'guardian' ? { ...fighter, frozenUntilTick: 1000 } : fighter) };
+      let state = triggerJourneyDiscArenaGravityHole(prepared, 'captain').state;
+      const shieldBefore = state.fighters.find((fighter) => fighter.id === 'guardian')!.shield;
+      state = playTicks(state, JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS + 1);
+      const swallowedGuardian = state.fighters.find((fighter) => fighter.id === 'guardian')!;
+      assertEqual(swallowedGuardian.active, true, 'Guardians resist instant defeat');
+      assert(swallowedGuardian.shield < shieldBefore && swallowedGuardian.shield > 0, 'Guardian resistance converts the gulp into heavy bounded damage');
+      assert(state.gravityHole?.capturedFighterIds.includes('guardian') ?? false, 'the Guardian remains protected until collapse completes');
+      state = playTicks(state, JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS + 2);
+      assertEqual(state.gravityHole, null, 'the Guardian transaction closes on schedule');
+      assertEqual(state.fighters.find((fighter) => fighter.id === 'guardian')?.active, true, 'the damaged Guardian returns to continue fighting');
+      assertEqual(state.phase, 'running', 'both teams resume after the Guardian returns');
+    },
+  },
+  {
+    name: 'Gravity Hole times out cleanly on a miss and defers the round timer until return',
+    run: () => {
+      const initial = createJourneyDiscArenaState({
+        seed: 713,
+        arenaRadius: 50,
+        durationSeconds: 5,
+        fighters: [
+          { id: 'captain', pieceId: 'quest_journal', team: 'player', rank: 1, position: { x: 0, z: 0 }, velocity: { x: 0, z: 0 } },
+          { id: 'far-rival', pieceId: 'fallen_star', team: 'rival', rank: 1, position: { x: 35, z: 0 }, velocity: { x: 0, z: 0 } },
+        ],
+      });
+      const prepared = {
+        ...initial,
+        elapsedSeconds: 4.99,
+        fighters: initial.fighters.map((fighter) => fighter.id === 'far-rival' ? { ...fighter, frozenUntilTick: 1000 } : fighter),
+      };
+      const armed = triggerJourneyDiscArenaGravityHole(prepared, 'captain');
+      const timedButProtected = stepJourneyDiscArena(armed.state).state;
+      assertEqual(timedButProtected.elapsedSeconds, 5, 'the ordinary round timer still reaches its cap');
+      assertEqual(timedButProtected.phase, 'running', 'timeout cannot resolve while the captain is transformed');
+      const finished = playTicks(timedButProtected, JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS + 180 + JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS + 4);
+      assertEqual(finished.gravityHole, null, 'a miss still collapses and returns the source spinner');
+      assertEqual(finished.fighters.find((fighter) => fighter.id === 'captain')?.active, true, 'the source safely returns after a miss');
+      assertEqual(finished.phase, 'finished', 'the deferred timeout resolves immediately after return');
+      assertDeepEqual(finished, playTicks(timedButProtected, JOURNEY_DISC_ARENA_GRAVITY_GROW_TICKS + 180 + JOURNEY_DISC_ARENA_GRAVITY_COLLAPSE_TICKS + 4), 'miss timing and timeout resolution replay exactly');
     },
   },
   {

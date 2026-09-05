@@ -6,6 +6,7 @@ import {
   scoreJourneyDiscArenaRound,
   stepJourneyDiscArena,
   triggerJourneyDiscArenaFreezeAttack,
+  triggerJourneyDiscArenaGravityHole,
   triggerJourneyDiscArenaSurge,
   type JourneyDiscArenaEvent,
   type JourneyDiscArenaEncounterProfile,
@@ -75,6 +76,7 @@ export interface JourneyDiscArenaPreviewController {
   selectFighter: (fighterId: string) => void;
   triggerSurge: () => void;
   triggerFreezeAttack: () => void;
+  triggerGravityHole: () => void;
   launchRematch: () => void;
   prepareNextRound: () => void;
   resetPreview: () => void;
@@ -242,8 +244,12 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
           ? Math.min(9, (comboStillLive ? snapshot.combo : 0) + 1 + knockouts)
           : snapshot.combo;
         const comboExpiresAtMs = meaningfulImpact || knockouts > 0 ? nowMs + 1850 : snapshot.comboExpiresAtMs;
-        const lastImpactLabel = knockouts > 0
-          ? 'RING OUT!'
+        const lastImpactLabel = newestEvents.some((event) => event.type === 'gravity_hole_gulp')
+          ? 'GRAVITY GULP!'
+          : newestEvents.some((event) => event.type === 'gravity_hole_open')
+            ? 'GRAVITY HOLE!'
+          : knockouts > 0
+            ? 'RING OUT!'
           : newestEvents.some((event) => event.type === 'drive_off' && event.succeeded)
             ? 'DRIVE-OFF!'
             : newestEvents.some((event) => event.type === 'drive_off' && !event.succeeded)
@@ -574,6 +580,28 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         recentEvents: result.events,
         notice: 'FREEZE PULSE — nearest rival locked in ice!',
         lastImpactLabel: 'FROZEN!',
+      });
+    },
+    triggerGravityHole() {
+      if (snapshot.mode !== 'battle' || !snapshot.battle) return;
+      const result = triggerJourneyDiscArenaGravityHole(snapshot.battle, snapshot.selectedFighterId);
+      if (!result.accepted) {
+        const notice = result.failureReason === 'opening'
+          ? 'Hold formation…'
+          : result.failureReason === 'not_ready'
+            ? 'Gravity Hole is recharging…'
+            : result.failureReason === 'busy'
+              ? 'The current Gravity Hole must collapse first.'
+              : 'Choose an active captain with a rival to hunt.';
+        commit({ notice });
+        return;
+      }
+      const selected = snapshot.playerLineup.find((fighter) => fighter.id === snapshot.selectedFighterId);
+      commit({
+        battle: result.state,
+        recentEvents: result.events,
+        notice: `${selected?.name ?? 'Captain'} armed — one gulp, then everyone protected returns.`,
+        lastImpactLabel: 'GRAVITY HOLE!',
       });
     },
     launchRematch() {

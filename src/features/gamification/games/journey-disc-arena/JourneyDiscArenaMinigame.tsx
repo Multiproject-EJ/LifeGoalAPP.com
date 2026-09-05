@@ -3,6 +3,7 @@ import type { IslandRunMinigameProps } from '../../level-worlds/services/islandR
 import {
   getJourneyDiscArenaFighterStats,
   JOURNEY_DISC_ARENA_FREEZE_READY,
+  JOURNEY_DISC_ARENA_GRAVITY_READY,
   JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS,
   JOURNEY_DISC_ARENA_OPENING_TICKS,
   JOURNEY_DISC_ARENA_SURGE_READY,
@@ -85,11 +86,11 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   }, [audio, controller]);
   useEffect(() => {
     audio.playEvents(snapshot.recentEvents);
-    if (snapshot.recentEvents.some((event) => event.type === 'knockout')) triggerIslandRunHaptic('boss_trial_resolve');
+    if (snapshot.recentEvents.some((event) => event.type === 'gravity_hole_gulp' || event.type === 'knockout')) triggerIslandRunHaptic('boss_trial_resolve');
     else if (snapshot.recentEvents.some((event) => event.type === 'freeze' || event.type === 'drive_off')) triggerIslandRunHaptic('encounter_resolve');
     else if (snapshot.recentEvents.some((event) => event.type === 'shield_break')) triggerIslandRunHaptic('encounter_resolve');
     else if (snapshot.recentEvents.some((event) => event.type === 'impact' && event.strength >= 8)) triggerIslandRunHaptic('stop_land');
-    else if (snapshot.recentEvents.some((event) => event.type === 'surge')) triggerIslandRunHaptic('roll');
+    else if (snapshot.recentEvents.some((event) => event.type === 'surge' || event.type === 'gravity_hole_open')) triggerIslandRunHaptic('roll');
     if (snapshot.recentEvents.some((event) => event.type === 'round_complete')) triggerIslandRunHaptic('reward_claim');
   }, [audio, snapshot.recentEvents]);
   useEffect(() => {
@@ -104,6 +105,8 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   const rivalAlive = battle?.fighters.filter((fighter) => fighter.team === 'rival' && fighter.active && !fighter.isEcho).length ?? encounter.rivalCount;
   const surgePercent = Math.round(battle?.playerSurge ?? 100);
   const freezePercent = Math.round(battle?.playerFreezeCharge ?? 100);
+  const gravityPercent = Math.round(battle?.playerGravityCharge ?? 100);
+  const gravityHoleActive = Boolean(battle?.gravityHole);
   const permanentRank = Math.max(snapshot.progress.rank, snapshot.armory.rank);
   const openingLabel = battle && snapshot.mode === 'battle'
     ? battle.openingTicksRemaining > 0
@@ -370,6 +373,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
                   key={fighter.id}
                   data-selected={fighter.id === selectedFighter?.id}
                   data-module={fighter.moduleId ?? 'core'}
+                  disabled={gravityHoleActive}
                   onClick={() => { audio.prime(); triggerIslandRunHaptic('stop_land'); controller.selectFighter(fighter.id); }}
                   aria-pressed={fighter.id === selectedFighter?.id}
                   aria-label={`Appoint ${lineupEntry?.name ?? 'fighter'} with ${weapon} as captain`}
@@ -385,7 +389,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
               type="button"
               className="journey-disc-arena__freeze"
               data-ready={freezePercent >= JOURNEY_DISC_ARENA_FREEZE_READY}
-              disabled={freezePercent < JOURNEY_DISC_ARENA_FREEZE_READY || Boolean(battle?.openingTicksRemaining)}
+              disabled={freezePercent < JOURNEY_DISC_ARENA_FREEZE_READY || Boolean(battle?.openingTicksRemaining) || gravityHoleActive}
               onClick={() => { audio.prime(); controller.triggerFreezeAttack(); }}
               style={{ '--freeze': `${freezePercent}%` } as React.CSSProperties}
             >
@@ -395,10 +399,23 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
             </button>
             <button
               type="button"
+              className="journey-disc-arena__gravity"
+              data-ready={gravityPercent >= JOURNEY_DISC_ARENA_GRAVITY_READY && !gravityHoleActive}
+              data-active={gravityHoleActive || undefined}
+              disabled={gravityPercent < JOURNEY_DISC_ARENA_GRAVITY_READY || Boolean(battle?.openingTicksRemaining) || gravityHoleActive}
+              onClick={() => { audio.prime(); controller.triggerGravityHole(); }}
+              style={{ '--gravity': `${gravityPercent}%` } as React.CSSProperties}
+            >
+              <span>{battle?.openingTicksRemaining ? 'HOLD' : gravityHoleActive ? 'HUNTING · ONE GULP' : gravityPercent >= JOURNEY_DISC_ARENA_GRAVITY_READY ? `${selectedLineupEntry?.name ?? 'CAPTAIN'} SELECTED` : 'RECHARGING'}</span>
+              <strong>◉ Gravity Hole</strong>
+              <i>{gravityHoleActive ? 'LIVE' : `${gravityPercent}%`}</i>
+            </button>
+            <button
+              type="button"
               className="journey-disc-arena__surge"
               data-ready={surgePercent >= JOURNEY_DISC_ARENA_SURGE_READY}
               data-max={surgePercent >= 100}
-              disabled={surgePercent < JOURNEY_DISC_ARENA_SURGE_READY || Boolean(battle?.openingTicksRemaining)}
+              disabled={surgePercent < JOURNEY_DISC_ARENA_SURGE_READY || Boolean(battle?.openingTicksRemaining) || gravityHoleActive}
               onClick={() => { audio.prime(); controller.triggerSurge(); }}
               style={{ '--surge': `${surgePercent}%` } as React.CSSProperties}
             >

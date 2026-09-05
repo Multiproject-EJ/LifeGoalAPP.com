@@ -22,6 +22,7 @@ interface FighterVisual {
   damageFlashUntil: number;
   baseScale: number;
   knockoutAt: number | null;
+  gravityConsumed: boolean;
   knockoutOrigin: THREE.Vector3;
   knockoutDirection: THREE.Vector3;
 }
@@ -345,6 +346,7 @@ function createFighterVisual(pieceId: PlayerPieceId, rank: number, bossTier: num
     damageFlashUntil: 0,
     baseScale,
     knockoutAt: null,
+    gravityConsumed: false,
     knockoutOrigin: new THREE.Vector3(),
     knockoutDirection: new THREE.Vector3(),
   };
@@ -358,6 +360,7 @@ export class JourneyDiscArenaThreeScene {
   private readonly fightersRoot = new THREE.Group();
   private readonly fieldRoot = new THREE.Group();
   private readonly crowdRoot = new THREE.Group();
+  private readonly gravityHoleRoot = new THREE.Group();
   private readonly fighterVisuals = new Map<string, FighterVisual>();
   private readonly impactFlashes: ImpactFlash[] = [];
   private readonly shockRings: ShockRing[] = [];
@@ -389,8 +392,9 @@ export class JourneyDiscArenaThreeScene {
     this.renderer.setClearColor(0xffffff, 0);
     this.scene.background = null;
     this.scene.fog = new THREE.FogExp2(0xe9f7ff, 0.015);
-    this.scene.add(this.arenaRoot, this.fightersRoot, this.fieldRoot, this.crowdRoot);
+    this.scene.add(this.arenaRoot, this.fightersRoot, this.fieldRoot, this.crowdRoot, this.gravityHoleRoot);
     this.createEnvironment();
+    this.createGravityHoleVisual();
     this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
@@ -496,12 +500,28 @@ export class JourneyDiscArenaThreeScene {
           const fighter = this.fighterVisuals.get(event.collectorFighterId)?.root.position;
           if (fighter) this.spawnShockRing(fighter.clone(), ECHO_COLOR);
         }
+        if (event.type === 'gravity_hole_open') {
+          this.spawnShockRing(new THREE.Vector3(event.position.x, 0.12, event.position.z), ECHO_COLOR);
+        }
+        if (event.type === 'gravity_hole_gulp') {
+          const position = new THREE.Vector3(event.position.x, 0.16, event.position.z);
+          this.spawnShockRing(position, 0xf564ff);
+          this.spawnImpactFlash(position.clone().setY(0.42), 0xffffff);
+          for (const fighterId of event.knockedOutFighterIds) {
+            const visual = this.fighterVisuals.get(fighterId);
+            if (visual) visual.gravityConsumed = true;
+          }
+          this.punchCamera((performance.now() - this.startedAtMs) / 1000, 0.34, 0.4);
+        }
+        if (event.type === 'gravity_hole_close') {
+          this.spawnShockRing(new THREE.Vector3(event.position.x, 0.18, event.position.z), PLAYER_COLOR);
+        }
         if (event.type === 'shield_break' || event.type === 'knockout') {
           const visual = this.fighterVisuals.get(event.fighterId);
           const fighter = visual?.root.position;
           if (fighter) {
             this.spawnShockRing(fighter.clone(), event.type === 'knockout' ? 0xffcf68 : 0xff5dad);
-            if (event.type === 'knockout' && visual && visual.knockoutAt === null) {
+            if (event.type === 'knockout' && event.cause !== 'gravity' && visual && visual.knockoutAt === null) {
               visual.knockoutAt = (performance.now() - this.startedAtMs) / 1000;
               visual.knockoutOrigin.copy(fighter);
               visual.knockoutDirection.set(fighter.x >= 0 ? 1 : -1, 0, fighter.z >= 0 ? 0.55 : -0.55).normalize();
@@ -517,6 +537,39 @@ export class JourneyDiscArenaThreeScene {
       }
     }
     this.lastEventSignature = eventSignature;
+  }
+
+  private createGravityHoleVisual() {
+    this.gravityHoleRoot.visible = false;
+    this.gravityHoleRoot.renderOrder = 8;
+    const shadow = new THREE.Mesh(
+      new THREE.CircleGeometry(1.42, 48),
+      new THREE.MeshBasicMaterial({ color: 0x010106, transparent: true, opacity: 0.97, depthWrite: false, side: THREE.DoubleSide }),
+    );
+    shadow.name = 'gravity-hole-shadow';
+    shadow.rotation.x = -Math.PI / 2;
+    const inner = new THREE.Mesh(
+      new THREE.RingGeometry(0.46, 1.08, 48),
+      new THREE.MeshBasicMaterial({ color: 0x6d16ba, transparent: true, opacity: 0.78, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+    );
+    inner.name = 'gravity-hole-inner';
+    inner.rotation.x = -Math.PI / 2;
+    inner.position.y = 0.025;
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(1.2, 0.12, 10, 56),
+      new THREE.MeshBasicMaterial({ color: 0xf46cff, transparent: true, opacity: 0.92, depthWrite: false, blending: THREE.AdditiveBlending }),
+    );
+    rim.name = 'gravity-hole-rim';
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 0.08;
+    const outer = new THREE.Mesh(
+      new THREE.TorusGeometry(1.55, 0.035, 8, 64),
+      new THREE.MeshBasicMaterial({ color: 0x66e9ff, transparent: true, opacity: 0.62, depthWrite: false, blending: THREE.AdditiveBlending }),
+    );
+    outer.name = 'gravity-hole-outer';
+    outer.rotation.x = Math.PI / 2;
+    outer.position.y = 0.1;
+    this.gravityHoleRoot.add(shadow, inner, rim, outer);
   }
 
   private createEnvironment() {
@@ -795,17 +848,55 @@ export class JourneyDiscArenaThreeScene {
     if (snapshot) {
       if (snapshot.battle) {
         const lifeBarScreenOffset = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion).multiplyScalar(1.7);
+        const gravityHole = snapshot.battle.gravityHole;
         for (const fighter of snapshot.battle.fighters) {
           const visual = this.fighterVisuals.get(fighter.id);
           if (!visual) continue;
           const stats = getJourneyDiscArenaFighterStats(fighter);
-          if (fighter.active && visual.knockoutAt !== null) {
+          if (fighter.active && (visual.knockoutAt !== null || visual.gravityConsumed)) {
             // A rematch reuses stable fighter ids. Clear the previous round's
             // fall/flip pose before this active fighter returns to the board.
             visual.knockoutAt = null;
+            visual.gravityConsumed = false;
             visual.root.rotation.set(0, 0, 0);
             visual.root.visible = true;
             visual.root.scale.setScalar(visual.baseScale);
+          }
+          const isGravitySource = gravityHole?.sourceFighterId === fighter.id;
+          const isGravityCaptured = gravityHole?.capturedFighterIds.includes(fighter.id) ?? false;
+          if (isGravitySource && gravityHole) {
+            const growProgress = THREE.MathUtils.clamp(
+              (snapshot.battle.tick - gravityHole.startedAtTick) / Math.max(1, gravityHole.growsUntilTick - gravityHole.startedAtTick),
+              0,
+              1,
+            );
+            const collapseProgress = gravityHole.collapseStartedAtTick === null || gravityHole.returnAtTick === null
+              ? 0
+              : THREE.MathUtils.clamp(
+                (snapshot.battle.tick - gravityHole.collapseStartedAtTick) / Math.max(1, gravityHole.returnAtTick - gravityHole.collapseStartedAtTick),
+                0,
+                1,
+              );
+            const sourceScale = collapseProgress > 0
+              ? Math.max(0.01, (collapseProgress - 0.28) / 0.72)
+              : Math.max(0.01, 1 - growProgress * 1.28);
+            visual.root.visible = sourceScale > 0.025;
+            visual.root.position.set(gravityHole.position.x, 0.45 + Math.sin(Math.min(1, growProgress) * Math.PI) * 0.42, gravityHole.position.z);
+            visual.root.scale.setScalar(visual.baseScale * Math.min(1, sourceScale));
+            visual.root.rotation.x = Math.PI * (collapseProgress > 0 ? 1 - collapseProgress : growProgress);
+            visual.root.rotation.z = Math.sin(elapsed * 14) * 0.12;
+            visual.spinner.rotation.y += this.reducedMotion ? 0.02 : 0.18;
+            visual.trail.visible = false;
+            visual.lifeBar.visible = false;
+            visual.selectionRing.visible = false;
+            continue;
+          }
+          if (isGravityCaptured || (visual.gravityConsumed && !fighter.active)) {
+            visual.root.visible = false;
+            visual.trail.visible = false;
+            visual.lifeBar.visible = false;
+            visual.selectionRing.visible = false;
+            continue;
           }
           const knockoutAge = visual.knockoutAt === null ? -1 : elapsed - visual.knockoutAt;
           if (!fighter.active && knockoutAge >= 0) {
@@ -922,6 +1013,35 @@ export class JourneyDiscArenaThreeScene {
       core.scale.setScalar(0.92 + Math.sin(elapsed * 2.2) * 0.08);
     }
     if (!this.reducedMotion) this.arenaRoot.rotation.y = Math.sin(elapsed * 0.11) * 0.015;
+    const gravityHole = snapshot?.battle?.gravityHole;
+    if (gravityHole) {
+      const growProgress = THREE.MathUtils.clamp(
+        (snapshot!.battle!.tick - gravityHole.startedAtTick) / Math.max(1, gravityHole.growsUntilTick - gravityHole.startedAtTick),
+        0,
+        1,
+      );
+      const collapseProgress = gravityHole.collapseStartedAtTick === null || gravityHole.returnAtTick === null
+        ? 0
+        : THREE.MathUtils.clamp(
+          (snapshot!.battle!.tick - gravityHole.collapseStartedAtTick) / Math.max(1, gravityHole.returnAtTick - gravityHole.collapseStartedAtTick),
+          0,
+          1,
+        );
+      const scale = Math.max(0.01, growProgress * (1 - collapseProgress));
+      this.gravityHoleRoot.visible = true;
+      this.gravityHoleRoot.position.set(gravityHole.position.x, 0.15, gravityHole.position.z);
+      this.gravityHoleRoot.scale.setScalar(scale * (1 + Math.sin(elapsed * 10) * 0.045));
+      const inner = this.gravityHoleRoot.getObjectByName('gravity-hole-inner');
+      const rim = this.gravityHoleRoot.getObjectByName('gravity-hole-rim');
+      const outer = this.gravityHoleRoot.getObjectByName('gravity-hole-outer');
+      if (!this.reducedMotion) {
+        if (inner) inner.rotation.z = elapsed * 2.8;
+        if (rim) rim.rotation.z = -elapsed * 3.9;
+        if (outer) outer.rotation.z = elapsed * 5.2;
+      }
+    } else {
+      this.gravityHoleRoot.visible = false;
+    }
     const energySweep = this.arenaRoot.getObjectByName('arena-energy-sweep');
     if (energySweep && !this.reducedMotion) energySweep.rotation.y = elapsed * 0.42;
     const speedField = this.fieldRoot.getObjectByName('speed-field');
