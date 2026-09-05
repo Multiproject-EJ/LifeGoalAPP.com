@@ -85,6 +85,7 @@ export default function VaultIslandCollectionPreview() {
       initialView={featuredTreasure ? 'vault' : undefined}
       featuredTreasure={featuredTreasure}
       holdingsValue={previewState.holdingsValue}
+      vaultProgress={{ purchasedUpgradeIds: [] }}
       onClose={() => undefined}
     />
   );

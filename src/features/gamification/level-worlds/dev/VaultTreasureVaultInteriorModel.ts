@@ -26,14 +26,14 @@ export interface VaultTreasureVaultInteriorOptions {
 
 type VaultInteriorMaterials = ReturnType<typeof createVaultInteriorMaterials>;
 const VAULT_MUSEUM_DISPLAY_LAYOUT = [
-  { id: 'crown', x: 0, y: 0.18, z: -4.7, rotationY: 0, scale: 0.92 },
-  { id: 'egg', x: -1.58, y: 0.18, z: -4.74, rotationY: -0.08, scale: 0.76 },
-  { id: 'hourglass', x: 1.58, y: 0.18, z: -4.74, rotationY: 0.08, scale: 0.78 },
-  { id: 'key', x: -3.32, y: 0.18, z: -1.62, rotationY: -0.48, scale: 0.82 },
-  { id: 'medallion', x: 3.32, y: 0.18, z: -1.62, rotationY: 0.48, scale: 0.8 },
-  { id: 'compass', x: -1.36, y: 4.49, z: -5.18, rotationY: -0.08, scale: 0.7 },
-  { id: 'obelisk', x: 0, y: 4.49, z: -5.28, rotationY: 0, scale: 0.72 },
-  { id: 'chalice', x: 1.36, y: 4.49, z: -5.18, rotationY: 0.08, scale: 0.7 },
+  { id: 'crown', x: 0, y: 0.28, z: -4.62, rotationY: 0, scale: 1.26 },
+  { id: 'egg', x: -1.62, y: 0.28, z: -4.66, rotationY: -0.08, scale: 1.06 },
+  { id: 'hourglass', x: 1.62, y: 0.28, z: -4.66, rotationY: 0.08, scale: 1.08 },
+  { id: 'key', x: -3.34, y: 0.28, z: -1.5, rotationY: -0.48, scale: 1.14 },
+  { id: 'medallion', x: 3.34, y: 0.28, z: -1.5, rotationY: 0.48, scale: 1.12 },
+  { id: 'compass', x: -1.42, y: 4.56, z: -5.12, rotationY: -0.08, scale: 1.02 },
+  { id: 'obelisk', x: 0, y: 4.56, z: -5.22, rotationY: 0, scale: 1.04 },
+  { id: 'chalice', x: 1.42, y: 4.56, z: -5.12, rotationY: 0.08, scale: 1.02 },
 ] as const satisfies ReadonlyArray<{
   id: VaultTreasureId;
   x: number;
@@ -56,6 +56,10 @@ const VAULT_BLENDER_TREASURE_ASSETS: Readonly<Record<VaultTreasureId, string>> =
 
 function tuneBlenderInteriorMaterials(root: THREE.Object3D, lookdev: VaultInteriorMaterials) {
   root.traverse((child) => {
+    if (child.name.includes('360-completion')) {
+      child.visible = false;
+      child.userData.vaultInterior360Completion = true;
+    }
     if (
       child.name.includes('vault-interior-museum-display-base-')
       || child.name.includes('vault-interior-museum-display-gold-ring-')
@@ -249,42 +253,54 @@ function tuneBlenderInteriorMaterials(root: THREE.Object3D, lookdev: VaultInteri
         material.roughness = 0.5;
         material.envMapIntensity = 0.9;
       } else if (name.includes('white-marble')) {
-        material.color.set('#b9a27c');
+        material.color.set('#9f8968');
         material.map = null;
-        material.bumpMap = null;
-        material.roughness = 0.48;
+        material.bumpMap = lookdev.masonryPattern;
+        material.bumpScale = 0.018;
+        material.roughness = 0.5;
+        material.envMapIntensity = 0.76;
       } else if (name.includes('pearl-marble')) {
-        material.color.set('#cfbd9b');
+        material.color.set('#c7b28d');
         material.map = null;
-        material.bumpMap = null;
-        material.roughness = 0.4;
+        material.bumpMap = lookdev.marblePattern;
+        material.bumpScale = 0.006;
+        material.roughness = 0.32;
+        material.envMapIntensity = 1.08;
       } else if (name.includes('shadow-marble')) {
-        material.color.set('#665d50');
+        material.color.set('#292c32');
         material.map = null;
-        material.bumpMap = null;
-        material.roughness = 0.44;
+        material.bumpMap = lookdev.masonryPattern;
+        material.bumpScale = 0.022;
+        material.roughness = 0.5;
+        material.envMapIntensity = 0.62;
       } else if (name.includes('polished-gold')) {
-        material.color.set('#d39216');
+        material.color.set('#b8790e');
         material.map = null;
-        material.bumpMap = null;
+        material.bumpMap = lookdev.metalPattern;
+        material.bumpScale = 0.004;
         material.metalness = 1;
-        material.roughness = 0.17;
-        material.envMapIntensity = 2.45;
+        material.roughness = 0.12;
+        material.envMapIntensity = 3.25;
       } else if (name.includes('antique-gold') || name.includes('polished-silver')) {
         material.map = null;
-        material.bumpMap = null;
+        material.bumpMap = lookdev.metalPattern;
+        material.bumpScale = name.includes('antique-gold') ? 0.008 : 0.003;
         if (name.includes('antique-gold')) {
           material.color.set('#74501b');
           material.roughness = 0.25;
           material.envMapIntensity = 2.1;
+        } else {
+          material.color.set('#aebdcc');
+          material.roughness = 0.13;
+          material.envMapIntensity = 2.8;
         }
       } else if (name.includes('midnight-enamel')) {
-        material.color.set('#072d68');
+        material.color.set('#03183d');
         material.bumpMap = lookdev.metalPattern;
         material.bumpScale = 0.005;
         material.roughness = 0.11;
       } else if (name.includes('sapphire-enamel')) {
-        material.color.set('#0d6f9f');
+        material.color.set('#07517d');
         material.bumpMap = lookdev.metalPattern;
         material.bumpScale = 0.005;
         material.roughness = 0.1;
@@ -423,7 +439,7 @@ function addVaultMuseumLights(root: THREE.Group, quality: VaultIslandQuality) {
   const colors = ['#ffd28b', '#8deeff', '#ff879d'] as const;
   VAULT_MUSEUM_DISPLAY_LAYOUT.forEach((display, index) => {
     if (quality === 'low' && index % 2 === 1) return;
-    const light = new THREE.PointLight(colors[index % colors.length], quality === 'high' ? 1.55 : 1, 3.7, 2);
+    const light = new THREE.PointLight(colors[index % colors.length], quality === 'high' ? 1.72 : 1.28, 4.1, 2);
     light.name = `vault-interior-museum-display-light-${String(index).padStart(2, '0')}`;
     light.position.set(display.x, display.y + 1.55, display.z + 0.7);
     root.add(light);
@@ -445,6 +461,71 @@ function addVaultMuseumLights(root: THREE.Group, quality: VaultIslandQuality) {
     reserveLight.position.set(side * 4.45, 2.25, -1.2);
     root.add(reserveLight);
   }
+}
+
+function addVaultMuseumChandelier(
+  parent: THREE.Group,
+  materials: VaultInteriorMaterials,
+  quality: VaultIslandQuality,
+) {
+  const chandelier = new THREE.Group();
+  chandelier.name = 'vault-interior-sovereign-cut-crystal-chandelier';
+  chandelier.position.set(0, 6.12, -1.0);
+
+  const suspension = cylinder(
+    0.025,
+    0.025,
+    1.2,
+    segmentCount(quality, 8, 10, 12),
+    materials.gold,
+    'vault-interior-chandelier-gold-suspension',
+  );
+  suspension.position.y = 0.52;
+  chandelier.add(suspension);
+
+  const crownRing = goldRing(0.82, 0.035, materials, quality, 'vault-interior-chandelier-crown-ring');
+  const lowerRing = goldRing(0.48, 0.025, materials, quality, 'vault-interior-chandelier-lower-ring');
+  lowerRing.position.y = -0.3;
+  chandelier.add(crownRing, lowerRing);
+
+  const dropCount = quality === 'low' ? 8 : quality === 'medium' ? 12 : 16;
+  for (let index = 0; index < dropCount; index += 1) {
+    const angle = index / dropCount * Math.PI * 2;
+    const radius = index % 2 === 0 ? 0.72 : 0.46;
+    const chain = cylinder(
+      0.009,
+      0.009,
+      index % 2 === 0 ? 0.52 : 0.36,
+      6,
+      materials.gold,
+      'vault-interior-chandelier-fine-gold-chain',
+    );
+    chain.position.set(Math.sin(angle) * radius, index % 2 === 0 ? -0.22 : -0.4, Math.cos(angle) * radius);
+    const prism = mesh(
+      new THREE.OctahedronGeometry(index % 2 === 0 ? 0.095 : 0.072, quality === 'high' ? 1 : 0),
+      index % 4 === 0 ? materials.violetGem : index % 3 === 0 ? materials.ruby : materials.cyanGem,
+      'vault-interior-chandelier-cut-jewel-prism',
+    );
+    prism.position.set(chain.position.x, chain.position.y - (index % 2 === 0 ? 0.31 : 0.24), chain.position.z);
+    prism.scale.y = 1.7;
+    prism.userData.waterPhase = index * 0.41;
+    chandelier.add(chain, prism);
+  }
+
+  const heart = mesh(
+    new THREE.OctahedronGeometry(0.18, quality === 'high' ? 2 : 1),
+    materials.cyanGem,
+    'vault-interior-chandelier-sovereign-crystal-heart-gem',
+  );
+  heart.position.y = -0.92;
+  heart.scale.y = 1.55;
+  chandelier.add(heart);
+
+  const chandelierLight = new THREE.PointLight('#ffd38a', quality === 'low' ? 1.25 : 2.2, 7.5, 2);
+  chandelierLight.name = 'vault-interior-chandelier-warm-crystal-light';
+  chandelierLight.position.y = -0.42;
+  chandelier.add(chandelierLight);
+  parent.add(chandelier);
 }
 
 function addMuseumRearRelief(parent: THREE.Group, materials: VaultInteriorMaterials, quality: VaultIslandQuality) {
@@ -557,16 +638,16 @@ function createVaultInteriorMaterials() {
     }),
     glass: new THREE.MeshPhysicalMaterial({
       color: '#bff8ff',
-      roughness: 0.04,
+      roughness: 0.075,
       metalness: 0,
-      transmission: 0.72,
-      thickness: 0.3,
+      transmission: 0.52,
+      thickness: 0.42,
       clearcoat: 1,
       transparent: true,
-      opacity: 0.14,
+      opacity: 0.22,
       depthWrite: false,
       ior: 1.46,
-      envMapIntensity: 1.6,
+      envMapIntensity: 2.25,
     }),
     cyanGem: new THREE.MeshPhysicalMaterial({
       color: '#7df5ff',
@@ -1363,6 +1444,113 @@ function addTreasurePedestals(
     }
     displays.add(model.root);
 
+    const usesFloorVitrine = definition.id === 'crown'
+      || definition.id === 'egg'
+      || definition.id === 'hourglass'
+      || definition.id === 'key'
+      || definition.id === 'medallion';
+    if (usesFloorVitrine) {
+      const vitrine = new THREE.Group();
+      vitrine.name = `vault-interior-${definition.id}-museum-vitrine`;
+      vitrine.position.set(layout.x, 0, layout.z);
+      vitrine.rotation.y = layout.rotationY;
+
+      const base = cylinder(
+        0.58,
+        0.66,
+        0.18,
+        segmentCount(quality, 24, 36, 48),
+        materials.floor,
+        'vault-interior-museum-vitrine-carved-limestone-base',
+      );
+      base.position.y = 0.2;
+      const baseInlay = cylinder(
+        0.5,
+        0.5,
+        0.045,
+        segmentCount(quality, 24, 36, 48),
+        materials.wallTrim,
+        'vault-interior-museum-vitrine-sapphire-base-inlay',
+      );
+      baseInlay.position.y = 0.315;
+      vitrine.add(base, baseInlay);
+
+      const glass = cylinder(
+        0.5,
+        0.5,
+        1.48,
+        segmentCount(quality, 24, 36, 48),
+        materials.glass,
+        'vault-interior-museum-vitrine-crystal-cylinder',
+      );
+      glass.position.y = 1.1;
+      glass.castShadow = false;
+      glass.renderOrder = 2;
+      vitrine.add(glass);
+
+      for (const [y, radius, tube] of [[0.38, 0.5, 0.035], [1.82, 0.5, 0.045]] as const) {
+        const ring = goldRing(radius, tube, materials, quality, 'vault-interior-museum-vitrine-solid-gold-ring');
+        ring.position.y = y;
+        vitrine.add(ring);
+      }
+      for (let postIndex = 0; postIndex < 4; postIndex += 1) {
+        const angle = Math.PI / 4 + postIndex * Math.PI / 2;
+        const post = cylinder(
+          0.018,
+          0.026,
+          1.42,
+          8,
+          materials.gold,
+          'vault-interior-museum-vitrine-fine-gold-stanchion',
+        );
+        post.position.set(Math.sin(angle) * 0.48, 1.1, Math.cos(angle) * 0.48);
+        vitrine.add(post);
+      }
+      const crownLight = mesh(
+        new THREE.OctahedronGeometry(0.085, quality === 'high' ? 1 : 0),
+        index % 2 === 0 ? materials.cyanGem : materials.ruby,
+        'vault-interior-museum-vitrine-crown-jewel-light',
+      );
+      crownLight.position.y = 1.98;
+      vitrine.add(crownLight);
+      displays.add(vitrine);
+    } else {
+      const galleryPlinth = new THREE.Group();
+      galleryPlinth.name = `vault-interior-${definition.id}-upper-gallery-plinth`;
+      galleryPlinth.position.set(layout.x, 4.18, layout.z);
+      galleryPlinth.rotation.y = layout.rotationY;
+
+      const carvedBase = mesh(
+        new RoundedBoxGeometry(0.72, 0.18, 0.58, quality === 'high' ? 4 : 2, 0.055),
+        materials.floor,
+        'vault-interior-upper-gallery-carved-limestone-plinth',
+      );
+      const blueCushion = mesh(
+        new RoundedBoxGeometry(0.56, 0.09, 0.44, quality === 'high' ? 4 : 2, 0.045),
+        materials.velvet,
+        'vault-interior-upper-gallery-royal-blue-display-cushion',
+      );
+      blueCushion.position.y = 0.13;
+      const goldCollar = mesh(
+        new RoundedBoxGeometry(0.76, 0.045, 0.62, 2, 0.018),
+        materials.gold,
+        'vault-interior-upper-gallery-solid-gold-plinth-collar',
+      );
+      goldCollar.position.y = -0.105;
+      galleryPlinth.add(carvedBase, blueCushion, goldCollar);
+
+      for (const side of [-1, 1] as const) {
+        const lamp = mesh(
+          new THREE.OctahedronGeometry(0.055, quality === 'high' ? 1 : 0),
+          definition.id === 'obelisk' ? materials.cyanGem : materials.ruby,
+          'vault-interior-upper-gallery-plinth-jewel-lamp',
+        );
+        lamp.position.set(side * 0.27, 0.24, 0.16);
+        galleryPlinth.add(lamp);
+      }
+      displays.add(galleryPlinth);
+    }
+
     releaseBlenderTreasureAssets.push(loadBlenderTreasureAsset(
       model,
       definition.id,
@@ -1680,12 +1868,20 @@ export function createVaultTreasurePalaceAtriumModel(options: VaultTreasureVault
   const fallbackArchitecture = createVaultPalaceAtriumArchitectureV3(materials, quality);
   fallbackArchitecture.name = 'vault-palace-atrium-procedural-fallback';
   root.add(fallbackArchitecture);
+  let explore360Enabled = false;
+  const applyExplore360Visibility = () => {
+    root.traverse((child) => {
+      if (child.userData.vaultInterior360Completion === true) child.visible = explore360Enabled;
+    });
+    root.userData.interiorExplore360 = explore360Enabled;
+  };
   const releaseBlenderArchitecture = loadBlenderInteriorArchitecture(
     root,
     fallbackArchitecture,
-    '/assets/islands/special/vault-island/vault-atrium.glb?v=028',
-    'vault-palace-atrium-blender-architecture-v028',
+    '/assets/islands/special/vault-island/vault-atrium.glb?v=045',
+    'vault-palace-atrium-blender-architecture-v045',
     materials,
+    applyExplore360Visibility,
   );
   addAtriumLuxuryDetails(root, materials, quality);
   addAtriumArchitecturalLights(root, quality);
@@ -1697,6 +1893,10 @@ export function createVaultTreasurePalaceAtriumModel(options: VaultTreasureVault
 
   return {
     root,
+    setInteriorExplore360: (enabled: boolean) => {
+      explore360Enabled = enabled;
+      applyExplore360Visibility();
+    },
     update: (elapsedSeconds: number) => {
       if (!options.animated) return;
       animatedObjects.forEach((object, index) => {
@@ -2460,12 +2660,20 @@ export function createVaultTreasureVaultInteriorModel(options: VaultTreasureVaul
   addChandelier(fallbackArchitecture, materials, quality);
   addMuseumLuxuryGalleryLayer(fallbackArchitecture, materials, quality);
   root.add(fallbackArchitecture);
+  let explore360Enabled = false;
+  const applyExplore360Visibility = () => {
+    root.traverse((child) => {
+      if (child.userData.vaultInterior360Completion === true) child.visible = explore360Enabled;
+    });
+    root.userData.interiorExplore360 = explore360Enabled;
+  };
   const releaseBlenderArchitecture = loadBlenderInteriorArchitecture(
     root,
     fallbackArchitecture,
-    '/assets/islands/special/vault-island/vault-museum.glb?v=041',
-    'vault-interior-royal-hydraulic-lift-cloister-v041',
+    '/assets/islands/special/vault-island/vault-museum.glb?v=045',
+    'vault-interior-royal-hydraulic-lift-cloister-v045',
     materials,
+    applyExplore360Visibility,
   );
   addMuseumRearRelief(root, materials, quality);
   const reliefKey = new THREE.PointLight('#8deeff', quality === 'high' ? 1.45 : 0.95, 4.2, 2);
@@ -2476,10 +2684,12 @@ export function createVaultTreasureVaultInteriorModel(options: VaultTreasureVaul
   reliefGold.position.set(1.25, 3.05, -3.55);
   root.add(reliefKey, reliefGold);
   addVaultMuseumLights(root, quality);
+  addVaultMuseumChandelier(root, materials, quality);
   addEssenceIngots(root, materials, quality, wealthDisplay);
   addTreasureOverflow(root, materials, quality, wealthDisplay);
   addStickerRelicFrames(root, materials, quality);
   addTreasurePedestals(root, materials, quality, options.unlockedTreasureIds);
+  addSpotlightBeams(root, materials, quality);
 
   const animatedObjects: THREE.Object3D[] = [];
   root.traverse((child) => {
@@ -2496,6 +2706,10 @@ export function createVaultTreasureVaultInteriorModel(options: VaultTreasureVaul
 
   return {
     root,
+    setInteriorExplore360: (enabled: boolean) => {
+      explore360Enabled = enabled;
+      applyExplore360Visibility();
+    },
     update: (elapsedSeconds: number) => {
       if (!options.animated) return;
       animatedObjects.forEach((object, index) => {

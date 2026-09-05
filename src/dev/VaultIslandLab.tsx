@@ -92,6 +92,9 @@ interface VaultIslandLabQaSnapshot {
   wealthGemCount: number;
   perimeterStyle: VaultIslandPerimeterStyle;
   lastPointerHit: VaultTreasureId | 'none';
+  interiorExplore360: boolean;
+  completionNodeCount: number;
+  visibleCompletionNodeCount: number;
   route: string;
 }
 
@@ -136,6 +139,10 @@ function readCleanPresentationMode() {
 
 function readQaStillMode() {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('still') === '1';
+}
+
+function readInitialInteriorExplore360() {
+  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('interior360') === '1';
 }
 
 function readBuildTunerMode() {
@@ -202,6 +209,7 @@ export default function VaultIslandLab({
   const [selectedTreasureId, setSelectedTreasureId] = useState<VaultTreasureId>(initialTreasureId);
   const [revealRun, setRevealRun] = useState(0);
   const [autoOrbit, setAutoOrbit] = useState(true);
+  const [interiorExplore360, setInteriorExplore360] = useState(readInitialInteriorExplore360);
   const [showReference, setShowReference] = useState(false);
   const [isMuseumCardExpanded, setIsMuseumCardExpanded] = useState(false);
   const [showDevelopment, setShowDevelopment] = useState(false);
@@ -337,25 +345,31 @@ export default function VaultIslandLab({
     lastPointerHitRef.current = 'none';
     const scene = new THREE.Scene();
     const isInteriorView = view !== 'exterior';
+    const isRotunda360View = interiorExplore360 && (view === 'atrium' || view === 'vault');
     const backgroundColor = view === 'vault' ? '#10192b' : view === 'garden' ? '#b66f34' : view === 'atrium' ? '#244b57' : '#d6a14e';
     scene.background = new THREE.Color(backgroundColor);
     const fogColor = view === 'exterior' ? '#e0ad59' : view === 'garden' ? '#d89a55' : backgroundColor;
     scene.fog = new THREE.Fog(
       fogColor,
-      view === 'vault' ? 7 : view === 'atrium' ? 18 : view === 'garden' ? 42 : 36,
-      view === 'vault' ? 18 : view === 'atrium' ? 38 : view === 'garden' ? 132 : 78,
+      view === 'vault' ? 10 : view === 'atrium' ? 15 : view === 'garden' ? 42 : 36,
+      view === 'vault' ? 32 : view === 'atrium' ? 34 : view === 'garden' ? 132 : 78,
     );
 
-    const camera = new THREE.PerspectiveCamera(view === 'atrium' ? 56 : view === 'garden' ? 54 : isInteriorView ? 52 : 38, 390 / 844, 0.1, view === 'garden' ? 140 : 80);
-    if (view === 'vault') {
-      camera.position.set(0, 2.12, 7.62);
-      camera.lookAt(0, 2.62, -3.32);
+    const camera = new THREE.PerspectiveCamera(isRotunda360View ? 58 : view === 'atrium' ? 50 : view === 'garden' ? 52 : isInteriorView ? 56 : 38, 390 / 844, 0.1, view === 'garden' ? 140 : 80);
+    if (isRotunda360View) {
+      const eyeHeight = view === 'atrium' ? 3.72 : 2.62;
+      const tourYaw = requestedYaw ?? 0;
+      camera.position.set(Math.sin(tourYaw) * 0.2, eyeHeight, Math.cos(tourYaw) * 0.2);
+      camera.lookAt(0, eyeHeight, 0);
+    } else if (view === 'vault') {
+      camera.position.set(2.15, 3.05, 12.55);
+      camera.lookAt(0.15, 2.9, -2.15);
     } else if (view === 'garden') {
-      camera.position.set(0.15, 5.65, 11.4);
-      camera.lookAt(0, 1.55, -5.4);
+      camera.position.set(0.15, 3.35, 10.9);
+      camera.lookAt(0, 1.62, -5.7);
     } else if (view === 'atrium') {
-      camera.position.set(0.2, 1.58, 10.62);
-      camera.lookAt(0, 4.72, -2.88);
+      camera.position.set(0.12, 4.1, 16.65);
+      camera.lookAt(0, 4.25, -1.25);
     } else {
       if (cameraPreset === 'top') {
         camera.position.set(5.4, 12.4, 14.2);
@@ -380,7 +394,7 @@ export default function VaultIslandLab({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = view === 'atrium' ? 0.68 : view === 'garden' ? 0.69 : isInteriorView ? 0.78 : 0.9;
+    renderer.toneMappingExposure = view === 'atrium' ? 0.64 : view === 'garden' ? 0.69 : isInteriorView ? 0.72 : 0.9;
     renderer.shadowMap.enabled = quality !== 'low';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
@@ -409,6 +423,11 @@ export default function VaultIslandLab({
     const rim = new THREE.DirectionalLight('#68cde0', isInteriorView ? 0.58 : 0.24);
     rim.position.set(4, 2.2, -4);
     scene.add(rim);
+
+    const tourFill = new THREE.DirectionalLight('#ffd58a', isRotunda360View ? 0.78 : 0);
+    tourFill.name = 'vault-interior-360-camera-fill';
+    tourFill.target.position.set(0, view === 'atrium' ? 4.18 : 3.05, 0);
+    scene.add(tourFill, tourFill.target);
 
     if (!isInteriorView) {
       const goldenBounce = new THREE.DirectionalLight('#ffc86c', 0.78);
@@ -441,6 +460,7 @@ export default function VaultIslandLab({
     model.root.rotation.y = view === 'exterior' ? -0.08 : 0;
     scene.add(model.root);
     modelRef.current = model;
+    model.setInteriorExplore360?.(isRotunda360View);
 
     const composer = quality === 'high' && isInteriorView ? new EffectComposer(renderer) : null;
     if (composer) {
@@ -601,13 +621,19 @@ export default function VaultIslandLab({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minDistance = view === 'garden' ? 8.4 : view === 'vault' ? 7.2 : view === 'atrium' ? 10.4 : 8.4;
-    controls.maxDistance = view === 'garden' ? 20 : view === 'vault' ? 12.2 : view === 'atrium' ? 13.5 : 30;
-    controls.minPolarAngle = isInteriorView ? 0.38 : 0.48;
-    controls.maxPolarAngle = view === 'vault' ? 1.46 : view === 'atrium' ? 1.4 : 1.18;
-    controls.minAzimuthAngle = isInteriorView ? -0.82 : -Infinity;
-    controls.maxAzimuthAngle = isInteriorView ? 0.82 : Infinity;
-    controls.target.set(0, view === 'garden' ? 1.15 : view === 'vault' ? 2.66 : view === 'atrium' ? 4.72 : 2.65, view === 'garden' ? -4.8 : view === 'vault' ? -3.28 : view === 'atrium' ? -2.88 : 0.28);
+    controls.minDistance = isRotunda360View ? 0.2 : view === 'garden' ? 8.4 : view === 'vault' ? 10 : view === 'atrium' ? 14.8 : 8.4;
+    controls.maxDistance = isRotunda360View ? 0.2 : view === 'garden' ? 20 : view === 'vault' ? 21 : view === 'atrium' ? 24 : 30;
+    controls.minPolarAngle = isRotunda360View ? 0.55 : isInteriorView ? 0.38 : 0.48;
+    controls.maxPolarAngle = isRotunda360View ? 2.58 : view === 'vault' ? 1.46 : view === 'atrium' ? 1.4 : 1.18;
+    controls.minAzimuthAngle = isRotunda360View ? -Infinity : isInteriorView ? -0.82 : -Infinity;
+    controls.maxAzimuthAngle = isRotunda360View ? Infinity : isInteriorView ? 0.82 : Infinity;
+    controls.target.set(
+      isRotunda360View || view === 'garden' ? 0 : view === 'vault' ? 0.15 : 0,
+      isRotunda360View ? (view === 'atrium' ? 3.72 : 2.62) : view === 'garden' ? 1.62 : view === 'vault' ? 2.9 : view === 'atrium' ? 4.25 : 2.65,
+      isRotunda360View ? 0 : view === 'garden' ? -5.7 : view === 'vault' ? -2.15 : view === 'atrium' ? -1.25 : 0.28,
+    );
+    controls.autoRotate = isRotunda360View && autoOrbit;
+    controls.autoRotateSpeed = 0.38;
 
     const clock = new THREE.Clock();
     let raf = 0;
@@ -652,6 +678,14 @@ export default function VaultIslandLab({
         if (delta > 18) variedPixelPairs += 1;
       }
 
+      let completionNodeCount = 0;
+      let visibleCompletionNodeCount = 0;
+      model.root.traverse((child) => {
+        if (child.userData.vaultInterior360Completion !== true) return;
+        completionNodeCount += 1;
+        if (child.visible) visibleCompletionNodeCount += 1;
+      });
+
       const snapshot: VaultIslandLabQaSnapshot = {
         view,
         quality,
@@ -676,6 +710,9 @@ export default function VaultIslandLab({
         wealthGemCount,
         perimeterStyle: perimeterStyleRef.current,
         lastPointerHit: lastPointerHitRef.current,
+        interiorExplore360: isRotunda360View,
+        completionNodeCount,
+        visibleCompletionNodeCount,
         route: window.location.pathname + window.location.search,
       };
       setQaSnapshot(snapshot);
@@ -723,8 +760,19 @@ export default function VaultIslandLab({
         camera.updateProjectionMatrix();
         controls.update();
       },
-      setInteriorCamera: (preset: 'front' | 'left' | 'right') => {
-        if (view === 'atrium') {
+      setInteriorCamera: (preset: 'front' | 'left' | 'right' | 'rear') => {
+        if (isRotunda360View && (view === 'atrium' || view === 'vault')) {
+          const eyeHeight = view === 'atrium' ? 4.18 : 3.05;
+          const radius = 2.95;
+          camera.fov = 62;
+          camera.position.set(
+            preset === 'left' ? -radius : preset === 'right' ? radius : 0,
+            eyeHeight,
+            preset === 'rear' ? -radius : preset === 'front' ? radius : 0,
+          );
+          controls.target.set(0, eyeHeight, 0);
+          camera.updateProjectionMatrix();
+        } else if (view === 'atrium') {
           if (preset === 'left') {
             controls.minDistance = 1.2;
             camera.fov = 52;
@@ -736,23 +784,23 @@ export default function VaultIslandLab({
             camera.position.set(4.45, 1.7, 2.88);
             controls.target.set(4.18, 1.1, -1.48);
           } else {
-            controls.minDistance = 10.4;
-            camera.fov = 56;
-            camera.position.set(0.2, 1.58, 10.62);
-            controls.target.set(0, 4.72, -2.88);
+            controls.minDistance = 14.8;
+            camera.fov = 50;
+            camera.position.set(0.12, 4.1, 16.65);
+            controls.target.set(0, 4.25, -1.25);
           }
           camera.updateProjectionMatrix();
         } else if (view === 'garden') {
-          camera.fov = preset === 'front' ? 54 : 61;
+          camera.fov = preset === 'front' ? 52 : 58;
           camera.position.set(
             preset === 'left' ? -0.48 : preset === 'right' ? 0.48 : 0.15,
-            preset === 'front' ? 5.65 : 5.25,
-            preset === 'front' ? 11.4 : 12.45,
+            preset === 'front' ? 3.35 : 3.18,
+            preset === 'front' ? 10.9 : 11.75,
           );
           controls.target.set(
             preset === 'left' ? -0.38 : preset === 'right' ? 0.38 : 0,
-            preset === 'front' ? 1.55 : 1.65,
-            preset === 'front' ? -5.4 : -6.4,
+            preset === 'front' ? 1.62 : 1.7,
+            preset === 'front' ? -5.7 : -6.5,
           );
           camera.updateProjectionMatrix();
         } else if (view === 'vault') {
@@ -763,19 +811,24 @@ export default function VaultIslandLab({
             camera.position.set(4.5, 2.42, 6.78);
             controls.target.set(1.72, 2.22, -3.02);
           } else {
-            camera.position.set(0, 2.12, 7.62);
-            controls.target.set(0, 2.62, -3.32);
+            camera.position.set(2.15, 3.05, 12.55);
+            controls.target.set(0.15, 2.9, -2.15);
           }
         }
         camera.lookAt(controls.target);
         controls.update();
+      },
+      setInterior360: (enabled: boolean) => {
+        setInteriorExplore360(enabled);
       },
     };
     (window as unknown as { __vaultIslandLabQaControls?: typeof qaControls }).__vaultIslandLabQaControls = qaControls;
 
     const render = () => {
       const elapsed = clock.getElapsedTime();
-      if (view === 'exterior' && qaYawOverrideRef.current !== null) {
+      if (isRotunda360View) {
+        model.root.rotation.y = 0;
+      } else if (view === 'exterior' && qaYawOverrideRef.current !== null) {
         model.root.rotation.y = qaYawOverrideRef.current;
       } else if (autoOrbit) {
         model.root.rotation.y = view === 'vault'
@@ -787,6 +840,11 @@ export default function VaultIslandLab({
             : -0.08 + Math.sin(elapsed * 0.22) * 0.04;
       }
       model.update(elapsed);
+      if (isRotunda360View) {
+        tourFill.position.copy(camera.position);
+        tourFill.position.y += 0.7;
+        tourFill.target.position.copy(controls.target);
+      }
       if (view === 'vault') {
         if (lastRevealRun !== revealRunRef.current) {
           lastRevealRun = revealRunRef.current;
@@ -794,7 +852,7 @@ export default function VaultIslandLab({
         }
         const selectedId = selectedTreasureRef.current;
         const selectedDisplay = treasureDisplays.find((display) => display.userData.treasureId === selectedId);
-        const revealActive = revealRunRef.current > 0;
+        const revealActive = revealRunRef.current > 0 && !isRotunda360View;
         const revealT = Math.min(1, Math.max(0, (elapsed - revealStartedAt) / 0.82));
         const easedReveal = 1 - Math.pow(1 - revealT, 3);
         treasureDisplays.forEach((display) => {
@@ -892,12 +950,15 @@ export default function VaultIslandLab({
       if (composer) composer.render();
       else renderer.render(scene, camera);
       frameCount += 1;
-      if (frameCount === 2 || frameCount % 45 === 0) sampleCanvas();
+      const authoredInteriorStillLoading = qaStillMode
+        && (view === 'atrium' || view === 'vault')
+        && model.root.userData.architectureReady === undefined;
+      if (frameCount === 2 || frameCount % 45 === 0 || (qaStillMode && !authoredInteriorStillLoading)) sampleCanvas();
       if (qaStillMode) {
-        if (frameCount < 3) {
+        if (frameCount < 3 || authoredInteriorStillLoading) {
           stagedFrameTimer = window.setTimeout(() => {
             raf = window.requestAnimationFrame(render);
-          }, frameCount === 2 ? 1_200 : 180);
+          }, authoredInteriorStillLoading ? 120 : frameCount === 2 ? 1_200 : 180);
         }
       } else {
         raf = window.requestAnimationFrame(render);
@@ -936,7 +997,7 @@ export default function VaultIslandLab({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [autoOrbit, availableTreasureIds, cameraPreset, effectiveExteriorFill, effectiveHoldingsValue, hasOwnershipFilter, ownedUpgradeKey, qaStillMode, quality, requestedYaw, vaultProgress, view]);
+  }, [autoOrbit, availableTreasureIds, cameraPreset, effectiveExteriorFill, effectiveHoldingsValue, hasOwnershipFilter, interiorExplore360, ownedUpgradeKey, qaStillMode, quality, requestedYaw, vaultProgress, view]);
 
   return (
     <main className={`vault-island-lab${embedded ? ' vault-island-lab--embedded' : ''}${cleanPresentationMode ? ' vault-island-lab--clean' : ''}`}>
@@ -1041,6 +1102,17 @@ export default function VaultIslandLab({
           </button>
           {view === 'atrium' ? <button type="button" onClick={() => setView('garden')}>Gardens</button> : null}
           {view !== 'exterior' ? <button type="button" onClick={() => setView('exterior')}>Exterior</button> : null}
+          {view === 'atrium' || view === 'vault' ? (
+            <button
+              type="button"
+              className={`vault-island-lab__tour-button${interiorExplore360 ? ' is-active' : ''}`}
+              aria-pressed={interiorExplore360}
+              onClick={() => setInteriorExplore360((value) => !value)}
+            >
+              <span aria-hidden="true">↻</span>
+              {interiorExplore360 ? 'Showcase' : '360 tour'}
+            </button>
+          ) : null}
           <button
             type="button"
             className="vault-island-lab__casino-button"
@@ -1092,7 +1164,7 @@ export default function VaultIslandLab({
             </button>
           </div>
         )}
-        {view === 'vault' && availableTreasureIds.length > 0 ? (
+        {view === 'vault' && !interiorExplore360 && availableTreasureIds.length > 0 ? (
           <article className={`vault-island-lab__treasure-card${isMuseumCardExpanded ? ' is-expanded' : ''}${featuredTreasureId === selectedTreasureId ? ' is-featured-relic' : ''}${revealRun > 0 ? ' is-reveal-active' : ''}`} aria-live="polite">
             <header>
               <div>
@@ -1141,7 +1213,7 @@ export default function VaultIslandLab({
               </button>
             </footer>
           </article>
-        ) : view === 'vault' ? (
+        ) : view === 'vault' && !interiorExplore360 ? (
           <article className="vault-island-lab__treasure-card vault-island-lab__treasure-card--empty" aria-live="polite">
             <p>Private collection</p>
             <h2>The treasury awaits</h2>
@@ -1240,6 +1312,10 @@ export default function VaultIslandLab({
             <div>
               <dt>Targets</dt>
               <dd>{qaSnapshot?.clickableDisplays ?? 0}</dd>
+            </div>
+            <div>
+              <dt>360 shell</dt>
+              <dd>{qaSnapshot ? `${qaSnapshot.visibleCompletionNodeCount}/${qaSnapshot.completionNodeCount}` : 'pending'}</dd>
             </div>
             <div>
               <dt>Last hit</dt>

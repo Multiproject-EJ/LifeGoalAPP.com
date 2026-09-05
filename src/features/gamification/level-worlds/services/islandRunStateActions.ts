@@ -169,6 +169,13 @@ import {
   isVaultRushUnlocked,
   VAULT_RUSH_MAX_CLAIMS_PER_ISLAND,
 } from './islandRunVaultRush';
+import {
+  normalizeVaultCasinoPrototypeResult,
+  resolveVaultCasinoGameForClaim,
+  resolveVaultCasinoVirtualCashPayout,
+  type VaultCasinoGameId,
+  type VaultCasinoPrototypeResult,
+} from './islandRunVaultCasino';
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
@@ -1538,6 +1545,88 @@ export interface ClaimVaultRushRewardResult {
   status: ClaimVaultRushRewardStatus;
   record: IslandRunGameStateRecord;
   claimCount: number;
+}
+
+export type ClaimVaultCasinoRewardStatus =
+  | 'claimed'
+  | 'locked'
+  | 'cap_reached'
+  | 'game_mismatch'
+  | 'invalid_result';
+
+export interface ClaimVaultCasinoRewardResult {
+  status: ClaimVaultCasinoRewardStatus;
+  record: IslandRunGameStateRecord;
+  claimCount: number;
+  gameId: VaultCasinoGameId | null;
+  payout: number;
+  grandCofferComplete: boolean;
+}
+
+/** Validates, pays, and consumes one earned Vault Casino play in one state commit. */
+export function claimVaultCasinoReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  effectiveIslandNumber: number;
+  gameId: VaultCasinoGameId;
+  result: VaultCasinoPrototypeResult;
+  triggerSource?: string;
+}): ClaimVaultCasinoRewardResult {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const completedStops = current.completedStopsByIsland?.[String(current.currentIslandNumber)] ?? [];
+  const effectiveIslandNumber = Math.max(1, Math.floor(options.effectiveIslandNumber));
+  const currentClaimCount = getVaultRushClaimCount(
+    current.vaultRushClaimsByIsland,
+    effectiveIslandNumber,
+  );
+  const expectedGameId = resolveVaultCasinoGameForClaim({
+    effectiveIslandNumber,
+    claimCount: currentClaimCount,
+  });
+  const rejected = (status: ClaimVaultCasinoRewardStatus): ClaimVaultCasinoRewardResult => ({
+    status,
+    record: current,
+    claimCount: currentClaimCount,
+    gameId: expectedGameId,
+    payout: 0,
+    grandCofferComplete: false,
+  });
+
+  if (!isVaultRushUnlocked(completedStops)) return rejected('locked');
+  if (!expectedGameId || currentClaimCount >= VAULT_RUSH_MAX_CLAIMS_PER_ISLAND) return rejected('cap_reached');
+  if (options.gameId !== expectedGameId) return rejected('game_mismatch');
+
+  const normalizedResult = normalizeVaultCasinoPrototypeResult(options.result);
+  if (!normalizedResult) return rejected('invalid_result');
+
+  const payout = resolveVaultCasinoVirtualCashPayout(normalizedResult);
+  const claimCount = currentClaimCount + 1;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    essence: current.essence + payout,
+    essenceLifetimeEarned: current.essenceLifetimeEarned + payout,
+    vaultRushClaimsByIsland: {
+      ...current.vaultRushClaimsByIsland,
+      [String(effectiveIslandNumber)]: claimCount,
+    },
+  };
+
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'claim_vault_casino_reward',
+  });
+  return {
+    status: 'claimed',
+    record: next,
+    claimCount,
+    gameId: options.gameId,
+    payout,
+    grandCofferComplete: claimCount === VAULT_RUSH_MAX_CLAIMS_PER_ISLAND,
+  };
 }
 
 /** Atomically awards one Vault Rush prize and consumes one per-island claim. */

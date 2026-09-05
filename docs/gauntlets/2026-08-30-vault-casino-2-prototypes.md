@@ -1,7 +1,7 @@
 # Vault Casino 2.0 Prototype Gauntlet
 
 Date: 2026-08-30
-Status: prototype slice complete
+Status: production rotation complete; visual and device embellishment continues
 
 ## Mission
 
@@ -64,8 +64,8 @@ Research:
   session rather than silently continuing the old one.
 - Vault Island permits inspection and tour access only. Production play remains
   game-loop-granted.
-- No gameplay write from React. Existing canonical reward actions remain the
-  only reward authority.
+- No gameplay write from React. `claimVaultCasinoReward` is the single reward
+  authority for all five machines and derives the expected game and payout.
 - No new runtime-state mirror, reward ledger, event clock, or ticket wallet.
 - Modals remain viewport-portaled and lock background scrolling.
 - Reduced motion preserves game state and readability.
@@ -109,13 +109,28 @@ Research:
 - Browser screenshots pass at 390x844 and a desktop viewport.
 - Reduced-motion and keyboard operation receive spot checks.
 
+## Production integration
+
+- Dormant landmark doors resolve one deterministic, non-repeating machine from
+  the effective island and persisted claim count.
+- Production results are normalized by the service. Machine-supplied tiers are
+  ignored, scores are bounded, and cash payouts are derived canonically.
+- One state commit credits current Essence, lifetime earned Essence, and the
+  existing per-island five-claim ledger. A repeat cash-out is rejected after
+  the rotation advances.
+- The fifth cash-out opens the finite Grand Coffer ceremony. Production mode
+  has no retry, autoplay, ticket purchase, or new-session control.
+- Crown Dice no longer uses its flat CSS placeholder. It renders an actual
+  Three.js casting machine with rounded gemstone dice, physical gold and marble
+  materials, inset pips, raycast selection, held-die halos, and bounded roll
+  animation.
+- No new Supabase field is required: the existing conflict-merged
+  `vaultRushClaimsByIsland` ledger persists the five seals.
+
 ## Deferred
 
-- Production rotation replacing later Vault Rush claims with the four new game
-  cores.
-- New canonical reward balancing or persistence.
 - Full Three.js casino machinery, authored audio, and haptics.
-- Physical iOS QA and live deployment.
+- Physical-device iOS QA and live deployment.
 
 ## Completion evidence
 
@@ -132,13 +147,17 @@ Research:
   the wallet. A rapid Cash out double-tap credited once and left the completed
   machine locked as Secured. Inspect mode disabled all play controls and the
   tour cycled machines.
+- Production-integration QA replayed Prism Cascade at phone size, changed two
+  mirrors, resolved an honest standard result, and verified that a rapid double
+  cash-out credited exactly 170 once. Crown Dice showroom inspection confirmed
+  disabled controls, a visible next-game indicator, no clipped text or controls,
+  and no browser warnings or errors.
 - QA captures live in
   `docs/visual-references/island-special-vault-treasure/casino-concepts/2026-08-30/qa/`.
-- Island Run service suite: 1,913 passed, 0 failed.
+- Island Run service suite: 1,984 passed, 0 failed.
 - Island Run architecture guard: 0 violations.
 - Vault Casino contract guard: passed.
-- Strict targeted TypeScript check for the new lab, model, tests, and Vault
-  modal: passed.
+- Repository-wide TypeScript build: passed.
 - Production Vite bundle: passed. The repository-wide `tsc -b` produced no
   diagnostics before the host terminated the unusually long check at its
   execution limit; the focused strict check covers the changed type surface.

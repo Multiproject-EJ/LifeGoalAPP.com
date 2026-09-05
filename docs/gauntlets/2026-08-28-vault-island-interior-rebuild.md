@@ -62,3 +62,17 @@ Replace the prototype-quality palace atrium and underground vault architecture w
 ## Approval Boundary
 
 Eivind approved the inventory, representative slice, preserve list, and continuation through the complete interiors and treasure set on 2026-08-28.
+
+## 360 Interior Extension - Blender v045
+
+The 2026-09-05 continuation added a full phone-tour acceptance sweep at fixed 0, 90, 180, and 270 degree headings for both authored rooms. The first sweep rejected the previous wall-radius camera after it clipped the vault dome and crossed the atrium stair. The accepted camera uses a near-center panoramic pivot, unrestricted horizontal rotation, a wider vertical look range, and suppresses the relic card while touring.
+
+Blender v045 adds two deep atrium side reliquaries and two vault armillary guardians. Each is part of the authored 360 completion shell and therefore remains hidden in the original museum showcase composition. The atrium shell reports 10/10 completion batches visible in tour mode; the vault reports 9/9. The weakest formerly clipped vault quadrant now renders varied pixels, the full room boundary, a sapphire-and-gold guardian display, and adjacent deposit bays.
+
+Accepted evidence:
+
+- `docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v217-360-gauntlet/atrium-yaw-90-phone-v045-accepted.png`
+- `docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v217-360-gauntlet/atrium-yaw-180-phone-v045-accepted.png`
+- `docs/visual-references/island-special-vault-treasure/gauntlet/qa/raw/browser-captures-v217-360-gauntlet/vault-yaw-270-phone-v045-accepted.png`
+
+Release gates: Blender source compilation passed; Vault Island lab, model-runtime, Vault Casino, and Island Run architecture contracts passed; Island Run services passed 1,984/1,984; TypeScript, the isolated Vault build, and the full production Vite build passed.

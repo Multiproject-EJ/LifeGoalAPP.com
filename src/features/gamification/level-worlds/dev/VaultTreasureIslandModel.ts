@@ -21,6 +21,7 @@ export interface VaultTreasureIslandRuntime {
   setExteriorFill?: (value: number) => void;
   setGigaCharmFill?: (value: number) => void;
   setOwnedUpgradeIds?: (upgradeIds: readonly VaultIslandUpgradeId[]) => void;
+  setInteriorExplore360?: (enabled: boolean) => void;
   dispose: () => void;
 }
 

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lockFullscreenPageScroll } from '../utils/scrollLock';
+import VaultCrownDiceThree from './VaultCrownDiceThree';
 import {
   buildDormantDoorMiniGame,
   resolveDormantDoorReward,
@@ -29,12 +31,29 @@ const FIGURE_ASSETS: Record<DormantDoorFigure, string> = {
   large: '/assets/vault-rush/amethyst.webp',
 };
 
-export type VaultCasinoLabMode = 'prototype' | 'inspect';
+export type VaultCasinoLabMode = 'prototype' | 'inspect' | 'production';
+
+export interface VaultCasinoProductionCashOutResult {
+  accepted: boolean;
+  virtualCashBalance: number;
+  claimCount: number;
+  payout: number;
+  grandCofferComplete: boolean;
+  message?: string;
+}
 
 export interface VaultCasinoLabProps {
   mode?: VaultCasinoLabMode;
   initialGameId?: VaultCasinoGameId;
   availableGameId?: VaultCasinoGameId | null;
+  productionClaimCount?: number;
+  productionCompletedGameIds?: readonly VaultCasinoGameId[];
+  productionSeed?: number;
+  productionCashBalance?: number;
+  onProductionCashOut?: (
+    gameId: VaultCasinoGameId,
+    result: VaultCasinoPrototypeResult,
+  ) => VaultCasinoProductionCashOutResult;
   onClose?: () => void;
 }
 
@@ -189,6 +208,8 @@ function CrownDicePrototype({ inspectOnly, seed, onComplete }: CasinoGameProps) 
   const [rerollCount, setRerollCount] = useState(0);
   const [crownUsed, setCrownUsed] = useState(false);
   const [result, setResult] = useState<VaultCasinoPrototypeResult | null>(null);
+  const [motionRevision, setMotionRevision] = useState(0);
+  const [animatedIndices, setAnimatedIndices] = useState<number[]>([0, 1, 2, 3, 4]);
 
   const toggleDie = (index: number) => {
     if (inspectOnly || result) return;
@@ -200,12 +221,16 @@ function CrownDicePrototype({ inspectOnly, seed, onComplete }: CasinoGameProps) 
 
   const reroll = () => {
     if (inspectOnly || result || rerollCount >= 2) return;
+    setAnimatedIndices(dice.map((_, index) => index).filter((index) => !heldIndices.includes(index)));
+    setMotionRevision((revision) => revision + 1);
     setDice(rerollCrownDice({ dice, heldIndices, seed, rerollIndex: rerollCount + 1 }));
     setRerollCount((count) => count + 1);
   };
 
   const crownTurn = () => {
     if (inspectOnly || result || crownUsed) return;
+    setAnimatedIndices([selectedDie]);
+    setMotionRevision((revision) => revision + 1);
     setDice(turnCrownDie(dice, selectedDie));
     setCrownUsed(true);
   };
@@ -219,13 +244,20 @@ function CrownDicePrototype({ inspectOnly, seed, onComplete }: CasinoGameProps) 
 
   return (
     <div className="vault-casino-machine vault-casino-machine--dice">
-      <div className="crown-dice__crown" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-      <div className="crown-dice__bowl">
+      <VaultCrownDiceThree
+        dice={dice}
+        heldIndices={heldIndices}
+        selectedDie={selectedDie}
+        inspectOnly={inspectOnly || Boolean(result)}
+        animationRevision={motionRevision}
+        animatedIndices={animatedIndices}
+        onSelectDie={toggleDie}
+      />
+      <div className="vault-casino-visually-hidden" aria-label="Crown Dice selection controls">
         {dice.map((value, index) => (
           <button
             key={index}
             type="button"
-            className={`${heldIndices.includes(index) ? 'is-held' : ''}${selectedDie === index ? ' is-selected' : ''}`}
             onClick={() => toggleDie(index)}
             disabled={inspectOnly || Boolean(result)}
             aria-label={`Die ${index + 1}: ${value}${heldIndices.includes(index) ? ', held' : ''}`}
@@ -425,25 +457,50 @@ export default function VaultCasinoLab({
   mode = readLabMode(),
   initialGameId = readInitialGameId(),
   availableGameId = readAvailableGameId(),
+  productionClaimCount = 0,
+  productionCompletedGameIds = [],
+  productionSeed = 17,
+  productionCashBalance = 0,
+  onProductionCashOut,
   onClose,
 }: VaultCasinoLabProps = {}) {
   const inspectOnly = mode === 'inspect';
+  const productionMode = mode === 'production';
   const [selectedGameId, setSelectedGameId] = useState<VaultCasinoGameId>(initialGameId);
   const [seedByGame, setSeedByGame] = useState<Record<VaultCasinoGameId, number>>(() => Object.fromEntries(
     VAULT_CASINO_GAME_DEFINITIONS.map((definition, index) => [definition.id, 17 + index * 97]),
   ) as Record<VaultCasinoGameId, number>);
   const [completedResults, setCompletedResults] = useState<Partial<Record<VaultCasinoGameId, VaultCasinoPrototypeResult>>>({});
   const [cashedOutGameIds, setCashedOutGameIds] = useState<VaultCasinoGameId[]>([]);
-  const [virtualCashBalance, setVirtualCashBalance] = useState(0);
+  const [virtualCashBalance, setVirtualCashBalance] = useState(productionMode ? productionCashBalance : 0);
   const [tourActive, setTourActive] = useState(false);
   const [grandCofferOpen, setGrandCofferOpen] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
+  const [productionStatus, setProductionStatus] = useState<string | null>(null);
+  const [productionGrandCofferComplete, setProductionGrandCofferComplete] = useState(false);
   const grandCofferShownRef = useRef(false);
   const cashedOutGameIdsRef = useRef<Set<VaultCasinoGameId>>(new Set());
   const selectedDefinition = getVaultCasinoGameDefinition(selectedGameId);
   const selectedResult = completedResults[selectedGameId] ?? null;
   const selectedPayout = selectedResult ? resolveVaultCasinoVirtualCashPayout(selectedResult) : 0;
   const selectedCashedOut = cashedOutGameIds.includes(selectedGameId);
+  const selectedGamePlayable = !inspectOnly && (!productionMode || selectedGameId === availableGameId);
+
+  useEffect(() => {
+    if (!productionMode) return;
+    setVirtualCashBalance(productionCashBalance);
+  }, [productionCashBalance, productionMode]);
+
+  useEffect(() => {
+    if (!productionMode || !availableGameId) return;
+    setSelectedGameId(availableGameId);
+    setTourActive(false);
+  }, [availableGameId, productionMode]);
+
+  useEffect(() => {
+    if (!productionMode) return undefined;
+    return lockFullscreenPageScroll({ root: true });
+  }, [productionMode]);
 
   useEffect(() => {
     if (!tourActive) return;
@@ -457,12 +514,13 @@ export default function VaultCasinoLab({
   }, [tourActive]);
 
   const handleComplete = useCallback((result: VaultCasinoPrototypeResult) => {
-    if (inspectOnly) return;
+    if (!selectedGamePlayable) return;
     setCompletedResults((current) => ({ ...current, [selectedGameId]: result }));
-  }, [inspectOnly, selectedGameId]);
+    setProductionStatus(null);
+  }, [selectedGameId, selectedGamePlayable]);
 
   const resetSelectedGame = () => {
-    if (inspectOnly) return;
+    if (inspectOnly || productionMode) return;
     setCompletedResults((current) => {
       const next = { ...current };
       delete next[selectedGameId];
@@ -476,13 +534,27 @@ export default function VaultCasinoLab({
 
   const cashOutSelectedGame = () => {
     if (inspectOnly || !selectedResult || cashedOutGameIdsRef.current.has(selectedGameId)) return;
+    if (productionMode) {
+      if (selectedGameId !== availableGameId || !onProductionCashOut) return;
+      const result = onProductionCashOut(selectedGameId, selectedResult);
+      if (!result.accepted) {
+        setProductionStatus(result.message ?? 'This Vault play could not be secured.');
+        return;
+      }
+      cashedOutGameIdsRef.current.add(selectedGameId);
+      setVirtualCashBalance(result.virtualCashBalance);
+      setCashedOutGameIds((current) => [...current, selectedGameId]);
+      setProductionStatus(`+${formatVaultCash(result.payout)} vault cash secured`);
+      setProductionGrandCofferComplete(result.grandCofferComplete);
+      return;
+    }
     cashedOutGameIdsRef.current.add(selectedGameId);
     setVirtualCashBalance((current) => current + selectedPayout);
     setCashedOutGameIds((current) => [...current, selectedGameId]);
   };
 
   const beginNewSession = () => {
-    if (inspectOnly) return;
+    if (inspectOnly || productionMode) return;
     setCompletedResults({});
     cashedOutGameIdsRef.current.clear();
     setCashedOutGameIds([]);
@@ -494,13 +566,26 @@ export default function VaultCasinoLab({
     grandCofferShownRef.current = false;
   };
 
-  const completedGameIds = useMemo(() => VAULT_CASINO_GAME_DEFINITIONS
-    .map((definition) => definition.id)
-    .filter((gameId) => Boolean(completedResults[gameId])), [completedResults]);
+  const completedGameIds = useMemo(() => {
+    const completed = new Set<VaultCasinoGameId>(productionMode ? productionCompletedGameIds : []);
+    for (const definition of VAULT_CASINO_GAME_DEFINITIONS) {
+      if (completedResults[definition.id]) completed.add(definition.id);
+    }
+    return VAULT_CASINO_GAME_DEFINITIONS
+      .map((definition) => definition.id)
+      .filter((gameId) => completed.has(gameId));
+  }, [completedResults, productionCompletedGameIds, productionMode]);
+  const securedGameIds = useMemo(() => {
+    const secured = new Set<VaultCasinoGameId>(productionMode ? productionCompletedGameIds : []);
+    cashedOutGameIds.forEach((gameId) => secured.add(gameId));
+    return [...secured];
+  }, [cashedOutGameIds, productionCompletedGameIds, productionMode]);
   const totalSessionWinnings = useMemo(() => Object.values(completedResults)
     .reduce((total, result) => total + (result ? resolveVaultCasinoVirtualCashPayout(result) : 0), 0), [completedResults]);
-  const sessionReadyToEnd = completedGameIds.length === VAULT_CASINO_GAME_DEFINITIONS.length
-    && cashedOutGameIds.length === VAULT_CASINO_GAME_DEFINITIONS.length;
+  const sessionReadyToEnd = productionMode
+    ? productionGrandCofferComplete
+    : completedGameIds.length === VAULT_CASINO_GAME_DEFINITIONS.length
+      && cashedOutGameIds.length === VAULT_CASINO_GAME_DEFINITIONS.length;
 
   useEffect(() => {
     if (!sessionReadyToEnd) {
@@ -520,7 +605,7 @@ export default function VaultCasinoLab({
       selectedGameId,
       availableGameId,
       completedGameIds,
-      cashedOutGameIds,
+      cashedOutGameIds: securedGameIds,
       virtualCashBalance,
       tourActive,
       resultTier: selectedResult?.tier ?? null,
@@ -543,7 +628,7 @@ export default function VaultCasinoLab({
       delete (window as unknown as { __vaultCasinoLabQa?: VaultCasinoQaSnapshot }).__vaultCasinoLabQa;
       delete (window as unknown as { __vaultCasinoLabQaControls?: unknown }).__vaultCasinoLabQaControls;
     };
-  }, [availableGameId, cashedOutGameIds, completedGameIds, grandCofferOpen, mode, selectedGameId, selectedResult?.tier, sessionEnded, tourActive, virtualCashBalance]);
+  }, [availableGameId, completedGameIds, grandCofferOpen, mode, securedGameIds, selectedGameId, selectedResult?.tier, sessionEnded, tourActive, virtualCashBalance]);
 
   return (
     <main className={`vault-casino-lab is-${mode}`}>
@@ -557,7 +642,7 @@ export default function VaultCasinoLab({
 
         <header className="vault-casino-lab__topbar">
           <div>
-            <span>{inspectOnly ? 'Private casino' : 'Casino 2.0 lab'}</span>
+            <span>{inspectOnly ? 'Private casino' : productionMode ? 'Island Run casino' : 'Casino 2.0 lab'}</span>
             <strong>{selectedDefinition.name}</strong>
           </div>
           <div className="vault-casino-lab__wallet" aria-label={`${formatVaultCash(virtualCashBalance)} vault cash`}>
@@ -579,7 +664,7 @@ export default function VaultCasinoLab({
           {VAULT_CASINO_GAME_DEFINITIONS.map((definition) => {
             const isSelected = selectedGameId === definition.id;
             const isAvailable = availableGameId === definition.id;
-            const isComplete = Boolean(completedResults[definition.id]);
+            const isComplete = completedGameIds.includes(definition.id);
             return (
               <button
                 key={definition.id}
@@ -608,10 +693,10 @@ export default function VaultCasinoLab({
             <h1>{selectedDefinition.name}</h1>
           </header>
           <CasinoGameStage
-            key={`${selectedGameId}-${seedByGame[selectedGameId]}-${mode}`}
+            key={`${selectedGameId}-${productionMode && selectedGameId === availableGameId ? productionSeed : seedByGame[selectedGameId]}-${mode}`}
             gameId={selectedGameId}
-            inspectOnly={inspectOnly}
-            seed={seedByGame[selectedGameId]}
+            inspectOnly={!selectedGamePlayable}
+            seed={productionMode && selectedGameId === availableGameId ? productionSeed : seedByGame[selectedGameId]}
             onComplete={handleComplete}
           />
         </section>
@@ -628,10 +713,11 @@ export default function VaultCasinoLab({
             </div>
             <span>Five seals united</span>
             <h2>Grand Coffer</h2>
-            <strong>{formatVaultCash(totalSessionWinnings)} vault cash secured</strong>
+            <strong>{formatVaultCash(productionMode ? virtualCashBalance : totalSessionWinnings)} vault cash secured</strong>
             <button type="button" onClick={() => {
               setGrandCofferOpen(false);
               setSessionEnded(true);
+              if (productionMode) onClose?.();
             }}>Finish session</button>
           </section>
         ) : null}
@@ -639,22 +725,22 @@ export default function VaultCasinoLab({
         <footer className="vault-casino-lab__footer">
           <div className="vault-casino-lab__coffer" aria-label={`${completedGameIds.length} of 5 casino seals complete`}>
             {VAULT_CASINO_GAME_DEFINITIONS.map((definition) => (
-              <i key={definition.id} className={completedResults[definition.id] ? 'is-lit' : ''} />
+              <i key={definition.id} className={completedGameIds.includes(definition.id) ? 'is-lit' : ''} />
             ))}
           </div>
           <div>
-            <span>{inspectOnly ? 'Inspection access' : sessionEnded ? 'Session complete' : `${completedGameIds.length}/5 seals · ${cashedOutGameIds.length} cashed out`}</span>
-            <strong>{inspectOnly ? 'Play opens from Island Run' : selectedResult ? `${selectedResult.summary} · ${selectedCashedOut ? 'Secured' : `${formatVaultCash(selectedPayout)} cash ready`}` : selectedDefinition.description}</strong>
+            <span>{inspectOnly ? 'Inspection access' : sessionEnded ? 'Session complete' : `${Math.max(productionMode ? productionClaimCount : 0, completedGameIds.length)}/5 seals · ${securedGameIds.length} cashed out`}</span>
+            <strong>{inspectOnly ? 'Play opens from Island Run' : productionStatus ?? (selectedResult ? `${selectedResult.summary} · ${selectedCashedOut ? 'Secured' : `${formatVaultCash(selectedPayout)} cash ready`}` : selectedGamePlayable ? selectedDefinition.description : 'Inspect this machine. Its earned play opens later in the rotation.')}</strong>
           </div>
           {!inspectOnly && selectedResult && !selectedCashedOut ? (
             <button type="button" className="is-cash-out" onClick={cashOutSelectedGame}>Cash out</button>
-          ) : !inspectOnly && sessionEnded ? (
+          ) : !inspectOnly && !productionMode && sessionEnded ? (
             <button type="button" onClick={beginNewSession}>Play again</button>
           ) : !inspectOnly && sessionReadyToEnd ? (
             <button type="button" onClick={() => setGrandCofferOpen(true)}>Open</button>
           ) : !inspectOnly && selectedResult && selectedCashedOut ? (
             <button type="button" disabled>Secured</button>
-          ) : !inspectOnly ? (
+          ) : !inspectOnly && !productionMode ? (
             <button type="button" onClick={resetSelectedGame} aria-label={`Reset ${selectedDefinition.name}`} title={`Reset ${selectedDefinition.name}`}>↻</button>
           ) : null}
         </footer>

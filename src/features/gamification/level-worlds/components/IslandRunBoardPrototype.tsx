@@ -110,6 +110,14 @@ import {
   VAULT_RUSH_MAX_CLAIMS_PER_ISLAND,
 } from '../services/islandRunVaultRush';
 import {
+  getVaultCasinoGameDefinition,
+  resolveVaultCasinoGameForClaim,
+  resolveVaultCasinoProductionSeed,
+  resolveVaultCasinoRotation,
+  type VaultCasinoGameId,
+  type VaultCasinoPrototypeResult,
+} from '../services/islandRunVaultCasino';
+import {
   findNewVaultIslandCollectionEntry,
   isVaultIslandCollectionUnlocked,
   resolveVaultIslandCollection,
@@ -244,6 +252,7 @@ import {
   applyRewardBarState,
   applyRollResult,
   applyTrafficLightCoinFlipReward,
+  claimVaultCasinoReward,
   claimVaultRushReward,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
@@ -704,6 +713,7 @@ import { getIslandRunBossReward } from '../services/islandRunBossReward';
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
 const VaultIslandCollectionModal = lazy(() => import('./VaultIslandCollectionModal'));
+const VaultCasinoLab = lazy(() => import('../../../../dev/VaultCasinoLab'));
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -2271,6 +2281,12 @@ export function IslandRunBoardPrototype({
   const [dormantDoorSelectedIndices, setDormantDoorSelectedIndices] = useState<number[]>([]);
   const [dormantDoorReward, setDormantDoorReward] = useState<DormantDoorRewardLevel | null>(null);
   const [isDormantDoorRewardClaiming, setIsDormantDoorRewardClaiming] = useState(false);
+  const [activeVaultCasinoPlay, setActiveVaultCasinoPlay] = useState<{
+    gameId: VaultCasinoGameId;
+    claimCount: number;
+    seed: number;
+  } | null>(null);
+  const vaultCasinoCashOutInFlightRef = useRef(false);
   const dormantDoorSelectedFigures = useMemo(() => {
     if (!dormantDoorMiniGame) return [] as DormantDoorFigure[];
     return dormantDoorSelectedIndices
@@ -3170,6 +3186,7 @@ export function IslandRunBoardPrototype({
     showRootheartPowerworks ||
     showFishermansFishing ||
     Boolean(dormantDoorMiniGame) ||
+    Boolean(activeVaultCasinoPlay) ||
     Boolean(trafficLightCoinFlip) ||
     Boolean(techCollectionModal) ||
     Boolean(techCompletionCelebration) ||
@@ -3569,7 +3586,7 @@ export function IslandRunBoardPrototype({
     hasStoryReaderMajorNarrative: showStoryReader,
     needsFirstSessionTutorialHatcheryGuidance: showFirstCreaturePackModal || showHatcheryL1Celebration || isBuildTutorialPromptActive,
     hasRewardClaimOrWelcomePackReveal: showWelcomePackModal || showClaimModal || showRewardDetailsModal || showWinCelebrationModal,
-    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal || showJourneyDiscConcourseInvitation),
+    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || activeVaultCasinoPlay || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal || showJourneyDiscConcourseInvitation),
   });
   const showFirstProgressRecapAfterArena = firstPlayerModalDecision.promptId === 'first_progress_recap_after_arena';
   const showSoftSavePromptAfterArena = firstPlayerModalDecision.promptId === 'soft_save_prompt_after_arena';
@@ -4503,9 +4520,9 @@ export function IslandRunBoardPrototype({
     effectiveIslandNumber,
     showShopPanel,
     showIslandClearCelebration,
-    isDormantDoorMiniGameOpen: Boolean(dormantDoorMiniGame),
+    isDormantDoorMiniGameOpen: Boolean(dormantDoorMiniGame || activeVaultCasinoPlay),
     isStoryReaderOpen: showStoryReader,
-  }), [dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, isDocumentVisible, musicEnabled, showIslandClearCelebration, showShopPanel, showStoryReader]);
+  }), [activeVaultCasinoPlay, dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, isDocumentVisible, musicEnabled, showIslandClearCelebration, showShopPanel, showStoryReader]);
 
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
@@ -6076,23 +6093,31 @@ export function IslandRunBoardPrototype({
       return;
     }
 
-    const miniGame = buildDormantDoorMiniGame({
-      islandNumber: effectiveIslandNumber,
-      tileIndex,
-      rollIndex: rollIndexRef.current,
-      doorStopId,
-      remainingIslandBuildCost: getRemainingIslandBuildCost({
-        effectiveIslandNumber,
-        stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
-      }),
+    const gameId = resolveVaultCasinoGameForClaim({
+      effectiveIslandNumber,
+      claimCount: vaultRushClaimCount,
     });
+    if (!gameId) {
+      setLandingText(`🔒 Island vault limit reached — ${vaultRushClaimCount}/${VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} claimed.`);
+      return;
+    }
     requestActiveStopTransition(null, 'dormant_landmark_door_minigame');
     setRequiredDoorStopId(null);
-    setDormantDoorMiniGame(miniGame);
+    setDormantDoorMiniGame(null);
     setDormantDoorSelectedIndices([]);
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
-    setLandingText('🚪 Dormant door challenge: reveal doors until 3 matching prizes appear.');
+    vaultCasinoCashOutInFlightRef.current = false;
+    setActiveVaultCasinoPlay({
+      gameId,
+      claimCount: vaultRushClaimCount,
+      seed: resolveVaultCasinoProductionSeed({
+        effectiveIslandNumber,
+        claimCount: vaultRushClaimCount,
+        gameId,
+      }),
+    });
+    setLandingText(`🎰 ${getVaultCasinoGameDefinition(gameId).name} opened behind the dormant door.`);
   }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandNumber, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
 
   const handlePrepayStopTicket = useCallback(async (stopId: string) => {
@@ -6186,6 +6211,8 @@ export function IslandRunBoardPrototype({
     setDormantDoorSelectedIndices([]);
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
+    setActiveVaultCasinoPlay(null);
+    vaultCasinoCashOutInFlightRef.current = false;
     setTrafficLightCoinFlip(null);
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
@@ -6198,10 +6225,81 @@ export function IslandRunBoardPrototype({
     effectiveIslandNumber,
   );
   const vaultCasinoAvailableGameId = isVaultRushUnlocked(
-    runtimeState.completedStopsByIsland?.[String(effectiveIslandNumber)] ?? [],
+    runtimeState.completedStopsByIsland?.[String(islandNumber)] ?? [],
   ) && vaultRushClaimCount < VAULT_RUSH_MAX_CLAIMS_PER_ISLAND
-    ? 'vault-rush' as const
+    ? resolveVaultCasinoGameForClaim({ effectiveIslandNumber, claimCount: vaultRushClaimCount })
     : null;
+  const vaultCasinoCompletedGameIds = resolveVaultCasinoRotation(effectiveIslandNumber)
+    .slice(0, vaultRushClaimCount);
+
+  const handleVaultCasinoCashOut = useCallback((
+    gameId: VaultCasinoGameId,
+    result: VaultCasinoPrototypeResult,
+  ) => {
+    if (!activeVaultCasinoPlay || vaultCasinoCashOutInFlightRef.current) {
+      return {
+        accepted: false,
+        virtualCashBalance: runtimeStateRef.current.essence,
+        claimCount: getVaultRushClaimCount(runtimeStateRef.current.vaultRushClaimsByIsland, effectiveIslandNumber),
+        payout: 0,
+        grandCofferComplete: false,
+        message: 'This Vault play is already being secured.',
+      };
+    }
+    vaultCasinoCashOutInFlightRef.current = true;
+    const previousVaultClaims = runtimeStateRef.current.vaultRushClaimsByIsland;
+    const claimed = claimVaultCasinoReward({
+      session,
+      client,
+      effectiveIslandNumber,
+      gameId,
+      result,
+      triggerSource: 'dormant_landmark_vault_casino',
+    });
+    if (claimed.status !== 'claimed') {
+      vaultCasinoCashOutInFlightRef.current = false;
+      const message = claimed.status === 'locked'
+        ? 'Complete a landmark submission before entering the Vault Casino.'
+        : claimed.status === 'cap_reached'
+          ? 'All five Vault Casino seals are already secured on this island.'
+          : claimed.status === 'game_mismatch'
+            ? 'The Vault rotation advanced before this result could be secured.'
+            : 'The machine result could not be verified.';
+      setLandingText(message);
+      return {
+        accepted: false,
+        virtualCashBalance: claimed.record.essence,
+        claimCount: claimed.claimCount,
+        payout: 0,
+        grandCofferComplete: false,
+        message,
+      };
+    }
+
+    runtimeStateRef.current = claimed.record;
+    setRuntimeState(claimed.record);
+    const newlyUnlockedTreasure = findNewVaultIslandCollectionEntry(
+      previousVaultClaims,
+      claimed.record.vaultRushClaimsByIsland,
+    );
+    if (newlyUnlockedTreasure) setVaultIslandFeaturedTreasure(newlyUnlockedTreasure);
+    setLandingText(`${getVaultCasinoGameDefinition(gameId).name}: +${claimed.payout} vault cash secured · ${claimed.claimCount}/${VAULT_RUSH_MAX_CLAIMS_PER_ISLAND} seals.`);
+    return {
+      accepted: true,
+      virtualCashBalance: claimed.record.essence,
+      claimCount: claimed.claimCount,
+      payout: claimed.payout,
+      grandCofferComplete: claimed.grandCofferComplete,
+    };
+  }, [activeVaultCasinoPlay, client, effectiveIslandNumber, session]);
+
+  const handleCloseVaultCasino = useCallback(() => {
+    setActiveVaultCasinoPlay(null);
+    vaultCasinoCashOutInFlightRef.current = false;
+    if (vaultIslandFeaturedTreasure && isVaultIslandUnlocked) {
+      setShowVaultIslandCollection(true);
+    }
+  }, [isVaultIslandUnlocked, vaultIslandFeaturedTreasure]);
 
   const handleDormantDoorSelect = useCallback((doorIndex: number) => {
     if (!dormantDoorMiniGame || dormantDoorReward) return;
@@ -13729,6 +13827,7 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       bossTrialPhase !== 'idle' ||
       Boolean(dormantDoorMiniGame) ||
+      Boolean(activeVaultCasinoPlay) ||
       Boolean(trafficLightCoinFlip) ||
       walletStoreModalKind !== null
   );
@@ -16842,6 +16941,41 @@ export function IslandRunBoardPrototype({
         </div>
         );
       })()}
+
+      {activeVaultCasinoPlay && typeof document !== 'undefined' ? createPortal((
+        <Suspense
+          fallback={(
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 10100,
+                display: 'grid',
+                placeItems: 'center',
+                background: '#020b17',
+                color: '#fff4cf',
+                fontWeight: 800,
+              }}
+            >
+              Opening Vault Casino
+            </div>
+          )}
+        >
+          <VaultCasinoLab
+            mode="production"
+            initialGameId={activeVaultCasinoPlay.gameId}
+            availableGameId={activeVaultCasinoPlay.gameId}
+            productionClaimCount={vaultRushClaimCount}
+            productionCompletedGameIds={vaultCasinoCompletedGameIds}
+            productionSeed={activeVaultCasinoPlay.seed}
+            productionCashBalance={runtimeState.essence}
+            onProductionCashOut={handleVaultCasinoCashOut}
+            onClose={handleCloseVaultCasino}
+          />
+        </Suspense>
+      ), document.body) : null}
 
       {dormantDoorMiniGame && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">

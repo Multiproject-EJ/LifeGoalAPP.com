@@ -152,6 +152,43 @@ export function resolveVaultCasinoVirtualCashPayout(result: VaultCasinoPrototype
   return Math.max(minimum, Math.round(payout / 10) * 10);
 }
 
+export function normalizeVaultCasinoPrototypeResult(value: unknown): VaultCasinoPrototypeResult | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Partial<VaultCasinoPrototypeResult>;
+  if (!Number.isFinite(candidate.score) || !Number.isFinite(candidate.maxScore)) return null;
+
+  const maxScore = Math.max(1, Math.min(1_000, Math.floor(candidate.maxScore as number)));
+  const score = Math.max(0, Math.min(maxScore, Math.floor(candidate.score as number)));
+  const summary = typeof candidate.summary === 'string'
+    ? candidate.summary.replace(/\s+/g, ' ').trim().slice(0, 80)
+    : '';
+
+  return {
+    tier: resolveVaultCasinoResultTier(score, maxScore),
+    score,
+    maxScore,
+    summary: summary || 'Vault Casino result',
+  };
+}
+
+export function resolveVaultCasinoProductionSeed(options: {
+  effectiveIslandNumber: number;
+  claimCount: number;
+  gameId: VaultCasinoGameId;
+}): number {
+  const island = Number.isFinite(options.effectiveIslandNumber)
+    ? Math.max(1, Math.floor(options.effectiveIslandNumber))
+    : 1;
+  const claim = Number.isFinite(options.claimCount)
+    ? Math.max(0, Math.min(VAULT_CASINO_GAME_IDS.length - 1, Math.floor(options.claimCount)))
+    : 0;
+  const gameIndex = Math.max(0, VAULT_CASINO_GAME_IDS.indexOf(options.gameId));
+  const mixed = Math.imul(island, 73_856_093)
+    ^ Math.imul(claim + 1, 19_349_663)
+    ^ Math.imul(gameIndex + 1, 83_492_791);
+  return mixed >>> 0;
+}
+
 function seededUnit(seed: number): number {
   let value = Math.imul((Math.floor(seed) | 0) ^ 0x9e3779b9, 0x85ebca6b);
   value ^= value >>> 13;

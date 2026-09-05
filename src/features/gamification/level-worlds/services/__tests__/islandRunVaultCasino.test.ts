@@ -2,10 +2,12 @@ import {
   createCrownDice,
   createSolarOrreryTargets,
   createTreasuryOrganSequence,
+  normalizeVaultCasinoPrototypeResult,
   rerollCrownDice,
   resolvePrismCascade,
   resolveVaultCasinoVirtualCashPayout,
   resolveVaultCasinoGameForClaim,
+  resolveVaultCasinoProductionSeed,
   resolveVaultCasinoRotation,
   scoreCrownDice,
   scoreSolarOrrery,
@@ -79,6 +81,37 @@ export const islandRunVaultCasinoTests: TestCase[] = [
         resolveVaultCasinoGameForClaim({ effectiveIslandNumber: 4, claimCount: 5 }),
         null,
         'Expected no sixth game claim',
+      );
+    },
+  },
+  {
+    name: 'vault casino production results are sanitized and tiers are recomputed',
+    run: () => {
+      const normalized = normalizeVaultCasinoPrototypeResult({
+        tier: 'sovereign',
+        score: 12.9,
+        maxScore: 100,
+        summary: '  Honest   standard result  ',
+      });
+      assertEqual(normalized?.tier, 'standard', 'Expected the service to ignore a forged tier');
+      assertEqual(normalized?.score, 12, 'Expected fractional scores to be normalized');
+      assertEqual(normalized?.summary, 'Honest standard result', 'Expected presentation text to be bounded and normalized');
+      assertEqual(normalizeVaultCasinoPrototypeResult({ score: Number.NaN, maxScore: 100 }), null, 'Expected invalid scores to be rejected');
+    },
+  },
+  {
+    name: 'vault casino production seeds are deterministic and distinguish claims',
+    run: () => {
+      const first = resolveVaultCasinoProductionSeed({ effectiveIslandNumber: 124, claimCount: 0, gameId: 'prism-cascade' });
+      assertEqual(
+        first,
+        resolveVaultCasinoProductionSeed({ effectiveIslandNumber: 124, claimCount: 0, gameId: 'prism-cascade' }),
+        'Expected the same earned play to keep the same seed',
+      );
+      assertEqual(
+        first === resolveVaultCasinoProductionSeed({ effectiveIslandNumber: 124, claimCount: 1, gameId: 'prism-cascade' }),
+        false,
+        'Expected the next earned play to use a different seed',
       );
     },
   },

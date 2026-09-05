@@ -20,6 +20,7 @@ const files = {
   treasures: 'src/features/gamification/level-worlds/dev/VaultTreasureModels.ts',
   exterior: 'src/features/gamification/level-worlds/dev/VaultTreasureIslandModel.ts',
   interior: 'src/features/gamification/level-worlds/dev/VaultTreasureVaultInteriorModel.ts',
+  blenderInterior: 'scripts/blender/build_vault_interiors.py',
   islandLab: 'src/dev/VaultIslandLab.tsx',
   treasureLab: 'src/dev/VaultTreasureLab.tsx',
   board: 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
@@ -215,6 +216,21 @@ assert(source.islandLab.includes('__vaultIslandLabQa'), 'VaultIslandLab must exp
 assert(source.islandLab.includes('gl.readPixels'), 'VaultIslandLab runtime QA must sample WebGL pixels.');
 assert(source.islandLab.includes('clickableDisplays'), 'VaultIslandLab runtime QA must report clickable treasure display count.');
 assert(source.islandLab.includes('lastPointerHit'), 'VaultIslandLab runtime QA must report pointer hit state.');
+assert(source.islandLab.includes('interiorExplore360'), 'VaultIslandLab must expose a dedicated 360 interior state.');
+assert(source.islandLab.includes('vault-island-lab__tour-button'), 'VaultIslandLab must expose the 360 tour control.');
+assert(source.islandLab.includes('controls.minAzimuthAngle = isRotunda360View ? -Infinity'), 'VaultIslandLab must allow unrestricted circular camera travel in 360 mode.');
+assert(source.interior.includes('setInteriorExplore360'), 'Vault interior runtimes must expose 360 completion-shell visibility control.');
+assert(source.interior.includes("vaultInterior360Completion"), 'Vault interior runtimes must tag authored 360 completion geometry.');
+assert(source.blenderInterior.includes('build_atrium_360_completion'), 'Blender interior authoring must include the complete atrium shell.');
+assert(source.blenderInterior.includes('build_vault_360_completion'), 'Blender interior authoring must include the complete vault shell.');
+assert(source.blenderInterior.includes('batch_static_architecture'), 'Blender interior authoring must batch static architecture for mobile rendering.');
+for (const asset of [
+  'public/assets/islands/special/vault-island/vault-atrium.glb',
+  'public/assets/islands/special/vault-island/vault-museum.glb',
+]) {
+  assert(existsSync(join(root, asset)), `360 interior asset is missing: ${asset}.`);
+  assert(statSync(join(root, asset)).size > 1000000, `360 interior asset appears incomplete: ${asset}.`);
+}
 assert(source.islandLab.includes("setRenderError('Interactive 3D is unavailable on this device.')"), 'VaultIslandLab must keep the production modal usable when WebGL is unavailable.');
 assert(existsSync(join(root, 'public/assets/islands/special/vault-island/vault-island-fallback.png')), 'Vault Island WebGL fallback artwork is missing.');
 assert(statSync(join(root, 'public/assets/islands/special/vault-island/vault-island-fallback.png')).size > 500000, 'Vault Island WebGL fallback artwork is unexpectedly small.');

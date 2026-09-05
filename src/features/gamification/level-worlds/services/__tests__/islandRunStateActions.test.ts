@@ -86,6 +86,7 @@ import {
   applySpaceExcavatorDig,
   applyTimedEventTicketSpend,
   claimArenaFirstTicketBoost,
+  claimVaultCasinoReward,
   claimVaultRushReward,
   ARENA_FIRST_TICKET_BOOST_AMOUNT,
   claimSpaceExcavatorMilestoneReward,
@@ -2055,6 +2056,91 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.essence, 50, 'The capped vault must not pay a reward');
       assertEqual(result.claimCount, 5, 'The claim count should remain capped at five');
       assertEqual(result.record.runtimeVersion, 8, 'A rejected claim must not commit a new version');
+    },
+  },
+  {
+    name: 'claimVaultCasinoReward enforces rotation and atomically credits canonical payout',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        currentIslandNumber: 4,
+        cycleIndex: 1,
+        essence: 200,
+        essenceLifetimeEarned: 500,
+        completedStopsByIsland: { '4': ['habit'] },
+        vaultRushClaimsByIsland: { '124': 0 },
+      });
+
+      const mismatch = claimVaultCasinoReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 124,
+        gameId: 'vault-rush',
+        result: { tier: 'sovereign', score: 100, maxScore: 100, summary: 'Wrong game' },
+      });
+      assertEqual(mismatch.status, 'game_mismatch', 'Expected the service to reject a machine outside the rotation');
+      assertEqual(mismatch.record.runtimeVersion, 9, 'Expected a mismatched claim to make no state commit');
+
+      const claimed = claimVaultCasinoReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 124,
+        gameId: 'prism-cascade',
+        result: { tier: 'sovereign', score: 40, maxScore: 100, summary: 'Outer treasury' },
+      });
+      assertEqual(claimed.status, 'claimed', 'Expected the rotation machine to cash out');
+      assertEqual(claimed.payout >= 120 && claimed.payout <= 300, true, 'Expected a forged sovereign tier to be normalized before payout');
+      assertEqual(claimed.record.essence, 200 + claimed.payout, 'Expected current cash to receive the payout');
+      assertEqual(claimed.record.essenceLifetimeEarned, 500 + claimed.payout, 'Expected lifetime earnings to receive the payout');
+      assertEqual(claimed.record.vaultRushClaimsByIsland['124'], 1, 'Expected the same commit to advance the seal ledger');
+      assertEqual(claimed.record.runtimeVersion, 10, 'Expected one successful cash-out to make one state version');
+
+      const duplicate = claimVaultCasinoReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 124,
+        gameId: 'prism-cascade',
+        result: { tier: 'standard', score: 40, maxScore: 100, summary: 'Duplicate' },
+      });
+      assertEqual(duplicate.status, 'game_mismatch', 'Expected a rapid duplicate cash-out to fail against the next rotation slot');
+      assertEqual(duplicate.record.runtimeVersion, 10, 'Expected duplicate cash-out to make no second commit');
+    },
+  },
+  {
+    name: 'claimVaultCasinoReward completes the Grand Coffer on the fifth claim and rejects a sixth',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        currentIslandNumber: 4,
+        essence: 0,
+        essenceLifetimeEarned: 0,
+        completedStopsByIsland: { '4': ['habit'] },
+        vaultRushClaimsByIsland: { '4': 4 },
+      });
+
+      const fifth = claimVaultCasinoReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 4,
+        gameId: 'solar-orrery',
+        result: { tier: 'standard', score: 100, maxScore: 100, summary: 'Final seal' },
+      });
+      assertEqual(fifth.status, 'claimed', 'Expected the fifth rotation machine to cash out');
+      assertEqual(fifth.grandCofferComplete, true, 'Expected the fifth claim to complete the Grand Coffer');
+
+      const sixth = claimVaultCasinoReward({
+        session,
+        client: null,
+        effectiveIslandNumber: 4,
+        gameId: 'vault-rush',
+        result: { tier: 'standard', score: 10, maxScore: 100, summary: 'Too late' },
+      });
+      assertEqual(sixth.status, 'cap_reached', 'Expected no sixth casino claim on one island');
+      assertEqual(sixth.record.runtimeVersion, fifth.record.runtimeVersion, 'Expected no state write after the cap');
     },
   },
   {
