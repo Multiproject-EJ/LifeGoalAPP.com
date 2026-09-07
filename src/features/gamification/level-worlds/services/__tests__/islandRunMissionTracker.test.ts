@@ -52,7 +52,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [5, 'Sunshore Arena', 'Defeat the Arena Guardian'],
         [6, 'Moonveil Nexus', 'Rephase the Moon Mirrors'],
         [7, 'Abyssal Pearl Kingdom', 'Restore the Breathline'],
-        [8, 'The Everblossom Kingdom', 'The Great Pollination'],
+        [8, 'Jungle Expedition', 'Awaken the Living Compass'],
         [9, 'The Heartshaft Crucible', 'Restart the Ignition Chain'],
         [10, 'Rootheart Canopy City', 'Restore the Rootheart Powerworks'],
         [11, 'First Light Kingdom', 'Reopen the First Light Route'],
@@ -60,6 +60,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [13, 'Cactus Canyon', 'Carve the Canyon Spiral'],
         [14, 'Honeycomb Kingdom', 'Awaken the Great Honeyfall'],
         [20, 'Lava Labyrinth', 'Escape the Lava Labyrinth'],
+        [18, 'The Everblossom Kingdom', 'The Great Pollination'],
       ] as const;
       expected.forEach(([islandNumber, islandName, headline]) => {
         const presentation = getIslandMissionBriefingPresentation(islandNumber);
@@ -166,9 +167,10 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [4, 'Causeway Spans'],
         [6, 'Mirrors Aligned'],
         [7, 'Districts Breathing'],
-        [8, 'Gardens Blooming'],
+        [8, 'Compass Seals Awakened'],
         [9, 'Systems Ignited'],
         [20, 'Escape Mission Locked'],
+        [18, 'Gardens Blooming'],
       ]);
       expectedStageLabels.forEach((stageLabel, islandNumber) => {
         const tracker = resolveIslandMissionTrackerPresentation({

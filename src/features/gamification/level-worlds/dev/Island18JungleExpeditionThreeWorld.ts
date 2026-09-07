@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { JUNGLE_COMPASS_CEREMONY_DURATION_MS } from '../services/islandRunJungleMissionPresentation';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type {
@@ -14,6 +15,7 @@ import {
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 
 type BuildLevel = 0 | 1 | 2 | 3;
+type BossTempleVisualLevel = 1 | 2 | 3 | 4;
 type ConstructionStage = 1 | 2 | 3 | 4 | 5;
 
 export const ISLAND_18_JUNGLE_EXPEDITION_WORLD_NAME = 'Jungle Expedition';
@@ -21,6 +23,11 @@ export const ISLAND_18_LIVING_COMPASS_MISSION_ID = 'jungle-expedition-living-com
 export const ISLAND_18_LIVING_COMPASS_MAX_STAGE = 5;
 export const ISLAND_18_WEATHER_CYCLE_SECONDS = 180;
 export const ISLAND_18_STORM_FLASH_COUNT_WEIGHTS = [0.46, 0.33, 0.12, 0.06, 0.03] as const;
+
+const ISLAND_18_BOSS_SCALE = 1.52;
+const ISLAND_18_TEMPLE_TUNNEL_OPENING_WIDTH = 1.08;
+const ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_WIDTH = 1.62;
+const ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_HEIGHT = 1.82;
 
 const ISLAND_18_STORM_FLASH_CENTERS = [
   [113.2],
@@ -88,6 +95,9 @@ export interface Island18JungleExpeditionMaterials {
   waterfall: THREE.MeshPhysicalMaterial;
   foam: THREE.MeshStandardMaterial;
   flower: THREE.MeshStandardMaterial;
+  flowerSun: THREE.MeshStandardMaterial;
+  flowerCyan: THREE.MeshStandardMaterial;
+  biolume: THREE.MeshStandardMaterial;
   basinGround: THREE.MeshStandardMaterial;
   canopyVolume: THREE.ShaderMaterial;
   mist: THREE.MeshBasicMaterial;
@@ -128,6 +138,7 @@ export const ISLAND_18_RUNTIME_PART_IDS = [
   'living-ambience',
   'construction-choreography',
   'emerald-zenith-fx',
+  'compass-book-sky-gift',
 ] as const;
 
 export type Island18RuntimePartId = typeof ISLAND_18_RUNTIME_PART_IDS[number];
@@ -541,8 +552,14 @@ function createRuinSurfaceMaps() {
       const albedoValue = THREE.MathUtils.clamp(228 + broad * 10 + grain * 4 - pit * 20 - hairline * 8, 174, 248);
       const roughnessValue = THREE.MathUtils.clamp(218 + broad * 8 + grain * 12 + pit * 18, 155, 248);
       const reliefValue = THREE.MathUtils.clamp(132 + broad * 8 + grain * 6 - pit * 34 - hairline * 17, 76, 174);
-      [albedo, roughness, relief].forEach((data, channelIndex) => {
-        const value = channelIndex === 0 ? albedoValue : channelIndex === 1 ? roughnessValue : reliefValue;
+      const mineralWarmth = 0.5 + 0.5 * Math.sin(x * 0.028 - y * 0.019 + Math.sin(x * 0.031 + y * 0.017) * 0.9);
+      const mossStain = Math.pow(Math.max(0, Math.sin(x * 0.016 + y * 0.024) * Math.cos(y * 0.011 - x * 0.008)), 3);
+      albedo[offset] = THREE.MathUtils.clamp(albedoValue + mineralWarmth * 8 - mossStain * 20, 0, 255);
+      albedo[offset + 1] = THREE.MathUtils.clamp(albedoValue + 4 + mossStain * 10, 0, 255);
+      albedo[offset + 2] = THREE.MathUtils.clamp(albedoValue - mineralWarmth * 13 - mossStain * 24, 0, 255);
+      albedo[offset + 3] = 255;
+      [roughness, relief].forEach((data, channelIndex) => {
+        const value = channelIndex === 0 ? roughnessValue : reliefValue;
         data[offset] = value;
         data[offset + 1] = value;
         data[offset + 2] = value;
@@ -601,9 +618,9 @@ export function createIsland18JungleExpeditionMaterials(): Island18JungleExpedit
     ruinStoneDark: ruinMaterial(0x293d2c, 0.9, 0.09),
     ruinStoneWet: ruinMaterial(0x1f6152, 0.38, 0.078),
     moss: new THREE.MeshStandardMaterial({ color: 0x3f8f25, roughness: 0.86, metalness: 0, side: THREE.DoubleSide }),
-    leaf: new THREE.MeshStandardMaterial({ color: 0x197536, roughness: 0.7, side: THREE.DoubleSide }),
-    leafLight: new THREE.MeshStandardMaterial({ color: 0x70bf43, roughness: 0.66, side: THREE.DoubleSide }),
-    leafDeep: new THREE.MeshStandardMaterial({ color: 0x093b25, roughness: 0.76, side: THREE.DoubleSide }),
+    leaf: new THREE.MeshStandardMaterial({ color: 0x167343, roughness: 0.68, side: THREE.DoubleSide }),
+    leafLight: new THREE.MeshStandardMaterial({ color: 0x86c957, roughness: 0.62, side: THREE.DoubleSide }),
+    leafDeep: new THREE.MeshStandardMaterial({ color: 0x07382b, roughness: 0.78, side: THREE.DoubleSide }),
     vine: new THREE.MeshStandardMaterial({ color: 0x2d621b, roughness: 0.86 }),
     rope: new THREE.MeshStandardMaterial({ color: 0x795128, roughness: 0.96 }),
     wood: new THREE.MeshStandardMaterial({ color: 0x71431f, roughness: 0.82, metalness: 0.01 }),
@@ -625,7 +642,10 @@ export function createIsland18JungleExpeditionMaterials(): Island18JungleExpedit
     water: new THREE.MeshPhysicalMaterial({ color: 0x32e5d7, map: waterAlbedo, vertexColors: true, roughness: 0.08, metalness: 0.02, clearcoat: 1, clearcoatRoughness: 0.025, transparent: true, opacity: 0.88, side: THREE.DoubleSide, depthWrite: false, emissive: 0x087f7e, emissiveIntensity: 0.11 }),
     waterfall: new THREE.MeshPhysicalMaterial({ color: 0x86fff0, map: waterfallAlbedo, roughness: 0.07, clearcoat: 0.94, transparent: true, opacity: 0.86, side: THREE.DoubleSide, depthWrite: false, emissive: 0x0d8886, emissiveIntensity: 0.2 }),
     foam: new THREE.MeshStandardMaterial({ color: 0xb8f7ec, roughness: 0.38, transparent: true, opacity: 0.74, depthWrite: false, emissive: 0x4baea6, emissiveIntensity: 0.09 }),
-    flower: new THREE.MeshStandardMaterial({ color: 0xa854b7, roughness: 0.64, emissive: 0x35113c, emissiveIntensity: 0.12 }),
+    flower: new THREE.MeshStandardMaterial({ color: 0xed64c6, roughness: 0.46, emissive: 0x71175d, emissiveIntensity: 0.26, side: THREE.DoubleSide }),
+    flowerSun: new THREE.MeshStandardMaterial({ color: 0xffd452, roughness: 0.42, emissive: 0x9b5607, emissiveIntensity: 0.28, side: THREE.DoubleSide }),
+    flowerCyan: new THREE.MeshStandardMaterial({ color: 0x6cf1e5, roughness: 0.38, emissive: 0x09897d, emissiveIntensity: 0.32, side: THREE.DoubleSide }),
+    biolume: new THREE.MeshStandardMaterial({ color: 0x9dff9a, roughness: 0.26, emissive: 0x28d76d, emissiveIntensity: 0.72, side: THREE.DoubleSide }),
     basinGround: new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, flatShading: true }),
     canopyVolume: new THREE.ShaderMaterial({
       uniforms: {
@@ -827,16 +847,142 @@ function createStoneBlockWall(
   }
 }
 
-function createBroadLeafGeometry() {
-  const perimeter = [
-    [0, -0.54, 0], [-0.24, -0.28, -0.01], [-0.4, 0.04, 0.01], [-0.3, 0.34, 0.025],
-    [0, 0.62, 0], [0.3, 0.34, 0.025], [0.4, 0.04, 0.01], [0.24, -0.28, -0.01],
-  ] as const;
-  const positions = [0, 0.02, 0.09, ...perimeter.flat()];
-  const uvs = [0.5, 0.5, ...perimeter.flatMap(([x, y]) => [0.5 + x, 0.46 + y * 0.78])];
+type JungleLeafSilhouette = 'banana' | 'monstera' | 'heartleaf';
+
+const JUNGLE_LEAF_SILHOUETTES = ['banana', 'monstera', 'heartleaf'] as const satisfies readonly JungleLeafSilhouette[];
+
+function createBroadLeafGeometry(silhouette: JungleLeafSilhouette = 'banana') {
+  const rows = 5;
+  const positions: number[] = [];
+  const uvs: number[] = [];
   const indices: number[] = [];
-  for (let index = 0; index < perimeter.length; index += 1) {
-    indices.push(0, index + 1, (index + 1) % perimeter.length + 1);
+  for (let row = 0; row < rows; row += 1) {
+    const t = row / (rows - 1);
+    const y = THREE.MathUtils.lerp(-0.56, 0.64, t);
+    const naturalWidth = silhouette === 'heartleaf'
+      ? (1 - t) * 0.105 + Math.pow(Math.sin(t * Math.PI), 0.56) * 0.4
+      : Math.pow(Math.sin(t * Math.PI), silhouette === 'monstera' ? 0.58 : 0.72)
+        * (silhouette === 'monstera' ? 0.46 : 0.4);
+    const lobing = silhouette === 'monstera'
+      ? 0.78 + Math.sin(t * Math.PI * 6.15 + 0.4) * 0.2
+      : silhouette === 'heartleaf'
+        ? 0.94 + Math.sin(t * Math.PI * 3.2) * 0.055
+        : 0.96 + Math.sin(t * Math.PI * 4.2) * 0.04;
+    const width = naturalWidth * lobing;
+    const cup = Math.sin(t * Math.PI) * (silhouette === 'heartleaf' ? 0.14 : 0.105)
+      - t * t * (silhouette === 'banana' ? 0.065 : 0.035);
+    const heartNotch = silhouette === 'heartleaf' && row === 0 ? 0.14 : 0;
+    const sideCurl = silhouette === 'monstera' ? width * 0.15 : width * 0.09;
+    positions.push(
+      -width, y, cup - sideCurl,
+      0, y + heartNotch, cup + (silhouette === 'monstera' ? 0.09 : 0.06),
+      width, y, cup - sideCurl,
+    );
+    uvs.push(0, t, 0.5, t, 1, t);
+  }
+  for (let row = 0; row < rows - 1; row += 1) {
+    const base = row * 3;
+    const next = base + 3;
+    indices.push(base, next, base + 1, next, next + 1, base + 1);
+    indices.push(base + 1, next + 1, base + 2, next + 1, next + 2, base + 2);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.name = `ISLAND_18_${silhouette.toUpperCase()}_LEAF_GEOMETRY`;
+  geometry.userData.botanicalSilhouette = silhouette;
+  return geometry;
+}
+
+function createFernFrondGeometry() {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  const addBlade = (
+    baseY: number,
+    tipX: number,
+    tipY: number,
+    width: number,
+    lift: number,
+  ) => {
+    const offset = positions.length / 3;
+    const direction = new THREE.Vector2(tipX, tipY - baseY).normalize();
+    const normal = new THREE.Vector2(-direction.y, direction.x).multiplyScalar(width);
+    positions.push(
+      normal.x, baseY + normal.y, 0,
+      tipX, tipY, lift,
+      -normal.x, baseY - normal.y, 0,
+      0, baseY + (tipY - baseY) * 0.48, lift * 0.7,
+    );
+    uvs.push(0, 0, 0.5, 1, 1, 0, 0.5, 0.48);
+    indices.push(offset, offset + 3, offset + 2, offset, offset + 1, offset + 3, offset + 3, offset + 1, offset + 2);
+  };
+  for (let segment = 0; segment < 7; segment += 1) {
+    const t = segment / 7;
+    const baseY = -0.52 + t * 1.02;
+    const reach = (0.42 - t * 0.24) * (0.92 + (segment % 2) * 0.08);
+    [-1, 1].forEach((side) => {
+      addBlade(baseY, side * reach, baseY + 0.2 + t * 0.06, 0.045 + (1 - t) * 0.025, 0.035 + t * 0.035);
+    });
+  }
+  addBlade(-0.42, 0, 0.68, 0.075, 0.11);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createJungleFlowerGeometry(petalCount = 6) {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  for (let petal = 0; petal < petalCount; petal += 1) {
+    const angle = petal / petalCount * Math.PI * 2;
+    const tangentX = -Math.sin(angle);
+    const tangentZ = Math.cos(angle);
+    const radialX = Math.cos(angle);
+    const radialZ = Math.sin(angle);
+    const offset = positions.length / 3;
+    const petalLift = 0.04 + (petal % 2) * 0.025;
+    const shoulderRadius = 0.28 + (petal % 3) * 0.012;
+    const tipRadius = 0.43 + (petal % 2) * 0.025;
+    positions.push(
+      radialX * 0.055 - tangentX * 0.055, 0.07, radialZ * 0.055 - tangentZ * 0.055,
+      radialX * shoulderRadius - tangentX * 0.12, 0.17 + petalLift, radialZ * shoulderRadius - tangentZ * 0.12,
+      radialX * tipRadius, 0.11 + petalLift * 0.34, radialZ * tipRadius,
+      radialX * shoulderRadius + tangentX * 0.12, 0.17 + petalLift, radialZ * shoulderRadius + tangentZ * 0.12,
+      radialX * 0.055 + tangentX * 0.055, 0.07, radialZ * 0.055 + tangentZ * 0.055,
+    );
+    uvs.push(0, 0, 0.12, 0.62, 0.5, 1, 0.88, 0.62, 1, 0);
+    indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 4, offset + 4, offset + 2, offset + 3);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.name = `ISLAND_18_CUPPED_${petalCount}_PETAL_ORCHID_GEOMETRY`;
+  geometry.userData.botanicalSilhouette = petalCount === 8 ? 'raised-lotus' : 'cupped-orchid';
+  geometry.userData.petalCount = petalCount;
+  return geometry;
+}
+
+function createLilyPadGeometry() {
+  const segments = 14;
+  const positions = [0, 0.045, 0];
+  const uvs = [0.5, 0.5];
+  const indices: number[] = [];
+  for (let segment = 0; segment <= segments; segment += 1) {
+    const t = segment / segments;
+    const angle = THREE.MathUtils.lerp(0.38, Math.PI * 2 - 0.38, t);
+    const radius = 0.92 + Math.sin(segment * 2.31) * 0.035;
+    positions.push(Math.cos(angle) * radius, Math.sin(t * Math.PI) * 0.055, Math.sin(angle) * radius);
+    uvs.push(0.5 + Math.cos(angle) * 0.5, 0.5 + Math.sin(angle) * 0.5);
+    if (segment > 0) indices.push(0, segment, segment + 1);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -945,33 +1091,33 @@ function addOpenRouteTunnelMouth(
   mouth.name = prefix;
   mouth.position.set(...position);
   mouth.rotation.y = rotationY;
-  const openingWidth = 0.78;
-  const pierHeight = 0.66;
+  const openingWidth = ISLAND_18_TEMPLE_TUNNEL_OPENING_WIDTH;
+  const pierHeight = 0.82;
   [-1, 1].forEach((side) => {
     const pier = box(
-      0.18,
+      0.15,
       pierHeight,
       0.22,
       side < 0 ? materials.ruinStone : materials.ruinStoneLight,
       `${prefix}_${side < 0 ? 'LEFT' : 'RIGHT'}_JAMB`,
       3,
     );
-    pier.position.set(side * openingWidth * 0.56, pierHeight * 0.5, 0);
+    pier.position.set(side * openingWidth * 0.57, pierHeight * 0.5, 0);
     mouth.add(pier);
   });
   for (let index = 0; index < 7; index += 1) {
     const angle = index / 6 * Math.PI;
     const voussoir = box(
-      0.18,
-      0.22,
+      0.16,
+      0.2,
       0.24,
       index === 3 ? materials.brass : index % 2 === 0 ? materials.ruinStoneLight : materials.ruinStone,
       `${prefix}_ARCH_STONE_${index + 1}`,
       3,
     );
     voussoir.position.set(
-      Math.cos(angle) * openingWidth * 0.52,
-      pierHeight + Math.sin(angle) * 0.34,
+      Math.cos(angle) * openingWidth * 0.57,
+      pierHeight + Math.sin(angle) * 0.38,
       0,
     );
     voussoir.rotation.z = Math.PI * 0.5 - angle;
@@ -983,7 +1129,7 @@ function addOpenRouteTunnelMouth(
       `${prefix}_AMBER_GUIDE_${side < 0 ? 'LEFT' : 'RIGHT'}`,
       3,
     );
-    guideLight.position.set(side * openingWidth * 0.33, 0.48, -0.035);
+    guideLight.position.set(side * openingWidth * 0.34, 0.74, -0.035);
     mouth.add(guideLight);
   });
   root.add(mouth);
@@ -1001,52 +1147,39 @@ function addTempleRouteTunnel(
   const tunnelCenterX = side * 2.24;
   tunnel.userData.routeClearance = {
     axis: 'z',
-    width: 1.18,
-    height: 1.48,
+    width: ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_WIDTH,
+    height: ISLAND_18_TEMPLE_TUNNEL_WORLD_CLEARANCE_HEIGHT,
     boardRadius: 3.4,
-    includesRouteFloor: true,
+    includesRouteFloor: false,
+    canonicalTileSurfaceExposed: true,
   };
 
   addOpenRouteTunnelMouth(
     tunnel,
     `${tunnel.name}_FRONT_ENTRY`,
-    [tunnelCenterX, 0.45, 0.84],
+    [tunnelCenterX, 0.45, 0.7],
     materials,
   );
   addOpenRouteTunnelMouth(
     tunnel,
     `${tunnel.name}_REAR_EXIT`,
-    [tunnelCenterX, 0.45, -1.17],
+    [tunnelCenterX, 0.45, -0.7],
     materials,
     Math.PI,
   );
 
   const routeFloor = markStage(new THREE.Group(), 2);
   routeFloor.name = `${tunnel.name}_ROUTE_FLOOR`;
-  const routeMaterials = side < 0
-    ? [materials.routeAzure, materials.routeIvory, materials.routeViolet]
-    : [materials.routeViolet, materials.routeIvory, materials.routeAzure];
-  [-0.76, -0.18, 0.4].forEach((z, index) => {
-    const panel = box(
-      0.7,
-      0.045,
-      0.56,
-      routeMaterials[index],
-      `${routeFloor.name}_PANEL_${index + 1}`,
-      2,
-    );
-    panel.position.set(tunnelCenterX, 0.44, z);
-    routeFloor.add(panel);
-  });
+  routeFloor.userData.canonicalTileSurfaceExposed = true;
   const ceiling = box(
-    0.78,
+    1.14,
     0.08,
-    1.86,
+    2.02,
     materials.ruinStoneDark,
     `${tunnel.name}_VAULTED_CEILING`,
     3,
   );
-  ceiling.position.set(tunnelCenterX, 1.32, -0.17);
+  ceiling.position.set(tunnelCenterX, 1.5, -0.17);
   tunnel.add(routeFloor, ceiling);
   root.add(tunnel);
   return tunnel;
@@ -1176,7 +1309,11 @@ function addLeafCluster(
       : materials.leafDeep;
   for (let index = 0; index < 7; index += 1) {
     const angle = index / 7 * Math.PI * 2 + (index % 2) * 0.22;
-    const leaf = presentMesh(new THREE.Mesh(createBroadLeafGeometry(), clusterMaterial), `${prefix}_LEAF_${index + 1}`, stage);
+    const leaf = presentMesh(
+      new THREE.Mesh(createBroadLeafGeometry(JUNGLE_LEAF_SILHOUETTES[index % JUNGLE_LEAF_SILHOUETTES.length]), clusterMaterial),
+      `${prefix}_LEAF_${index + 1}`,
+      stage,
+    );
     leaf.scale.set(0.72, 0.82, 0.72);
     leaf.position.set(Math.cos(angle) * 0.24, 0.18 + Math.sin(angle) * 0.12, Math.sin(angle) * 0.24);
     leaf.rotation.z = -angle + Math.PI / 2;
@@ -1200,7 +1337,7 @@ function createInstancedCanopyField(
 ) {
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_INSTANCED_JUNGLE_CANOPY_FIELD';
-  const leafGeometry = createBroadLeafGeometry();
+  const leafGeometries = JUNGLE_LEAF_SILHOUETTES.map((silhouette) => createBroadLeafGeometry(silhouette));
   const materialList = [materials.leafLight, materials.leaf, materials.leafDeep] as const;
   const placements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], [], []];
   const euler = new THREE.Euler();
@@ -1235,7 +1372,7 @@ function createInstancedCanopyField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(leafGeometry, materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(leafGeometries[materialIndex], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_CANOPY_LEAF_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -1259,7 +1396,7 @@ function createInstancedPalmGrove(
   root.name = 'ISLAND_18_INSTANCED_PALM_GROVE';
   root.userData.windPhase = 2.17;
   const trunkGeometry = new THREE.CylinderGeometry(0.085, 0.14, 1, 7);
-  const frondGeometry = createBroadLeafGeometry();
+  const frondGeometry = createBroadLeafGeometry('banana');
   const trunkPlacements: Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }> = [];
   const frondPlacements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], []];
   const euler = new THREE.Euler();
@@ -1326,7 +1463,11 @@ function createInstancedUnderstoryField(
 ) {
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_INSTANCED_UNDERSTORY_FIELD';
-  const geometry = createBroadLeafGeometry();
+  const geometries = [
+    createBroadLeafGeometry('monstera'),
+    createBroadLeafGeometry('heartleaf'),
+    createBroadLeafGeometry('banana'),
+  ] as const;
   const materialList = [materials.leafDeep, materials.leaf, materials.leafLight] as const;
   const placements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], [], []];
   const euler = new THREE.Euler();
@@ -1354,7 +1495,7 @@ function createInstancedUnderstoryField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(geometry, materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(geometries[materialIndex], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_UNDERSTORY_LEAF_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -1375,7 +1516,11 @@ function createTempleOvergrowthField(
 ) {
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_TEMPLE_OVERGROWTH_FIELD';
-  const geometry = createBroadLeafGeometry();
+  const geometries = [
+    createBroadLeafGeometry('heartleaf'),
+    createBroadLeafGeometry('monstera'),
+    createBroadLeafGeometry('banana'),
+  ] as const;
   const materialList = [materials.leafDeep, materials.leaf, materials.leafLight] as const;
   const anchors = [
     [-2.25, 1.45, 0.3], [2.28, 1.68, -0.18], [-1.9, 2.8, -0.2], [1.94, 3.0, -0.18],
@@ -1405,7 +1550,7 @@ function createTempleOvergrowthField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(geometry, materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(geometries[materialIndex], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_TEMPLE_OVERGROWTH_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -1418,6 +1563,209 @@ function createTempleOvergrowthField(
     return mesh;
   });
   return { root, meshes };
+}
+
+interface Island18JungleDetailGarden {
+  root: THREE.Group;
+  glowSites: THREE.Vector3[];
+}
+
+function createCarvedRelicStoneGeometry(profile: 'tapered' | 'fractured') {
+  const base = new THREE.BoxGeometry(1, 0.72, 0.62);
+  base.translate(0, 0.36, 0);
+  const shoulder = new THREE.BoxGeometry(0.82, 0.2, 0.72);
+  shoulder.translate(0, 0.82, 0);
+  const crown = new THREE.BoxGeometry(0.58, 0.18, 0.52);
+  crown.rotateY(Math.PI / 4);
+  crown.translate(0, 0.99, 0);
+  const geometry = mergeGeometries([base, shoulder, crown], false) ?? base;
+  if (geometry !== base) base.dispose();
+  shoulder.dispose();
+  crown.dispose();
+  const positions = geometry.getAttribute('position') as THREE.BufferAttribute;
+  for (let index = 0; index < positions.count; index += 1) {
+    const x = positions.getX(index);
+    const y = positions.getY(index);
+    const z = positions.getZ(index);
+    const height = THREE.MathUtils.clamp(y / 1.08, 0, 1);
+    const weathering = Math.sin(x * 5.7 + y * 11.3 + z * 7.9);
+    const taper = 1 - height * (profile === 'fractured' ? 0.2 : 0.13);
+    const fracture = profile === 'fractured' && weathering > 0.42 ? 0.91 : 1;
+    positions.setXYZ(
+      index,
+      x * taper * fracture + (profile === 'fractured' ? height * 0.075 : 0) + weathering * 0.012,
+      y + Math.sin(x * 8.1 + z * 6.4) * 0.012 * height,
+      z * (1 - height * 0.08) * fracture + Math.cos(y * 9.2 + x * 4.3) * 0.01,
+    );
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  geometry.name = `ISLAND_18_${profile.toUpperCase()}_RELIC_STONE_GEOMETRY`;
+  geometry.userData.relicProfile = profile;
+  return geometry;
+}
+
+function createJungleDetailGarden(
+  profile: Island3DQualityProfile,
+  materials: Island18JungleExpeditionMaterials,
+): Island18JungleDetailGarden {
+  const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'botanical-and-stone-detail');
+  root.name = 'ISLAND_18_BOTANICAL_STONE_DETAIL_GARDEN';
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion();
+  const euler = new THREE.Euler();
+  const scale = new THREE.Vector3();
+  const position = new THREE.Vector3();
+  const fernGeometry = createFernFrondGeometry();
+  const flowerGeometry = createJungleFlowerGeometry();
+  const stoneGeometries = [
+    createCarvedRelicStoneGeometry('tapered'),
+    createCarvedRelicStoneGeometry('fractured'),
+  ] as const;
+  const glyphGeometry = new THREE.OctahedronGeometry(0.5, 0);
+  const mossGeometry = new THREE.SphereGeometry(0.5, 6, 3, 0, Math.PI * 2, 0, Math.PI * 0.52);
+  const mushroomCapGeometry = new THREE.SphereGeometry(0.5, 7, 4, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  const mushroomStemGeometry = new THREE.CylinderGeometry(0.22, 0.34, 1, 6);
+  const fernCount = profile.id === 'high' ? 76 : profile.id === 'medium' ? 56 : 36;
+  const flowerCount = profile.id === 'high' ? 52 : profile.id === 'medium' ? 38 : 24;
+  const stoneCount = profile.id === 'high' ? 34 : profile.id === 'medium' ? 26 : 18;
+  const mushroomCount = profile.id === 'high' ? 22 : profile.id === 'medium' ? 15 : 9;
+  const fernPlacements: THREE.Matrix4[][] = [[], []];
+  const flowerPlacements: THREE.Matrix4[][] = [[], [], []];
+  const stonePlacements: THREE.Matrix4[][] = [[], []];
+  const mossPlacements: THREE.Matrix4[] = [];
+  const glyphPlacements: THREE.Matrix4[] = [];
+  const mushroomCapPlacements: THREE.Matrix4[] = [];
+  const mushroomStemPlacements: THREE.Matrix4[] = [];
+  const glowSites: THREE.Vector3[] = [];
+
+  const sampleGardenPosition = (index: number, count: number, minimumRadius: number, spread: number) => {
+    const streamBiased = index < Math.ceil(count * 0.46);
+    if (streamBiased) {
+      const progress = index / Math.max(1, Math.ceil(count * 0.46) - 1);
+      const side = index % 2 === 0 ? -1 : 1;
+      const z = THREE.MathUtils.lerp(6.35, 15.4, progress) + Math.sin(index * 2.17) * 0.24;
+      const x = side * (1.72 + progress * 1.18 + (index % 3) * 0.16);
+      return new THREE.Vector3(x, 0, z);
+    }
+    const localIndex = index - Math.ceil(count * 0.46);
+    const angle = localIndex * 2.399963 + Math.sin(index * 1.37) * 0.22;
+    const radius = minimumRadius + (index * 17 % 11) / 10 * spread;
+    return new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  };
+
+  for (let index = 0; index < fernCount; index += 1) {
+    position.copy(sampleGardenPosition(index, fernCount, 6.55, 5.8));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.11 + (index % 3) * 0.025;
+    quaternion.setFromEuler(euler.set(-0.26 + (index % 3) * 0.08, -angle + index * 0.17, (index % 2 ? -1 : 1) * 0.09));
+    const size = 0.43 + (index % 5) * 0.065;
+    fernPlacements[index % 5 === 0 ? 1 : 0].push(matrix.compose(
+      position,
+      quaternion,
+      scale.set(size * 0.92, size * 1.58, size),
+    ).clone());
+  }
+
+  for (let index = 0; index < flowerCount; index += 1) {
+    position.copy(sampleGardenPosition(index + 5, flowerCount, 6.75, 5.2));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.25 + (index % 4) * 0.055;
+    quaternion.setFromEuler(euler.set((index % 3 - 1) * 0.08, index * 1.13, (index % 2 ? -1 : 1) * 0.06));
+    const size = 0.32 + (index % 5) * 0.04;
+    flowerPlacements[index % 3].push(matrix.compose(position, quaternion, scale.setScalar(size)).clone());
+  }
+
+  for (let index = 0; index < stoneCount; index += 1) {
+    position.copy(sampleGardenPosition(index + 11, stoneCount, 6.72, 6.6));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.02 + (index % 3) * 0.03;
+    quaternion.setFromEuler(euler.set(index * 0.29, angle + index * 0.51, (index % 3 - 1) * 0.14));
+    const width = 0.38 + (index % 4) * 0.11;
+    const height = 0.24 + (index % 5) * 0.075;
+    stonePlacements[index % 2].push(matrix.compose(
+      position.clone().add(new THREE.Vector3(0, height * 0.38, 0)),
+      quaternion,
+      scale.set(width * 1.28, height, width),
+    ).clone());
+    mossPlacements.push(matrix.compose(
+      position.clone().add(new THREE.Vector3(0, height * 0.72, 0)),
+      quaternion,
+      scale.set(width * 1.06, 0.08 + (index % 2) * 0.025, width * 0.78),
+    ).clone());
+    if (index % 3 === 0) {
+      const glyphPosition = position.clone().add(new THREE.Vector3(0, height + 0.34, 0));
+      glyphPlacements.push(matrix.compose(
+        glyphPosition,
+        quaternion,
+        scale.set(0.13, 0.2, 0.1),
+      ).clone());
+      glowSites.push(glyphPosition.clone().add(new THREE.Vector3(0, 0.08, 0)));
+    }
+  }
+
+  for (let index = 0; index < mushroomCount; index += 1) {
+    position.copy(sampleGardenPosition(index + 19, mushroomCount, 6.8, 4.8));
+    const radius = Math.hypot(position.x, position.z);
+    const angle = Math.atan2(position.z, position.x);
+    const height = 0.15 + (index % 4) * 0.035;
+    position.y = sampleJungleBasinHeight(radius, angle) + 1.08;
+    quaternion.setFromEuler(euler.set(0, index * 1.37, (index % 3 - 1) * 0.08));
+    mushroomStemPlacements.push(matrix.compose(
+      position.clone().add(new THREE.Vector3(0, height * 0.5, 0)),
+      quaternion,
+      scale.set(0.1 + (index % 3) * 0.018, height, 0.1 + ((index + 1) % 3) * 0.015),
+    ).clone());
+    const capRadius = 0.13 + (index % 4) * 0.025;
+    const capPosition = position.clone().add(new THREE.Vector3(0, height, 0));
+    mushroomCapPlacements.push(matrix.compose(
+      capPosition,
+      quaternion,
+      scale.set(capRadius * 1.18, capRadius * 0.62, capRadius),
+    ).clone());
+    if (index % 3 === 0) glowSites.push(capPosition.clone().add(new THREE.Vector3(0, 0.12, 0)));
+  }
+
+  const addBatch = (
+    name: string,
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    matrices: THREE.Matrix4[],
+  ) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
+    mesh.name = name;
+    matrices.forEach((entry, index) => mesh.setMatrixAt(index, entry));
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    root.add(mesh);
+    return mesh;
+  };
+  addBatch('ISLAND_18_FERN_FROND_BATCH_DEEP', fernGeometry, materials.leafDeep, fernPlacements[0]);
+  addBatch('ISLAND_18_FERN_FROND_BATCH_SUNLIT', fernGeometry, materials.leafLight, fernPlacements[1]);
+  addBatch('ISLAND_18_ORCHID_BATCH_MAGENTA', flowerGeometry, materials.flower, flowerPlacements[0]);
+  addBatch('ISLAND_18_ORCHID_BATCH_SUN', flowerGeometry, materials.flowerSun, flowerPlacements[1]);
+  addBatch('ISLAND_18_ORCHID_BATCH_CYAN', flowerGeometry, materials.flowerCyan, flowerPlacements[2]);
+  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT', stoneGeometries[0], materials.ruinStoneLight, stonePlacements[0]);
+  addBatch('ISLAND_18_MOSSY_RELIC_STONE_BATCH_DARK', stoneGeometries[1], materials.ruinStoneDark, stonePlacements[1]);
+  addBatch('ISLAND_18_RELIC_MOSS_CROWN_BATCH', mossGeometry, materials.moss, mossPlacements);
+  addBatch('ISLAND_18_RELIC_EMERALD_GLYPH_BATCH', glyphGeometry, materials.biolume, glyphPlacements);
+  addBatch('ISLAND_18_BIOLUMINESCENT_MUSHROOM_STEM_BATCH', mushroomStemGeometry, materials.routeIvory, mushroomStemPlacements);
+  const mushroomCaps = addBatch('ISLAND_18_BIOLUMINESCENT_MUSHROOM_CAP_BATCH', mushroomCapGeometry, materials.biolume, mushroomCapPlacements);
+  mushroomCaps.renderOrder = 2;
+  root.userData.detailEcology = {
+    fernCount,
+    orchidCount: flowerCount,
+    mossyRelicCount: stoneCount,
+    glowingRelicGlyphCount: glyphPlacements.length,
+    bioluminescentMushroomCount: mushroomCount,
+    minimumRouteRadius: 6.55,
+    drawCallCount: 11,
+  };
+  return { root, glowSites };
 }
 
 interface Island18AerialFaunaSpec {
@@ -1813,7 +2161,7 @@ function addLostCityOrnamentPass(
 
   for (let index = 0; index < 12; index += 1) {
     const angle = index / 12 * Math.PI * 2 + 0.18;
-    const radius = 1.68 + (index % 3) * 0.17;
+    const radius = 1.46 + (index % 3) * 0.08;
     addGeometry(
       stone,
       new THREE.DodecahedronGeometry(0.08 + (index % 4) * 0.018, 0),
@@ -2249,12 +2597,12 @@ function createExplorersCamp(level: 1 | 2 | 3, materials: Island18JungleExpediti
   return registerIsland18RuntimePart('explorers-camp', root, 'landmark');
 }
 
-function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpeditionMaterials) {
+function createLostCityTemple(level: BossTempleVisualLevel, materials: Island18JungleExpeditionMaterials) {
   const root = new THREE.Group();
   root.name = 'ISLAND_18_LOST_CITY_TEMPLE';
-  const court = cylinder(2.04, 2.3, 0.38, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_PROCESSIONAL_COURT', 1, 12);
+  const court = cylinder(1.7, 1.84, 0.38, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_PROCESSIONAL_COURT', 1, 12);
   court.position.y = 0.19;
-  const courtCap = cylinder(1.92, 2.04, 0.1, materials.ruinStone, 'ISLAND_18_TEMPLE_COURT_STONE_CAP', 1, 12);
+  const courtCap = cylinder(1.7, 1.78, 0.1, materials.ruinStone, 'ISLAND_18_TEMPLE_COURT_STONE_CAP', 1, 12);
   courtCap.position.y = 0.44;
   const courtMossInlay = torus(1.62, 0.055, materials.moss, 'ISLAND_18_TEMPLE_COURT_MOSS_INLAY', 5, 6, 42);
   courtMossInlay.rotation.x = Math.PI / 2;
@@ -2263,7 +2611,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   addStoneStairFlight(
     root,
     'ISLAND_18_TEMPLE_FRONT_PROCESSIONAL',
-    new THREE.Vector3(0, 0.42, 2.18),
+    new THREE.Vector3(0, 0.42, 1.62),
     new THREE.Vector3(0, 1.24, 0.84),
     1.72,
     11,
@@ -2272,7 +2620,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   );
   [-0.52, 0, 0.52].forEach((x, index) => {
     const runeRunner = beamBetween(
-      new THREE.Vector3(x, 0.53, 2.08),
+      new THREE.Vector3(x, 0.53, 1.72),
       new THREE.Vector3(x, 1.34, 0.78),
       index === 1 ? 0.028 : 0.022,
       index === 1 ? materials.brass : materials.brassDark,
@@ -2284,7 +2632,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   });
   [-1, 1].forEach((side) => {
     const rail = beamBetween(
-      new THREE.Vector3(side * 0.94, 0.72, 2.08),
+      new THREE.Vector3(side * 0.8, 0.72, 1.64),
       new THREE.Vector3(side * 0.94, 1.58, 0.78),
       0.06,
       materials.ruinStoneDark,
@@ -2294,7 +2642,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     );
     root.add(rail);
     [0.18, 0.52, 0.86].forEach((t, index) => {
-      const z = THREE.MathUtils.lerp(2.08, 0.78, t);
+      const z = THREE.MathUtils.lerp(1.64, 0.78, t);
       const y = THREE.MathUtils.lerp(0.48, 1.34, t);
       const post = cylinder(
         0.035,
@@ -2305,7 +2653,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
         3,
         7,
       );
-      post.position.set(side * 0.94, y + 0.16, z);
+      post.position.set(side * THREE.MathUtils.lerp(0.8, 0.94, t), y + 0.16, z);
       root.add(post);
     });
     const serpentHead = presentMesh(
@@ -2338,7 +2686,7 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     root.add(flame);
   });
 
-  const lowerPlinth = box(3.28, 0.46, 2.02, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_PLINTH', 2);
+  const lowerPlinth = box(3.08, 0.46, 1.86, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_PLINTH', 2);
   lowerPlinth.position.set(0, 0.72, -0.02);
   const lowerSanctuary = box(1.72, 1.18, 1.42, materials.ruinStone, 'ISLAND_18_TEMPLE_LOWER_SANCTUARY', 2);
   lowerSanctuary.position.set(0, 1.26, -0.12);
@@ -2349,14 +2697,14 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   const lowerCornice = box(3.08, 0.11, 1.76, materials.brassDark, 'ISLAND_18_TEMPLE_LOWER_CORNICE', 2);
   lowerCornice.position.set(0, 1.7, -0.08);
   root.add(lowerPlinth, lowerSanctuary, leftPylon, rightPylon, lowerCornice);
-  const lowerWingLeft = roundedBox(0.82, 0.72, 1.68, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT', 2, 0.065, 2);
-  lowerWingLeft.position.set(-1.68, 0.9, -0.12);
-  const lowerWingRight = roundedBox(0.72, 0.92, 1.58, materials.ruinStone, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT', 2, 0.055, 2);
-  lowerWingRight.position.set(1.7, 1.0, -0.1);
-  const lowerWingLeftCap = roundedBox(0.98, 0.12, 1.82, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT_CAP', 2, 0.035);
-  lowerWingLeftCap.position.set(-1.68, 1.3, -0.12);
-  const lowerWingRightCap = roundedBox(0.9, 0.12, 1.72, materials.brassDark, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT_CAP', 2, 0.035);
-  lowerWingRightCap.position.set(1.7, 1.5, -0.1);
+  const lowerWingLeft = roundedBox(0.52, 0.72, 1.36, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT', 2, 0.065, 2);
+  lowerWingLeft.position.set(-1.38, 0.9, -0.12);
+  const lowerWingRight = roundedBox(0.52, 0.92, 1.34, materials.ruinStone, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT', 2, 0.055, 2);
+  lowerWingRight.position.set(1.38, 1.0, -0.1);
+  const lowerWingLeftCap = roundedBox(0.62, 0.12, 1.48, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_LOWER_WING_LEFT_CAP', 2, 0.035);
+  lowerWingLeftCap.position.set(-1.38, 1.3, -0.12);
+  const lowerWingRightCap = roundedBox(0.62, 0.12, 1.46, materials.brassDark, 'ISLAND_18_TEMPLE_LOWER_WING_RIGHT_CAP', 2, 0.035);
+  lowerWingRightCap.position.set(1.38, 1.5, -0.1);
   root.add(lowerWingLeft, lowerWingRight, lowerWingLeftCap, lowerWingRightCap);
   addStonePortal(root, 'ISLAND_18_TEMPLE_MAIN_PORTAL', [0, 1.24, 0.69], 0.94, 1.18, materials, 2);
   addGuardianMask(root, 'ISLAND_18_TEMPLE_MAIN_GUARDIAN_RELIEF', [0, 2.08, 0.77], 0.5, materials, 3);
@@ -2364,14 +2712,14 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
   rearPortal.position.z = -0.87;
   addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_FACADE_LEFT', [-1.12, 1.28, 0.71], 0.92, 1.18, 5, 3, materials, 2);
   addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_FACADE_RIGHT', [1.12, 1.3, 0.7], 0.92, 1.28, 5, 3, materials, 2);
-  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_LEFT', [-1.78, 1.1, -0.1], 1.42, 0.7, 3, 5, materials, 3, -Math.PI / 2);
-  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_RIGHT', [1.79, 1.2, -0.1], 1.36, 0.82, 4, 5, materials, 3, Math.PI / 2);
+  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_LEFT', [-1.58, 1.1, -0.1], 1.3, 0.7, 3, 5, materials, 3, -Math.PI / 2);
+  addStoneBlockFacade(root, 'ISLAND_18_TEMPLE_LOWER_SIDE_RIGHT', [1.58, 1.2, -0.1], 1.28, 0.82, 4, 5, materials, 3, Math.PI / 2);
   addTempleBalustrade(root, 'ISLAND_18_TEMPLE_LOWER_BALUSTRADE_LEFT', [-1.13, 1.76, 0.82], 0.92, materials, 3);
   addTempleBalustrade(root, 'ISLAND_18_TEMPLE_LOWER_BALUSTRADE_RIGHT', [1.13, 1.78, 0.82], 0.92, materials, 3);
-  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_LEFT_WING_STAIR', new THREE.Vector3(-1.76, 0.45, 1.02), new THREE.Vector3(-1.55, 1.36, 0.12), 0.62, 8, materials.ruinStone, 2);
-  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_RIGHT_WING_STAIR', new THREE.Vector3(1.78, 0.45, 1.08), new THREE.Vector3(1.58, 1.54, 0.05), 0.62, 9, materials.ruinStoneLight, 2);
-  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_LEFT', [-1.67, 0.96, 0.76], 0.52, materials, 3);
-  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_RIGHT', [1.69, 1.12, 0.72], 0.48, materials, 3);
+  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_LEFT_WING_STAIR', new THREE.Vector3(-1.38, 0.45, 0.78), new THREE.Vector3(-1.28, 1.36, 0.08), 0.5, 8, materials.ruinStone, 2);
+  addStoneStairFlight(root, 'ISLAND_18_TEMPLE_RIGHT_WING_STAIR', new THREE.Vector3(1.38, 0.45, 0.8), new THREE.Vector3(1.28, 1.54, 0.04), 0.5, 9, materials.ruinStoneLight, 2);
+  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_LEFT', [-1.45, 0.96, 0.62], 0.5, materials, 3);
+  addCarvedReliefPanel(root, 'ISLAND_18_TEMPLE_WING_RELIEF_RIGHT', [1.45, 1.12, 0.6], 0.46, materials, 3);
   for (let index = 0; index < 7; index += 1) {
     const rearStep = box(
       1.4 - index * 0.04,
@@ -2419,8 +2767,8 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     relief.rotation.z = index % 2 === 0 ? Math.PI / 4 : 0;
     root.add(relief);
   }
-  [-1.66, -1.14, 1.14, 1.66].forEach((x, index) => {
-    addAmberNiche(root, `ISLAND_18_TEMPLE_LOWER_LAMP_NICHE_${index + 1}`, [x, 1.04 + (index % 2) * 0.16, 0.81], materials, 3, 0.78);
+  [-1.48, -1.02, 1.02, 1.48].forEach((x, index) => {
+    addAmberNiche(root, `ISLAND_18_TEMPLE_LOWER_LAMP_NICHE_${index + 1}`, [x, 1.04 + (index % 2) * 0.16, 0.72], materials, 3, 0.78);
   });
   addMossFringe(root, 'ISLAND_18_TEMPLE_LOWER_MOSS_FRINGE_LEFT', [-1.2, 1.77, 0.72], 1.18, 0.2, materials, 5);
   addMossFringe(root, 'ISLAND_18_TEMPLE_LOWER_MOSS_FRINGE_RIGHT', [1.18, 1.8, 0.72], 1.12, 0.2, materials, 5);
@@ -2435,25 +2783,19 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     const precinct = markStage(new THREE.Group(), 2);
     precinct.name = `ISLAND_18_TEMPLE_${sideName}_PRECINCT_TERRACE`;
     const precinctCenterX = side * 2.46;
-    const tunnelCenterX = side * 2.24;
-    const precinctMinX = precinctCenterX - 0.64;
-    const precinctMaxX = precinctCenterX + 0.64;
-    const openingMinX = tunnelCenterX - 0.39;
-    const openingMaxX = tunnelCenterX + 0.39;
     [
-      { min: precinctMinX, max: openingMinX, material: materials.ruinStoneDark },
-      { min: openingMaxX, max: precinctMaxX, material: materials.ruinStone },
+      { centerX: side * 1.66, material: materials.ruinStoneDark },
+      { centerX: side * 2.86, material: materials.ruinStone },
     ].forEach((support, supportIndex) => {
-      const width = Math.max(0.18, support.max - support.min);
       const pier = box(
-        width,
+        0.34,
         0.9,
-        1.92,
+        supportIndex === 0 ? 0.8 : 1.92,
         support.material,
         `${precinct.name}_TUNNEL_SUPPORT_${supportIndex + 1}`,
         2,
       );
-      pier.position.set((support.min + support.max) * 0.5, 0.86, -0.18);
+      pier.position.set(support.centerX, 0.86, -0.18);
       precinct.add(pier);
     });
     const bridgeDeck = box(
@@ -2809,10 +3151,97 @@ function createLostCityTemple(level: 1 | 2 | 3, materials: Island18JungleExpedit
     addLostCityOrnamentPass(root, materials);
   }
 
+  if (level >= 4) {
+    const observatory = markStage(new THREE.Group(), 1);
+    observatory.name = 'ISLAND_18_TEMPLE_ZENITH_OBSERVATORY';
+    const summitDeck = cylinder(0.76, 0.9, 0.18, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_ZENITH_SUMMIT_DECK', 1, 10);
+    summitDeck.position.set(0.02, 5.08, -0.17);
+    const summitCap = cylinder(0.72, 0.78, 0.08, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_ZENITH_SUMMIT_CAP', 1, 10);
+    summitCap.position.set(0.02, 5.2, -0.17);
+    const summitMoss = torus(0.62, 0.045, materials.moss, 'ISLAND_18_TEMPLE_ZENITH_SUMMIT_MOSS_RING', 1, 4, 12);
+    summitMoss.rotation.x = Math.PI / 2;
+    summitMoss.position.set(0.02, 5.255, -0.17);
+    observatory.add(summitDeck, summitCap, summitMoss);
+
+    ([-1, 1] as const).forEach((xSide) => {
+      ([-1, 1] as const).forEach((zSide) => {
+        const column = cylinder(
+          0.065,
+          0.09,
+          0.78,
+          xSide === zSide ? materials.brassDark : materials.ruinStoneLight,
+          `ISLAND_18_TEMPLE_ZENITH_COLUMN_${xSide < 0 ? 'LEFT' : 'RIGHT'}_${zSide < 0 ? 'REAR' : 'FRONT'}`,
+          2,
+          7,
+        );
+        column.position.set(xSide * 0.48, 5.62, -0.17 + zSide * 0.34);
+        const capital = box(
+          0.2,
+          0.1,
+          0.2,
+          materials.brass,
+          `${column.name}_CAPITAL`,
+          2,
+        );
+        capital.position.set(xSide * 0.48, 6.02, -0.17 + zSide * 0.34);
+        observatory.add(column, capital);
+      });
+    });
+
+    const canopyLower = roundedBox(1.46, 0.14, 1.14, materials.ruinStoneDark, 'ISLAND_18_TEMPLE_ZENITH_CANOPY_LOWER', 3, 0.035);
+    canopyLower.position.set(0.02, 6.1, -0.17);
+    const canopyMiddle = cylinder(0.54, 0.72, 0.22, materials.ruinStoneLight, 'ISLAND_18_TEMPLE_ZENITH_CANOPY_MIDDLE', 3, 8);
+    canopyMiddle.position.set(0.02, 6.26, -0.17);
+    const canopyCrown = cone(0.35, 0.72, materials.brassDark, 'ISLAND_18_TEMPLE_ZENITH_CANOPY_CROWN', 3, 7);
+    canopyCrown.position.set(0.02, 6.68, -0.17);
+    observatory.add(canopyLower, canopyMiddle, canopyCrown);
+
+    const compassFrame = markStage(new THREE.Group(), 4);
+    compassFrame.name = 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS';
+    compassFrame.position.set(0.02, 5.76, 0.46);
+    const outerCompassRing = torus(0.5, 0.055, materials.brass, 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_OUTER_RING', 4, 4, 12);
+    const innerCompassRing = torus(0.33, 0.03, materials.emerald, 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_INNER_RING', 4, 4, 12);
+    const compassCore = sphere(0.13, materials.emerald, 'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_CORE', 4, 6);
+    compassCore.scale.set(0.7, 1, 0.42);
+    compassCore.position.z = 0.035;
+    compassFrame.add(outerCompassRing, innerCompassRing, compassCore);
+    [
+      [new THREE.Vector3(-0.4, 0, 0), new THREE.Vector3(0.4, 0, 0)],
+      [new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(0, 0.4, 0)],
+    ].forEach(([start, end], index) => {
+      compassFrame.add(beamBetween(start, end, 0.025, materials.brassDark, `ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_NEEDLE_${index + 1}`, 4, 6));
+    });
+    observatory.add(compassFrame);
+
+    [-1, 1].forEach((side) => {
+      const beacon = cone(0.13, 0.72, materials.emerald, `ISLAND_18_TEMPLE_ZENITH_BEACON_${side < 0 ? 'LEFT' : 'RIGHT'}`, 5, 6);
+      beacon.position.set(side * 0.72, 5.66, -0.04);
+      const lamp = sphere(0.08, materials.amber, `ISLAND_18_TEMPLE_ZENITH_LAMP_${side < 0 ? 'LEFT' : 'RIGHT'}`, 5, 6);
+      lamp.scale.set(0.72, 1.35, 0.72);
+      lamp.position.set(side * 0.5, 5.5, 0.42);
+      observatory.add(beacon, lamp);
+    });
+    for (let index = 0; index < 7; index += 1) {
+      const offset = index - 3;
+      const crownRay = cone(
+        0.055 + (3 - Math.abs(offset)) * 0.008,
+        0.42 + (3 - Math.abs(offset)) * 0.09,
+        index === 3 ? materials.emerald : index % 2 === 0 ? materials.brass : materials.ruinStoneLight,
+        `ISLAND_18_TEMPLE_ZENITH_CROWN_RAY_${index + 1}`,
+        5,
+        5,
+      );
+      crownRay.position.set(offset * 0.16, 6.54 + (3 - Math.abs(offset)) * 0.07, -0.2);
+      crownRay.rotation.z = -offset * 0.14;
+      observatory.add(crownRay);
+    }
+    root.add(observatory);
+  }
+
   registerIsland18RuntimePart('lost-city-temple-shell', root, 'landmark');
   const focus = new THREE.Object3D();
   focus.name = 'ISLAND_18_BOSS_FOCUS_SOCKET';
-  focus.position.set(0, level >= 3 ? 2.75 : 1.7, 0.2);
+  focus.position.set(0, level >= 4 ? 3.45 : level >= 3 ? 2.75 : 1.7, 0.2);
   root.add(focus);
   return root;
 }
@@ -2853,10 +3282,11 @@ export function buildIsland18JungleExpeditionLandmark(
   materials: Island18JungleExpeditionMaterials,
   options: IslandConstructionFactoryOptions = {},
 ) {
-  if (level === 0) return createFoundationPlot(definition, materials);
+  if (level === 0 && definition.id !== 'boss') return createFoundationPlot(definition, materials);
   const resolvedLevel = Math.max(1, level) as 1 | 2 | 3;
+  const bossTempleVisualLevel = Math.min(4, level + 1) as BossTempleVisualLevel;
   const architecture = definition.id === 'boss'
-    ? createLostCityTemple(resolvedLevel, materials)
+    ? createLostCityTemple(bossTempleVisualLevel, materials)
     : definition.id === 'hatchery'
       ? createExplorerNest(resolvedLevel, materials)
       : definition.id === 'habit'
@@ -2872,10 +3302,11 @@ export function buildIsland18JungleExpeditionLandmark(
     architecture.position.x += outward.x * offset;
     architecture.position.z += outward.y * offset;
   } else {
-    // L1 establishes the final temple envelope; L2/L3 add chambers, crown and
-    // relic detail without rescaling already funded stonework.
-    const bossScale = 1.52;
-    architecture.scale.set(bossScale, bossScale * 1.1, bossScale);
+    // The first lost-city precinct is ancient island fabric and is therefore
+    // already present at gameplay L0. L1/L2 restore the middle city and crown;
+    // L3 commissions the new Zenith Observatory without moving the footprint.
+    architecture.scale.set(ISLAND_18_BOSS_SCALE, ISLAND_18_BOSS_SCALE * 1.1, ISLAND_18_BOSS_SCALE);
+    architecture.userData.bossTempleVisualLevel = bossTempleVisualLevel;
   }
   architecture.userData.landmarkId = definition.id;
   architecture.userData.buildLevel = level;
@@ -2901,7 +3332,7 @@ export function buildIsland18JungleExpeditionLandmark(
   };
   const focus = new THREE.Object3D();
   focus.name = `ISLAND_18_${definition.id.toUpperCase()}_FOCUS_SOCKET`;
-  focus.position.y = definition.id === 'boss' ? 2.8 : 1.45;
+  focus.position.y = definition.id === 'boss' ? (level >= 3 ? 3.45 : 2.8) : 1.45;
   architecture.add(focus);
   return architecture;
 }
@@ -3035,12 +3466,13 @@ function createJungleCanopyVolume(
   const colors = new Float32Array(count * 3);
   const sizes = new Float32Array(count);
   const palette = [
-    new THREE.Color(0x1e7434),
-    new THREE.Color(0x2c8d42),
-    new THREE.Color(0x3f9a43),
-    new THREE.Color(0x65ad4e),
-    new THREE.Color(0x8abc58),
+    new THREE.Color(0x164e42),
+    new THREE.Color(0x267742),
+    new THREE.Color(0x56933f),
+    new THREE.Color(0x91ae55),
+    new THREE.Color(0xbba34f),
   ] as const;
+  const canopyColor = new THREE.Color();
   const streamClearings = [0.12, 0.72, 1.56, 3.02, 4.45, 5.36] as const;
   const random01 = (seed: number) => {
     const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -3054,17 +3486,26 @@ function createJungleCanopyVolume(
     if (nearStream) angle += index % 2 === 0 ? 0.09 : -0.09;
     const radialRandom = random01(index * 7.73 + 4.1);
     const radius = Math.sqrt(8.2 * 8.2 + radialRandom * (44.8 * 44.8 - 8.2 * 8.2));
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    // Broad connected groves, with small crown-to-crown variation inside each grove.
+    const grove = THREE.MathUtils.clamp(0.5 + Math.sin(x * 0.21 + z * 0.09) * 0.28
+      + Math.cos(z * 0.25 - x * 0.12) * 0.22, 0, 1);
     const y = sampleJungleBasinHeight(radius, angle)
       + 1.18
-      + random01(index * 11.41 + 2.7) * 1.22;
-    positions[index * 3] = Math.cos(angle) * radius;
+      + grove * 1.45 + random01(index * 11.41 + 2.7) * 0.74;
+    positions[index * 3] = x;
     positions[index * 3 + 1] = y;
-    positions[index * 3 + 2] = Math.sin(angle) * radius;
-    const color = palette[(index * 7 + Math.floor(radius)) % palette.length];
+    positions[index * 3 + 2] = z;
+    const palettePosition = grove * (palette.length - 1);
+    const paletteIndex = Math.floor(palettePosition);
+    const color = canopyColor.copy(palette[paletteIndex]).lerp(
+      palette[Math.min(paletteIndex + 1, palette.length - 1)], palettePosition - paletteIndex,
+    ).multiplyScalar(0.84 + random01(index * 4.37) * 0.28);
     colors[index * 3] = color.r;
     colors[index * 3 + 1] = color.g;
     colors[index * 3 + 2] = color.b;
-    sizes[index] = 1.82 + random01(index * 13.37 + 8.2) * 1.86 + (radius > 28 ? 0.42 : 0);
+    sizes[index] = 1.48 + grove * 0.9 + random01(index * 13.37 + 8.2) * 1.86;
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -3497,7 +3938,8 @@ function addContinuousJungleBasin(
         sampleJungleBasinHeight(authoredRadius, angle) + canopyLift,
         Math.sin(angle) * authoredRadius,
       );
-      const lightMix = 0.22 + ((segment * 7 + ringIndex * 5) % 11) / 15;
+      const lightMix = 0.3 + Math.sin(angle * 3.1 + radius * 0.17) * 0.22
+        + Math.cos(angle * 7.3 - radius * 0.23) * 0.16;
       scratchColor.copy(canopyDeep).lerp(canopyMid, 0.48 + ringIndex * 0.06).lerp(canopyBright, lightMix * 0.42);
       canopyColors.push(scratchColor.r, scratchColor.g, scratchColor.b);
     }
@@ -3542,7 +3984,8 @@ function addContinuousJungleBasin(
     const angle = index * 2.399963 + (index % 4) * 0.17;
     const radius = 9.2 + (index * 11 % 34) + (index % 3) * 0.44;
     const groundY = sampleJungleBasinHeight(radius, angle);
-    const trunkHeight = 1.9 + (index % 5) * 0.34;
+    const crownFamily = index % 3;
+    const trunkHeight = (1.9 + (index % 5) * 0.34) * (crownFamily === 0 ? 1.65 : 1);
     quaternion.setFromEuler(new THREE.Euler(0, angle * 0.27, (index % 3 - 1) * 0.035));
     matrix.compose(
       new THREE.Vector3(Math.cos(angle) * radius, groundY + trunkHeight * 0.5, Math.sin(angle) * radius),
@@ -3550,20 +3993,20 @@ function addContinuousJungleBasin(
       scale.set(0.72 + (index % 3) * 0.12, trunkHeight, 0.72 + ((index + 1) % 3) * 0.1),
     );
     combinedGeometry.push(cloneColoredBasinGeometry(trunkSource, matrix, new THREE.Color(0x354b26)));
-    const crownHeight = 1.28 + (index % 4) * 0.22;
+    const crownHeight = (1.28 + (index % 4) * 0.22) * (crownFamily === 1 ? 1.42 : 0.74);
     for (let lobe = 0; lobe < 3; lobe += 1) {
       const lobeAngle = angle + lobe / 3 * Math.PI * 2 + index * 0.19;
       matrix.compose(
         new THREE.Vector3(
-          Math.cos(angle) * radius + Math.cos(lobeAngle) * (0.28 + lobe * 0.06),
+          Math.cos(angle) * radius + Math.cos(lobeAngle) * (crownFamily === 0 ? 0.88 : 0.28 + lobe * 0.06),
           groundY + trunkHeight + crownHeight * (0.42 + (lobe === 1 ? 0.18 : 0)),
-          Math.sin(angle) * radius + Math.sin(lobeAngle) * (0.28 + lobe * 0.06),
+          Math.sin(angle) * radius + Math.sin(lobeAngle) * (crownFamily === 0 ? 0.88 : 0.28 + lobe * 0.06),
         ),
         quaternion,
         scale.set(
-          0.82 + (index + lobe) % 4 * 0.16,
+          (0.82 + (index + lobe) % 4 * 0.16) * (crownFamily === 0 ? 1.6 : 1),
           crownHeight * (0.76 + lobe * 0.08),
-          0.74 + (index + lobe * 2) % 4 * 0.15,
+          (0.74 + (index + lobe * 2) % 4 * 0.15) * (crownFamily === 0 ? 1.45 : 1),
         ),
       );
       combinedGeometry.push(cloneColoredBasinGeometry(
@@ -3636,7 +4079,7 @@ function addContinuousJungleBasin(
     ));
   });
   const bankPlantRadii = [7.4, 8.8, 10.2, 11.7, 13.1, 14.4] as const;
-  const bankLeafSource = new THREE.ConeGeometry(0.22, 1, 4);
+  const bankLeafSource = createFernFrondGeometry();
   const bankPlantColors = [new THREE.Color(0x55a83d), new THREE.Color(0x97c84c), new THREE.Color(0x216f3a)] as const;
   bankPlantRadii.forEach((radius, radiusIndex) => {
     [-1, 1].forEach((side, sideIndex) => {
@@ -3669,7 +4112,7 @@ function addContinuousJungleBasin(
   const riverRelicSource = new THREE.TetrahedronGeometry(0.5, 0);
   const riverRootSource = new THREE.CylinderGeometry(0.06, 0.11, 1, 3);
   const riverReedSource = new THREE.ConeGeometry(0.06, 1, 3);
-  const riverBloomSource = new THREE.TetrahedronGeometry(0.12, 0);
+  const riverBloomSource = createJungleFlowerGeometry();
   const heroStreamRelicCount = profile.id === 'high' ? 24 : profile.id === 'medium' ? 20 : 14;
   const heroStreamRootCount = profile.id === 'high' ? 14 : profile.id === 'medium' ? 12 : 8;
   const heroStreamReedCount = profile.id === 'high' ? 28 : profile.id === 'medium' ? 22 : 16;
@@ -3786,7 +4229,7 @@ function addContinuousJungleBasin(
     const radius = Math.hypot(x, z);
     const angle = Math.atan2(z, x);
     quaternion.setFromEuler(new THREE.Euler(index * 0.42, angle + index * 0.58, side * 0.28));
-    const bloomScale = 0.92 + (index % 4) * 0.18;
+    const bloomScale = 0.32 + (index % 4) * 0.052;
     matrix.compose(
       new THREE.Vector3(x, sampleJungleBasinHeight(radius, angle) + 1.55 + (index % 3) * 0.08, z),
       quaternion,
@@ -3902,8 +4345,8 @@ function addContinuousJungleBasin(
       terraceMossColors[sideIndex],
     ));
   });
-  const lilyPadSource = new THREE.CylinderGeometry(1, 1, 0.08, 10, 1);
-  const lotusBudSource = new THREE.OctahedronGeometry(0.5, 0);
+  const lilyPadSource = createLilyPadGeometry();
+  const lotusBudSource = createJungleFlowerGeometry(8);
   const lilyPadCount = profile.id === 'high' ? 12 : profile.id === 'medium' ? 9 : 7;
   const lotusBudCount = profile.id === 'high' ? 5 : profile.id === 'medium' ? 4 : 3;
   const lilyPadColors = [
@@ -3936,7 +4379,7 @@ function addContinuousJungleBasin(
       matrix.compose(
         new THREE.Vector3(x + 0.06, waterY + 0.12, z - 0.04),
         quaternion,
-        scale.set(0.18, 0.24, 0.18),
+        scale.set(0.22, 0.29, 0.22),
       );
       combinedGeometry.push(cloneColoredBasinGeometry(
         lotusBudSource,
@@ -4054,7 +4497,7 @@ function addContinuousJungleBasin(
     catchPoolColors[index * 3 + 2] = catchPoolColor.b;
   }
   catchPoolGeometry.setAttribute('color', new THREE.BufferAttribute(catchPoolColors, 3));
-  const catchPoolFoamGeometry = new THREE.TorusGeometry(2.42, 0.1, 4, 28);
+  const catchPoolFoamGeometry = new THREE.TorusGeometry(2.42, 0.1, 4, 24);
   catchPoolFoamGeometry.rotateX(Math.PI / 2);
   catchPoolFoamGeometry.translate(catchPoolX, catchPoolY + 0.11, catchPoolZ);
   const catchPoolFoamPositions = catchPoolFoamGeometry.getAttribute('position') as THREE.BufferAttribute;
@@ -4082,7 +4525,7 @@ function addContinuousJungleBasin(
     const radius = Math.hypot(ripple.x, ripple.z);
     const angle = Math.atan2(ripple.z, ripple.x);
     const y = sampleJungleBasinHeight(radius, angle) + 1.34 + (index % 3) * 0.006;
-    const geometry = new THREE.TorusGeometry(ripple.radius, 0.018 + (index % 2) * 0.007, 3, 16);
+    const geometry = new THREE.TorusGeometry(ripple.radius, 0.018 + (index % 2) * 0.007, 3, 12);
     geometry.rotateX(Math.PI / 2);
     geometry.scale(1, 1, 0.74 + (index % 3) * 0.08);
     geometry.translate(ripple.x, y, ripple.z);
@@ -4974,6 +5417,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
   root.add(understory.root);
   const templeOvergrowth = createTempleOvergrowthField(profile.id === 'high' ? 32 : profile.id === 'medium' ? 30 : 24, materials);
   root.add(templeOvergrowth.root);
+  const detailGarden = createJungleDetailGarden(profile, materials);
+  root.add(detailGarden.root);
 
   const hangingVines = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   hangingVines.name = 'ISLAND_18_HANGING_VINES';
@@ -5128,6 +5573,37 @@ export function createIsland18JungleExpeditionLivingAmbience(
   practicalHaloField.userData.siteCount = practicalHaloSites.length;
   registerIsland18RuntimePart('living-ambience', practicalHaloField, 'storm-responsive-practical-halos');
   root.add(practicalHaloField);
+  const emeraldHaloMaterial = new THREE.MeshBasicMaterial({
+    color: 0x65f49a,
+    transparent: true,
+    opacity: 0.018,
+    depthWrite: false,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const emeraldHaloField = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(1, 7, 5),
+    emeraldHaloMaterial,
+    detailGarden.glowSites.length,
+  );
+  emeraldHaloField.name = 'ISLAND_18_BIOLUMINESCENT_GARDEN_HALO_FIELD';
+  detailGarden.glowSites.forEach((site, index) => {
+    practicalHaloMatrix.compose(
+      site,
+      practicalHaloQuaternion,
+      practicalHaloScale.setScalar(0.34 + (index % 3) * 0.08),
+    );
+    emeraldHaloField.setMatrixAt(index, practicalHaloMatrix);
+  });
+  emeraldHaloField.instanceMatrix.needsUpdate = true;
+  emeraldHaloField.castShadow = false;
+  emeraldHaloField.receiveShadow = false;
+  emeraldHaloField.renderOrder = 5;
+  emeraldHaloField.userData.presentationOnly = true;
+  emeraldHaloField.userData.siteCount = detailGarden.glowSites.length;
+  registerIsland18RuntimePart('living-ambience', emeraldHaloField, 'weather-responsive-bioluminescent-gardens');
+  root.add(emeraldHaloField);
   const practicalPoolSpecs = [
     { id: 'EXPLORER_NEST', position: new THREE.Vector3(-4.36, 1.42, -3.46), distance: 5.2 },
     { id: 'JUNGLE_PATH', position: new THREE.Vector3(4.36, 1.5, -3.5), distance: 5.4 },
@@ -5145,6 +5621,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
   });
   root.userData.practicalLightNetwork = {
     haloSiteCount: practicalHaloSites.length,
+    bioluminescentHaloSiteCount: detailGarden.glowSites.length,
     pooledLightCount: practicalPoolLights.length,
     quality: profile.id,
     presentationOnly: true,
@@ -5159,6 +5636,99 @@ export function createIsland18JungleExpeditionLivingAmbience(
 
   const compass = createLivingCompassMechanism(materials);
   root.add(compass.root);
+  const buildupFx = registerIsland18RuntimePart('construction-choreography', new THREE.Group(), 'mission-fx');
+  buildupFx.name = 'ISLAND_18_LIVING_COMPASS_BUILDUP_FX';
+  root.add(buildupFx);
+
+  const sealSourcePositions = [1, 2, 4, 6, 7].map((beaconIndex) => {
+    const angle = beaconIndex / 8 * Math.PI * 2 + Math.PI / 8;
+    return new THREE.Vector3(
+      Math.cos(angle) * (2.72 + (beaconIndex % 2) * 0.16),
+      1.48 + (beaconIndex % 3) * 0.14,
+      Math.sin(angle) * (2.72 + (beaconIndex % 2) * 0.16),
+    );
+  });
+  const sealTargetPositions = Array.from({ length: 5 }, (_, index) => {
+    const angle = index / 5 * Math.PI * 2 - Math.PI / 2;
+    return new THREE.Vector3(
+      Math.cos(angle) * 0.64,
+      compass.root.position.y + Math.sin(angle) * 0.64,
+      compass.root.position.z + 0.08,
+    );
+  });
+  const conduitMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe4ff7b,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const sealConduits = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.042, 0.068, 1, 6, 1, true),
+    conduitMaterial,
+    5,
+  );
+  sealConduits.name = 'ISLAND_18_BUILDUP_SEAL_CONDUIT_BATCH';
+  sealConduits.visible = false;
+  sealConduits.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  [0xffd45a, 0x72ff7c, 0x63f4e4, 0xb8ff67, 0xffed83].forEach((color, index) => {
+    sealConduits.setColorAt(index, new THREE.Color(color));
+  });
+  if (sealConduits.instanceColor) sealConduits.instanceColor.needsUpdate = true;
+  buildupFx.add(sealConduits);
+
+  const sealBloomMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffe46d,
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const sealBloomRings = new THREE.InstancedMesh(
+    new THREE.TorusGeometry(0.42, 0.038, 5, 28),
+    sealBloomMaterial,
+    10,
+  );
+  sealBloomRings.name = 'ISLAND_18_BUILDUP_SEAL_BLOOM_RING_BATCH';
+  sealBloomRings.visible = false;
+  sealBloomRings.renderOrder = 7;
+  sealBloomRings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  buildupFx.add(sealBloomRings);
+
+  const buildupSparkCount = profile.id === 'low' ? 24 : profile.id === 'medium' ? 32 : 40;
+  const buildupSparkSize = profile.id === 'low' ? 0.09 : 0.12;
+  const buildupSparkPositions = new Float32Array(buildupSparkCount * 3);
+  const buildupSparkGeometry = new THREE.BufferGeometry();
+  buildupSparkGeometry.setAttribute('position', new THREE.BufferAttribute(buildupSparkPositions, 3));
+  const buildupSparkMaterial = new THREE.PointsMaterial({
+    color: 0xffdc68,
+    size: buildupSparkSize,
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const buildupSparks = new THREE.Points(buildupSparkGeometry, buildupSparkMaterial);
+  buildupSparks.name = 'ISLAND_18_BUILDUP_TRAVELING_SPARK_FIELD';
+  buildupSparks.visible = false;
+  buildupSparks.renderOrder = 8;
+  buildupFx.add(buildupSparks);
+  root.userData.livingCompassBuildup = {
+    stageCount: 4,
+    drawCalls: 3,
+    stages: [
+      { stage: 1, id: 'seal-discovery', durationSeconds: 4.2, visualBeat: 'golden seal bloom and temple tracing light' },
+      { stage: 2, id: 'vine-release', durationSeconds: 4.8, visualBeat: 'spiraling vine release, rising canopy ripples, and emerald fireflies' },
+      { stage: 3, id: 'bridge-reconnection', durationSeconds: 5.4, visualBeat: 'sequential bridge tension and turquoise thread sparks' },
+      { stage: 4, id: 'compass-forging', durationSeconds: 6.2, visualBeat: 'four-beam convergence and staggered ring forging' },
+    ],
+  };
+
   const zenithFx = registerIsland18RuntimePart('emerald-zenith-fx', new THREE.Group(), 'mission-fx');
   zenithFx.name = 'ISLAND_18_EMERALD_ZENITH_FX';
   root.add(zenithFx);
@@ -5187,17 +5757,43 @@ export function createIsland18JungleExpeditionLivingAmbience(
     floatingSlabs.push({ rest, orbit, width });
   }
   floatingSlabMesh.instanceMatrix.needsUpdate = true;
-  const beam = cylinder(0.56, 1.08, 19.5, materials.emerald, 'ISLAND_18_ZENITH_SKY_BEAM', 5, 12);
+  const beam = cylinder(0.56, 1.08, 19.5, materials.emerald, 'ISLAND_18_ZENITH_SKY_BEAM', 5, 16);
   beam.position.set(0, 17.45, -0.18);
   beam.visible = false;
-  beam.material = new THREE.MeshBasicMaterial({
-    color: 0x19dc6c,
+  const beamMaterial = new THREE.ShaderMaterial({
+    uniforms: { strength: { value: 0 }, time: { value: 0 } },
+    vertexShader: `
+      varying vec2 beamUv;
+      varying vec3 beamNormal;
+      varying vec3 beamView;
+      void main() {
+        beamUv = uv;
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+        beamNormal = normalize(normalMatrix * normal);
+        beamView = -viewPosition.xyz;
+        gl_Position = projectionMatrix * viewPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float strength;
+      uniform float time;
+      varying vec2 beamUv;
+      varying vec3 beamNormal;
+      varying vec3 beamView;
+      void main() {
+        float facing = pow(max(0.0, dot(normalize(beamNormal), normalize(beamView))), 1.6);
+        float ends = smoothstep(0.0, 0.16, beamUv.y) * (1.0 - smoothstep(0.62, 1.0, beamUv.y));
+        float flow = 0.78 + 0.22 * sin(beamUv.y * 35.0 - time * 3.0);
+        vec3 color = mix(vec3(0.18, 0.72, 0.53), vec3(0.82, 1.0, 0.71), facing * 0.55);
+        gl_FragColor = vec4(color, strength * facing * ends * flow);
+      }
+    `,
     transparent: true,
-    opacity: 0,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     toneMapped: false,
   });
+  beam.material = beamMaterial;
   beam.castShadow = false;
   zenithFx.add(beam);
   const skyHaloRings: THREE.Mesh[] = [];
@@ -5289,7 +5885,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
     blending: THREE.NormalBlending,
     toneMapped: false,
   });
-  const waterCrown = new THREE.Mesh(new THREE.TorusGeometry(2.42, 0.17, 8, 64), waterCrownMaterial);
+  const waterCrown = new THREE.Mesh(new THREE.TorusGeometry(2.42, 0.17, 8, 60), waterCrownMaterial);
   waterCrown.name = 'ISLAND_18_ZENITH_SUSPENDED_WATER_CROWN';
   waterCrown.rotation.x = Math.PI / 2;
   waterCrown.position.set(0, 9.42, -0.18);
@@ -5303,9 +5899,9 @@ export function createIsland18JungleExpeditionLivingAmbience(
     geometry.dispose();
     return normalized;
   };
-  const wayfinderOuterRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.62, 0.075, 8, 64));
+  const wayfinderOuterRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.62, 0.075, 8, 60));
   wayfinderCrownGeometries.push(wayfinderOuterRing);
-  const wayfinderCrossRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.24, 0.045, 7, 56));
+  const wayfinderCrossRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.24, 0.045, 7, 52));
   wayfinderCrossRing.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2));
   wayfinderCrownGeometries.push(wayfinderCrossRing);
   for (let index = 0; index < 8; index += 1) {
@@ -5333,6 +5929,149 @@ export function createIsland18JungleExpeditionLivingAmbience(
   wayfinderCrown.visible = false;
   zenithFx.add(wayfinderCrown);
 
+  const compassBookGift = registerIsland18RuntimePart(
+    'compass-book-sky-gift',
+    new THREE.Group(),
+    'mission-reward',
+  );
+  compassBookGift.name = 'ISLAND_18_COMPASS_BOOK_SKY_GIFT';
+  compassBookGift.userData.receipt = {
+    source: 'sky',
+    revealStart: 0.66,
+    descentStart: 0.72,
+    landing: 0.94,
+    opensChapter: 'living_wheel',
+    firstSignalCount: 8,
+    visibleFragmentStartIsland: 9,
+  };
+  compassBookGift.visible = false;
+  zenithFx.add(compassBookGift);
+
+  const pageBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(1.46, 0.24, 1.92),
+    materials.routeIvory,
+  );
+  pageBlock.name = 'ISLAND_18_COMPASS_BOOK_PAGE_BLOCK';
+  const lowerCover = new THREE.Mesh(
+    new THREE.BoxGeometry(1.68, 0.11, 2.14),
+    new THREE.MeshStandardMaterial({ color: 0x12564f, metalness: 0.32, roughness: 0.42 }),
+  );
+  lowerCover.position.y = -0.17;
+  const upperCover = lowerCover.clone();
+  upperCover.name = 'ISLAND_18_COMPASS_BOOK_COVER';
+  upperCover.position.y = 0.18;
+  const spine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.36, 2.08),
+    materials.brass,
+  );
+  spine.position.x = -0.78;
+  const crestRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.32, 0.38, 24),
+    materials.brass,
+  );
+  crestRing.name = 'ISLAND_18_COMPASS_BOOK_CREST';
+  crestRing.position.y = 0.265;
+  crestRing.rotation.x = -Math.PI / 2;
+  const crestNeedle = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), materials.emerald);
+  crestNeedle.position.y = 0.285;
+  crestNeedle.scale.set(0.34, 0.12, 1.55);
+  const crestCross = new THREE.Mesh(new THREE.OctahedronGeometry(0.22, 0), materials.brass);
+  crestCross.position.y = 0.292;
+  crestCross.scale.set(1.38, 0.11, 0.34);
+  const crestCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.105, 0), materials.emerald);
+  crestCore.position.y = 0.34;
+  compassBookGift.add(pageBlock, lowerCover, spine);
+  const coverHinge = new THREE.Group();
+  coverHinge.name = 'ISLAND_18_COMPASS_BOOK_OPENING_HINGE';
+  coverHinge.position.set(-0.78, 0.12, 0);
+  compassBookGift.add(coverHinge);
+  for (const detail of [upperCover, crestRing, crestNeedle, crestCross, crestCore]) {
+    detail.position.sub(coverHinge.position);
+    coverHinge.add(detail);
+  }
+
+  // Raised corner brackets and edge rails share one draw call on the moving cover.
+  const bindingPieces: THREE.BufferGeometry[] = [];
+  for (const side of [-1, 1]) {
+    for (const end of [-1, 1]) {
+      bindingPieces.push(new THREE.BoxGeometry(0.3, 0.055, 0.08).translate(side * 0.64 + 0.78, 0.125, end * 0.99));
+      bindingPieces.push(new THREE.BoxGeometry(0.08, 0.055, 0.3).translate(side * 0.75 + 0.78, 0.125, end * 0.88));
+    }
+    bindingPieces.push(new THREE.BoxGeometry(1.32, 0.025, 0.025).translate(0.78, 0.12, side * 0.89));
+  }
+  const bindingGeometry = mergeGeometries(bindingPieces, false)!;
+  bindingPieces.forEach((piece) => piece.dispose());
+  const bindings = new THREE.Mesh(bindingGeometry, materials.brass);
+  bindings.name = 'ISLAND_18_COMPASS_BOOK_GILDED_BINDINGS';
+  coverHinge.add(bindings);
+  const turningLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.43, 0.025, 1.88), materials.routeIvory);
+  turningLeaf.name = 'ISLAND_18_COMPASS_BOOK_TURNING_LEAF';
+  turningLeaf.position.set(0.78, -0.03, 0);
+  coverHinge.add(turningLeaf);
+  const pageCompass = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.345, 24), materials.brassDark);
+  pageCompass.name = 'ISLAND_18_COMPASS_BOOK_FIRST_CHAPTER_WHEEL';
+  pageCompass.rotation.x = -Math.PI / 2;
+  pageCompass.position.y = 0.125;
+  compassBookGift.add(pageCompass);
+  const pageMarks: number[] = [];
+  for (let spoke = 0; spoke < 8; spoke += 1) {
+    const angle = spoke * Math.PI / 4;
+    for (const [inner, outer] of [[0.09, 0.31], [0.36, 0.41]]) {
+      pageMarks.push(Math.cos(angle) * inner, 0.133, Math.sin(angle) * inner,
+        Math.cos(angle) * outer, 0.133, Math.sin(angle) * outer);
+    }
+  }
+  for (const [z, halfWidth] of [[0.56, 0.36], [0.64, 0.28], [0.72, 0.32]]) {
+    pageMarks.push(-halfWidth, 0.133, z, halfWidth, 0.133, z);
+  }
+  const pageEngraving = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pageMarks, 3)),
+    new THREE.LineBasicMaterial({ color: 0x806632 }),
+  );
+  pageEngraving.name = 'ISLAND_18_COMPASS_BOOK_CHAPTER_ENGRAVING';
+  compassBookGift.add(pageEngraving);
+
+  const compassBookHaloMaterial = new THREE.MeshBasicMaterial({
+    color: 0xdfff7c,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const compassBookHalo = new THREE.Mesh(
+    new THREE.RingGeometry(1.08, 1.105, 32),
+    compassBookHaloMaterial,
+  );
+  compassBookHalo.name = 'ISLAND_18_COMPASS_BOOK_RECEIPT_HALO';
+  compassBookHalo.rotation.x = -Math.PI / 2;
+  compassBookHalo.position.y = -0.12;
+  compassBookGift.add(compassBookHalo);
+
+  const compassBookSparkCount = profile.id === 'low' ? 20 : profile.id === 'medium' ? 30 : 42;
+  const compassBookSparkPositions = new Float32Array(compassBookSparkCount * 3);
+  for (let index = 0; index < compassBookSparkCount; index += 1) {
+    const angle = index * 2.399963;
+    const radius = 0.72 + (index % 7) * 0.11;
+    compassBookSparkPositions[index * 3] = Math.cos(angle) * radius;
+    compassBookSparkPositions[index * 3 + 1] = (index % 9) * 0.09 - 0.34;
+    compassBookSparkPositions[index * 3 + 2] = Math.sin(angle) * radius;
+  }
+  const compassBookSparkGeometry = new THREE.BufferGeometry();
+  compassBookSparkGeometry.setAttribute('position', new THREE.BufferAttribute(compassBookSparkPositions, 3));
+  const compassBookSparkMaterial = new THREE.PointsMaterial({
+    color: 0xffe67c,
+    size: profile.id === 'low' ? 0.09 : 0.12,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const compassBookSparks = new THREE.Points(compassBookSparkGeometry, compassBookSparkMaterial);
+  compassBookSparks.name = 'ISLAND_18_COMPASS_BOOK_RECEIPT_SPARKS';
+  compassBookGift.add(compassBookSparks);
+
   const junglePulseRingMaterial = new THREE.MeshBasicMaterial({
     color: 0x8dff6a,
     transparent: true,
@@ -5342,7 +6081,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
     toneMapped: false,
   });
   const junglePulseRings = new THREE.InstancedMesh(
-    new THREE.TorusGeometry(1, 0.022, 4, 36),
+    new THREE.TorusGeometry(1, 0.022, 4, 32),
     junglePulseRingMaterial,
     3,
   );
@@ -5401,6 +6140,14 @@ export function createIsland18JungleExpeditionLivingAmbience(
   const compassGlyphMatrix = new THREE.Matrix4();
   const compassGlyphQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
   const compassGlyphScale = new THREE.Vector3();
+  const buildupMatrix = new THREE.Matrix4();
+  const buildupPosition = new THREE.Vector3();
+  const buildupDirection = new THREE.Vector3();
+  const buildupQuaternion = new THREE.Quaternion();
+  const buildupScale = new THREE.Vector3();
+  const buildupUp = new THREE.Vector3(0, 1, 0);
+  const buildupBloomQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+  const buildupIdentityQuaternion = new THREE.Quaternion();
   const faunaMatrix = new THREE.Matrix4();
   const faunaPosition = new THREE.Vector3();
   const faunaScale = new THREE.Vector3();
@@ -5418,6 +6165,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
   const lightningColor = new THREE.Color(0xf2fbff);
   const sunrayColor = new THREE.Color(0xffefaa);
   const weatherColor = new THREE.Color();
+  const missionReplayDurationSeconds = [0, 4.2, 4.8, 5.4, 6.2, JUNGLE_COMPASS_CEREMONY_DURATION_MS / 1000] as const;
 
   const applyMissionState = (stage: number, progress: number, reducedMotion: boolean) => {
     const zenithReplayActive = stage >= 5 && !reducedMotion && progress < 1;
@@ -5447,34 +6195,191 @@ export function createIsland18JungleExpeditionLivingAmbience(
       compass.glyphs.setMatrixAt(index, compassGlyphMatrix);
     }
     compass.glyphs.instanceMatrix.needsUpdate = true;
+    const buildupVisible = stage > 0 && stage < 5;
+    const buildupTransition = buildupVisible && !reducedMotion && progress < 1;
+    const buildupPulse = buildupTransition ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.02, 0.96)) : 0;
+    const buildupStageLift = buildupVisible ? stage / 4 : 0;
+    buildupFx.visible = buildupVisible;
+    sealConduits.visible = buildupVisible;
+    sealBloomRings.visible = buildupVisible;
+    for (let index = 0; index < 5; index += 1) {
+      const isNewSeal = index === stage - 1;
+      const conduitReveal = stage > index + 1 || reducedMotion
+        ? (stage > index ? 1 : 0)
+        : isNewSeal
+          ? THREE.MathUtils.smoothstep(progress, 0.04, 0.78)
+          : 0;
+      const source = sealSourcePositions[index];
+      const target = sealTargetPositions[index];
+      buildupDirection.subVectors(target, source);
+      const conduitLength = buildupDirection.length();
+      buildupQuaternion.setFromUnitVectors(buildupUp, buildupDirection.normalize());
+      buildupPosition.lerpVectors(source, target, conduitReveal * 0.5);
+      buildupScale.set(1, Math.max(0.001, conduitLength * conduitReveal), 1);
+      buildupMatrix.compose(buildupPosition, buildupQuaternion, buildupScale);
+      sealConduits.setMatrixAt(index, buildupMatrix);
+
+      const bloomReveal = stage > index + 1 || reducedMotion
+        ? (stage > index ? 1 : 0)
+        : isNewSeal
+          ? THREE.MathUtils.smoothstep(progress, 0.02, 0.46)
+          : 0;
+      const bloomFlare = isNewSeal && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.02, 0.72))
+        : 0;
+      const bloomBreath = reducedMotion ? 0 : Math.sin(lastElapsed * 1.8 + index * 1.17) * 0.055;
+      buildupPosition.copy(source).addScaledVector(buildupUp, 0.035);
+      buildupScale.setScalar(Math.max(0.001, bloomReveal * (0.78 + bloomBreath + bloomFlare * 1.16)));
+      buildupMatrix.compose(buildupPosition, buildupBloomQuaternion, buildupScale);
+      sealBloomRings.setMatrixAt(index, buildupMatrix);
+    }
+    for (let index = 0; index < 2; index += 1) {
+      const gate = vineGates[index];
+      const gateBloom = stage === 2
+        ? (reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.08 + index * 0.05, 0.58 + index * 0.08))
+        : 0;
+      const gateFlare = stage === 2 && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.08, 0.82))
+        : 0;
+      buildupPosition.set(gate.position.x, gate.position.y + 0.88, gate.position.z + 0.04);
+      buildupScale.setScalar(Math.max(0.001, gateBloom * (1.02 + gateFlare * 0.72)));
+      buildupMatrix.compose(buildupPosition, buildupIdentityQuaternion, buildupScale);
+      sealBloomRings.setMatrixAt(5 + index, buildupMatrix);
+    }
+    for (let index = 0; index < 3; index += 1) {
+      const canopyRipple = stage === 2
+        ? (reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.1 + index * 0.1, 0.58 + index * 0.1))
+        : 0;
+      const rippleTravel = reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.08 + index * 0.08, 0.78 + index * 0.06);
+      const rippleFlare = stage === 2 && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.08 + index * 0.06, 0.84))
+        : 0;
+      buildupPosition.set((index - 1) * 0.22, 2.15 + index * 2.08 + rippleTravel * 0.76, -0.18);
+      buildupScale.setScalar(Math.max(0.001, canopyRipple * (2.72 + index * 0.5 + rippleFlare * 1.52)));
+      buildupMatrix.compose(buildupPosition, buildupIdentityQuaternion, buildupScale);
+      sealBloomRings.setMatrixAt(7 + index, buildupMatrix);
+    }
+    sealConduits.instanceMatrix.needsUpdate = true;
+    sealBloomRings.instanceMatrix.needsUpdate = true;
+    conduitMaterial.opacity = buildupVisible ? 0.24 + buildupPulse * 0.68 : 0;
+    sealBloomMaterial.opacity = buildupVisible ? 0.24 + buildupPulse * 0.72 : 0;
+    sealBloomMaterial.color.set(stage === 1
+      ? 0xffe46d
+      : stage === 2
+        ? 0x79ff79
+        : stage === 3
+          ? 0x62f3e8
+          : 0xe8ff77);
+
+    buildupSparks.visible = buildupTransition;
+    buildupSparkMaterial.opacity = buildupTransition
+      ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.02, 0.98)) * 0.92
+      : 0;
+    buildupSparkMaterial.size = stage === 2 ? buildupSparkSize * 1.5 : buildupSparkSize;
+    if (buildupTransition) {
+      buildupSparkMaterial.color.set(stage === 1
+        ? 0xffd85f
+        : stage === 2
+          ? 0x7cff78
+          : stage === 3
+            ? 0x62f3e8
+            : 0xeaff76);
+      const sparkAttribute = buildupSparkGeometry.getAttribute('position') as THREE.BufferAttribute;
+      for (let index = 0; index < buildupSparkCount; index += 1) {
+        const localT = (lastElapsed * (stage === 3 ? 0.62 : 0.48) + index / buildupSparkCount * 2.4) % 1;
+        if (stage === 2) {
+          const gateLift = THREE.MathUtils.smoothstep(progress, 0.08, 0.78);
+          if (index < Math.floor(buildupSparkCount * 0.35)) {
+            const gate = vineGates[index % vineGates.length];
+            const phase = localT * Math.PI * 4 + index * 1.37;
+            const radius = (0.42 - localT * 0.16) * (0.45 + gateLift * 0.55);
+            sparkAttribute.setXYZ(
+              index,
+              gate.position.x + Math.cos(phase) * radius,
+              Number(gate.userData.closedY ?? 0.35) + 0.28 + localT * (1.82 + gateLift * 0.72),
+              gate.position.z + Math.sin(phase) * radius,
+            );
+          } else {
+            const canopyT = (localT + progress * 0.16) % 1;
+            const phase = canopyT * Math.PI * 6 + index * 0.71;
+            const radius = (2.42 - canopyT * 1.18) * (0.58 + gateLift * 0.42);
+            sparkAttribute.setXYZ(
+              index,
+              Math.cos(phase) * radius,
+              1.45 + canopyT * (6.7 + gateLift * 0.72),
+              -0.18 + Math.sin(phase) * radius * 0.72,
+            );
+          }
+        } else if (stage === 3) {
+          const [start, end] = bridgePairs[index % bridgePairs.length];
+          buildupPosition.lerpVectors(start, end, localT);
+          buildupPosition.y += Math.sin(localT * Math.PI) * 0.38
+            + Math.sin(lastElapsed * 3.2 + index) * 0.035;
+          sparkAttribute.setXYZ(index, buildupPosition.x, buildupPosition.y, buildupPosition.z);
+        } else {
+          const pathIndex = stage === 1 ? 0 : index % 5;
+          const source = sealSourcePositions[pathIndex];
+          const target = sealTargetPositions[pathIndex];
+          const travel = localT * THREE.MathUtils.smoothstep(progress, 0.02, 0.82);
+          buildupPosition.lerpVectors(source, target, travel);
+          const spiral = Math.sin(localT * Math.PI * 5 + index * 0.73) * (1 - travel) * 0.18;
+          buildupPosition.x += spiral;
+          buildupPosition.z += Math.cos(localT * Math.PI * 4 + index) * (1 - travel) * 0.14;
+          sparkAttribute.setXYZ(index, buildupPosition.x, buildupPosition.y, buildupPosition.z);
+        }
+      }
+      sparkAttribute.needsUpdate = true;
+    }
     const vineOpen = stage >= 2
       ? (reducedMotion || stage > 2 ? 1 : THREE.MathUtils.smoothstep(progress, 0.12, 0.72))
       : 0;
     vineGates.forEach((gate, index) => {
+      const releaseFlourish = stage === 2 && !reducedMotion
+        ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.08, 0.82))
+        : 0;
       gate.position.y = Number(gate.userData.closedY ?? 0.35) + vineOpen * (1.18 + index * 0.12);
-      gate.rotation.z = (index === 0 ? -1 : 1) * vineOpen * 0.42;
-      gate.scale.y = 1 - vineOpen * 0.34;
+      gate.rotation.y = (index === 0 ? -1 : 1) * releaseFlourish * 0.28;
+      gate.rotation.z = (index === 0 ? -1 : 1) * (vineOpen * 0.48 + releaseFlourish * 0.16);
+      gate.scale.set(1 + releaseFlourish * 0.09, 1 - vineOpen * 0.38, 1 + releaseFlourish * 0.06);
     });
     const bridgeTension = stage >= 3
       ? (reducedMotion || stage > 3 ? 1 : THREE.MathUtils.smoothstep(progress, 0.08, 0.7))
       : 0;
     ropeBridges.forEach((bridge, index) => {
-      bridge.position.y = Number(bridge.userData.restY ?? 0.42) + bridgeTension * (0.1 + index * 0.012);
-      bridge.scale.y = 0.82 + bridgeTension * 0.18;
-      bridge.rotation.z = reducedMotion ? 0 : Math.sin(lastElapsed * 1.6 + index) * 0.006 * bridgeTension;
+      const localTension = stage < 3
+        ? 0
+        : stage > 3 || reducedMotion
+          ? bridgeTension
+          : THREE.MathUtils.smoothstep(progress, 0.05 + index * 0.08, 0.55 + index * 0.07);
+      const snap = stage === 3 && !reducedMotion
+        ? Math.sin(localTension * Math.PI * 3) * (1 - localTension) * 0.045
+        : 0;
+      bridge.position.y = Number(bridge.userData.restY ?? 0.42) + localTension * (0.1 + index * 0.012) + snap;
+      bridge.scale.y = 0.82 + localTension * 0.18;
+      bridge.scale.z = 0.96 + localTension * 0.04;
+      bridge.rotation.x = snap * (index % 2 === 0 ? 0.7 : -0.7);
+      bridge.rotation.z = reducedMotion ? 0 : Math.sin(lastElapsed * 1.6 + index) * 0.008 * localTension;
     });
     compass.rings.forEach((ring, index) => {
       ring.visible = stage >= 4 && (stage < 5 || progress < 1);
       const reveal = stage > 4 || reducedMotion
         ? (stage >= 4 ? 1 : 0)
         : THREE.MathUtils.smoothstep(progress, 0.12 + index * 0.06, 0.48 + index * 0.08);
-      ring.scale.setScalar(Math.max(0.001, reveal));
+      const revealOffset = reveal - 1;
+      const forgedScale = reveal <= 0
+        ? 0.001
+        : Math.min(1.16, 1 + 2.70158 * revealOffset * revealOffset * revealOffset + 1.70158 * revealOffset * revealOffset);
+      ring.scale.setScalar(Math.max(0.001, forgedScale));
+      ring.position.y = (1 - reveal) * (index === 1 ? -0.82 : 0.72 + index * 0.12);
+      ring.position.z = (1 - reveal) * (0.34 + index * 0.11);
       const direction = index % 2 === 0 ? 1 : -1;
-      ring.rotation.z = index * 0.36 + (reducedMotion ? 0 : lastElapsed * 0.26 * direction);
-      ring.rotation.y = (index === 2 ? Math.PI / 2 : index * 0.45) + (reducedMotion ? 0 : lastElapsed * 0.17 * -direction);
+      const forgingSpin = stage === 4 && !reducedMotion ? (1 - reveal) * Math.PI * (1.7 + index * 0.35) : 0;
+      ring.rotation.z = index * 0.36 + forgingSpin * direction + (reducedMotion ? 0 : lastElapsed * 0.26 * direction);
+      ring.rotation.y = (index === 2 ? Math.PI / 2 : index * 0.45) + forgingSpin * -direction + (reducedMotion ? 0 : lastElapsed * 0.17 * -direction);
     });
     compass.core.visible = stage >= 4;
     const coreScale = stage > 4 || reducedMotion ? (stage >= 4 ? 1 : 0.001) : THREE.MathUtils.smoothstep(progress, 0.28, 0.62);
+    compass.core.position.y = (1 - coreScale) * -0.58;
     compass.core.scale.setScalar(Math.max(0.001, coreScale) * (1 + Math.sin(lastElapsed * 3.2) * 0.08));
     floatingSlabMesh.visible = zenithReplayActive;
     floatingSlabs.forEach(({ rest, orbit, width }, index) => {
@@ -5497,7 +6402,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
     floatingSlabMesh.instanceMatrix.needsUpdate = true;
     const beamReveal = reducedMotion ? (stage >= 5 ? 0.56 : 0) : stage >= 5 ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.58, 0.94)) : 0;
     beam.visible = stage >= 5;
-    (beam.material as THREE.MeshBasicMaterial).opacity = stage >= 5 && progress >= 1 ? 0.34 : beamReveal * 0.78;
+    beamMaterial.uniforms.strength.value = stage >= 5 && progress >= 1 ? 0.16 : beamReveal * 0.52;
+    beamMaterial.uniforms.time.value = lastElapsed;
     skyHaloRings.forEach((halo, index) => {
       const haloProgress = reducedMotion
         ? (stage >= 5 ? 1 : 0)
@@ -5562,6 +6468,41 @@ export function createIsland18JungleExpeditionLivingAmbience(
     wayfinderCrownMaterial.opacity = stage >= 5 && progress >= 1
       ? 0.48
       : 0.3 + wayfinderReveal * 0.68;
+    const bookReveal = stage < 5
+      ? 0
+      : reducedMotion
+        ? 1
+        : THREE.MathUtils.smoothstep(progress, 0.66, 0.76);
+    const bookDescent = stage < 5
+      ? 0
+      : reducedMotion
+        ? 1
+        : THREE.MathUtils.smoothstep(progress, 0.72, 0.94);
+    compassBookGift.visible = bookReveal > 0;
+    if (compassBookGift.visible) {
+      const descentArc = Math.sin(bookDescent * Math.PI);
+      compassBookGift.position.set(
+        Math.sin((1 - bookDescent) * Math.PI * 3.5) * (1 - bookDescent) * 0.82,
+        THREE.MathUtils.lerp(18.2, 10.55, bookDescent)
+          + descentArc * 0.62
+          + (reducedMotion ? 0 : Math.sin(lastElapsed * 1.4) * 0.08),
+        -0.18 + Math.cos((1 - bookDescent) * Math.PI * 3) * (1 - bookDescent) * 0.48,
+      );
+      compassBookGift.rotation.set(
+        0.22 + (1 - bookDescent) * 0.36,
+        0.2 + (1 - bookDescent) * Math.PI * 2,
+        (1 - bookDescent) * 0.42 - bookDescent * 0.08,
+      );
+      coverHinge.rotation.z = (reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.82, 0.94)) * 2.45;
+      const arrivalPulse = reducedMotion ? 0 : Math.sin(Math.PI * THREE.MathUtils.smoothstep(bookDescent, 0.76, 1));
+      compassBookGift.scale.setScalar(Math.max(0.001, bookReveal * (0.8 + bookDescent * 0.65 + arrivalPulse * 0.08)));
+      compassBookHalo.rotation.z = reducedMotion ? 0 : lastElapsed * -0.72;
+      compassBookHalo.scale.setScalar(0.86 + bookDescent * 0.44 + Math.sin(lastElapsed * 2.1) * 0.06);
+      compassBookHaloMaterial.opacity = 0.2 + bookReveal * 0.46 + arrivalPulse * 0.24;
+      compassBookSparks.rotation.y = reducedMotion ? 0 : lastElapsed * 0.9;
+      compassBookSparks.rotation.z = reducedMotion ? 0 : lastElapsed * -0.28;
+      compassBookSparkMaterial.opacity = 0.34 + bookReveal * 0.56;
+    }
     junglePulseRings.visible = zenithLivingState;
     let strongestJunglePulse = 0;
     for (let index = 0; index < junglePulseRings.count; index += 1) {
@@ -5606,17 +6547,30 @@ export function createIsland18JungleExpeditionLivingAmbience(
       ? 0.72 + Math.sin(lastElapsed * 5.4) * (progress < 1 ? 0.34 : 0.12)
       : stage >= 4
         ? 0.58 + Math.sin(lastElapsed * 2.6) * 0.12
-        : 0.46;
+        : 0.46 + buildupStageLift * 0.1 + buildupPulse * 0.2;
     materials.amber.emissiveIntensity = stage >= 5
       ? 0.56 + Math.sin(lastElapsed * 4.1 + 0.8) * 0.2
-      : 0.44;
+      : 0.44 + buildupStageLift * 0.06 + buildupPulse * 0.15;
     materials.water.emissiveIntensity = stage >= 5
       ? 0.28 + Math.sin(lastElapsed * 2.8) * (progress < 1 ? 0.12 : 0.045)
       : 0.16;
     materials.waterfall.emissiveIntensity = stage >= 5
       ? 0.36 + Math.sin(lastElapsed * 3.3 + 0.6) * (progress < 1 ? 0.16 : 0.055)
       : 0.2;
-    zenithLight.intensity = stage >= 5 ? (progress >= 1 ? 2.1 + Math.sin(lastElapsed * 2.4) * 0.28 : progress * 4.2) : stage >= 4 ? 0.42 : 0;
+    zenithLight.color.set(stage >= 5
+      ? 0x52ff9a
+      : stage === 1
+        ? 0xffd45a
+        : stage === 2
+          ? 0x72ff7c
+          : stage === 3
+            ? 0x63f4e4
+            : 0xd9ff71);
+    zenithLight.intensity = stage >= 5
+      ? (progress >= 1 ? 2.1 + Math.sin(lastElapsed * 2.4) * 0.28 : progress * 4.2)
+      : buildupVisible
+        ? 0.14 + buildupStageLift * 0.38 + buildupPulse * (0.92 + buildupStageLift * 0.54)
+        : 0;
     waterfallInstances.forEach((fall, index) => {
       const reversal = reducedMotion || stage < 5 ? 0 : Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.34, 0.7));
       waterfallSheetPosition.copy(fall.position);
@@ -5874,7 +6828,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
     const weather = updateWeather(elapsed, reducedMotion);
     guardianCrownLight.intensity = missionStage >= 4
       ? 0.62 + (reducedMotion ? 0 : Math.sin(elapsed * 2.7) * 0.14)
-      : 0.42 + (reducedMotion ? 0 : Math.sin(elapsed * 1.4) * 0.06);
+      : 0.42 + missionStage * 0.035 + (reducedMotion ? 0 : Math.sin(elapsed * 1.4) * 0.06);
     if (!reducedMotion) {
       depthIslands.position.y = Math.sin(elapsed * 0.12) * 0.1;
       depthIslands.rotation.y = Math.sin(elapsed * 0.075) * 0.004;
@@ -5896,7 +6850,9 @@ export function createIsland18JungleExpeditionLivingAmbience(
     }
     const replayProgress = replayStartedAt === null
       ? 1
-      : THREE.MathUtils.clamp((elapsed - replayStartedAt) / (reducedMotion ? 0.45 : missionStage >= 5 ? 8.8 : 3.4), 0, 1);
+      : THREE.MathUtils.clamp((elapsed - replayStartedAt) / (
+        reducedMotion ? 0.45 : missionReplayDurationSeconds[missionStage]
+      ), 0, 1);
     applyMissionState(missionStage, replayProgress, reducedMotion);
     const practicalFlicker = reducedMotion
       ? 0
@@ -5910,6 +6866,25 @@ export function createIsland18JungleExpeditionLivingAmbience(
       + weather.lightningFlash * 0.018,
       0.02,
       0.28,
+    );
+    const livingGardenPulse = reducedMotion ? 0 : 0.5 + Math.sin(elapsed * 1.36) * 0.5;
+    const zenithGardenLift = missionStage >= 5 ? 0.34 : missionStage > 0 ? missionStage / 4 * 0.15 : 0;
+    materials.biolume.emissiveIntensity = 0.72
+      + weather.practicalLightExposure * 0.78
+      + zenithGardenLift
+      + livingGardenPulse * (0.08 + weather.practicalLightExposure * 0.07);
+    emeraldHaloMaterial.opacity = THREE.MathUtils.clamp(
+      0.018
+      + weather.practicalLightExposure * 0.115
+      + zenithGardenLift * 0.12
+      + livingGardenPulse * 0.012,
+      0.015,
+      0.19,
+    );
+    moteMaterial.opacity = THREE.MathUtils.clamp(
+      0.58 + weather.practicalLightExposure * 0.24 + zenithGardenLift * 0.32,
+      0.5,
+      0.96,
     );
     templeLanternLight.intensity = 0.74
       + weather.practicalLightExposure * 1.62
@@ -5925,6 +6900,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
     root.userData.practicalLighting = {
       exposure: weather.practicalLightExposure,
       haloOpacity: practicalHaloMaterial.opacity,
+      bioluminescentHaloOpacity: emeraldHaloMaterial.opacity,
+      bioluminescentEmissiveIntensity: materials.biolume.emissiveIntensity,
       amberEmissiveIntensity: materials.amber.emissiveIntensity,
       templePoolIntensity: templeLanternLight.intensity,
       satellitePoolIntensities: practicalPoolLights.map((light) => light.intensity),
@@ -5955,6 +6932,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
       boardOrigin: [0, 0, 0],
       templeRoot: [0, 0, 0],
       zenithCore: [0, 9.18, -0.18],
+      compassBookRest: [0, 10.55, -0.18],
       waterfallLips: waterfallInstances.map((fall) => fall.position.toArray()),
     },
     colliders: [

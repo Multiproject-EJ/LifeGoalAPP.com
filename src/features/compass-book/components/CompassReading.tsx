@@ -90,7 +90,7 @@ export function CompassReading({
           <section className="compass-reading__meters" aria-label="Book progress">
             <div className="compass-reading__meter">
               <span className="compass-reading__meter-value">{fragmentsWritten}</span>
-              <span className="compass-reading__meter-label">of {fragmentsTotal} fragments</span>
+              <span className="compass-reading__meter-label">of {fragmentsTotal} pages</span>
             </div>
             <div className="compass-reading__meter">
               <span className="compass-reading__meter-value">{sealedCount}</span>
@@ -114,11 +114,11 @@ export function CompassReading({
           <strong>
             {fragmentsOpen} of {fragmentsTotal}
           </strong>{' '}
-          fragments. Every answer becomes a line on this page.
+          pages. Every answer becomes a line on this reading.
         </p>
       ) : (
         <p className="compass-reading__waiting">
-          Set sail — each island you reach unlocks a fragment of this book.
+          Set sail - each island you reach unlocks another page of this book.
         </p>
       )}
 

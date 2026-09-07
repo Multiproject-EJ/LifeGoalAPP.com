@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { lockFullscreenPageScroll } from './utils/scrollLock';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
@@ -117,6 +118,9 @@ import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
+import { getIslandDisplayName } from './features/gamification/level-worlds/services/islandNames';
+import { hasReceivedCompassBook } from './features/gamification/level-worlds/services/islandRunCompassBookReceipt';
+import { getIslandRunStateSnapshot, subscribeIslandRunState } from './features/gamification/level-worlds/services/islandRunStateStore';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
 import { fetchSoundEffectsEnabled, updateSoundEffectsEnabled } from './services/soundPreferences';
 import {
@@ -838,7 +842,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setOverlayActiveTimedEventExpiresAtMs(state?.activeTimedEvent?.expiresAtMs ?? null);
         const safeIslandNumber = Math.max(1, Math.floor(state?.currentIslandNumber ?? 1));
         setOverlayIslandNumber(safeIslandNumber);
-        setOverlayIslandDisplayName(state?.islandDisplayName ?? `Island ${safeIslandNumber}`);
+        setOverlayIslandDisplayName(getIslandDisplayName(safeIslandNumber));
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
         if (state?.isIslandTimerPendingStart) {
@@ -1916,6 +1920,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     () => (supabaseSession ?? localGuestSession) as Session,
     [localGuestSession, supabaseSession],
   );
+  const subscribeCompassReceipt = useCallback((onChange: () => void) => (
+    activeSession ? subscribeIslandRunState(activeSession, onChange) : () => {}
+  ), [activeSession]);
+  const readCompassReceipt = useCallback(() => (
+    activeSession ? hasReceivedCompassBook(getIslandRunStateSnapshot(activeSession)) : false
+  ), [activeSession]);
+  const overlayCompassBookReceived = useSyncExternalStore(subscribeCompassReceipt, readCompassReceipt, readCompassReceipt);
 
   useEffect(() => {
     if (supabaseSession) setLocalGuestSession(null);
@@ -3496,9 +3507,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
+    if (!overlayCompassBookReceived) {
+      setIsMobileMenuOpen(true);
+      return;
+    }
     setCompassBookInitialPageId('quest_ledger');
     setIsCompassBookOpen(true);
-  }, [closeGameBoardOverlayIfOpen]);
+  }, [closeGameBoardOverlayIfOpen, overlayCompassBookReceived]);
 
   /**
    * Open the Ledger's own quick-add. Unlike every other Ledger action this one
@@ -4541,7 +4556,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);
               }}
-              onOpenCompassBook={() => setIsCompassBookOpen(true)}
+              onOpenCompassBook={overlayCompassBookReceived ? () => setIsCompassBookOpen(true) : undefined}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               activeHolidaySeason={activeHolidaySeason}
@@ -4994,12 +5009,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder mobile-menu-overlay__hero-card--journey-sealed"
-                    aria-label="The Compass is sealed. Its first page will wake later in the journey."
+                    aria-label="An uncharted relic awaits later in the journey"
                     aria-disabled="true"
                   >
                     <span className="mobile-menu-overlay__compass-placeholder-copy">
-                      <span className="mobile-menu-overlay__compass-placeholder-title">Sealed Compass</span>
-                      <span className="mobile-menu-overlay__compass-placeholder-subtitle">A page is sleeping beneath the glass.</span>
+                      <span className="mobile-menu-overlay__compass-placeholder-title">Uncharted Relic</span>
+                      <span className="mobile-menu-overlay__compass-placeholder-subtitle">Your First Signals are shaping what comes next.</span>
                     </span>
                     <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
                       <span className="mobile-menu-overlay__compass-placeholder-page">✦</span>
@@ -5093,21 +5108,39 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
               {!isJourneyDayOne ? (
                 <>
-              <button
-                type="button"
-                className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder"
-                onClick={() => setIsCompassBookOpen(true)}
-                aria-label="Open Compass Book"
-              >
-                <span className="mobile-menu-overlay__compass-placeholder-copy">
-                  <span className="mobile-menu-overlay__compass-placeholder-title">Compass Book</span>
-                  <span className="mobile-menu-overlay__compass-placeholder-subtitle">Open your six-chapter journey of self-discovery.</span>
-                </span>
-                <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
-                  <span className="mobile-menu-overlay__compass-placeholder-page">Chapter I<br />Know Thyself</span>
-                  <span className="mobile-menu-overlay__compass-placeholder-rose">✦</span>
-                </span>
-              </button>
+              {overlayCompassBookReceived ? (
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder"
+                  onClick={() => setIsCompassBookOpen(true)}
+                  aria-label="Open Compass Book"
+                >
+                  <span className="mobile-menu-overlay__compass-placeholder-copy">
+                    <span className="mobile-menu-overlay__compass-placeholder-title">Compass Book</span>
+                    <span className="mobile-menu-overlay__compass-placeholder-subtitle">Open your six-chapter journey of self-discovery.</span>
+                  </span>
+                  <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
+                    <span className="mobile-menu-overlay__compass-placeholder-page">Chapter I<br />Know Thyself</span>
+                    <span className="mobile-menu-overlay__compass-placeholder-rose">✦</span>
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder mobile-menu-overlay__hero-card--journey-sealed"
+                  aria-label="An uncharted relic awaits later in the journey"
+                  aria-disabled="true"
+                >
+                  <span className="mobile-menu-overlay__compass-placeholder-copy">
+                    <span className="mobile-menu-overlay__compass-placeholder-title">Uncharted Relic</span>
+                    <span className="mobile-menu-overlay__compass-placeholder-subtitle">Your First Signals are shaping what comes next.</span>
+                  </span>
+                  <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
+                    <span className="mobile-menu-overlay__compass-placeholder-page">Not yet charted</span>
+                    <span className="mobile-menu-overlay__compass-placeholder-rose">◇</span>
+                  </span>
+                </button>
+              )}
 
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--featured">
                 <button
@@ -6022,7 +6055,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);
               }}
-              onOpenCompassBook={() => setIsCompassBookOpen(true)}
+              onOpenCompassBook={overlayCompassBookReceived ? () => setIsCompassBookOpen(true) : undefined}
               forceCompactView={!isGameModeActive}
               preferredCompactView={!isGameModeActive ? true : workspaceProfile?.private_compact_view_enabled ?? false}
               onPreferredCompactViewChange={handlePreferredCompactViewChange}

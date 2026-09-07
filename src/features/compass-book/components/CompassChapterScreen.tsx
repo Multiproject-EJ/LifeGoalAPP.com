@@ -7,6 +7,7 @@ import type {
 import { getCompassChapterMethodVersion } from '../types';
 import { getChapterDefinition, getChapterActivities } from '../content/compassBookCurriculum';
 import { chapterNumeral } from '../logic/reading';
+import { getCompassActivityJourneyLabel } from '../logic/journey';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import { CompassGoalBridge } from './CompassGoalBridge';
 import { CompassHabitBridge } from './CompassHabitBridge';
@@ -184,7 +185,9 @@ export function CompassChapterScreen({
                   </span>
                   <span>
                     <span className="compass-book__activity-title">{activity.title}</span>
-                    <span className="compass-book__activity-island">Island {activity.islandNumber}</span>
+                    <span className="compass-book__activity-island">
+                      {getCompassActivityJourneyLabel(activity.islandNumber)}
+                    </span>
                   </span>
                   <span
                     className={`compass-book__badge compass-book__badge--${

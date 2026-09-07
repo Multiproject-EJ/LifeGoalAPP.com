@@ -27,6 +27,13 @@ export {
   type IslandUnlockInput,
 } from './logic/unlock';
 export {
+  COMPASS_BOOK_FIRST_SIGNAL_COUNT,
+  COMPASS_BOOK_RECEIPT_ISLAND_NUMBER,
+  COMPASS_BOOK_VISIBLE_FRAGMENT_START_ISLAND_NUMBER,
+  getCompassActivityJourneyLabel,
+  isCompassFirstSignalIsland,
+} from './logic/journey';
+export {
   computeChapterProgress,
   isActivityComplete,
   isActivityStarted,

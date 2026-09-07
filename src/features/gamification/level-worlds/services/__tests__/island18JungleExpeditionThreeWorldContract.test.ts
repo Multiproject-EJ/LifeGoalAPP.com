@@ -1,6 +1,10 @@
 import * as THREE from 'three';
+import { resolveIsland18CompassCeremonyCamera } from '../../dev/island18CompassCeremonyCamera';
+import { getJungleMissionActionPresentation } from '../islandRunJungleMissionPresentation';
 import {
   ISLAND_3D_QUALITY_PROFILES,
+  ISLAND_3D_ROUTE_RADIUS,
+  ISLAND_3D_TILE_RADIAL_DEPTH,
   ISLAND_5_LANDMARKS,
 } from '../../dev/island5ThreePilotContract';
 import {
@@ -45,7 +49,90 @@ function measureVisibleRuntime(roots: THREE.Object3D[]) {
   return { drawCalls, triangles };
 }
 
+function findLowRouteCorridorObstructions(root: THREE.Object3D) {
+  const innerRadius = ISLAND_3D_ROUTE_RADIUS - ISLAND_3D_TILE_RADIAL_DEPTH * 0.5;
+  const outerRadius = ISLAND_3D_ROUTE_RADIUS + ISLAND_3D_TILE_RADIAL_DEPTH * 0.5;
+  const obstructions: string[] = [];
+  root.updateMatrixWorld(true);
+  root.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const position = object.geometry.getAttribute('position');
+    if (!position) return;
+    const vertex = new THREE.Vector3();
+    let minimumRadius = Number.POSITIVE_INFINITY;
+    let maximumRadius = 0;
+    let minimumY = Number.POSITIVE_INFINITY;
+    let maximumY = Number.NEGATIVE_INFINITY;
+    for (let index = 0; index < position.count; index += 1) {
+      vertex.fromBufferAttribute(position, index).applyMatrix4(object.matrixWorld);
+      const radius = Math.hypot(vertex.x, vertex.z);
+      minimumRadius = Math.min(minimumRadius, radius);
+      maximumRadius = Math.max(maximumRadius, radius);
+      minimumY = Math.min(minimumY, vertex.y);
+      maximumY = Math.max(maximumY, vertex.y);
+    }
+    const crossesRoute = minimumRadius < outerRadius + 0.02 && maximumRadius > innerRadius - 0.02;
+    const crossesPlayerVolume = maximumY > 0.1 && minimumY < 1.72;
+    if (crossesRoute && crossesPlayerVolume) obstructions.push(object.name || '(unnamed mesh)');
+  });
+  return obstructions;
+}
+
 export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
+  {
+    name: 'keeps varied jungle groves deterministic and clear of the playable route',
+    run: () => {
+      const materials = createIsland18JungleExpeditionMaterials();
+      const first = createIsland18JungleExpeditionLivingAmbience(new THREE.Scene(), ISLAND_3D_QUALITY_PROFILES.high, materials);
+      const second = createIsland18JungleExpeditionLivingAmbience(new THREE.Scene(), ISLAND_3D_QUALITY_PROFILES.high, materials);
+      const canopy = first.root.getObjectByName('ISLAND_18_BASIN_CANOPY_VOLUME') as THREE.Points;
+      const copy = second.root.getObjectByName('ISLAND_18_BASIN_CANOPY_VOLUME') as THREE.Points;
+      const positions = canopy.geometry.getAttribute('position');
+      const colors = canopy.geometry.getAttribute('color');
+      const hues = new Set<string>();
+      assertEqual(positions.count, 1200, 'variation retains the existing canopy budget');
+      for (let index = 0; index < positions.count; index += 1) {
+        assert(Math.hypot(positions.getX(index), positions.getZ(index)) > 8, 'groves remain outside the board');
+        hues.add(`${colors.getX(index).toFixed(2)}:${colors.getY(index).toFixed(2)}:${colors.getZ(index).toFixed(2)}`);
+      }
+      assert(hues.size > 100, 'groves blend tones instead of repeating five flat colors');
+      assertEqual(Array.from(positions.array).join(','), Array.from(copy.geometry.getAttribute('position').array).join(','), 'world generation is stable across reloads');
+      disposeRoot(first.root);
+      disposeRoot(second.root);
+      Object.values(materials).forEach((material) => material.dispose());
+    },
+  },
+  {
+    name: 'keeps the sky-book camera continuous and holds the received book in frame',
+    run: () => {
+      const origin = { position: new THREE.Vector3(0, 16, 22), target: new THREE.Vector3() };
+      const focus = new THREE.Vector3(0, 8, -0.18);
+      for (const boundary of [0.18, 0.62, 0.74, 0.94]) {
+        const before = resolveIsland18CompassCeremonyCamera(boundary - 0.00001, origin, focus);
+        const after = resolveIsland18CompassCeremonyCamera(boundary + 0.00001, origin, focus);
+        assert(before.position.distanceTo(after.position) < 0.001, `position does not jump at ${boundary}`);
+        assert(before.target.distanceTo(after.target) < 0.001, `look target does not jump at ${boundary}`);
+      }
+      const arrival = resolveIsland18CompassCeremonyCamera(0.94, origin, focus);
+      const finish = resolveIsland18CompassCeremonyCamera(1, origin, focus);
+      assert(arrival.position.distanceTo(finish.position) < 1e-10, 'the final beat holds rather than rushing away');
+      assertEqual(finish.target.y, 10.65, 'the received book remains the subject');
+    },
+  },
+  {
+    name: 'gives each Living Compass seal a compact action and a distinct story beat',
+    run: () => {
+      const hints = new Set<string>();
+      for (let stage = 0; stage < 5; stage += 1) {
+        const action = getJungleMissionActionPresentation(stage, true, false);
+        assertEqual(action.label, `Awaken seal ${stage + 1} of 5`, 'the next stage is readable without a long mission title');
+        hints.add(action.hint);
+      }
+      assertEqual(hints.size, 5, 'all five stages describe their own payoff');
+      assertEqual(getJungleMissionActionPresentation(0, false, false).label, 'Find a Wayfinder', 'an empty inventory sends the player back to the route');
+      assertEqual(getJungleMissionActionPresentation(5, false, true).label, 'Replay the awakening', 'completed replay does not require another charge');
+    },
+  },
   {
     name: 'builds the Jungle Expedition horizon from visible procedural 3D layers without image-mapped sky geometry',
     run: () => {
@@ -70,6 +157,14 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const basinRivers = runtime.root.getObjectByName('ISLAND_18_BASIN_RIVER_NETWORK');
       const basinFauna = runtime.root.getObjectByName('ISLAND_18_EXOTIC_BASIN_FAUNA_ECOLOGY');
       const residentNetwork = runtime.root.getObjectByName('ISLAND_18_JUNGLE_RESIDENT_WORK_NETWORK');
+      const detailGarden = runtime.root.getObjectByName('ISLAND_18_BOTANICAL_STONE_DETAIL_GARDEN');
+      const canopyLeafBatches = [1, 2, 3].map((index) => runtime.root.getObjectByName(`ISLAND_18_CANOPY_LEAF_BATCH_${index}`));
+      const fernBatch = runtime.root.getObjectByName('ISLAND_18_FERN_FROND_BATCH_DEEP');
+      const orchidBatch = runtime.root.getObjectByName('ISLAND_18_ORCHID_BATCH_MAGENTA');
+      const mossyRelicBatch = runtime.root.getObjectByName('ISLAND_18_MOSSY_RELIC_STONE_BATCH_LIGHT');
+      const fracturedRelicBatch = runtime.root.getObjectByName('ISLAND_18_MOSSY_RELIC_STONE_BATCH_DARK');
+      const mushroomBatch = runtime.root.getObjectByName('ISLAND_18_BIOLUMINESCENT_MUSHROOM_CAP_BATCH');
+      const gardenHalos = runtime.root.getObjectByName('ISLAND_18_BIOLUMINESCENT_GARDEN_HALO_FIELD');
       const aerialFauna = runtime.root.getObjectByName('ISLAND_18_EXOTIC_AERIAL_FAUNA_BATCH');
       const weatherField = runtime.root.getObjectByName('ISLAND_18_WEATHER_RAIN_LIGHTNING_AND_SUNRAY_FIELD');
       const frontDepthSector = runtime.root.getObjectByName('ISLAND_18_FRONT_DEPTH_SECTOR');
@@ -129,6 +224,27 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       assert(Number(residentNetwork?.userData.minimumRouteRadius ?? 0) >= 5, 'resident work stations remain outside the protected board route');
       assertEqual(residentNetwork?.userData.batchedInto, basinMesh?.name, 'resident geometry adds no separate scenery draw call');
       assert(Array.isArray(residentNetwork?.userData.workLoops) && residentNetwork.userData.workLoops.length === 4, 'each resident role owns a readable everyday work loop');
+      assert(detailGarden instanceof THREE.Group, 'the jungle adds a dedicated procedural botanical and stone detail garden');
+      assert(Number(detailGarden?.userData.detailEcology?.fernCount ?? 0) >= 76, 'high quality layers at least seventy-six curved fern fronds around the basin');
+      assert(Number(detailGarden?.userData.detailEcology?.orchidCount ?? 0) >= 52, 'high quality punctuates the jungle with a dense field of real petaled orchids');
+      assert(Number(detailGarden?.userData.detailEcology?.mossyRelicCount ?? 0) >= 34, 'the outer basin carries a readable procession of moss-capped lost-city stones');
+      assert(Number(detailGarden?.userData.detailEcology?.bioluminescentMushroomCount ?? 0) >= 22, 'the detail garden includes a low-cost luminous mushroom ecology');
+      assert(Number(detailGarden?.userData.detailEcology?.minimumRouteRadius ?? 0) >= 6.5, 'all added botanical and stone detail remains outside the protected route corridor');
+      const leafSilhouettes = canopyLeafBatches.map((batch) => (
+        batch instanceof THREE.InstancedMesh ? batch.geometry.userData.botanicalSilhouette : undefined
+      ));
+      assertEqual(new Set(leafSilhouettes).size, 3, 'the near canopy uses three genuinely different procedural leaf silhouettes');
+      ['banana', 'monstera', 'heartleaf'].forEach((silhouette) => {
+        assert(leafSilhouettes.includes(silhouette), `the canopy includes the ${silhouette} leaf family`);
+      });
+      assert(fernBatch instanceof THREE.InstancedMesh && fernBatch.count > 40, 'curved fern leaves are instanced rather than emitted as individual meshes');
+      assert(orchidBatch instanceof THREE.InstancedMesh && orchidBatch.geometry.getAttribute('position')?.count >= 30, 'orchids use cupped multi-petal procedural geometry rather than tetrahedron placeholders');
+      assertEqual((orchidBatch as THREE.InstancedMesh).geometry.userData.botanicalSilhouette, 'cupped-orchid', 'orchids retain a raised cupped silhouette at runtime');
+      assert(mossyRelicBatch instanceof THREE.InstancedMesh && fracturedRelicBatch instanceof THREE.InstancedMesh, 'mossy relic stones stay in two batched mobile-friendly families');
+      assertEqual((mossyRelicBatch as THREE.InstancedMesh).geometry.userData.relicProfile, 'tapered', 'sunlit relics use the tapered weathered profile');
+      assertEqual((fracturedRelicBatch as THREE.InstancedMesh).geometry.userData.relicProfile, 'fractured', 'dark relics use the broken asymmetric profile');
+      assert(mushroomBatch instanceof THREE.InstancedMesh, 'the bioluminescent mushroom caps share one instanced draw call');
+      assert(gardenHalos instanceof THREE.InstancedMesh && gardenHalos.count >= 7, 'one batched emerald halo field connects the luminous garden sites');
       runtime.animate(9, false);
       assertEqual((materials.basinGround.userData.residentWorkTime as { value?: number } | undefined)?.value, 9, 'the resident work network receives the live ambience clock');
       assertEqual((materials.basinGround.userData.residentWorkMotion as { value?: number } | undefined)?.value, 1, 'resident work motion stays active in the ordinary world');
@@ -195,6 +311,7 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const clearSunIntensity = primarySun.intensity;
       const clearSkyDomeLuminance = ((skyDome?.material as THREE.MeshBasicMaterial | undefined)?.color.getHSL({ h: 0, s: 0, l: 0 }).l ?? 0);
       const clearAmberIntensity = materials.amber.emissiveIntensity;
+      const clearBiolumeIntensity = materials.biolume.emissiveIntensity;
       const clearCloudOpacity = materials.cloud.opacity;
       const clearFogDensity = weatherFog.density;
       const clearHaloOpacity = (practicalHalos?.material as THREE.MeshBasicMaterial | undefined)?.opacity ?? 0;
@@ -216,6 +333,7 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       assert(weatherFog.density > clearFogDensity * 2, 'the storm grows a materially deeper teal rain atmosphere around the jungle layers');
       assert(Number(runtime.root.userData.weatherMix?.daylightBlue ?? 1) < 0.1, 'the daylight blue recedes before the rain reaches full strength');
       assert(materials.amber.emissiveIntensity > clearAmberIntensity + 0.9, 'lanterns torches and lit interiors strengthen their emissive response in storm darkness');
+      assert(materials.biolume.emissiveIntensity > clearBiolumeIntensity + 0.45, 'the botanical bioluminescence grows naturally as the storm darkens the jungle');
       assert(((practicalHalos?.material as THREE.MeshBasicMaterial | undefined)?.opacity ?? 0) > clearHaloOpacity + 0.14, 'the 3D practical halos bloom naturally as the sky darkens');
       assert((junglePathPool?.intensity ?? 0) > clearPracticalPoolIntensity + 0.75, 'the landmark practical pool throws more warm light during the storm');
       assert(((skyDome?.material as THREE.MeshBasicMaterial | undefined)?.color.getHSL({ h: 0, s: 0, l: 0 }).l ?? 1) < clearSkyDomeLuminance * 0.7, 'the procedural sky dome darkens materially before rainfall');
@@ -277,6 +395,29 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
     },
   },
   {
+    name: 'starts with the ancient boss precinct and grows through a new Zenith Observatory at L3',
+    run: () => {
+      const materials = createIsland18JungleExpeditionMaterials();
+      const boss = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'boss');
+      assert(Boolean(boss), 'boss landmark definition is available');
+      const levels = ([0, 1, 2, 3] as const).map((level) => (
+        buildIsland18JungleExpeditionLandmark(boss!, level, 'low', materials, { constructionPreview: 'current' })
+      ));
+      assert(Boolean(levels[0].getObjectByName('ISLAND_18_TEMPLE_PROCESSIONAL_COURT')), 'the former L1 temple precinct is permanent island fabric at gameplay L0');
+      assert(!levels[0].getObjectByName('ISLAND_18_TEMPLE_MIDDLE_TERRACE'), 'the middle city still waits for the first funded boss build');
+      assert(Boolean(levels[1].getObjectByName('ISLAND_18_TEMPLE_MIDDLE_TERRACE')), 'boss L1 now restores the former middle-city L2');
+      assert(Boolean(levels[2].getObjectByName('ISLAND_18_TEMPLE_CROWN_TOWER')), 'boss L2 now restores the former crown L3');
+      assert(Boolean(levels[3].getObjectByName('ISLAND_18_TEMPLE_ZENITH_OBSERVATORY')), 'boss L3 adds the new summit observatory');
+      assert(Boolean(levels[3].getObjectByName('ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS')), 'the new L3 owns a readable sky-compass identity mechanism');
+      levels.forEach((root, level) => {
+        assertEqual(root.userData.buildLevel, level, `boss gameplay level ${level} remains the canonical progression value`);
+        assertEqual(root.userData.bossTempleVisualLevel, level + 1, `boss gameplay level ${level} resolves to the next authored temple tier`);
+        disposeRoot(root);
+      });
+      Object.values(materials).forEach((material) => material.dispose());
+    },
+  },
+  {
     name: 'stages the Living Compass as five readable beats and reserves Emerald Zenith motion for the finale',
     run: () => {
       const materials = createIsland18JungleExpeditionMaterials();
@@ -289,13 +430,26 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const shockwave = runtime.root.getObjectByName('ISLAND_18_ZENITH_SHOCKWAVE');
       const beam = runtime.root.getObjectByName('ISLAND_18_ZENITH_SKY_BEAM');
       const wayfinder = runtime.root.getObjectByName('ISLAND_18_ZENITH_WAYFINDER_CONSTELLATION');
+      const compassBookGift = runtime.root.getObjectByName('ISLAND_18_COMPASS_BOOK_SKY_GIFT');
       const waterCrown = runtime.root.getObjectByName('ISLAND_18_ZENITH_SUSPENDED_WATER_CROWN');
       const junglePulseRings = runtime.root.getObjectByName('ISLAND_18_ZENITH_JUNGLE_PULSE_RING_BATCH');
-      assert(Boolean(glyph1 && vineGate && bridge && compassRing && shockwave && beam && wayfinder && waterCrown && junglePulseRings), 'all five mission animation systems expose stable named roots');
+      const buildupFx = runtime.root.getObjectByName('ISLAND_18_LIVING_COMPASS_BUILDUP_FX');
+      const sealConduits = runtime.root.getObjectByName('ISLAND_18_BUILDUP_SEAL_CONDUIT_BATCH');
+      const sealBlooms = runtime.root.getObjectByName('ISLAND_18_BUILDUP_SEAL_BLOOM_RING_BATCH');
+      const travelingSparks = runtime.root.getObjectByName('ISLAND_18_BUILDUP_TRAVELING_SPARK_FIELD');
+      assert(Boolean(glyph1 && vineGate && bridge && compassRing && shockwave && beam && wayfinder && waterCrown && junglePulseRings && compassBookGift), 'all five mission animation systems and the sky gift expose stable named roots');
+      assertEqual(compassBookGift?.userData.receipt?.source, 'sky', 'the Compass Book is explicitly authored as a sky-delivered reward');
+      assertEqual(compassBookGift?.userData.receipt?.firstSignalCount, 8, 'the book binds the first eight personal signals');
+      assertEqual(compassBookGift?.userData.receipt?.visibleFragmentStartIsland, 9, 'visible fragment collection begins on Island 009');
+      assert(Boolean(buildupFx && sealConduits && sealBlooms && travelingSparks), 'the four intermediate seals expose their authored buildup effects');
+      assertEqual(runtime.root.userData.livingCompassBuildup?.drawCalls, 3, 'the richer buildup stays inside a three-draw-call mobile budget');
+      assertEqual(runtime.root.userData.livingCompassBuildup?.stages?.length, 4, 'all four pre-finale stages declare a distinct visual beat');
 
       runtime.setLivingCompassStage({ activatedStages: 1, constructionSequence: 1 }, true);
       runtime.animate(1.2, false);
       assertEqual(glyph1?.visible, true, 'the first Wayfinder Glyph wakes on stage one');
+      assertEqual(buildupFx?.visible, true, 'stage one opens the authored buildup layer');
+      assertEqual(travelingSparks?.visible, true, 'stage one traces the discovered seal toward the temple');
       assertEqual(compassRing?.visible, false, 'compass rings remain reserved until stage four');
       assertEqual(shockwave?.visible, false, 'the Emerald Zenith shockwave cannot leak into an ordinary seal activation');
 
@@ -303,24 +457,58 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       runtime.setLivingCompassStage({ activatedStages: 2, constructionSequence: 2 }, true);
       runtime.animate(2.8, false);
       assert((vineGate?.position.y ?? 0) > closedVineY, 'stage two physically parts the Jungle Path vine gate');
+      assert(Math.abs(vineGate?.rotation.y ?? 0) > 0.01, 'stage two spirals the vine crowns outward instead of only translating them');
       const slackBridgeY = bridge?.position.y ?? 0;
       runtime.setLivingCompassStage({ activatedStages: 3, constructionSequence: 3 }, true);
       runtime.animate(4.4, false);
       assert((bridge?.position.y ?? 0) > slackBridgeY, 'stage three tensions the rope skybridge');
+      assertEqual(travelingSparks?.visible, true, 'stage three runs turquoise thread sparks across the bridge network');
       runtime.setLivingCompassStage({ activatedStages: 4, constructionSequence: 4 }, true);
       runtime.animate(6.1, false);
       assertEqual(compassRing?.visible, true, 'stage four assembles the Living Compass rings');
+      const fourthConduitMatrix = new THREE.Matrix4();
+      const fourthConduitScale = new THREE.Vector3();
+      (sealConduits as THREE.InstancedMesh).getMatrixAt(3, fourthConduitMatrix);
+      fourthConduitMatrix.decompose(new THREE.Vector3(), new THREE.Quaternion(), fourthConduitScale);
+      assert(fourthConduitScale.y > 0.1, 'stage four visibly draws the fourth convergence beam into the compass');
       assertEqual(beam?.visible, false, 'the sky beam still waits for the fifth seal');
+      assertEqual(compassBookGift?.visible, false, 'the Compass Book cannot appear before the fifth seal');
 
       runtime.setLivingCompassStage({ activatedStages: 5, constructionSequence: 5, completed: true }, true);
-      runtime.animate(11, false);
+      runtime.animate(14, false);
+      assertEqual(buildupFx?.visible, false, 'the buildup layer yields cleanly when Emerald Zenith begins');
       assertEqual(shockwave?.visible, true, 'the fifth seal unleashes the Emerald Zenith shockwave');
       assertEqual(beam?.visible, true, 'the fifth seal opens the emerald sky beam');
-      runtime.animate(12, true);
+      runtime.animate(18.4, false);
+      assertEqual(compassBookGift?.visible, true, 'the Compass Book becomes visible after energy reaches the sky');
+      assert((compassBookGift?.position.y ?? 0) > 10.5, 'the Compass Book visibly descends from above the temple');
+      runtime.animate(19, true);
       assertEqual(shockwave?.visible, false, 'reduced motion removes the rapid finale shockwave');
       assertEqual(beam?.visible, true, 'reduced motion retains the completed finale composition');
+      assertEqual(compassBookGift?.visible, true, 'reduced motion retains the received Compass Book');
+      const openingHinge = runtime.root.getObjectByName('ISLAND_18_COMPASS_BOOK_OPENING_HINGE');
+      assert(Math.abs((openingHinge?.rotation.z ?? 0) - 2.45) < 0.001, 'the received book opens its cover in reduced motion too');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_18_COMPASS_BOOK_GILDED_BINDINGS')), 'the sky gift retains its raised cover fittings');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_18_COMPASS_BOOK_FIRST_CHAPTER_WHEEL')), 'the open book reveals Chapter I on a real page');
+      assert(beam instanceof THREE.Mesh && beam.material instanceof THREE.ShaderMaterial, 'the sky beam uses soft volume shading without a bitmap');
+      assert(Math.abs((compassBookGift?.position.y ?? 0) - 10.55) < 0.01, 'reduced motion places the book at its temple rest socket');
+      const pose = resolveIsland18CompassCeremonyCamera(1, { position: new THREE.Vector3(), target: new THREE.Vector3() }, new THREE.Vector3(), 320 / 740);
+      const portraitCamera = new THREE.PerspectiveCamera(42, 320 / 740, 0.1, 210);
+      portraitCamera.position.copy(pose.position);
+      portraitCamera.lookAt(pose.target);
+      portraitCamera.updateMatrixWorld(true);
+      runtime.root.updateMatrixWorld(true);
+      const giftBounds = new THREE.Box3().setFromObject(compassBookGift!);
+      for (const x of [giftBounds.min.x, giftBounds.max.x]) {
+        for (const y of [giftBounds.min.y, giftBounds.max.y]) {
+          for (const z of [giftBounds.min.z, giftBounds.max.z]) {
+            const projected = new THREE.Vector3(x, y, z).project(portraitCamera);
+            assert(Math.abs(projected.x) < 0.99 && Math.abs(projected.y) < 0.99, `the entire open book and its halo fit a narrow phone camera: ${projected.x.toFixed(3)}, ${projected.y.toFixed(3)}; bounds ${giftBounds.min.toArray()} to ${giftBounds.max.toArray()}`);
+          }
+        }
+      }
       runtime.setLivingCompassStage({ activatedStages: 5, constructionSequence: 5, completed: true }, true);
-      runtime.animate(22, false);
+      runtime.animate(34, false);
       assertEqual(wayfinder?.visible, true, 'the completed Zenith keeps its living wayfinder constellation');
       assertEqual(waterCrown?.visible, true, 'the completed Zenith keeps its suspended water crown');
       assertEqual(junglePulseRings?.visible, true, 'the completed Zenith leaves luminous pulse rings across the jungle');
@@ -345,6 +533,8 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
         'ISLAND_18_TEMPLE_GUARDIAN_CROWN_CENTRAL_CROWN_RAY_3',
         'ISLAND_18_TEMPLE_REAR_PROCESSIONAL_GALLERY',
         'ISLAND_18_TEMPLE_REAR_LEFT_ARCHIVE_TOWER',
+        'ISLAND_18_TEMPLE_ZENITH_OBSERVATORY',
+        'ISLAND_18_TEMPLE_ZENITH_SKY_COMPASS_CORE',
       ].forEach((name) => {
         assert(Boolean(root.getObjectByName(name)), `${name} remains a named construction-stage element`);
       });
@@ -361,14 +551,30 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       ['EAST', 'WEST'].forEach((side) => {
         const tunnel = productionRoot.getObjectByName(`ISLAND_18_TEMPLE_${side}_ROUTE_TUNNEL`);
         const floor = productionRoot.getObjectByName(`ISLAND_18_TEMPLE_${side}_ROUTE_TUNNEL_ROUTE_FLOOR`);
-        const clearance = tunnel?.userData.routeClearance as { axis?: string; width?: number; height?: number; includesRouteFloor?: boolean } | undefined;
+        const clearance = tunnel?.userData.routeClearance as {
+          axis?: string;
+          width?: number;
+          height?: number;
+          includesRouteFloor?: boolean;
+          canonicalTileSurfaceExposed?: boolean;
+        } | undefined;
         assert(tunnel instanceof THREE.Group, `${side.toLowerCase()} precinct keeps a named open route tunnel after production batching`);
         assert(floor instanceof THREE.Group, `${side.toLowerCase()} tunnel preserves the board surface through the structure`);
         assertEqual(clearance?.axis, 'z', `${side.toLowerCase()} tunnel follows the board tangent through the precinct`);
-        assert((clearance?.width ?? 0) >= 1.1 && (clearance?.height ?? 0) >= 1.4, `${side.toLowerCase()} tunnel reserves visible route clearance`);
-        assertEqual(clearance?.includesRouteFloor, true, `${side.toLowerCase()} tunnel explicitly carries the route floor`);
+        assert((clearance?.width ?? 0) >= 1.6 && (clearance?.height ?? 0) >= 1.8, `${side.toLowerCase()} tunnel reserves widened player-piece clearance`);
+        assertEqual(clearance?.includesRouteFloor, false, `${side.toLowerCase()} tunnel does not replace the playable tile tops with scenery panels`);
+        assertEqual(clearance?.canonicalTileSurfaceExposed, true, `${side.toLowerCase()} tunnel explicitly leaves the canonical board visible`);
+        assertEqual(floor?.children.length, 0, `${side.toLowerCase()} tunnel floor is an empty clearance socket around the real tiles`);
       });
       disposeRoot(productionRoot);
+      const clearanceRoot = buildIsland18JungleExpeditionLandmark(boss!, 3, 'high', materials, { constructionPreview: 'current' });
+      const routeObstructions = findLowRouteCorridorObstructions(clearanceRoot);
+      assertEqual(
+        routeObstructions.length,
+        0,
+        `the restored boss keeps every tile and the player-piece volume clear; obstructions: ${routeObstructions.join(', ')}`,
+      );
+      disposeRoot(clearanceRoot);
       Object.values(materials).forEach((material) => material.dispose());
     },
   },
@@ -395,10 +601,10 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
         assert(measurement.triangles < 180_000, `${quality} Island 018 stays below 180k authored triangles (got ${measurement.triangles})`);
         const manifest = collectIsland18RuntimePartManifest([ambience.root, ...landmarks]);
         const partNames = new Set(manifest.parts.map((part) => part.name));
-        ['floating-cliff-and-temple-terraces', 'board-route-corridor', 'lost-city-temple-shell', 'living-compass-mechanism', 'emerald-zenith-fx'].forEach((part) => {
+        ['floating-cliff-and-temple-terraces', 'board-route-corridor', 'lost-city-temple-shell', 'living-compass-mechanism', 'emerald-zenith-fx', 'compass-book-sky-gift'].forEach((part) => {
           assert(partNames.has(part), `runtime manifest includes ${part}`);
         });
-        assertEqual(ISLAND_18_RUNTIME_PART_IDS.length, 20, 'the production inventory keeps twenty independently reviewable parts');
+        assertEqual(ISLAND_18_RUNTIME_PART_IDS.length, 21, 'the production inventory keeps twenty-one independently reviewable parts');
         [ambience.root, ...landmarks].forEach(disposeRoot);
         Object.values(materials).forEach((material) => material.dispose());
       });

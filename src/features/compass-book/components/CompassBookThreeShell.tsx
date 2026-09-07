@@ -400,7 +400,7 @@ export function CompassBookThreeShell({
     >
       <canvas ref={canvasRef} className="compass-book-three-shell__canvas" />
       <div className="compass-book-three-shell__ceremony">
-        <span>{celebrationKind === 'chapter' ? 'Chapter sealed' : 'Fragment inscribed'}</span>
+        <span>{celebrationKind === 'chapter' ? 'Chapter sealed' : 'Page inscribed'}</span>
       </div>
     </div>
   );

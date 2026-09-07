@@ -8,6 +8,7 @@ import {
   areBlocksAnswered,
   getIslandFragment,
 } from '../../../compass-book/logic/islandFragment';
+import { isCompassFirstSignalIsland } from '../../../compass-book/logic/journey';
 import {
   buildCompassIllumination,
   type CompassIlluminationSignal,
@@ -66,6 +67,7 @@ export function WisdomCaretakerCompassEncounter({
   previewMode = false,
 }: WisdomCaretakerCompassEncounterProps) {
   const fragment = useMemo(() => getIslandFragment(islandNumber), [islandNumber]);
+  const isFirstSignal = isCompassFirstSignalIsland(islandNumber);
   const book = useCompassBook(session, { demo: previewMode });
   const syncedActivityRef = useRef<string | null>(null);
   const [draft, setDraft] = useState<DraftValues>({});
@@ -147,7 +149,7 @@ export function WisdomCaretakerCompassEncounter({
   if (!fragment || fragment.inputs.length === 0) {
     return (
       <section className="wisdom-caretaker" aria-label="Wisdom caretaker">
-        <p className="wisdom-caretaker__error">This island&apos;s Compass question is not available yet.</p>
+        <p className="wisdom-caretaker__error">This island&apos;s reflection is not available yet.</p>
         {onComeBackLater ? (
           <button type="button" className="wisdom-caretaker__later" onClick={onComeBackLater}>
             Come back later
@@ -203,7 +205,9 @@ export function WisdomCaretakerCompassEncounter({
       });
       setNativeAISuggestion(text);
     } catch {
-      setNativeAIError('Your authored Compass insight is safe. The optional iPhone suggestion was not available this time.');
+      setNativeAIError(isFirstSignal
+        ? 'Your First Signal is safe. The optional iPhone suggestion was not available this time.'
+        : 'Your authored Compass insight is safe. The optional iPhone suggestion was not available this time.');
     } finally {
       setNativeAIBusy(false);
     }
@@ -214,7 +218,7 @@ export function WisdomCaretakerCompassEncounter({
       <section className="wisdom-caretaker wisdom-caretaker--insight" aria-labelledby="wisdom-insight-title">
         <div className="wisdom-caretaker__ornament" aria-hidden="true">✦</div>
         <header className="wisdom-caretaker__insight-header">
-          <span>Saved to your Compass Book</span>
+          <span>{isFirstSignal ? 'Saved to your captain profile' : 'Saved to your Compass Book'}</span>
           <h2 id="wisdom-insight-title">Your choice has a home</h2>
           <p>Miri keeps the answer as a clue — never a permanent label.</p>
         </header>
@@ -243,7 +247,7 @@ export function WisdomCaretakerCompassEncounter({
           <b>{activeSignal.score}<small>/4</small></b>
         </div>
 
-        <div className="wisdom-caretaker__scores" aria-label="Compass illumination">
+        <div className="wisdom-caretaker__scores" aria-label={isFirstSignal ? 'First Signal map' : 'Compass illumination'}>
           {illumination.map((signal) => (
             <div
               key={signal.id}
@@ -270,7 +274,7 @@ export function WisdomCaretakerCompassEncounter({
               <span aria-hidden="true">⌁</span>
               <p>
                 <strong>Optional on-device AI</strong>
-                Only this question and answer are processed privately on this iPhone. The Compass works fully without it.
+                Only this question and answer are processed privately on this iPhone. This reflection works fully without it.
               </p>
             </div>
             {nativeAISuggestion ? (
@@ -288,7 +292,9 @@ export function WisdomCaretakerCompassEncounter({
           type="button"
           className="wisdom-caretaker__continue"
           onClick={() => onComplete(
-            `${fragment.title} saved to your Compass Book. ${activeSignal.label}: ${activeSignal.stateLabel}.`,
+            isFirstSignal
+              ? `${fragment.title} saved as a First Signal. ${activeSignal.label}: ${activeSignal.stateLabel}.`
+              : `${fragment.title} saved to your Compass Book. ${activeSignal.label}: ${activeSignal.stateLabel}.`,
           )}
         >
           Continue the island
@@ -313,7 +319,7 @@ export function WisdomCaretakerCompassEncounter({
       </header>
 
       <div className="wisdom-caretaker__chapter-line">
-        <span>{chapter.title}</span>
+        <span>{isFirstSignal ? 'Journey profile' : chapter.title}</span>
         <i aria-hidden="true" />
         <strong>{activeSignal.label}</strong>
       </div>
@@ -322,7 +328,7 @@ export function WisdomCaretakerCompassEncounter({
         Choose what feels most true right now. There is no wrong answer, and you can revise it later.
       </p>
 
-      {!book.ready ? <p className="wisdom-caretaker__loading">Opening your private Compass…</p> : null}
+      {!book.ready ? <p className="wisdom-caretaker__loading">Opening your private reflection…</p> : null}
 
       <div className="wisdom-caretaker__question-card">
         <CompassActivityRenderer
@@ -343,7 +349,7 @@ export function WisdomCaretakerCompassEncounter({
         disabled={!complete || book.saving}
         onClick={() => void handleSave()}
       >
-        {book.saving ? 'Placing the insight…' : 'Place this in my Compass'}
+        {book.saving ? 'Placing the insight…' : isFirstSignal ? 'Save First Signal' : 'Place this in my Compass'}
         <span aria-hidden="true">✦</span>
       </button>
 

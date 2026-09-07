@@ -19,6 +19,7 @@ export interface IslandMissionBriefingModalProps {
   primaryActionHint?: string;
   primaryActionDisabled?: boolean;
   primaryActionBusy?: boolean;
+  variant?: 'default' | 'living-compass';
   milestoneValue?: number;
   milestoneCount?: number;
   onPrimaryAction?: () => void;
@@ -77,6 +78,7 @@ export function IslandMissionBriefingModal({
   primaryActionHint,
   primaryActionDisabled = false,
   primaryActionBusy = false,
+  variant = 'default',
   milestoneValue = 0,
   milestoneCount = 0,
   onPrimaryAction,
@@ -203,7 +205,7 @@ export function IslandMissionBriefingModal({
     : normalizedProgress[selectedObjectiveIndex] ?? null;
 
   return createPortal(
-    <div className="island-mission-tracker" data-phase={phase} role="presentation">
+    <div className="island-mission-tracker" data-phase={phase} data-variant={variant} role="presentation">
       <section
         className="island-mission-tracker__phone"
         role="dialog"
@@ -326,7 +328,7 @@ export function IslandMissionBriefingModal({
               {milestoneCount > 0 ? (
                 <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
                   {Array.from({ length: milestoneCount }, (_, index) => (
-                    <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">⬡</i>
+                    <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">{variant === 'living-compass' ? index + 1 : '⬡'}</i>
                   ))}
                 </span>
               ) : null}
@@ -335,8 +337,8 @@ export function IslandMissionBriefingModal({
                 disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
                 onClick={onPrimaryAction}
               >
-                <span aria-hidden="true">{milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
-                <strong>{primaryActionBusy ? 'PRESSURISING…' : primaryActionLabel}</strong>
+                <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
+                <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
               </button>
               {primaryActionHint ? <small>{primaryActionHint}</small> : null}
             </div>

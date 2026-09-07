@@ -151,12 +151,12 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   },
   8: {
     progressKind: 'staged_restoration',
-    headline: 'The Great Pollination',
-    missionStatement: 'The botanical kingdom has beauty in abundance but its living systems have stopped exchanging energy. Restore each landmark family and reconnect springs, roots, glasshouses and pollinators.',
-    primaryObjective: 'Restore the five Everblossom landmark families.',
-    supportingObjective: 'Keep the 36-tile pilgrimage route open beneath the growing canopy.',
-    fieldProtocol: 'Cultivate variety; do not force every living system into symmetry.',
-    caretakerSignal: 'A garden can be perfectly arranged and still forget how to grow.',
+    headline: 'Awaken the Living Compass',
+    missionStatement: 'Five Wayfinder seals lie dormant across the lost city. Recover their glyphs and wake the temple network so its gathered energy can reach the sky and call down the Compass Book.',
+    primaryObjective: 'Awaken all five Living Compass seals.',
+    supportingObjective: 'Restore the jungle landmarks while keeping the 36-tile expedition route open.',
+    fieldProtocol: 'Follow the old paths in order. Each awakened seal teaches the next ruin how to answer.',
+    caretakerSignal: 'When every direction speaks as one, the sky will return what the city protected.',
   },
   9: {
     progressKind: 'staged_restoration',
@@ -230,6 +230,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'The long escape mission remains locked until the ordinary island is fully restored. Once launched: left and right steer, hold forward for speed, and trust the guided current to prevent a failed extraction loop.',
     caretakerSignal: 'The shortest path burns. The mindful path carries us home.',
   },
+  18: {
+    progressKind: 'staged_restoration',
+    headline: 'The Great Pollination',
+    missionStatement: 'The botanical kingdom has beauty in abundance but its living systems have stopped exchanging energy. Restore each landmark family and reconnect springs, roots, glasshouses and pollinators.',
+    primaryObjective: 'Restore the five Everblossom landmark families.',
+    supportingObjective: 'Keep the 36-tile pilgrimage route open beneath the growing canopy.',
+    fieldProtocol: 'Cultivate variety; do not force every living system into symmetry.',
+    caretakerSignal: 'A garden can be perfectly arranged and still forget how to grow.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
@@ -240,7 +249,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   5: 'Sunshore Arena',
   6: 'Moonveil Nexus',
   7: 'Abyssal Pearl Kingdom',
-  8: 'The Everblossom Kingdom',
+  8: 'Jungle Expedition',
   9: 'The Heartshaft Crucible',
   10: 'Rootheart Canopy City',
   11: 'First Light Kingdom',
@@ -249,6 +258,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   14: 'Honeycomb Kingdom',
   16: "Fisherman's Village",
   20: 'Lava Labyrinth',
+  18: 'The Everblossom Kingdom',
 });
 
 function padIsland(islandNumber: number): string {

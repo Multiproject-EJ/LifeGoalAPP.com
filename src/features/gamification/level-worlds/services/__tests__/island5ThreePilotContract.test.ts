@@ -237,14 +237,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'gives generic staged restorations robots and finales while Island 018 delegates visuals to its authored world',
+    name: 'gives generic staged restorations robots and finales while Island 008 delegates visuals to its authored Jungle world',
     run: () => {
       const missions = [
         { islandNumber: 4 as const, stageCount: 3 },
         { islandNumber: 6 as const, stageCount: 5 },
         { islandNumber: 7 as const, stageCount: 4 },
-        { islandNumber: 8 as const, stageCount: 5 },
         { islandNumber: 9 as const, stageCount: 8 },
+        { islandNumber: 18 as const, stageCount: 5 },
       ];
 
       missions.forEach(({ islandNumber, stageCount }) => {
@@ -267,11 +267,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
         assert(Array.from({ length: stageCount }, (_, index) => runtime.root.getObjectByName(`ISLAND_${islandNumber}_MISSION_STAGE_${index + 1}`)?.visible).every(Boolean), `Island ${islandNumber} must retain every completed construction stage`);
       });
 
-      const jungleRuntime = createIslandStagedRestorationThreePresentation({ islandNumber: 18, stageCount: 5, quality: 'low' });
-      assert(jungleRuntime.root.userData.presentationOnly === true, 'Island 018 mission projection must remain read-only');
-      assert(Boolean(jungleRuntime.missionHitTarget), 'Island 018 still needs the canonical mission hit target');
-      assert(!jungleRuntime.root.getObjectByName('ISLAND_MISSION_CONSTRUCTION_ROBOT_1'), 'Island 018 must not duplicate its authored Living Compass with generic mission robots');
-      assert(!jungleRuntime.root.getObjectByName('ISLAND_18_MISSION_FINALE'), 'Island 018 must render the Emerald Zenith only through the authored Jungle Expedition world');
+      const jungleRuntime = createIslandStagedRestorationThreePresentation({ islandNumber: 8, stageCount: 5, quality: 'low' });
+      assert(jungleRuntime.root.userData.presentationOnly === true, 'Island 008 mission projection must remain read-only');
+      assert(Boolean(jungleRuntime.missionHitTarget), 'Island 008 still needs the canonical mission hit target');
+      assert(!jungleRuntime.root.getObjectByName('ISLAND_MISSION_CONSTRUCTION_ROBOT_1'), 'Island 008 must not duplicate its authored Living Compass with generic mission robots');
+      assert(!jungleRuntime.root.getObjectByName('ISLAND_8_MISSION_FINALE'), 'Island 008 must render the Emerald Zenith only through the authored Jungle Expedition world');
     },
   },
   {

@@ -1,0 +1,53 @@
+PASS keeps the Compass Book concealed until the Island 008 Living Compass finale
+PASS grandfathers players who already travelled beyond the new receipt island
+PASS Celestial Great Re-Docking advances once per roll and locks platforms at 5, 10, 15, and 20
+PASS Celestial Great Re-Docking sanitizes and merges progress monotonically
+PASS First Light places exactly twenty finite Assembly Crater charges on non-door board tiles
+PASS First Light detonation consumes one collected charge and completes the twentieth sector exactly once
+PASS Island 001 briefing states the Assembly mission and excludes a separate Boss landmark
+PASS Island missions expose a compact reward-rail phone above the HUD with live progress and queued pickup handoff
+PASS First Light sanitizer and merge preserve unique pickups and monotonic excavation
+PASS Honeycomb Kingdom places four visible royal-nectar pickups away from landmark doors and caps collection
+PASS Great Honeyfall activation spends one nectar per reservoir and completes exactly once
+PASS Great Honeyfall sanitizer and conflict merge preserve furthest coronation stage
+PASS Cactus Canyon distributes mostly single dynamite caches with rare triple bundles after mission start
+PASS Cactus Canyon blast consumes one dynamite, builds one section, caps the helix, and completes exactly once
+PASS Cactus Canyon sanitizer and conflict merge preserve furthest excavation and first completion
+PASS Sunken Sands advances one chamber turn per canonical roll and caps at twenty
+PASS Sunken Sands first treasure claim is gated, rewarding, persisted, and idempotent
+PASS Sunken Sands sanitizer and conflict merge preserve furthest reveal and first claim
+PASS Rootheart exposes eight stable Powerworks caches clear of doors and special economy stations
+PASS Rootheart landing collects each named component once and remains cycle scoped
+PASS Rootheart merge preserves the union of components and highest funded stage
+PASS Rootheart staged funding deducts 600, 900, and 1500 exactly once then activates
+PASS Rootheart funding rejects incomplete collection and insufficient Essence without mutation
+PASS Fisherman’s Village exposes six reusable rod stations clear of every landmark-door cluster
+PASS Every Fisherman’s Village rod landing equips the rod and immediately hooks a catch
+PASS Fisherman’s Village celebrates a catch above the HUD then keeps only a mini bar below the reward bar
+PASS Fisherman’s Village canonically clears an escaped fish without awarding kilograms
+PASS Fisherman’s Village colossal catch lands exactly on 78 kg and triggers the dragon once
+PASS Frostwell exposes exactly three stable drill tiles clear of landmark doors
+PASS Frostwell grants one queued spin only for an Island 003 drill-tile landing
+PASS staged restoration routes are unique, collision-free, and correctly sized on every authored island
+PASS staged restoration route pity collects one object and cannot claim it twice
+PASS staged restoration sanitizer and conflict merge preserve monotonic progress
+PASS staged restoration action spends the exact authored charge cost and cannot overspend
+PASS Living Compass commits the fifth seal and Emerald Zenith completion through the canonical action
+PASS Island 008 and 018 staged saves retain progress across the mission reassignment
+PASS Frostwell final wheel spin reaches 500m and commissions the fishery immediately without an Essence charge
+PASS Frostwell wheel rejects play without a queued drill-tile spin
+PASS Frostwell progress is cycle-scoped and conflict merge is monotonic
+PASS Frostwell sanitizer migrates the 50m draft and auto-commissions existing 500m saves
+PASS keeps runtime identity separate from the authored visual-world source
+PASS keeps every runtime island on an explicit authored source identity
+PASS keeps the sky-book camera continuous and holds the received book in frame
+PASS gives each Living Compass seal a compact action and a distinct story beat
+PASS builds the Jungle Expedition horizon from visible procedural 3D layers without image-mapped sky geometry
+PASS cycles from a long clear jungle rest through storm rain lightning and a gradual sunbreak
+PASS seeds one to five lightning events per storm with one or two as the normal outcome
+PASS authors five distinct clickable Jungle Expedition landmarks with additive L1 L2 L3 silhouettes
+PASS starts with the ancient boss precinct and grows through a new Zenith Observatory at L3
+PASS stages the Living Compass as five readable beats and reserves Emerald Zenith motion for the finale
+PASS keeps the final Lost City ornament and guardian identity inside the staged construction model
+PASS keeps the complete Jungle Expedition world inside the mobile authored-geometry budget
+{ passed: 52, failed: 0 }

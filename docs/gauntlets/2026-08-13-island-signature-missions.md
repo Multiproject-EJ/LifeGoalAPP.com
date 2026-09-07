@@ -64,9 +64,10 @@ restoration mission.
 | 005 — Sunshore Arena | **Arena guardian battle** | Existing every-fifth boss/creature event; no second signature mission. |
 | 006 — Moonveil Nexus | **Rephase the Moon Mirrors** | Five giant mirrors rotate into alignment one at a time, forming a visible beam chain that stabilizes the central moon core. |
 | 007 — Abyssal Pearl Kingdom | **Restore the Breathline** | A bubble-pressure network advances through four districts; domes clear, fauna return, and the pearl heart emits a final oxygen pulse. |
-| 008 — Everblossom Kingdom | **The Great Pollination** | Butterflies carry light between landmark flower families; each stage opens a new border bloom, activates springs, and finally blossoms the central crown. |
+| 008 — Jungle Expedition | **The Living Compass** | Five Wayfinder Glyphs awaken the lost-city seals. The final energy column opens the canopy and calls the Compass Book down from the sky, revealing Chapter I. |
 | 009 — Heartshaft Crucible | **Restart the Ignition Chain** | The Great Fuse, conduits, Incubator, Memory Press, Switchyard, gantries, ignition ring, and magma heart activate in that visible sequence. |
 | 010 and every fifth island | **Arena guardian battle** | Boss/creature battle remains the main island event. |
+| 018 — Everblossom Kingdom | **The Great Pollination** | Butterflies carry light between landmark flower families; each stage opens a new border bloom, activates springs, and finally blossoms the central crown. |
 
 ## Celestial vertical slice
 

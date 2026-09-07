@@ -4,6 +4,7 @@ import './compassBook.css';
 import type { CompassAnswerRecord, CompassBookChapterId } from '../types';
 import { getActivityDefinition, getChapterDefinition } from '../content/compassBookCurriculum';
 import { getCurrentChapterId } from '../logic/unlock';
+import { getCompassActivityJourneyLabel } from '../logic/journey';
 import { projectLivingWheel } from '../logic/projectors/livingWheelProjector';
 import { useCompassBook } from '../hooks/useCompassBook';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
@@ -84,7 +85,7 @@ export function CompactGameCompassPanel({
 
         <div className="compass-ingame__progress">
           <span className="compass-book__count">
-            {progress.completedCount} / {progress.totalCount} fragments
+            {progress.completedCount} / {progress.totalCount} pages
           </span>
           <span className="compass-book__stages" aria-hidden="true">
             {[1, 2, 3, 4, 5].map((stage) => (
@@ -103,11 +104,13 @@ export function CompactGameCompassPanel({
         {nextActivity ? (
           <p className="compass-ingame__next">
             Next: <strong>{nextActivity.title}</strong>
-            <span className="compass-ingame__next-island"> · Island {nextActivity.islandNumber}</span>
+            <span className="compass-ingame__next-island">
+              {' · '}{getCompassActivityJourneyLabel(nextActivity.islandNumber)}
+            </span>
           </p>
         ) : (
           <p className="compass-ingame__next">
-            {progress.status === 'complete' ? 'This chapter is sealed.' : 'All unlocked fragments done.'}
+            {progress.status === 'complete' ? 'This chapter is sealed.' : 'All unlocked pages complete.'}
           </p>
         )}
 

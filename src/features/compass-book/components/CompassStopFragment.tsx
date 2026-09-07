@@ -16,6 +16,7 @@ import {
   isFragmentSlotComplete,
   type IslandFragmentSlot,
 } from '../logic/islandFragment';
+import { getCompassActivityJourneyLabel } from '../logic/journey';
 import { loadCompassPlayerData } from '../services/compassPlayerData';
 import { loadCompassShadowBridge } from '../services/compassShadowBridge';
 import type { CompassShadowBridgeData } from '../logic/shadowBridge';
@@ -104,10 +105,10 @@ export function CompassStopFragment({
   }
 
   return (
-    <section className="compass-stop" aria-label="Answer a Compass fragment">
+    <section className="compass-stop" aria-label="Answer a Compass page">
       <header className="compass-stop__header">
         <span className="compass-stop__eyebrow">
-          {chapter.title} · Island {fragment.islandNumber}
+          {chapter.title} · {getCompassActivityJourneyLabel(fragment.islandNumber)}
         </span>
         <h3 className="compass-stop__title">{fragment.title}</h3>
         {fragment.description ? <p className="compass-stop__note">{fragment.description}</p> : null}

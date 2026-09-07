@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jungle Expedition | Playtest comparison</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f5;color:#182e2c;font:16px/1.5 system-ui,sans-serif;letter-spacing:0}main{max-width:1020px;margin:auto;padding:28px 24px}h1{font-size:28px;margin:0}h2{font-size:20px;margin:0 0 12px}p{margin:8px 0 20px;color:#465955}a{color:#176959}section{padding:24px 0;border-top:1px solid #cfd9d5}.pair{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:720px;margin:auto}figure{margin:0;min-width:0}figcaption{font-size:14px;margin:8px 0}strong.label{display:block;font-size:16px;margin:0 0 8px}.phone{display:block;width:100%;height:540px;object-fit:contain;background:#e1e8e5}.wide{display:block;width:100%;height:auto}.relic-pair{grid-template-columns:240px minmax(0,1fr);max-width:none}.relic-pair img{width:100%;height:430px;object-fit:contain;background:#e1e8e5}.note{font-size:13px}ul{padding-left:20px;margin:8px 0 20px}li{margin:5px 0}@media(max-width:600px){main{padding:20px 14px}.pair{gap:12px}.phone{height:auto}.relic-pair{grid-template-columns:1fr}.relic-pair img{height:auto;max-height:520px}h1{font-size:24px}}
+</style>
+<main>
+<h1>Jungle Expedition: playtest improvements</h1>
+<p>Runtime Island 008, authored source 018. Real local demo play: five rolls, all five seals, first book receipt, Chapter I, and one complete Hatchery build level.</p>
+<section id="phone-comparison">
+<h2>Mission Phone</h2>
+<div class="pair">
+<figure><strong class="label">Before</strong><img class="phone" src="before-mission-complete.png" alt="Before: truncated Compass Seals objective and a long wrapping replay action"><figcaption>Truncated objective, ambiguous seal markers, oversized title and technical replay copy.</figcaption></figure>
+<figure><strong class="label">After</strong><img class="phone" src="after-mission-complete.png" alt="After: complete objective label, five numbered seals and a short replay action"><figcaption>Full objective names, numbered seals, a compact action and story-led copy. The progress bar remains visible.</figcaption></figure>
+</div>
+<p class="note">Same saved player, completed mission state and capture viewport. No composited game elements.</p>
+</section>
+<section>
+<h2>The Sky Gift</h2>
+<div class="pair relic-pair">
+<figure><strong class="label">Before: plain closed book</strong><img src="before-replay-13.png" alt="Before book descending in a solid-edged bright sky beam"><figcaption>Phone replay near arrival. A hard-edged beam competes with the simple brown cover.</figcaption></figure>
+<figure><strong class="label">After: decorated, opening book</strong><img src="after-book-final.png" alt="Teal Compass Book with raised golden fittings opening above the temple"><figcaption>Desktop replay during opening. Real hinged geometry, gilded corner brackets, an emerald compass crest and a soft-edged animated beam.</figcaption></figure>
+</div>
+<p class="note">The finale frames use different viewport shapes and deliberately different camera positions. The camera now moves continuously, adjusts its arrival distance to screen shape, and holds its final target.</p>
+<img class="wide" src="after-desktop-arrival-3.png" alt="Open Compass Book showing the first chapter wheel above the temple">
+<p class="note">Open-spread detail from the preceding camera-framing iteration; the final camera is closer on desktop and farther back on narrow phones.</p>
+</section>
+<section>
+<h2>Playtest Findings</h2>
+<ul>
+<li>The book shortcut appeared before the sky descent ended. It is now hidden during the ceremony, with board input locked until the reveal finishes.</li>
+<li>The receipt named a different first chapter. It now matches the book: <strong>The Living Wheel</strong>.</li>
+<li>Camera segment boundaries jumped, then rushed away from the gift. Shared endpoints and an arrival hold remove those jumps.</li>
+<li>Replay preserves the saved mission and currency: 832 Money and 1,675 dice remained unchanged across the verified replays.</li>
+</ul>
+<p>Still worth improving: distant forest variation, material richness, and the amount of scenery hidden by the shared game controller. This is a focused improvement pass, not a 10/10 claim or a complete island-clear certification.</p>
+<p><a href="verification.log">Original 52 focused regression checks</a>. The release pass adds a deterministic grove test (53 focused checks). The merged behavioral suite passed 2,020 tests, and all Compass Book assertions passed. Architecture guard passes. Full source-branch TypeScript and production build pass; final merged build verification is tracked in the release Gauntlet.</p>
+<p><a href="http://127.0.0.1:5240/dev/island-art-preview?debugBoard=1&amp;island3dPreview=1&amp;island3dQuality=high">Play the saved local demo</a></p>
+</section>
+<section>
+<h2>Final Canopy Pass</h2>
+<p>Connected colour groves and three crown proportions break up the repeated forest pattern without increasing geometry count. These are additional inspection views, not matched before/after frames.</p>
+<div class="pair">
+<figure><img class="wide" src="after-jungle-canopy.png" alt="Jungle temple and stream with varied canopy groves"><figcaption>Front inspection.</figcaption></figure>
+<figure><img class="wide" src="after-jungle-rear.png" alt="Rear elevation of the Jungle temple"><figcaption>Rear inspection.</figcaption></figure>
+<figure><img class="wide" src="after-jungle-left.png" alt="Left view through the forest"><figcaption>Left inspection.</figcaption></figure>
+<figure><img class="wide" src="after-jungle-right.png" alt="Right view through the forest"><figcaption>Right inspection.</figcaption></figure>
+</div>
+</section>
+</main>
+</html>
