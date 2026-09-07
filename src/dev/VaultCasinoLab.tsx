@@ -5,6 +5,7 @@ import {
   buildDormantDoorMiniGame,
   resolveDormantDoorReward,
   type DormantDoorFigure,
+  type DormantDoorRewardTier,
 } from '../features/gamification/level-worlds/services/islandRunDormantDoorMinigame';
 import {
   createCrownDice,
@@ -26,10 +27,40 @@ import {
 import './VaultCasinoLab.css';
 
 const FIGURE_ASSETS: Record<DormantDoorFigure, string> = {
-  small: '/assets/vault-rush/diamond.webp',
-  medium: '/assets/vault-rush/crown.webp',
-  large: '/assets/vault-rush/amethyst.webp',
+  small: '/assets/vault-rush/amethyst.webp',
+  medium: '/assets/vault-rush/diamond.webp',
+  large: '/assets/vault-rush/crown.webp',
 };
+
+const VAULT_RUSH_CRACKED_LOCK_ASSET = '/assets/vault-rush/cracked-lock.webp';
+
+const VAULT_RUSH_TIER_FIGURE: Record<DormantDoorRewardTier, DormantDoorFigure> = {
+  small: 'small',
+  medium: 'medium',
+  jackpot: 'large',
+};
+
+const VAULT_RUSH_TIER_NAMES: Record<DormantDoorRewardTier, string> = {
+  small: 'Amethyst',
+  medium: 'Diamond',
+  jackpot: 'Crown jackpot',
+};
+
+const VAULT_RUSH_FIGURE_NAMES: Record<DormantDoorFigure, string> = {
+  small: 'Amethyst',
+  medium: 'Diamond',
+  large: 'Crown',
+};
+
+function getVaultRushResult(tier: DormantDoorRewardTier): VaultCasinoPrototypeResult {
+  if (tier === 'jackpot') {
+    return { tier: 'sovereign', score: 100, maxScore: 100, summary: 'Sovereign vault' };
+  }
+  if (tier === 'medium') {
+    return { tier: 'grand', score: 68, maxScore: 100, summary: 'Grand vault' };
+  }
+  return { tier: 'standard', score: 42, maxScore: 100, summary: 'Treasury vault' };
+}
 
 export type VaultCasinoLabMode = 'prototype' | 'inspect' | 'production';
 
@@ -150,6 +181,20 @@ function VaultRushPrototype({ inspectOnly, seed, onComplete }: CasinoGameProps) 
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [result, setResult] = useState<VaultCasinoPrototypeResult | null>(null);
 
+  const prizeCounts = useMemo(() => selectedIndices.reduce<Record<DormantDoorFigure, number>>((counts, index) => {
+    const figure = round.doors[index]?.figure;
+    if (figure) counts[figure] += 1;
+    return counts;
+  }, { small: 0, medium: 0, large: 0 }), [round.doors, selectedIndices]);
+  const bestMatchCount = Math.min(3, Math.max(...Object.values(prizeCounts)));
+  const winningTier: DormantDoorRewardTier | null = result?.tier === 'sovereign'
+    ? 'jackpot'
+    : result?.tier === 'grand'
+      ? 'medium'
+      : result
+        ? 'small'
+        : null;
+
   const selectDoor = (index: number) => {
     if (inspectOnly || result || selectedIndices.includes(index)) return;
     const next = [...selectedIndices, index];
@@ -160,43 +205,85 @@ function VaultRushPrototype({ inspectOnly, seed, onComplete }: CasinoGameProps) 
       round.rewardLevels,
     );
     if (!reward) return;
-    const score = reward.tier === 'jackpot' ? 100 : reward.tier === 'medium' ? 68 : 42;
-    const nextResult: VaultCasinoPrototypeResult = {
-      tier: reward.tier === 'jackpot' ? 'sovereign' : reward.tier === 'medium' ? 'grand' : 'standard',
-      score,
-      maxScore: 100,
-      summary: reward.tier === 'jackpot' ? 'Sovereign vault' : reward.tier === 'medium' ? 'Grand vault' : 'Treasury vault',
-    };
+    const nextResult = getVaultRushResult(reward.tier);
     setResult(nextResult);
     onComplete(nextResult);
   };
 
   return (
-    <div className="vault-casino-machine vault-casino-machine--rush">
-      <div className="vault-rush-prototype__arch" aria-hidden="true" />
-      <div className="vault-rush-prototype__doors" aria-label="Vault Rush doors">
-        {round.doors.map((door, index) => {
-          const revealed = selectedIndices.includes(index) || inspectOnly;
-          return (
-            <button
-              key={door.id}
-              type="button"
-              className={revealed ? 'is-revealed' : ''}
-              onClick={() => selectDoor(index)}
-              disabled={inspectOnly || Boolean(result)}
-              aria-label={revealed ? `Door ${index + 1} revealed` : `Reveal door ${index + 1}`}
-            >
-              <span className="vault-rush-prototype__door-face"><i /></span>
-              <span className="vault-rush-prototype__figure">
-                <img src={FIGURE_ASSETS[door.figure]} alt="" />
-              </span>
-            </button>
-          );
-        })}
+    <div className={`vault-casino-machine vault-casino-machine--rush vault-rush-classic${result ? ' is-cracked' : ''}`}>
+      <div className="vault-rush-classic__panel">
+        <div className="vault-rush-classic__prizes" aria-label="Vault Rush prize tiers">
+          {round.rewardLevels.map((level) => {
+            const figure = VAULT_RUSH_TIER_FIGURE[level.tier];
+            const foundCount = Math.min(3, prizeCounts[figure]);
+            const isWinner = winningTier === level.tier;
+            return (
+              <div
+                key={level.tier}
+                className={`vault-rush-classic__prize is-${level.tier}${isWinner ? ' is-winner' : ''}${winningTier && !isWinner ? ' is-muted' : ''}`}
+              >
+                <span className="vault-rush-classic__prize-art" aria-hidden="true">
+                  <img src={FIGURE_ASSETS[figure]} alt="" loading="eager" decoding="async" />
+                </span>
+                <span>{VAULT_RUSH_TIER_NAMES[level.tier]}</span>
+                <strong className="vault-rush-classic__prize-value">
+                  +{formatVaultCash(resolveVaultCasinoVirtualCashPayout(getVaultRushResult(level.tier)))} cash
+                </strong>
+                <span className="vault-rush-classic__match-lights" aria-label={`${foundCount} of 3 ${VAULT_RUSH_TIER_NAMES[level.tier]} found`}>
+                  {[0, 1, 2].map((light) => (
+                    <i key={light} className={light < foundCount ? 'is-lit' : ''} aria-hidden="true" />
+                  ))}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="vault-rush-classic__doors" aria-label="Sixteen Vault Rush doors">
+          {round.doors.map((door, index) => {
+            const isSelected = selectedIndices.includes(index);
+            const revealed = isSelected || inspectOnly;
+            const doorTier: DormantDoorRewardTier = door.figure === 'large' ? 'jackpot' : door.figure;
+            const isWinner = isSelected && winningTier === doorTier;
+            return (
+              <button
+                key={door.id}
+                type="button"
+                className={`${revealed ? `is-revealed is-${door.figure}` : ''}${isWinner ? ' is-winner' : ''}${winningTier && !isWinner ? ' is-muted' : ''}`}
+                onClick={() => selectDoor(index)}
+                disabled={inspectOnly || Boolean(result) || isSelected}
+                aria-pressed={isSelected}
+                aria-label={revealed ? `Door ${index + 1}: ${VAULT_RUSH_FIGURE_NAMES[door.figure]}` : `Reveal door ${index + 1}`}
+              >
+                <span className="vault-rush-classic__door-face" aria-hidden="true">
+                  <span>{index + 1}</span>
+                  <i />
+                </span>
+                <span className="vault-rush-classic__door-prize" aria-hidden="true">
+                  <img src={FIGURE_ASSETS[door.figure]} alt="" loading="eager" decoding="async" />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {result && winningTier ? (
+          <div className="vault-rush-classic__result" role="status" aria-live="polite">
+            <img src={VAULT_RUSH_CRACKED_LOCK_ASSET} alt="" aria-hidden="true" loading="eager" decoding="async" />
+            <span>
+              <strong>Vault cracked!</strong>
+              <small>3x {VAULT_RUSH_TIER_NAMES[winningTier]} · +{formatVaultCash(resolveVaultCasinoVirtualCashPayout(result))} cash</small>
+            </span>
+          </div>
+        ) : !inspectOnly ? (
+          <div className="vault-rush-classic__status" role="status">
+            <span>Best match <strong>{bestMatchCount}/3</strong></span>
+            <span>{Math.max(0, round.doors.length - selectedIndices.length)} doors left</span>
+          </div>
+        ) : null}
       </div>
-      {inspectOnly ? <InspectState /> : result ? <MachineResult result={result} /> : (
-        <p className="vault-casino-machine__prompt">Find three matching treasury figures</p>
-      )}
+      {inspectOnly ? <InspectState /> : null}
     </div>
   );
 }

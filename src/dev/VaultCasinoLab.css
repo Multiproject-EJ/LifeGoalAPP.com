@@ -641,76 +641,335 @@
 
 .vault-casino-inspect-state small { text-transform: none; }
 
-.vault-rush-prototype__arch {
-  position: absolute;
-  top: 9%;
-  width: 276px;
-  height: 360px;
-  border: 6px solid #c69134;
-  border-bottom-width: 12px;
-  border-radius: 140px 140px 18px 18px;
-  background: radial-gradient(circle at 50% 16%, rgba(45, 96, 151, 0.45), #031127 58%);
-  box-shadow: inset 0 0 0 4px #f7de89, 0 0 34px rgba(67, 217, 255, 0.14);
+.vault-casino-machine--rush {
+  align-content: stretch;
+  padding: 6px 7px 72px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(244, 180, 60, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(8, 7, 6, 0.42), rgba(2, 2, 2, 0.9));
 }
 
-.vault-rush-prototype__doors {
+.vault-casino-machine--rush::before {
+  opacity: 0.3;
+}
+
+.vault-rush-classic__panel {
   position: relative;
   z-index: 2;
-  width: 244px;
+  width: min(100%, 304px);
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-}
-
-.vault-rush-prototype__doors button {
-  position: relative;
-  aspect-ratio: 0.78;
-  padding: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-self: stretch;
+  gap: 7px;
+  padding: 10px;
   overflow: hidden;
-  border: 1px solid #e7bd5d;
-  border-radius: 10px 10px 3px 3px;
-  background: #071a38;
-  box-shadow: inset 0 0 0 2px #734a18, 0 3px 7px rgba(0, 0, 0, 0.45);
-  cursor: pointer;
-  perspective: 180px;
+  border: 1px solid rgba(246, 195, 84, 0.74);
+  border-radius: 25px;
+  color: #fff4d0;
+  background-color: #090806;
+  background-image:
+    linear-gradient(180deg, rgba(8, 7, 5, 0.16), rgba(8, 7, 5, 0.34)),
+    url('/assets/vault-rush/vault-panel.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 231, 165, 0.14),
+    inset 0 0 34px rgba(0, 0, 0, 0.52),
+    0 14px 32px rgba(0, 0, 0, 0.58),
+    0 0 24px rgba(228, 161, 39, 0.14);
 }
 
-.vault-rush-prototype__door-face {
+.vault-rush-classic__panel::before {
+  content: "";
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  transform-origin: 0 50%;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle at 50% 46%, transparent 0 5px, #e5bd59 6px 7px, transparent 8px),
-    linear-gradient(145deg, #12335f, #06152f);
-  box-shadow: inset 0 0 0 3px #a47125;
-  transition: transform 420ms cubic-bezier(.2,.7,.2,1);
+  inset: 5px;
+  border: 1px solid rgba(255, 222, 141, 0.16);
+  border-radius: 20px;
+  pointer-events: none;
 }
 
-.vault-rush-prototype__door-face i {
+.vault-rush-classic__prizes {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vault-rush-classic__prize {
+  min-width: 0;
+  min-height: 79px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 2px 5px;
+  border: 1px solid rgba(226, 169, 64, 0.62);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(157, 80, 231, 0.2), transparent 46%),
+    linear-gradient(150deg, rgba(40, 36, 31, 0.97), rgba(8, 8, 7, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 190, 0.17),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.38),
+    0 5px 11px rgba(0, 0, 0, 0.34);
+  color: #ffedbd;
+  font-size: 8px;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+  transition: filter 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+.vault-rush-classic__prize.is-medium {
+  border-color: rgba(126, 213, 255, 0.62);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(82, 188, 246, 0.22), transparent 46%),
+    linear-gradient(150deg, rgba(29, 39, 43, 0.97), rgba(7, 10, 12, 0.98));
+}
+
+.vault-rush-classic__prize.is-jackpot {
+  border-color: rgba(247, 195, 74, 0.76);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(247, 181, 46, 0.25), transparent 46%),
+    linear-gradient(150deg, rgba(45, 37, 20, 0.98), rgba(10, 8, 5, 0.99));
+}
+
+.vault-rush-classic__prize.is-muted,
+.vault-rush-classic__doors button.is-muted {
+  opacity: 0.36;
+  filter: grayscale(0.58) brightness(0.7);
+}
+
+.vault-rush-classic__prize.is-winner {
+  transform: translateY(-2px) scale(1.04);
+  border-color: #fff0a9;
+  box-shadow: 0 0 0 2px rgba(255, 229, 133, 0.24), 0 0 22px rgba(245, 185, 55, 0.68);
+  animation: vault-rush-classic-winner 900ms ease-in-out infinite alternate;
+}
+
+.vault-rush-classic__prize-art {
+  width: 40px;
+  height: 40px;
+  margin-bottom: -1px;
+  overflow: hidden;
+  border-radius: 50%;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.62));
+}
+
+.vault-rush-classic__prize-art img,
+.vault-rush-classic__door-prize img,
+.vault-rush-classic__result > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.vault-rush-classic__match-lights {
+  display: flex;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.vault-rush-classic__match-lights i {
   width: 7px;
   height: 7px;
-  border: 2px solid #ffe78f;
+  border: 1px solid rgba(229, 177, 71, 0.55);
   border-radius: 50%;
-  background: #3dddf7;
-  box-shadow: 0 0 7px #3dddf7;
+  background: rgba(5, 5, 4, 0.88);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.72);
 }
 
-.vault-rush-prototype__figure {
+.vault-rush-classic__match-lights i.is-lit {
+  border-color: #fff0bd;
+  background: #f4b53e;
+  box-shadow: 0 0 8px rgba(244, 181, 62, 0.9);
+  animation: vault-rush-classic-light 280ms cubic-bezier(0.2, 1.4, 0.4, 1.1);
+}
+
+.vault-rush-classic__doors {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid rgba(225, 169, 64, 0.46);
+  border-radius: 17px;
+  background: rgba(4, 4, 3, 0.78);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.76), 0 1px 0 rgba(255, 226, 154, 0.1);
+}
+
+.vault-rush-classic__doors button {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(230, 177, 74, 0.62);
+  border-radius: 11px;
+  color: #f8d886;
+  background:
+    radial-gradient(circle at 7px 7px, #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at 7px calc(100% - 7px), #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    linear-gradient(145deg, #343027, #12110f 58%, #050504);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 198, 0.17),
+    inset 0 -8px 13px rgba(0, 0, 0, 0.55),
+    0 4px 8px rgba(0, 0, 0, 0.38);
+  cursor: pointer;
+  perspective: 180px;
+  transition: border-color 200ms ease, box-shadow 200ms ease, opacity 200ms ease, transform 200ms ease;
+}
+
+.vault-rush-classic__doors button:not(:disabled):hover,
+.vault-rush-classic__doors button:not(:disabled):focus-visible {
+  z-index: 2;
+  transform: translateY(-2px) scale(1.04);
+  border-color: #ffe7a2;
+  box-shadow: 0 0 14px rgba(244, 181, 62, 0.52), 0 7px 12px rgba(0, 0, 0, 0.44);
+}
+
+.vault-rush-classic__door-face,
+.vault-rush-classic__door-prize {
   position: absolute;
-  inset: 8px;
+  inset: 7%;
   display: grid;
   place-items: center;
-  transform: scale(0.6);
+  border: 1px solid rgba(237, 188, 88, 0.68);
+  border-radius: 8px;
+}
+
+.vault-rush-classic__door-face {
+  z-index: 2;
+  transform-origin: 0 50%;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(232, 181, 73, 0.1) 0 35%, transparent 36%),
+    radial-gradient(circle at 50% 48%, transparent 0 47%, rgba(225, 171, 63, 0.52) 48% 50%, transparent 51%),
+    linear-gradient(145deg, #2f2b24, #0d0d0b);
+  box-shadow: inset 0 0 0 2px rgba(4, 4, 3, 0.58), inset 0 1px 0 rgba(255, 238, 188, 0.2);
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.vault-rush-classic__door-face span {
+  font: 900 16px/1 Georgia, "Times New Roman", serif;
+  text-shadow: 0 2px 0 #3e2104, 0 0 9px rgba(237, 174, 54, 0.24);
+}
+
+.vault-rush-classic__door-face i {
+  position: absolute;
+  right: 9%;
+  top: 66%;
+  width: 5px;
+  height: 8px;
+  border: 1px solid rgba(242, 191, 82, 0.88);
+  border-radius: 50% 50% 3px 3px;
+  background: #0b0905;
+  box-shadow: 0 0 5px rgba(240, 179, 55, 0.42);
+}
+
+.vault-rush-classic__door-prize {
+  inset: 5px;
+  transform: scale(0.66);
+  overflow: hidden;
+  border-radius: 50%;
   opacity: 0;
   transition: transform 340ms 150ms ease, opacity 240ms 150ms ease;
 }
 
-.vault-rush-prototype__figure img { width: 100%; max-height: 100%; object-fit: contain; }
-.vault-rush-prototype__doors button.is-revealed .vault-rush-prototype__door-face { transform: rotateY(-96deg); }
-.vault-rush-prototype__doors button.is-revealed .vault-rush-prototype__figure { transform: scale(1); opacity: 1; }
+.vault-rush-classic__doors button.is-revealed .vault-rush-classic__door-face {
+  transform: rotateY(-98deg);
+}
+
+.vault-rush-classic__doors button.is-revealed .vault-rush-classic__door-prize {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.vault-rush-classic__doors button.is-winner {
+  z-index: 3;
+  transform: translateY(-2px) scale(1.06);
+  border-color: #fff0a9;
+  box-shadow: 0 0 0 2px rgba(255, 229, 133, 0.28), 0 0 20px rgba(245, 185, 55, 0.76);
+  animation: vault-rush-classic-winner 900ms ease-in-out infinite alternate;
+}
+
+.vault-rush-classic__status,
+.vault-rush-classic__result {
+  position: relative;
+  z-index: 1;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid rgba(229, 176, 71, 0.44);
+  border-radius: 12px;
+  background: rgba(7, 7, 6, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 241, 190, 0.1);
+  color: rgba(255, 242, 210, 0.9);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.vault-rush-classic__status strong {
+  color: #ffe2a0;
+}
+
+.vault-rush-classic__result {
+  justify-content: start;
+  min-height: 50px;
+  padding: 3px 9px 3px 4px;
+  border-color: rgba(255, 221, 135, 0.86);
+  background:
+    radial-gradient(circle at 15% 50%, rgba(255, 193, 54, 0.22), transparent 34%),
+    linear-gradient(145deg, rgba(48, 38, 23, 0.98), rgba(9, 8, 6, 0.98));
+  box-shadow: 0 0 20px rgba(239, 177, 51, 0.3), inset 0 1px 0 rgba(255, 238, 188, 0.24);
+  text-transform: none;
+}
+
+.vault-rush-classic__result > img {
+  flex: 0 0 auto;
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 8px rgba(255, 184, 42, 0.44));
+}
+
+.vault-rush-classic__result > span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.vault-rush-classic__result strong {
+  color: #fff0b6;
+  font: 800 15px/1 Georgia, "Times New Roman", serif;
+}
+
+.vault-rush-classic__result small {
+  color: rgba(255, 242, 210, 0.86);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+@keyframes vault-rush-classic-winner {
+  to { filter: brightness(1.18); box-shadow: 0 0 0 2px rgba(255, 229, 133, 0.32), 0 0 28px rgba(245, 185, 55, 0.88); }
+}
+
+@keyframes vault-rush-classic-light {
+  0% { transform: scale(0.55); }
+  70% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
 
 .crown-dice__crown {
   position: absolute;
@@ -1328,7 +1587,12 @@
   .vault-casino-lab__footer { min-height: 70px; bottom: 8px; }
   .vault-casino-lab__machine-heading { min-height: 46px; }
   .vault-casino-lab__machine-heading h1 { font-size: 20px; }
-  .vault-rush-prototype__doors { width: 218px; }
+  .vault-rush-classic__panel { gap: 5px; padding: 7px; border-radius: 20px; }
+  .vault-rush-classic__prize { min-height: 66px; }
+  .vault-rush-classic__prize-art { width: 32px; height: 32px; }
+  .vault-rush-classic__doors { gap: 4px; padding: 5px; }
+  .vault-rush-classic__door-face span { font-size: 14px; }
+  .vault-rush-classic__status { min-height: 28px; }
   .crown-dice__bowl { transform: scale(0.88); }
   .solar-orrery { transform: scale(0.84); }
   .prism-cascade { transform: scale(0.86); }

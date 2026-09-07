@@ -8,6 +8,7 @@ const assert = (condition, message) => {
 };
 
 const lab = read('src/dev/VaultCasinoLab.tsx');
+const labStyles = read('src/dev/VaultCasinoLab.css');
 const crownDiceThree = read('src/dev/VaultCrownDiceThree.tsx');
 const model = read('src/features/gamification/level-worlds/services/islandRunVaultCasino.ts');
 const modal = read('src/features/gamification/level-worlds/components/VaultIslandCollectionModal.tsx');
@@ -51,6 +52,20 @@ assert(actions.includes("grandCofferComplete: claimCount === VAULT_RUSH_MAX_CLAI
 assert(lab.includes('<VaultCrownDiceThree'), 'Crown Dice must use its real Three.js machine.');
 for (const token of ['THREE.WebGLRenderer', 'RoundedBoxGeometry', 'installVaultPremiumEnvironment', 'Raycaster']) {
   assert(crownDiceThree.includes(token), `Crown Dice 3D machine is missing ${token}.`);
+}
+
+for (const classicVaultRushToken of [
+  'vault-rush-classic__prizes',
+  'vault-rush-classic__match-lights',
+  'vault-rush-classic__doors',
+  'vault-rush-classic__result',
+  '/assets/vault-rush/vault-panel.webp',
+  '/assets/vault-rush/cracked-lock.webp',
+]) {
+  assert(
+    lab.includes(classicVaultRushToken) || labStyles.includes(classicVaultRushToken),
+    `Vault Rush classic presentation is missing ${classicVaultRushToken}.`,
+  );
 }
 
 const forbiddenWriteSymbols = [
