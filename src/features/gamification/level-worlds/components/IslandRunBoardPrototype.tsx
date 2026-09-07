@@ -14970,20 +14970,6 @@ export function IslandRunBoardPrototype({
             </div>
             <button
               type="button"
-              className={`island-run-board__topbar-menu${isTopbarMenuPrimed ? ' island-run-board__topbar-menu--primed' : ''}${showTopbarMenu ? ' island-run-board__topbar-menu--open' : ''}`}
-              aria-label="Board menu"
-              aria-expanded={showTopbarMenu}
-              aria-haspopup="menu"
-              aria-controls="island-run-topbar-menu"
-              onClick={() => {
-                setShowAudioMenu(false);
-                handleTopbarMenuButtonClick();
-              }}
-            >
-              ☰
-            </button>
-            <button
-              type="button"
               className={`island-run-board__topbar-audio-toggle${showAudioMenu ? ' island-run-board__topbar-audio-toggle--open' : ''}`}
               aria-label="Audio options"
               aria-expanded={showAudioMenu}
@@ -14998,11 +14984,17 @@ export function IslandRunBoardPrototype({
             </button>
             <button
               type="button"
-              className="island-run-board__topbar-audio-toggle island-run-board__topbar-exit"
-              aria-label="Exit Island Run"
-              onClick={() => onExitBoard?.()}
+              className={`island-run-board__topbar-menu${isTopbarMenuPrimed ? ' island-run-board__topbar-menu--primed' : ''}${showTopbarMenu ? ' island-run-board__topbar-menu--open' : ''}`}
+              aria-label="Board menu"
+              aria-expanded={showTopbarMenu}
+              aria-haspopup="menu"
+              aria-controls="island-run-topbar-menu"
+              onClick={() => {
+                setShowAudioMenu(false);
+                handleTopbarMenuButtonClick();
+              }}
             >
-              ✕
+              ☰
             </button>
           </div>
 
@@ -15222,13 +15214,14 @@ export function IslandRunBoardPrototype({
               ) : null}
               <button
                 type="button"
-                className="island-run-board__topbar-menu-item"
+                className="island-run-board__topbar-menu-item island-run-board__topbar-menu-item--exit"
+                aria-label="Exit Island Run"
                 onClick={() => {
                   onExitBoard?.();
                   setShowTopbarMenu(false);
                 }}
               >
-                ← Back
+                <span aria-hidden="true">✕</span> Exit Island Run
               </button>
               <button
                 type="button"

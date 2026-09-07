@@ -84,7 +84,8 @@ export function resolveIslandRunTileRewardObjectKind(
     || entry.signatureMissionKind === 'breathline_pressure_pearl'
     || entry.signatureMissionKind === 'pollination_pollen_light'
     || entry.signatureMissionKind === 'ignition_core'
-    || entry.signatureMissionKind === 'heatshield_plate') return 'staged_restoration_pickup';
+    || entry.signatureMissionKind === 'heatshield_plate'
+    || entry.signatureMissionKind === 'golden_ride_ticket') return 'staged_restoration_pickup';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -519,7 +520,9 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
           || entry.signatureMissionKind === 'heatshield_plate'
           ? materials.amber
           : materials.gold;
-    const core = entry.signatureMissionKind === 'causeway_masonry'
+    const core = entry.signatureMissionKind === 'golden_ride_ticket'
+      ? createTicket(materials, quality)
+      : entry.signatureMissionKind === 'causeway_masonry'
       ? new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.24, 0.22), material)
       : entry.signatureMissionKind === 'moon_mirror_lens'
         ? new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.07, segments), material)
@@ -553,6 +556,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   quality: Island3DQuality;
   compactCollectibles?: boolean;
   staticBatchNonMissionRewards?: boolean;
+  signatureMissionOnly?: boolean;
 }): IslandRunTileRewardThreeRuntime {
   const root = new THREE.Group();
   root.name = 'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS';
@@ -578,6 +582,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   options.tileMap.forEach((tileEntry) => {
     const transform = transformByIndex.get(tileEntry.index);
     if (!transform) return;
+    if (options.signatureMissionOnly && !tileEntry.signatureMissionKind) return;
     // Low mode keeps the important economy/special objects but omits common
     // reward-progress tokens so the visual tier is materially cheaper.
     if (options.quality === 'low' && tileEntry.tileType === 'micro' && !tileEntry.signatureMissionKind) return;
@@ -609,6 +614,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || tileEntry.signatureMissionKind === 'breathline_pressure_pearl'
         || tileEntry.signatureMissionKind === 'pollination_pollen_light'
         || tileEntry.signatureMissionKind === 'ignition_core'
+        || tileEntry.signatureMissionKind === 'golden_ride_ticket'
         ? 1.16
       : tileEntry.signatureMissionKind === 'heatshield_plate'
         ? 0.9
@@ -698,7 +704,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || entry.signatureMissionKind === 'breathline_pressure_pearl'
         || entry.signatureMissionKind === 'pollination_pollen_light'
         || entry.signatureMissionKind === 'ignition_core'
-        || entry.signatureMissionKind === 'heatshield_plate')
+        || entry.signatureMissionKind === 'heatshield_plate'
+    || entry.signatureMissionKind === 'golden_ride_ticket')
         && stagedRestorationClaimedTiles.has(entry.tileIndex)) {
         entry.root.visible = false;
         return;

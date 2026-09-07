@@ -239,6 +239,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'Cultivate variety; do not force every living system into symmetry.',
     caretakerSignal: 'A garden can be perfectly arranged and still forget how to grow.',
   },
+  19: {
+    progressKind: 'staged_restoration',
+    headline: 'Restart the Wonder Circuit',
+    missionStatement: 'Coaster Carnival still has every ride, but its shared power circuit has gone quiet. Recover six Golden Ride Tickets, recommission the station, lift hill and loop launch, then prove the circuit in the Wonder Express victory lap—from your choice of front or middle wagon, through the gold-and-diamond caverns and out over the open ocean.',
+    primaryObjective: 'Power all three Wonder Circuit systems and complete the underground-to-ocean victory ride.',
+    supportingObjective: 'Restore the five carnival landmarks while keeping the canonical route and ride clearances open.',
+    fieldProtocol: 'Spend tickets in pairs. Commit each build stage, choose a front or middle wagon, then keep your eyes open through the plunge, treasure galleries and sea-cave reveal.',
+    caretakerSignal: 'Courage is not the absence of the drop. It is choosing to ride again with your eyes open.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
@@ -259,6 +268,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   16: "Fisherman's Village",
   20: 'Lava Labyrinth',
   18: 'The Everblossom Kingdom',
+  19: 'Coaster Carnival',
 });
 
 function padIsland(islandNumber: number): string {

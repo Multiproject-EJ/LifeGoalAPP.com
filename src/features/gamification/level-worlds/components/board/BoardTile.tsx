@@ -258,6 +258,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '✿';
   } else if (signatureMissionKind === 'ignition_core') {
     iconContent = '🔥';
+  } else if (signatureMissionKind === 'golden_ride_ticket') {
+    iconContent = '🎟️';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
@@ -305,7 +307,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         signatureMissionKind === 'fishermans_rod' ? 'island-tile--fishermans-rod' : '',
         signatureMissionKind?.includes('causeway_') || signatureMissionKind?.includes('moon_mirror_')
           || signatureMissionKind?.includes('breathline_') || signatureMissionKind?.includes('pollination_')
-          || signatureMissionKind === 'ignition_core'
+          || signatureMissionKind === 'ignition_core' || signatureMissionKind === 'golden_ride_ticket'
           ? 'island-tile--staged-restoration-pickup' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
@@ -339,6 +341,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
               ? `Tile ${index + 1}. Pollen Light for the Great Pollination`
             : signatureMissionKind === 'ignition_core'
               ? `Tile ${index + 1}. Ignition Core for the forge chain`
+            : signatureMissionKind === 'golden_ride_ticket'
+              ? `Tile ${index + 1}. Golden Ride Ticket for the Wonder Circuit`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing

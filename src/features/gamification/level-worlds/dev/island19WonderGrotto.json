@@ -1,0 +1,8 @@
+{
+  "decisionId": "d019",
+  "center": [-1, -13, 0],
+  "radii": [6.8, 7, 5.4],
+  "floorY": -19,
+  "terrainBottomY": -24,
+  "treasureFocus": [-0.5, -16.9, 0.2]
+}

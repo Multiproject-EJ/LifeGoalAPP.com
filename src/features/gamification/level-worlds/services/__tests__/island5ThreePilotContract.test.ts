@@ -446,9 +446,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, 018 and 020',
+    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, 018, 019 and 020',
     run: () => {
-      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 60, 'twelve authored worlds need five landmark construction profiles each');
+      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 65, 'thirteen authored worlds need five landmark construction profiles each');
       const frostmoonProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(3, landmark.id)
       ));
@@ -573,6 +573,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(jungleProfiles.some((profile) => profile?.choreography.stationStep === -1) && jungleProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Jungle Expedition needs clockwise and counter-clockwise routes');
       assert(jungleProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Jungle Expedition landmarks need phase-shaped relocation routes');
       assert(jungleProfiles.every((profile) => profile?.stageNames.some((name) => /jungle|vine|temple|compass|glyph|bridge|ruin|canopy|emerald|leaf|map|astrolabe/i.test(name))), 'Jungle Expedition reveal stories must use the actual lost-city construction language');
+      const coasterProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(19, landmark.id));
+      assert(coasterProfiles.every(Boolean), 'Coaster Carnival needs a construction choreography for every landmark');
+      assertEqual(new Set(coasterProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Coaster Carnival landmarks must not share one generic robot choreography');
+      assert(new Set(coasterProfiles.map((profile) => profile?.choreography.stationOffset)).size >= 4, 'Coaster Carnival must use at least four collision-tested base routes');
+      assert(coasterProfiles.some((profile) => profile?.choreography.stationStep === -1) && coasterProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Coaster Carnival needs clockwise and counter-clockwise routes');
+      assert(coasterProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Coaster Carnival landmarks need phase-shaped relocation routes');
+      assert(coasterProfiles.every((profile) => profile?.stageNames.some((name) => /ride|rail|ferris|wheel|gondola|station|lift|carousel|tower|courage|perspective|castle|ticket|loop|launch/i.test(name))), 'Coaster Carnival reveal stories must use its ride and railway construction language');
       const levels = [[0, 1], [1, 2], [2, 3]] as const;
       const island2Materials = createIsland2CelestialMaterials();
       const island3Materials = createIsland3FrostmoonMaterials();
@@ -2242,9 +2249,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth;'),
-        'Islands 007, 012, 013, 014, 018, 020 and runtime 016 should use the proven per-material instanced route path',
+        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
+        'Islands 007, 012, 013, 014, 018, runtime 016 and non-Circuit-G Island 019 should use the proven per-material instanced route path',
       );
+      assert(pilotSource.includes('const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];'), 'Circuit G must substitute its own one-to-one canonical mesh route instead of layering a second board');
       assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
       assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
@@ -2880,7 +2888,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including preserved Island 011, promoted Island 016, Jungle Expedition and Lava Labyrinth Island 020');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including preserved Island 011, promoted Island 016, Jungle Expedition and Lava Labyrinth Island 020');
       assert(pageSource.includes('assembly-crater-preview-controls') && pageSource.includes('Blast next'), 'the workbench must replay Assembly Crater sectors without writing a real gameplay save');
       assert(pageSource.includes('Play full 20') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of all twenty detonations');
       assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');
@@ -2925,6 +2933,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
       assert(routingSource.includes('runtimeIslandNumber: 11, worldSourceNumber: 11'), 'Island 011 must route the preserved pre-crater First Light world identity');
       assert(routingSource.includes('runtimeIslandNumber: 14, worldSourceNumber: 14'), 'Island 014 must route its dedicated Honeycomb Kingdom world pack');
+      assert(routingSource.includes('runtimeIslandNumber: 19, worldSourceNumber: 19'), 'Island 019 must route its dedicated Coaster Carnival world pack');
       assert(pilotSource.includes("getObjectByName('ISLAND_14_GREAT_HONEYFALL_MISSION_HIT_TARGET')"), 'Island 014 palace reservoir must be tappable in the real 3D renderer');
       assert(boardSource.includes('rollResult.greatHoneyfallNectarCollected'), 'the board must react when canonical roll gameplay awards royal nectar');
       assert(boardSource.includes("setQueuedSignatureMissionPresentation('great_honeyfall')"), 'nectar pickup must queue its mission controller behind any competing full-attention reward');

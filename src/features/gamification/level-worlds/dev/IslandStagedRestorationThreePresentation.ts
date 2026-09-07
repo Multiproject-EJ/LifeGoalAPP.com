@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Island3DQuality } from './island5ThreePilotContract';
 
 export interface IslandStagedRestorationPresentation {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 20;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 19 | 20;
   activatedStages: number;
   stageCount: number;
   constructionSequence?: number;
@@ -18,13 +18,14 @@ export interface IslandStagedRestorationThreeRuntime {
 
 type Palette = { primary: number; secondary: number; glow: number; dark: number };
 
-const PALETTES: Record<4 | 6 | 7 | 8 | 9 | 18, Palette> = {
+const PALETTES: Record<4 | 6 | 7 | 8 | 9 | 18 | 19, Palette> = {
   4: { primary: 0xf5d083, secondary: 0xb88340, glow: 0xffe9a3, dark: 0x382716 },
   6: { primary: 0xdad8ff, secondary: 0x7d70df, glow: 0xb9f4ff, dark: 0x171237 },
   7: { primary: 0x8df4ff, secondary: 0x3aa8cc, glow: 0xd5ffff, dark: 0x082a3a },
   8: { primary: 0x6e8466, secondary: 0xb78b35, glow: 0x54f5a0, dark: 0x172c20 },
   9: { primary: 0xffa126, secondary: 0xb83d18, glow: 0xffee8a, dark: 0x341008 },
   18: { primary: 0xff8fda, secondary: 0x71d276, glow: 0xfff0a8, dark: 0x17361c },
+  19: { primary: 0xf4bd3b, secondary: 0xb73825, glow: 0xfff0a0, dark: 0x25203f },
 };
 
 function cylinderBetween(start: THREE.Vector3, end: THREE.Vector3, radius: number, material: THREE.Material) {
@@ -150,8 +151,86 @@ function createLivingCompassStage(index: number, materials: Record<string, THREE
   return group;
 }
 
+function createWonderCircuitStage(index: number, materials: Record<string, THREE.Material>) {
+  const group = new THREE.Group();
+  group.name = `ISLAND_19_WONDER_CIRCUIT_SYSTEM_${index + 1}`;
+
+  if (index === 0) {
+    // System one recommissions the dispatch station at the castle throat.
+    group.name = 'ISLAND_19_WONDER_CIRCUIT_DISPATCH_STATION';
+    const semanticRoot = new THREE.Object3D();
+    semanticRoot.name = group.name;
+    group.add(semanticRoot);
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.22, 1.15), materials.primary);
+    platform.position.set(0, 0.62, -4.28);
+    const canopy = new THREE.Mesh(new THREE.BoxGeometry(2.34, 0.13, 0.9), materials.secondary);
+    canopy.position.set(0, 1.78, -4.28);
+    group.add(platform, canopy);
+    for (const x of [-1, 1]) {
+      const post = cylinderBetween(
+        new THREE.Vector3(x, 0.7, -4.28),
+        new THREE.Vector3(x, 1.76, -4.28),
+        0.07,
+        materials.secondary,
+      );
+      group.add(post);
+    }
+    const dispatchStar = new THREE.Mesh(new THREE.OctahedronGeometry(0.26, 1), materials.glow);
+    dispatchStar.position.set(0, 2.02, -4.28);
+    dispatchStar.userData.wonderCircuitPulse = 0;
+    group.add(dispatchStar);
+    return group;
+  }
+
+  if (index === 1) {
+    // System two powers the lift hill. Three luminous traction relays trace
+    // the climb without adding a second railway or changing route ownership.
+    group.name = 'ISLAND_19_WONDER_CIRCUIT_LIFT_HILL_POWER';
+    const semanticRoot = new THREE.Object3D();
+    semanticRoot.name = group.name;
+    group.add(semanticRoot);
+    const relays = [
+      new THREE.Vector3(-3.7, 2.0, 2.18),
+      new THREE.Vector3(-4.15, 4.65, 1.42),
+      new THREE.Vector3(-3.35, 7.35, 0.54),
+    ];
+    relays.forEach((position, relayIndex) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.085, 7, 18), materials.secondary);
+      ring.position.copy(position);
+      ring.rotation.y = 0.34;
+      ring.userData.wonderCircuitRelay = relayIndex;
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.16, 1), materials.glow);
+      core.position.copy(position);
+      core.userData.wonderCircuitPulse = relayIndex * 0.8;
+      group.add(ring, core);
+      if (relayIndex > 0) group.add(cylinderBetween(relays[relayIndex - 1], position, 0.035, materials.glow));
+    });
+    return group;
+  }
+
+  // System three arms the launch coils that throw the train through the
+  // surface S and toward the underground plunge.
+  group.name = 'ISLAND_19_WONDER_CIRCUIT_LOOP_LAUNCH';
+  const semanticRoot = new THREE.Object3D();
+  semanticRoot.name = group.name;
+  group.add(semanticRoot);
+  const launchCentre = new THREE.Vector3(5.18, 1.58, 2.0);
+  for (let coil = 0; coil < 3; coil += 1) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58 + coil * 0.18, 0.08, 8, 24), coil === 1 ? materials.primary : materials.secondary);
+    ring.position.copy(launchCentre).add(new THREE.Vector3(0, coil * 0.07, 0));
+    ring.rotation.x = Math.PI / 2;
+    ring.userData.wonderCircuitLaunchCoil = coil;
+    group.add(ring);
+  }
+  const launchCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 1), materials.glow);
+  launchCore.position.copy(launchCentre).add(new THREE.Vector3(0, 0.18, 0));
+  launchCore.userData.wonderCircuitPulse = 1.6;
+  group.add(launchCore);
+  return group;
+}
+
 export function createIslandStagedRestorationThreePresentation(options: {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 19;
   stageCount: number;
   quality: Island3DQuality;
 }): IslandStagedRestorationThreeRuntime {
@@ -180,7 +259,9 @@ export function createIslandStagedRestorationThreePresentation(options: {
             ? createLivingCompassStage(index, materials)
           : options.islandNumber === 18
             ? createPollinationStage(index, materials)
-            : createIgnitionStage(index, materials);
+            : options.islandNumber === 19
+              ? createWonderCircuitStage(index, materials)
+              : createIgnitionStage(index, materials);
     stage.name = `ISLAND_${options.islandNumber}_MISSION_STAGE_${index + 1}`;
     stage.visible = false;
     root.add(stage);
@@ -195,6 +276,10 @@ export function createIslandStagedRestorationThreePresentation(options: {
   finaleRing.position.copy(finaleCore.position);
   finaleRing.rotation.x = Math.PI / 2;
   finale.add(finaleCore, finaleRing);
+  if (options.islandNumber === 19) {
+    finale.name = 'ISLAND_19_WONDER_EXPRESS_VICTORY_RIDE_BEACON';
+    finale.position.set(7.35, -0.25, -0.78);
+  }
   finale.visible = false;
   if (!usesAuthoredWorldPresentation) root.add(finale);
 
@@ -271,6 +356,14 @@ export function createIslandStagedRestorationThreePresentation(options: {
         robot.rotation.y = elapsed * (index % 2 === 0 ? 1.4 : -1.2);
         robot.position.y = 0.55 + Math.abs(Math.sin(elapsed * 5 + index)) * 0.12;
       });
+      if (options.islandNumber === 19) {
+        const wonderWorksites = [
+          new THREE.Vector3(0, 0, -4.28),
+          new THREE.Vector3(-3.72, 0.28, 1.58),
+          new THREE.Vector3(5.18, 0, 2.0),
+        ] as const;
+        robots.position.copy(wonderWorksites[Math.max(0, Math.min(2, presentation.activatedStages - 1))]);
+      }
     }
     flashPoints.children.forEach((flash) => {
       const phase = Number(flash.userData.phase ?? 0);
@@ -286,6 +379,17 @@ export function createIslandStagedRestorationThreePresentation(options: {
         }
       });
       if (options.islandNumber === 9) group.rotation.y = reducedMotion ? 0 : Math.sin(elapsed * 0.42 + index) * 0.025;
+      if (options.islandNumber === 19 && !reducedMotion) {
+        group.traverse((child) => {
+          if (typeof child.userData.wonderCircuitPulse === 'number') {
+            const pulse = 0.82 + Math.sin(elapsed * 4.1 + child.userData.wonderCircuitPulse) * 0.18;
+            child.scale.setScalar(pulse);
+          }
+          if (typeof child.userData.wonderCircuitLaunchCoil === 'number') {
+            child.rotation.z = elapsed * (0.28 + child.userData.wonderCircuitLaunchCoil * 0.12);
+          }
+        });
+      }
     });
     if (finale.visible) {
       const pulse = reducedMotion ? 1 : 1 + Math.sin(elapsed * 2.2) * 0.12;

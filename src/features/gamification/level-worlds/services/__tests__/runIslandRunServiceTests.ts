@@ -187,6 +187,7 @@ import { island5ThreePilotContractTests } from './island5ThreePilotContract.test
 import { island10RootheartThreeWorldContractTests } from './island10RootheartThreeWorldContract.test';
 import { island18JungleExpeditionThreeWorldContractTests } from './island18JungleExpeditionThreeWorldContract.test';
 import { island20LavaLabyrinthThreeWorldContractTests } from './island20LavaLabyrinthThreeWorldContract.test';
+import { island19CoasterCarnivalRepresentativeSliceTests } from './island19CoasterCarnivalRepresentativeSlice.test';
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
 import { eggHatchThreePresentationTests } from './eggHatchThreePresentation.test';
 import { eggHatchThreeContractTests } from './eggHatchThreeContract.test';
@@ -217,6 +218,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'island10RootheartThreeWorldContract', tests: island10RootheartThreeWorldContractTests },
   { label: 'island18JungleExpeditionThreeWorldContract', tests: island18JungleExpeditionThreeWorldContractTests },
   { label: 'island20LavaLabyrinthThreeWorldContract', tests: island20LavaLabyrinthThreeWorldContractTests },
+  { label: 'island19CoasterCarnivalRepresentativeSlice', tests: island19CoasterCarnivalRepresentativeSliceTests },
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
   { label: 'eggHatchThreePresentation', tests: eggHatchThreePresentationTests },
   { label: 'eggHatchThreeContract', tests: eggHatchThreeContractTests },
@@ -417,8 +419,16 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
 async function main() {
   let passed = 0;
   let failed = 0;
+  // @ts-ignore island-run test tsconfig intentionally omits Node globals
+  const requestedSuite = globalThis.process?.env?.ISLAND_RUN_TEST_SUITE?.trim();
+  const selectedSuites = requestedSuite
+    ? suites.filter((suite) => suite.label === requestedSuite)
+    : suites;
+  if (requestedSuite && selectedSuites.length === 0) {
+    throw new Error(`Unknown Island Run test suite: ${requestedSuite}`);
+  }
 
-  for (const suite of suites) {
+  for (const suite of selectedSuites) {
     for (const test of suite.tests) {
       try {
         await test.run();

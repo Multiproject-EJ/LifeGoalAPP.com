@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "family": "circuit-i-source-identity-and-structural-ride-exterior",
+  "decisionId": "d016+d017+d018+d019",
+  "status": "bounded-correction-built-awaiting-runtime-quality-lord",
+  "revision": "r02",
+  "hypothesis": "The shared C1 route carves a continuous physical void through this island's own cliff, terrace and obstructing scenery; no image plate or replacement island is used.",
+  "staticMeshCount": 1,
+  "materialCount": 3,
+  "expectedStaticDrawCalls": 3,
+  "triangles": 48172,
+  "triangleBudget": 60000,
+  "drawCallBudget": 3,
+  "atlas": "public/assets/islands/island-019/coaster-carnival-exterior-atlas-v008.png",
+  "glb": "public/assets/islands/island-019/coaster-carnival-exterior-v008.glb",
+  "blend": "work/island-visual-library/island-019-coaster-carnival/blender/coaster-carnival-exterior-v008.blend",
+  "evidenceDirectory": "work/island-visual-library/island-019-coaster-carnival/evidence/grand-grotto-d019-r01/raw",
+  "gameplayWrites": false,
+  "boardGeometryOwned": false,
+  "wonderExpressRouteOwned": false,
+  "purposeBuiltRailPortalOwned": true,
+  "palacePortalClearWidth": 1.85,
+  "palacePortalClearHeight": 3.02,
+  "palaceRearwardOffset": 3.4,
+  "sharedRouteSource": "src/features/gamification/level-worlds/dev/island19WonderRoute.json",
+  "physicalGrotto": {
+    "decisionId": "d019",
+    "center": [
+      -1,
+      -13,
+      0
+    ],
+    "radii": [
+      6.8,
+      7,
+      5.4
+    ],
+    "floorY": -19,
+    "terrainBottomY": -24,
+    "treasureFocus": [
+      -0.5,
+      -16.9,
+      0.2
+    ]
+  },
+  "palacePortalDepth": 2.05
+}

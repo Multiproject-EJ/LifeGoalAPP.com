@@ -1,0 +1,32 @@
+{
+  "radius": 1.6,
+  "knots": [
+    {"id":"station","position":[0,1.62,-7.9],"tangent":[0,0,1],"phase":"dispatch","handleScale":0.43},
+    {"id":"palace-exit","position":[0,1.62,-3.4],"tangent":[0,0,1],"phase":"dispatch","handleScale":0.3158776},
+    {"id":"bypass-shoulder","position":[-2.2523777,1.6199946,-1.8736261],"tangent":[-1,0,0],"phase":"dispatch","handleScale":0.527677},
+    {"id":"fountain-bypass","position":[-4.9528431,1.3974687,0.1049769],"tangent":[0,0,1],"phase":"dispatch","handleScale":0.4248585},
+    {"id":"lift-base","position":[-3.5503758,2.1649519,3.422313],"phase":"source-crest","handleScale":0.4401336},
+    {"id":"lift","position":[-3.6941447,5.8798504,1.4196453],"phase":"source-crest","handleScale":0.3836911},
+    {"id":"crest","position":[-2.9623083,9.18,0.076684],"phase":"source-crest","handleScale":0.4380876},
+    {"id":"crest-descent","position":[-0.0091107,7.3948792,0.1157531],"phase":"source-crest","handleScale":0.427998},
+    {"id":"inward-s","position":[1.0629,4.42889,0.9069],"phase":"surface-s","handleScale":0.44403},
+    {"id":"east-turn","position":[5.25025,1.39823,2.15683],"phase":"surface-s","handleScale":0.39904},
+    {"id":"front-sweep","position":[1.07706,1.3326,4.9933],"phase":"surface-s","handleScale":0.43},
+    {"id":"plunge-mouth","position":[-5.80015,1.42192,3.55214],"phase":"plunge","handleScale":0.43262},
+    {"id":"descent","position":[-5.90928,-1.60134,0.20035],"phase":"plunge","handleScale":0.42997},
+    {"id":"gold-vault","position":[-3.62928,-3.21425,-1.1852],"phase":"gold-vault","handleScale":0.3326541774580255},
+    {"id":"grotto-threshold","position":[-0.9457883485686033,-6.161764408769085,-2.821913826710077],"phase":"plunge","handleScale":0.47370831334381364},
+    {"id":"grotto-second-drop","position":[-0.5708342218515463,-10.497066346681674,-3.6595615633297727],"phase":"plunge","handleScale":0.47999374311184506},
+    {"id":"grotto-west-balcony","position":[-4.48334934562212,-12.099581527120899,-1.8278010477381754],"phase":"grand-vault","handleScale":0.45894665767904375},
+    {"id":"grotto-south-balcony","position":[-4.502523783193904,-12.399590369379151,1.8462182011036203],"phase":"grand-vault","handleScale":0.46651833181269464},
+    {"id":"grotto-treasure-overlook","position":[-0.5717564874119125,-12.227850252084894,3.8826242705457847],"phase":"grand-vault","handleScale":0.47388583768391973},
+    {"id":"grotto-east-balcony","position":[2.9162702738144444,-12.207843737991062,2.4369513222388925],"phase":"grand-vault","handleScale":0.4804619256407022},
+    {"id":"diamond-gallery","position":[3.525679110963828,-9.474842048450371,-1.227283087128308],"phase":"diamond-gallery","handleScale":0.4448817352764308},
+    {"id":"undersea-entry","position":[7.046,-7,-0.788],"tangent":[1,0,-0.2],"phase":"sea-cave","handleScale":0.5273137030553046},
+    {"id":"undersea-panorama","position":[11.252,-7,-3.429],"phase":"ocean-reveal","handleScale":0.42998},
+    {"id":"undersea-far-turn","position":[8,-7,-8.8],"phase":"ocean-reveal","handleScale":0.43},
+    {"id":"ascent-foot","position":[3,-6.935,-12],"phase":"return","handleScale":0.43},
+    {"id":"ascent-mouth","position":[0,-0.782,-13],"phase":"return","handleScale":0.47282},
+    {"id":"arrival-level","position":[0,1.62,-10.4],"tangent":[0,0,1],"phase":"return","handleScale":0.4577}
+  ]
+}

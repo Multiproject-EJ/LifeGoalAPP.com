@@ -196,8 +196,14 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(cssSource.includes('.island-run-prototype--build-exclusive > .island-run-overlay-root:not(.bm2-build-mode):not(.bm2-level-complete)'), 'unrelated overlay surfaces should stay hidden until Build closes');
       assert(cssSource.includes('.island-run-prototype--build-exclusive .island-run-board__topbar'), 'Build must replace rather than stack underneath the ordinary game top bar');
       assert(cssSource.includes("top: max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))"), 'Build header must occupy the top safe-area slot instead of sitting below the game header');
-      assert(cssSource.includes('background: linear-gradient(180deg, #ef5757 0%, #ad1717 100%)'), 'Build and board close controls should use a high-contrast red surface');
-      assert(cssSource.includes('.bm2-build-mode .bm2-header__close') && cssSource.includes('.island-run-board__topbar-exit'), 'both close controls must share the red and white visibility treatment');
+      assert(cssSource.includes('background: linear-gradient(180deg, #ef5757 0%, #ad1717 100%)'), 'Build close should use a high-contrast red surface');
+      assert(cssSource.includes('.bm2-build-mode .bm2-header__close'), 'Build keeps its contextual close control in the modal header');
+      const audioTopbarIndex = boardSource.indexOf('aria-label="Audio options"');
+      const menuTopbarIndex = boardSource.indexOf('aria-label="Board menu"');
+      assert(audioTopbarIndex >= 0 && menuTopbarIndex > audioTopbarIndex, 'the calm top bar should place sound before the menu button');
+      assert(!boardSource.includes('island-run-board__topbar-exit'), 'the game header must not advertise a persistent exit action');
+      assert(boardSource.includes('island-run-board__topbar-menu-item--exit') && boardSource.includes('aria-label="Exit Island Run"'), 'the board menu owns the explicit Exit Island Run action');
+      assert(!boardSource.includes('\n                ← Back\n'), 'the top-bar menu should not retain its ambiguous standalone Back label');
       assert(cssSource.includes('.bm2-level-review__advance:disabled') && cssSource.includes('cursor: wait'), 'the protected choreography window should have explicit disabled feedback');
       assert(modalSource.includes('bm2-dock__topline') && modalSource.includes('bm2-dock__funding'), 'the active build summary should keep level, identity, and funding information in compact rows');
       assert(cssSource.includes('.bm2-level-complete__scene-fx') && cssSource.includes('bm2-level-scene-shine'), 'level completion should add a board-wide shine and sparkle pass');

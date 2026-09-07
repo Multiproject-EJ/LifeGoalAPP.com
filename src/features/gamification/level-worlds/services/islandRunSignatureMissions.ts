@@ -83,7 +83,8 @@ export type StagedRestorationMissionId =
   | 'great-pollination'
   | 'ignition-chain'
   | 'jungle-expedition-living-compass'
-  | 'escape-lava-labyrinth';
+  | 'escape-lava-labyrinth'
+  | 'restart-wonder-circuit';
 
 export type StagedRestorationPickupKind =
   | 'causeway_masonry'
@@ -92,10 +93,11 @@ export type StagedRestorationPickupKind =
   | 'pollination_pollen_light'
   | 'ignition_core'
   | 'wayfinder_glyph'
-  | 'heatshield_plate';
+  | 'heatshield_plate'
+  | 'golden_ride_ticket';
 
 export interface StagedRestorationMissionDescriptor {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 20;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 19 | 20;
   missionId: StagedRestorationMissionId;
   pickupKind: StagedRestorationPickupKind;
   pickupLabel: string;
@@ -148,6 +150,12 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
     pickupLabel: 'Heatshield Plate', actionLabel: 'Forge Iron Skiff System', stageLabel: 'Escape Systems Ready',
     stageCount: 4, chargeCostPerStage: 2,
     preferredPickupFractions: [2 / 36, 7 / 36, 11 / 36, 16 / 36, 20 / 36, 25 / 36, 29 / 36, 35 / 36],
+  },
+  19: {
+    islandNumber: 19, missionId: 'restart-wonder-circuit', pickupKind: 'golden_ride_ticket',
+    pickupLabel: 'Golden Ride Ticket', actionLabel: 'Power Next Circuit System', stageLabel: 'Circuit Systems Online',
+    stageCount: 3, chargeCostPerStage: 2,
+    preferredPickupFractions: [2 / 36, 8 / 36, 14 / 36, 20 / 36, 27 / 36, 34 / 36],
   },
 });
 

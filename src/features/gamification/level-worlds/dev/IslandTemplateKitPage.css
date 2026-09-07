@@ -123,7 +123,10 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
   }
   .island-kit-phone--evidence-frame {
     z-index: 10;
-    transform: scale(.62);
+    /* Keep the complete 390x844 gameplay viewport inside an 800px-tall
+       desktop evidence frame while preserving enough pixel density for
+       board, coaster and ride-detail review. */
+    transform: scale(.9);
     transform-origin: top center;
   }
 }
@@ -233,6 +236,86 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
   font-size: 7px;
   font-weight: 900;
   cursor: pointer;
+}
+
+.island-5-three-pilot__wonder-transition-veil {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(34, 17, 10, .18), rgba(7, 6, 12, .92) 78%),
+    linear-gradient(180deg, rgba(4, 5, 10, .58), rgba(25, 9, 5, .76));
+  transition: opacity 90ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-5-three-pilot__wonder-transition-veil { transition: none; }
+}
+
+.island-5-three-pilot__wonder-cockpit {
+  position: absolute;
+  z-index: 9;
+  left: 50%;
+  bottom: -4px;
+  width: min(82%, 360px);
+  height: 82px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  filter: drop-shadow(0 -8px 16px rgba(10, 4, 3, .42));
+}
+.island-5-three-pilot__wonder-cockpit::before {
+  content: '';
+  position: absolute;
+  inset: 34px 13% -26px;
+  border: 3px solid #f1cf83;
+  border-bottom: 0;
+  border-radius: 48% 48% 0 0;
+  background: linear-gradient(180deg, #b62f24 0%, #651b1d 55%, #29141a 100%);
+  box-shadow: inset 0 4px rgba(255, 239, 184, .18), 0 -3px 0 #32151a;
+}
+.island-5-three-pilot__wonder-cockpit > span {
+  position: absolute;
+  top: 4px;
+  width: 13px;
+  height: 70px;
+  border: 3px solid #d6a94b;
+  border-radius: 999px;
+  background: #2b2327;
+  box-shadow: inset 0 0 0 2px #efe0b4;
+  transform-origin: bottom center;
+}
+.island-5-three-pilot__wonder-cockpit > span:first-child { left: 24%; transform: rotate(-28deg); }
+.island-5-three-pilot__wonder-cockpit > span:nth-child(2) { right: 24%; transform: rotate(28deg); }
+.island-5-three-pilot__wonder-cockpit > b {
+  position: absolute;
+  left: 50%;
+  bottom: 11px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 223, 149, .78);
+  border-radius: 999px;
+  color: #fff0be;
+  background: rgba(30, 15, 17, .78);
+  font: 900 7px/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .12em;
+  transform: translateX(-50%);
+}
+.island-5-three-pilot__wonder-cockpit[data-wagon='middle'] {
+  transform: translateX(-50%) scale(.94);
+}
+.island-5-three-pilot__wonder-cockpit[data-wagon='middle']::after {
+  content: '';
+  position: absolute;
+  left: 35%;
+  bottom: 30px;
+  width: 30%;
+  height: 27px;
+  border: 2px solid #d6a94b;
+  border-radius: 48% 48% 18% 18%;
+  background: linear-gradient(180deg, #38272b, #171216);
+  box-shadow: inset 0 3px rgba(255, 238, 187, .12);
 }
 
 .island-5-three-pilot--evidence .island-5-three-pilot__topline,

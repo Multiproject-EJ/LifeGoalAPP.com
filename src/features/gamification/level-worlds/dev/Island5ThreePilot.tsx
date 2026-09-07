@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import './Island19WonderRide.css';
+import { createWonderRideCameraFilter } from './island19WonderRideCamera';
 import * as THREE from 'three';
 import { resolveIsland18CompassCeremonyCamera } from './island18CompassCeremonyCamera';
 import { JUNGLE_COMPASS_CEREMONY_DURATION_MS, JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS } from '../services/islandRunJungleMissionPresentation';
@@ -229,6 +231,28 @@ import {
   ISLAND_20_LAVA_LABYRINTH_WORLD_NAME,
   type Island20SkiffNavigationPresentation,
 } from './Island20LavaLabyrinthThreeWorld';
+import {
+  createIsland19CoasterCarnivalSourceLoftWorld,
+  type Island19SourceLoftWorldRuntime,
+} from './Island19CoasterCarnivalSourceLoftWorld';
+import {
+  createIsland19CoasterCarnivalCircuitFWorld,
+  ISLAND_19_CIRCUIT_F_WORLD_NAME,
+  type Island19CircuitFRidePhase,
+  type Island19CircuitFWagon,
+  type Island19CircuitFWorldRuntime,
+} from './Island19CoasterCarnivalCircuitFWorld';
+import {
+  createIsland19CoasterCarnivalCircuitGBoardPlaza,
+  ISLAND_19_CIRCUIT_G_BOARD_NAME,
+  type Island19CircuitGBoardRuntime,
+} from './Island19CoasterCarnivalCircuitGBoardPlaza';
+import {
+  createIsland19CoasterCarnivalHybridOverlay,
+  ISLAND_19_HYBRID_PHONE_PLATE,
+  ISLAND_19_HYBRID_WORLD_NAME,
+  type Island19HybridOverlayRuntime,
+} from './Island19CoasterCarnivalHybridOverlay';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -484,6 +508,7 @@ interface PilotMetrics {
 type ProfilerStatus = 'idle' | 'running' | 'complete' | 'cancelled';
 type CameraTourStatus = 'idle' | 'running';
 type Island13TrainRidePhase = 'idle' | Island13TrainRideView;
+type Island19WonderRidePhase = 'idle' | Island19CircuitFRidePhase;
 
 const ISLAND_13_TRAIN_RIDE_VIEWS: readonly Island13TrainRideView[] = ['driver', 'rear', 'side'];
 const ISLAND_13_TRAIN_RIDE_PHASE_MS = 15_000;
@@ -3449,6 +3474,19 @@ export default function Island5ThreePilot({
   const isHoneycombKingdom = resolvedWorldSourceNumber === 14;
   const isJungleExpedition = resolvedWorldSourceNumber === 18;
   const isLavaLabyrinth = resolvedWorldSourceNumber === 20;
+  const isCoasterCarnival = resolvedWorldSourceNumber === 19;
+  const isCircuitGBoardPreviewEnabled = isCoasterCarnival
+    && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('island19CircuitGBoard') === '1';
+  const isCircuitFPreviewEnabled = isCoasterCarnival
+    && !isCircuitGBoardPreviewEnabled
+    && typeof window !== 'undefined'
+    // d022: user approved the current all-angle island for the live release.
+    // Keep an explicit diagnostic rollback, but ordinary players need no flag.
+    && new URLSearchParams(window.location.search).get('island19CircuitF') !== '0';
+  const isIsland19BoardFocusEvidenceEnabled = isCoasterCarnival
+    && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('island19BoardFocus') === '1';
   const worldName = isAssemblyCraterFirstLight
     ? ISLAND_1_ASSEMBLY_CRATER_NAME
     : isFirstLightKingdom
@@ -3479,6 +3517,12 @@ export default function Island5ThreePilot({
                         ? ISLAND_18_JUNGLE_EXPEDITION_WORLD_NAME
                         : isLavaLabyrinth
                           ? ISLAND_20_LAVA_LABYRINTH_WORLD_NAME
+                        : isCoasterCarnival
+                          ? isCircuitGBoardPreviewEnabled
+                            ? ISLAND_19_CIRCUIT_G_BOARD_NAME
+                            : isCircuitFPreviewEnabled
+                              ? ISLAND_19_CIRCUIT_F_WORLD_NAME
+                              : ISLAND_19_HYBRID_WORLD_NAME
                         : isFishermansVillage
                           ? ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME
               : 'Crown of Tides';
@@ -3501,7 +3545,11 @@ export default function Island5ThreePilot({
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
   const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(null);
   const sustainedQualityMissesRef = useRef(0);
-  const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>('overview');
+  const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>(() => (
+    isIsland19BoardFocusEvidenceEnabled
+      ? 'survey'
+      : 'overview'
+  ));
   const [isCameraAuthoring, setIsCameraAuthoring] = useState(() => (
     typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('cameraAuthoring') === '1'
@@ -3519,9 +3567,18 @@ export default function Island5ThreePilot({
   const [reportShareNotice, setReportShareNotice] = useState('');
   const [trainRidePhase, setTrainRidePhase] = useState<Island13TrainRidePhase>('idle');
   const [trainRideSecondsRemaining, setTrainRideSecondsRemaining] = useState(15);
+  const [wonderRidePhase, setWonderRidePhase] = useState<Island19WonderRidePhase>('idle');
+  const [wonderRideWagon, setWonderRideWagon] = useState<Island19CircuitFWagon>('front');
+  const [wonderRideSecondsRemaining, setWonderRideSecondsRemaining] = useState(0);
+  const [wonderRideTelemetry, setWonderRideTelemetry] = useState({ progress: 0, pace: 'Boarding' });
   const [error, setError] = useState<string | null>(null);
   const [rendererRetryVersion, setRendererRetryVersion] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wonderRideTransitionVeilRef = useRef<HTMLDivElement>(null);
+  const wonderRideFrontButtonRef = useRef<HTMLButtonElement>(null);
+  const wonderRideMiddleButtonRef = useRef<HTMLButtonElement>(null);
+  const wonderRideExitButtonRef = useRef<HTMLButtonElement>(null);
+  const previousWonderRidePhaseRef = useRef<Island19WonderRidePhase>('idle');
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
   landmarkBuildLevelsRef.current = landmarkBuildLevels;
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
@@ -3543,6 +3600,8 @@ export default function Island5ThreePilot({
   const startProfilerRef = useRef<() => void>(() => undefined);
   const exitTrainRideRef = useRef<() => void>(() => undefined);
   const advanceTrainRideRef = useRef<() => void>(() => undefined);
+  const startWonderRideRef = useRef<(wagon: Island19CircuitFWagon) => void>(() => undefined);
+  const exitWonderRideRef = useRef<() => void>(() => undefined);
   const deviceLabelRef = useRef('');
   const tokenIndexRef = useRef(tokenIndex);
   const tokenSnapRequestRef = useRef(tokenIndex);
@@ -3782,7 +3841,7 @@ export default function Island5ThreePilot({
       renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: qualityProfile.antialias,
-        alpha: false,
+        alpha: isCoasterCarnival,
         powerPreference: qualityProfile.id === 'high' ? 'high-performance' : 'default',
       });
     } catch (caught) {
@@ -3923,7 +3982,14 @@ export default function Island5ThreePilot({
       });
       scene.background = rootheartDayBackdrop;
     }
-    scene.fog = new THREE.FogExp2(fogColor, fogDensity);
+    if (isCoasterCarnival) {
+      scene.background = isCircuitFPreviewEnabled || isCircuitGBoardPreviewEnabled ? new THREE.Color(0x77c9ef) : null;
+    }
+    scene.fog = isCoasterCarnival
+      ? isCircuitFPreviewEnabled || isCircuitGBoardPreviewEnabled
+        ? new THREE.FogExp2(0x86d2ee, 0.008)
+        : null
+      : new THREE.FogExp2(fogColor, fogDensity);
 
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
@@ -4011,6 +4077,18 @@ export default function Island5ThreePilot({
       position: [0, 14.8, 19.6] as const,
       target: [0, 0.18, -0.18] as const,
     };
+    const coasterCarnivalInitialOverview = {
+      // Give the production hybrid a closer establishing view while keeping
+      // the complete Ferris wheel, crest, drop tower, carousel and cliff root
+      // inside the portrait. This camera scales the real Three.js overlay in
+      // step with the slightly enlarged source-locked plate below.
+      position: [1.25, 17.3, 31.7] as const,
+      target: [0, 1.25, -0.05] as const,
+    };
+    const circuitGBoardInitialOverview = {
+      position: [0.4, 12.8, 20.8] as const,
+      target: [0, 0.35, 0] as const,
+    };
     const restoredCameraPose = cameraPoseSnapshotRef.current;
     const initialOverviewPosition = isFirstLightKingdom
       ? firstLightInitialOverview.position
@@ -4026,6 +4104,10 @@ export default function Island5ThreePilot({
               ? jungleExpeditionInitialOverview.position
             : isLavaLabyrinth
               ? lavaLabyrinthInitialOverview.position
+              : isCoasterCarnival
+                ? isCircuitGBoardPreviewEnabled
+                  ? circuitGBoardInitialOverview.position
+                  : coasterCarnivalInitialOverview.position
         : overview.position;
     const initialOverviewTarget = isFirstLightKingdom
       ? firstLightInitialOverview.target
@@ -4041,10 +4123,14 @@ export default function Island5ThreePilot({
               ? jungleExpeditionInitialOverview.target
             : isLavaLabyrinth
               ? lavaLabyrinthInitialOverview.target
+              : isCoasterCarnival
+                ? isCircuitGBoardPreviewEnabled
+                  ? circuitGBoardInitialOverview.target
+                  : coasterCarnivalInitialOverview.target
         : overview.target;
     camera.position.set(...(restoredCameraPose?.position ?? initialOverviewPosition));
     camera.lookAt(...(restoredCameraPose?.target ?? initialOverviewTarget));
-    if (!restoredCameraPose) setActivePreset('overview');
+    if (!restoredCameraPose && !isIsland19BoardFocusEvidenceEnabled) setActivePreset('overview');
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -4093,7 +4179,8 @@ export default function Island5ThreePilot({
     // every leaf, tile reward, controller prop or ambient effect.
     const sceneUsesRealtimeShadows = qualityProfile.shadows
       && !isAbyssalPearlKingdom
-      && !isLavaLabyrinth;
+      && !isLavaLabyrinth
+      && !(isCoasterCarnival && isCircuitFPreviewEnabled);
     renderer.shadowMap.enabled = sceneUsesRealtimeShadows;
     renderer.shadowMap.type = isSunkenSands ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
@@ -4341,6 +4428,13 @@ export default function Island5ThreePilot({
     sunlight.shadow.bias = isSunkenSands ? -0.00035 : -0.0006;
     sunlight.shadow.normalBias = isSunkenSands ? 0.025 : isJungleExpedition ? 0.018 : 0;
     scene.add(sunlight);
+    const wonderRideKeyLight = new THREE.PointLight(0xffc36d, 0, 7.5, 1.7);
+    wonderRideKeyLight.name = 'ISLAND_19_WONDER_EXPRESS_PHASE_KEY_LIGHT';
+    wonderRideKeyLight.visible = false;
+    const wonderRideRimLight = new THREE.PointLight(0x74ddff, 0, 6.5, 1.8);
+    wonderRideRimLight.name = 'ISLAND_19_WONDER_EXPRESS_PHASE_RIM_LIGHT';
+    wonderRideRimLight.visible = false;
+    if (isCoasterCarnival) scene.add(wonderRideKeyLight, wonderRideRimLight);
     if (isSunkenSands) {
       // A restrained water-colour fill keeps shaded sandstone legible while
       // allowing the warmer key light and static shadow map to do the actual
@@ -4528,6 +4622,94 @@ export default function Island5ThreePilot({
     const island14HoneycombMaterials = isHoneycombKingdom ? createIsland14HoneycombMaterials() : null;
     const island18JungleExpeditionMaterials = isJungleExpedition ? createIsland18JungleExpeditionMaterials() : null;
     const island20LavaLabyrinthMaterials = isLavaLabyrinth ? createIsland20LavaLabyrinthMaterials(qualityProfile.id) : null;
+    const island19CircuitGBoard: Island19CircuitGBoardRuntime | null = isCircuitGBoardPreviewEnabled
+      ? createIsland19CoasterCarnivalCircuitGBoardPlaza({
+          quality: qualityProfile.id,
+          castShadow: qualityProfile.shadows,
+          receiveShadow: true,
+          reducedMotion: isReducedMotion,
+          clay: isMapStrippedEvidenceEnabled,
+        })
+      : null;
+    if (island19CircuitGBoard) {
+      scene.add(island19CircuitGBoard.root);
+      Object.assign(canvas.dataset, island19CircuitGBoard.dataset);
+      canvas.dataset.island19FullWorld = 'circuit-g-g01-board-plaza-mounted';
+      canvas.dataset.island19RepresentativeVariant = 'circuit-g-source-locked-modular-board';
+      canvas.dataset.island19FallbackPreserved = 'circuit-e-source-locked-hybrid';
+    }
+    // Keep the production Wonder Express world ready behind the source-facing
+    // overview. It becomes visible for the canonical mission finale and for
+    // the explicit Circuit F evidence route; while hidden it owns no gameplay
+    // state and contributes no draw calls.
+    const island19CircuitFWorld: Island19CircuitFWorldRuntime | null = isCoasterCarnival
+      ? createIsland19CoasterCarnivalCircuitFWorld({
+          quality: qualityProfile.id,
+          castShadow: sceneUsesRealtimeShadows,
+          receiveShadow: true,
+          clay: isMapStrippedEvidenceEnabled,
+          cutaway: typeof window !== 'undefined'
+            && new URLSearchParams(window.location.search).get('island19CircuitFCutaway') === '1',
+          reducedMotion: isReducedMotion,
+        })
+      : null;
+    if (island19CircuitFWorld) {
+      island19CircuitFWorld.root.visible = isCircuitFPreviewEnabled;
+      scene.add(island19CircuitFWorld.root);
+      if (isCircuitFPreviewEnabled) {
+        Object.assign(canvas.dataset, island19CircuitFWorld.dataset);
+        canvas.dataset.island19FullWorld = 'circuit-f-mounted';
+        canvas.dataset.island19RepresentativeVariant = 'circuit-i-source-identity-exterior-with-deep-undersea-wonder-express';
+        canvas.dataset.island19FallbackPreserved = 'circuit-e-source-locked-hybrid';
+      }
+    }
+    const island19FullWorld: Island19SourceLoftWorldRuntime | null = isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled
+      ? createIsland19CoasterCarnivalSourceLoftWorld({
+          quality: qualityProfile.id,
+          castShadow: qualityProfile.shadows,
+          receiveShadow: true,
+        })
+      : null;
+    if (island19FullWorld) {
+      // Circuit D is retained as honest plate-free geometry evidence and as
+      // the train's cumulative-distance owner. It no longer owns the
+      // source-facing silhouette after the user's explicit 2/10 verdict.
+      island19FullWorld.root.visible = isMapStrippedEvidenceEnabled;
+      scene.add(island19FullWorld.root);
+      const diagnostics = island19FullWorld.diagnostics;
+      canvas.dataset.island19FullWorld = 'mounted';
+      canvas.dataset.island19RepresentativeVariant = 'circuit-e-source-locked-hybrid';
+      canvas.dataset.island19CircuitClosed = String(diagnostics.seamDistance <= 0.001 && diagnostics.seamTangentDot >= 0.995);
+      canvas.dataset.island19PortalClearance = String(diagnostics.portalSideMargin >= 0.25 && diagnostics.portalTopMargin >= 0.2 && diagnostics.portalBottomMargin >= 0.2);
+      canvas.dataset.island19LandmarksDistinct = String(diagnostics.landmarkMinimumSeparation >= 2.5);
+      canvas.dataset.island19RouteClearance = String(diagnostics.routeViolations.length === 0);
+      canvas.dataset.island19RuntimeManifest = String(diagnostics.manifestValid);
+      canvas.dataset.island19BoundsValid = String(diagnostics.rootDepthToTopWidthRatio >= 0.32);
+      canvas.dataset.island19TopologyValid = String(diagnostics.nonManifoldEdges === 0);
+      canvas.dataset.island19CircuitLength = diagnostics.totalLength.toFixed(5);
+      canvas.dataset.island19SourceLoftStations = String(diagnostics.stationCount);
+      canvas.dataset.island19PortalMinimumSideMargin = diagnostics.portalSideMargin.toFixed(5);
+    }
+    const island19HybridOverlay: Island19HybridOverlayRuntime | null = island19FullWorld && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled
+      ? createIsland19CoasterCarnivalHybridOverlay({
+          quality: qualityProfile.id,
+          castShadow: false,
+          getTrainPose: island19FullWorld.getTrainPose,
+          buildLevels: Object.fromEntries(
+            ISLAND_5_LANDMARKS.map((landmark) => [
+              landmark.id,
+              landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel,
+            ]),
+          ),
+        })
+      : null;
+    if (island19HybridOverlay) {
+      const geometryProofTrain = island19HybridOverlay.root.getObjectByName('island19-hybrid-wonder-train-motion');
+      if (geometryProofTrain) geometryProofTrain.visible = isMapStrippedEvidenceEnabled;
+      scene.add(island19HybridOverlay.root);
+      Object.assign(canvas.dataset, island19HybridOverlay.dataset);
+      canvas.dataset.island19HybridWorldTrainView = 'geometry-proof-only';
+    }
     const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom || isEverblossomKingdom || isSunkenSands;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
@@ -4574,13 +4756,13 @@ export default function Island5ThreePilot({
     water.rotation.x = -Math.PI / 2;
     water.position.y = isFirstLightKingdom ? ISLAND_1_OCEAN_SURFACE_Y : -0.62;
     water.receiveShadow = true;
-    if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isLavaLabyrinth) scene.add(water);
+    if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth) scene.add(water);
 
     const assemblySurfaceCutawayRoots: THREE.Object3D[] = [];
 
     // Island 007 owns a dedicated seabed/root system. Do not construct and then
     // hide the generic coastal plates, bridges and lagoon underneath it.
-    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isLavaLabyrinth) {
+    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth) {
       const firstLightMainDepth = 3.4;
       const island = isAssemblyCraterFirstLight && island1Materials
         ? createIsland1AssemblyCraterTerrain(qualityProfile.id, {
@@ -4642,7 +4824,13 @@ export default function Island5ThreePilot({
       scene.add(innerLagoon);
     }
 
-    const livingAmbience: Island5AmbienceRuntime = isFirstLightKingdom && island1Materials
+    const livingAmbience: Island5AmbienceRuntime = isCoasterCarnival && island19CircuitGBoard
+      ? { root: island19CircuitGBoard.root, animate: island19CircuitGBoard.animate }
+      : isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled
+      ? { root: island19CircuitFWorld.root, animate: island19CircuitFWorld.animate }
+      : isCoasterCarnival && island19HybridOverlay
+      ? { root: island19HybridOverlay.root, animate: island19HybridOverlay.animate }
+      : isFirstLightKingdom && island1Materials
       ? createIsland1LivingAmbience(scene, qualityProfile, island1Materials, water, materials.reef)
       : isCelestialSkyKingdom && island2CelestialMaterials
         ? createIsland2CelestialLivingAmbience(scene, qualityProfile, island2CelestialMaterials, water)
@@ -4746,6 +4934,7 @@ export default function Island5ThreePilot({
     const stagedRestorationInitial = resolveStagedRestorationPresentation();
     const stagedRestorationRuntime = stagedRestorationInitial
       && stagedRestorationInitial.islandNumber !== 20
+      && [4, 6, 7, 8, 9, 18, 19].includes(stagedRestorationInitial.islandNumber)
       ? createIslandStagedRestorationThreePresentation({
           islandNumber: stagedRestorationInitial.islandNumber,
           stageCount: stagedRestorationInitial.stageCount,
@@ -4800,11 +4989,13 @@ export default function Island5ThreePilot({
               (candidate): candidate is THREE.Object3D => Boolean(candidate),
             )
         : [];
-    const clickableCactusCanyonTrain = isCactusCanyon
+    const clickableRideTrain = isCactusCanyon
       ? [livingAmbience.root.getObjectByName('ISLAND_13_LOCOMOTIVE_ORBIT')].filter(
           (candidate): candidate is THREE.Object3D => Boolean(candidate),
         )
-      : [];
+      : isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled
+        ? [island19CircuitFWorld.train]
+        : [];
 
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
@@ -4914,6 +5105,18 @@ export default function Island5ThreePilot({
               emissiveIntensity: 0.22,
             }),
           ]
+      : isCoasterCarnival && isCircuitFPreviewEnabled
+        ? [
+            new THREE.MeshStandardMaterial({ color: 0xead8b0, roughness: 0.7, metalness: 0.02 }),
+            new THREE.MeshStandardMaterial({ color: 0x319394, roughness: 0.48, metalness: 0.16 }),
+            new THREE.MeshPhysicalMaterial({ color: 0xe8b94d, roughness: 0.28, metalness: 0.72, clearcoat: 0.34, clearcoatRoughness: 0.18 }),
+          ]
+      : isCoasterCarnival
+        ? [
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }),
+          ]
       : isHoneycombKingdom
         ? [
             new THREE.MeshStandardMaterial({ color: 0xffedbd, roughness: 0.62, metalness: 0.03 }),
@@ -5007,7 +5210,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth;
+    const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
     const instancedTileCounts = [0, 0, 0];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -5029,6 +5232,8 @@ export default function Island5ThreePilot({
                 ? `ISLAND_18_JUNGLE_ROUTE_TILE_BATCH_${materialIndex + 1}`
               : isLavaLabyrinth
                 ? `ISLAND_20_TILE_SURFACE_BATCH_${materialIndex + 1}`
+                : isCoasterCarnival
+                  ? `ISLAND_19_TILE_SURFACE_BATCH_${materialIndex + 1}`
               : `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
           if (isAbyssalPearlKingdom && materialIndex === 0) {
             mesh.userData.sculptRuntime = {
@@ -5090,7 +5295,11 @@ export default function Island5ThreePilot({
     const instancedTileInstanceCursor = [0, 0, 0];
     const tileMatrixScratch = new THREE.Matrix4();
     const tileQuaternionScratch = new THREE.Quaternion();
-    const tileScaleScratch = new THREE.Vector3(1, 1, 1);
+    const tileScaleScratch = new THREE.Vector3(
+      isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.3 : 1,
+      isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.34 : 1,
+      isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.3 : 1,
+    );
     const assemblyCameraBasePosition = new THREE.Vector3();
     const assemblyCameraShakeOffset = new THREE.Vector3();
     for (const transform of tileTransforms) {
@@ -5099,6 +5308,12 @@ export default function Island5ThreePilot({
       // coordinates and progression semantics stay unchanged while every
       // individual tile face and gilded joint remains visible.
       const tileVisualY = transform.position[1] + (isHoneycombKingdom ? 0.08 : isJungleExpedition ? 0.06 : isLavaLabyrinth ? 0.05 : 0);
+      if (island19CircuitGBoard) {
+        const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];
+        if (!circuitGTile) throw new Error(`Circuit G board is missing canonical tile ${transform.index}.`);
+        tileMeshes.set(transform.index, { mesh: circuitGTile, baseY: 0 });
+        continue;
+      }
       const tileMaterial = transform.isKeyTile ? tileMaterials[2] : tileMaterials[transform.index % 2];
       const tile = new THREE.Mesh(tileGeometry, tileMaterial);
       tile.position.set(transform.position[0], tileVisualY, transform.position[2]);
@@ -5164,6 +5379,7 @@ export default function Island5ThreePilot({
       quality: qualityProfile.id,
       compactCollectibles: isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
       staticBatchNonMissionRewards: isLavaLabyrinth,
+      signatureMissionOnly: isCoasterCarnival,
     });
     tileRewardObjects.setFirstLightClaimedDynamiteTiles(
       firstLightAssemblyCraterPresentationRef.current.claimedDynamiteTileIndices ?? [],
@@ -5171,6 +5387,7 @@ export default function Island5ThreePilot({
     tileRewardObjects.setStagedRestorationClaimedTiles(
       stagedRestorationPresentationRef.current?.claimedPickupTileIndices ?? [],
     );
+    if (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled) tileRewardObjects.root.scale.setScalar(0.62);
     if (isLavaLabyrinth) {
       tileRewardObjects.root.children.forEach((reward) => {
         reward.scale.multiplyScalar(0.72);
@@ -5197,6 +5414,7 @@ export default function Island5ThreePilot({
       compactStaticGeometry(playerPiece.root, 'ISLAND_20_PLAYER_TOKEN_RUNTIME_BATCH');
       playerPiece.root.userData.island20ThemedScale = 0.46;
     }
+    if (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled) playerPiece.root.scale.multiplyScalar(0.62);
     const startingTokenPosition = getIsland5TokenGroundPosition(tileTransforms, tokenIndexRef.current);
     playerPiece.root.position.set(...startingTokenPosition);
     playerPiece.shadow.position.set(startingTokenPosition[0], startingTokenPosition[1] + 0.012, startingTokenPosition[2]);
@@ -5248,7 +5466,7 @@ export default function Island5ThreePilot({
     const boardCaretaker = createCaretakerMaster({ quality: 'low' });
     boardCaretaker.root.name = 'ISLAND_5_CARETAKER_BOARD_LOD';
     boardCaretaker.root.position.copy(CARETAKER_BOARD_HOME);
-    boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE);
+    boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE * (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.62 : 1));
     boardCaretaker.root.rotation.y = 0;
     boardCaretaker.root.traverse((child) => {
       child.userData.caretakerTarget = true;
@@ -5390,6 +5608,11 @@ export default function Island5ThreePilot({
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
       const landmarkRoot = buildAuthoredLandmark(landmark, resolvedBuildLevel);
       if (landmark.id === 'boss') makeLandmarkMaterialsIndependent(landmarkRoot);
+      // The representative Island 019 gate intentionally shows only the
+      // approved p08/p09/p10/p24 geometry. Generic Crown-of-Tides landmarks
+      // would contaminate its source-fidelity review and are replaced family
+      // by family after the railway/castle macro slice is accepted.
+      if (isCoasterCarnival) landmarkRoot.visible = false;
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
       landmarkRootsById.set(landmark.id, landmarkRoot);
@@ -6064,7 +6287,7 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
@@ -6133,12 +6356,13 @@ export default function Island5ThreePilot({
     routeGlow.position.y = isFishermansVillage
       ? 0.34 + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET + 0.12
       : 0.25;
+    routeGlow.visible = !isCoasterCarnival;
     scene.add(routeGlow);
 
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)
+    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival)
       && isMapStrippedEvidenceEnabled;
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -6235,6 +6459,29 @@ export default function Island5ThreePilot({
       returnFov: number;
       returnPreset: Island5CameraPresetId | 'manual';
     } | null = null;
+    let activeWonderRide: {
+      startedAt: number;
+      durationMs: number;
+      wagon: Island19CircuitFWagon;
+      fixedProgress: number | null;
+      returnPosition: THREE.Vector3;
+      returnTarget: THREE.Vector3;
+      returnFov: number;
+      returnPreset: Island5CameraPresetId | 'manual';
+      returnBackground: THREE.Scene['background'];
+      returnFog: THREE.Scene['fog'];
+      returnUp: THREE.Vector3;
+      returnVisibility: Map<THREE.Object3D, boolean>;
+    } | null = null;
+    let wonderRidePublishedSeconds = -1;
+    const wonderRideCameraFilter = createWonderRideCameraFilter();
+    let wonderRidePublishedPhase: Island19WonderRidePhase = 'idle';
+    const wonderRideSkyBackground = new THREE.Color(0x69c4eb);
+    const wonderRideUnderseaBackground = new THREE.Color(0x07567a);
+    let wonderRideCompletedConstructionSequence = stagedRestorationInitial?.activatedStages === stagedRestorationInitial?.stageCount
+      ? Math.max(0, Math.floor(stagedRestorationInitial?.constructionSequence ?? 0))
+      : -1;
+    let wonderRidePendingAfterConstruction = false;
     let trainRidePublishedSeconds = -1;
     let lastTrainTapAt = Number.NEGATIVE_INFINITY;
     const lastTrainTapPosition = new THREE.Vector2();
@@ -6296,7 +6543,7 @@ export default function Island5ThreePilot({
           || (showAssemblyCutaway && entry.mesh.position.z <= 0);
       });
       tileRewardObjects.root.visible = showPlayableRoute;
-      routeGlow.visible = showPlayableRoute;
+      routeGlow.visible = showPlayableRoute && !isCoasterCarnival;
       assemblySurfaceCutawayRoots.forEach((surfaceRoot) => {
         surfaceRoot.visible = !showAssemblyCutaway;
       });
@@ -6785,6 +7032,14 @@ export default function Island5ThreePilot({
     const trainRidePhaseDurationMs = import.meta.env.DEV && Number.isFinite(requestedTrainRidePhaseMs)
       ? THREE.MathUtils.clamp(requestedTrainRidePhaseMs, 800, ISLAND_13_TRAIN_RIDE_PHASE_MS)
       : ISLAND_13_TRAIN_RIDE_PHASE_MS;
+    const requestedWonderRideWagon = trainRideParams.get('island19RideWagon') === 'middle' ? 'middle' : 'front';
+    const requestedWonderRideProgressParam = trainRideParams.get('island19RideProgress');
+    const requestedWonderRideProgressRaw = requestedWonderRideProgressParam === null
+      ? Number.NaN
+      : Number(requestedWonderRideProgressParam);
+    const requestedWonderRideProgress = Number.isFinite(requestedWonderRideProgressRaw)
+      ? THREE.MathUtils.clamp(requestedWonderRideProgressRaw, 0.01, 0.985)
+      : null;
     const finishTrainRide = (restoreCamera = true) => {
       if (!activeTrainRide) return;
       const finishedRide = activeTrainRide;
@@ -6863,6 +7118,126 @@ export default function Island5ThreePilot({
     };
     exitTrainRideRef.current = () => finishTrainRide();
     advanceTrainRideRef.current = advanceTrainRide;
+    const publishWonderRidePhase = (phase: Island19CircuitFRidePhase) => {
+      if (wonderRidePublishedPhase === phase) return;
+      wonderRidePublishedPhase = phase;
+      canvas.dataset.island19WonderRidePhase = phase;
+      setWonderRidePhase(phase);
+    };
+    const finishWonderRide = (restoreCamera = true) => {
+      if (!activeWonderRide || !island19CircuitFWorld) return;
+      const finishedRide = activeWonderRide;
+      activeWonderRide = null;
+      wonderRidePublishedSeconds = -1;
+      wonderRidePublishedPhase = 'idle';
+      canvas.dataset.island19WonderRidePhase = 'idle';
+      canvas.dataset.island19WonderRideActive = 'false';
+      wonderRideKeyLight.visible = false;
+      wonderRideRimLight.visible = false;
+      if (wonderRideTransitionVeilRef.current) wonderRideTransitionVeilRef.current.style.opacity = '0';
+      setWonderRidePhase('idle');
+      setWonderRideSecondsRemaining(0);
+      island19CircuitFWorld.train.visible = true;
+      island19CircuitFWorld.setRiderPovActive(null);
+      island19CircuitFWorld.setRidePhaseVisibility(null);
+      island19CircuitFWorld.root.visible = isCircuitFPreviewEnabled;
+      if (island19HybridOverlay) island19HybridOverlay.root.visible = true;
+      if (island19FullWorld) island19FullWorld.root.visible = isMapStrippedEvidenceEnabled;
+      if (island19CircuitGBoard) island19CircuitGBoard.root.visible = true;
+      if (stagedRestorationRuntime) stagedRestorationRuntime.root.visible = true;
+      finishedRide.returnVisibility.forEach((visible, object) => { object.visible = visible; });
+      scene.background = finishedRide.returnBackground;
+      scene.fog = finishedRide.returnFog;
+      hemisphere.intensity = hemisphereIntensity;
+      sunlight.intensity = sunlightIntensity;
+      camera.up.copy(finishedRide.returnUp);
+      camera.fov = finishedRide.returnFov;
+      camera.updateProjectionMatrix();
+      controls.enabled = !interactionPausedRef.current && !caretakerEncounterOpenRef.current;
+      if (!restoreCamera) return;
+      setActivePreset(finishedRide.returnPreset);
+      if (isReducedMotion) {
+        camera.position.copy(finishedRide.returnPosition);
+        controls.target.copy(finishedRide.returnTarget);
+        camera.lookAt(controls.target);
+        controls.update();
+        transition = null;
+        return;
+      }
+      const fromPosition = camera.position.clone();
+      const controlPosition = fromPosition.clone().lerp(finishedRide.returnPosition, 0.5);
+      controlPosition.y += 1.7;
+      transition = {
+        startedAt: performance.now(),
+        durationMs: 900,
+        fromPosition,
+        fromTarget: controls.target.clone(),
+        controlPosition,
+        toPosition: finishedRide.returnPosition,
+        toTarget: finishedRide.returnTarget,
+      };
+    };
+    const startWonderRide = (
+      startedAt: number,
+      wagon: Island19CircuitFWagon,
+      fixedProgress: number | null = null,
+    ) => {
+      if (!isCoasterCarnival || !island19CircuitFWorld || activeWonderRide) return;
+      if (activeTrainRide) finishTrainRide(false);
+      const normalizedFixedProgress = fixedProgress === null
+        ? null
+        : THREE.MathUtils.clamp(fixedProgress, 0.01, 0.985);
+      const returnVisibility = new Map<THREE.Object3D, boolean>();
+      // Retire only legacy alternative representations. Canonical board tiles,
+      // rewards and the actual island remain in the same scene during the ride.
+      [island19HybridOverlay?.root, island19FullWorld?.root, island19CircuitGBoard?.root, stagedRestorationRuntime?.root].forEach((object) => {
+        if (!object) return;
+        returnVisibility.set(object, object.visible);
+        object.visible = false;
+      });
+      activeWonderRide = {
+        startedAt,
+        durationMs: isReducedMotion ? 30_000 : island19CircuitFWorld.pacing.durationSeconds * 1000,
+        wagon,
+        fixedProgress: normalizedFixedProgress,
+        returnPosition: camera.position.clone(),
+        returnTarget: controls.target.clone(),
+        returnFov: camera.fov,
+        returnPreset: activeInspectionPreset,
+        returnBackground: scene.background,
+        returnFog: scene.fog,
+        returnUp: camera.up.clone(),
+        returnVisibility,
+      };
+      wonderRideCameraFilter.reset();
+      transition = null;
+      idleOverviewAt = null;
+      controls.enabled = false;
+      setActivePreset('manual');
+      setWonderRideWagon(wagon);
+      island19CircuitFWorld.root.visible = true;
+      // The d017 ride camera occupies a named seat socket on the selected
+      // physical carriage. Keep the train visible so the nose/restraint stays
+      // in frame and the POV never reads like a detached fly-through.
+      island19CircuitFWorld.train.visible = true;
+      island19CircuitFWorld.setRiderPovActive(wagon);
+      island19CircuitFWorld.setCutaway(false);
+      if (island19HybridOverlay) island19HybridOverlay.root.visible = false;
+      if (island19FullWorld) island19FullWorld.root.visible = false;
+      if (island19CircuitGBoard) island19CircuitGBoard.root.visible = false;
+      if (stagedRestorationRuntime) stagedRestorationRuntime.root.visible = false;
+      scene.background = wonderRideSkyBackground;
+      camera.fov = 66;
+      camera.updateProjectionMatrix();
+      canvas.dataset.island19WonderRideActive = 'true';
+      canvas.dataset.island19WonderRideWagon = wagon;
+      canvas.dataset.island19WonderRideMission = 'restart-wonder-circuit-victory-lap';
+      const initialRidePhase = island19CircuitFWorld.getRideFrame(normalizedFixedProgress ?? 0.018, wagon).phase;
+      island19CircuitFWorld.setRidePhaseVisibility(initialRidePhase);
+      publishWonderRidePhase(initialRidePhase);
+    };
+    startWonderRideRef.current = (wagon) => startWonderRide(performance.now(), wagon);
+    exitWonderRideRef.current = () => finishWonderRide();
     const applyControlledCameraFocus = (request: ControlledCameraFocusRequest) => {
       if (request.version <= appliedControlledCameraFocusVersionRef.current) return;
       appliedControlledCameraFocusVersionRef.current = request.version;
@@ -6889,9 +7264,30 @@ export default function Island5ThreePilot({
       applyControlledCameraFocus(controlledCameraFocusRequestRef.current);
     }
     if (new URLSearchParams(window.location.search).get('island3dEvidence') === '1') {
-      const evidencePreset = new URLSearchParams(window.location.search).get('island3dEvidencePreset');
+      const evidenceParams = new URLSearchParams(window.location.search);
+      const evidencePreset = evidenceParams.get('island3dEvidencePreset');
       if (evidencePreset && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === evidencePreset)) {
-        applyPreset(evidencePreset as Island5CameraPresetId, 0.2);
+        applyPreset(evidencePreset as Island5CameraPresetId, 0.2, true);
+        const evidenceAzimuth = Number(evidenceParams.get('island3dEvidenceAzimuth'));
+        if (Number.isFinite(evidenceAzimuth)) {
+          const offset = camera.position.clone().sub(controls.target);
+          const requestedDistanceScale = Number(evidenceParams.get('island3dEvidenceDistanceScale'));
+          const distanceScale = Number.isFinite(requestedDistanceScale)
+            ? THREE.MathUtils.clamp(requestedDistanceScale, 0.15, 4)
+            : 1;
+          const horizontalRadius = Math.hypot(offset.x, offset.z) * distanceScale;
+          const radians = THREE.MathUtils.degToRad(evidenceAzimuth);
+          camera.position.set(
+            controls.target.x + Math.sin(radians) * horizontalRadius,
+            controls.target.y + offset.y * distanceScale,
+            controls.target.z + Math.cos(radians) * horizontalRadius,
+          );
+          camera.lookAt(controls.target);
+          controls.update();
+          publishCameraAuthoringPose(performance.now(), true);
+          canvas.dataset.evidenceAzimuth = String(evidenceAzimuth);
+          canvas.dataset.evidenceDistanceScale = String(distanceScale);
+        }
       }
     }
     if (
@@ -6899,6 +7295,9 @@ export default function Island5ThreePilot({
       && ISLAND_13_TRAIN_RIDE_VIEWS.includes(requestedTrainRideView as Island13TrainRideView)
     ) {
       startTrainRide(performance.now(), requestedTrainRideView as Island13TrainRideView);
+    }
+    if (import.meta.env.DEV && isCoasterCarnival && trainRideParams.get('island19Ride') === '1') {
+      startWonderRide(performance.now(), requestedWonderRideWagon, requestedWonderRideProgress);
     }
 
     const stopTour = (returnToOverview = true) => {
@@ -7047,7 +7446,7 @@ export default function Island5ThreePilot({
       );
     };
     const handlePointerUp = (event: PointerEvent) => {
-      if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion || activeTrainRide) return;
+      if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion || activeTrainRide || activeWonderRide) return;
       if (pointerDown.distanceTo(new THREE.Vector2(event.clientX, event.clientY)) > 7) return;
       const rect = canvas.getBoundingClientRect();
       pointer.set(
@@ -7055,7 +7454,7 @@ export default function Island5ThreePilot({
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
-      const trainIntersection = raycaster.intersectObjects(clickableCactusCanyonTrain, true)[0];
+      const trainIntersection = raycaster.intersectObjects(clickableRideTrain, true)[0];
       if (trainIntersection) {
         const tappedAt = performance.now();
         const tapPosition = new THREE.Vector2(event.clientX, event.clientY);
@@ -7065,7 +7464,8 @@ export default function Island5ThreePilot({
         lastTrainTapPosition.copy(tapPosition);
         if (isDoubleTap) {
           lastTrainTapAt = Number.NEGATIVE_INFINITY;
-          startTrainRide(tappedAt);
+          if (isCoasterCarnival) startWonderRide(tappedAt, 'front');
+          else startTrainRide(tappedAt);
         }
         // A single tap reserves the moving consist for its documented
         // double-tap interaction instead of focusing a landmark behind it.
@@ -7108,7 +7508,13 @@ export default function Island5ThreePilot({
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
       const elapsed = timer.getElapsed();
-      const frameDeltaSeconds = Math.min(0.05, Math.max(0, (now - lastAnimationFrameAt) / 1000));
+      const actualFrameDeltaSeconds = Math.max(0, (now - lastAnimationFrameAt) / 1000);
+      const frameDeltaSeconds = Math.min(0.05, actualFrameDeltaSeconds);
+      // A tab suspension must not teleport the physical rider several metres.
+      // Ordinary frames retain the faster distance-domain clock unchanged.
+      if (activeWonderRide && actualFrameDeltaSeconds > .2) {
+        activeWonderRide.startedAt += (actualFrameDeltaSeconds - .05) * 1000;
+      }
       lastAnimationFrameAt = now;
       const constructionCameraPresentation = constructionPresentationRef.current;
       const constructionCameraActive = Boolean(constructionCameraPresentation?.active);
@@ -7210,6 +7616,16 @@ export default function Island5ThreePilot({
           stagedRestorationPresentationKey = nextKey;
           stagedRestorationRuntime.update(nextPresentation, isReducedMotion);
           tileRewardObjects.setStagedRestorationClaimedTiles(nextPresentation.claimedPickupTileIndices ?? []);
+          const nextConstructionSequence = Math.max(0, Math.floor(nextPresentation.constructionSequence ?? 0));
+          if (
+            isCoasterCarnival
+            && nextPresentation.activatedStages >= nextPresentation.stageCount
+            && nextConstructionSequence > wonderRideCompletedConstructionSequence
+          ) {
+            wonderRideCompletedConstructionSequence = nextConstructionSequence;
+            wonderRidePendingAfterConstruction = true;
+            canvas.dataset.island19WonderRideReady = 'true';
+          }
         }
         stagedRestorationRuntime.animate(elapsed, isReducedMotion);
         if (isJungleExpedition) {
@@ -7337,6 +7753,18 @@ export default function Island5ThreePilot({
         canvas.dataset.island20AuthoredCityParts = String(authoredCityEvidence?.semanticPartCount ?? 0);
         canvas.dataset.island20RepresentationFamily = String(livingAmbience.root.userData.representationFamily ?? 'unknown');
         if (isReducedMotion && island20SkiffNavigationRef.current.active) livingAmbience.animate(elapsed);
+      }
+      if (
+        wonderRidePendingAfterConstruction
+        && !isReducedMotion
+        && !interactionPausedRef.current
+        && !constructionPresentationRef.current?.active
+        && !activeTokenMotion
+        && !activeTrainRide
+        && !activeWonderRide
+      ) {
+        wonderRidePendingAfterConstruction = false;
+        startWonderRide(now, 'front');
       }
       if (isHoneycombKingdom) {
         const honeyfallPresentation = greatHoneyfallPresentationRef.current;
@@ -7918,7 +8346,11 @@ export default function Island5ThreePilot({
         const pose = getIsland3DTileImpactPose(elapsedImpactMs, impact.strength);
         if (tileEntry.mesh instanceof THREE.InstancedMesh && tileEntry.instanceId !== undefined && tileEntry.basePosition) {
           tileQuaternionScratch.setFromAxisAngle(new THREE.Vector3(0, 1, 0), tileEntry.baseRotationY ?? 0);
-          tileScaleScratch.set(pose.scaleXZ, pose.scaleY, pose.scaleXZ);
+          tileScaleScratch.set(
+            pose.scaleXZ * (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.3 : 1),
+            pose.scaleY * (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.34 : 1),
+            pose.scaleXZ * (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.3 : 1),
+          );
           tileMatrixScratch.compose(
             tileEntry.basePosition.clone().setY(tileEntry.baseY + pose.yOffset),
             tileQuaternionScratch,
@@ -7938,7 +8370,11 @@ export default function Island5ThreePilot({
         if (elapsedImpactMs >= ISLAND_3D_TILE_IMPACT_DURATION_MS) {
           if (tileEntry.mesh instanceof THREE.InstancedMesh && tileEntry.instanceId !== undefined && tileEntry.basePosition) {
             tileQuaternionScratch.setFromAxisAngle(new THREE.Vector3(0, 1, 0), tileEntry.baseRotationY ?? 0);
-            tileScaleScratch.set(1, 1, 1);
+            tileScaleScratch.set(
+              isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.3 : 1,
+              isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.34 : 1,
+              isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled ? 0.3 : 1,
+            );
             tileMatrixScratch.compose(tileEntry.basePosition, tileQuaternionScratch, tileScaleScratch);
             tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);
             tileEntry.mesh.instanceMatrix.needsUpdate = true;
@@ -8213,6 +8649,121 @@ export default function Island5ThreePilot({
           }
         }
       }
+      if (activeWonderRide && activeTokenMotion) finishWonderRide(false);
+      if (activeWonderRide && interactionPausedRef.current) finishWonderRide();
+      if (activeWonderRide && island19CircuitFWorld) {
+        const rideElapsedMs = Math.max(0, now - activeWonderRide.startedAt);
+        if (activeWonderRide.fixedProgress === null && rideElapsedMs >= activeWonderRide.durationMs) {
+          finishWonderRide();
+        } else {
+          const reducedMotionStops = island19CircuitFWorld.getRidePhaseStops();
+          const normalizedTime = THREE.MathUtils.clamp(rideElapsedMs / activeWonderRide.durationMs, 0, 1);
+          const routeProgress = activeWonderRide.fixedProgress ?? (isReducedMotion
+            ? reducedMotionStops[Math.min(
+                reducedMotionStops.length - 1,
+                Math.floor(normalizedTime * reducedMotionStops.length),
+              )]
+            : island19CircuitFWorld.pacing.sampleAtTime(rideElapsedMs / 1000).progress);
+          const frame = island19CircuitFWorld.getRideFrame(routeProgress, activeWonderRide.wagon);
+          const transitionVeilOpacity = 0;
+          if (wonderRideTransitionVeilRef.current) {
+            wonderRideTransitionVeilRef.current.style.opacity = transitionVeilOpacity.toFixed(3);
+          }
+          canvas.dataset.island19WonderRideTransitionOpacity = transitionVeilOpacity.toFixed(3);
+          island19CircuitFWorld.setRidePhaseVisibility(frame.phase);
+          // No image plates or replacement scenes: depth haze surrounds the
+          // same physical terrain, cavern and ocean used by the overview.
+          const riderPosition = island19CircuitFWorld.getRiderCameraPosition(routeProgress, activeWonderRide.wagon);
+          const eyeHeight = riderPosition.y;
+          const insideRock = ['plunge', 'gold-vault', 'grand-vault', 'diamond-gallery'].includes(frame.phase);
+          const submerged = eyeHeight < -5.05 && !insideRock;
+          // The island blocks daylight underground. Adapt the illumination,
+          // not the world geometry, and restore the original sky on exit.
+          const buriedLightWeight = THREE.MathUtils.smoothstep(-eyeHeight, 0, 3);
+          const lightAdaptation = activeWonderRide.fixedProgress === null ? 1 - Math.exp(-3 * frameDeltaSeconds) : 1;
+          // Open seawater still receives filtered daylight; only solid rock
+          // removes almost all sun. Ease between the two at the cave mouth.
+          hemisphere.intensity = THREE.MathUtils.lerp(hemisphere.intensity,
+            hemisphereIntensity * (1 - buriedLightWeight * (insideRock ? .88 : .45)), lightAdaptation);
+          sunlight.intensity = THREE.MathUtils.lerp(sunlight.intensity,
+            sunlightIntensity * (1 - buriedLightWeight * (insideRock ? .98 : .7)), lightAdaptation);
+          scene.background = submerged ? wonderRideUnderseaBackground : wonderRideSkyBackground;
+          if (submerged) {
+            if (!(scene.fog instanceof THREE.FogExp2) || scene.fog === activeWonderRide.returnFog) scene.fog = new THREE.FogExp2(0x07567a, 0.035);
+            scene.fog.color.setHex(0x07567a);
+            scene.fog.density = THREE.MathUtils.smoothstep(-eyeHeight, 5.05, 6.4) * 0.035;
+          } else if (insideRock) {
+            if (!(scene.fog instanceof THREE.FogExp2) || scene.fog === activeWonderRide.returnFog) scene.fog = new THREE.FogExp2(0x291b22, 0.012);
+            scene.fog.color.setHex(0x291b22);
+            scene.fog.density = 0.012;
+          } else scene.fog = activeWonderRide.returnFog;
+          const lookAhead = island19CircuitFWorld.getRideFrame(
+            routeProgress + 1.6 / island19CircuitFWorld.diagnostics.pathLength,
+            activeWonderRide.wagon,
+          );
+          publishWonderRidePhase(frame.phase);
+          const secondsRemaining = activeWonderRide.fixedProgress === null
+            ? Math.max(1, Math.ceil((activeWonderRide.durationMs - rideElapsedMs) / 1000))
+            : 0;
+          if (secondsRemaining !== wonderRidePublishedSeconds) {
+            wonderRidePublishedSeconds = secondsRemaining;
+            setWonderRideSecondsRemaining(secondsRemaining);
+            const pace = island19CircuitFWorld.pacing.sampleAtTime(rideElapsedMs / 1000);
+            const labels = { dispatch: 'Leaving the station', 'chain-lift': 'Powered climb', 'gravity-run': 'Gravity run', 'scenic-cruise': 'Scenic cruise', 'station-brakes': 'Returning to station' };
+            setWonderRideTelemetry({ progress: routeProgress, pace: activeWonderRide.fixedProgress === null ? labels[pace.mode] : 'Preview viewpoint' });
+          }
+          transition = null;
+          controls.enabled = false;
+          camera.position.copy(riderPosition);
+          const warmRidePhase = frame.phase === 'plunge' || frame.phase === 'gold-vault' || frame.phase === 'grand-vault';
+          wonderRideKeyLight.visible = true;
+          wonderRideKeyLight.color.setHex(warmRidePhase ? 0xffb24c : frame.phase === 'diamond-gallery' ? 0x92efff : 0xffd6a3);
+          wonderRideKeyLight.intensity = warmRidePhase ? 2.15 : frame.phase === 'diamond-gallery' ? 1.65 : 1.8;
+          wonderRideKeyLight.position.copy(camera.position)
+            .addScaledVector(frame.up, 0.72)
+            .addScaledVector(frame.side, -0.62)
+            .addScaledVector(frame.tangent, 0.38);
+          wonderRideRimLight.visible = true;
+          wonderRideRimLight.color.setHex(frame.phase === 'diamond-gallery' || frame.phase === 'sea-cave' ? 0x76eaff : 0x6aa7d9);
+          wonderRideRimLight.intensity = frame.phase === 'diamond-gallery' ? 1.45 : 0.72;
+          wonderRideRimLight.position.copy(camera.position)
+            .addScaledVector(frame.up, 0.28)
+            .addScaledVector(frame.side, 0.78)
+            .addScaledVector(frame.tangent, -0.55);
+          // No artificial sleeper judder or lateral eye shake.
+          canvas.dataset.island19WonderRideContact = '0.000';
+          // Target a future point on the actual railway rather than extending
+          // the current tangent through a bend. This keeps cavern views inside
+          // the authored tunnel and prevents the camera from staring through
+          // the island shell on tight curves.
+          controls.target.copy(lookAhead.position).addScaledVector(lookAhead.up, activeWonderRide.wagon === 'front' ? 1.32 : 1.28);
+          const scenicFocus = island19CircuitFWorld.getScenicFocus(frame.u);
+          if (scenicFocus.weight > 0) {
+            // A gentle downward/inward gaze from the physical seat reveals
+            // the hoard below without detaching into a spectator camera.
+            controls.target.lerp(scenicFocus.point, 0.65 * scenicFocus.weight);
+          }
+          camera.up.copy(frame.up);
+          const nextFov = 68;
+          if (camera.fov !== nextFov) {
+            camera.fov = nextFov;
+            camera.updateProjectionMatrix();
+          }
+          camera.lookAt(controls.target);
+          camera.quaternion.copy(wonderRideCameraFilter.update(camera.quaternion,
+            actualFrameDeltaSeconds, isReducedMotion || activeWonderRide.fixedProgress !== null));
+          canvas.dataset.island19WonderRideSeatError = camera.position.distanceTo(
+            riderPosition,
+          ).toFixed(6);
+          canvas.dataset.island19WonderRideCameraFilter = 'two-stage-seat-locked';
+          canvas.dataset.island19WonderRideLapSeconds = island19CircuitFWorld.pacing.durationSeconds.toFixed(2);
+          canvas.dataset.island19WonderRideWorldMode = 'continuous-physical-island';
+          canvas.dataset.island19WonderRideProgress = routeProgress.toFixed(4);
+          canvas.dataset.island19WonderRideSpeed = island19CircuitFWorld.pacing.sampleAtTime(rideElapsedMs / 1000).speed.toFixed(3);
+          canvas.dataset.island19WonderRidePacing = island19CircuitFWorld.pacing.sampleAtTime(rideElapsedMs / 1000).mode;
+          canvas.dataset.island19WonderRideReducedMotion = String(isReducedMotion);
+        }
+      }
       const signatureMissionCameraPose = isFrostmoonHaven && activeInspectionPreset === 'frostwell'
         ? livingAmbience.getSignatureMissionCameraPose?.()
         : null;
@@ -8298,7 +8849,10 @@ export default function Island5ThreePilot({
         idleOverviewAt = null;
         applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE);
       }
-      const ambientCameraAllowed = !isReducedMotion
+      const ambientCameraAllowed = !isEvidenceCapture
+        && !activeWonderRide
+        && !activeTrainRide
+        && !isReducedMotion
         && now >= ambientCameraEligibleAt
         && !transition
         && !activeTokenMotion
@@ -8313,7 +8867,10 @@ export default function Island5ThreePilot({
       if (ambientCameraAllowed) {
         applyAmbientCameraNudge(ambientCameraContext, now);
       }
-      controls.update();
+      // OrbitControls still clamps distance and polar angle when disabled.
+      // A ride owns its seat position; applying the overview limits here
+      // pulls the eye out of the wagon immediately before rendering.
+      if (!activeWonderRide && !activeTrainRide) controls.update();
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -8391,6 +8948,49 @@ export default function Island5ThreePilot({
         }
       }
       renderer.render(scene, camera);
+      if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
+        const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
+          | { root?: THREE.Object3D }
+          | undefined;
+        const atlasData = atlasExterior?.root?.userData;
+        canvas.dataset.island19CircuitIReady = String(atlasData?.ready === true);
+        canvas.dataset.island19CircuitIStaticDrawCalls = String(atlasData?.staticDrawCalls ?? 0);
+        canvas.dataset.island19CircuitIStaticTriangles = String(atlasData?.staticTriangles ?? 0);
+        canvas.dataset.island19CircuitIStaticBatchPresent = String(atlasData?.requiredStaticBatchPresent === true);
+        canvas.dataset.island19SceneDrawCalls = String(renderer.info.render.calls);
+        canvas.dataset.island19SceneTriangles = String(renderer.info.render.triangles);
+        const visibleRootBreakdown = scene.children.map((sceneRoot) => {
+          let meshes = 0;
+          let triangles = 0;
+          sceneRoot.traverseVisible((object) => {
+            if (!(object instanceof THREE.Mesh) && !(object instanceof THREE.InstancedMesh)) return;
+            const materialCount = Array.isArray(object.material) ? object.material.length : 1;
+            meshes += materialCount;
+            const instanceCount = object instanceof THREE.InstancedMesh ? object.count : 1;
+            const geometryTriangles = object.geometry.index
+              ? object.geometry.index.count / 3
+              : (object.geometry.getAttribute('position')?.count ?? 0) / 3;
+            triangles += geometryTriangles * instanceCount;
+          });
+          return { name: sceneRoot.name || sceneRoot.type, meshes, triangles: Math.round(triangles) };
+        }).filter((entry) => entry.meshes > 0);
+        canvas.dataset.island19SceneVisibleRootBreakdown = JSON.stringify(visibleRootBreakdown);
+        const circuitFChildBreakdown = island19CircuitFWorld.world.children.map((worldChild) => {
+          let meshes = 0;
+          let triangles = 0;
+          worldChild.traverseVisible((object) => {
+            if (!(object instanceof THREE.Mesh) && !(object instanceof THREE.InstancedMesh)) return;
+            meshes += Array.isArray(object.material) ? object.material.length : 1;
+            const instanceCount = object instanceof THREE.InstancedMesh ? object.count : 1;
+            const geometryTriangles = object.geometry.index
+              ? object.geometry.index.count / 3
+              : (object.geometry.getAttribute('position')?.count ?? 0) / 3;
+            triangles += geometryTriangles * instanceCount;
+          });
+          return { name: worldChild.name || worldChild.type, meshes, triangles: Math.round(triangles) };
+        }).filter((entry) => entry.meshes > 0);
+        canvas.dataset.island19CircuitFVisibleChildBreakdown = JSON.stringify(circuitFChildBreakdown);
+      }
       if (isJungleExpedition) {
         const weatherMix = livingAmbience.root.userData.weatherMix;
         canvas.dataset.island18SceneDrawCalls = String(renderer.info.render.calls);
@@ -8620,10 +9220,13 @@ export default function Island5ThreePilot({
       startProfilerRef.current = () => undefined;
       exitTrainRideRef.current = () => undefined;
       advanceTrainRideRef.current = () => undefined;
+      startWonderRideRef.current = () => undefined;
+      exitWonderRideRef.current = () => undefined;
       if (activeTrainRide) setTrainRidePhase('idle');
+      if (activeWonderRide) setWonderRidePhase('idle');
       setCameraAuthoringModeRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }
@@ -8632,20 +9235,92 @@ export default function Island5ThreePilot({
       : trainRidePhase === 'side'
         ? { eyebrow: 'LUXURY CARRIAGE', title: 'Canyon air through the open sash', next: 'Return to the island' }
         : null;
+  const wonderRideUnlocked = isCoasterCarnival && (
+    isCircuitFPreviewEnabled
+    || Boolean(
+      stagedRestorationPresentation
+      && stagedRestorationPresentation.activatedStages >= stagedRestorationPresentation.stageCount,
+    )
+  );
+  const wonderRidePhaseCopy: Readonly<Record<Island19CircuitFRidePhase, { eyebrow: string; title: string }>> = {
+    dispatch: { eyebrow: 'WONDER EXPRESS', title: 'Dispatch from Coaster Castle' },
+    'source-crest': { eyebrow: 'LIFT HILL', title: 'Climbing above the whole carnival' },
+    'surface-s': { eyebrow: 'COURAGE RUN', title: 'Carving the great red S' },
+    plunge: { eyebrow: 'UNDERGROUND DROP', title: 'Diving beneath the island' },
+    'gold-vault': { eyebrow: 'THE GILDED GALLERIES', title: 'Follow the first glimmer of gold' },
+    'grand-vault': { eyebrow: 'THE GREAT BELOW · LEVEL II', title: 'The vault beneath the world' },
+    'diamond-gallery': { eyebrow: 'DIAMOND GALLERY', title: 'Crystal light across the rails' },
+    'sea-cave': { eyebrow: 'UNDERSEA PORTAL', title: 'Entering the glass tunnel beneath the waves' },
+    'ocean-reveal': { eyebrow: 'BENEATH THE BLUE', title: 'A slow passage through a living ocean' },
+    return: { eyebrow: 'VICTORY ASCENT', title: 'Climbing from the seabed back to Coaster Castle' },
+  };
+  const activeWonderRideCopy = wonderRidePhase === 'idle' ? null : wonderRidePhaseCopy[wonderRidePhase];
+  const wonderRideAnnouncement = activeWonderRideCopy
+    ? `Wonder Express. ${activeWonderRideCopy.eyebrow}. ${activeWonderRideCopy.title}. ${wonderRideWagon === 'front' ? 'Front wagon' : 'Middle wagon'}.`
+    : '';
+  useEffect(() => {
+    const previousPhase = previousWonderRidePhaseRef.current;
+    previousWonderRidePhaseRef.current = wonderRidePhase;
+    if (isEvidenceCapture || !wonderRideUnlocked) return undefined;
+    const rideStarted = previousPhase === 'idle' && wonderRidePhase !== 'idle';
+    const rideEnded = previousPhase !== 'idle' && wonderRidePhase === 'idle';
+    if (!rideStarted && !rideEnded) return undefined;
+    const focusFrame = window.requestAnimationFrame(() => {
+      if (rideStarted) {
+        wonderRideExitButtonRef.current?.focus({ preventScroll: true });
+        return;
+      }
+      const returnButton = wonderRideWagon === 'front'
+        ? wonderRideFrontButtonRef.current
+        : wonderRideMiddleButtonRef.current;
+      returnButton?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(focusFrame);
+  }, [isEvidenceCapture, wonderRidePhase, wonderRideUnlocked, wonderRideWagon]);
+  const island19PresentationMode = !isCoasterCarnival
+    ? undefined
+    : wonderRidePhase !== 'idle'
+      ? 'wonder-express-3d-pov'
+      : isCircuitFPreviewEnabled
+        ? 'all-angle-3d-world'
+        : isCircuitGBoardPreviewEnabled
+          ? 'modular-board-3d-preview'
+          : isMapStrippedEvidenceEnabled
+            ? 'geometry-proof'
+            : 'source-locked-hybrid-overview';
+  const isIsland19HybridOverview = island19PresentationMode === 'source-locked-hybrid-overview';
+  const presentationAccessibilityLabel = isIsland19HybridOverview
+    ? 'Interactive Island 19 Coaster Carnival hybrid overview; source-matched carnival artwork with real Three.js gameplay and Wonder Express ride geometry'
+    : isEmbedded
+      ? `Interactive 3D Island ${islandNumber}`
+      : `Actual 3D Island ${islandNumber} pilot`;
+  const canvasAccessibilityLabel = isIsland19HybridOverview
+    ? 'Interactive Three.js gameplay layer for the Island 19 Coaster Carnival hybrid overview; the Wonder Express ride uses real 3D geometry'
+    : `Interactive 3D ${worldName} island${isCactusCanyon || isCoasterCarnival ? '; ride the railway in first person' : ''}`;
 
   return (
     <section
       className={`island-5-three-pilot${isEmbedded ? ' island-5-three-pilot--embedded' : ''}${isEvidenceCapture ? ' island-5-three-pilot--evidence' : ''}`}
+      style={isCoasterCarnival && wonderRidePhase === 'idle' && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled && !isMapStrippedEvidenceEnabled ? {
+        backgroundImage: `url(${ISLAND_19_HYBRID_PHONE_PLATE})`,
+        backgroundPosition: activePreset === 'survey' ? 'center 43%' : 'center 10%',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: activePreset === 'survey' ? '172% auto' : '112% auto',
+        transition: isReducedMotion ? 'none' : 'background-size 700ms ease, background-position 700ms ease',
+      } : undefined}
       data-quality={qualityProfile.id}
       data-camera-preset={activePreset}
       data-train-ride-phase={trainRidePhase}
-      aria-label={isEmbedded ? `Interactive 3D Island ${islandNumber}` : `Actual 3D Island ${islandNumber} pilot`}
+      data-wonder-ride-phase={wonderRidePhase}
+      data-wonder-ride-wagon={wonderRideWagon}
+      data-island-19-presentation={island19PresentationMode}
+      aria-label={presentationAccessibilityLabel}
     >
       <canvas
         key={`${islandNumber}-${resolvedWorldSourceNumber}-${qualityProfile.id}`}
         ref={canvasRef}
         className="island-5-three-pilot__canvas"
-        aria-label={`Interactive 3D ${worldName} island${isCactusCanyon ? '; double-tap the train to ride' : ''}`}
+        aria-label={canvasAccessibilityLabel}
       />
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
@@ -8657,6 +9332,97 @@ export default function Island5ThreePilot({
       {isCactusCanyon && hasRenderedFrame && trainRidePhase === 'idle' && !isEvidenceCapture ? (
         <div className="island-5-three-pilot__train-ride-prompt" aria-hidden="true">
           <span>🚂</span> Double-tap the train to ride
+        </div>
+      ) : null}
+      {wonderRideUnlocked && hasRenderedFrame && wonderRidePhase === 'idle' && !isEvidenceCapture ? (
+        <section
+          className="wonder-ride-card"
+          aria-labelledby="island-19-wonder-express-choice-title"
+          aria-describedby="island-19-wonder-express-choice-description"
+        >
+          <div className="wonder-ride-card__top">
+            <div className="wonder-ride-card__seal" aria-hidden="true">✧</div>
+            <div className="wonder-ride-card__copy">
+            <span>MISSION FINALE · WONDER EXPRESS</span>
+            <strong id="island-19-wonder-express-choice-title">Your seat to the extraordinary</strong>
+            <small id="island-19-wonder-express-choice-description">From carnival skies to the great treasure vault and living ocean.</small>
+            </div>
+          </div>
+          <div className="wonder-ride-card__choices">
+            <button
+              ref={wonderRideFrontButtonRef}
+              type="button"
+              aria-label="Ride the Wonder Express from the front wagon"
+              onClick={() => startWonderRideRef.current('front')}
+            >
+              Front wagon
+              <small>The unobstructed adventure</small>
+            </button>
+            <button
+              ref={wonderRideMiddleButtonRef}
+              type="button"
+              aria-label="Ride the Wonder Express from the middle wagon"
+              onClick={() => startWonderRideRef.current('middle')}
+            >
+              Middle wagon
+              <small>Follow the train into the deep</small>
+            </button>
+          </div>
+        </section>
+      ) : null}
+      {isCoasterCarnival ? (
+        <p
+          className="sr-only island-5-three-pilot__wonder-ride-announcement"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {wonderRideAnnouncement}
+        </p>
+      ) : null}
+      {activeWonderRideCopy ? (
+        <section className="wonder-ride-card" data-phase={wonderRidePhase} aria-label="Wonder Express ride status">
+          <div className="wonder-ride-card__top">
+            <div className="wonder-ride-card__seal" aria-hidden="true">✧</div>
+            <div className="wonder-ride-card__copy">
+            <span>{activeWonderRideCopy.eyebrow}</span>
+            <strong>{activeWonderRideCopy.title}</strong>
+            </div>
+            <button
+              className="wonder-ride-card__exit"
+              ref={wonderRideExitButtonRef}
+              type="button"
+              aria-label="Exit the Wonder Express and return to Coaster Carnival"
+              onClick={() => exitWonderRideRef.current()}
+            >
+              <span aria-hidden="true">↩</span>
+            </button>
+          </div>
+          <div className="wonder-ride-card__footer">
+            <span>{wonderRideWagon === 'front' ? 'FRONT ROW' : 'MIDDLE ROW'} · WONDER EXPRESS</span>
+            <b>{wonderRideTelemetry.pace}</b>
+          </div>
+          <div className="wonder-ride-card__progress" aria-hidden="true">
+            <i style={{ width: `${wonderRideTelemetry.progress * 100}%` }} />
+          </div>
+        </section>
+      ) : null}
+      {activeWonderRideCopy ? (
+        <div
+          ref={wonderRideTransitionVeilRef}
+          className="island-5-three-pilot__wonder-transition-veil"
+          aria-hidden="true"
+        />
+      ) : null}
+      {activeWonderRideCopy ? (
+        <div
+          className="island-5-three-pilot__wonder-cockpit"
+          data-wagon={wonderRideWagon}
+          aria-hidden="true"
+        >
+          <span />
+          <span />
+          <b>{wonderRideWagon === 'front' ? 'WONDER · ROW 1' : 'WONDER · ROW 3'}</b>
         </div>
       ) : null}
       {trainRideViewCopy ? (
@@ -8822,7 +9588,7 @@ export default function Island5ThreePilot({
         <button type="button" onClick={() => setIsEvidenceCapture(true)}>
           Hide overlays for evidence
         </button>
-        {(isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
+        {(isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival) ? (
           <button
             type="button"
             aria-pressed={isMapStrippedEvidenceEnabled}

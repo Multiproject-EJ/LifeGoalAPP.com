@@ -42,6 +42,7 @@ const WORLD_LANDMARK_LABELS: Readonly<Record<number, Readonly<Record<Island5Land
   14: { boss: 'Royal Honeycomb Palace', hatchery: "Queen's Nursery Hatchery", habit: 'Pollinator Yard', wisdom: 'Hive Archives', event: 'Nectar Trials Pavilion' },
   18: { boss: 'Lost City Temple', hatchery: 'Explorer Nest', habit: 'Jungle Path', wisdom: "Explorer's Camp", event: 'Survival Trials' },
   20: { boss: 'Crucible Citadel', hatchery: 'Magma Crucible Hatchery', habit: 'Fire Path Sanctum', wisdom: 'Obsidian Archive', event: 'Ashen Trialworks' },
+  19: { boss: 'Loopmaster Castle', hatchery: 'Hatchery Gondola Nursery', habit: 'Habit Momentum Station', wisdom: 'Wisdom Carousel of Perspectives', event: 'Mystery Courage Drop' },
 };
 
 const LANDMARK_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
@@ -66,6 +67,22 @@ const HONEYCOMB_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [stri
   event: ['nectar trial plinth and ceremonial floor', 'trial columns and participant ring', 'purple canopy and golden crown rail', 'nectar core and crossed trial hammers', 'royal banners and bee victory crest'],
   wisdom: ['archive plinth and reading threshold', 'hexagonal reading hall and cell walls', 'upper archive tower and hive dome', 'open book, reading pods, and knowledge cells', 'wisdom crown, purple glazing, and archivist bee'],
   boss: ['royal honey court and processional stairs', 'lower palace keep and honeycomb walls', 'turrets, domes, and upper royal silhouette', 'palace windows, banners, and hive mechanisms', 'queen-bee crown, victory lamps, and royal halo'],
+};
+
+const COASTER_CARNIVAL_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
+  hatchery: ['Ferris footing and nursery threshold', 'double-rim frame and star hub', 'gondola cradle pavilion', 'upright gondolas and hatchery mechanisms', 'chasing bulbs, nursery crest, and commissioning glow'],
+  habit: ['station platform and queue threshold', 'teal station walls and lift columns', 'shelter roof and chain housing', 'lift motor, dispatch gate, and momentum signals', 'Wonder Circuit lamps and station star crest'],
+  event: ['drop-tower footing and courage court', 'faceted teal guide shaft', 'crowned dome, ribs, and brake frame', 'radial seat carriage and restraint ring', 'courage beacon, flags, and brake-spark commissioning'],
+  wisdom: ['carousel plinth and perspective court', 'turntable, columns, and central axle', 'striped canopy and scalloped cornice', 'horses, chariots, poles, and phase mechanism', 'wisdom lanterns, gold finial, and completed light chase'],
+  boss: ['castle court and physically open portal', 'ivory keep, stairs, and lower towers', 'teal domes, rear service wings, and track throughpass', 'Loopmaster medallion, balcony, and circuit crown', 'victory lamps, coaster sign, and full Wonder Circuit commissioning'],
+};
+
+const COASTER_CARNIVAL_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
+  hatchery: { styleId: 'coaster-gondola-nursery-wheel-hoist', stationOffset: 0, stationStep: 1, relocationSeconds: 1.42, phaseStationOffsets: { foundation: 0, frame: 1, assemble: 3, finish: 2 } },
+  habit: { styleId: 'coaster-momentum-station-lift-rail', stationOffset: 2, stationStep: -1, relocationSeconds: 1.36, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 } },
+  event: { styleId: 'coaster-courage-drop-guide-climb', stationOffset: 5, stationStep: 1, relocationSeconds: 1.5, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 3, finish: 1 } },
+  wisdom: { styleId: 'coaster-perspectives-carousel-radial-lift', stationOffset: 3, stationStep: -1, relocationSeconds: 1.58, phaseStationOffsets: { foundation: 0, frame: 1, assemble: 2, finish: 0 } },
+  boss: { styleId: 'coaster-loopmaster-portal-commissioning', stationOffset: 4, stationStep: 1, relocationSeconds: 1.46, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 } },
 };
 
 const HONEYCOMB_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
@@ -703,6 +720,7 @@ function resolveConstructionChoreography(
   if (worldSourceNumber === 14) return HONEYCOMB_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 18) return JUNGLE_EXPEDITION_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 20) return LAVA_LABYRINTH_CHOREOGRAPHY[landmarkId];
+  if (worldSourceNumber === 19) return COASTER_CARNIVAL_CHOREOGRAPHY[landmarkId];
   return {
     styleId: `world-${worldSourceNumber}-${landmarkId}-${rigKind}`,
     stationOffset: (['boss', 'hatchery', 'habit', 'wisdom', 'event'] as Island5LandmarkId[]).indexOf(landmarkId),
@@ -738,6 +756,8 @@ export const ISLAND_LANDMARK_CONSTRUCTION_PROFILES: readonly IslandLandmarkConst
                       ? JUNGLE_EXPEDITION_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 20
                       ? LAVA_LABYRINTH_STAGE_STORIES[landmarkId]
+                    : Number(worldSourceNumber) === 19
+                      ? COASTER_CARNIVAL_STAGE_STORIES[landmarkId]
                       : LANDMARK_STAGE_STORIES[landmarkId],
       choreography: resolveConstructionChoreography(
         Number(worldSourceNumber),

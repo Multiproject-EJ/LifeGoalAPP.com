@@ -957,7 +957,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
-      [4, 6, 7, 8, 9, 18, 20].forEach((islandNumber) => {
+      [4, 6, 7, 8, 9, 18, 19, 20].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;
@@ -1343,6 +1343,47 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(flowers?.missionId, 'great-pollination', 'old Island 018 Compass progress adopts the pollination identity');
       assertEqual(flowers?.activatedStages, 3, 'Island 018 keeps its completed stage count');
       assertEqual(flowers?.chargesSpent, 3, 'Island 018 keeps spent mission charges');
+    },
+  },
+  {
+    name: 'Wonder Circuit spends six Golden Ride Tickets across exactly three durable stages',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const key = getIslandRunSignatureMissionKey(base.cycleIndex, 19);
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...base,
+          currentIslandNumber: 19,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'restart-wonder-circuit', version: 1,
+              claimedPickupTileIndices: [2, 8, 14, 20, 27, 34], chargesEarned: 6, chargesSpent: 0,
+              activatedStages: 0, lastActivatedStage: null, completedAtMs: null, updatedAtMs: 10,
+            },
+          },
+        },
+      });
+      refreshIslandRunStateFromLocal(session);
+      const first = await activateStagedRestorationMissionStage({ session, client: null });
+      const second = await activateStagedRestorationMissionStage({ session, client: null });
+      const third = await activateStagedRestorationMissionStage({ session, client: null });
+      const fourth = await activateStagedRestorationMissionStage({ session, client: null });
+      const after = readIslandRunGameStateRecord(session);
+      const progress = resolveStagedRestorationMissionProgress({ ledger: after.signatureMissionProgressByIsland, islandNumber: 19, cycleIndex: base.cycleIndex });
+      assertEqual(first.status, 'ok', 'station power commits first');
+      assertEqual(second.status, 'ok', 'lift machinery commits second');
+      assertEqual(third.status, 'ok', 'loop launch commits third');
+      assertEqual(fourth.status, 'already_complete', 'completed circuit cannot overspend');
+      assertEqual(progress?.activatedStages, 3, 'all three circuit systems persist');
+      assertEqual(progress?.chargesSpent, 6, 'exactly six tickets are spent');
+      assert(progress?.completedAtMs !== null, 'completion timestamp persists with the third commit');
     },
   },
   {

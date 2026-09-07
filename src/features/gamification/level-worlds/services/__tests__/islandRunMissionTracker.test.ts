@@ -42,7 +42,7 @@ function restoredStops(count = 5) {
 
 export const islandRunMissionTrackerTests: TestCase[] = [
   {
-    name: 'mission registry aligns Islands 001-014 with the authored production worlds and approved headers',
+    name: 'mission registry aligns every authored production world with its approved header',
     run: () => {
       const expected = [
         [1, 'First Light Kingdom', 'First Light Assembly'],
@@ -61,6 +61,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [14, 'Honeycomb Kingdom', 'Awaken the Great Honeyfall'],
         [20, 'Lava Labyrinth', 'Escape the Lava Labyrinth'],
         [18, 'The Everblossom Kingdom', 'The Great Pollination'],
+        [19, 'Coaster Carnival', 'Restart the Wonder Circuit'],
       ] as const;
       expected.forEach(([islandNumber, islandName, headline]) => {
         const presentation = getIslandMissionBriefingPresentation(islandNumber);
@@ -171,6 +172,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [9, 'Systems Ignited'],
         [20, 'Escape Mission Locked'],
         [18, 'Gardens Blooming'],
+        [19, 'Circuit Systems Online'],
       ]);
       expectedStageLabels.forEach((stageLabel, islandNumber) => {
         const tracker = resolveIslandMissionTrackerPresentation({
@@ -186,6 +188,31 @@ export const islandRunMissionTrackerTests: TestCase[] = [
           'canonical build progress remains visible',
         );
       });
+    },
+  },
+  {
+    name: 'Coaster Carnival tracker distinguishes ready Golden Ride Tickets from committed circuit systems',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 19);
+      const tracker = resolveIslandMissionTrackerPresentation({
+        islandNumber: 19,
+        state: makeState({
+          currentIslandNumber: 19,
+          signatureMissionProgressByIsland: {
+            [key]: {
+              missionId: 'restart-wonder-circuit', version: 1,
+              claimedPickupTileIndices: [2, 8, 14, 20, 27, 34],
+              chargesEarned: 6, chargesSpent: 4,
+              activatedStages: 2, lastActivatedStage: 2,
+              completedAtMs: null, updatedAtMs: 19,
+            },
+          },
+        }),
+      });
+      assertEqual(tracker.usesLiveSignatureProgress, true, 'Wonder Circuit phone reads canonical mission state');
+      assertEqual(tracker.objectives[0].label, 'Circuit Systems Online', 'the tracker names the durable world transformation');
+      assertEqual(tracker.objectives[0].value, 2, 'only committed systems advance the primary ring');
+      assertEqual(tracker.objectives[0].displayValue, '2 ready · 2 / 3', 'the final two tickets remain visibly actionable');
     },
   },
   {

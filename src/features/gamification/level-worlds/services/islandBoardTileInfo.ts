@@ -99,6 +99,8 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
           ? ['Pollen Light', 'Recover this living light to awaken the next garden family.']
           : entry?.signatureMissionKind === 'ignition_core'
             ? ['Ignition Core', 'Recover this core to fire the next mechanism in the volcanic chain.']
+          : entry?.signatureMissionKind === 'golden_ride_ticket'
+            ? ['Golden Ride Ticket', 'Recover this ticket and spend it with one more to power the next Wonder Circuit system.']
             : null;
   if (restorationCopy) return { title: restorationCopy[0], description: restorationCopy[1] };
 
