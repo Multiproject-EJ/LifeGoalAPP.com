@@ -38,6 +38,14 @@ The focused park-detail review is not a whole-island 10/10 approval.
 
 ## Release verification
 
-Architecture and audio asset guards pass. Clean integration type-check, full
-Island Run service suite, production build and no-flag browser survey are release
-gates; deployment completion and the live artifact must be checked after pushing.
+Architecture and audio asset guards pass. The complete Island Run suite passes
+2,040/2,040 tests after updating three stale integration/asset expectations.
+The production Vite bundle builds successfully (existing chunk-size warnings).
+The no-flag rear/overview/left/right/phone survey has no JavaScript errors.
+The no-flag ride reaches completion and idle with no JavaScript errors; 2,689
+sampled frames have median 16.7 ms and p95 16.8 ms, with 29 frames above 50 ms
+on the concurrently compiling desktop. This is not a phone performance pass.
+Six 1,800-interval clearance traces report zero hits; they are sampled traces,
+not a continuous collision-volume proof. Full-app `tsc -b --pretty false` passes.
+Successful Pages deployment and a matching live asset remain mandatory before
+declaring the release live.
