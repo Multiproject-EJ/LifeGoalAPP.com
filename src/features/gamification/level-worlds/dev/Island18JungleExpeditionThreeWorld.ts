@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { JUNGLE_COMPASS_CEREMONY_DURATION_MS } from '../services/islandRunJungleMissionPresentation';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type {
@@ -137,6 +138,7 @@ export const ISLAND_18_RUNTIME_PART_IDS = [
   'living-ambience',
   'construction-choreography',
   'emerald-zenith-fx',
+  'compass-book-sky-gift',
 ] as const;
 
 export type Island18RuntimePartId = typeof ISLAND_18_RUNTIME_PART_IDS[number];
@@ -3464,12 +3466,13 @@ function createJungleCanopyVolume(
   const colors = new Float32Array(count * 3);
   const sizes = new Float32Array(count);
   const palette = [
-    new THREE.Color(0x1e7434),
-    new THREE.Color(0x2c8d42),
-    new THREE.Color(0x3f9a43),
-    new THREE.Color(0x65ad4e),
-    new THREE.Color(0x8abc58),
+    new THREE.Color(0x164e42),
+    new THREE.Color(0x267742),
+    new THREE.Color(0x56933f),
+    new THREE.Color(0x91ae55),
+    new THREE.Color(0xbba34f),
   ] as const;
+  const canopyColor = new THREE.Color();
   const streamClearings = [0.12, 0.72, 1.56, 3.02, 4.45, 5.36] as const;
   const random01 = (seed: number) => {
     const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -3483,17 +3486,26 @@ function createJungleCanopyVolume(
     if (nearStream) angle += index % 2 === 0 ? 0.09 : -0.09;
     const radialRandom = random01(index * 7.73 + 4.1);
     const radius = Math.sqrt(8.2 * 8.2 + radialRandom * (44.8 * 44.8 - 8.2 * 8.2));
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    // Broad connected groves, with small crown-to-crown variation inside each grove.
+    const grove = THREE.MathUtils.clamp(0.5 + Math.sin(x * 0.21 + z * 0.09) * 0.28
+      + Math.cos(z * 0.25 - x * 0.12) * 0.22, 0, 1);
     const y = sampleJungleBasinHeight(radius, angle)
       + 1.18
-      + random01(index * 11.41 + 2.7) * 1.22;
-    positions[index * 3] = Math.cos(angle) * radius;
+      + grove * 1.45 + random01(index * 11.41 + 2.7) * 0.74;
+    positions[index * 3] = x;
     positions[index * 3 + 1] = y;
-    positions[index * 3 + 2] = Math.sin(angle) * radius;
-    const color = palette[(index * 7 + Math.floor(radius)) % palette.length];
+    positions[index * 3 + 2] = z;
+    const palettePosition = grove * (palette.length - 1);
+    const paletteIndex = Math.floor(palettePosition);
+    const color = canopyColor.copy(palette[paletteIndex]).lerp(
+      palette[Math.min(paletteIndex + 1, palette.length - 1)], palettePosition - paletteIndex,
+    ).multiplyScalar(0.84 + random01(index * 4.37) * 0.28);
     colors[index * 3] = color.r;
     colors[index * 3 + 1] = color.g;
     colors[index * 3 + 2] = color.b;
-    sizes[index] = 1.82 + random01(index * 13.37 + 8.2) * 1.86 + (radius > 28 ? 0.42 : 0);
+    sizes[index] = 1.48 + grove * 0.9 + random01(index * 13.37 + 8.2) * 1.86;
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -3926,7 +3938,8 @@ function addContinuousJungleBasin(
         sampleJungleBasinHeight(authoredRadius, angle) + canopyLift,
         Math.sin(angle) * authoredRadius,
       );
-      const lightMix = 0.22 + ((segment * 7 + ringIndex * 5) % 11) / 15;
+      const lightMix = 0.3 + Math.sin(angle * 3.1 + radius * 0.17) * 0.22
+        + Math.cos(angle * 7.3 - radius * 0.23) * 0.16;
       scratchColor.copy(canopyDeep).lerp(canopyMid, 0.48 + ringIndex * 0.06).lerp(canopyBright, lightMix * 0.42);
       canopyColors.push(scratchColor.r, scratchColor.g, scratchColor.b);
     }
@@ -3971,7 +3984,8 @@ function addContinuousJungleBasin(
     const angle = index * 2.399963 + (index % 4) * 0.17;
     const radius = 9.2 + (index * 11 % 34) + (index % 3) * 0.44;
     const groundY = sampleJungleBasinHeight(radius, angle);
-    const trunkHeight = 1.9 + (index % 5) * 0.34;
+    const crownFamily = index % 3;
+    const trunkHeight = (1.9 + (index % 5) * 0.34) * (crownFamily === 0 ? 1.65 : 1);
     quaternion.setFromEuler(new THREE.Euler(0, angle * 0.27, (index % 3 - 1) * 0.035));
     matrix.compose(
       new THREE.Vector3(Math.cos(angle) * radius, groundY + trunkHeight * 0.5, Math.sin(angle) * radius),
@@ -3979,20 +3993,20 @@ function addContinuousJungleBasin(
       scale.set(0.72 + (index % 3) * 0.12, trunkHeight, 0.72 + ((index + 1) % 3) * 0.1),
     );
     combinedGeometry.push(cloneColoredBasinGeometry(trunkSource, matrix, new THREE.Color(0x354b26)));
-    const crownHeight = 1.28 + (index % 4) * 0.22;
+    const crownHeight = (1.28 + (index % 4) * 0.22) * (crownFamily === 1 ? 1.42 : 0.74);
     for (let lobe = 0; lobe < 3; lobe += 1) {
       const lobeAngle = angle + lobe / 3 * Math.PI * 2 + index * 0.19;
       matrix.compose(
         new THREE.Vector3(
-          Math.cos(angle) * radius + Math.cos(lobeAngle) * (0.28 + lobe * 0.06),
+          Math.cos(angle) * radius + Math.cos(lobeAngle) * (crownFamily === 0 ? 0.88 : 0.28 + lobe * 0.06),
           groundY + trunkHeight + crownHeight * (0.42 + (lobe === 1 ? 0.18 : 0)),
-          Math.sin(angle) * radius + Math.sin(lobeAngle) * (0.28 + lobe * 0.06),
+          Math.sin(angle) * radius + Math.sin(lobeAngle) * (crownFamily === 0 ? 0.88 : 0.28 + lobe * 0.06),
         ),
         quaternion,
         scale.set(
-          0.82 + (index + lobe) % 4 * 0.16,
+          (0.82 + (index + lobe) % 4 * 0.16) * (crownFamily === 0 ? 1.6 : 1),
           crownHeight * (0.76 + lobe * 0.08),
-          0.74 + (index + lobe * 2) % 4 * 0.15,
+          (0.74 + (index + lobe * 2) % 4 * 0.15) * (crownFamily === 0 ? 1.45 : 1),
         ),
       );
       combinedGeometry.push(cloneColoredBasinGeometry(
@@ -4483,7 +4497,7 @@ function addContinuousJungleBasin(
     catchPoolColors[index * 3 + 2] = catchPoolColor.b;
   }
   catchPoolGeometry.setAttribute('color', new THREE.BufferAttribute(catchPoolColors, 3));
-  const catchPoolFoamGeometry = new THREE.TorusGeometry(2.42, 0.1, 4, 28);
+  const catchPoolFoamGeometry = new THREE.TorusGeometry(2.42, 0.1, 4, 24);
   catchPoolFoamGeometry.rotateX(Math.PI / 2);
   catchPoolFoamGeometry.translate(catchPoolX, catchPoolY + 0.11, catchPoolZ);
   const catchPoolFoamPositions = catchPoolFoamGeometry.getAttribute('position') as THREE.BufferAttribute;
@@ -4511,7 +4525,7 @@ function addContinuousJungleBasin(
     const radius = Math.hypot(ripple.x, ripple.z);
     const angle = Math.atan2(ripple.z, ripple.x);
     const y = sampleJungleBasinHeight(radius, angle) + 1.34 + (index % 3) * 0.006;
-    const geometry = new THREE.TorusGeometry(ripple.radius, 0.018 + (index % 2) * 0.007, 3, 16);
+    const geometry = new THREE.TorusGeometry(ripple.radius, 0.018 + (index % 2) * 0.007, 3, 12);
     geometry.rotateX(Math.PI / 2);
     geometry.scale(1, 1, 0.74 + (index % 3) * 0.08);
     geometry.translate(ripple.x, y, ripple.z);
@@ -5743,17 +5757,43 @@ export function createIsland18JungleExpeditionLivingAmbience(
     floatingSlabs.push({ rest, orbit, width });
   }
   floatingSlabMesh.instanceMatrix.needsUpdate = true;
-  const beam = cylinder(0.56, 1.08, 19.5, materials.emerald, 'ISLAND_18_ZENITH_SKY_BEAM', 5, 12);
+  const beam = cylinder(0.56, 1.08, 19.5, materials.emerald, 'ISLAND_18_ZENITH_SKY_BEAM', 5, 16);
   beam.position.set(0, 17.45, -0.18);
   beam.visible = false;
-  beam.material = new THREE.MeshBasicMaterial({
-    color: 0x19dc6c,
+  const beamMaterial = new THREE.ShaderMaterial({
+    uniforms: { strength: { value: 0 }, time: { value: 0 } },
+    vertexShader: `
+      varying vec2 beamUv;
+      varying vec3 beamNormal;
+      varying vec3 beamView;
+      void main() {
+        beamUv = uv;
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+        beamNormal = normalize(normalMatrix * normal);
+        beamView = -viewPosition.xyz;
+        gl_Position = projectionMatrix * viewPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float strength;
+      uniform float time;
+      varying vec2 beamUv;
+      varying vec3 beamNormal;
+      varying vec3 beamView;
+      void main() {
+        float facing = pow(max(0.0, dot(normalize(beamNormal), normalize(beamView))), 1.6);
+        float ends = smoothstep(0.0, 0.16, beamUv.y) * (1.0 - smoothstep(0.62, 1.0, beamUv.y));
+        float flow = 0.78 + 0.22 * sin(beamUv.y * 35.0 - time * 3.0);
+        vec3 color = mix(vec3(0.18, 0.72, 0.53), vec3(0.82, 1.0, 0.71), facing * 0.55);
+        gl_FragColor = vec4(color, strength * facing * ends * flow);
+      }
+    `,
     transparent: true,
-    opacity: 0,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     toneMapped: false,
   });
+  beam.material = beamMaterial;
   beam.castShadow = false;
   zenithFx.add(beam);
   const skyHaloRings: THREE.Mesh[] = [];
@@ -5845,7 +5885,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
     blending: THREE.NormalBlending,
     toneMapped: false,
   });
-  const waterCrown = new THREE.Mesh(new THREE.TorusGeometry(2.42, 0.17, 8, 64), waterCrownMaterial);
+  const waterCrown = new THREE.Mesh(new THREE.TorusGeometry(2.42, 0.17, 8, 60), waterCrownMaterial);
   waterCrown.name = 'ISLAND_18_ZENITH_SUSPENDED_WATER_CROWN';
   waterCrown.rotation.x = Math.PI / 2;
   waterCrown.position.set(0, 9.42, -0.18);
@@ -5859,9 +5899,9 @@ export function createIsland18JungleExpeditionLivingAmbience(
     geometry.dispose();
     return normalized;
   };
-  const wayfinderOuterRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.62, 0.075, 8, 64));
+  const wayfinderOuterRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.62, 0.075, 8, 60));
   wayfinderCrownGeometries.push(wayfinderOuterRing);
-  const wayfinderCrossRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.24, 0.045, 7, 56));
+  const wayfinderCrossRing = normalizeWayfinderGeometry(new THREE.TorusGeometry(1.24, 0.045, 7, 52));
   wayfinderCrossRing.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2));
   wayfinderCrownGeometries.push(wayfinderCrossRing);
   for (let index = 0; index < 8; index += 1) {
@@ -5889,6 +5929,149 @@ export function createIsland18JungleExpeditionLivingAmbience(
   wayfinderCrown.visible = false;
   zenithFx.add(wayfinderCrown);
 
+  const compassBookGift = registerIsland18RuntimePart(
+    'compass-book-sky-gift',
+    new THREE.Group(),
+    'mission-reward',
+  );
+  compassBookGift.name = 'ISLAND_18_COMPASS_BOOK_SKY_GIFT';
+  compassBookGift.userData.receipt = {
+    source: 'sky',
+    revealStart: 0.66,
+    descentStart: 0.72,
+    landing: 0.94,
+    opensChapter: 'living_wheel',
+    firstSignalCount: 8,
+    visibleFragmentStartIsland: 9,
+  };
+  compassBookGift.visible = false;
+  zenithFx.add(compassBookGift);
+
+  const pageBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(1.46, 0.24, 1.92),
+    materials.routeIvory,
+  );
+  pageBlock.name = 'ISLAND_18_COMPASS_BOOK_PAGE_BLOCK';
+  const lowerCover = new THREE.Mesh(
+    new THREE.BoxGeometry(1.68, 0.11, 2.14),
+    new THREE.MeshStandardMaterial({ color: 0x12564f, metalness: 0.32, roughness: 0.42 }),
+  );
+  lowerCover.position.y = -0.17;
+  const upperCover = lowerCover.clone();
+  upperCover.name = 'ISLAND_18_COMPASS_BOOK_COVER';
+  upperCover.position.y = 0.18;
+  const spine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.36, 2.08),
+    materials.brass,
+  );
+  spine.position.x = -0.78;
+  const crestRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.32, 0.38, 24),
+    materials.brass,
+  );
+  crestRing.name = 'ISLAND_18_COMPASS_BOOK_CREST';
+  crestRing.position.y = 0.265;
+  crestRing.rotation.x = -Math.PI / 2;
+  const crestNeedle = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), materials.emerald);
+  crestNeedle.position.y = 0.285;
+  crestNeedle.scale.set(0.34, 0.12, 1.55);
+  const crestCross = new THREE.Mesh(new THREE.OctahedronGeometry(0.22, 0), materials.brass);
+  crestCross.position.y = 0.292;
+  crestCross.scale.set(1.38, 0.11, 0.34);
+  const crestCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.105, 0), materials.emerald);
+  crestCore.position.y = 0.34;
+  compassBookGift.add(pageBlock, lowerCover, spine);
+  const coverHinge = new THREE.Group();
+  coverHinge.name = 'ISLAND_18_COMPASS_BOOK_OPENING_HINGE';
+  coverHinge.position.set(-0.78, 0.12, 0);
+  compassBookGift.add(coverHinge);
+  for (const detail of [upperCover, crestRing, crestNeedle, crestCross, crestCore]) {
+    detail.position.sub(coverHinge.position);
+    coverHinge.add(detail);
+  }
+
+  // Raised corner brackets and edge rails share one draw call on the moving cover.
+  const bindingPieces: THREE.BufferGeometry[] = [];
+  for (const side of [-1, 1]) {
+    for (const end of [-1, 1]) {
+      bindingPieces.push(new THREE.BoxGeometry(0.3, 0.055, 0.08).translate(side * 0.64 + 0.78, 0.125, end * 0.99));
+      bindingPieces.push(new THREE.BoxGeometry(0.08, 0.055, 0.3).translate(side * 0.75 + 0.78, 0.125, end * 0.88));
+    }
+    bindingPieces.push(new THREE.BoxGeometry(1.32, 0.025, 0.025).translate(0.78, 0.12, side * 0.89));
+  }
+  const bindingGeometry = mergeGeometries(bindingPieces, false)!;
+  bindingPieces.forEach((piece) => piece.dispose());
+  const bindings = new THREE.Mesh(bindingGeometry, materials.brass);
+  bindings.name = 'ISLAND_18_COMPASS_BOOK_GILDED_BINDINGS';
+  coverHinge.add(bindings);
+  const turningLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.43, 0.025, 1.88), materials.routeIvory);
+  turningLeaf.name = 'ISLAND_18_COMPASS_BOOK_TURNING_LEAF';
+  turningLeaf.position.set(0.78, -0.03, 0);
+  coverHinge.add(turningLeaf);
+  const pageCompass = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.345, 24), materials.brassDark);
+  pageCompass.name = 'ISLAND_18_COMPASS_BOOK_FIRST_CHAPTER_WHEEL';
+  pageCompass.rotation.x = -Math.PI / 2;
+  pageCompass.position.y = 0.125;
+  compassBookGift.add(pageCompass);
+  const pageMarks: number[] = [];
+  for (let spoke = 0; spoke < 8; spoke += 1) {
+    const angle = spoke * Math.PI / 4;
+    for (const [inner, outer] of [[0.09, 0.31], [0.36, 0.41]]) {
+      pageMarks.push(Math.cos(angle) * inner, 0.133, Math.sin(angle) * inner,
+        Math.cos(angle) * outer, 0.133, Math.sin(angle) * outer);
+    }
+  }
+  for (const [z, halfWidth] of [[0.56, 0.36], [0.64, 0.28], [0.72, 0.32]]) {
+    pageMarks.push(-halfWidth, 0.133, z, halfWidth, 0.133, z);
+  }
+  const pageEngraving = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pageMarks, 3)),
+    new THREE.LineBasicMaterial({ color: 0x806632 }),
+  );
+  pageEngraving.name = 'ISLAND_18_COMPASS_BOOK_CHAPTER_ENGRAVING';
+  compassBookGift.add(pageEngraving);
+
+  const compassBookHaloMaterial = new THREE.MeshBasicMaterial({
+    color: 0xdfff7c,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const compassBookHalo = new THREE.Mesh(
+    new THREE.RingGeometry(1.08, 1.105, 32),
+    compassBookHaloMaterial,
+  );
+  compassBookHalo.name = 'ISLAND_18_COMPASS_BOOK_RECEIPT_HALO';
+  compassBookHalo.rotation.x = -Math.PI / 2;
+  compassBookHalo.position.y = -0.12;
+  compassBookGift.add(compassBookHalo);
+
+  const compassBookSparkCount = profile.id === 'low' ? 20 : profile.id === 'medium' ? 30 : 42;
+  const compassBookSparkPositions = new Float32Array(compassBookSparkCount * 3);
+  for (let index = 0; index < compassBookSparkCount; index += 1) {
+    const angle = index * 2.399963;
+    const radius = 0.72 + (index % 7) * 0.11;
+    compassBookSparkPositions[index * 3] = Math.cos(angle) * radius;
+    compassBookSparkPositions[index * 3 + 1] = (index % 9) * 0.09 - 0.34;
+    compassBookSparkPositions[index * 3 + 2] = Math.sin(angle) * radius;
+  }
+  const compassBookSparkGeometry = new THREE.BufferGeometry();
+  compassBookSparkGeometry.setAttribute('position', new THREE.BufferAttribute(compassBookSparkPositions, 3));
+  const compassBookSparkMaterial = new THREE.PointsMaterial({
+    color: 0xffe67c,
+    size: profile.id === 'low' ? 0.09 : 0.12,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const compassBookSparks = new THREE.Points(compassBookSparkGeometry, compassBookSparkMaterial);
+  compassBookSparks.name = 'ISLAND_18_COMPASS_BOOK_RECEIPT_SPARKS';
+  compassBookGift.add(compassBookSparks);
+
   const junglePulseRingMaterial = new THREE.MeshBasicMaterial({
     color: 0x8dff6a,
     transparent: true,
@@ -5898,7 +6081,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
     toneMapped: false,
   });
   const junglePulseRings = new THREE.InstancedMesh(
-    new THREE.TorusGeometry(1, 0.022, 4, 36),
+    new THREE.TorusGeometry(1, 0.022, 4, 32),
     junglePulseRingMaterial,
     3,
   );
@@ -5982,7 +6165,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
   const lightningColor = new THREE.Color(0xf2fbff);
   const sunrayColor = new THREE.Color(0xffefaa);
   const weatherColor = new THREE.Color();
-  const missionReplayDurationSeconds = [0, 4.2, 4.8, 5.4, 6.2, 8.8] as const;
+  const missionReplayDurationSeconds = [0, 4.2, 4.8, 5.4, 6.2, JUNGLE_COMPASS_CEREMONY_DURATION_MS / 1000] as const;
 
   const applyMissionState = (stage: number, progress: number, reducedMotion: boolean) => {
     const zenithReplayActive = stage >= 5 && !reducedMotion && progress < 1;
@@ -6219,7 +6402,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
     floatingSlabMesh.instanceMatrix.needsUpdate = true;
     const beamReveal = reducedMotion ? (stage >= 5 ? 0.56 : 0) : stage >= 5 ? Math.sin(Math.PI * THREE.MathUtils.smoothstep(progress, 0.58, 0.94)) : 0;
     beam.visible = stage >= 5;
-    (beam.material as THREE.MeshBasicMaterial).opacity = stage >= 5 && progress >= 1 ? 0.34 : beamReveal * 0.78;
+    beamMaterial.uniforms.strength.value = stage >= 5 && progress >= 1 ? 0.16 : beamReveal * 0.52;
+    beamMaterial.uniforms.time.value = lastElapsed;
     skyHaloRings.forEach((halo, index) => {
       const haloProgress = reducedMotion
         ? (stage >= 5 ? 1 : 0)
@@ -6284,6 +6468,41 @@ export function createIsland18JungleExpeditionLivingAmbience(
     wayfinderCrownMaterial.opacity = stage >= 5 && progress >= 1
       ? 0.48
       : 0.3 + wayfinderReveal * 0.68;
+    const bookReveal = stage < 5
+      ? 0
+      : reducedMotion
+        ? 1
+        : THREE.MathUtils.smoothstep(progress, 0.66, 0.76);
+    const bookDescent = stage < 5
+      ? 0
+      : reducedMotion
+        ? 1
+        : THREE.MathUtils.smoothstep(progress, 0.72, 0.94);
+    compassBookGift.visible = bookReveal > 0;
+    if (compassBookGift.visible) {
+      const descentArc = Math.sin(bookDescent * Math.PI);
+      compassBookGift.position.set(
+        Math.sin((1 - bookDescent) * Math.PI * 3.5) * (1 - bookDescent) * 0.82,
+        THREE.MathUtils.lerp(18.2, 10.55, bookDescent)
+          + descentArc * 0.62
+          + (reducedMotion ? 0 : Math.sin(lastElapsed * 1.4) * 0.08),
+        -0.18 + Math.cos((1 - bookDescent) * Math.PI * 3) * (1 - bookDescent) * 0.48,
+      );
+      compassBookGift.rotation.set(
+        0.22 + (1 - bookDescent) * 0.36,
+        0.2 + (1 - bookDescent) * Math.PI * 2,
+        (1 - bookDescent) * 0.42 - bookDescent * 0.08,
+      );
+      coverHinge.rotation.z = (reducedMotion ? 1 : THREE.MathUtils.smoothstep(progress, 0.82, 0.94)) * 2.45;
+      const arrivalPulse = reducedMotion ? 0 : Math.sin(Math.PI * THREE.MathUtils.smoothstep(bookDescent, 0.76, 1));
+      compassBookGift.scale.setScalar(Math.max(0.001, bookReveal * (0.8 + bookDescent * 0.65 + arrivalPulse * 0.08)));
+      compassBookHalo.rotation.z = reducedMotion ? 0 : lastElapsed * -0.72;
+      compassBookHalo.scale.setScalar(0.86 + bookDescent * 0.44 + Math.sin(lastElapsed * 2.1) * 0.06);
+      compassBookHaloMaterial.opacity = 0.2 + bookReveal * 0.46 + arrivalPulse * 0.24;
+      compassBookSparks.rotation.y = reducedMotion ? 0 : lastElapsed * 0.9;
+      compassBookSparks.rotation.z = reducedMotion ? 0 : lastElapsed * -0.28;
+      compassBookSparkMaterial.opacity = 0.34 + bookReveal * 0.56;
+    }
     junglePulseRings.visible = zenithLivingState;
     let strongestJunglePulse = 0;
     for (let index = 0; index < junglePulseRings.count; index += 1) {
@@ -6713,6 +6932,7 @@ export function createIsland18JungleExpeditionLivingAmbience(
       boardOrigin: [0, 0, 0],
       templeRoot: [0, 0, 0],
       zenithCore: [0, 9.18, -0.18],
+      compassBookRest: [0, 10.55, -0.18],
       waterfallLips: waterfallInstances.map((fall) => fall.position.toArray()),
     },
     colliders: [

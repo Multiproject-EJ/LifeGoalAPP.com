@@ -162,6 +162,16 @@ import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomCaretakerCompassEncounter } from './WisdomCaretakerCompassEncounter';
 import { CompactGameCompassPanel } from '../../../compass-book/components/CompactGameCompassPanel';
+import {
+  COMPASS_BOOK_FIRST_SIGNAL_COUNT,
+  COMPASS_BOOK_VISIBLE_FRAGMENT_START_ISLAND_NUMBER,
+  hasReceivedCompassBook,
+} from '../services/islandRunCompassBookReceipt';
+import {
+  getJungleMissionActionPresentation,
+  JUNGLE_COMPASS_CEREMONY_DURATION_MS,
+  JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS,
+} from '../services/islandRunJungleMissionPresentation';
 import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/compassBookService';
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
@@ -2577,7 +2587,7 @@ export function IslandRunBoardPrototype({
     setIslandArtManifest(null);
     setIsIslandArtAmbientBackgroundLoaded(false);
 
-    void loadIslandArtManifest(islandArtPreviewNumber).then((manifest) => {
+    void loadIslandArtManifest(island3DWorldNumber ?? islandArtPreviewNumber).then((manifest) => {
       if (cancelled) return;
       setIslandArtManifest(manifest);
     });
@@ -2585,7 +2595,7 @@ export function IslandRunBoardPrototype({
     return () => {
       cancelled = true;
     };
-  }, [islandArtPreviewNumber]);
+  }, [island3DWorldNumber, islandArtPreviewNumber]);
 
   useEffect(() => {
     if (!showTopbarMenu && !showAudioMenu) {
@@ -2812,6 +2822,10 @@ export function IslandRunBoardPrototype({
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
   const [showHatcheryCompassModal, setShowHatcheryCompassModal] = useState(false);
+  const [showCompassBookReceiptModal, setShowCompassBookReceiptModal] = useState(false);
+  const [isCompassBookCeremonyPlaying, setIsCompassBookCeremonyPlaying] = useState(false);
+  const compassBookCeremonyTimerRef = useRef<number | null>(null);
+  const compassBookCeremonyGenerationRef = useRef(0);
   const [walletStoreModalKind, setWalletStoreModalKind] = useState<WalletStoreModalKind | null>(null);
   const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
   const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
@@ -3145,13 +3159,14 @@ export function IslandRunBoardPrototype({
   // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
   // behind the overlay.
   const anyBlockingModalOpen =
-    showShopPanel ||
+    isCompassBookCeremonyPlaying || showShopPanel ||
     showMarketPanel ||
     showBuildPanel ||
     showOutOfDicePurchasePrompt ||
     showRewardDetailsModal ||
     showEggManiaModal ||
     showHatcheryCompassModal ||
+    showCompassBookReceiptModal ||
     Boolean(activePlaceholder) ||
     showStickerAlbumDialog ||
     showSanctuaryPanel ||
@@ -3315,6 +3330,15 @@ export function IslandRunBoardPrototype({
   const stagedRestorationAvailableCharges = stagedRestorationProgress
     ? getStagedRestorationAvailableCharges(stagedRestorationProgress)
     : 0;
+  const compassBookReceived = useMemo(() => hasReceivedCompassBook(runtimeState), [runtimeState]);
+  const jungleMissionAction = stagedRestorationDescriptor?.missionId === 'jungle-expedition-living-compass'
+    && stagedRestorationProgress
+    ? getJungleMissionActionPresentation(
+      stagedRestorationProgress.activatedStages,
+      stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage,
+      stagedRestorationProgress.completedAtMs !== null,
+    )
+    : null;
   const currentMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
     islandNumber,
     state: runtimeState,
@@ -3545,7 +3569,7 @@ export function IslandRunBoardPrototype({
       : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
-    showFirstCreaturePackModal ||
+    isCompassBookCeremonyPlaying || showFirstCreaturePackModal ||
       showStoryReader ||
       activeStopId ||
       activeLaunchedMinigameId ||
@@ -3554,6 +3578,7 @@ export function IslandRunBoardPrototype({
       showClaimModal ||
       showRewardDetailsModal ||
       showHatcheryCompassModal ||
+      showCompassBookReceiptModal ||
       showFirstVoyageDepartureModal
   );
 
@@ -3569,7 +3594,7 @@ export function IslandRunBoardPrototype({
     hasStoryReaderMajorNarrative: showStoryReader,
     needsFirstSessionTutorialHatcheryGuidance: showFirstCreaturePackModal || showHatcheryL1Celebration || isBuildTutorialPromptActive,
     hasRewardClaimOrWelcomePackReveal: showWelcomePackModal || showClaimModal || showRewardDetailsModal || showWinCelebrationModal,
-    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal || showJourneyDiscConcourseInvitation),
+    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal || showCompassBookReceiptModal || showJourneyDiscConcourseInvitation),
   });
   const showFirstProgressRecapAfterArena = firstPlayerModalDecision.promptId === 'first_progress_recap_after_arena';
   const showSoftSavePromptAfterArena = firstPlayerModalDecision.promptId === 'soft_save_prompt_after_arena';
@@ -3578,6 +3603,32 @@ export function IslandRunBoardPrototype({
     if ((!showFirstProgressRecapAfterArena && !showSoftSavePromptAfterArena) || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showFirstProgressRecapAfterArena, showSoftSavePromptAfterArena]);
+
+  useEffect(() => {
+    if (!showCompassBookReceiptModal || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showCompassBookReceiptModal]);
+
+  useEffect(() => {
+    setIsCompassBookCeremonyPlaying(false);
+    setShowCompassBookReceiptModal(false);
+    return () => {
+      compassBookCeremonyGenerationRef.current += 1;
+      if (compassBookCeremonyTimerRef.current !== null) window.clearTimeout(compassBookCeremonyTimerRef.current);
+      compassBookCeremonyTimerRef.current = null;
+    };
+  }, [islandNumber, runtimeState.cycleIndex, session.user.id]);
+
+  const presentCompassBookCeremony = useCallback((showReceipt: boolean) => {
+    setIsCompassBookCeremonyPlaying(true);
+    if (compassBookCeremonyTimerRef.current !== null) window.clearTimeout(compassBookCeremonyTimerRef.current);
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    compassBookCeremonyTimerRef.current = window.setTimeout(() => {
+      compassBookCeremonyTimerRef.current = null;
+      setIsCompassBookCeremonyPlaying(false);
+      if (showReceipt) setShowCompassBookReceiptModal(true);
+    }, (reducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS) + 300);
+  }, []);
 
   const handleContinueFirstProgressRecapAfterArena = useCallback(() => {
     const next = markIslandRunGuestFirstProgressRecapSeen();
@@ -13110,7 +13161,7 @@ export function IslandRunBoardPrototype({
   }, [nowMs, playerLevelInfo?.currentLevel, runtimeState]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
-    isArenaBattleOpen ||
+    isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
@@ -13131,6 +13182,7 @@ export function IslandRunBoardPrototype({
       showHatcheryHelp ||
       showHatcheryL1Celebration ||
       showHatcheryCompassModal ||
+      showCompassBookReceiptModal ||
       showIslandClearCelebration ||
       showMarketPanel ||
       showOnboardingBooster ||
@@ -13593,9 +13645,11 @@ export function IslandRunBoardPrototype({
   ]);
 
   const handleActivateStagedRestoration = useCallback(async () => {
-    if (isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
+    if (isCompassBookCeremonyPlaying || isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
+    const isLivingCompass = stagedRestorationDescriptor.missionId === 'jungle-expedition-living-compass';
     setShowMissionPhoneBriefing(false);
     if (stagedRestorationProgress.completedAtMs !== null) {
+      if (isLivingCompass) presentCompassBookCeremony(false);
       // Canonical completion is immutable; this only replays the world payoff.
       setStagedRestorationConstructionSequence((value) => value + 1);
       setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
@@ -13605,8 +13659,13 @@ export function IslandRunBoardPrototype({
       return;
     }
     setIsActivatingStagedRestoration(true);
+    const ceremonyGeneration = compassBookCeremonyGenerationRef.current;
+    const expectsBook = isLivingCompass && stagedRestorationProgress.activatedStages === stagedRestorationDescriptor.stageCount - 1;
+    let ceremonyStarted = false;
+    if (expectsBook) setIsCompassBookCeremonyPlaying(true);
     try {
       const result = await activateStagedRestorationMissionStage({ session, client });
+      if (ceremonyGeneration !== compassBookCeremonyGenerationRef.current) return;
       if (result.status !== 'ok') {
         if (result.status === 'no_charges') {
           setLandingText(`Find ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route before activating the next stage.`);
@@ -13621,14 +13680,23 @@ export function IslandRunBoardPrototype({
       setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
       const completed = result.completedAtMs !== null;
       const unlockedVaultIsland = completed && stagedRestorationDescriptor.islandNumber === 4;
+      const revealedCompassBook = completed
+        && stagedRestorationDescriptor.missionId === 'jungle-expedition-living-compass';
       setLandingText(completed
         ? unlockedVaultIsland
           ? `✨ ${currentMissionTracker.briefing.headline} complete — Vault Island is now yours!`
-          : `✨ ${currentMissionTracker.briefing.headline} complete — the whole island transformation is alive!`
+          : revealedCompassBook
+            ? 'The Living Compass has answered. Watch the sky.'
+            : `✨ ${currentMissionTracker.briefing.headline} complete — the whole island transformation is alive!`
         : `✨ ${stagedRestorationDescriptor.stageLabel} ${result.activatedStages}/${stagedRestorationDescriptor.stageCount}.`);
       playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
       if (completed) {
+        if (revealedCompassBook) {
+          presentCompassBookCeremony(true);
+          ceremonyStarted = true;
+          return;
+        }
         const completionRewards = [
           { icon: '✨', label: stagedRestorationDescriptor.stageLabel, value: 'COMPLETE' },
           { icon: '🏝️', label: currentMissionTracker.briefing.islandName, value: 'TRANSFORMED' },
@@ -13642,6 +13710,7 @@ export function IslandRunBoardPrototype({
         }, 5_200);
       }
     } finally {
+      if (expectsBook && !ceremonyStarted && ceremonyGeneration === compassBookCeremonyGenerationRef.current) setIsCompassBookCeremonyPlaying(false);
       setIsActivatingStagedRestoration(false);
     }
   }, [
@@ -13649,6 +13718,8 @@ export function IslandRunBoardPrototype({
     currentMissionTracker.briefing.headline,
     currentMissionTracker.briefing.islandName,
     isActivatingStagedRestoration,
+    isCompassBookCeremonyPlaying,
+    presentCompassBookCeremony,
     openWinCelebrationModal,
     playIslandRunSound,
     session,
@@ -13696,7 +13767,7 @@ export function IslandRunBoardPrototype({
       islandClearStats?.islandNumber === runtimeState.currentIslandNumber
   );
   const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
-    isArenaBattleOpen ||
+    isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
@@ -13717,6 +13788,7 @@ export function IslandRunBoardPrototype({
       showHatcheryHelp ||
       showHatcheryL1Celebration ||
       showHatcheryCompassModal ||
+      showCompassBookReceiptModal ||
       showMissionPhoneBriefing ||
       showMarketPanel ||
       showOnboardingBooster ||
@@ -14073,6 +14145,8 @@ export function IslandRunBoardPrototype({
   return (
     <section
       className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}${isArenaBattleOpen ? ' island-run-prototype--arena-battle' : ''}`}
+      {...(isCompassBookCeremonyPlaying ? { inert: '' } : {})}
+      data-compass-book-ceremony={isCompassBookCeremonyPlaying ? 'playing' : undefined}
       data-island-number={islandNumber}
       data-dice-launching={shouldRenderIsland5Three && isRolling ? 'true' : undefined}
       data-dice-throw-strength={shouldRenderIsland5Three && isRolling ? diceThrowStrength : undefined}
@@ -14755,7 +14829,7 @@ export function IslandRunBoardPrototype({
                   <i />
                 </span>
               </button>
-              <p className="island-run-board__audio-menu-hint" role="presentation">Change this anytime from the compass bar.</p>
+              <p className="island-run-board__audio-menu-hint" role="presentation">Change this anytime from the board settings.</p>
             </div>
           )}
 
@@ -15680,15 +15754,17 @@ export function IslandRunBoardPrototype({
         </button>
       ) : null}
 
-      <button
-        type="button"
-        className="island-run-prototype__compass-floating"
-        aria-label="Open Compass"
-        title="Compass"
-        onClick={() => setShowHatcheryCompassModal(true)}
-      >
-        <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
-      </button>
+      {compassBookReceived && !isCompassBookCeremonyPlaying ? (
+        <button
+          type="button"
+          className="island-run-prototype__compass-floating"
+          aria-label="Open Compass Book"
+          title="Compass Book"
+          onClick={() => setShowHatcheryCompassModal(true)}
+        >
+          <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
+        </button>
+      ) : null}
 
       <div
         className={`island-run-prototype__footer${isControllerTucked ? ' island-run-prototype__footer--controller-tucked' : ''}${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}
@@ -16121,13 +16197,49 @@ export function IslandRunBoardPrototype({
         />
       )}
 
-      {showHatcheryCompassModal && (
+      {showHatcheryCompassModal && compassBookReceived && !isCompassBookCeremonyPlaying && (
         <CompactGameCompassPanel
           session={session}
           currentIslandNumber={islandNumber}
           onClose={() => setShowHatcheryCompassModal(false)}
         />
       )}
+
+      {showCompassBookReceiptModal ? createPortal(
+        <div className="island-soft-save-modal" role="dialog" aria-modal="true" aria-labelledby="island-compass-book-receipt-title">
+          <div className="island-soft-save-modal__backdrop" aria-hidden="true" />
+          <div className="island-soft-save-modal__dialog">
+            <p className="island-soft-save-modal__eyebrow">Island 008 · Relic received</p>
+            <h2 id="island-compass-book-receipt-title">The Compass Book</h2>
+            <p>
+              The Living Compass has gathered your first {COMPASS_BOOK_FIRST_SIGNAL_COUNT} signals and opened Chapter I: The Living Wheel.
+            </p>
+            <p className="island-soft-save-modal__fineprint">
+              From Island {COMPASS_BOOK_VISIBLE_FRAGMENT_START_ISLAND_NUMBER}, each new island reveals a visible Compass fragment.
+            </p>
+            <div className="island-soft-save-modal__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--primary"
+                onClick={() => {
+                  setShowCompassBookReceiptModal(false);
+                  setShowHatcheryCompassModal(true);
+                }}
+              >
+                Open Chapter I
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--secondary"
+                onClick={() => setShowCompassBookReceiptModal(false)}
+              >
+                Keep exploring
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      ) : null}
 
       {shouldRenderActiveStopModal({
         hasActiveStop: Boolean(activeStop),
@@ -16549,7 +16661,7 @@ export function IslandRunBoardPrototype({
               />
             )}
 
-            {/* ── Stop 4: caretaker-led canonical Compass activity ── */}
+            {/* Stop 4: caretaker-led First Signal / Compass activity. */}
             {activeStopId === 'wisdom' && openedStopIsPlayable && (
               <div className="wisdom-stop-stack wisdom-stop-stack--caretaker">
                 <WisdomCaretakerCompassEncounter
@@ -16786,16 +16898,16 @@ export function IslandRunBoardPrototype({
 
             {isActiveCompassSessionFilled && (activeStop.stopId === 'habit' || activeStop.stopId === 'wisdom') && openedStopIsPlayable ? (
               <div className="island-stop-modal__copy" role="status">
-                <strong>Compass box already filled.</strong> You can use that saved session to finish this landmark now.
+                <strong>{compassBookReceived ? 'Compass page already filled.' : 'First Signal already saved.'}</strong> You can use that saved reflection to finish this landmark now.
                 <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                     onClick={() => {
-                      handleCompleteActiveStop(`${activeStop.title} completed from your filled Compass session. Next landmark unlocked.`);
+                      handleCompleteActiveStop(`${activeStop.title} completed from your saved reflection. Next landmark unlocked.`);
                     }}
                   >
-                    Use filled Compass box & Complete Landmark
+                    Use saved reflection & Complete Landmark
                   </button>
                 </div>
               </div>
@@ -18986,7 +19098,7 @@ export function IslandRunBoardPrototype({
           <div className="island-soft-save-modal__backdrop" aria-hidden="true" />
           <div className="island-soft-save-modal__dialog">
             <p className="island-soft-save-modal__eyebrow">First Light Shore</p>
-            <h2 id="island-first-progress-recap-title">Your Compass Has Begun</h2>
+            <h2 id="island-first-progress-recap-title">Your First Signals Have Begun</h2>
             <p>You have already opened the first route on First Light Shore.</p>
             <ul className="island-first-progress-recap-modal__list" aria-label="First Light progress">
               <li>✓ Captain identity formed</li>
@@ -18997,10 +19109,10 @@ export function IslandRunBoardPrototype({
               <li>✓ Routekeeper Steps relit</li>
               <li>✓ Arena opened</li>
               <li>✓ Event tickets gained</li>
-              <li>✓ Compass Book started</li>
+              <li>✓ First personal signal recorded</li>
             </ul>
             <p className="island-soft-save-modal__fineprint">
-              Your Compass Book fills as you play. Some pages unlock through island progress. Some pages unlock through the real actions you choose.
+              These First Signals help the journey adapt to you. They remain part of your captain profile until a later island gives them a new purpose.
             </p>
             <div className="island-soft-save-modal__actions">
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary" onClick={handleContinueFirstProgressRecapAfterArena}>
@@ -19277,6 +19389,7 @@ export function IslandRunBoardPrototype({
       />
 
       <IslandMissionBriefingModal
+        variant={jungleMissionAction ? 'living-compass' : 'default'}
         isOpen={Boolean(activeMissionBriefing) || showMissionPhoneBriefing}
         presentation={Boolean(activeMissionBriefing) || showMissionPhoneBriefing
           ? displayedMissionTracker.briefing
@@ -19287,7 +19400,7 @@ export function IslandRunBoardPrototype({
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
-        primaryActionLabel={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+        primaryActionLabel={showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.label : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? stagedRestorationProgress.completedAtMs !== null
             ? `Replay ${currentMissionTracker.briefing.headline}`
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
@@ -19300,7 +19413,7 @@ export function IslandRunBoardPrototype({
               ? `Pour nectar · stage ${greatHoneyfallProgress.activatedReservoirs + 1} of ${GREAT_HONEYFALL_MAX_STAGE}`
               : 'Find royal nectar on the route'
           : undefined}
-        primaryActionHint={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+        primaryActionHint={showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.hint : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? stagedRestorationProgress.completedAtMs !== null
             ? 'Replay the completed 3D transformation and island-wide finale.'
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage

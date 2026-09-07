@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { getChapterActivities, getChapterDefinition } from '../content/compassBookCurriculum';
 import { getUnlockedActivityCount } from '../logic/unlock';
+import { getCompassActivityJourneyLabel } from '../logic/journey';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
 import { makeHelpSlot, makePickSlot, makeInnerCompassHintSlot } from './compassBlockSlots';
@@ -173,7 +174,7 @@ export function CompassGuidedFlow({
   if (!activity) {
     return (
       <div className="compass-book__scroll">
-        <p className="compass-book__note">No fragments are unlocked in this chapter yet.</p>
+        <p className="compass-book__note">No pages are unlocked in this chapter yet.</p>
         <button type="button" className="compass-book__primary" onClick={onExit}>
           Back to chapter
         </button>
@@ -233,7 +234,7 @@ export function CompassGuidedFlow({
       </div>
       <div className="compass-book__scroll">
         <p className="compass-book__chapter-eyebrow">
-          {chapter.title} · Island {activity.islandNumber} · Stage {activity.stage}
+          {chapter.title} · {getCompassActivityJourneyLabel(activity.islandNumber)} · Stage {activity.stage}
         </p>
         <h2 className="compass-book__activity-heading">{activity.title}</h2>
         {activity.description ? (

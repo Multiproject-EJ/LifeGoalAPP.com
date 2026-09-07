@@ -1,13 +1,14 @@
 # Island 018 - Jungle Expedition Reference Packet
 
-This folder is the durable cross-chat visual working set for runtime Island
-018. Start here before changing its Three.js world. Nothing in this packet is
-shipped as runtime artwork.
+This folder is the durable cross-chat visual working set for the authored
+Jungle Expedition source pack 018, routed to runtime Island 008 as of
+2026-09-06. Start here before changing its Three.js world. Nothing in this
+packet is shipped as runtime artwork.
 
 ## Authority Order
 
 1. `018-source.png` - immutable user-supplied exact source and
-   visual-semantic target for runtime Island 018.
+   visual-semantic target for Jungle Expedition, now runtime Island 008.
 2. `derived-crops/` - non-generative crops of visible source details.
 3. `secondary-inferred/` - generated modeling aids for hidden side/rear form,
    admitted only after their files and provenance sidecars are recorded here.
@@ -16,10 +17,11 @@ The exact source always wins. Generated turnarounds may fill hidden
 construction gaps, but they may not replace visible silhouette, feature,
 palette, material response, landmark placement, or mood from the source.
 
-The source image itself says `ISLAND 039`, but Eivind explicitly started this
-as runtime Island 018. The runtime number is therefore 018. The source inbox
-ledger copied here also references a missing `018-source.png` with a different
-hash; the active source for this packet is the attached `new 018.png`, copied
+The source image itself says `ISLAND 039`. Eivind initially started the pack as
+runtime Island 018, then explicitly moved Jungle Expedition to runtime Island
+008 on 2026-09-06. The source pack and file names remain 018 for provenance.
+The source inbox ledger copied here also references a missing `018-source.png`
+with a different hash; the active source is the attached `new 018.png`, copied
 here as `018-source.png` on 2026-08-30.
 
 ## Reference Lock
@@ -41,7 +43,7 @@ state remain unchanged.
 | --- | --- | --- | --- | --- |
 | Explorer Nest | Hatchery | `derived-crops/explorer-nest-hatchery-source-crop-v001.png` | none admitted | Preserve the moss-hidden green egg, small shrine plinth, wet stone, vines and waterfall perch. Do not turn it into a bird nest or soft forest hut. |
 | Jungle Path | Habit | `derived-crops/jungle-path-habit-source-crop-v001.png` | none admitted | Preserve the elevated jungle-platform path, torchlight, vines and daily-step expedition tone. Text panel copy is not runtime UI authority. |
-| Survival Trials | Mystery | `derived-crops/survival-trials-mystery-source-crop-v001.png` | none admitted | The source labels this area `ARENA`, but runtime Island 018 is an ordinary island unless gameplay separately says otherwise; use it as the Mystery landmark visual language. |
+| Survival Trials | Mystery | `derived-crops/survival-trials-mystery-source-crop-v001.png` | none admitted | The source labels this area `ARENA`, but runtime Island 008 is an ordinary island unless gameplay separately says otherwise; use it as the Mystery landmark visual language. |
 | Explorer's Camp | Wisdom | `derived-crops/explorers-camp-wisdom-source-crop-v001.png` | none admitted | Preserve the map/camp/lesson identity with small expedition platforms and warm lantern-gold detail. |
 | Lost City Temple | Boss | `derived-crops/lost-city-temple-boss-source-crop-v001.png` | none admitted | Preserve the dominant stepped ruin-temple mass, vertical stairways, glowing entrances, vines, waterfalls and carved stone guardian identity. |
 

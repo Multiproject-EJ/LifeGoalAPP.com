@@ -19,6 +19,13 @@ import {
   getCurrentChapterId,
 } from '../logic/unlock';
 import {
+  COMPASS_BOOK_FIRST_SIGNAL_COUNT,
+  COMPASS_BOOK_RECEIPT_ISLAND_NUMBER,
+  COMPASS_BOOK_VISIBLE_FRAGMENT_START_ISLAND_NUMBER,
+  getCompassActivityJourneyLabel,
+  isCompassFirstSignalIsland,
+} from '../logic/journey';
+import {
   computeChapterProgress,
   isActivityComplete,
   areRequiredBlocksAnswered,
@@ -210,6 +217,16 @@ function testUnlock(): void {
   assert(getChapterActivityIndexForIsland(21) === 1, 'island 21 is activity 1 of its chapter');
   assert(getChapterActivityIndexForIsland(40) === 20, 'island 40 is activity 20 of its chapter');
   assert(getCurrentChapterId({ currentIslandNumber: 0 }) === 'living_wheel', 'pre-start → chapter 1');
+}
+
+function testJourneyRevealLanguage(): void {
+  assert(COMPASS_BOOK_RECEIPT_ISLAND_NUMBER === 8, 'the Living Compass awards the book on Island 008');
+  assert(COMPASS_BOOK_FIRST_SIGNAL_COUNT === 8, 'the first eight activities remain First Signals');
+  assert(COMPASS_BOOK_VISIBLE_FRAGMENT_START_ISLAND_NUMBER === 9, 'visible fragments begin on Island 009');
+  assert(isCompassFirstSignalIsland(8), 'Island 008 is still a First Signal page');
+  assert(!isCompassFirstSignalIsland(9), 'Island 009 begins visible fragment collection');
+  assert(getCompassActivityJourneyLabel(1) === 'First Signal 1', 'early personalization avoids premature Compass terminology');
+  assert(getCompassActivityJourneyLabel(9) === 'Island 9 Fragment', 'post-reveal activities use fragment language');
 }
 
 function testProgress(): void {
@@ -1668,6 +1685,7 @@ function testDeviceProfiling(): void {
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
+  testJourneyRevealLanguage();
   testProgress();
   testAnswerParsing();
   testChapterMethodVersioning();

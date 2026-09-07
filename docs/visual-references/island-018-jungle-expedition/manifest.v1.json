@@ -1,13 +1,14 @@
 {
   "schemaVersion": 1,
   "island": {
-    "runtimeNumber": 18,
+    "runtimeNumber": 8,
+    "authoredSourcePackNumber": 18,
     "slug": "jungle-expedition",
     "title": "Jungle Expedition",
     "embeddedConceptLabel": "ISLAND 039",
-    "runtimeNumberDecision": "Eivind explicitly started this supplied Jungle Expedition source as runtime Island 018."
+    "runtimeNumberDecision": "Eivind moved Jungle Expedition to runtime Island 008 on 2026-09-06; source-pack identity 018 remains unchanged."
   },
-  "updated": "2026-08-30",
+  "updated": "2026-09-06",
   "status": "active-rebuild-after-user-visual-review",
   "sourceInbox": {
     "folder": "/Users/ejmac/Library/CloudStorage/OneDrive-Personal/Projects - sites LEVELup/Habit game UI/011-120 islands HERE/",
@@ -27,7 +28,7 @@
       "path": "docs/visual-references/island-018-jungle-expedition/018-source.png",
       "sha256": "0ab89ac048a8ba9327575afeacdee125998a8455bc5c687e87b0a3049735ee59",
       "authority": "exact-source",
-      "purpose": "Immutable user-supplied whole-island visual goal and source-fidelity target for runtime Island 018",
+      "purpose": "Immutable user-supplied whole-island visual goal and source-fidelity target for Jungle Expedition, now runtime Island 008",
       "status": "active"
     },
     {
@@ -83,7 +84,7 @@
       "stopId": "mystery",
       "purpose": "Visible ruin-trial platform, carved totem, explorer chest and survival-test visual language",
       "status": "active-with-adaptation",
-      "adaptation": "Source label says Arena, but runtime Island 018 is ordinary; use this as Mystery landmark presentation unless gameplay is separately approved."
+      "adaptation": "Source label says Arena, but runtime Island 008 is ordinary; use this as Mystery landmark presentation unless gameplay is separately approved."
     },
     {
       "id": "explorers-camp-wisdom-source-crop-v001",

@@ -83,7 +83,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(!source.includes('Become a Pro Member'), 'Soft save prompt must not show a Pro purchase CTA.');
       assert(source.includes("markIslandRunGuestSavePromptDismissed({ prompt: 'soft_after_arena' })"), 'Secondary CTA should record dismissal in guest funnel state.');
       assert(source.includes("claimStatus: 'claim_pending'"), 'Primary CTA should mark claim intent pending for the next claim/merge slice.');
-      assert(source.includes('Your Compass Has Begun'), 'First progress recap should appear before the soft save prompt.');
+      assert(source.includes('Your First Signals Have Begun'), 'First progress recap should introduce personal signals before the soft save prompt.');
       assert(source.indexOf('showFirstProgressRecapAfterArena ? createPortal(') < source.indexOf('showSoftSavePromptAfterArena ? createPortal('), 'Recap modal should render before save prompt modal.');
       const promptSection = source.slice(source.indexOf('showSoftSavePromptAfterArena ? createPortal('), source.indexOf('{showWelcomePackModal ? ('));
       const recapSection = source.slice(source.indexOf('showFirstProgressRecapAfterArena ? createPortal('), source.indexOf('showSoftSavePromptAfterArena ? createPortal('));

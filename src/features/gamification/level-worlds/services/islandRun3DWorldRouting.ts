@@ -22,7 +22,9 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 5, worldSourceNumber: 5, role: 'arena' },
   { runtimeIslandNumber: 6, worldSourceNumber: 6, role: 'ordinary' },
   { runtimeIslandNumber: 7, worldSourceNumber: 7, role: 'ordinary' },
-  { runtimeIslandNumber: 8, worldSourceNumber: 8, role: 'ordinary' },
+  // The Living Compass is now the Island 008 revelation. Source numbers remain
+  // stable authored-pack identities, while runtime numbers own progression.
+  { runtimeIslandNumber: 8, worldSourceNumber: 18, role: 'ordinary' },
   { runtimeIslandNumber: 9, worldSourceNumber: 9, role: 'ordinary' },
   { runtimeIslandNumber: 10, worldSourceNumber: 10, role: 'arena' },
   // Island 011 intentionally preserves the pre-Assembly-Crater First Light
@@ -32,7 +34,7 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 12, worldSourceNumber: 12, role: 'ordinary' },
   { runtimeIslandNumber: 13, worldSourceNumber: 13, role: 'ordinary' },
   { runtimeIslandNumber: 14, worldSourceNumber: 14, role: 'ordinary' },
-  { runtimeIslandNumber: 18, worldSourceNumber: 18, role: 'ordinary' },
+  { runtimeIslandNumber: 18, worldSourceNumber: 8, role: 'ordinary' },
   // Eivind explicitly promoted the completed Fisherman's Village pack into
   // runtime Island 016. Source 022 remains an internal visual-pack identity;
   // runtime progression, story, persistence and PWA copy all use Island 016.

@@ -22,9 +22,9 @@ const PALETTES: Record<4 | 6 | 7 | 8 | 9 | 18, Palette> = {
   4: { primary: 0xf5d083, secondary: 0xb88340, glow: 0xffe9a3, dark: 0x382716 },
   6: { primary: 0xdad8ff, secondary: 0x7d70df, glow: 0xb9f4ff, dark: 0x171237 },
   7: { primary: 0x8df4ff, secondary: 0x3aa8cc, glow: 0xd5ffff, dark: 0x082a3a },
-  8: { primary: 0xff8fda, secondary: 0x71d276, glow: 0xfff0a8, dark: 0x17361c },
+  8: { primary: 0x6e8466, secondary: 0xb78b35, glow: 0x54f5a0, dark: 0x172c20 },
   9: { primary: 0xffa126, secondary: 0xb83d18, glow: 0xffee8a, dark: 0x341008 },
-  18: { primary: 0x6e8466, secondary: 0xb78b35, glow: 0x54f5a0, dark: 0x172c20 },
+  18: { primary: 0xff8fda, secondary: 0x71d276, glow: 0xfff0a8, dark: 0x17361c },
 };
 
 function cylinderBetween(start: THREE.Vector3, end: THREE.Vector3, radius: number, material: THREE.Material) {
@@ -165,10 +165,10 @@ export function createIslandStagedRestorationThreePresentation(options: {
     glow: new THREE.MeshBasicMaterial({ color: palette.glow, transparent: true, opacity: 0.78, blending: THREE.AdditiveBlending, depthWrite: false }),
     dark: new THREE.MeshStandardMaterial({ color: palette.dark, roughness: 0.44, metalness: 0.58 }),
   };
-  // Island 018 owns its complete stage/finale sculpture inside the authored
-  // Jungle Expedition world. Retain this runtime only as the canonical mission
-  // hit target so the generic markers do not duplicate the Living Compass.
-  const usesAuthoredWorldPresentation = options.islandNumber === 18;
+  // Runtime Island 008 owns its complete stage/finale sculpture inside the
+  // authored Jungle Expedition source pack. Retain this runtime only as the
+  // canonical mission hit target so generic markers do not duplicate it.
+  const usesAuthoredWorldPresentation = options.islandNumber === 8;
   const stageGroups = Array.from({ length: usesAuthoredWorldPresentation ? 0 : options.stageCount }, (_, index) => {
     const stage = options.islandNumber === 4
       ? createCausewayStage(index, materials)
@@ -177,9 +177,9 @@ export function createIslandStagedRestorationThreePresentation(options: {
         : options.islandNumber === 7
           ? createBreathlineStage(index, materials)
           : options.islandNumber === 8
-            ? createPollinationStage(index, materials)
-          : options.islandNumber === 18
             ? createLivingCompassStage(index, materials)
+          : options.islandNumber === 18
+            ? createPollinationStage(index, materials)
             : createIgnitionStage(index, materials);
     stage.name = `ISLAND_${options.islandNumber}_MISSION_STAGE_${index + 1}`;
     stage.visible = false;

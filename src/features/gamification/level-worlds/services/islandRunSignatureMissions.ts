@@ -68,7 +68,7 @@ export const GREAT_HONEYFALL_NECTAR_TILE_FRACTIONS = Object.freeze([
   2 / 36, 11 / 36, 20 / 36, 29 / 36,
 ] as const);
 
-export const JUNGLE_EXPEDITION_ISLAND_NUMBER = 18;
+export const JUNGLE_EXPEDITION_ISLAND_NUMBER = 8;
 export const LIVING_COMPASS_MAX_STAGE = 5;
 /** Five Wayfinder caches, separated from the four landmark-door clusters. */
 export const LIVING_COMPASS_GLYPH_TILE_FRACTIONS = Object.freeze([
@@ -123,10 +123,10 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
     preferredPickupFractions: [3 / 36, 11 / 36, 20 / 36, 28 / 36],
   },
   8: {
-    islandNumber: 8, missionId: 'great-pollination', pickupKind: 'pollination_pollen_light',
-    pickupLabel: 'Pollen Light', actionLabel: 'Awaken Garden Family', stageLabel: 'Gardens Blooming',
-    stageCount: 5, chargeCostPerStage: 1,
-    preferredPickupFractions: [1 / 36, 8 / 36, 16 / 36, 25 / 36, 35 / 36],
+    islandNumber: 8, missionId: 'jungle-expedition-living-compass', pickupKind: 'wayfinder_glyph',
+    pickupLabel: 'Wayfinder Glyph', actionLabel: 'Awaken Next Compass Seal', stageLabel: 'Compass Seals Awakened',
+    stageCount: LIVING_COMPASS_MAX_STAGE, chargeCostPerStage: 1,
+    preferredPickupFractions: LIVING_COMPASS_GLYPH_TILE_FRACTIONS,
   },
   9: {
     islandNumber: 9, missionId: 'ignition-chain', pickupKind: 'ignition_core',
@@ -135,10 +135,10 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
     preferredPickupFractions: [0 / 36, 3 / 36, 8 / 36, 11 / 36, 18 / 36, 20 / 36, 26 / 36, 29 / 36],
   },
   18: {
-    islandNumber: 18, missionId: 'jungle-expedition-living-compass', pickupKind: 'wayfinder_glyph',
-    pickupLabel: 'Wayfinder Glyph', actionLabel: 'Awaken Next Compass Seal', stageLabel: 'Compass Seals Awakened',
-    stageCount: LIVING_COMPASS_MAX_STAGE, chargeCostPerStage: 1,
-    preferredPickupFractions: LIVING_COMPASS_GLYPH_TILE_FRACTIONS,
+    islandNumber: 18, missionId: 'great-pollination', pickupKind: 'pollination_pollen_light',
+    pickupLabel: 'Pollen Light', actionLabel: 'Awaken Garden Family', stageLabel: 'Gardens Blooming',
+    stageCount: 5, chargeCostPerStage: 1,
+    preferredPickupFractions: [1 / 36, 8 / 36, 16 / 36, 25 / 36, 35 / 36],
   },
 });
 
@@ -818,7 +818,15 @@ export function resolveStagedRestorationMissionProgress(options: {
   if (!descriptor) return null;
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, descriptor.islandNumber);
   const current = options.ledger[key];
-  return current?.missionId === descriptor.missionId ? current as StagedRestorationMissionProgress : {
+  if (current?.missionId === descriptor.missionId) return current as StagedRestorationMissionProgress;
+  const isReassignedIslandMission = current && (
+    (descriptor.missionId === 'jungle-expedition-living-compass' && current.missionId === 'great-pollination')
+    || (descriptor.missionId === 'great-pollination' && current.missionId === 'jungle-expedition-living-compass')
+  );
+  if (isReassignedIslandMission) {
+    return { ...(current as StagedRestorationMissionProgress), missionId: descriptor.missionId };
+  }
+  return {
     missionId: descriptor.missionId,
     version: 1,
     claimedPickupTileIndices: [],

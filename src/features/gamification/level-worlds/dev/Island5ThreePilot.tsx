@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { resolveIsland18CompassCeremonyCamera } from './island18CompassCeremonyCamera';
+import { JUNGLE_COMPASS_CEREMONY_DURATION_MS, JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS } from '../services/islandRunJungleMissionPresentation';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -81,6 +83,7 @@ import {
   resolveIslandRun3DWorldRoute,
   type IslandRunAuthored3DWorldSource,
 } from '../services/islandRun3DWorldRouting';
+import { JUNGLE_EXPEDITION_ISLAND_NUMBER } from '../services/islandRunSignatureMissions';
 import {
   buildIsland1Landmark,
   createIsland1LivingAmbience,
@@ -4630,15 +4633,15 @@ export default function Island5ThreePilot({
     const resolveStagedRestorationPresentation = (elapsed = 0): IslandStagedRestorationPresentation | null => (
       jungleZenithPreviewEnabled
         ? {
-            islandNumber: 18,
+            islandNumber: JUNGLE_EXPEDITION_ISLAND_NUMBER,
             activatedStages: 5,
             stageCount: 5,
-            constructionSequence: 10_000 + Math.floor(elapsed / 11.4),
+            constructionSequence: 10_000 + Math.floor(elapsed / 15.5),
             claimedPickupTileIndices: [2, 9, 16, 25, 34],
           }
         : jungleMissionPreviewStage !== null
           ? {
-              islandNumber: 18,
+              islandNumber: JUNGLE_EXPEDITION_ISLAND_NUMBER,
               activatedStages: jungleMissionPreviewStage,
               stageCount: 5,
               constructionSequence: 20_000 + (jungleMissionPreviewReplay ? Math.floor(elapsed / 7.5) : 0),
@@ -7104,7 +7107,7 @@ export default function Island5ThreePilot({
             controls.enabled = true;
             applyPreset('overview', 0.54);
           }
-          const zenithDurationMs = isReducedMotion ? 450 : 8_800;
+          const zenithDurationMs = isReducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS;
           const zenithProgress = Number.isFinite(jungleZenithStartedAtMs)
             ? THREE.MathUtils.clamp((now - jungleZenithStartedAtMs) / zenithDurationMs, 0, 1)
             : 1;
@@ -7113,43 +7116,24 @@ export default function Island5ThreePilot({
             ? 'compass-awakening'
             : zenithProgress < 0.48
               ? 'ruin-ascension'
-              : zenithProgress < 0.72
+              : zenithProgress < 0.66
                 ? 'waterfall-reversal'
-                : zenithProgress < 1
-                  ? 'sky-canopy-opening'
-                  : 'complete';
+                : zenithProgress < 0.75
+                  ? 'energy-to-sky'
+                  : zenithProgress < 0.94
+                    ? 'compass-book-descent'
+                    : zenithProgress < 1
+                      ? 'chapter-awakening'
+                      : 'complete';
           if (jungleZenithCameraWasActive && jungleZenithCameraOrigin && zenithProgress < 1) {
-            const focus = getIsland18EmeraldZenithFocus();
-            const position = new THREE.Vector3();
-            const target = new THREE.Vector3();
-            if (zenithProgress < 0.18) {
-              const approach = THREE.MathUtils.smoothstep(zenithProgress, 0, 0.18);
-              position.lerpVectors(jungleZenithCameraOrigin.position, new THREE.Vector3(10.8, 10.9, 19.4), approach);
-              target.lerpVectors(jungleZenithCameraOrigin.target, focus, approach);
-            } else if (zenithProgress < 0.82) {
-              const orbit = THREE.MathUtils.smoothstep(zenithProgress, 0.18, 0.82);
-              const angle = 0.78 + orbit * 1.62;
-              const radius = THREE.MathUtils.lerp(20.4, 18.3, Math.sin(orbit * Math.PI));
-              const reversalShake = zenithProgress >= 0.48 && zenithProgress <= 0.68
-                ? Math.sin((zenithProgress - 0.48) / 0.2 * Math.PI) * 0.08
-                : 0;
-              position.set(
-                Math.cos(angle) * radius + Math.sin(now * 0.014) * reversalShake,
-                THREE.MathUtils.lerp(11.3, 14.8, orbit) + Math.sin(now * 0.017) * reversalShake,
-                Math.sin(angle) * radius + Math.cos(now * 0.012) * reversalShake,
-              );
-              target.copy(focus).add(new THREE.Vector3(0, -2.35 + orbit * 0.55, 0));
-            } else {
-              const settle = THREE.MathUtils.smoothstep(zenithProgress, 0.82, 1);
-              position.lerpVectors(new THREE.Vector3(-11.1, 12.9, 10.8), new THREE.Vector3(0, 13.8, 21.8), settle);
-              target.lerpVectors(focus.clone().add(new THREE.Vector3(0, -1.45, 0)), new THREE.Vector3(0, 0.38, -0.18), settle);
-            }
-            jungleZenithCameraPose = { position, target };
+            jungleZenithCameraPose = resolveIsland18CompassCeremonyCamera(
+              zenithProgress, jungleZenithCameraOrigin, getIsland18EmeraldZenithFocus(), camera.aspect,
+            );
           } else if (jungleZenithCameraWasActive) {
             jungleZenithCameraWasActive = false;
             jungleZenithCameraOrigin = null;
             controls.enabled = true;
-            applyPreset('overview', 0.54);
+            applyPreset('overview', 1.6);
           }
         }
         canvas.dataset.stagedRestorationStage = String(nextPresentation.activatedStages);

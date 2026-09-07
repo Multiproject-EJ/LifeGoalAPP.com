@@ -18,7 +18,7 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(6)?.role, 'ordinary', 'Island 006 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(7)?.worldSourceNumber, 7, 'Island 007 owns the Abyssal Pearl Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(7)?.role, 'ordinary', 'Island 007 keeps the ordinary-island role');
-      assertEqual(resolveIslandRun3DWorldRoute(8)?.worldSourceNumber, 8, 'Island 008 owns the Everblossom Kingdom world');
+      assertEqual(resolveIslandRun3DWorldRoute(8)?.worldSourceNumber, 18, 'Island 008 owns the Jungle Expedition world');
       assertEqual(resolveIslandRun3DWorldRoute(8)?.role, 'ordinary', 'Island 008 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(9)?.worldSourceNumber, 9, 'Island 009 owns the Heartshaft Crucible world');
       assertEqual(resolveIslandRun3DWorldRoute(9)?.role, 'ordinary', 'Island 009 keeps the ordinary-island role');
@@ -32,7 +32,7 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(13)?.role, 'ordinary', 'Island 013 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(14)?.worldSourceNumber, 14, 'Island 014 owns the Honeycomb Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(14)?.role, 'ordinary', 'Island 014 keeps the ordinary-island role');
-      assertEqual(resolveIslandRun3DWorldRoute(18)?.worldSourceNumber, 18, 'Island 018 owns the Jungle Expedition world');
+      assertEqual(resolveIslandRun3DWorldRoute(18)?.worldSourceNumber, 8, 'Island 018 owns the Everblossom Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(18)?.role, 'ordinary', 'Island 018 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(16)?.worldSourceNumber, 22, 'runtime Island 016 owns the Fisherman\'s Village world');
       assertEqual(resolveIslandRun3DWorldRoute(16)?.role, 'ordinary', 'Island 016 remains an ordinary mission island');

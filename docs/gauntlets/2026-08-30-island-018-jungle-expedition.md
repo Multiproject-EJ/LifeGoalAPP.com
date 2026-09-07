@@ -4,6 +4,13 @@ Date: 2026-08-30
 Status: active; reopened after Eivind's 2/10 visual review
 Runtime island: 018
 
+> Superseded runtime assignment (2026-09-06): Eivind moved this authored
+> Jungle Expedition source pack to runtime Island 008, where The Living Compass
+> now awards the Compass Book. Runtime Island 018 now uses the authored
+> Everblossom source pack and The Great Pollination. Source-pack filenames and
+> provenance remain `018`. See
+> `docs/gauntlets/2026-09-06-island-008-compass-book-reveal-and-world-swap.md`.
+
 ## Objective
 
 Produce a source-faithful runtime Island 018 based on Eivind's supplied

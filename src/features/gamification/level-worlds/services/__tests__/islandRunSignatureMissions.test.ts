@@ -1045,13 +1045,13 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       installWindowWithStorage(createMemoryStorage());
       const session = makeSession();
       const base = readIslandRunGameStateRecord(session);
-      const key = getIslandRunSignatureMissionKey(base.cycleIndex, 18);
+      const key = getIslandRunSignatureMissionKey(base.cycleIndex, 8);
       await writeIslandRunGameStateRecord({
         session,
         client: null,
         record: {
           ...base,
-          currentIslandNumber: 18,
+          currentIslandNumber: 8,
           signatureMissionProgressByIsland: {
             [key]: {
               missionId: 'jungle-expedition-living-compass',
@@ -1072,13 +1072,48 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const after = readIslandRunGameStateRecord(session);
       const progress = resolveStagedRestorationMissionProgress({
         ledger: after.signatureMissionProgressByIsland,
-        islandNumber: 18,
+        islandNumber: 8,
         cycleIndex: base.cycleIndex,
       });
       assertEqual(result.status, 'ok', 'the fifth Wayfinder Glyph activates through the action mutex');
       assertEqual(progress?.activatedStages, 5, 'all five Living Compass seals persist');
       assertEqual(progress?.chargesSpent, 5, 'the finale spends exactly one authored glyph charge');
       assert(progress?.completedAtMs !== null, 'Emerald Zenith completion receives a canonical timestamp');
+    },
+  },
+  {
+    name: 'Island 008 and 018 staged saves retain progress across the mission reassignment',
+    run: () => {
+      const jungleKey = getIslandRunSignatureMissionKey(0, 8);
+      const flowerKey = getIslandRunSignatureMissionKey(0, 18);
+      const jungle = resolveStagedRestorationMissionProgress({
+        cycleIndex: 0,
+        islandNumber: 8,
+        ledger: {
+          [jungleKey]: {
+            missionId: 'great-pollination', version: 1,
+            claimedPickupTileIndices: [1, 8, 16], chargesEarned: 3, chargesSpent: 2,
+            activatedStages: 2, lastActivatedStage: 2, completedAtMs: null, updatedAtMs: 20,
+          },
+        },
+      });
+      const flowers = resolveStagedRestorationMissionProgress({
+        cycleIndex: 0,
+        islandNumber: 18,
+        ledger: {
+          [flowerKey]: {
+            missionId: 'jungle-expedition-living-compass', version: 1,
+            claimedPickupTileIndices: [2, 9, 16, 25], chargesEarned: 4, chargesSpent: 3,
+            activatedStages: 3, lastActivatedStage: 3, completedAtMs: null, updatedAtMs: 30,
+          },
+        },
+      });
+      assertEqual(jungle?.missionId, 'jungle-expedition-living-compass', 'old Island 008 pollination progress adopts the Living Compass identity');
+      assertEqual(jungle?.activatedStages, 2, 'Island 008 keeps its completed stage count');
+      assertEqual(jungle?.chargesEarned, 3, 'Island 008 keeps earned mission charges');
+      assertEqual(flowers?.missionId, 'great-pollination', 'old Island 018 Compass progress adopts the pollination identity');
+      assertEqual(flowers?.activatedStages, 3, 'Island 018 keeps its completed stage count');
+      assertEqual(flowers?.chargesSpent, 3, 'Island 018 keeps spent mission charges');
     },
   },
   {
