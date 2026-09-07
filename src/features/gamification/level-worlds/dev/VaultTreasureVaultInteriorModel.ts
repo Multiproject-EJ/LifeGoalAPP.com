@@ -1868,18 +1868,27 @@ export function createVaultTreasurePalaceAtriumModel(options: VaultTreasureVault
   const fallbackArchitecture = createVaultPalaceAtriumArchitectureV3(materials, quality);
   fallbackArchitecture.name = 'vault-palace-atrium-procedural-fallback';
   root.add(fallbackArchitecture);
+  const entryLanternLights = new THREE.Group();
+  entryLanternLights.name = 'vault-palace-atrium-entry-lantern-lights';
+  for (const side of [-1, 1]) {
+    const light = new THREE.PointLight('#ffbf72', quality === 'low' ? 1.4 : 2.4, 4.4, 2);
+    light.position.set(side * 1.64, 2.78, 3.95);
+    entryLanternLights.add(light);
+  }
+  root.add(entryLanternLights);
   let explore360Enabled = false;
   const applyExplore360Visibility = () => {
     root.traverse((child) => {
       if (child.userData.vaultInterior360Completion === true) child.visible = explore360Enabled;
     });
+    entryLanternLights.visible = explore360Enabled;
     root.userData.interiorExplore360 = explore360Enabled;
   };
   const releaseBlenderArchitecture = loadBlenderInteriorArchitecture(
     root,
     fallbackArchitecture,
-    '/assets/islands/special/vault-island/vault-atrium.glb?v=045',
-    'vault-palace-atrium-blender-architecture-v045',
+    '/assets/islands/special/vault-island/vault-atrium.glb?v=046',
+    'vault-palace-atrium-blender-architecture-v046',
     materials,
     applyExplore360Visibility,
   );

@@ -7,7 +7,7 @@ import bpy
 
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = "v045"
+VERSION = "v046"
 DEV_ROOT = ROOT / "public/assets/dev/vault-island-lab"
 PRODUCTION_ROOT = ROOT / "public/assets/islands/special/vault-island"
 WORK_ROOT = ROOT / "work/vault-island-interior/blender"
@@ -468,9 +468,38 @@ def loggia_level(prefix, base_z, gallery_z, radius, mats, bay_count=9):
         cylinder(f"{prefix}-marble-baluster", (x, y, gallery_z + 0.56), 0.038, 0.52, mats["marble_light"], 10)
 
 
+def continuous_arc_slab(name, inner_radius, outer_radius, z, height, start, end, mat):
+    # One annular solid avoids intersecting box ends along the balcony silhouette.
+    count = max(32, math.ceil((end - start) * 32))
+    vertices = []
+    for index in range(count + 1):
+        angle = start + (end - start) * index / count
+        for radius, level in ((inner_radius, z - height / 2), (outer_radius, z - height / 2),
+                              (inner_radius, z + height / 2), (outer_radius, z + height / 2)):
+            vertices.append((math.sin(angle) * radius, -math.cos(angle) * radius, level))
+    faces = [(0, 2, 3, 1)]
+    for index in range(count):
+        a, b = index * 4, (index + 1) * 4
+        faces.extend(((a, a + 1, b + 1, b), (a + 2, b + 2, b + 3, a + 3),
+                      (a, b, b + 2, a + 2), (a + 1, a + 3, b + 3, b + 1)))
+    a = count * 4
+    faces.append((a, a + 1, a + 3, a + 2))
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(vertices, [], [tuple(reversed(face)) for face in faces])
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    bevel(obj, 0.018, 2)
+    return obj
+
+
 def completion_loggia_arc(prefix, base_z, gallery_z, radius, mats, start, end, bay_count):
-    radial_gallery_slab(prefix, radius - 0.52, gallery_z, mats, start, end, bay_count + 2, 1.08)
-    curve_tube(f"{prefix}-deep-gallery-slab-front", arc_points(radius - 1.02, gallery_z + 0.02, start, end, 31), 0.17, mats["marble_light"])
+    continuous_arc_slab(f"{prefix}-continuous-walkable-gallery", radius - 1.18, radius + 0.02,
+                        gallery_z, 0.28, start, end, mats["marble_light"])
+    continuous_arc_slab(f"{prefix}-recessed-enamel-soffit", radius - 1.0, radius - 0.02,
+                        gallery_z - 0.16, 0.035, start, end, mats["blue"])
+    curve_tube(f"{prefix}-deep-gallery-slab-front", arc_points(radius - 1.02, gallery_z + 0.02, start, end, 65), 0.075, mats["marble_light"])
     curve_tube(f"{prefix}-deep-gold-cornice", arc_points(radius - 0.96, gallery_z + 0.16, start, end, 31), 0.075, mats["gold"])
     curve_tube(f"{prefix}-continuous-gold-rail", arc_points(radius - 1.1, gallery_z + 0.84, start + 0.04, end - 0.04, 31), 0.05, mats["gold"])
     curve_tube(f"{prefix}-continuous-marble-rail", arc_points(radius - 1.1, gallery_z + 0.68, start + 0.04, end - 0.04, 31), 0.075, mats["marble_light"])
@@ -508,17 +537,43 @@ def completion_loggia_arc(prefix, base_z, gallery_z, radius, mats, start, end, b
             8,
         )
 
-    for index in range(bay_count * 2 + 1):
-        angle = start + (end - start) * index / (bay_count * 2)
-        radial_panel(
-            f"{prefix}-carved-solid-gallery-parapet",
-            angle,
-            radius - 1.1,
-            gallery_z + 0.38,
-            (0.5, 0.13, 0.48),
-            mats["marble_light"],
-            0.04,
-        )
+    for index in range(bay_count * 6 + 1):
+        angle = start + (end - start) * index / (bay_count * 6)
+        x, y = math.sin(angle) * (radius - 1.1), -math.cos(angle) * (radius - 1.1)
+        if index % 6 == 0:
+            box(f"{prefix}-stone-newel", (x, y, gallery_z + 0.39), (0.15, 0.15, 0.62),
+                mats["marble_light"], rotation=(0, 0, angle), bevel_amount=0.018)
+            cylinder(f"{prefix}-newel-gold-cap", (x, y, gallery_z + 0.72), 0.11, 0.065, mats["gold"], 16)
+        else:
+            cylinder(f"{prefix}-gilded-baluster", (x, y, gallery_z + 0.4), 0.022, 0.58, mats["gold"], 10, bevel_amount=0)
+            sphere(f"{prefix}-baluster-knuckle", (x, y, gallery_z + 0.42), (0.045, 0.045, 0.08), mats["dark_gold"], 10, 6)
+
+
+def entry_lantern(prefix, x, y, z, mats):
+    box(f"{prefix}-wall-bracket", (x, y + 0.12, z - 0.15), (0.085, 0.46, 0.085), mats["dark_gold"], bevel_amount=0.016)
+    box(f"{prefix}-amber-glass", (x, y - 0.1, z), (0.14, 0.14, 0.36), mats["warm"], bevel_amount=0.025)
+    for side_x in (-1, 1):
+        for side_y in (-1, 1):
+            box(f"{prefix}-gilded-frame", (x + side_x * 0.095, y - 0.1 + side_y * 0.095, z),
+                (0.026, 0.026, 0.44), mats["gold"], bevel_amount=0.006)
+    for level in (-0.24, 0.24):
+        box(f"{prefix}-cornice", (x, y - 0.1, z + level), (0.25, 0.25, 0.06), mats["gold"], bevel_amount=0.018)
+    cone(f"{prefix}-canopy", (x, y - 0.1, z + 0.34), 0.18, 0.035, 0.16, mats["dark_gold"], 4, rotation=(0, 0, math.pi / 4))
+
+
+def finish_atrium_entry(mats):
+    prefix = "vault-palace-atrium-360-completion-entry-finish"
+    for side in (-1, 1):
+        for level in (1.08, 2.1, 3.12):
+            x = side * 0.63
+            box(f"{prefix}-recessed-door-panel", (x, 4.66, level), (0.86, 0.08, 0.86), mats["blue"], bevel_amount=0.015)
+            for offset in (-0.43, 0.43):
+                box(f"{prefix}-panel-vertical-moulding", (x + offset, 4.615, level), (0.025, 0.1, 0.84), mats["gold"], bevel_amount=0.006)
+                box(f"{prefix}-panel-horizontal-moulding", (x, 4.615, level + offset), (0.88, 0.1, 0.025), mats["gold"], bevel_amount=0.006)
+        entry_lantern(prefix, side * 1.64, 4.24, 2.78, mats)
+        classical_column(prefix, math.pi + side * 0.34, 4.84, 0.22, 3.66, mats, 0.14)
+    box(f"{prefix}-limestone-threshold", (0, 4.45, 0.16), (3.12, 0.78, 0.18), mats["marble_light"], bevel_amount=0.028)
+    box(f"{prefix}-threshold-gold-inlay", (0, 4.05, 0.255), (2.92, 0.035, 0.012), mats["gold"], bevel_amount=0.004)
 
 
 def build_atrium_side_reliquary(side, mats):
@@ -675,6 +730,7 @@ def build_atrium_360_completion(mats):
         major_segments=40,
     )
     sphere("vault-palace-atrium-360-completion-grand-entry-crest-gem", (0, 4.3, 4.78), (0.18, 0.07, 0.18), mats["ruby"], 20, 10)
+    finish_atrium_entry(mats)
 
 
 def build_split_stair(mats):
@@ -2056,6 +2112,24 @@ def export_asset(slug, root):
 
 def main():
     target = os.environ.get("VAULT_INTERIOR_ASSET", "all")
+    if target == "atrium-completion":
+        bpy.ops.wm.open_mainfile(filepath=str(WORK_ROOT / "vault-atrium-v045.blend"))
+        for obj in list(bpy.context.scene.objects):
+            if "360-completion" in obj.name:
+                bpy.data.objects.remove(obj, do_unlink=True)
+        mats = {key: bpy.data.materials[value] for key, value in {
+            "marble": "interior-white-marble", "marble_light": "interior-pearl-marble",
+            "marble_shadow": "interior-shadow-marble", "blue": "interior-midnight-enamel",
+            "blue_light": "interior-sapphire-enamel", "gold": "interior-polished-gold",
+            "dark_gold": "interior-antique-gold", "silver": "interior-polished-silver",
+            "warm": "interior-warm-glass", "cyan": "interior-cyan-gem",
+            "ruby": "interior-ruby-gem", "emerald": "interior-emerald-gem",
+            "crystal": "interior-cut-crystal",
+        }.items()}
+        build_atrium_360_completion(mats)
+        batch_static_architecture("vault-atrium")
+        export_asset("vault-atrium", None)
+        return
     if target in ("all", "atrium"):
         build_atrium()
     if target in ("all", "museum"):

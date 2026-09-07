@@ -355,12 +355,13 @@ export default function VaultIslandLab({
       view === 'vault' ? 32 : view === 'atrium' ? 34 : view === 'garden' ? 132 : 78,
     );
 
-    const camera = new THREE.PerspectiveCamera(isRotunda360View ? 58 : view === 'atrium' ? 50 : view === 'garden' ? 52 : isInteriorView ? 56 : 38, 390 / 844, 0.1, view === 'garden' ? 140 : 80);
+    const tourEyeHeight = view === 'atrium' ? 3.72 : 2.62;
+    const tourFieldOfView = 58;
+    const camera = new THREE.PerspectiveCamera(isRotunda360View ? tourFieldOfView : view === 'atrium' ? 50 : view === 'garden' ? 52 : isInteriorView ? 56 : 38, 390 / 844, 0.1, view === 'garden' ? 140 : 80);
     if (isRotunda360View) {
-      const eyeHeight = view === 'atrium' ? 3.72 : 2.62;
       const tourYaw = requestedYaw ?? 0;
-      camera.position.set(Math.sin(tourYaw) * 0.2, eyeHeight, Math.cos(tourYaw) * 0.2);
-      camera.lookAt(0, eyeHeight, 0);
+      camera.position.set(Math.sin(tourYaw) * 0.2, tourEyeHeight, Math.cos(tourYaw) * 0.2);
+      camera.lookAt(0, tourEyeHeight, 0);
     } else if (view === 'vault') {
       camera.position.set(2.15, 3.05, 12.55);
       camera.lookAt(0.15, 2.9, -2.15);
@@ -629,7 +630,7 @@ export default function VaultIslandLab({
     controls.maxAzimuthAngle = isRotunda360View ? Infinity : isInteriorView ? 0.82 : Infinity;
     controls.target.set(
       isRotunda360View || view === 'garden' ? 0 : view === 'vault' ? 0.15 : 0,
-      isRotunda360View ? (view === 'atrium' ? 3.72 : 2.62) : view === 'garden' ? 1.62 : view === 'vault' ? 2.9 : view === 'atrium' ? 4.25 : 2.65,
+      isRotunda360View ? tourEyeHeight : view === 'garden' ? 1.62 : view === 'vault' ? 2.9 : view === 'atrium' ? 4.25 : 2.65,
       isRotunda360View ? 0 : view === 'garden' ? -5.7 : view === 'vault' ? -2.15 : view === 'atrium' ? -1.25 : 0.28,
     );
     controls.autoRotate = isRotunda360View && autoOrbit;
@@ -725,6 +726,12 @@ export default function VaultIslandLab({
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
       composer?.setSize(width, height);
+      // Resizing clears WebGL's buffer even after a still capture has stopped its loop.
+      if (qaStillMode && frameCount >= 3) {
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
+        sampleCanvas();
+      }
     };
     const observer = new ResizeObserver(resize);
     observer.observe(mount);
@@ -762,15 +769,14 @@ export default function VaultIslandLab({
       },
       setInteriorCamera: (preset: 'front' | 'left' | 'right' | 'rear') => {
         if (isRotunda360View && (view === 'atrium' || view === 'vault')) {
-          const eyeHeight = view === 'atrium' ? 4.18 : 3.05;
-          const radius = 2.95;
-          camera.fov = 62;
+          const radius = 0.2;
+          camera.fov = tourFieldOfView;
           camera.position.set(
             preset === 'left' ? -radius : preset === 'right' ? radius : 0,
-            eyeHeight,
+            tourEyeHeight,
             preset === 'rear' ? -radius : preset === 'front' ? radius : 0,
           );
-          controls.target.set(0, eyeHeight, 0);
+          controls.target.set(0, tourEyeHeight, 0);
           camera.updateProjectionMatrix();
         } else if (view === 'atrium') {
           if (preset === 'left') {
