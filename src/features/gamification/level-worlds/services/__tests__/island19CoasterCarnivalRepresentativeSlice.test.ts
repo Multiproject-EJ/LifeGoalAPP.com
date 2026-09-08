@@ -46,6 +46,63 @@ function disposeSlice(root: THREE.Object3D) {
 
 export const island19CoasterCarnivalRepresentativeSliceTests: TestCase[] = [
   {
+    name: 'renders every physical train wheel in two per-car batches without changing its spun transform',
+    run: () => {
+      const world = createIsland19CoasterCarnivalCircuitFWorld({ quality: 'low' });
+      let meshes = 0;
+      let triangles = 0;
+      world.train.traverse(node => {
+        if (!(node instanceof THREE.Mesh)) return;
+        meshes += 1;
+        triangles += (node.geometry.index?.count ?? node.geometry.attributes.position.count) / 3
+          * (node instanceof THREE.InstancedMesh ? node.count : 1);
+      });
+      assertEqual(meshes, 24, 'train render calls halve without hiding wheels');
+      assertEqual(triangles, 8656, 'all original train triangles are retained');
+      for (const progress of [0, 0.19, 0.62, 0.82, 0.999]) {
+        world.setTrainProgress(progress);
+        world.train.children.forEach((car, carIndex) => {
+          const batches = ['TYRES', 'FLANGES'].map(part => car.getObjectByName(`ISLAND_19_D023_CARRIAGE_${carIndex + 1}_WHEELS_${part}`) as THREE.InstancedMesh);
+          assert(batches.every(batch => batch?.count === 4), 'both materials render all four wheel contacts');
+          const pivots = car.children.filter(child => child.name.includes('_WHEEL_PIVOT_'));
+          pivots.forEach((pivot, index) => {
+            batches.forEach((batch, part) => {
+              const originalChild = new THREE.Object3D();
+              originalChild.rotation.z = Math.PI / 2;
+              if (part === 1) originalChild.position.x = Math.sign(pivot.position.x) * 0.045;
+              originalChild.updateMatrix();
+              const expected = new THREE.Matrix4().multiplyMatrices(pivot.matrix, originalChild.matrix);
+              const actual = new THREE.Matrix4();
+              batch.getMatrixAt(index, actual);
+              assert(actual.elements.every((value, i) => Math.abs(value - expected.elements[i]) < 0.000001), 'instanced transform matches the original moving pivot × child matrix');
+              assert(batch.boundingBox!.containsPoint(pivot.position), 'rotating contacts remain inside the conservative culling box');
+            });
+          });
+        });
+      }
+      for (const wagon of ['front', 'middle', null] as const) {
+        world.setRiderPovActive(wagon);
+        world.train.children.forEach(car => {
+          car.children.filter(child => child instanceof THREE.InstancedMesh).forEach(batch => {
+            assertEqual(batch.parent, car, 'wheel visibility follows its physical carriage in either POV');
+          });
+        });
+      }
+      const wheelBatches: THREE.InstancedMesh[] = [];
+      let releasedInstances = 0;
+      world.train.traverse(node => {
+        if (node instanceof THREE.InstancedMesh && node.userData.animatedWheelBatch) {
+          wheelBatches.push(node);
+          node.addEventListener('dispose', () => { releasedInstances += 1; });
+        }
+      });
+      disposeSlice(world.root);
+      assertEqual(releasedInstances, 8, 'geometry-only island teardown releases all eight instance-matrix buffers');
+      wheelBatches.forEach(batch => batch.geometry.dispose());
+      assertEqual(releasedInstances, 8, 'repeated geometry cleanup cannot redispose the wheel batches');
+    },
+  },
+  {
     name: 'batches deterministic park details outside the board and rider envelope',
     run: () => {
       const path = createIsland19CircuitFRoutePath();

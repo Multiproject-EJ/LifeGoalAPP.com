@@ -17,6 +17,7 @@ import {
 } from './Island19CoasterCarnivalCircuitGBoardPlaza';
 import { createIsland19CoasterCarnivalCircuitGCliffRoot } from './Island19CoasterCarnivalCircuitGCliffRoot';
 import { createIsland19CoasterCarnivalAtlasExterior } from './Island19CoasterCarnivalAtlasExterior';
+import { batchIsland19TrainWheels } from './Island19TrainWheelBatches';
 
 export const ISLAND_19_CIRCUIT_F_WORLD_NAME = 'Island 019 Coaster Carnival — Circuit F Wonder Express';
 export const ISLAND_19_CIRCUIT_F_PATH_OWNER = 'island19-circuit-f-explicit-bezier-section-chain';
@@ -1521,6 +1522,7 @@ function createOceanVista(materials: Island19CircuitFMaterials, quality: Island3
 
 function createTrain(materials: Island19CircuitFMaterials) {
   const train = new THREE.Group();
+  const wheelAnimators: Array<(spin: number) => void> = [];
   train.name = 'ISLAND_19_CIRCUIT_F_WONDER_EXPRESS_TRAIN';
   for (let carriage = 0; carriage < 4; carriage += 1) {
     const car = new THREE.Group();
@@ -1585,12 +1587,15 @@ function createTrain(materials: Island19CircuitFMaterials) {
         car.add(wheelPivot);
       }
     }
-    // Wheels remain separate live geometry; batching them into the body would
-    // leave empty pivots that spin without rotating any visible wheel.
+    // Keep wheel sockets separate from the static body. Their transforms drive
+    // two live per-car instance batches, so all visible tyres and flanges spin.
     const liveWheels=car.children.filter(child=>child.name.includes('_WHEEL_PIVOT_'));
     liveWheels.forEach(wheel=>car.remove(wheel));
     batchStaticGroupByMaterial(car, `ISLAND_19_CIRCUIT_H_CARRIAGE_${carriage + 1}_BATCH`);
     car.add(...liveWheels);
+    const wheels = batchIsland19TrainWheels(liveWheels, `ISLAND_19_D023_CARRIAGE_${carriage + 1}_WHEELS`);
+    car.add(...wheels.batches);
+    wheelAnimators.push(wheels.update);
     const undercarriageSocket = new THREE.Object3D();
     undercarriageSocket.name = `ISLAND_19_CIRCUIT_F_CARRIAGE_${carriage + 1}_UNDERCARRIAGE`;
     undercarriageSocket.position.y = -0.01;
@@ -1617,7 +1622,7 @@ function createTrain(materials: Island19CircuitFMaterials) {
     cameraAttachment: 'named carriage-seat sockets',
     remainsVisibleDuringRide: true,
   };
-  return train;
+  return { train, wheelAnimators };
 }
 
 export function createIsland19CircuitFMaterials(): Island19CircuitFMaterials {
@@ -1800,7 +1805,7 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
   world.add(oceanVista);
   const skyAmbience = createIsland19SkyAmbience(options.reducedMotion ?? false);
   world.add(skyAmbience.root);
-  const train = createTrain(materials);
+  const { train, wheelAnimators } = createTrain(materials);
   world.add(train);
   const diagnostics = createDiagnostics(path, cliffRoot.outerShell.geometry);
   const tempPosition = new THREE.Vector3();
@@ -1815,9 +1820,7 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
       train.children[carriage].position.copy(tempPosition);
       train.children[carriage].quaternion.copy(frame.quaternion);
       const wheelSpin = -(frame.distance / 0.12);
-      train.children[carriage].traverse((object) => {
-        if (object.name.includes('_WHEEL_PIVOT_')) object.rotation.x = wheelSpin;
-      });
+      wheelAnimators[carriage](wheelSpin);
     }
     train.updateWorldMatrix(true, true);
   };

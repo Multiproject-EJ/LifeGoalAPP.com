@@ -13,6 +13,8 @@ const errors = [];
 page.on('pageerror', error => { errors.push(error.message); console.error('page error', error.message); });
 const base = (process.env.ISLAND19_BASE_URL ?? 'http://127.0.0.1:5191') + '/dev/island-template-kit?mode=3d&island=19&level=3&guides=0&island3dQuality=high&island3dEvidence=1';
 const frames = [];
+const wagon = process.env.ISLAND19_CAPTURE_WAGON ?? 'front';
+if (!['front', 'middle'].includes(wagon)) throw new Error('ISLAND19_CAPTURE_WAGON must be front or middle');
 const route = JSON.parse(await fs.readFile('src/features/gamification/level-worlds/dev/island19WonderRoute.json', 'utf8'));
 const points = route.knots.map(k => new THREE.Vector3(...k.position));
 const handles = points.map((p, i) => {
@@ -35,7 +37,7 @@ try {
   for (const [name, id] of [['climb','lift'], ['crest','crest'], ['grand-vault','grotto-south-balcony'], ['treasure-overlook','grotto-treasure-overlook'], ['palace', 'station'], ['bypass', 'bypass-shoulder'], ['plunge', 'plunge-mouth'], ['gold', 'gold-vault'], ['second-drop','grotto-second-drop'], ['diamond', 'diamond-gallery'], ['ocean', 'undersea-panorama'], ['ascent', 'ascent-mouth']]) {
     const progress = phaseMidpoint(id);
     if (process.env.ISLAND19_CAPTURE_FRAMES && !process.env.ISLAND19_CAPTURE_FRAMES.split(',').includes(name)) continue;
-    await page.goto(base + '&island19Ride=1&island19RideWagon=front&island19RideProgress=' + progress);
+    await page.goto(base + '&island19Ride=1&island19RideWagon=' + wagon + '&island19RideProgress=' + progress);
     await page.waitForFunction(() => Array.from(document.querySelectorAll('canvas')).some(c => c.dataset.island19WonderRideActive === 'true'));
     await page.waitForFunction(() => document.querySelector('canvas')?.dataset.island19CircuitIReady === 'true');
     await page.waitForTimeout(2000);
@@ -48,7 +50,7 @@ try {
   if (process.env.ISLAND19_CAPTURE_ONLY) {
     await fs.writeFile(path.join(out, 'focused-visual-report.json'), JSON.stringify({ errors, frames }, null, 2));
   } else {
-  await page.goto(base + '&island19Ride=1&island19RideWagon=front');
+  await page.goto(base + '&island19Ride=1&island19RideWagon=' + wagon);
   await page.waitForFunction(() => Array.from(document.querySelectorAll('canvas')).some(c => c.dataset.island19WonderRideActive === 'true'));
   const frameTiming = page.evaluate(() => new Promise(resolve => {
     const samples = [];
