@@ -1,0 +1,40 @@
+{
+  "island": "001",
+  "date": "2026-09-10",
+  "status": "user-approved-v2-art-direction",
+  "images": [
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png",
+      "sha256": "9ac33d19017e0c23bf3448a36a6b3269eeec554b3c6a466ad0896818459b02b8",
+      "prompt": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.prompt.txt",
+      "authority": "user-approved-goal",
+      "generator": "built-in image_gen",
+      "reference": null
+    },
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+      "sha256": "aa7fcb230045d93de487059b2fe4ff4c81c5e7e4d98277fe81fc3127a150224f",
+      "prompt": "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.prompt.txt",
+      "authority": "user-approved-goal",
+      "generator": "built-in image_gen",
+      "reference": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+    },
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/03-assembly-chamber.png",
+      "sha256": "6183b5fea22621243b96e15a15cbdc11494cc5b84d65c51f19294f659dfb17e8",
+      "prompt": "docs/visual-references/island-001-reimagined-20260910/03-assembly-chamber.prompt.txt",
+      "authority": "user-approved-goal",
+      "generator": "built-in image_gen",
+      "reference": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+    }
+  ],
+  "limitations": [
+    "Canonical route and landmark footprints require reconciliation before production.",
+    "Views do not establish rear geometry, growth levels, phone rendering cost or animation.",
+    "Surface aperture and underground seating extent require camera-locked scale validation."
+  ],
+  "approval": {
+    "date": "2026-09-10",
+    "userInstruction": "LOVE LOVE LOVe it, lets commit those iamges, and upgrade the island 001 to this new v2! use the gauntlet loop if you need to"
+  }
+}
