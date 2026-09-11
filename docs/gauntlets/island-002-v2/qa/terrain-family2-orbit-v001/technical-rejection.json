@@ -1,0 +1,6 @@
+{
+  "status": "technical-rejection-before-visual-review",
+  "reason": "SDF column top clamp incorrectly allowed rock at topY+.08 above meadow and canonical route. Corrected to topY-.055, the exact underside of the fixed meadow cap.",
+  "visualReviewCount": 0,
+  "replacement": "../terrain-family2-orbit-v001b"
+}

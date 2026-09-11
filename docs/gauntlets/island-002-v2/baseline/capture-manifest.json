@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "1c1908751df10b9de8896bd89209540190146876",
+  "capturedAt": "2026-09-11T14:00:19.172Z",
+  "kind": "V1 runtime baseline, not V2 concept",
+  "note": "Short renderer samples only, not a device performance gate.",
+  "evidence": [
+    {
+      "name": "01-overview-docked",
+      "url": "http://127.0.0.1:53282/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "view": "Overview",
+      "metrics": "47 FPS\n1102 calls\n121k tris\n860×1864 px",
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "deviceScaleFactor": 2
+    },
+    {
+      "name": "02-palace-docked",
+      "url": "http://127.0.0.1:53282/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "view": "boss",
+      "metrics": "60 FPS\n548 calls\n73k tris\n860×1864 px",
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "deviceScaleFactor": 2
+    },
+    {
+      "name": "03-left-orbit-docked",
+      "url": "http://127.0.0.1:53282/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "view": "Left orbit",
+      "metrics": "46 FPS\n1109 calls\n123k tris\n860×1864 px",
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "deviceScaleFactor": 2
+    },
+    {
+      "name": "04-overview-undocked",
+      "url": "http://127.0.0.1:53282/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=0",
+      "view": "Overview",
+      "metrics": "52 FPS\n1096 calls\n121k tris\n860×1864 px",
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "deviceScaleFactor": 2
+    }
+  ]
+}

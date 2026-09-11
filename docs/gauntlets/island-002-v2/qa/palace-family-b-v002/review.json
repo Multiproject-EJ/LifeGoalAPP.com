@@ -1,0 +1,52 @@
+{
+  "reviewer": "island002_review",
+  "action": "stop",
+  "scope": "palace familyB correction, globalreview4",
+  "scores": {
+    "overview": [
+      0.85,
+      0.82,
+      0.89,
+      0.88,
+      0.88
+    ],
+    "palace": [
+      0.83,
+      0.82,
+      0.88,
+      0.87,
+      0.86
+    ],
+    "left": [
+      0.85,
+      0.84,
+      0.88,
+      0.88,
+      0.87
+    ],
+    "right": [
+      0.84,
+      0.83,
+      0.88,
+      0.88,
+      0.86
+    ]
+  },
+  "categories": [
+    "silhouette",
+    "identity",
+    "attachment",
+    "structure",
+    "phone"
+  ],
+  "worst": 0.82,
+  "improvement": 0.04,
+  "requiredImprovement": 0.1,
+  "requiredAllScores": 0.85,
+  "dominantDeficiency": "Shallow flared shoulder below separated cylindrical crown does not match continuous tall tapered sapphire source silhouette; horizontal tier bands remain dominant",
+  "orbitEvidence": "../palace-family-b-orbit-v002",
+  "orbitWorst": 0.82,
+  "status": "not-approved",
+  "nextRoute": "Proposed local Blender continuous roof-and-keep volumes using measured source silhouette sections; optimized semantic/additive GLB integration",
+  "userRouteApproval": "required, pending"
+}

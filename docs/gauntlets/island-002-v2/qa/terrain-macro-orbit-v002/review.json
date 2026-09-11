@@ -1,0 +1,12 @@
+{
+  "reviewer": "island002_review",
+  "action": "retire-family",
+  "scope": "terrainfamily1review2",
+  "worst": 0.77,
+  "improvement": 0.22,
+  "criticalRegression": false,
+  "dominantDeficiency": "Repeated pointed teeth and broad faces converging from cap to tip; goal has substantial irregular cliff columns with staggered shoulders and broken profiles",
+  "nextFamily": "Interlocking irregular cliff columns extracted as one volumetric surface; preserve caps/anchors",
+  "remainingFamilies": 1,
+  "remainingReviews": 2
+}

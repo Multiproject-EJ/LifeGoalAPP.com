@@ -1,0 +1,436 @@
+{
+  "subject": "Island 002 Celestial V2",
+  "parts": [
+    {
+      "id": "palace-mass",
+      "parent": "palace",
+      "ownedSurfaces": "Central halls, gallery wings, seven tapered spires",
+      "socket": "Central ring interior",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "gauntlet": {
+        "familyLimit": 2,
+        "reviewsLimit": 4,
+        "familiesUsed": 2,
+        "reviewsUsed": 4,
+        "retired": [
+          "A",
+          "B"
+        ],
+        "currentFamily": "B",
+        "currentFamilyCorrectionsUsed": 1,
+        "reviewEvidence": [
+          "qa/palace-blockout-v001/review.json",
+          "qa/palace-blockout-v002/review.json",
+          "qa/palace-family-b-v001/review.json",
+          "qa/palace-family-b-v002/review.json"
+        ]
+      },
+      "routeChange": {
+        "authorizedBy": "user-decisions.v1.jsonl",
+        "representation": "Blender continuous mesh roof/keep",
+        "previousGlobalReviews": 4,
+        "newRouteReviews": 1,
+        "initialPassPlusCorrections": 2,
+        "approvedEvidence": "qa/palace-blender-v001/review.json"
+      },
+      "attachmentPoseRevalidation": "pending finalassembly after fixed+0.24 collar"
+    },
+    {
+      "id": "palace-court",
+      "parent": "palace",
+      "ownedSurfaces": "Terraced arrival, stairs, balustrades, garden beds",
+      "socket": "Palace ground socket",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "gauntlet": {
+        "familyLimit": 2,
+        "reviewsLimit": 4,
+        "familiesUsed": 2,
+        "reviewsUsed": 4,
+        "retired": [
+          "A",
+          "B"
+        ],
+        "currentFamily": "B",
+        "currentFamilyCorrectionsUsed": 1,
+        "reviewEvidence": [
+          "qa/palace-blockout-v001/review.json",
+          "qa/palace-blockout-v002/review.json",
+          "qa/palace-family-b-v001/review.json",
+          "qa/palace-family-b-v002/review.json"
+        ]
+      },
+      "routeChange": {
+        "authorizedBy": "user-decisions.v1.jsonl",
+        "representation": "Blender continuous mesh roof/keep",
+        "previousGlobalReviews": 4,
+        "newRouteReviews": 1,
+        "initialPassPlusCorrections": 2,
+        "approvedEvidence": "qa/palace-blender-v001/review.json"
+      },
+      "attachmentPoseRevalidation": "pending finalassembly after fixed+0.24 collar"
+    },
+    {
+      "id": "cloudnest",
+      "parent": "districts",
+      "ownedSurfaces": "Glass ribbed dome, cloud tree and nest galleries",
+      "socket": "Hatchery plot",
+      "dependencies": [
+        "sky-root"
+      ],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "reviewEvidence": "qa/cloudnest-macro-v001/review.json",
+      "attachmentPoseRevalidation": "pending finalassembly after fixed+0.24 collar"
+    },
+    {
+      "id": "resolve-court",
+      "parent": "districts",
+      "ownedSurfaces": "Open floor, wing pylons, suspended mechanism",
+      "socket": "Habit plot",
+      "dependencies": [
+        "sky-root"
+      ],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "gauntlet": {
+        "familiesUsed": 1,
+        "reviewsUsed": 2,
+        "approvedFamily": "architectural-piers-and-wing-fans",
+        "reviewEvidence": [
+          "qa/resolve-macro-v001b/review.json",
+          "qa/resolve-macro-orbit-v002/review.json"
+        ]
+      },
+      "attachmentPoseRevalidation": "pending finalassembly after fixed+0.24 collar"
+    },
+    {
+      "id": "archive",
+      "parent": "districts",
+      "ownedSurfaces": "Reading galleries, dome and telescope",
+      "socket": "Wisdom plot",
+      "dependencies": [
+        "sky-root"
+      ],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "gauntlet": {
+        "familiesUsed": 1,
+        "reviewsUsed": 2,
+        "reviewEvidence": [
+          "qa/archive-macro-orbit-v001/review.json",
+          "qa/archive-macro-orbit-v002/review.json"
+        ]
+      }
+    },
+    {
+      "id": "astral-gate",
+      "parent": "districts",
+      "ownedSurfaces": "Portal frame, rings, arrival terrace",
+      "socket": "Event plot",
+      "dependencies": [
+        "sky-root"
+      ],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "gauntlet": {
+        "familiesUsed": 1,
+        "reviewsUsed": 1,
+        "reviewEvidence": [
+          "qa/gate-macro-orbit-v001/review.json"
+        ]
+      }
+    },
+    {
+      "id": "sky-root",
+      "parent": "landscape",
+      "ownedSurfaces": "Continuous fractured central rock mass and four moving shelves",
+      "socket": "Board floor and district collars",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "macro-approved-finish-pending",
+      "gauntlet": {
+        "familiesUsed": 2,
+        "reviewsUsed": 4,
+        "retired": [
+          "radial-loft"
+        ],
+        "approvedFamily": "interlocking-cliff-volume",
+        "reviewEvidence": [
+          "qa/terrain-macro-orbit-v001/review.json",
+          "qa/terrain-macro-orbit-v002/review.json",
+          "qa/terrain-family2-orbit-v001b/review.json",
+          "qa/terrain-family2-orbit-v002/review.json"
+        ]
+      }
+    },
+    {
+      "id": "gardens",
+      "parent": "landscape",
+      "ownedSurfaces": "Wind-shaped trees, shrubs, ferns, trailing vines",
+      "socket": "Root and landmark beds",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "initial-landscape-assembly-review-pending"
+    },
+    {
+      "id": "waterways",
+      "parent": "landscape",
+      "ownedSurfaces": "Pools, channels, falls and mist",
+      "socket": "Root ledges outside route",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "initial-landscape-assembly-review-pending"
+    },
+    {
+      "id": "cloudscape",
+      "parent": "landscape",
+      "ownedSurfaces": "Cloud floor and distant islets",
+      "socket": "Background",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "initial-landscape-assembly-review-pending"
+    },
+    {
+      "id": "docking-machinery",
+      "parent": "mission",
+      "ownedSurfaces": "Guides, capstans, latches and settled bridges",
+      "socket": "Four district collars",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "initial-landscape-assembly-review-pending"
+    },
+    {
+      "id": "living-motion",
+      "parent": "mission",
+      "ownedSurfaces": "Birds, airship, light wave and working landmark mechanisms",
+      "socket": "Non-gameplay motion roots",
+      "dependencies": [],
+      "symmetry": "paired architecture with authored variation",
+      "exclusions": [
+        "canonical tiles",
+        "HUD",
+        "gameplay progression",
+        "other part surfaces"
+      ],
+      "views": [
+        "overview",
+        "left",
+        "right",
+        "rear",
+        "focus"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "status": "initial-landscape-assembly-review-pending"
+    }
+  ],
+  "order": [
+    "palace-mass",
+    "palace-court",
+    "sky-root",
+    "cloudnest",
+    "resolve-court",
+    "archive",
+    "astral-gate",
+    "gardens",
+    "waterways",
+    "cloudscape",
+    "docking-machinery",
+    "living-motion"
+  ],
+  "representativeSlice": "palace-mass",
+  "geometryWriters": "serialized"
+}

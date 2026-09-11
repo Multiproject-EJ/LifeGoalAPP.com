@@ -1,0 +1,100 @@
+{
+  "at": "2026-09-11T15:30:09.233Z",
+  "viewport": {
+    "width": 650,
+    "height": 900
+  },
+  "dpr": 1.5,
+  "records": [
+    {
+      "name": "beauty-000.png",
+      "angle": 0,
+      "metrics": "36 FPS\n264 calls\n60k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-045.png",
+      "angle": 45,
+      "metrics": "4 FPS\n312 calls\n63k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-090.png",
+      "angle": 90,
+      "metrics": "15 FPS\n293 calls\n64k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-135.png",
+      "angle": 135,
+      "metrics": "22 FPS\n286 calls\n62k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-180.png",
+      "angle": 180,
+      "metrics": "26 FPS\n285 calls\n62k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-225.png",
+      "angle": 225,
+      "metrics": "26 FPS\n302 calls\n64k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-270.png",
+      "angle": 270,
+      "metrics": "19 FPS\n302 calls\n64k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-315.png",
+      "angle": 315,
+      "metrics": "29 FPS\n296 calls\n63k tris\n564×1245 px"
+    },
+    {
+      "name": "beauty-survey.png",
+      "angle": 20,
+      "metrics": "27 FPS\n532 calls\n84k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-000.png",
+      "angle": 0,
+      "metrics": "60 FPS\n222 calls\n55k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-045.png",
+      "angle": 45,
+      "metrics": "41 FPS\n257 calls\n57k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-090.png",
+      "angle": 90,
+      "metrics": "38 FPS\n209 calls\n48k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-135.png",
+      "angle": 135,
+      "metrics": "40 FPS\n226 calls\n42k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-180.png",
+      "angle": 180,
+      "metrics": "33 FPS\n240 calls\n45k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-225.png",
+      "angle": 225,
+      "metrics": "44 FPS\n248 calls\n53k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-270.png",
+      "angle": 270,
+      "metrics": "31 FPS\n215 calls\n46k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-315.png",
+      "angle": 315,
+      "metrics": "31 FPS\n217 calls\n46k tris\n564×1245 px"
+    },
+    {
+      "name": "normal-survey.png",
+      "angle": 20,
+      "metrics": "60 FPS\n446 calls\n106k tris\n564×1245 px"
+    }
+  ]
+}

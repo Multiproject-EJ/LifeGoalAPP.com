@@ -1,0 +1,93 @@
+vite v5.4.21 building for island-profiler...
+transforming...
+✓ 1440 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                   9.80 kB │ gzip:   3.06 kB
+dist/assets/Cinzel-700-Dkw14w9r.woff2                            15.18 kB
+dist/assets/EBGaramond-400i-DSEbMgZu.woff2                       25.39 kB
+dist/assets/EBGaramond-400-CRpggXlh.woff2                        44.34 kB
+dist/assets/tozengarden-BNpnGN29.webp                            51.01 kB
+dist/assets/Dark_controller-CV4GbjXG.webp                       117.76 kB
+dist/assets/Gold_controller-B1mAp9Xu.webp                       136.18 kB
+dist/assets/Blue_darkcontroller-C8lePwNf.webp                   137.59 kB
+dist/assets/Controller_lightblue-SrV3mTds.webp                  137.64 kB
+dist/assets/Score_achievements-D_056y5n.webp                    153.50 kB
+dist/assets/Score_shop-Bc3tLJnL.webp                            199.06 kB
+dist/assets/score_Bank-CnaSdtEX.webp                            224.84 kB
+dist/assets/Score_zengarden-BICZBFAw.webp                       238.74 kB
+dist/assets/Visiontablight-CHtAiN0O.webp                        341.41 kB
+dist/assets/fleet-evolution-strip-v1-B0h8LDzN.png               345.86 kB
+dist/assets/Visiontabdark-Dh_ahfLp.webp                         514.83 kB
+dist/assets/zengardenplotdark-B9ZVIoqG.webp                     519.90 kB
+dist/assets/zengardenplotlight-8li_PTkX.webp                    609.16 kB
+dist/assets/Zen_shopV2-D1A5YUEk.webp                            865.78 kB
+dist/assets/MinigameHudStrip-CsGib9NE.css                         2.18 kB │ gzip:   0.81 kB
+dist/assets/SignalPathMinigame-Cr2UpGX_.css                       2.77 kB │ gzip:   1.04 kB
+dist/assets/ShooterBlitz-BLnpw5n8.css                             2.84 kB │ gzip:   1.02 kB
+dist/assets/Island5ThreePilot-CJE36te5.css                        2.97 kB │ gzip:   1.13 kB
+dist/assets/ConcordCategoriesMinigame-DbYSufwQ.css                3.04 kB │ gzip:   1.14 kB
+dist/assets/TwinSigilsMinigame-D0W2o_NY.css                       3.44 kB │ gzip:   1.16 kB
+dist/assets/LexiconRelayMinigame-mHWLi74_.css                     3.73 kB │ gzip:   1.26 kB
+dist/assets/ExpeditionShipGarageShowcase-Dh2Hwq4o.css             5.12 kB │ gzip:   1.60 kB
+dist/assets/ExpeditionShipGarageQualitySelector-D-9aIr1D.css      5.14 kB │ gzip:   1.63 kB
+dist/assets/VisionQuestIslandRunAdapter-CvGaF705.css              5.64 kB │ gzip:   1.43 kB
+dist/assets/BossRhythmMinigame-C30AKzNL.css                       5.65 kB │ gzip:   1.67 kB
+dist/assets/ExpeditionShipGarageEntrance-CiXScj1J.css             5.93 kB │ gzip:   1.81 kB
+dist/assets/ArenaPuzzleFrame-oHtjEBzL.css                         8.05 kB │ gzip:   2.39 kB
+dist/assets/CompanionFeastMinigame-ArMUGh_x.css                   8.27 kB │ gzip:   2.23 kB
+dist/assets/MomentumMatrixMinigame-C2to4aW0.css                  14.13 kB │ gzip:   3.66 kB
+dist/assets/VaultIslandCollectionModal-nYKI9ilG.css              18.38 kB │ gzip:   4.23 kB
+dist/assets/IslandTemplateKitPage-VmOMG1XK.css                   20.29 kB │ gzip:   5.06 kB
+dist/assets/IslandWorkshopMinigame-vQkVINCw.css                  21.76 kB │ gzip:   4.87 kB
+dist/assets/FortuneEngineMinigame-DMv5i9iI.css                   22.17 kB │ gzip:   5.34 kB
+dist/assets/SpaceExcavatorMinigame-CB9FLJJ2.css                  30.46 kB │ gzip:   5.87 kB
+dist/assets/VaultCasinoLab-C8esJjg6.css                          35.90 kB │ gzip:   8.51 kB
+dist/assets/SkyboundExpeditionMinigame-BgWZ0wfZ.css              39.32 kB │ gzip:   8.47 kB
+dist/assets/JourneyDiscArenaMinigame-CC4aLIVv.css                60.26 kB │ gzip:  11.22 kB
+dist/assets/index-bG7O5CZr.css                                  993.04 kB │ gzip: 162.97 kB
+dist/assets/main-BgbAeXxt.css                                 1,696.11 kB │ gzip: 313.72 kB
+dist/assets/web-Cd0m8RwA.js                                       0.41 kB │ gzip:   0.27 kB
+dist/assets/bossService-B8hDqW4i.js                               0.47 kB │ gzip:   0.29 kB
+dist/assets/web-BhIdC35c.js                                       0.87 kB │ gzip:   0.41 kB
+dist/assets/web-Dho1q9U1.js                                       0.97 kB │ gzip:   0.48 kB
+dist/assets/RoundedBoxGeometry-DCiCE6WB.js                        1.72 kB │ gzip:   0.81 kB
+dist/assets/RoomEnvironment-npveINoe.js                           2.06 kB │ gzip:   0.88 kB
+dist/assets/ExpeditionShipGarageEntrance-DsGBebpU.js              2.49 kB │ gzip:   0.88 kB
+dist/assets/MinigameFxOverlay-B5o1_WtT.js                         2.53 kB │ gzip:   1.23 kB
+dist/assets/luckyRollTileEffects-BxOjTkrM.js                      2.54 kB │ gzip:   0.88 kB
+dist/assets/MinigameHudStrip-BNUGFSoI.js                          2.86 kB │ gzip:   1.21 kB
+dist/assets/ExpeditionShipGarageShowcase-DX2LJubR.js              4.29 kB │ gzip:   1.54 kB
+dist/assets/LexiconRelayMinigame-DEAmXkkO.js                      4.58 kB │ gzip:   1.96 kB
+dist/assets/ConcordCategoriesMinigame-DhA6bjtM.js                 4.68 kB │ gzip:   1.89 kB
+dist/assets/TwinSigilsMinigame-DtsBWRO2.js                        5.04 kB │ gzip:   2.04 kB
+dist/assets/SignalPathMinigame-CbL1hufw.js                        5.78 kB │ gzip:   2.43 kB
+dist/assets/BufferGeometryUtils-c1gd58V5.js                       6.28 kB │ gzip:   2.04 kB
+dist/assets/minigameCanvasKit-DoU2NL-J.js                         6.87 kB │ gzip:   2.75 kB
+dist/assets/ShooterBlitz-BmxwU6bv.js                              9.63 kB │ gzip:   3.27 kB
+dist/assets/MomentumMatrixMinigame-Bh-XfKA2.js                   11.18 kB │ gzip:   4.05 kB
+dist/assets/ArenaPuzzleFrame-BpxqVDyn.js                         13.32 kB │ gzip:   5.17 kB
+dist/assets/index-BlNdetrD.js                                    13.83 kB │ gzip:   5.27 kB
+dist/assets/VisionQuestIslandRunAdapter-mApwRtg-.js              13.91 kB │ gzip:   4.66 kB
+dist/assets/IslandTemplateKitPage-D1x0fnSG.js                    16.17 kB │ gzip:   5.28 kB
+dist/assets/CompanionFeastMinigame-kKV3lvm3.js                   18.32 kB │ gzip:   6.01 kB
+dist/assets/SpaceExcavatorMinigame-C7hZmvLa.js                   25.89 kB │ gzip:   7.65 kB
+dist/assets/BossRhythmMinigame-C_XBRbsn.js                       28.41 kB │ gzip:   9.76 kB
+dist/assets/VaultCasinoLab-BywJ1quV.js                           31.34 kB │ gzip:  10.94 kB
+dist/assets/IslandWorkshopMinigame-CKHJGKwm.js                   36.82 kB │ gzip:  11.44 kB
+dist/assets/FortuneEngineMinigame-DWS5QHx_.js                    40.88 kB │ gzip:  12.88 kB
+dist/assets/GLTFLoader-DZYYh98Y.js                               63.59 kB │ gzip:  17.47 kB
+dist/assets/JourneyDiscArenaMinigame-Do2HkwoO.js                 94.58 kB │ gzip:  28.38 kB
+dist/assets/ExpeditionShipGarageQualitySelector-CAQyFW0h.js      97.31 kB │ gzip:  31.60 kB
+dist/assets/CompassBookThreeShell-CAVFbKwF.js                   103.56 kB │ gzip:  32.02 kB
+dist/assets/SkyboundExpeditionMinigame-DSU4ygJ7.js              123.92 kB │ gzip:  42.05 kB
+dist/assets/VaultIslandCollectionModal-CkO1wPi-.js              218.39 kB │ gzip:  64.38 kB
+dist/assets/three.module-BTprxrCL.js                            620.14 kB │ gzip: 159.37 kB
+dist/assets/main-BYcAbeII.js                                  1,016.99 kB │ gzip: 281.28 kB
+dist/assets/Island5ThreePilot-BwTzDMvz.js                     2,383.90 kB │ gzip: 658.79 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3m 10s

@@ -1,0 +1,111 @@
+{
+  "reviewer": "island002_review",
+  "action": "one-bounded-correction",
+  "scope": "Resolve Court family1 initial",
+  "worst": 0.72,
+  "categories": [
+    "silhouette",
+    "identity",
+    "attachment",
+    "structure",
+    "phone"
+  ],
+  "scores": {
+    "overview": [
+      0.79,
+      0.73,
+      0.88,
+      0.87,
+      0.81
+    ],
+    "habit": [
+      0.79,
+      0.74,
+      0.88,
+      0.87,
+      0.83
+    ],
+    "left": [
+      0.78,
+      0.72,
+      0.87,
+      0.86,
+      0.79
+    ],
+    "right": [
+      0.79,
+      0.73,
+      0.88,
+      0.87,
+      0.8
+    ],
+    "000": [
+      0.8,
+      0.75,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "045": [
+      0.79,
+      0.74,
+      0.88,
+      0.87,
+      0.83
+    ],
+    "090": [
+      0.79,
+      0.74,
+      0.88,
+      0.87,
+      0.83
+    ],
+    "135": [
+      0.8,
+      0.75,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "180": [
+      0.79,
+      0.74,
+      0.88,
+      0.87,
+      0.83
+    ],
+    "225": [
+      0.79,
+      0.74,
+      0.88,
+      0.87,
+      0.83
+    ],
+    "270": [
+      0.8,
+      0.75,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "315": [
+      0.8,
+      0.75,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "survey": [
+      0.79,
+      0.73,
+      0.88,
+      0.87,
+      0.81
+    ]
+  },
+  "evidence": [
+    "qa/resolve-macro-v001b",
+    "qa/resolve-macro-orbit-v001"
+  ],
+  "hypothesis": "Separate grounded architectural piers from broad outward-sweeping feather fans; preserve court footprint and supported armillary."
+}

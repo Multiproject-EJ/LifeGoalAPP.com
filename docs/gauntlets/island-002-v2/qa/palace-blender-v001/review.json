@@ -1,0 +1,57 @@
+{
+  "reviewer": "island002_review",
+  "action": "approve",
+  "scope": "palace macro only, firstpass of userauthorized Blender route",
+  "scores": {
+    "overview": [
+      0.88,
+      0.86,
+      0.89,
+      0.88,
+      0.88
+    ],
+    "palace": [
+      0.88,
+      0.86,
+      0.88,
+      0.88,
+      0.87
+    ],
+    "left": [
+      0.87,
+      0.85,
+      0.88,
+      0.87,
+      0.87
+    ],
+    "right": [
+      0.87,
+      0.85,
+      0.88,
+      0.87,
+      0.87
+    ]
+  },
+  "categories": [
+    "silhouette",
+    "identity",
+    "attachment",
+    "structure",
+    "phone"
+  ],
+  "worst": 0.85,
+  "orbit": "../palace-blender-orbit-v001",
+  "orbitWorst": 0.85,
+  "noHardVeto": true,
+  "historicalReviewsRetained": 4,
+  "newRouteReview": 1,
+  "frozen": "Coupled roof/keep macro geometry",
+  "exclusions": [
+    "materials",
+    "ornament",
+    "terrain",
+    "otherlandmarks",
+    "performance",
+    "physicalphone"
+  ]
+}

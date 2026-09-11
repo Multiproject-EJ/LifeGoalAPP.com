@@ -1,0 +1,90 @@
+{
+  "reviewer": "island002_review",
+  "action": "one-bounded-correction",
+  "scope": "terrain family 2 review 1; global review 3",
+  "worst": 0.74,
+  "categories": [
+    "silhouette",
+    "identity",
+    "volume",
+    "capAttachment",
+    "crossView",
+    "phone"
+  ],
+  "scores": {
+    "000": [
+      0.83,
+      0.77,
+      0.85,
+      0.89,
+      0.87,
+      0.85
+    ],
+    "045": [
+      0.83,
+      0.78,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "090": [
+      0.81,
+      0.74,
+      0.83,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "135": [
+      0.82,
+      0.76,
+      0.84,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "180": [
+      0.82,
+      0.75,
+      0.84,
+      0.89,
+      0.87,
+      0.84
+    ],
+    "225": [
+      0.83,
+      0.76,
+      0.84,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "270": [
+      0.83,
+      0.77,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "315": [
+      0.83,
+      0.78,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "survey": [
+      0.81,
+      0.75,
+      0.83,
+      0.89,
+      0.87,
+      0.84
+    ]
+  },
+  "hypothesis": "Integrate irregular upper shoulders and broken column profiles; keep volume and fixed cap anchors. Replace repeated horizontal reductions with staggered sloping breaks.",
+  "remainingReviews": 1
+}

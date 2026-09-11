@@ -17,6 +17,7 @@ try {
   const theatreModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/RobotConstructionTheatre.ts')
   const authoringModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/IslandConstructionAuthoring.ts')
   const pilotModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx')
+  const celestialModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts')
   const sunshoreModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts')
   const moonveilModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island6MoonveilThreeWorld.ts')
   const abyssalModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island7UnderwaterThreeWorld.ts')
@@ -25,8 +26,10 @@ try {
   const rootheartModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island10RootheartThreeWorld.ts')
   const contractModule = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts')
 
-  assert.ok([4, 5, 6, 7, 8, 9, 10].includes(worldSourceNumber), 'the current exact-envelope trace supports world sources 4 through 10')
-  const materials = worldSourceNumber === 5
+  assert.ok([2, 4, 5, 6, 7, 8, 9, 10].includes(worldSourceNumber), 'the current exact-envelope trace supports world source 2 and world sources 4 through 10')
+  const materials = worldSourceNumber === 2
+    ? celestialModule.createIsland2CelestialMaterials()
+    : worldSourceNumber === 5
     ? sunshoreModule.createIsland2WorldMaterials('low')
     : worldSourceNumber === 6
       ? moonveilModule.createIsland6MoonveilMaterials('low')
@@ -46,7 +49,15 @@ try {
     const profile = authoringModule.resolveIslandLandmarkConstructionProfile(worldSourceNumber, landmark.id)
     assert.ok(profile, `missing construction profile for world ${worldSourceNumber} ${landmark.id}`)
 
-    const target = worldSourceNumber === 5
+    const target = worldSourceNumber === 2
+      ? celestialModule.buildIsland2CelestialLandmark(
+          landmark,
+          3,
+          'low',
+          materials,
+          { constructionPreview: 'target' },
+        )
+      : worldSourceNumber === 5
       ? sunshoreModule.buildIsland2Landmark(
           landmark,
           3,

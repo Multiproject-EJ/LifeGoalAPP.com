@@ -42,7 +42,7 @@ function readInitialPreviewState() {
   const treasureRolls = Number.isFinite(treasureRollsParam)
     ? Math.max(0, Math.min(SUNKEN_SANDS_TREASURE_ROLL_TARGET, Math.floor(treasureRollsParam)))
     : SUNKEN_SANDS_TREASURE_ROLL_TARGET;
-  const redockingRollsParam = Number(params.get('redockingRolls'));
+  const redockingRollsParam = Number(params.get('redockingRolls') ?? Number.NaN);
   const redockingRolls = Number.isFinite(redockingRollsParam)
     ? Math.max(0, Math.min(CELESTIAL_REDOCKING_ROLL_TARGET, Math.floor(redockingRollsParam)))
     : CELESTIAL_REDOCKING_ROLL_TARGET;
@@ -89,6 +89,7 @@ function readInitialPreviewState() {
     worldSourceNumber,
     treasureRolls,
     redockingRolls,
+    redockingReplay: params.get('redockingReplay') === '1',
     assemblyCharges: assemblyReplay ? 0 : assemblyCharges,
     assemblyReplay,
     honeyfallMissionStage,
@@ -218,6 +219,13 @@ export default function IslandTemplateKitPage() {
   const [mode, setMode] = useState<ViewMode>(initialState.mode);
   const [buildLevel, setBuildLevel] = useState<BuildLevel>(initialState.buildLevel);
   const [overlays, setOverlays] = useState(initialState.overlays);
+  const [redockingPreviewRolls, setRedockingPreviewRolls] = useState(initialState.redockingReplay ? 0 : initialState.redockingRolls);
+  useEffect(() => {
+    if (!initialState.redockingReplay || initialState.islandNumber !== 2) return;
+    // Developer presentation fixture only. No canonical progress is persisted.
+    const timer = window.setInterval(() => setRedockingPreviewRolls(value => Math.min(CELESTIAL_REDOCKING_ROLL_TARGET, value + 1)), 1800);
+    return () => window.clearInterval(timer);
+  }, [initialState]);
   const [assemblyCharges, setAssemblyCharges] = useState(initialState.assemblyCharges);
   const [assemblyConstructionSequence, setAssemblyConstructionSequence] = useState(0);
   const [assemblyReplayActive, setAssemblyReplayActive] = useState(initialState.assemblyReplay);
@@ -440,9 +448,9 @@ export default function IslandTemplateKitPage() {
                 claimed: false,
               }}
               celestialRedockingPresentation={{
-                completedRolls: initialState.redockingRolls,
+                completedRolls: redockingPreviewRolls,
                 targetRolls: CELESTIAL_REDOCKING_ROLL_TARGET,
-                dockedPlatformCount: Math.floor(initialState.redockingRolls / 5),
+                dockedPlatformCount: Math.floor(redockingPreviewRolls / 5),
               }}
               firstLightAssemblyCraterPresentation={{
                 chargesDetonated: assemblyCharges,

@@ -27,3 +27,6 @@ avatar-mobile-test.html
 # Python tooling caches
 __pycache__/
 *.py[cod]
+
+# Per-worktree visual review cache
+.vite-island*/

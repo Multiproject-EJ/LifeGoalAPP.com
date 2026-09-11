@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "approved-three-quarter-concept",
+    "sourcePath": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-002-v2-concept-20260911/docs/visual-references/island-002-celestial-v2/002-source.png",
+    "width": 851,
+    "height": 1847,
+    "foregroundCoverage": 0.6456,
+    "largestComponentFraction": 0.9659,
+    "pHash": 15902387175942189802,
+    "duplicateOfHash": null
+  }
+}

@@ -1,0 +1,94 @@
+import * as THREE from 'three';
+import type { Island3DQuality } from './island5ThreePilotContract';
+import type { Island2CelestialMaterials } from './Island2CelestialThreeWorld';
+
+/** Continuous fractured strata; every cap edge shares its cliff attachment. */
+export function createCelestialSkyRoot(
+  radius: number, depth: number, seed: number, quality: Island3DQuality,
+  materials: Island2CelestialMaterials, topY = 0.36,
+) {
+  const root = new THREE.Group();
+  root.name = radius > 5 ? 'ISLAND_2_MAIN_SKY_ROOT' : 'ISLAND_2_LANDMARK_SKY_ROOT';
+  root.userData.skyRootTop = topY;
+  const count = quality === 'high' ? 64 : quality === 'medium' ? 48 : 32;
+  const zRatio = radius > 5 ? .89 : .93;
+  const contour = (angle: number) => 1 + .043 * Math.sin(angle * 3 + seed)
+    + .032 * Math.cos(angle * 7 - seed * 1.7) + .018 * Math.sin(angle * 13 + seed * 2.1);
+  // One continuous skin descends through unequal buttresses. Clefts retreat
+  // toward the centre and finish higher; the buttresses reach different depths.
+  // This changes the mass itself rather than attaching spikes below a cylinder.
+  const rings: Array<[number, number]> = [
+    [0, 1], [.035, .995], [.12, .94], [.24, .81], [.39, .65],
+    [.54, .49], [.70, .32], [.85, .15], [1, .014],
+  ];
+  const rootCount = radius > 5 ? 5 : 3 + Math.floor(seed) % 2;
+  const buttressAt = (angle: number) => {
+    let lobe = 0, weightedDepth = 0;
+    for (let i = 0; i < rootCount; i++) {
+      const centre = i / rootCount * Math.PI * 2 + seed * .63;
+      const diff = Math.atan2(Math.sin(angle - centre), Math.cos(angle - centre));
+      const spread = (.34 + .04 * Math.sin(i * 2.1 + seed)) * (5 / rootCount);
+      const shape = Math.exp(-Math.pow(diff / spread, 2));
+      if (shape > lobe) {
+        lobe = shape;
+        weightedDepth = shape * (.75 + .24 * (.5 + .5 * Math.sin(i * 2.3 + seed)));
+      }
+    }
+    return { lobe, weightedDepth };
+  };
+  const position: number[] = [];
+  rings.forEach(([drop, width], layer) => {
+    for (let i = 0; i < count; i++) {
+      const angle = i / count * Math.PI * 2;
+      const { lobe, weightedDepth } = buttressAt(angle);
+      const extension = Math.pow(drop, 1.2) * .24 * lobe;
+      const cleft = drop * .055 * (1 - lobe);
+      const r = radius * contour(angle) * Math.max(.008, width + extension - cleft);
+      const depthFactor = .52 + .48 * weightedDepth;
+      const verticalRag = layer === 0 ? 0 : depth * .016 * Math.sin(angle * 9 + seed) * Math.sin(drop * Math.PI);
+      position.push(Math.cos(angle) * r + drop * radius * .04 * Math.sin(seed),
+        topY - .055 - depth * drop * depthFactor + verticalRag,
+        Math.sin(angle) * r * zRatio + drop * radius * .035 * Math.cos(seed));
+    }
+  });
+  const index: number[] = [];
+  for (let layer = 0; layer < rings.length - 1; layer++) {
+    for (let i = 0; i < count; i++) {
+      const next = (i + 1) % count, a = layer * count + i, b = layer * count + next;
+      const c = a + count, d = b + count;
+      index.push(a, b, c, b, d, c);
+    }
+  }
+  const bottom = position.length / 3;
+  position.push(radius * .04 * Math.sin(seed), topY - depth * .54, radius * .035 * Math.cos(seed));
+  for (let i = 0; i < count; i++) index.push((rings.length - 1) * count + i, (rings.length - 1) * count + (i + 1) % count, bottom);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+  geometry.setIndex(index);
+  const rockGeometry = geometry.toNonIndexed();
+  geometry.dispose();
+  rockGeometry.computeVertexNormals();
+  const rock = new THREE.Mesh(rockGeometry, materials.cliff);
+  rock.name = 'CELESTIAL_V2_CONTINUOUS_FRACTURED_CLIFF';
+  rock.castShadow = quality === 'high'; rock.receiveShadow = true;
+  root.add(rock);
+
+  const capPositions = [0, topY, 0];
+  const capIndices: number[] = [];
+  for (let i = 0; i < count; i++) {
+    const a = i / count * Math.PI * 2, r = radius * contour(a);
+    capPositions.push(Math.cos(a) * r, topY, Math.sin(a) * r * zRatio);
+  }
+  for (let i = 0; i < count; i++) capPositions.push(position[i * 3], position[i * 3 + 1], position[i * 3 + 2]);
+  for (let i = 0; i < count; i++) {
+    const a = 1 + i, b = 1 + (i + 1) % count;
+    capIndices.push(0, b, a, a, b, a + count, b, b + count, a + count);
+  }
+  const capGeometry = new THREE.BufferGeometry();
+  capGeometry.setAttribute('position', new THREE.Float32BufferAttribute(capPositions, 3));
+  capGeometry.setIndex(capIndices); capGeometry.computeVertexNormals();
+  const cap = new THREE.Mesh(capGeometry, materials.grass);
+  cap.name = 'CELESTIAL_V2_ATTACHED_MEADOW_CAP'; cap.receiveShadow = true;
+  root.add(cap);
+  return root;
+}

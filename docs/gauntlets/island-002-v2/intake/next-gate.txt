@@ -1,0 +1,13 @@
+LOCAL_STATE status=active step=build-current-pass pass=blockout loop=0/3 total=0/6
+next command: python3 forge/stage3_build/generate_threejs_factory.py .img2threejs/island-002-v2/object-sculpt-spec.json --out src/createObjectModel.ts --pass-id blockout
+pending mandatory steps:
+- build-current-pass
+- render-capture
+- review-contract-read
+- tier1-diagnostics
+- multi-angle-review
+- pass-gate-check
+- ai-review-recorded
+- pipeline-sync
+- part-coverage
+- action-ready

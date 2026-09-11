@@ -1,0 +1,11 @@
+{
+  "source": "8ef9bd73c0edfc8350d425cf0b76ca62332800ed3aec5c4c1566a116d16dd66b",
+  "blend": "island002-palace-continuous-keep-v001.blend",
+  "generatedMesh": "src/features/gamification/level-worlds/dev/generated/island002-palace-roof.json",
+  "objects": 19,
+  "triangles": 2388,
+  "roofRise": 1.465,
+  "roofWidth": 0.76,
+  "maxHeight": 4.025,
+  "approval": "pending independent runtime macro review"
+}

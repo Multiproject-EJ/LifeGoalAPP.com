@@ -249,6 +249,10 @@ export function prepareIslandConstructionLevelDelta(options: {
       part.mesh.visible = presentationVisibility && reveal > 0.01;
       part.materials.forEach((material, index) => {
         material.opacity = part.baseOpacities[index] * reveal * (presentationVisibility ? 1 : 0);
+        // Custom shaders opt into the same cloned-material reveal as standard surfaces.
+        if (material instanceof THREE.ShaderMaterial && typeof material.uniforms.opacity?.value === 'number') {
+          material.uniforms.opacity.value = material.opacity;
+        }
         material.depthWrite = presentationVisibility && reveal > 0.92 && part.baseOpacities[index] > 0.55;
       });
     });

@@ -1,0 +1,12 @@
+{
+  "reviewer": "island002_review",
+  "action": "one-bounded-correction",
+  "scope": "sky-root terrain family1 macro",
+  "worst": 0.55,
+  "worstView": "180",
+  "dominantDeficiency": "Near-vertical banded walls and short rounded basin read as thick floating table",
+  "hypothesis": "Earlier deep unequal taper through integrated buttresses/clefts; preserve caps/anchors and eliminate continuous bright ledge bands",
+  "requiredWorst": 0.85,
+  "correctionUsed": 1,
+  "status": "not-approved"
+}

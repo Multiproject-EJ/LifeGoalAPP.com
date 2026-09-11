@@ -1,0 +1,5 @@
+[IslandRunGuard][WARN][no_new_runtime_state_mirror] allowlisted legacy usage in src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (hits=103)
+[IslandRunGuard][WARN][no_ui_runtime_read] allowlisted legacy usage in src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (hits=4)
+[IslandRunGuard][WARN][no_ui_runtime_read] allowlisted legacy usage in src/features/gamification/ScoreTab.tsx (hits=2)
+
+[IslandRunGuard] PASS. Violations: 0. Allowlisted warnings: 3.

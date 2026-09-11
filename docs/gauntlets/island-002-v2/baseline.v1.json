@@ -1,0 +1,8 @@
+{
+  "goal": "docs/visual-references/island-002-celestial-v2/002-source.png",
+  "sha256": "8ef9bd73c0edfc8350d425cf0b76ca62332800ed3aec5c4c1566a116d16dd66b",
+  "authority": "user-approved-v2-redesign",
+  "baselineCommit": "1c1908751df10b9de8896bd89209540190146876",
+  "captures": "baseline/capture-manifest.json",
+  "salvage": "Preserve runtime topology, quality, construction and mission integration; rebuild visual families."
+}

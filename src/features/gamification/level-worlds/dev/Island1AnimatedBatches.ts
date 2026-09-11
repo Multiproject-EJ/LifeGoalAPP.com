@@ -19,11 +19,16 @@ const FAMILIES = [
 // Geometry remains rigid in these families. Keep the authored objects as motion
 // controllers and submit their surfaces together, without a multi-draw extension.
 export function createIsland1AnimatedBatches(scene: THREE.Scene) {
+  return createIslandRigidSurfaceBatches(scene, FAMILIES, 'ISLAND_001_ANIMATED_SURFACE_BATCHES');
+}
+
+/** Shared rigid-surface renderer; callers explicitly own their selected families. */
+export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: readonly string[], rootName: string) {
   const root = new THREE.Group();
-  root.name = 'ISLAND_001_ANIMATED_SURFACE_BATCHES';
+  root.name = rootName;
   const groups = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>[]>();
   const selected = new Set<THREE.Object3D>();
-  for (const name of FAMILIES) scene.getObjectByName(name)?.traverse((object) => {
+  for (const name of families) scene.getObjectByName(name)?.traverse((object) => {
     for (let parent: THREE.Object3D | null = object; parent; parent = parent.parent) {
       if (parent.name === 'ISLAND_1_ASSEMBLY_TWENTY_STAGE_EXCAVATION_VOLUME') return;
     }
@@ -91,7 +96,7 @@ export function createIsland1AnimatedBatches(scene: THREE.Scene) {
     const material = sources[0].material.clone();
     patch(material);
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.name = `ISLAND001_SURFACE_BATCH_${batches.length}`;
+    mesh.name = `${rootName}_${batches.length}`;
     mesh.frustumCulled = false;
     mesh.castShadow = sources[0].castShadow;
     mesh.receiveShadow = sources[0].receiveShadow;
@@ -136,11 +141,13 @@ export function createIsland1AnimatedBatches(scene: THREE.Scene) {
     inverseRoot.copy(root.matrixWorld).invert();
     camera?.getWorldPosition(eye);
     for (const batch of batches) {
-      let changed = batch.visibility.length === 0;
+      let visibilityChanged = batch.visibility.length === 0;
+      let changed = visibilityChanged;
       batch.sources.forEach((source, i) => {
         let visible = true;
         for (let node: THREE.Object3D | null = source; node; node = node.parent) if (!node.visible) { visible = false; break; }
-        changed ||= batch.visibility[i] !== visible;
+        visibilityChanged ||= batch.visibility[i] !== visible;
+        changed ||= visibilityChanged;
         batch.visibility[i] = visible;
         batch.matrices[i].multiplyMatrices(inverseRoot, source.matrixWorld);
         if (camera && source.material.side !== THREE.DoubleSide) {
@@ -151,26 +158,36 @@ export function createIsland1AnimatedBatches(scene: THREE.Scene) {
       });
       if (changed) {
         const index = batch.mesh.geometry.index!;
+        const colorIndices = index.array as Uint32Array;
+        const shadowIndices = batch.shadowIndex.array as Uint32Array;
         let count = 0, shadowCount = 0;
         batch.sources.forEach((_, i) => {
           if (!batch.visibility[i]) return;
           const source = batch.sources[i], e = batch.localEyes[i];
           for (let vertex = batch.offsets[i]; vertex < batch.offsets[i] + batch.counts[i]; vertex += 3) {
-            for (let corner = 0; corner < 3; corner++) batch.shadowIndex.setX(shadowCount++, vertex + corner);
+            if (visibilityChanged) {
+              shadowIndices[shadowCount++] = vertex;
+              shadowIndices[shadowCount++] = vertex + 1;
+              shadowIndices[shadowCount++] = vertex + 2;
+            }
             // The rasterizer would discard these faces too. Submit only the
             // camera-facing triangles; shadow passes retain the complete shell.
             const p = vertex / 3 * 4;
             const facing = batch.planes[p] * e.x + batch.planes[p + 1] * e.y + batch.planes[p + 2] * e.z - batch.planes[p + 3];
             if (camera && source.material.side !== THREE.DoubleSide
               && (source.material.side === THREE.BackSide ? facing > 1e-7 : facing < -1e-7)) continue;
-            for (let corner = 0; corner < 3; corner++) index.setX(count++, vertex + corner);
+            colorIndices[count++] = vertex;
+            colorIndices[count++] = vertex + 1;
+            colorIndices[count++] = vertex + 2;
           }
         });
         index.needsUpdate = true;
         batch.mesh.geometry.setDrawRange(0, count);
-        batch.mesh.userData.shadowCount = shadowCount;
-        batch.shadowIndex.needsUpdate = true;
-        batch.mesh.visible = shadowCount > 0;
+        if (visibilityChanged) {
+          batch.mesh.userData.shadowCount = shadowCount;
+          batch.shadowIndex.needsUpdate = true;
+          batch.mesh.visible = shadowCount > 0;
+        }
       }
       const original = batch.sources[0].material, material = batch.mesh.material;
       material.color.copy(original.color);

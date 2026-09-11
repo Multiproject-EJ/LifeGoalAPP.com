@@ -1,0 +1,197 @@
+[
+  {
+    "id": "full-object",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1,
+      "units": "normalized"
+    },
+    "observations": [
+      "Five floating architectural districts and a circular playable route"
+    ],
+    "confidence": 0.95
+  },
+  {
+    "id": "palace-mass",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.32,
+      "y": 0.3,
+      "width": 0.34,
+      "height": 0.17,
+      "units": "normalized"
+    },
+    "observations": [
+      "Central ivory halls with a dominant slender blue roof, paired lower spires, gold crest and trim; entry is a deep arch framed by clustered vertical piers."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "palace-court",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.31,
+      "y": 0.41,
+      "width": 0.37,
+      "height": 0.09,
+      "units": "normalized"
+    },
+    "observations": [
+      "Semicircular arrival stair descends to water; curved balustrades, narrow evergreen trees and flower beds give the foot of the palace layered depth."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "cloudnest",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.01,
+      "y": 0.21,
+      "width": 0.4,
+      "height": 0.19,
+      "units": "normalized"
+    },
+    "observations": [
+      "Ribbed transparent hemispherical dome and small side dome enclose a branching pale tree and suspended gold vessels; circular stone podium."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "resolve-court",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.57,
+      "y": 0.21,
+      "width": 0.42,
+      "height": 0.2,
+      "units": "normalized"
+    },
+    "observations": [
+      "Open circular blue floor with gold radial mark, tall paired wing-shaped pylons and an elevated gold orrery."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "archive",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.01,
+      "y": 0.45,
+      "width": 0.3,
+      "height": 0.15,
+      "units": "normalized"
+    },
+    "observations": [
+      "Round ivory multi-storey building with blue hemispherical roof, gold ribs, arched windows, open arrival and projecting telescope."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "astral-gate",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.69,
+      "y": 0.44,
+      "width": 0.3,
+      "height": 0.17,
+      "units": "normalized"
+    },
+    "observations": [
+      "Oblique upright gold-rimmed portal with purple luminous interior, blue inset panels and paired crystal supports on a stepped terrace."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "sky-root",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.02,
+      "y": 0.5,
+      "width": 0.96,
+      "height": 0.24,
+      "units": "normalized"
+    },
+    "observations": [
+      "Broad central crown and distinct outer shelves terminate in long tapered fractured rock masses, with strata and asymmetric buttresses."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "gardens",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.02,
+      "y": 0.2,
+      "width": 0.97,
+      "height": 0.53,
+      "units": "normalized"
+    },
+    "observations": [
+      "Multiple heights of broad wind-shaped tree canopy, fine shrubs, trailing vines and white/lilac flower cascades, with gaps revealing stone."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "waterways",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.03,
+      "y": 0.55,
+      "width": 0.92,
+      "height": 0.22,
+      "units": "normalized"
+    },
+    "observations": [
+      "Cyan pools link short falls and arched bridges above multiple long vertical cascades; narrow white stream edges and mist."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "cloudscape",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1,
+      "units": "normalized"
+    },
+    "observations": [
+      "Cloud sea surrounds many distant tapered islets at distinct heights and apparent sizes; blue sky is brighter toward upper left."
+    ],
+    "confidence": 0.9
+  },
+  {
+    "id": "docking-machinery",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.25,
+      "y": 0.48,
+      "width": 0.59,
+      "height": 0.16,
+      "units": "normalized"
+    },
+    "observations": [
+      "Stone bridges visibly link shelves; capstans, brakes and latch geometry are approved functional elaborations, not reliably observable in this image."
+    ],
+    "confidence": 0.45
+  },
+  {
+    "id": "living-motion",
+    "view": "approved-three-quarter-concept",
+    "imageRegion": {
+      "x": 0.28,
+      "y": 0.08,
+      "width": 0.3,
+      "height": 0.07,
+      "units": "normalized"
+    },
+    "observations": [
+      "Ivory gold-ribbed airship with blue band and hanging banner sits above the city; birds and completion wave are functional elaborations."
+    ],
+    "confidence": 0.9
+  }
+]

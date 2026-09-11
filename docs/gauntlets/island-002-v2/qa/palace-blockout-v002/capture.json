@@ -1,0 +1,42 @@
+{
+  "at": "2026-09-11T15:29:21.501Z",
+  "failures": [],
+  "records": [
+    {
+      "name": "overview",
+      "metrics": "31 FPS\n528 calls\n83k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2
+    },
+    {
+      "name": "palace",
+      "metrics": "39 FPS\n275 calls\n60k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2
+    },
+    {
+      "name": "left",
+      "metrics": "28 FPS\n549 calls\n86k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2
+    },
+    {
+      "name": "right",
+      "metrics": "33 FPS\n333 calls\n87k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2
+    }
+  ]
+}

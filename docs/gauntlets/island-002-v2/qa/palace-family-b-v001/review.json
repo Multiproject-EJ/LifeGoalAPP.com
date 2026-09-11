@@ -1,0 +1,50 @@
+{
+  "reviewer": "island002_review",
+  "action": "one-bounded-correction",
+  "scope": "palace family B first pass, global review 3",
+  "scores": {
+    "overview": [
+      0.84,
+      0.8,
+      0.89,
+      0.87,
+      0.86
+    ],
+    "palace": [
+      0.82,
+      0.78,
+      0.88,
+      0.87,
+      0.84
+    ],
+    "left": [
+      0.84,
+      0.81,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "right": [
+      0.83,
+      0.8,
+      0.88,
+      0.87,
+      0.84
+    ]
+  },
+  "categories": [
+    "silhouette",
+    "identity",
+    "attachment",
+    "structure",
+    "phone"
+  ],
+  "worst": 0.78,
+  "dominantDeficiency": "Broad white middle terraces weaken continuous rising sapphire palace roof silhouette",
+  "orbitEvidence": "../palace-family-b-orbit-v001",
+  "orbitWorst": 0.78,
+  "hypothesis": "Continuous tapered sapphire roof over inhabited keep; reduce dominant horizontal ivory shelves; preserve lower residence and footprint",
+  "requiredWorstAfterCorrection": 0.88,
+  "status": "not-approved",
+  "separateIssue": "Distant islet conifers use main shelf elevation and visibly float; correct in landscape pass"
+}

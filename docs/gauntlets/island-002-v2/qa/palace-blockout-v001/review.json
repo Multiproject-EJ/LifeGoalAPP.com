@@ -1,0 +1,51 @@
+{
+  "reviewer": "island002_review",
+  "action": "one-bounded-correction",
+  "scope": "palace macro only",
+  "scores": {
+    "overview": [
+      0.66,
+      0.61,
+      0.87,
+      0.8,
+      0.84
+    ],
+    "palace": [
+      0.64,
+      0.59,
+      0.84,
+      0.79,
+      0.83
+    ],
+    "left": [
+      0.67,
+      0.62,
+      0.86,
+      0.8,
+      0.84
+    ],
+    "right": [
+      0.65,
+      0.6,
+      0.85,
+      0.79,
+      0.82
+    ]
+  },
+  "categories": [
+    "silhouette",
+    "identity",
+    "attachment",
+    "structure",
+    "phone"
+  ],
+  "dominantDeficiency": "Broad top-heavy cone above flat gatehouse; strengthen ascending hall/terrace/spire masses",
+  "correction": "Narrow crown, taller lantern masonry, distinct gabled great hall roof, stagger subordinate tower heights",
+  "missingEvidence": [
+    "rear",
+    "profile",
+    "nine-angle",
+    "clay"
+  ],
+  "status": "not-approved"
+}

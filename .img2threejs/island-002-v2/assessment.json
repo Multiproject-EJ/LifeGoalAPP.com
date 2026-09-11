@@ -1,0 +1,683 @@
+{
+  "targetName": "Celestial Sky Kingdom V2",
+  "sourceImage": "docs/visual-references/island-002-celestial-v2/002-source.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "five-landmark floating architectural city",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "architectural",
+        "botanical",
+        "organic rock",
+        "mechanical"
+      ],
+      "structureKind": [
+        "compound assembly",
+        "layered shells",
+        "repeated modules",
+        "branching hierarchy"
+      ],
+      "motionPotential": [
+        "detachable districts",
+        "rotating mechanism",
+        "wind sway",
+        "effect emitters"
+      ],
+      "materialFamilies": [
+        "stone",
+        "metal",
+        "glass",
+        "leaf",
+        "bark",
+        "cloth",
+        "liquid"
+      ],
+      "notes": "Stylized authored adaptation of approved environment; retain game board sockets."
+    },
+    "complexity": {
+      "tier": "ultra-complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 12,
+        "mesoComponents": 26,
+        "microFeatureGroups": 26,
+        "materialLayers": 8,
+        "repetitionSystems": 5
+      },
+      "reasoning": [
+        "Five distinct architectural identities with relief, repeated ornament, planted terraces and floating rock supports.",
+        "Four moving shelves require independent transforms and contacts; single image limits rear-side confidence."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "ultra-complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Architectural skyline, repeated arches, roof trims, vines, transparent dome ribs and articulated docking demand macro/meso/micro depth."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 16,
+      "details": [
+        {
+          "id": "arched-entry",
+          "kind": "ridge",
+          "region": [
+            0.32,
+            0.3,
+            0.34,
+            0.17
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "palace-mass",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "central-hall/arched-entry"
+          }
+        },
+        {
+          "id": "raised-gold-ribs",
+          "kind": "ridge",
+          "region": [
+            0.32,
+            0.3,
+            0.34,
+            0.17
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "palace-mass",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "principal-roof/raised-gold-ribs"
+          }
+        },
+        {
+          "id": "seven-distinct-roof-peaks",
+          "kind": "ridge",
+          "region": [
+            0.32,
+            0.3,
+            0.34,
+            0.17
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "palace-mass",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "paired-spires/seven-distinct-roof-peaks"
+          }
+        },
+        {
+          "id": "arcade-openings",
+          "kind": "ridge",
+          "region": [
+            0.32,
+            0.3,
+            0.34,
+            0.17
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "palace-mass",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "gallery-wings/arcade-openings"
+          }
+        },
+        {
+          "id": "stepped-semicircle",
+          "kind": "ridge",
+          "region": [
+            0.31,
+            0.41,
+            0.37,
+            0.09
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "palace-court",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "arrival-stairs/stepped-semicircle"
+          }
+        },
+        {
+          "id": "repeated-balusters",
+          "kind": "ridge",
+          "region": [
+            0.31,
+            0.41,
+            0.37,
+            0.09
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "palace-court",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "balustrades/repeated-balusters"
+          }
+        },
+        {
+          "id": "meridional-ribs",
+          "kind": "ridge",
+          "region": [
+            0.01,
+            0.21,
+            0.4,
+            0.19
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "cloudnest",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "dome-ribs/meridional-ribs"
+          }
+        },
+        {
+          "id": "branch-forks",
+          "kind": "ridge",
+          "region": [
+            0.01,
+            0.21,
+            0.4,
+            0.19
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "cloudnest",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "tree-trunk/branch-forks"
+          }
+        },
+        {
+          "id": "hanging-nest-vessels",
+          "kind": "ridge",
+          "region": [
+            0.01,
+            0.21,
+            0.4,
+            0.19
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "cloudnest",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "nest-galleries/hanging-nest-vessels"
+          }
+        },
+        {
+          "id": "separate-feather-relief",
+          "kind": "ridge",
+          "region": [
+            0.57,
+            0.21,
+            0.42,
+            0.2
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "resolve-court",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "wing-pylons/separate-feather-relief"
+          }
+        },
+        {
+          "id": "orbital-rings",
+          "kind": "ridge",
+          "region": [
+            0.57,
+            0.21,
+            0.42,
+            0.2
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "resolve-court",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "orrery/orbital-rings"
+          }
+        },
+        {
+          "id": "gold-radial-inlay",
+          "kind": "ridge",
+          "region": [
+            0.57,
+            0.21,
+            0.42,
+            0.2
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "resolve-court",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "court-floor/gold-radial-inlay"
+          }
+        },
+        {
+          "id": "window-arcades",
+          "kind": "ridge",
+          "region": [
+            0.01,
+            0.45,
+            0.3,
+            0.15
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "archive",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "reading-galleries/window-arcades"
+          }
+        },
+        {
+          "id": "gold-roof-ribs",
+          "kind": "ridge",
+          "region": [
+            0.01,
+            0.45,
+            0.3,
+            0.15
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "archive",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "observatory-dome/gold-roof-ribs"
+          }
+        },
+        {
+          "id": "barrel-and-ocular",
+          "kind": "ridge",
+          "region": [
+            0.01,
+            0.45,
+            0.3,
+            0.15
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "archive",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "telescope/barrel-and-ocular"
+          }
+        },
+        {
+          "id": "blue-inset-panels",
+          "kind": "ridge",
+          "region": [
+            0.69,
+            0.44,
+            0.3,
+            0.17
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "astral-gate",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "portal-frame/blue-inset-panels"
+          }
+        },
+        {
+          "id": "violet-spiral",
+          "kind": "emissive",
+          "region": [
+            0.69,
+            0.44,
+            0.3,
+            0.17
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "astral-gate",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "portal-field/violet-spiral"
+          }
+        },
+        {
+          "id": "offset-rock-bands",
+          "kind": "ridge",
+          "region": [
+            0.02,
+            0.5,
+            0.96,
+            0.24
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "sky-root",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "fractured-strata/offset-rock-bands"
+          }
+        },
+        {
+          "id": "independent-root-tapers",
+          "kind": "ridge",
+          "region": [
+            0.02,
+            0.5,
+            0.96,
+            0.24
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "sky-root",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "outer-shelves/independent-root-tapers"
+          }
+        },
+        {
+          "id": "irregular-overlapping-clusters",
+          "kind": "ridge",
+          "region": [
+            0.02,
+            0.2,
+            0.97,
+            0.53
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "gardens",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "tree-crowns/irregular-overlapping-clusters"
+          }
+        },
+        {
+          "id": "ledge-rooted-cascades",
+          "kind": "ridge",
+          "region": [
+            0.02,
+            0.2,
+            0.97,
+            0.53
+          ],
+          "affects": "geometry and local material",
+          "scale": "micro",
+          "evidenceRef": "gardens",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "trailing-vines/ledge-rooted-cascades"
+          }
+        },
+        {
+          "id": "white-lilac-patches",
+          "kind": "ridge",
+          "region": [
+            0.02,
+            0.2,
+            0.97,
+            0.53
+          ],
+          "affects": "geometry and local material",
+          "scale": "micro",
+          "evidenceRef": "gardens",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "flower-beds/white-lilac-patches"
+          }
+        },
+        {
+          "id": "white-ripple-rims",
+          "kind": "ridge",
+          "region": [
+            0.03,
+            0.55,
+            0.92,
+            0.22
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "waterways",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "pool-lips/white-ripple-rims"
+          }
+        },
+        {
+          "id": "parallel-stream-lines",
+          "kind": "ridge",
+          "region": [
+            0.03,
+            0.55,
+            0.92,
+            0.22
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "waterways",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "fall-streams/parallel-stream-lines"
+          }
+        },
+        {
+          "id": "opposed-latch-jaws",
+          "kind": "ridge",
+          "region": [
+            0.25,
+            0.48,
+            0.59,
+            0.16
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "docking-machinery",
+          "confidence": 0.45,
+          "mapsTo": {
+            "ref": "locking-collars/opposed-latch-jaws"
+          }
+        },
+        {
+          "id": "blue-bands-gold-ribs",
+          "kind": "ridge",
+          "region": [
+            0.28,
+            0.08,
+            0.3,
+            0.07
+          ],
+          "affects": "geometry and local material",
+          "scale": "meso",
+          "evidenceRef": "living-motion",
+          "confidence": 0.85,
+          "mapsTo": {
+            "ref": "airship-envelope/blue-bands-gold-ribs"
+          }
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "docs/visual-references/island-002-celestial-v2/002-source.png",
+    "resolvedScopeLimitations": [
+      "No rear source view: coherent inferred elevations are explicitly within approved stylized adaptation, subject to orbit review.",
+      "No exact material channels: author independent PBR response rather than extraction from the baked-lit concept."
+    ]
+  },
+  "qualityContract": {
+    "qualityBar": "ultra-complex",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 5,
+      "mesoComponents": 16,
+      "microFeatureGroups": 8,
+      "materialLayers": 4,
+      "repetitionSystems": 2,
+      "reviewViewpoints": 5
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Celestial Sky Kingdom V2",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": []
+  }
+}

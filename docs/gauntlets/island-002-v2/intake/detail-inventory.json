@@ -1,0 +1,448 @@
+{
+  "scanMethod": "component-zones",
+  "targetMinDetails": 16,
+  "details": [
+    {
+      "id": "arched-entry",
+      "kind": "ridge",
+      "region": [
+        0.32,
+        0.3,
+        0.34,
+        0.17
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "palace-mass",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "central-hall/arched-entry"
+      }
+    },
+    {
+      "id": "raised-gold-ribs",
+      "kind": "ridge",
+      "region": [
+        0.32,
+        0.3,
+        0.34,
+        0.17
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "palace-mass",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "principal-roof/raised-gold-ribs"
+      }
+    },
+    {
+      "id": "seven-distinct-roof-peaks",
+      "kind": "ridge",
+      "region": [
+        0.32,
+        0.3,
+        0.34,
+        0.17
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "palace-mass",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "paired-spires/seven-distinct-roof-peaks"
+      }
+    },
+    {
+      "id": "arcade-openings",
+      "kind": "ridge",
+      "region": [
+        0.32,
+        0.3,
+        0.34,
+        0.17
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "palace-mass",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "gallery-wings/arcade-openings"
+      }
+    },
+    {
+      "id": "stepped-semicircle",
+      "kind": "ridge",
+      "region": [
+        0.31,
+        0.41,
+        0.37,
+        0.09
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "palace-court",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "arrival-stairs/stepped-semicircle"
+      }
+    },
+    {
+      "id": "repeated-balusters",
+      "kind": "ridge",
+      "region": [
+        0.31,
+        0.41,
+        0.37,
+        0.09
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "palace-court",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "balustrades/repeated-balusters"
+      }
+    },
+    {
+      "id": "meridional-ribs",
+      "kind": "ridge",
+      "region": [
+        0.01,
+        0.21,
+        0.4,
+        0.19
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "cloudnest",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "dome-ribs/meridional-ribs"
+      }
+    },
+    {
+      "id": "branch-forks",
+      "kind": "ridge",
+      "region": [
+        0.01,
+        0.21,
+        0.4,
+        0.19
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "cloudnest",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "tree-trunk/branch-forks"
+      }
+    },
+    {
+      "id": "hanging-nest-vessels",
+      "kind": "ridge",
+      "region": [
+        0.01,
+        0.21,
+        0.4,
+        0.19
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "cloudnest",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "nest-galleries/hanging-nest-vessels"
+      }
+    },
+    {
+      "id": "separate-feather-relief",
+      "kind": "ridge",
+      "region": [
+        0.57,
+        0.21,
+        0.42,
+        0.2
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "resolve-court",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "wing-pylons/separate-feather-relief"
+      }
+    },
+    {
+      "id": "orbital-rings",
+      "kind": "ridge",
+      "region": [
+        0.57,
+        0.21,
+        0.42,
+        0.2
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "resolve-court",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "orrery/orbital-rings"
+      }
+    },
+    {
+      "id": "gold-radial-inlay",
+      "kind": "ridge",
+      "region": [
+        0.57,
+        0.21,
+        0.42,
+        0.2
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "resolve-court",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "court-floor/gold-radial-inlay"
+      }
+    },
+    {
+      "id": "window-arcades",
+      "kind": "ridge",
+      "region": [
+        0.01,
+        0.45,
+        0.3,
+        0.15
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "archive",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "reading-galleries/window-arcades"
+      }
+    },
+    {
+      "id": "gold-roof-ribs",
+      "kind": "ridge",
+      "region": [
+        0.01,
+        0.45,
+        0.3,
+        0.15
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "archive",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "observatory-dome/gold-roof-ribs"
+      }
+    },
+    {
+      "id": "barrel-and-ocular",
+      "kind": "ridge",
+      "region": [
+        0.01,
+        0.45,
+        0.3,
+        0.15
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "archive",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "telescope/barrel-and-ocular"
+      }
+    },
+    {
+      "id": "blue-inset-panels",
+      "kind": "ridge",
+      "region": [
+        0.69,
+        0.44,
+        0.3,
+        0.17
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "astral-gate",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "portal-frame/blue-inset-panels"
+      }
+    },
+    {
+      "id": "violet-spiral",
+      "kind": "emissive",
+      "region": [
+        0.69,
+        0.44,
+        0.3,
+        0.17
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "astral-gate",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "portal-field/violet-spiral"
+      }
+    },
+    {
+      "id": "offset-rock-bands",
+      "kind": "ridge",
+      "region": [
+        0.02,
+        0.5,
+        0.96,
+        0.24
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "sky-root",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "fractured-strata/offset-rock-bands"
+      }
+    },
+    {
+      "id": "independent-root-tapers",
+      "kind": "ridge",
+      "region": [
+        0.02,
+        0.5,
+        0.96,
+        0.24
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "sky-root",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "outer-shelves/independent-root-tapers"
+      }
+    },
+    {
+      "id": "irregular-overlapping-clusters",
+      "kind": "ridge",
+      "region": [
+        0.02,
+        0.2,
+        0.97,
+        0.53
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "gardens",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "tree-crowns/irregular-overlapping-clusters"
+      }
+    },
+    {
+      "id": "ledge-rooted-cascades",
+      "kind": "ridge",
+      "region": [
+        0.02,
+        0.2,
+        0.97,
+        0.53
+      ],
+      "affects": "geometry and local material",
+      "scale": "micro",
+      "evidenceRef": "gardens",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "trailing-vines/ledge-rooted-cascades"
+      }
+    },
+    {
+      "id": "white-lilac-patches",
+      "kind": "ridge",
+      "region": [
+        0.02,
+        0.2,
+        0.97,
+        0.53
+      ],
+      "affects": "geometry and local material",
+      "scale": "micro",
+      "evidenceRef": "gardens",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "flower-beds/white-lilac-patches"
+      }
+    },
+    {
+      "id": "white-ripple-rims",
+      "kind": "ridge",
+      "region": [
+        0.03,
+        0.55,
+        0.92,
+        0.22
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "waterways",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "pool-lips/white-ripple-rims"
+      }
+    },
+    {
+      "id": "parallel-stream-lines",
+      "kind": "ridge",
+      "region": [
+        0.03,
+        0.55,
+        0.92,
+        0.22
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "waterways",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "fall-streams/parallel-stream-lines"
+      }
+    },
+    {
+      "id": "opposed-latch-jaws",
+      "kind": "ridge",
+      "region": [
+        0.25,
+        0.48,
+        0.59,
+        0.16
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "docking-machinery",
+      "confidence": 0.45,
+      "mapsTo": {
+        "ref": "locking-collars/opposed-latch-jaws"
+      }
+    },
+    {
+      "id": "blue-bands-gold-ribs",
+      "kind": "ridge",
+      "region": [
+        0.28,
+        0.08,
+        0.3,
+        0.07
+      ],
+      "affects": "geometry and local material",
+      "scale": "meso",
+      "evidenceRef": "living-motion",
+      "confidence": 0.85,
+      "mapsTo": {
+        "ref": "airship-envelope/blue-bands-gold-ribs"
+      }
+    }
+  ]
+}

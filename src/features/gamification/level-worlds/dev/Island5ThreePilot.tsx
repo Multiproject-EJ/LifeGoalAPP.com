@@ -7,7 +7,7 @@ import { JUNGLE_COMPASS_CEREMONY_DURATION_MS, JUNGLE_COMPASS_REDUCED_CEREMONY_DU
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { createIsland1AnimatedBatches } from './Island1AnimatedBatches';
+import { createIsland1AnimatedBatches, createIslandRigidSurfaceBatches } from './Island1AnimatedBatches';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import {
   applyLandmarkDoorTiles,
@@ -2314,13 +2314,13 @@ export function createPilotMaterials(quality: Island3DQuality, worldSourceNumber
     purpleRoofBright: new THREE.MeshStandardMaterial({ color: roofBrightColor, map: roofMap, roughness: 0.32, metalness: 0.18 }),
     gold: new THREE.MeshStandardMaterial({ color: 0xf1c866, roughness: 0.32, metalness: 0.58, emissive: 0x3d2504, emissiveIntensity: 0.18 }),
     deepWindow: new THREE.MeshStandardMaterial({ color: 0x172849, roughness: 0.2, metalness: 0.15, emissive: 0x164e70, emissiveIntensity: 0.52 }),
-    aquaGlass: new THREE.MeshPhysicalMaterial({ color: 0x8effe7, roughness: 0.12, metalness: 0.02, transparent: true, opacity: 0.82, transmission: 0.22, thickness: 0.35 }),
+    aquaGlass: new THREE.MeshPhysicalMaterial({ color: 0x8effe7, roughness: 0.12, metalness: 0.02, transparent: true, opacity: 0.82, transmission: isCelestialSkyKingdom ? 0 : 0.22, thickness: 0.35 }),
     voiceGlow: new THREE.MeshStandardMaterial({ color: 0xa8fff0, roughness: 0.12, emissive: 0x38d9cd, emissiveIntensity: 1.05 }),
     banner: new THREE.MeshStandardMaterial({ color: 0x50309d, roughness: 0.55, side: THREE.DoubleSide }),
     reefAccent: new THREE.MeshStandardMaterial({ color: 0xff7da9, roughness: 0.5, emissive: 0x5c1735, emissiveIntensity: 0.22 }),
     pearlAccent: new THREE.MeshStandardMaterial({ color: 0xfff6db, roughness: 0.16, metalness: 0.16, emissive: 0x50b9b2, emissiveIntensity: 0.42 }),
     coral: new THREE.MeshStandardMaterial({ color: 0xe972a4, roughness: 0.52, emissive: 0x49142d, emissiveIntensity: 0.16 }),
-    coralGlass: new THREE.MeshPhysicalMaterial({ color: 0xc288e8, roughness: 0.18, metalness: 0.02, transparent: true, opacity: 0.68, transmission: 0.18, thickness: 0.7 }),
+    coralGlass: new THREE.MeshPhysicalMaterial({ color: 0xc288e8, roughness: 0.18, metalness: 0.02, transparent: true, opacity: 0.68, transmission: isCelestialSkyKingdom ? 0 : 0.18, thickness: 0.7 }),
     pearl: new THREE.MeshStandardMaterial({ color: 0xfff3da, roughness: 0.18, metalness: 0.22, emissive: 0x7a5d91, emissiveIntensity: 0.16 }),
     mintGlow: new THREE.MeshStandardMaterial({ color: 0x8df5d5, roughness: 0.2, emissive: 0x23836f, emissiveIntensity: 0.72 }),
     waterGlow: new THREE.MeshStandardMaterial({ color: 0x61cbed, roughness: 0.22, metalness: 0.12, emissive: 0x125a7a, emissiveIntensity: 0.48 }),
@@ -2433,6 +2433,7 @@ interface Island5AmbienceRuntime {
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
   registerRedockingLandmark?: (landmarkId: Island5LandmarkDefinition['id'], root: THREE.Object3D) => void;
   updateRedocking?: (presentation: Island2CelestialRedockingPresentation, immediate?: boolean) => void;
+  consumeShadowUpdate?: () => boolean;
   getSignatureMissionCameraPose?: () => { position: THREE.Vector3; target: THREE.Vector3 } | null;
   setSignatureMissionCinematicActive?: (active: boolean) => void;
   updatePowerworksStage?: (presentation: Island10RootheartPowerworksPresentation) => void;
@@ -4124,6 +4125,13 @@ export default function Island5ThreePilot({
     camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isCactusCanyon ? 1.06 : isHoneycombKingdom ? 1.16 : isJungleExpedition ? 0.98 : isLavaLabyrinth ? 1.2 : isFirstLightKingdom ? 1.03 : 1;
     camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
+    const celestialInitialOverview = {
+      // The separated districts must fit too. Only the view changes; canonical
+      // route, landmark anchors and hit proxies retain their shared transforms.
+      position: celestialRedockingPresentationRef.current.completedRolls < 20
+        ? [0, 35, 43] as const : [0, 29, 34] as const,
+      target: [0, -0.8, 0] as const,
+    };
     const firstLightInitialOverview = {
       // First Light is the onboarding hero, so its board must read at phone
       // scale instead of dissolving into a large field of empty ocean. The
@@ -4224,7 +4232,9 @@ export default function Island5ThreePilot({
       fov: 47,
     };
     const restoredCameraPose = cameraPoseSnapshotRef.current;
-    const initialOverviewPosition = isFirstLightKingdom
+    const initialOverviewPosition = isCelestialSkyKingdom
+      ? celestialInitialOverview.position
+      : isFirstLightKingdom
       ? firstLightInitialOverview.position
       : isSunkenSands
         ? sunkenSandsInitialOverview.position
@@ -4245,7 +4255,9 @@ export default function Island5ThreePilot({
                   ? circuitGBoardInitialOverview.position
                   : coasterCarnivalInitialOverview.position
         : overview.position;
-    const initialOverviewTarget = isFirstLightKingdom
+    const initialOverviewTarget = isCelestialSkyKingdom
+      ? celestialInitialOverview.target
+      : isFirstLightKingdom
       ? firstLightInitialOverview.target
       : isSunkenSands
         ? sunkenSandsInitialOverview.target
@@ -4399,11 +4411,11 @@ export default function Island5ThreePilot({
     let honeycombEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let jungleExpeditionEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let lavaLabyrinthEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
-    if (isAssemblyCraterFirstLight) {
+    if (isAssemblyCraterFirstLight || isCelestialSkyKingdom) {
       const roomEnvironment = new RoomEnvironment();
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
       assemblyEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, .06);
-      scene.environment = assemblyEnvironmentTarget.texture; scene.environmentIntensity = .4;
+      scene.environment = assemblyEnvironmentTarget.texture; scene.environmentIntensity = isCelestialSkyKingdom ? .35 : .4;
       roomEnvironment.dispose(); pmremGenerator.dispose();
     }
     if (isArchiveEnvironmentLookdev || isArchiveBacklightLookdev) {
@@ -4504,7 +4516,7 @@ export default function Island5ThreePilot({
         : isFirstLightKingdom
       ? 1.7
       : isCelestialSkyKingdom
-        ? 1.75
+        ? 1.05
         : isFrostmoonHaven
           ? 1.55
           : isSunshoreAtoll
@@ -4561,7 +4573,7 @@ export default function Island5ThreePilot({
         : isFirstLightKingdom
       ? 3.15
       : isCelestialSkyKingdom
-        ? 3.3
+        ? 2.8
         : isFrostmoonHaven
           ? 2.65
           : isSunshoreAtoll
@@ -5432,7 +5444,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
+    const useInstancedRouteTiles = isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
     const instancedTileCounts = Array(isAssemblyCraterFirstLight ? 6 : 3).fill(0) as number[];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -5445,6 +5457,8 @@ export default function Island5ThreePilot({
           mesh.userData.assemblyNearRoute = isAssemblyCraterFirstLight && materialIndex >= 3;
           mesh.name = isAssemblyCraterFirstLight
             ? `ISLAND_001_TILE_SURFACE_BATCH_${materialIndex + 1}`
+            : isCelestialSkyKingdom
+              ? `ISLAND_002_TILE_SURFACE_BATCH_${materialIndex + 1}`
             : isSunkenSands
             ? `ISLAND_12_TILE_SURFACE_BATCH_${materialIndex + 1}`
             : isCactusCanyon
@@ -6650,7 +6664,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier)
+    const isMapStrippedEvidence = (isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier)
       && isMapStrippedEvidenceEnabled;
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -6662,7 +6676,7 @@ export default function Island5ThreePilot({
       scene.background = new THREE.Color(0x17242d);
       scene.environment = null;
       scene.traverse((object) => {
-        if (object.name === 'ISLAND_20_LAVA_FLOW_AND_HEAT_OVERLAY') {
+        if (object.name === 'ISLAND_20_LAVA_FLOW_AND_HEAT_OVERLAY' || object.name === 'ISLAND_2_CELESTIAL_SKY_DOME') {
           object.visible = false;
           return;
         }
@@ -7325,6 +7339,19 @@ export default function Island5ThreePilot({
         'orbit-left': { position: [-19.5, 14.5, 20.5], target: [0, 0.2, -0.12] },
         'orbit-right': { position: [19.5, 14.5, 20.5], target: [0, 0.2, -0.12] },
       };
+      const celestialFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number]; target: readonly [number, number, number];
+      }>> = {
+        overview: {
+          position: celestialRedockingPresentationRef.current.completedRolls < 20 ? [0, 35, 43] : [0, 29, 34],
+          target: [0, -0.8, 0],
+        },
+        survey: { position: [0, 34, 37], target: [0, -0.8, 0] },
+        'orbit-left': { position: [-33, 25, 36], target: [0, -0.7, 0] },
+        'orbit-right': { position: [33, 25, 36], target: [0, -0.7, 0] },
+        boss: { position: [0, 7.8, 13.8], target: [0, 1.75, 0] },
+      };
+      const celestialOverride = isCelestialSkyKingdom ? celestialFocusOverrides[id] : undefined;
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
       const underwaterOverride = isAbyssalPearlKingdom ? underwaterFocusOverrides[id] : undefined;
@@ -7338,7 +7365,7 @@ export default function Island5ThreePilot({
       const honeycombOverride = isHoneycombKingdom ? honeycombFocusOverrides[id] : undefined;
       const jungleExpeditionOverride = isJungleExpedition ? jungleExpeditionFocusOverrides[id] : undefined;
       const lavaLabyrinthOverride = isLavaLabyrinth ? lavaLabyrinthFocusOverrides[id] : undefined;
-      const authoredFocusOverride = assemblyCraterFocusOverride ?? fishermansVillageOverride ?? jungleExpeditionOverride ?? honeycombOverride ?? lavaLabyrinthOverride ?? cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
+      const authoredFocusOverride = celestialOverride ?? assemblyCraterFocusOverride ?? fishermansVillageOverride ?? jungleExpeditionOverride ?? honeycombOverride ?? lavaLabyrinthOverride ?? cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
       let preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       if (isCrystalGlacier) {
         const fromRoom = isIsland15PalaceRoomPreset(activeInspectionPreset)
@@ -7393,6 +7420,19 @@ export default function Island5ThreePilot({
             instant,
           });
           return;
+        }
+      }
+      if (isCelestialSkyKingdom && ['hatchery', 'habit', 'wisdom', 'event'].includes(id)) {
+        const landmarkId = id as Island5LandmarkDefinition['id'];
+        const movingRoot = landmarkRootsById.get(landmarkId);
+        const definition = ISLAND_5_LANDMARKS.find(landmark => landmark.id === landmarkId);
+        if (movingRoot && definition) {
+          const dx = movingRoot.position.x - definition.position[0];
+          const dz = movingRoot.position.z - definition.position[2];
+          preset = { ...preset,
+            position: [preset.position[0] + dx, preset.position[1], preset.position[2] + dz],
+            target: [preset.target[0] + dx, preset.target[1], preset.target[2] + dz],
+          };
         }
       }
       if (isAssemblyCraterFirstLight && ['boss','hatchery','habit','wisdom','event'].includes(id)) {
@@ -8370,7 +8410,13 @@ export default function Island5ThreePilot({
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointerup', handlePointerUp);
 
-    const island1AnimatedBatches = isAssemblyCraterFirstLight ? createIsland1AnimatedBatches(scene) : null;
+    const island1AnimatedBatches = isAssemblyCraterFirstLight ? createIsland1AnimatedBatches(scene)
+      : isCelestialSkyKingdom ? createIslandRigidSurfaceBatches(scene, [
+        'ISLAND_2_CELESTIAL_LIVING_AMBIENCE',
+        ...['BOSS', 'HATCHERY', 'HABIT', 'WISDOM', 'EVENT'].map(id => `ISLAND_2_CELESTIAL_${id}_ROOT`),
+        'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS',
+        'ISLAND_5_CARETAKER_BOARD_LOD',
+      ], 'ISLAND_002_ANIMATED_SURFACE_BATCHES') : null;
     let appliedConstructionCameraKey = '';
     let appliedIsland15ConstructionRevealKey = '';
     const animate = (now: number) => {
@@ -9850,6 +9896,7 @@ export default function Island5ThreePilot({
         }
       }
       island1AnimatedBatches?.sync(camera);
+      if (livingAmbience.consumeShadowUpdate?.() && sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
       renderer.render(scene, camera);
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
         const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
@@ -10569,7 +10616,7 @@ export default function Island5ThreePilot({
         <button type="button" onClick={() => setIsEvidenceCapture(true)}>
           Hide overlays for evidence
         </button>
-        {(isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival) ? (
+        {(isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival) ? (
           <button
             type="button"
             aria-pressed={isMapStrippedEvidenceEnabled}
@@ -10578,7 +10625,7 @@ export default function Island5ThreePilot({
             {isMapStrippedEvidenceEnabled ? 'Show materials' : 'Geometry proof'}
           </button>
         ) : null}
-        {(isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
+        {(isCelestialSkyKingdom || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
           <div className="island-5-three-pilot__camera-row" aria-label={`${worldName} 360 evidence orbit`}>
             {[0, 45, 90, 135, 180, 225, 270, 315].map((degrees) => (
               <button

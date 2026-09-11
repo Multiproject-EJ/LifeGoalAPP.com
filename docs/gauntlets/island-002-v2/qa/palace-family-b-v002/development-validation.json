@@ -1,0 +1,41 @@
+{
+  "status": "development-checkpoint-only",
+  "sourceHashes": {
+    "src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts": "be947d3d9830c280a7513c46e8437b9002e79266aa645b872100c0b7c6630843",
+    "src/features/gamification/level-worlds/dev/Island2CelestialV2Landmarks.ts": "823455d57067ea479fe2a67f9bd32582f422f400d0407ee1e522a6e582a40951",
+    "src/features/gamification/level-worlds/dev/Island2CelestialV2Batch.ts": "87e2ac6df803cab93c0fff67cf958181b8d863e023956df8d226665d6ff4721e",
+    "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "744d4de5113894e84c23f63b20d561854426bb537a3e59cc65abdb6943040dab",
+    "src/features/gamification/level-worlds/dev/Island1AnimatedBatches.ts": "04b09ea371074e243c8b2795522ed119c0560c6edc7d911e111e84f504a7538c"
+  },
+  "checks": {
+    "typescript": "passed",
+    "focusedRuntime": "11/11 passed",
+    "instancedRoute": "passed separate check, canonical36/keytiles6/impact restoration",
+    "architectureGuard": "passed, 3 existing allowlisted warnings",
+    "artRenderWiring": "passed",
+    "constructionChoreography": {
+      "frames": 36000,
+      "robotPairViolations": 0,
+      "buildingViolations": 0
+    },
+    "gitDiffWhitespace": "passed"
+  },
+  "previewSamples": {
+    "overview": {
+      "fps": 60,
+      "drawCalls": 194,
+      "trianglesApprox": 64000
+    },
+    "palace": {
+      "fps": 60,
+      "drawCalls": 108,
+      "trianglesApprox": 44000
+    }
+  },
+  "limitations": [
+    "Visual review failed at .82 worst; family ceiling reached",
+    "Short FPS samples are not performance gate",
+    "Full production build, service suite, responsive and physicalphone evidence pending",
+    "Otherfourlandmarks/landscape remain V1 geometry"
+  ]
+}

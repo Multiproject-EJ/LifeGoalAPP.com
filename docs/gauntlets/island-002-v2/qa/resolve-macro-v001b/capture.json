@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 2,
+  "at": "2026-09-11T16:31:59.414Z",
+  "status": "captured-unreviewed",
+  "visualAcceptance": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "dpr": 2,
+  "sourceStart": {
+    "branch": "codex/island-002-v2-concept-20260911",
+    "head": "1c1908751df10b9de8896bd89209540190146876",
+    "sources": {
+      "scripts/build-island002-palace-blender.py": "37569e373bf15ec53dcb1ba2769fd9bd63d0690497ba6b6ea8815189f434754b",
+      "scripts/capture-island002-orbit.cjs": "f9e48ec3f06dcdf79a0b06d54a550d409bb24a01b969c719e2dea92232ed438b",
+      "scripts/capture-island002-v2.cjs": "8bf0d78383022c94fa57084e3fe6b0331425fa590b316ab0c3c0e45d36f13d63",
+      "src/features/gamification/level-worlds/dev/Island1AnimatedBatches.ts": "04b09ea371074e243c8b2795522ed119c0560c6edc7d911e111e84f504a7538c",
+      "src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts": "7de8b21113ae3b36cf9b5eb772978991bc3f075c6b1df81b9125e23afbb9a7b5",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Batch.ts": "1bed6c37388bbe75248cac4b28e8d05665e149a436c142685944eae041db3ce2",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Botany.ts": "fa41cf0222c79d04b2da37f0c3ba0e8e3a59f8c8af4529990489ae2c28de296c",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Cloudnest.ts": "046401b31025217808552a4a751c0878683e940a8e868e309e0036afbd59cee9",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Landmarks.ts": "8270990991f6f0d9fe70e8c65c67b83b653472b7d6678dd3bb5384bdeb33d0d3",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2ResolveCourt.ts": "5aca5d310dc41a98627d8f4e4229de58e315735401c575e90c648646d8bca0ec",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Terrain.ts": "5f62f62ab8eb63c7f727344e58d0915e483608d0d9377c6786a37ffcff15ad34",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "4f93af2921c1bf8b5b082bbe3e4371a26a53e252fcaf06d6d849d543af5f35a4",
+      "src/features/gamification/level-worlds/dev/IslandConstructionLevelDelta.ts": "dc95a0c9def89febbbaac0d60ea4f73445db9f81f9ff94b16dd2983774a04365",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "44d1bc0ccae235e20d87d468d898421c7036fb449a593c9aaad88970da6d9a58",
+      "src/features/gamification/level-worlds/dev/generated/island002-palace-roof.json": "8d3aaf6eb1441eeee6883181215febbbe0c176c656a185f548973944b3c084d1",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "f28a7029dc6787d0ea7def8e8e38537c51f4a464bf2ac714873e57175300ebf4",
+      "src/features/gamification/level-worlds/services/islandBoardLayout.ts": "7fb9579efec8959f1ca1cecf5ff63e3dbf1f9d550161e6c8bc80440f94886f26"
+    },
+    "sourceSetSha256": "7fd11ae1004bd17e3a054b4dd7bd4c3057541aaefc36623847ce60507ba70098"
+  },
+  "sourceEnd": {
+    "branch": "codex/island-002-v2-concept-20260911",
+    "head": "1c1908751df10b9de8896bd89209540190146876",
+    "sources": {
+      "scripts/build-island002-palace-blender.py": "37569e373bf15ec53dcb1ba2769fd9bd63d0690497ba6b6ea8815189f434754b",
+      "scripts/capture-island002-orbit.cjs": "f9e48ec3f06dcdf79a0b06d54a550d409bb24a01b969c719e2dea92232ed438b",
+      "scripts/capture-island002-v2.cjs": "8bf0d78383022c94fa57084e3fe6b0331425fa590b316ab0c3c0e45d36f13d63",
+      "src/features/gamification/level-worlds/dev/Island1AnimatedBatches.ts": "04b09ea371074e243c8b2795522ed119c0560c6edc7d911e111e84f504a7538c",
+      "src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts": "7de8b21113ae3b36cf9b5eb772978991bc3f075c6b1df81b9125e23afbb9a7b5",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Batch.ts": "1bed6c37388bbe75248cac4b28e8d05665e149a436c142685944eae041db3ce2",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Botany.ts": "fa41cf0222c79d04b2da37f0c3ba0e8e3a59f8c8af4529990489ae2c28de296c",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Cloudnest.ts": "046401b31025217808552a4a751c0878683e940a8e868e309e0036afbd59cee9",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Landmarks.ts": "8270990991f6f0d9fe70e8c65c67b83b653472b7d6678dd3bb5384bdeb33d0d3",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2ResolveCourt.ts": "5aca5d310dc41a98627d8f4e4229de58e315735401c575e90c648646d8bca0ec",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Terrain.ts": "5f62f62ab8eb63c7f727344e58d0915e483608d0d9377c6786a37ffcff15ad34",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "4f93af2921c1bf8b5b082bbe3e4371a26a53e252fcaf06d6d849d543af5f35a4",
+      "src/features/gamification/level-worlds/dev/IslandConstructionLevelDelta.ts": "dc95a0c9def89febbbaac0d60ea4f73445db9f81f9ff94b16dd2983774a04365",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "44d1bc0ccae235e20d87d468d898421c7036fb449a593c9aaad88970da6d9a58",
+      "src/features/gamification/level-worlds/dev/generated/island002-palace-roof.json": "8d3aaf6eb1441eeee6883181215febbbe0c176c656a185f548973944b3c084d1",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "f28a7029dc6787d0ea7def8e8e38537c51f4a464bf2ac714873e57175300ebf4",
+      "src/features/gamification/level-worlds/services/islandBoardLayout.ts": "7fb9579efec8959f1ca1cecf5ff63e3dbf1f9d550161e6c8bc80440f94886f26"
+    },
+    "sourceSetSha256": "7fd11ae1004bd17e3a054b4dd7bd4c3057541aaefc36623847ce60507ba70098"
+  },
+  "changedDuringCapture": [],
+  "failures": [],
+  "records": [
+    {
+      "name": "overview",
+      "file": "overview.png",
+      "metrics": "56 FPS\n186 calls\n105k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2,
+      "url": "http://127.0.0.1:53284/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "quality": "high",
+      "camera": {
+        "kind": "default-overview",
+        "selected": null
+      },
+      "canvasDataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "celestialRedockingRolls": "20",
+        "celestialRedockingDockedPlatforms": "4",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "207a685f18898a5b9fd4a433586df81bea5e7d9e118532e59663174209a904e2",
+      "sourceSetSha256": "7fd11ae1004bd17e3a054b4dd7bd4c3057541aaefc36623847ce60507ba70098",
+      "sourceChanges": []
+    },
+    {
+      "name": "habit",
+      "file": "habit.png",
+      "metrics": "55 FPS\n58 calls\n86k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2,
+      "url": "http://127.0.0.1:53284/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "quality": "high",
+      "camera": {
+        "kind": "landmark-focus",
+        "selected": "habit"
+      },
+      "canvasDataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "celestialRedockingRolls": "20",
+        "celestialRedockingDockedPlatforms": "4",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "b3fd7c1684c0d83ed6c3322ffa2ef1570c9d9859c1f3b322f1c5b3afb0b8292e",
+      "sourceSetSha256": "7fd11ae1004bd17e3a054b4dd7bd4c3057541aaefc36623847ce60507ba70098",
+      "sourceChanges": []
+    },
+    {
+      "name": "left",
+      "file": "left.png",
+      "metrics": "49 FPS\n187 calls\n105k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2,
+      "url": "http://127.0.0.1:53284/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "quality": "high",
+      "camera": {
+        "kind": "preset",
+        "selected": "Left orbit"
+      },
+      "canvasDataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "celestialRedockingRolls": "20",
+        "celestialRedockingDockedPlatforms": "4",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "471ab593252f87fecdbcb812b24f5b9f8861299fc95c202cbe1176fb430aaddd",
+      "sourceSetSha256": "7fd11ae1004bd17e3a054b4dd7bd4c3057541aaefc36623847ce60507ba70098",
+      "sourceChanges": []
+    },
+    {
+      "name": "right",
+      "file": "right.png",
+      "metrics": "43 FPS\n186 calls\n106k tris\n780×1688 px",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2,
+      "url": "http://127.0.0.1:53284/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "quality": "high",
+      "camera": {
+        "kind": "preset",
+        "selected": "Right orbit"
+      },
+      "canvasDataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "celestialRedockingRolls": "20",
+        "celestialRedockingDockedPlatforms": "4",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "153c8bb0872aba903bc4c3e6f8582ba95d81c212333140b687db5ae3d3f5207e",
+      "sourceSetSha256": "7fd11ae1004bd17e3a054b4dd7bd4c3057541aaefc36623847ce60507ba70098",
+      "sourceChanges": []
+    }
+  ]
+}

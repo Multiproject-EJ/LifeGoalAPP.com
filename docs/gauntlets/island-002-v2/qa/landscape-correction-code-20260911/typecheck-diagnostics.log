@@ -1,0 +1,60 @@
+Files:                         2278
+Lines of Library:             49896
+Lines of Definitions:         93784
+Lines of TypeScript:         479360
+Lines of JavaScript:              0
+Lines of JSON:                  250
+Lines of Other:                   0
+Identifiers:                1063355
+Symbols:                    1223335
+Types:                       499816
+Instantiations:             1389318
+Memory used:               1790039K
+Assignability cache size:    316316
+Identity cache size:          28600
+Subtype cache size:           13590
+Strict subtype cache size:    24745
+I/O Read time:               14.42s
+Parse time:                  42.77s
+ResolveModule time:           5.94s
+ResolveTypeReference time:    0.03s
+ResolveLibrary time:          0.35s
+Program time:                70.31s
+Bind time:                   26.42s
+Check time:                 806.65s
+I/O Write time:               0.01s
+printTime time:               0.07s
+Emit time:                    0.07s
+Total time:                 903.44s
+Projects in scope:                          2
+Projects built:                             1
+Aggregate Files:                         2278
+Aggregate Lines of Library:             49896
+Aggregate Lines of Definitions:         93784
+Aggregate Lines of TypeScript:         479360
+Aggregate Lines of JavaScript:              0
+Aggregate Lines of JSON:                  250
+Aggregate Lines of Other:                   0
+Aggregate Identifiers:                1063355
+Aggregate Symbols:                    1223335
+Aggregate Types:                       499816
+Aggregate Instantiations:             1389318
+Aggregate Memory used:               1790039K
+Aggregate Assignability cache size:    316316
+Aggregate Identity cache size:          28600
+Aggregate Subtype cache size:           13590
+Aggregate Strict subtype cache size:    24745
+Aggregate I/O Read time:               14.42s
+Aggregate Parse time:                  42.77s
+Aggregate ResolveModule time:           5.94s
+Aggregate ResolveTypeReference time:    0.03s
+Aggregate ResolveLibrary time:          0.35s
+Aggregate Program time:                70.31s
+Aggregate Bind time:                   26.42s
+Aggregate Check time:                 806.65s
+Aggregate I/O Write time:               0.01s
+Aggregate printTime time:               0.07s
+Aggregate Emit time:                    0.07s
+Config file parsing time:               0.36s
+Up-to-date check time:                  0.10s
+Build time:                           906.32s

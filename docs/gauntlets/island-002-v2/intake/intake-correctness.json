@@ -1,0 +1,18 @@
+{
+  "action": "proceed",
+  "confirmed": false,
+  "assumptionsExposed": {
+    "primaryType": "five-landmark floating architectural city",
+    "primaryDomain": "object",
+    "materialFamilies": [
+      "stone",
+      "metal",
+      "glass",
+      "leaf",
+      "bark",
+      "cloth",
+      "liquid"
+    ]
+  },
+  "reason": "no objectness source available yet — confirmation DEFERRED to Phase 3 (OSIM). Proceeding on exposed assumptions; they remain falsifiable at Divine-Eye review."
+}

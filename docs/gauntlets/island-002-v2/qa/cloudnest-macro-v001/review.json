@@ -1,0 +1,111 @@
+{
+  "reviewer": "island002_review",
+  "action": "approve-macro-freeze-shape",
+  "scope": "Cloudnest initial family review",
+  "worst": 0.85,
+  "categories": [
+    "silhouette",
+    "identity",
+    "attachment",
+    "structure",
+    "phone"
+  ],
+  "scores": {
+    "overview": [
+      0.88,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "hatchery": [
+      0.88,
+      0.86,
+      0.89,
+      0.88,
+      0.87
+    ],
+    "left": [
+      0.87,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "right": [
+      0.87,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ],
+    "orbit000": [
+      0.89,
+      0.87,
+      0.89,
+      0.88,
+      0.88
+    ],
+    "orbit045": [
+      0.89,
+      0.87,
+      0.89,
+      0.88,
+      0.88
+    ],
+    "orbit090": [
+      0.88,
+      0.86,
+      0.88,
+      0.88,
+      0.87
+    ],
+    "orbit135": [
+      0.88,
+      0.85,
+      0.88,
+      0.87,
+      0.86
+    ],
+    "orbit180": [
+      0.88,
+      0.85,
+      0.89,
+      0.88,
+      0.86
+    ],
+    "orbit225": [
+      0.88,
+      0.85,
+      0.89,
+      0.88,
+      0.86
+    ],
+    "orbit270": [
+      0.88,
+      0.86,
+      0.89,
+      0.88,
+      0.87
+    ],
+    "orbit315": [
+      0.88,
+      0.86,
+      0.88,
+      0.87,
+      0.87
+    ],
+    "survey": [
+      0.88,
+      0.85,
+      0.88,
+      0.87,
+      0.85
+    ]
+  },
+  "evidence": [
+    "qa/cloudnest-macro-v001",
+    "qa/cloudnest-macro-orbit-v001"
+  ],
+  "note": "Finish pending; an owl partly obscures focus, with orbit000/045 supplying the missing inspection."
+}
