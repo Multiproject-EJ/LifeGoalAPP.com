@@ -17,6 +17,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   devAdminGrantDice: 'dev_admin_grant_dice',
   tokenHopDice: 'token_hop_dice',
   eggRewardDice: 'egg_reward_dice',
+  bossTrialDice: 'boss_trial_dice',
   creatureFormUpgradeDice: 'creature_form_upgrade_dice',
   signatureTreasureDice: 'signature_treasure_dice',
   signatureMissionFinaleDice: 'signature_mission_finale_dice',

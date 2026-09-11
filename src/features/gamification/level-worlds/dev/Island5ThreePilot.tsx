@@ -255,6 +255,49 @@ import {
   ISLAND_19_HYBRID_WORLD_NAME,
   type Island19HybridOverlayRuntime,
 } from './Island19CoasterCarnivalHybridOverlay';
+import {
+  buildIsland15CrystalGlacierLandmark,
+  collectIsland15RuntimePartManifest,
+  createIsland15CrystalGlacierBackdrop,
+  createIsland15CrystalGlacierLivingAmbience,
+  createIsland15CrystalGlacierMaterials,
+  createIsland15UnifiedCrystalPalaceAsset,
+  registerIsland15RuntimePart,
+  ISLAND_15_CRYSTAL_GLACIER_LANDMARK_LABELS,
+  ISLAND_15_CRYSTAL_GLACIER_WORLD_NAME,
+} from './Island15CrystalGlacierThreeWorld';
+import {
+  bindIsland15CrystalPalaceRuntime,
+  ISLAND_15_CRYSTAL_PALACE_NODE_NAMES,
+  ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS,
+  resolveIsland15CrystalPalaceRoom,
+  type Island15CrystalPalaceBuildLevels,
+  type Island15CrystalPalaceFocusMode,
+  type Island15CrystalPalaceRuntime,
+} from './island15/Island15CrystalPalaceRuntime';
+import {
+  ISLAND_15_CAMERA_PRESET_IDS,
+  ISLAND_15_CAMERA_TOUR_STEPS,
+  ISLAND_15_PALACE_ROOM_ORDER,
+  ISLAND_15_R17_CAMERA_AUTHORITY,
+  fitIsland15ExteriorCameraPose,
+  hashIsland15CameraPose,
+  isIsland15ExteriorCameraPreset,
+  isIsland15PalaceRoomPreset,
+  resolveIsland15CameraPose,
+  resolveIsland15CameraPoseSafety,
+  resolveIsland15OrbitControlLimits,
+  resolveIsland15PortalEntrySequence,
+  resolveIsland15PortalExitSequence,
+  resolveIsland15QuietDriftPose,
+  resolveIsland15RoomNavigationHallPose,
+  type Island15CameraEnvelope,
+  type Island15CameraOrbitMode,
+  type Island15CameraPose,
+  type Island15CameraPoint,
+  type Island15PalaceFramingBounds,
+  type Island15PalaceRoomPreset,
+} from './island15/Island15CameraDirector';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -263,6 +306,34 @@ import {
 
 export type BuildLevel = 0 | 1 | 2 | 3;
 export type Island5LandmarkBuildLevels = Partial<Record<Island5LandmarkDefinition['id'], BuildLevel>>;
+
+type Island15PalaceEntryPhase =
+  | 'idle'
+  | 'approach'
+  | 'stair-crest'
+  | 'threshold'
+  | 'crossing'
+  | 'boss-wonder'
+  | 'boss-settle'
+  | 'boss-exit-align'
+  | 'narthex-return'
+  | 'threshold-return'
+  | 'exterior-settle'
+  | 'navigating'
+  | 'reveal';
+
+export function resolveIsland15CrystalPalaceBuildLevels(
+  fallbackLevel: BuildLevel,
+  landmarkLevels?: Island5LandmarkBuildLevels,
+): Island15CrystalPalaceBuildLevels {
+  return {
+    hatchery: landmarkLevels?.hatchery ?? fallbackLevel,
+    habit: landmarkLevels?.habit ?? fallbackLevel,
+    event: landmarkLevels?.event ?? fallbackLevel,
+    wisdom: landmarkLevels?.wisdom ?? fallbackLevel,
+    boss: landmarkLevels?.boss ?? fallbackLevel,
+  };
+}
 
 export type IslandRunArenaBattleVisualCue =
   | 'idle'
@@ -345,6 +416,7 @@ interface ControlledCameraFocusRequest {
 interface CameraPoseSnapshot {
   position: readonly [number, number, number];
   target: readonly [number, number, number];
+  fov?: number;
 }
 
 interface CameraAuthoringPose extends CameraPoseSnapshot {
@@ -2357,7 +2429,7 @@ interface Island5AmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number, reducedMotion?: boolean) => void;
   dispose?: () => void;
-  updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
+  updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3, reducedMotion?: boolean) => void;
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
   registerRedockingLandmark?: (landmarkId: Island5LandmarkDefinition['id'], root: THREE.Object3D) => void;
   updateRedocking?: (presentation: Island2CelestialRedockingPresentation, immediate?: boolean) => void;
@@ -3493,6 +3565,7 @@ export default function Island5ThreePilot({
   const isIsland19BoardFocusEvidenceEnabled = isCoasterCarnival
     && typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('island19BoardFocus') === '1';
+  const isCrystalGlacier = resolvedWorldSourceNumber === 15;
   const worldName = isAssemblyCraterFirstLight
     ? ISLAND_1_ASSEMBLY_CRATER_NAME
     : isFirstLightKingdom
@@ -3519,6 +3592,8 @@ export default function Island5ThreePilot({
                         ? ISLAND_13_CACTUS_CANYON_WORLD_NAME
                       : isHoneycombKingdom
                         ? ISLAND_14_HONEYCOMB_WORLD_NAME
+                        : isCrystalGlacier
+                          ? ISLAND_15_CRYSTAL_GLACIER_WORLD_NAME
                       : isJungleExpedition
                         ? ISLAND_18_JUNGLE_EXPEDITION_WORLD_NAME
                         : isLavaLabyrinth
@@ -3533,6 +3608,10 @@ export default function Island5ThreePilot({
                           ? ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME
               : 'Crown of Tides';
   const isEmbedded = presentation === 'embedded';
+  const isIsland15ProductAcceptanceCapture = isCrystalGlacier
+    && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('island15ProductAcceptance') === '1';
+  const useIsland15ProductPresentation = isEmbedded || isIsland15ProductAcceptanceCapture;
   const [isEvidenceCapture, setIsEvidenceCapture] = useState(() => (
     typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('island3dEvidence') === '1'
@@ -3556,6 +3635,7 @@ export default function Island5ThreePilot({
       ? 'survey'
       : 'overview'
   ));
+  const [island15PalaceEntryPhase, setIsland15PalaceEntryPhase] = useState<Island15PalaceEntryPhase>('idle');
   const [isCameraAuthoring, setIsCameraAuthoring] = useState(() => (
     typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('cameraAuthoring') === '1'
@@ -3586,12 +3666,16 @@ export default function Island5ThreePilot({
   const wonderRideMiddleButtonRef = useRef<HTMLButtonElement>(null);
   const wonderRideExitButtonRef = useRef<HTMLButtonElement>(null);
   const previousWonderRidePhaseRef = useRef<Island19WonderRidePhase>('idle');
+  const buildLevelRef = useRef(buildLevel);
+  buildLevelRef.current = buildLevel;
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
   landmarkBuildLevelsRef.current = landmarkBuildLevels;
+  const island15CrystalPalaceRuntimeRef = useRef<Island15CrystalPalaceRuntime | null>(null);
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
   const applyEvidenceOrbitRef = useRef<(degrees: number) => void>(() => undefined);
+  const exitIsland15PalaceRef = useRef<() => void>(() => undefined);
   const previousCameraFocusPresetRef = useRef<Island5CameraPresetId | null>(null);
   const previousCameraFocusTransitionRef = useRef<'standard' | 'quick'>('standard');
   const previousCameraOverviewRequestVersionRef = useRef(cameraOverviewRequestVersion);
@@ -3701,6 +3785,19 @@ export default function Island5ThreePilot({
       .join('|'),
     [buildLevel, landmarkBuildLevels],
   );
+  // Island 015 build levels mutate semantic GLB groups through the binder.
+  // Other worlds still rebuild their authored procedural geometry as before.
+  const sceneBuildLevelDependency = isCrystalGlacier ? 0 : buildLevel;
+  const sceneLandmarkBuildLevelsDependency = isCrystalGlacier
+    ? 'island-015-runtime-levels'
+    : landmarkBuildLevelsKey;
+
+  useEffect(() => {
+    if (!isCrystalGlacier) return;
+    island15CrystalPalaceRuntimeRef.current?.setBuildLevels(
+      resolveIsland15CrystalPalaceBuildLevels(buildLevel, landmarkBuildLevels),
+    );
+  }, [buildLevel, isCrystalGlacier, landmarkBuildLevels, landmarkBuildLevelsKey]);
 
   useEffect(() => {
     onLandmarkClickRef.current = onLandmarkClick;
@@ -3804,7 +3901,10 @@ export default function Island5ThreePilot({
       landingImpact: resolveIsland3DLandingImpact(landingTileType),
     });
   }, [islandNumber, landingTileType, movementSpeedFactor, pendingHopSequence]);
-  const isReducedMotion = deviceSignals.prefersReducedMotion === true;
+  const isReducedMotion = deviceSignals.prefersReducedMotion === true || (
+    new URLSearchParams(window.location.search).get('island3dEvidence') === '1'
+    && new URLSearchParams(window.location.search).get('reduced') === '1'
+  );
 
   const shareProfileReport = async () => {
     if (!profileReport) return;
@@ -3904,6 +4004,8 @@ export default function Island5ThreePilot({
                         ? 0xd98a58
                         : isHoneycombKingdom
                         ? 0x148ac8
+                        : isCrystalGlacier
+                          ? 0x10253a
                       : isJungleExpedition
                         ? 0x1397bd
                         : isLavaLabyrinth
@@ -3933,6 +4035,8 @@ export default function Island5ThreePilot({
                         ? 0xc98258
                       : isHoneycombKingdom
                         ? 0x83d4ee
+                        : isCrystalGlacier
+                          ? 0x9eb8c5
                       : isJungleExpedition
                         ? 0x8edbd3
                         : isLavaLabyrinth
@@ -3962,6 +4066,8 @@ export default function Island5ThreePilot({
                         ? 0.0065
                       : isHoneycombKingdom
                         ? 0.0034
+                        : isCrystalGlacier
+                          ? 0.0028
                       : isJungleExpedition
                         ? 0.0042
                         : isLavaLabyrinth
@@ -3978,6 +4084,8 @@ export default function Island5ThreePilot({
       scene.background = createIsland13CactusCanyonBackdrop();
     } else if (isHoneycombKingdom) {
       scene.background = createIsland14HoneycombBackdrop();
+    } else if (isCrystalGlacier) {
+      scene.background = createIsland15CrystalGlacierBackdrop();
     } else if (isMoonveilNexus) {
       const moonveilSky = new THREE.TextureLoader().load('/assets/islands/island-006/background/moonveil-nebula-sky-portrait-v2.webp');
       moonveilSky.colorSpace = THREE.SRGBColorSpace;
@@ -4108,6 +4216,13 @@ export default function Island5ThreePilot({
       position: [0.4, 12.8, 20.8] as const,
       target: [0, 0.35, 0] as const,
     };
+    const crystalGlacierInitialOverview = resolveIsland15CameraPose('overview', {
+      portrait: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75,
+    }) ?? {
+      position: [0, 20.5, 32] as const,
+      target: [0, 1.15, 0] as const,
+      fov: 47,
+    };
     const restoredCameraPose = cameraPoseSnapshotRef.current;
     const initialOverviewPosition = isFirstLightKingdom
       ? firstLightInitialOverview.position
@@ -4119,6 +4234,8 @@ export default function Island5ThreePilot({
             ? fishermansVillageInitialOverview.position
             : isHoneycombKingdom
               ? honeycombInitialOverview.position
+          : isCrystalGlacier
+            ? crystalGlacierInitialOverview.position
             : isJungleExpedition
               ? jungleExpeditionInitialOverview.position
             : isLavaLabyrinth
@@ -4138,6 +4255,8 @@ export default function Island5ThreePilot({
             ? fishermansVillageInitialOverview.target
             : isHoneycombKingdom
               ? honeycombInitialOverview.target
+          : isCrystalGlacier
+            ? crystalGlacierInitialOverview.target
             : isJungleExpedition
               ? jungleExpeditionInitialOverview.target
             : isLavaLabyrinth
@@ -4147,6 +4266,14 @@ export default function Island5ThreePilot({
                   ? circuitGBoardInitialOverview.target
                   : coasterCarnivalInitialOverview.target
         : overview.target;
+    if (isCrystalGlacier && !restoredCameraPose) {
+      camera.fov = crystalGlacierInitialOverview.fov ?? camera.fov;
+      camera.updateProjectionMatrix();
+    }
+    if (restoredCameraPose && Number.isFinite(restoredCameraPose.fov)) {
+      camera.fov = Number(restoredCameraPose.fov);
+      camera.updateProjectionMatrix();
+    }
     camera.position.set(...(restoredCameraPose?.position ?? initialOverviewPosition));
     camera.lookAt(...(restoredCameraPose?.target ?? initialOverviewTarget));
     if (!restoredCameraPose && !isIsland19BoardFocusEvidenceEnabled) setActivePreset('overview');
@@ -4179,6 +4306,8 @@ export default function Island5ThreePilot({
                           ? 0.94
                         : isHoneycombKingdom
                           ? 0.98
+                        : isCrystalGlacier
+                          ? 0.96
                         : isJungleExpedition
                           ? 1.03
                         : isLavaLabyrinth
@@ -4217,6 +4346,35 @@ export default function Island5ThreePilot({
     controls.maxPolarAngle = THREE.MathUtils.degToRad(69);
     controls.enableRotate = true;
     controls.enableZoom = true;
+    let island15OrbitMode: Island15CameraOrbitMode = 'exterior';
+    let island15FittedExteriorDistance = 0;
+    const applyIsland15OrbitControlMode = (
+      mode: Island15CameraOrbitMode,
+      syncCamera = false,
+    ) => {
+      island15OrbitMode = mode;
+      const limits = resolveIsland15OrbitControlLimits(mode);
+      controls.minDistance = limits.minDistance;
+      controls.maxDistance = isCrystalGlacier && mode === 'exterior'
+        ? Math.max(limits.maxDistance, island15FittedExteriorDistance * 1.3)
+        : limits.maxDistance;
+      controls.minPolarAngle = limits.minPolarAngle;
+      controls.maxPolarAngle = limits.maxPolarAngle;
+      if (isCrystalGlacier) {
+        canvas.dataset.island15OrbitControlMode = mode;
+        canvas.dataset.island15OrbitControlLimits = JSON.stringify({
+          minDistance: Number(limits.minDistance.toFixed(3)),
+          maxDistance: Number(controls.maxDistance.toFixed(3)),
+          minPolarAngleDegrees: Number(THREE.MathUtils.radToDeg(limits.minPolarAngle).toFixed(1)),
+          maxPolarAngleDegrees: Number(THREE.MathUtils.radToDeg(limits.maxPolarAngle).toFixed(1)),
+        });
+      }
+      if (syncCamera) {
+        camera.lookAt(controls.target);
+        controls.update();
+      }
+    };
+    if (isCrystalGlacier) applyIsland15OrbitControlMode('exterior');
     controls.rotateSpeed = 0.56;
     controls.zoomSpeed = 0.78;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
@@ -4332,6 +4490,8 @@ export default function Island5ThreePilot({
                           ? 0x173b26
                         : isLavaLabyrinth
                           ? 0x0c1016
+                          : isCrystalGlacier
+                            ? 0x33434f
               : 0x28566a;
     const hemisphereIntensity = isArchiveNeutralLookdev
       ? 1.18
@@ -4371,6 +4531,8 @@ export default function Island5ThreePilot({
                           ? 1.58
                         : isLavaLabyrinth
                           ? 1.15
+                          : isCrystalGlacier
+                            ? 1.22
               : 2.25;
     const hemisphere = new THREE.HemisphereLight(
       isArchiveNeutralLookdev
@@ -4381,7 +4543,7 @@ export default function Island5ThreePilot({
             ? 0xd9eaff
             : isArchiveBacklightLookdev
               ? 0x7d9bc2
-          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : isJungleExpedition ? 0xdaf6d8 : isLavaLabyrinth ? 0xc5d2e4 : 0xeefcff,
+          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : isJungleExpedition ? 0xdaf6d8 : isLavaLabyrinth ? 0xc5d2e4 : isCrystalGlacier ? 0xdceaf0 : 0xeefcff,
       hemisphereGroundColor,
       hemisphereIntensity,
     );
@@ -4426,6 +4588,8 @@ export default function Island5ThreePilot({
                           ? 3.75
                         : isLavaLabyrinth
                           ? 2.45
+                          : isCrystalGlacier
+                            ? 3.05
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
       isArchiveNeutralLookdev
@@ -4436,7 +4600,7 @@ export default function Island5ThreePilot({
             ? 0xe8f2ff
             : isArchiveBacklightLookdev
               ? 0x83c7ff
-          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isJungleExpedition ? 0xffdda6 : isLavaLabyrinth ? 0xffd9c2 : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
+          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isJungleExpedition ? 0xffdda6 : isLavaLabyrinth ? 0xffd9c2 : isCrystalGlacier ? 0xf5fbff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     if (isJungleExpedition) sunlight.name = 'ISLAND_18_PRIMARY_SUN_LIGHT';
@@ -4517,6 +4681,16 @@ export default function Island5ThreePilot({
       coolRim.name = 'ISLAND_20_OBSIDIAN_SEPARATION_RIM_LIGHT';
       coolRim.position.set(10, 7, 12);
       scene.add(forgeKey, underglow, lavaSeaBounce, coolRim);
+    }
+    if (isCrystalGlacier) {
+      const glacierBounce = new THREE.DirectionalLight(0x9acfdc, 0.34);
+      glacierBounce.name = 'ISLAND_15_GLACIER_BOUNCE_LIGHT';
+      glacierBounce.position.set(9, 6, 11);
+      scene.add(glacierBounce);
+      const hearthBounce = new THREE.PointLight(0xffb177, 0.34, 9, 2);
+      hearthBounce.name = 'ISLAND_15_CASTLE_HEARTH_BOUNCE_LIGHT';
+      hearthBounce.position.set(0, 2.2, 1.4);
+      scene.add(hearthBounce);
     }
     const rootheartDaySky = new THREE.Color(0xffedc2);
     const rootheartEveningSky = new THREE.Color(0x52647a);
@@ -4745,6 +4919,7 @@ export default function Island5ThreePilot({
       Object.assign(canvas.dataset, island19HybridOverlay.dataset);
       canvas.dataset.island19HybridWorldTrainView = 'geometry-proof-only';
     }
+    const island15CrystalGlacierMaterials = isCrystalGlacier ? createIsland15CrystalGlacierMaterials() : null;
     const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom || isEverblossomKingdom || isSunkenSands;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
@@ -4797,7 +4972,7 @@ export default function Island5ThreePilot({
 
     // Island 007 owns a dedicated seabed/root system. Do not construct and then
     // hide the generic coastal plates, bridges and lagoon underneath it.
-    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth) {
+    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier) {
       const firstLightMainDepth = 3.4;
       const island = isAssemblyCraterFirstLight && island1Materials
         ? createIsland1AssemblyCraterTerrain(qualityProfile.id, {
@@ -4884,7 +5059,7 @@ export default function Island5ThreePilot({
             : isRootheartCanopyCity && island10RootheartMaterials
               ? createIsland10RootheartLivingAmbience(scene, qualityProfile, island10RootheartMaterials, water)
             : isSunkenSands && island12SunkenSandsMaterials
-              ? createIsland12SunkenSandsLivingAmbience(scene, qualityProfile, island12SunkenSandsMaterials, water, buildLevel)
+              ? createIsland12SunkenSandsLivingAmbience(scene, qualityProfile, island12SunkenSandsMaterials, water, buildLevelRef.current)
             : isCactusCanyon && island13CactusCanyonMaterials
               ? createIsland13CactusCanyonLivingAmbience(scene, qualityProfile, island13CactusCanyonMaterials)
             : isFishermansVillage && island22FishermansVillageMaterials
@@ -4895,6 +5070,8 @@ export default function Island5ThreePilot({
               ? createIsland18JungleExpeditionLivingAmbience(scene, qualityProfile, island18JungleExpeditionMaterials)
             : isLavaLabyrinth && island20LavaLabyrinthMaterials
               ? createIsland20LavaLabyrinthLivingAmbience(scene, qualityProfile, island20LavaLabyrinthMaterials, buildLevel)
+            : isCrystalGlacier && island15CrystalGlacierMaterials
+              ? createIsland15CrystalGlacierLivingAmbience(scene, qualityProfile, island15CrystalGlacierMaterials, water)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
     const jungleInspectionOccluders = isJungleExpedition
       ? [
@@ -4935,6 +5112,16 @@ export default function Island5ThreePilot({
     if (isCactusCanyon) {
       livingAmbience.updateSpiralRail?.(cactusCanyonSpiralPresentationRef.current);
     }
+    const island15PalaceAttachmentRoot = new THREE.Group();
+    island15PalaceAttachmentRoot.name = 'ISLAND_15_CRYSTAL_PALACE_ATTACHMENT_ROOT';
+    if (isCrystalGlacier) livingAmbience.root.add(island15PalaceAttachmentRoot);
+    let island15PalaceRuntime: Island15CrystalPalaceRuntime | null = null;
+    let island15PalaceFramingBounds: Island15PalaceFramingBounds | null = null;
+    const island15PalaceFramingPoints: Island15CameraPoint[] = [];
+    let island15LastExteriorPose: Island15CameraPose | null = null;
+    let island15CameraEnvelope: Island15CameraEnvelope = {
+      ...ISLAND_15_R17_CAMERA_AUTHORITY.envelope,
+    };
     if (isHoneycombKingdom) {
       livingAmbience.setGreatHoneyfallStage?.(greatHoneyfallPresentationRef.current.activatedReservoirs, false);
     }
@@ -5630,6 +5817,8 @@ export default function Island5ThreePilot({
                     island20LavaLabyrinthMaterials,
                     { constructionPreview },
                   )
+              : isCrystalGlacier && island15CrystalGlacierMaterials
+                ? buildIsland15CrystalGlacierLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island15CrystalGlacierMaterials)
               : buildLandmark(
                   landmark,
                   resolvedBuildLevel,
@@ -5642,16 +5831,19 @@ export default function Island5ThreePilot({
 
     const clickableLandmarks: THREE.Object3D[] = [];
     const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
+    const island15FallbackRoot = new THREE.Group();
+    island15FallbackRoot.name = 'ISLAND_15_CRYSTAL_PALACE_V4_LOADING_FALLBACK';
+    if (isCrystalGlacier) scene.add(island15FallbackRoot);
     for (const landmark of ISLAND_5_LANDMARKS) {
-      const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
+      const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevelRef.current;
       const landmarkRoot = buildAuthoredLandmark(landmark, resolvedBuildLevel);
-      if (landmark.id === 'boss') makeLandmarkMaterialsIndependent(landmarkRoot);
+      if (landmark.id === 'boss' && !isCrystalGlacier) makeLandmarkMaterialsIndependent(landmarkRoot);
       // The representative Island 019 gate intentionally shows only the
       // approved p08/p09/p10/p24 geometry. Generic Crown-of-Tides landmarks
       // would contaminate its source-fidelity review and are replaced family
       // by family after the railway/castle macro slice is accepted.
       if (isCoasterCarnival) landmarkRoot.visible = false;
-      scene.add(landmarkRoot);
+      (isCrystalGlacier ? island15FallbackRoot : scene).add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
       landmarkRootsById.set(landmark.id, landmarkRoot);
       if (isCelestialSkyKingdom && landmark.id !== 'boss') {
@@ -5662,7 +5854,7 @@ export default function Island5ThreePilot({
         hitTarget.position.x = landmarkRoot.position.x;
         hitTarget.position.z = landmarkRoot.position.z;
       }
-      scene.add(hitTarget);
+      (isCrystalGlacier ? island15FallbackRoot : scene).add(hitTarget);
       clickableLandmarks.push(hitTarget);
     }
     // The live construction crew shares this renderer and reads the real
@@ -5833,7 +6025,7 @@ export default function Island5ThreePilot({
     const constructionPreviewBounds = new THREE.Box3();
     const constructionPreviewSize = new THREE.Vector3();
     const constructionPreviewCenter = new THREE.Vector3();
-    let constructionPreviewRoot: THREE.Group | null = null;
+    let constructionPreviewRoot: THREE.Object3D | null = null;
     let constructionPreviewKey = '';
     let constructionLevelDelta: IslandConstructionLevelDelta | null = null;
     let constructionSourceRoot: THREE.Object3D | null = null;
@@ -5841,8 +6033,8 @@ export default function Island5ThreePilot({
     let previousConstructionPhase: IslandRunConstructionPresentation['phase'] | null = null;
     const disposeDetachedConstructionRoot = (root: THREE.Object3D) => {
       root.traverse((entry) => {
-        if (!(entry instanceof THREE.Mesh)) return;
-        entry.geometry.dispose();
+        if (!(entry instanceof THREE.Mesh || entry instanceof THREE.Line || entry instanceof THREE.Points || entry instanceof THREE.Sprite)) return;
+        if (!(entry instanceof THREE.Sprite)) entry.geometry.dispose();
         const entryMaterials = Array.isArray(entry.material) ? entry.material : [entry.material];
         entryMaterials.forEach((material) => material.dispose());
       });
@@ -5867,9 +6059,13 @@ export default function Island5ThreePilot({
       }
       const stage = new THREE.Group();
       stage.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_TO_L${targetLevel}_DELTA_STAGE`;
-      const current = buildAuthoredLandmark(definition, currentLevel, 'current');
+      const current = island15PalaceRuntime
+        ? island15PalaceRuntime.cloneRoomAtLevel(landmarkId, currentLevel)
+        : buildAuthoredLandmark(definition, currentLevel, 'current');
       current.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED_LEVEL`;
-      const target = buildAuthoredLandmark(definition, targetLevel, 'target');
+      const target = island15PalaceRuntime
+        ? island15PalaceRuntime.cloneRoomAtLevel(landmarkId, targetLevel)
+        : buildAuthoredLandmark(definition, targetLevel, 'target');
       target.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${targetLevel}_ADDITIVE_TARGET`;
       [current, target].forEach((root) => {
         root.position.set(0, 0, 0);
@@ -5878,14 +6074,19 @@ export default function Island5ThreePilot({
         stage.add(root);
       });
       stage.updateWorldMatrix(true, true);
-      constructionPreviewBounds.setFromObject(target);
+      constructionPreviewBounds.makeEmpty();
+      target.traverseVisible((entry) => {
+        if (entry instanceof THREE.Mesh || entry instanceof THREE.Line || entry instanceof THREE.Points || entry instanceof THREE.Sprite) {
+          constructionPreviewBounds.expandByObject(entry, true);
+        }
+      });
       constructionPreviewBounds.getSize(constructionPreviewSize);
       constructionLevelDelta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
-      if ((isFirstLightKingdom || isJungleExpedition) && currentLevel > 0) {
+      if ((isFirstLightKingdom || isJungleExpedition) && currentLevel > 0 && current instanceof THREE.Group) {
         const worldPrefix = isJungleExpedition ? 'ISLAND18' : 'ISLAND1';
         compactStaticGeometry(current, `${worldPrefix}_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED`);
       }
-      makeLandmarkMaterialsIndependent(current);
+      if (!island15PalaceRuntime) makeLandmarkMaterialsIndependent(current);
       constructionPreviewRoot = stage;
       constructionStageBuilding.add(stage);
       canvas.dataset.constructionCrewBuilding = `${landmarkId}:L${currentLevel}->L${targetLevel}:additive-delta`;
@@ -6311,8 +6512,53 @@ export default function Island5ThreePilot({
       canvas.dataset.island20RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
       canvas.dataset.island20ScenePerformanceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
     }
-    const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevel;
-    const crownDrifter = !isRootheartCanopyCity && !isLavaLabyrinth && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
+    let refreshIsland15RuntimeDatasets = () => undefined;
+    if (isCrystalGlacier) {
+      const landmarkNetwork = new THREE.Object3D();
+      landmarkNetwork.name = 'ISLAND_15_LANDMARK_NETWORK_RUNTIME_PROXY';
+      landmarkNetwork.visible = false;
+      const routeIntegration = new THREE.Object3D();
+      routeIntegration.name = 'ISLAND_15_ROUTE_INTEGRATION_RUNTIME_PROXY';
+      routeIntegration.visible = false;
+      landmarkNetwork.userData.sculptRuntime = {
+        parts: [registerIsland15RuntimePart('landmark-network', landmarkNetwork, 'landmark-network')],
+        sockets: Object.fromEntries(ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS.map((rendererId) => {
+          const room = resolveIsland15CrystalPalaceRoom(rendererId);
+          return [rendererId, ISLAND_15_CRYSTAL_PALACE_NODE_NAMES.rooms[room].root];
+        })),
+        colliders: [{ id: 'island-015-landmark-network', type: 'compound', isTrigger: true }],
+        destructionGroups: [{ id: 'castle-room-network', breakable: false, partIds: ISLAND_5_LANDMARKS.map((landmark) => landmark.id) }],
+      };
+      routeIntegration.userData.sculptRuntime = {
+        parts: [registerIsland15RuntimePart('route-integration', routeIntegration, 'canonical-board-route')],
+        colliders: [{ id: 'island-015-board-route', type: 'compound-ring', isTrigger: true }],
+      };
+      scene.add(landmarkNetwork, routeIntegration);
+      canvas.dataset.island15PalaceAssetUrl = 'procedural://island-015/unified-crystal-palace-v16';
+      canvas.dataset.island15PalaceLoadStatus = 'loading';
+      canvas.dataset.island15PalaceFallback = 'visible';
+      canvas.dataset.island15CameraAuthority = ISLAND_15_R17_CAMERA_AUTHORITY.id;
+      canvas.dataset.island15CameraGeometryAcceptance = 'pending-r17-palace';
+      canvas.dataset.island15PerformanceBudget = JSON.stringify({ triangles: 110_000, drawCalls: 125 });
+      refreshIsland15RuntimeDatasets = () => {
+        const partManifest = collectIsland15RuntimePartManifest([
+          livingAmbience.root,
+          landmarkNetwork,
+          routeIntegration,
+          ...landmarkRootsById.values(),
+          ...instancedTileMeshes,
+        ]);
+        canvas.dataset.island15RuntimePartManifest = JSON.stringify(partManifest);
+        canvas.dataset.island15RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
+        canvas.dataset.island15ScenePerformanceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
+        canvas.dataset.island15PalaceSemanticRoomCount = String(
+          island15PalaceRuntime ? ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS.length : 0,
+        );
+      };
+      refreshIsland15RuntimeDatasets();
+    }
+    const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevelRef.current;
+    const crownDrifter = !isRootheartCanopyCity && !isLavaLabyrinth && !isCrystalGlacier && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
       ? createCrownDrifterModel({ lod: 'board', quality: qualityProfile.id })
       : null;
     const crownDrifterPresentationRoot = crownDrifter ? new THREE.Group() : null;
@@ -6325,7 +6571,7 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
@@ -6356,6 +6602,8 @@ export default function Island5ThreePilot({
                 ? 0x53e68f
               : isLavaLabyrinth
                 ? 0xff7a2f
+              : isCrystalGlacier
+                ? 0xa7f5ff
               : 0xffdb8c;
     const routeGlowEmissive = isFirstLightKingdom
       ? 0x247bb2
@@ -6385,6 +6633,8 @@ export default function Island5ThreePilot({
                 ? 0x087d53
               : isLavaLabyrinth
                 ? 0xa51f05
+              : isCrystalGlacier
+                ? 0x167ca8
               : 0xa96f18;
     const routeGlow = new THREE.Mesh(
       new THREE.TorusGeometry(3.4, 0.055, 8, 96),
@@ -6400,7 +6650,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival)
+    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier)
       && isMapStrippedEvidenceEnabled;
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -6451,7 +6701,7 @@ export default function Island5ThreePilot({
 
     const timer = new THREE.Timer();
     timer.connect(document);
-    const bossRootForOcclusion = landmarkRootsById.get('boss');
+    const bossRootForOcclusion = isCrystalGlacier ? undefined : landmarkRootsById.get('boss');
     const bossOcclusionBounds = bossRootForOcclusion
       ? new THREE.Box3().setFromObject(bossRootForOcclusion)
       : null;
@@ -6471,6 +6721,10 @@ export default function Island5ThreePilot({
       controlPosition: THREE.Vector3;
       toPosition: THREE.Vector3;
       toTarget: THREE.Vector3;
+      fromFov?: number;
+      toFov?: number;
+      island15Intent?: Island15CameraPose['intent'];
+      onComplete?: () => void;
     } | null = null;
     let frameCount = 0;
     let metricStartedAt = performance.now();
@@ -6554,6 +6808,10 @@ export default function Island5ThreePilot({
     let lastCameraAuthoringPublishAt = 0;
     let lastCameraAuthoringPayload = '';
     let isBossOcclusionFadeApplied = false;
+    let island15PalaceEntryActive = false;
+    let island15PalaceExitActive = false;
+    let requestIsland15PalaceEntry: () => void = () => undefined;
+    let requestIsland15PalaceExit: () => void = () => undefined;
     const activeTileImpacts = new Map<number, ActiveTileImpact>();
     let activeTokenSettle: ActiveTokenSettle | null = null;
 
@@ -6608,6 +6866,24 @@ export default function Island5ThreePilot({
         landmarkRootsById.forEach((landmarkRoot, landmarkId) => {
           landmarkRoot.visible = !isLandmarkInspection || landmarkId === preset;
         });
+      }
+      if (isCrystalGlacier && island15PalaceRuntime) {
+        const focusMode: Island15CrystalPalaceFocusMode = preset === 'playable-overview'
+          ? 'boss'
+          : ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS.includes(
+          preset as (typeof ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS)[number],
+        )
+          ? preset as Island15CrystalPalaceFocusMode
+          : 'overview';
+        island15PalaceRuntime.setFocusMode(focusMode);
+        canvas.dataset.island15PalaceFocusMode = focusMode;
+        if (!island15PalaceEntryActive && !island15PalaceExitActive) {
+          const interiorRoom = isIsland15PalaceRoomPreset(preset) ? preset : null;
+          canvas.dataset.island15PalaceNavigationMode = interiorRoom ? 'inside' : 'outside';
+          canvas.dataset.island15PalaceCurrentRoom = interiorRoom ?? 'none';
+          canvas.dataset.island15PalaceEntryPhase = 'idle';
+          setIsland15PalaceEntryPhase('idle');
+        }
       }
     };
 
@@ -6674,7 +6950,116 @@ export default function Island5ThreePilot({
       }
     };
 
+    const startIsland15CameraPose = (
+      pose: Island15CameraPose,
+      options: {
+        durationScale?: number;
+        controlPosition?: THREE.Vector3;
+        instant?: boolean;
+        onComplete?: () => void;
+      } = {},
+    ) => {
+      if (pose.orbitMode === 'exterior' && island15PalaceFramingBounds) {
+        island15LastExteriorPose = pose;
+        pose = fitIsland15ExteriorCameraPose(
+          pose,
+          island15PalaceFramingBounds,
+          canvas.clientWidth / Math.max(1, canvas.clientHeight),
+          island15PalaceFramingPoints,
+        );
+        island15FittedExteriorDistance = Math.hypot(...pose.position.map((value, axis) => value - pose.target[axis]));
+        canvas.dataset.island15CameraFraming = 'mounted-palace-bounds';
+      } else {
+        island15LastExteriorPose = null;
+        canvas.dataset.island15CameraFraming = 'authored-room-socket';
+      }
+      const instant = Boolean(options.instant || isReducedMotion);
+      const safety = resolveIsland15CameraPoseSafety(pose);
+      applyIsland15OrbitControlMode(pose.orbitMode);
+      canvas.dataset.island15CameraShot = pose.id;
+      canvas.dataset.island15CameraIntent = pose.intent;
+      canvas.dataset.island15CameraPoseHash = hashIsland15CameraPose(pose);
+      canvas.dataset.island15CameraPose = JSON.stringify({
+        authority: ISLAND_15_R17_CAMERA_AUTHORITY.id,
+        id: pose.id,
+        intent: pose.intent,
+        orbitMode: pose.orbitMode,
+        position: pose.position.map((value) => Number(value.toFixed(3))),
+        target: pose.target.map((value) => Number(value.toFixed(3))),
+        fov: Number.isFinite(pose.fov) ? pose.fov : camera.fov,
+      });
+      canvas.dataset.island15CameraSafety = JSON.stringify({
+        ...safety,
+        targetDistance: Number(safety.targetDistance.toFixed(3)),
+        boundaryClearance: safety.boundaryClearance === null
+          ? null
+          : Number(safety.boundaryClearance.toFixed(3)),
+      });
+      if (instant) {
+        camera.position.set(...pose.position);
+        controls.target.set(...pose.target);
+        if (Number.isFinite(pose.fov)) {
+          camera.fov = pose.fov;
+          camera.updateProjectionMatrix();
+        }
+        camera.lookAt(controls.target);
+        // The Island 015 authored limit set is already active here, so this
+        // synchronizes OrbitControls' spherical cache without applying the
+        // generic 5.4-distance / 69-degree clamp to an interior endpoint.
+        controls.update();
+        transition = null;
+        options.onComplete?.();
+        return;
+      }
+      const fromPosition = camera.position.clone();
+      const toPosition = new THREE.Vector3(...pose.position);
+      const controlPosition = options.controlPosition
+        ?? fromPosition.clone().lerp(toPosition, 0.5);
+      if (!options.controlPosition) {
+        controlPosition.y += Math.min(5.5, Math.max(1.1, fromPosition.distanceTo(toPosition) * 0.1));
+      }
+      transition = {
+        startedAt: performance.now(),
+        durationMs: Math.max(220, pose.durationMs * (options.durationScale ?? 1)),
+        fromPosition,
+        fromTarget: controls.target.clone(),
+        controlPosition,
+        toPosition,
+        toTarget: new THREE.Vector3(...pose.target),
+        fromFov: Number.isFinite(pose.fov) ? camera.fov : undefined,
+        toFov: Number.isFinite(pose.fov) ? pose.fov : undefined,
+        island15Intent: pose.intent,
+        onComplete: options.onComplete,
+      };
+    };
+
     const applyPreset = (id: Island5CameraPresetId, durationScale = 1, instant = false) => {
+      if (
+        isCrystalGlacier
+        && id === 'boss'
+        && isIsland15ExteriorCameraPreset(activeInspectionPreset)
+        && !island15PalaceEntryActive
+        && !island15PalaceExitActive
+      ) {
+        requestIsland15PalaceEntry();
+        return;
+      }
+      if (
+        isCrystalGlacier
+        && id === 'overview'
+        && (isIsland15PalaceRoomPreset(activeInspectionPreset) || activeInspectionPreset === 'playable-overview')
+        && !island15PalaceEntryActive
+        && !island15PalaceExitActive
+      ) {
+        requestIsland15PalaceExit();
+        return;
+      }
+      if (island15PalaceEntryActive || island15PalaceExitActive) {
+        island15PalaceEntryActive = false;
+        island15PalaceExitActive = false;
+        controls.enabled = true;
+        setIsland15PalaceEntryPhase('idle');
+      }
       const basePreset = getIsland5CameraPreset(id);
       const firstLightFocusOverrides: Partial<Record<Island5CameraPresetId, {
         position: readonly [number, number, number];
@@ -6955,6 +7340,61 @@ export default function Island5ThreePilot({
       const lavaLabyrinthOverride = isLavaLabyrinth ? lavaLabyrinthFocusOverrides[id] : undefined;
       const authoredFocusOverride = assemblyCraterFocusOverride ?? fishermansVillageOverride ?? jungleExpeditionOverride ?? honeycombOverride ?? lavaLabyrinthOverride ?? cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
       let preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
+      if (isCrystalGlacier) {
+        const fromRoom = isIsland15PalaceRoomPreset(activeInspectionPreset)
+          ? activeInspectionPreset
+          : null;
+        const construction = constructionPresentationRef.current;
+        const pose = resolveIsland15CameraPose(id, {
+          portrait: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75,
+          envelope: island15CameraEnvelope,
+          intent: construction?.active && construction.phase === 'reveal'
+            ? 'build-reveal'
+            : construction?.active
+              ? 'build-work'
+              : 'inspect',
+        });
+        if (pose) {
+          const navigationStage = fromRoom && isIsland15PalaceRoomPreset(id)
+            ? resolveIsland15RoomNavigationHallPose(fromRoom, id)
+            : null;
+          if (navigationStage) {
+            setBoardActorsVisibleForPreset('boss');
+            setActivePreset(id);
+            setIsland15PalaceEntryPhase('navigating');
+            canvas.dataset.island15PalaceEntryPhase = 'navigating';
+            canvas.dataset.island15PalaceNavigationMode = 'navigating-via-boss-hall';
+            canvas.dataset.island15PalaceCurrentRoom = 'boss';
+            startIsland15CameraPose(navigationStage, {
+              durationScale,
+              instant,
+              controlPosition: new THREE.Vector3(...navigationStage.controlPosition),
+              onComplete: () => {
+                setBoardActorsVisibleForPreset(id);
+                setActivePreset(id);
+                startIsland15CameraPose(pose, {
+                  durationScale,
+                  instant,
+                  onComplete: () => {
+                    setIsland15PalaceEntryPhase('idle');
+                    canvas.dataset.island15PalaceEntryPhase = 'idle';
+                    canvas.dataset.island15PalaceNavigationMode = 'inside';
+                    canvas.dataset.island15PalaceCurrentRoom = id;
+                  },
+                });
+              },
+            });
+            return;
+          }
+          setBoardActorsVisibleForPreset(id);
+          setActivePreset(id);
+          startIsland15CameraPose(pose, {
+            durationScale,
+            instant,
+          });
+          return;
+        }
+      }
       if (isAssemblyCraterFirstLight && ['boss','hatchery','habit','wisdom','event'].includes(id)) {
         const target = new THREE.Vector3(...preset.target);
         const offset = new THREE.Vector3(...preset.position).sub(target);
@@ -6963,6 +7403,26 @@ export default function Island5ThreePilot({
         preset = { ...preset, position: target.add(offset).toArray() as [number,number,number] };
       }
       setBoardActorsVisibleForPreset(id);
+      if (
+        island15PalaceRuntime
+        && id !== 'boss'
+        && ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS.includes(
+          id as (typeof ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS)[number],
+        )
+      ) {
+        const authoredAnchor = island15PalaceRuntime.getHitAnchor(
+          id as (typeof ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS)[number],
+        );
+        authoredAnchor.updateWorldMatrix(true, false);
+        const authoredTarget = authoredAnchor.getWorldPosition(new THREE.Vector3());
+        const framingOffset = new THREE.Vector3(...preset.position)
+          .sub(new THREE.Vector3(...preset.target));
+        preset = {
+          ...preset,
+          position: authoredTarget.clone().add(framingOffset).toArray() as [number, number, number],
+          target: authoredTarget.toArray() as [number, number, number],
+        };
+      }
       setActivePreset(id);
       if (isReducedMotion || instant) {
         camera.position.set(...preset.position);
@@ -6988,6 +7448,21 @@ export default function Island5ThreePilot({
     };
     const applyAmbientCameraNudge = (context: 'board' | 'build-modal', now: number) => {
       if (isLavaLabyrinth) return;
+      if (isCrystalGlacier) {
+        const quietPose = resolveIsland15QuietDriftPose({
+          position: camera.position.toArray() as [number, number, number],
+          target: controls.target.toArray() as [number, number, number],
+          context,
+          step: ambientCameraStep,
+          orbitMode: island15OrbitMode,
+        });
+        startIsland15CameraPose(quietPose);
+        ambientCameraStep += 1;
+        ambientCameraEligibleAt = now + ISLAND_3D_AMBIENT_POV_INTERVAL_MS;
+        canvas.dataset.ambientCameraMode = `${context}-island15-quiet-drift`;
+        canvas.dataset.ambientCameraStep = String(ambientCameraStep);
+        return;
+      }
       const offset = camera.position.clone().sub(controls.target);
       const yawDirection = ambientCameraStep % 2 === 0 ? 1 : -1;
       const yaw = yawDirection * (context === 'build-modal' ? 0.105 : 0.145);
@@ -7072,6 +7547,257 @@ export default function Island5ThreePilot({
       controls.update();
       canvas.dataset.evidenceOrbitDegrees = String(degrees);
     };
+    if (isCrystalGlacier && island15CrystalGlacierMaterials) {
+      const palaceAsset = createIsland15UnifiedCrystalPalaceAsset(island15CrystalGlacierMaterials);
+      island15PalaceAttachmentRoot.add(palaceAsset);
+      const runtime = bindIsland15CrystalPalaceRuntime(palaceAsset);
+      island15PalaceRuntime = runtime;
+      island15CrystalPalaceRuntimeRef.current = runtime;
+      const palaceBounds = new THREE.Box3().setFromObject(runtime.root);
+      const palaceSize = palaceBounds.getSize(new THREE.Vector3());
+      island15PalaceFramingBounds = {
+        minimum: palaceBounds.min.toArray() as [number, number, number],
+        maximum: palaceBounds.max.toArray() as [number, number, number],
+      };
+      canvas.dataset.island15PalaceOccupiedBounds = JSON.stringify(island15PalaceFramingBounds);
+      // Capture the permanent exterior once, before presenting any funded room
+      // contents. Camera fitting uses real crown/stair vertices, not empty AABB
+      // corners above the lower wings. No per-frame geometry traversal is needed.
+      runtime.root.updateMatrixWorld(true);
+      const fitPoint = new THREE.Vector3();
+      const fitInstance = new THREE.Matrix4();
+      const fitWorld = new THREE.Matrix4();
+      runtime.root.traverseVisible((object) => {
+        if (!(object instanceof THREE.Mesh) || object.userData.island15CrystalPalaceHitProxy) return;
+        const position = object.geometry.getAttribute('position');
+        if (!position) return;
+        const instanceCount = object instanceof THREE.InstancedMesh ? object.count : 1;
+        for (let instance = 0; instance < instanceCount; instance += 1) {
+          fitWorld.copy(object.matrixWorld);
+          if (object instanceof THREE.InstancedMesh) {
+            object.getMatrixAt(instance, fitInstance);
+            fitWorld.multiply(fitInstance);
+          }
+          for (let vertex = 0; vertex < position.count; vertex += 1) {
+            fitPoint.fromBufferAttribute(position, vertex).applyMatrix4(fitWorld);
+            island15PalaceFramingPoints.push([fitPoint.x, fitPoint.y, fitPoint.z]);
+          }
+        }
+      });
+      canvas.dataset.island15PalaceFramingVertexCount = String(island15PalaceFramingPoints.length);
+      island15CameraEnvelope = {
+        palaceRadius: Math.max(
+          ISLAND_15_R17_CAMERA_AUTHORITY.envelope.palaceRadius,
+          Math.max(palaceSize.x, palaceSize.z) * 0.5,
+        ),
+        palaceHeight: Math.max(
+          ISLAND_15_R17_CAMERA_AUTHORITY.envelope.palaceHeight,
+          palaceSize.y,
+        ),
+      };
+      canvas.dataset.island15CameraEnvelope = JSON.stringify({
+        palaceRadius: Number(island15CameraEnvelope.palaceRadius.toFixed(3)),
+        palaceHeight: Number(island15CameraEnvelope.palaceHeight.toFixed(3)),
+      });
+      runtime.setBuildLevels(resolveIsland15CrystalPalaceBuildLevels(
+        buildLevelRef.current,
+        landmarkBuildLevelsRef.current,
+      ));
+      const focusMode: Island15CrystalPalaceFocusMode = ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS.includes(
+        activeInspectionPreset as (typeof ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS)[number],
+      )
+        ? activeInspectionPreset as Island15CrystalPalaceFocusMode
+        : 'overview';
+      runtime.setFocusMode(focusMode);
+
+      clickableLandmarks.length = 0;
+      ISLAND_15_CRYSTAL_PALACE_RENDERER_IDS.forEach((rendererId) => {
+        const room = resolveIsland15CrystalPalaceRoom(rendererId);
+        landmarkRootsById.set(rendererId, runtime.nodes.rooms[room].root);
+        const hitAnchor = runtime.getHitAnchor(rendererId);
+        setLandmarkId(hitAnchor, rendererId);
+        hitAnchor.userData.landmarkHitTarget = true;
+        clickableLandmarks.push(hitAnchor);
+      });
+      registerIsland15RuntimePart(
+        'production-crystal-palace',
+        runtime.root,
+        'island15/Island15UnifiedCrystalPalace',
+      );
+      island15FallbackRoot.visible = false;
+      canvas.dataset.island15PalaceLoadStatus = 'ready';
+      canvas.dataset.island15PalaceFallback = 'hidden';
+      canvas.dataset.island15PalaceFocusMode = focusMode;
+      canvas.dataset.island15PalaceNavigationMode = isIsland15PalaceRoomPreset(activeInspectionPreset)
+        ? 'inside'
+        : 'outside';
+      canvas.dataset.island15PalaceCurrentRoom = isIsland15PalaceRoomPreset(activeInspectionPreset)
+        ? activeInspectionPreset
+        : 'none';
+      canvas.dataset.island15PalaceEntryPhase = 'idle';
+      refreshIsland15RuntimeDatasets();
+      if (activeInspectionPreset === 'overview') applyPreset('overview', 1, true);
+    }
+
+    const beginIsland15PalaceEntry = () => {
+      if (
+        !isCrystalGlacier
+        || !island15PalaceRuntime
+        || island15PalaceEntryActive
+        || island15PalaceExitActive
+      ) return;
+      const stages = resolveIsland15PortalEntrySequence({
+        portrait: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75,
+        envelope: island15CameraEnvelope,
+      });
+      if (stages.length === 0) return;
+      island15PalaceEntryActive = true;
+      controls.enabled = false;
+      idleOverviewAt = null;
+      activeInspectionPreset = 'manual';
+      setActivePreset('manual');
+      canvas.dataset.island15PalaceNavigationMode = 'entering';
+      canvas.dataset.island15PalaceCurrentRoom = 'none';
+      canvas.dataset.island15PalaceThresholdZ = String(ISLAND_15_R17_CAMERA_AUTHORITY.southPortal.center[2]);
+      canvas.dataset.island15PalaceShellSwitch = 'pending-camera-crossing';
+
+      const finishInsideBossHall = () => {
+        island15PalaceEntryActive = false;
+        controls.enabled = !activeTour
+          && !activeProfiler
+          && !interactionPausedRef.current
+          && !caretakerEncounterOpenRef.current;
+        activeInspectionPreset = 'boss';
+        setBoardActorsVisibleForPreset('boss');
+        setActivePreset('boss');
+        setIsland15PalaceEntryPhase('idle');
+        canvas.dataset.island15PalaceNavigationMode = 'inside';
+        canvas.dataset.island15PalaceCurrentRoom = 'boss';
+        canvas.dataset.island15PalaceEntryPhase = 'idle';
+        canvas.dataset.island15PalaceShellSwitch = 'inside-after-crossing';
+        applyIsland15OrbitControlMode('authored-interior', true);
+      };
+
+      if (isReducedMotion) {
+        const finalStage = stages[stages.length - 1];
+        // Reduced motion performs the final semantic state and camera endpoint
+        // in the same task; it never pairs a closed exterior with an interior
+        // camera or pauses on the physical threshold.
+        setBoardActorsVisibleForPreset('boss');
+        canvas.dataset.island15PalaceShellSwitch = 'reduced-motion-safe-endpoint';
+        startIsland15CameraPose(finalStage, { instant: true, onComplete: finishInsideBossHall });
+        return;
+      }
+
+      const runStage = (index: number) => {
+        const stage = stages[index];
+        if (!stage) {
+          finishInsideBossHall();
+          return;
+        }
+        setIsland15PalaceEntryPhase(stage.phase);
+        canvas.dataset.island15PalaceEntryPhase = stage.phase;
+        canvas.dataset.island15PalaceNavigationMode = 'entering';
+        if (stage.focusMode === 'boss') {
+          // The prior stage ends 1.55 world units inside z=14. Only then may
+          // the room cutaway open behind portal masonry.
+          setBoardActorsVisibleForPreset('boss');
+          setActivePreset('boss');
+          canvas.dataset.island15PalaceCurrentRoom = 'boss';
+          canvas.dataset.island15PalaceShellSwitch = 'inside-after-crossing';
+        }
+        canvas.dataset.island15CameraInsideOuterThreshold = String(stage.cameraInsideOuterThreshold);
+        startIsland15CameraPose(stage, {
+          onComplete: () => runStage(index + 1),
+        });
+      };
+      runStage(0);
+    };
+    requestIsland15PalaceEntry = beginIsland15PalaceEntry;
+
+    const beginIsland15PalaceExit = () => {
+      if (
+        !isCrystalGlacier
+        || !island15PalaceRuntime
+        || island15PalaceEntryActive
+        || island15PalaceExitActive
+      ) return;
+      const stages = resolveIsland15PortalExitSequence({
+        portrait: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75,
+        envelope: island15CameraEnvelope,
+      });
+      if (stages.length === 0) return;
+      island15PalaceExitActive = true;
+      controls.enabled = false;
+      idleOverviewAt = null;
+      const departingRoom = isIsland15PalaceRoomPreset(activeInspectionPreset)
+        ? activeInspectionPreset
+        : 'boss';
+      activeInspectionPreset = 'manual';
+      setActivePreset('manual');
+      canvas.dataset.island15PalaceNavigationMode = 'exiting';
+      canvas.dataset.island15PalaceCurrentRoom = departingRoom;
+      canvas.dataset.island15PalaceShellSwitch = 'open-until-camera-outside';
+
+      const finishOutside = () => {
+        island15PalaceExitActive = false;
+        setBoardActorsVisibleForPreset('overview');
+        setActivePreset('overview');
+        setIsland15PalaceEntryPhase('idle');
+        canvas.dataset.island15PalaceNavigationMode = 'outside';
+        canvas.dataset.island15PalaceCurrentRoom = 'none';
+        canvas.dataset.island15PalaceEntryPhase = 'idle';
+        canvas.dataset.island15PalaceShellSwitch = 'closed-after-exit';
+        applyIsland15OrbitControlMode('exterior', true);
+        controls.enabled = !activeTour
+          && !activeProfiler
+          && !interactionPausedRef.current
+          && !caretakerEncounterOpenRef.current;
+      };
+
+      if (isReducedMotion) {
+        const finalStage = stages[stages.length - 1];
+        setBoardActorsVisibleForPreset('overview');
+        canvas.dataset.island15PalaceShellSwitch = 'reduced-motion-safe-endpoint';
+        startIsland15CameraPose(finalStage, { instant: true, onComplete: finishOutside });
+        return;
+      }
+
+      const runStage = (index: number) => {
+        const stage = stages[index];
+        if (!stage) {
+          finishOutside();
+          return;
+        }
+        setIsland15PalaceEntryPhase(stage.phase);
+        canvas.dataset.island15PalaceEntryPhase = stage.phase;
+        canvas.dataset.island15PalaceNavigationMode = 'exiting';
+        canvas.dataset.island15CameraOutsideOuterThreshold = String(stage.cameraOutsideOuterThreshold);
+        if (stage.focusMode === 'overview') {
+          // The previous stage has already placed the camera outside z=14.
+          // Restore the closed shell before pulling back to the hero view.
+          setBoardActorsVisibleForPreset('overview');
+          canvas.dataset.island15PalaceShellSwitch = 'closed-after-exit';
+        }
+        startIsland15CameraPose(stage, { onComplete: () => runStage(index + 1) });
+      };
+
+      if (departingRoom !== 'boss') {
+        const hallStage = resolveIsland15RoomNavigationHallPose(departingRoom, 'boss');
+        setBoardActorsVisibleForPreset('boss');
+        if (hallStage) {
+          startIsland15CameraPose(hallStage, {
+            controlPosition: new THREE.Vector3(...hallStage.controlPosition),
+            onComplete: () => runStage(0),
+          });
+          return;
+        }
+      }
+      setBoardActorsVisibleForPreset('boss');
+      runStage(0);
+    };
+    requestIsland15PalaceExit = beginIsland15PalaceExit;
+    exitIsland15PalaceRef.current = beginIsland15PalaceExit;
     const trainRideParams = new URLSearchParams(window.location.search);
     const frostwellDeterministicEvidence = import.meta.env.DEV
       && isFrostmoonHaven
@@ -7321,7 +8047,17 @@ export default function Island5ThreePilot({
     if (new URLSearchParams(window.location.search).get('island3dEvidence') === '1') {
       const evidenceParams = new URLSearchParams(window.location.search);
       const evidencePreset = evidenceParams.get('island3dEvidencePreset');
-      if (evidencePreset && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === evidencePreset)) {
+      if (
+        evidencePreset
+        && (
+          ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === evidencePreset)
+          || (
+            isCrystalGlacier
+            && (ISLAND_15_CAMERA_PRESET_IDS as readonly Island5CameraPresetId[])
+              .includes(evidencePreset as Island5CameraPresetId)
+          )
+        )
+      ) {
         applyPreset(evidencePreset as Island5CameraPresetId, 0.2, true);
         const evidenceAzimuth = Number(evidenceParams.get('island3dEvidenceAzimuth'));
         if (Number.isFinite(evidenceAzimuth)) {
@@ -7398,6 +8134,35 @@ export default function Island5ThreePilot({
         nextStepAt: performance.now() + (isReducedMotion ? 220 : firstStep.durationMs) + firstStep.holdMs,
       };
     };
+    const cameraTourSteps = isCrystalGlacier
+      ? ISLAND_15_CAMERA_TOUR_STEPS
+      : ISLAND_CAMERA_TOUR_STEPS;
+    const resolveTourTransitionDurationMs = (
+      presetId: Island5CameraPresetId,
+      previousPresetId?: Island5CameraPresetId,
+    ) => {
+      const baseDurationMs = getIsland5CameraPreset(presetId).durationMs;
+      if (!isCrystalGlacier) return baseDurationMs;
+      const poseOptions = {
+        portrait: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75,
+        envelope: island15CameraEnvelope,
+      };
+      if (presetId === 'boss' && previousPresetId && isIsland15ExteriorCameraPreset(previousPresetId)) {
+        return resolveIsland15PortalEntrySequence(poseOptions)
+          .reduce((total, stage) => total + stage.durationMs, 0);
+      }
+      if (presetId === 'overview' && previousPresetId && isIsland15PalaceRoomPreset(previousPresetId)) {
+        return resolveIsland15PortalExitSequence(poseOptions)
+          .reduce((total, stage) => total + stage.durationMs, 0);
+      }
+      const poseDurationMs = resolveIsland15CameraPose(presetId, poseOptions)?.durationMs ?? baseDurationMs;
+      const navigationDurationMs = previousPresetId
+        && isIsland15PalaceRoomPreset(previousPresetId)
+        && isIsland15PalaceRoomPreset(presetId)
+        ? resolveIsland15RoomNavigationHallPose(previousPresetId, presetId)?.durationMs ?? 0
+        : 0;
+      return poseDurationMs + navigationDurationMs;
+    };
     const startTour = () => {
       if (activeProfiler || activeTour) return;
       if (
@@ -7407,15 +8172,14 @@ export default function Island5ThreePilot({
         startAssemblyTour();
         return;
       }
-      const firstStep = ISLAND_CAMERA_TOUR_STEPS[0];
-      const firstPreset = getIsland5CameraPreset(firstStep.preset);
+      const firstStep = cameraTourSteps[0];
       controls.enabled = false;
       setTourStatus('running');
       applyPreset(firstStep.preset);
       activeTour = {
         kind: 'island',
         stepIndex: 0,
-        nextStepAt: performance.now() + firstPreset.durationMs + firstStep.holdMs,
+        nextStepAt: performance.now() + resolveTourTransitionDurationMs(firstStep.preset) + firstStep.holdMs,
       };
     };
     startTourRef.current = startTour;
@@ -7474,14 +8238,26 @@ export default function Island5ThreePilot({
 
     const cancelTransition = () => {
       transition = null;
+      island15PalaceEntryActive = false;
+      island15PalaceExitActive = false;
+      setIsland15PalaceEntryPhase('idle');
       idleOverviewAt = null;
       ambientCameraEligibleAt = performance.now() + (
         constructionPresentationRef.current?.active
           ? ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS
           : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
       );
-      setBoardActorsVisibleForPreset('manual');
-      setActivePreset('manual');
+      if (isCrystalGlacier && isIsland15PalaceRoomPreset(activeInspectionPreset)) {
+        applyIsland15OrbitControlMode('authored-interior');
+        setBoardActorsVisibleForPreset(activeInspectionPreset);
+        setActivePreset(activeInspectionPreset);
+        canvas.dataset.island15PalaceNavigationMode = 'inside';
+        canvas.dataset.island15PalaceCurrentRoom = activeInspectionPreset;
+      } else {
+        if (isCrystalGlacier) applyIsland15OrbitControlMode('exterior');
+        setBoardActorsVisibleForPreset('manual');
+        setActivePreset('manual');
+      }
     };
     controls.addEventListener('start', cancelTransition);
 
@@ -7495,6 +8271,11 @@ export default function Island5ThreePilot({
       camera.updateProjectionMatrix();
       if (isAssemblyCraterFirstLight && Math.abs(previousAspect - camera.aspect) > .001 && !activeTour && !cameraAuthoringEnabledRef.current && activeInspectionPreset !== 'manual' && ['boss','hatchery','habit','wisdom','event'].includes(activeInspectionPreset)) {
         applyPreset(activeInspectionPreset, 1, true);
+      }
+      if (isCrystalGlacier && island15LastExteriorPose && !transition
+        && !island15PalaceEntryActive && !island15PalaceExitActive
+        && isIsland15ExteriorCameraPreset(activeInspectionPreset)) {
+        startIsland15CameraPose(island15LastExteriorPose, { instant: true });
       }
     };
     resize();
@@ -7510,7 +8291,16 @@ export default function Island5ThreePilot({
       );
     };
     const handlePointerUp = (event: PointerEvent) => {
-      if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion || activeTrainRide || activeWonderRide) return;
+      if (
+        interactionPausedRef.current
+        || activeTour
+        || activeProfiler
+        || activeTokenMotion
+        || activeTrainRide
+        || activeWonderRide
+        || island15PalaceEntryActive
+        || island15PalaceExitActive
+      ) return;
       if (pointerDown.distanceTo(new THREE.Vector2(event.clientX, event.clientY)) > 7) return;
       const rect = canvas.getBoundingClientRect();
       pointer.set(
@@ -7552,6 +8342,19 @@ export default function Island5ThreePilot({
         onSignatureMissionClickRef.current?.();
         return;
       }
+      const isIsland15OutsideView = isIsland15ExteriorCameraPreset(activeInspectionPreset)
+        || activeInspectionPreset === 'manual';
+      if (
+        isCrystalGlacier
+        && island15PalaceRuntime
+        && isIsland15OutsideView
+        && raycaster.intersectObject(island15PalaceRuntime.root, true).length > 0
+      ) {
+        beginIsland15PalaceEntry();
+        // Exterior entry is camera choreography only. Landmark challenges are
+        // intentionally opened only by their existing explicit room targets.
+        return;
+      }
       const intersections = raycaster.intersectObjects(clickableLandmarks, true);
       const landmarkId = intersections
         .map((candidate) => resolveLandmarkIdFromIntersection(candidate.object))
@@ -7569,6 +8372,7 @@ export default function Island5ThreePilot({
 
     const island1AnimatedBatches = isAssemblyCraterFirstLight ? createIsland1AnimatedBatches(scene) : null;
     let appliedConstructionCameraKey = '';
+    let appliedIsland15ConstructionRevealKey = '';
     const animate = (now: number) => {
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
@@ -7586,10 +8390,15 @@ export default function Island5ThreePilot({
       const constructionCameraWorking = Boolean(
         constructionCameraActive && constructionCameraPresentation?.working,
       );
+      const island15ConstructionReveal = Boolean(
+        isCrystalGlacier
+        && constructionCameraActive
+        && constructionCameraPresentation?.phase === 'reveal'
+      );
       const constructionCameraLocked = Boolean(
         constructionCameraActive
         && (constructionCameraPresentation?.cameraLocked || constructionCameraWorking),
-      );
+      ) && !island15ConstructionReveal;
       const nextAmbientCameraContext = constructionCameraActive ? 'build-modal' : 'board';
       if (nextAmbientCameraContext !== ambientCameraContext) {
         ambientCameraContext = nextAmbientCameraContext;
@@ -7641,7 +8450,7 @@ export default function Island5ThreePilot({
       let jungleZenithCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
-      livingAmbience.updateView?.(camera.position, controls.target);
+      livingAmbience.updateView?.(camera.position, controls.target, isReducedMotion);
       if (isAssemblyCraterFirstLight && firstLightAssemblyCrater) {
         const assemblyPresentation = firstLightAssemblyCraterPresentationRef.current;
         const presentationKey = [
@@ -8082,6 +8891,22 @@ export default function Island5ThreePilot({
         const constructionCameraKey = activeConstruction && constructionPreset
           ? `${constructionPreset}:${activeConstruction.targetLevel}`
           : '';
+        const revealKey = activeConstruction && constructionPreset && activeConstruction.phase === 'reveal'
+          ? `${constructionPreset}:${activeConstruction.targetLevel}:${activeConstruction.sequence}`
+          : '';
+        if (
+          isCrystalGlacier
+          && revealKey
+          && revealKey !== appliedIsland15ConstructionRevealKey
+          && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === constructionPreset)
+        ) {
+          appliedIsland15ConstructionRevealKey = revealKey;
+          idleOverviewAt = null;
+          applyPreset(constructionPreset as Island5CameraPresetId, 0.86);
+          setIsland15PalaceEntryPhase('reveal');
+          canvas.dataset.island15PalaceEntryPhase = 'reveal';
+          canvas.dataset.island15PalaceNavigationMode = 'interior-build-reveal';
+        }
         if (
           constructionCameraKey
           && !activeConstruction?.cameraLocked
@@ -8658,8 +9483,20 @@ export default function Island5ThreePilot({
           inverse * inverse * transition.fromPosition.z + 2 * inverse * eased * transition.controlPosition.z + eased * eased * transition.toPosition.z,
         );
         controls.target.lerpVectors(transition.fromTarget, transition.toTarget, eased);
+        if (transition.fromFov !== undefined && transition.toFov !== undefined) {
+          camera.fov = THREE.MathUtils.lerp(transition.fromFov, transition.toFov, eased);
+          camera.updateProjectionMatrix();
+        }
         camera.lookAt(controls.target);
-        if (rawProgress >= 1) transition = null;
+        if (rawProgress >= 1) {
+          const completedTransition = transition;
+          transition = null;
+          if (completedTransition.toFov !== undefined) {
+            camera.fov = completedTransition.toFov;
+            camera.updateProjectionMatrix();
+          }
+          completedTransition.onComplete?.();
+        }
       }
       if (cactusCanyonBlastCameraPose) {
         transition = null;
@@ -9084,7 +9921,7 @@ export default function Island5ThreePilot({
         const nextStepIndex = activeTour.stepIndex + 1;
         const nextStep = activeTour.kind === 'assembly'
           ? ISLAND_1_ASSEMBLY_POV_TOUR_STEPS[nextStepIndex]
-          : ISLAND_CAMERA_TOUR_STEPS[nextStepIndex];
+          : cameraTourSteps[nextStepIndex];
         if (!nextStep) {
           const completedTourKind = activeTour.kind;
           activeTour = null;
@@ -9102,12 +9939,15 @@ export default function Island5ThreePilot({
             };
           } else {
             const islandTourStep = nextStep as (typeof ISLAND_CAMERA_TOUR_STEPS)[number];
-            const nextPreset = getIsland5CameraPreset(islandTourStep.preset);
+            const previousStep = cameraTourSteps[activeTour.stepIndex];
             applyPreset(islandTourStep.preset);
             activeTour = {
               kind: 'island',
               stepIndex: nextStepIndex,
-              nextStepAt: now + nextPreset.durationMs + islandTourStep.holdMs,
+              nextStepAt: now + resolveTourTransitionDurationMs(
+                islandTourStep.preset,
+                previousStep?.preset,
+              ) + islandTourStep.holdMs,
             };
           }
         }
@@ -9147,7 +9987,8 @@ export default function Island5ThreePilot({
             triangles: renderer.info.render.triangles,
             maxDrawCalls: activeProfiler.maxDrawCalls,
             maxTriangles: activeProfiler.maxTriangles,
-            geometryBudgetPass: activeProfiler.maxDrawCalls <= 175 && activeProfiler.maxTriangles <= 180_000,
+            geometryBudgetPass: activeProfiler.maxDrawCalls <= (isCrystalGlacier ? 125 : 175)
+              && activeProfiler.maxTriangles <= (isCrystalGlacier ? 110_000 : 180_000),
             measuredRefreshFps: 0,
             refreshNormalizedP95Ms: 0,
             refreshNormalizedTimingPass: false,
@@ -9225,6 +10066,7 @@ export default function Island5ThreePilot({
       cameraPoseSnapshotRef.current = {
         position: [camera.position.x, camera.position.y, camera.position.z],
         target: [controls.target.x, controls.target.y, controls.target.z],
+        fov: camera.fov,
       };
       controls.dispose();
       timer.dispose();
@@ -9259,6 +10101,11 @@ export default function Island5ThreePilot({
         scene.environment = null;
         lavaLabyrinthEnvironmentTarget.dispose();
       }
+      const disposingIsland15PalaceRuntime = island15PalaceRuntime;
+      island15PalaceRuntime = null;
+      if (island15CrystalPalaceRuntimeRef.current === disposingIsland15PalaceRuntime) {
+        island15CrystalPalaceRuntimeRef.current = null;
+      }
       disposeScene(scene);
       if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
       if (rootheartNightBackdrop && rootheartNightBackdrop !== disposedSceneBackground) rootheartNightBackdrop.dispose();
@@ -9282,6 +10129,7 @@ export default function Island5ThreePilot({
       // Dispose GPU resources while preserving the reusable canvas context.
       renderer.dispose();
       applyPresetRef.current = () => undefined;
+      exitIsland15PalaceRef.current = () => undefined;
       applyControlledCameraFocusRef.current = () => undefined;
       startTourRef.current = () => undefined;
       stopTourRef.current = () => undefined;
@@ -9293,8 +10141,9 @@ export default function Island5ThreePilot({
       if (activeTrainRide) setTrainRidePhase('idle');
       if (activeWonderRide) setWonderRidePhase('idle');
       setCameraAuthoringModeRef.current = () => undefined;
+      setIsland15PalaceEntryPhase('idle');
     };
-  }, [assemblyAssetsReady, buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [assemblyAssetsReady, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isCrystalGlacier, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, sceneBuildLevelDependency, sceneLandmarkBuildLevelsDependency, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }
@@ -9359,16 +10208,29 @@ export default function Island5ThreePilot({
   const isIsland19HybridOverview = island19PresentationMode === 'source-locked-hybrid-overview';
   const presentationAccessibilityLabel = isIsland19HybridOverview
     ? 'Interactive Island 19 Coaster Carnival hybrid overview; source-matched carnival artwork with real Three.js gameplay and Wonder Express ride geometry'
-    : isEmbedded
+    : useIsland15ProductPresentation
       ? `Interactive 3D Island ${islandNumber}`
       : `Actual 3D Island ${islandNumber} pilot`;
   const canvasAccessibilityLabel = isIsland19HybridOverview
     ? 'Interactive Three.js gameplay layer for the Island 19 Coaster Carnival hybrid overview; the Wonder Express ride uses real 3D geometry'
     : `Interactive 3D ${worldName} island${isCactusCanyon || isCoasterCarnival ? '; ride the railway in first person' : ''}`;
 
+  const island15ActiveRoom = isIsland15PalaceRoomPreset(activePreset) ? activePreset : null;
+  const island15ActiveRoomIndex = island15ActiveRoom
+    ? ISLAND_15_PALACE_ROOM_ORDER.indexOf(island15ActiveRoom)
+    : -1;
+  const island15PreviousRoom = island15ActiveRoomIndex >= 0
+    ? ISLAND_15_PALACE_ROOM_ORDER[
+      (island15ActiveRoomIndex - 1 + ISLAND_15_PALACE_ROOM_ORDER.length) % ISLAND_15_PALACE_ROOM_ORDER.length
+    ]
+    : 'boss';
+  const island15NextRoom = island15ActiveRoomIndex >= 0
+    ? ISLAND_15_PALACE_ROOM_ORDER[(island15ActiveRoomIndex + 1) % ISLAND_15_PALACE_ROOM_ORDER.length]
+    : 'boss';
+
   return (
     <section
-      className={`island-5-three-pilot${isEmbedded ? ' island-5-three-pilot--embedded' : ''}${isEvidenceCapture ? ' island-5-three-pilot--evidence' : ''}`}
+      className={`island-5-three-pilot${useIsland15ProductPresentation ? ' island-5-three-pilot--embedded' : ''}${isIsland15ProductAcceptanceCapture ? ' island-5-three-pilot--product-acceptance' : ''}${isEvidenceCapture ? ' island-5-three-pilot--evidence' : ''}`}
       style={isCoasterCarnival && wonderRidePhase === 'idle' && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled && !isMapStrippedEvidenceEnabled ? {
         backgroundImage: `url(${ISLAND_19_HYBRID_PHONE_PLATE})`,
         backgroundPosition: activePreset === 'survey' ? 'center 43%' : 'center 10%',
@@ -9388,7 +10250,7 @@ export default function Island5ThreePilot({
         key={`${islandNumber}-${resolvedWorldSourceNumber}-${qualityProfile.id}`}
         ref={canvasRef}
         className="island-5-three-pilot__canvas"
-        aria-label={canvasAccessibilityLabel}
+        aria-label={`${canvasAccessibilityLabel}${isCrystalGlacier ? '; select the palace exterior to enter' : ''}`}
       />
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
@@ -9506,7 +10368,56 @@ export default function Island5ThreePilot({
           </div>
         </section>
       ) : null}
-      {!isEmbedded ? (
+      {isCrystalGlacier && hasRenderedFrame && island15ActiveRoom && !isEvidenceCapture ? (
+        <nav
+          className="island-5-three-pilot__palace-navigation"
+          aria-label="Crystal Palace rooms"
+          data-entry-phase={island15PalaceEntryPhase}
+        >
+          <button
+            className="island-5-three-pilot__palace-navigation-arrow"
+            type="button"
+            disabled={island15PalaceEntryPhase !== 'idle'}
+            aria-label={`Previous room: ${ISLAND_15_CRYSTAL_GLACIER_LANDMARK_LABELS[island15PreviousRoom]}`}
+            onClick={() => applyPresetRef.current(island15PreviousRoom)}
+          >
+            <span aria-hidden="true">&#8592;</span>
+          </button>
+          <div className="island-5-three-pilot__palace-navigation-room" aria-live="polite">
+            <span>INSIDE THE CRYSTAL PALACE</span>
+            <strong>{ISLAND_15_CRYSTAL_GLACIER_LANDMARK_LABELS[island15ActiveRoom]}</strong>
+            <small>{island15PalaceEntryPhase === 'crossing' ? 'Passing through the crystal gate…' : `${island15ActiveRoomIndex + 1} of ${ISLAND_15_PALACE_ROOM_ORDER.length}`}</small>
+          </div>
+          <button
+            className="island-5-three-pilot__palace-navigation-arrow"
+            type="button"
+            disabled={island15PalaceEntryPhase !== 'idle'}
+            aria-label={`Next room: ${ISLAND_15_CRYSTAL_GLACIER_LANDMARK_LABELS[island15NextRoom]}`}
+            onClick={() => applyPresetRef.current(island15NextRoom)}
+          >
+            <span aria-hidden="true">&#8594;</span>
+          </button>
+          <div className="island-5-three-pilot__palace-navigation-actions">
+            <button
+              type="button"
+              disabled={island15PalaceEntryPhase !== 'idle' || island15ActiveRoom === 'boss'}
+              aria-label="Return to Boss Hall"
+              onClick={() => applyPresetRef.current('boss')}
+            >
+              Hall
+            </button>
+            <button
+              type="button"
+              disabled={island15PalaceEntryPhase !== 'idle'}
+              aria-label="Exit Palace"
+              onClick={() => exitIsland15PalaceRef.current()}
+            >
+              Exit
+            </button>
+          </div>
+        </nav>
+      ) : null}
+      {!useIsland15ProductPresentation ? (
         <>
           <div className="island-5-three-pilot__topline">
             <div>
@@ -9630,6 +10541,8 @@ export default function Island5ThreePilot({
                               ? ISLAND_13_CACTUS_CANYON_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_13_CACTUS_CANYON_LANDMARK_LABELS]
                             : isHoneycombKingdom
                               ? ISLAND_14_HONEYCOMB_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_14_HONEYCOMB_LANDMARK_LABELS]
+                            : isCrystalGlacier
+                              ? ISLAND_15_CRYSTAL_GLACIER_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_15_CRYSTAL_GLACIER_LANDMARK_LABELS]
                             : isJungleExpedition
                               ? ISLAND_18_JUNGLE_EXPEDITION_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_18_JUNGLE_EXPEDITION_LANDMARK_LABELS]
                             : isLavaLabyrinth

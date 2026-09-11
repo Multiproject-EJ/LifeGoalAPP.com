@@ -447,9 +447,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, 018, 019 and 020',
+    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, 015, 018, 019 and 020',
     run: () => {
-      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 65, 'thirteen authored worlds need five landmark construction profiles each');
+      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 70, 'fourteen authored worlds need five landmark construction profiles each');
       const frostmoonProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(3, landmark.id)
       ));
@@ -581,6 +581,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(coasterProfiles.some((profile) => profile?.choreography.stationStep === -1) && coasterProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Coaster Carnival needs clockwise and counter-clockwise routes');
       assert(coasterProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Coaster Carnival landmarks need phase-shaped relocation routes');
       assert(coasterProfiles.every((profile) => profile?.stageNames.some((name) => /ride|rail|ferris|wheel|gondola|station|lift|carousel|tower|courage|perspective|castle|ticket|loop|launch/i.test(name))), 'Coaster Carnival reveal stories must use its ride and railway construction language');
+      const crystalGlacierProfiles = ISLAND_5_LANDMARKS.map((landmark) => resolveIslandLandmarkConstructionProfile(15, landmark.id));
+      assert(crystalGlacierProfiles.every(Boolean), 'Crystal Glacier needs a room-building choreography for every palace landmark');
+      assertEqual(new Set(crystalGlacierProfiles.map((profile) => profile?.choreography.styleId)).size, 5, 'Crystal Glacier rooms must not share one generic robot choreography');
+      assertEqual(new Set(crystalGlacierProfiles.map((profile) => profile?.choreography.stationOffset)).size, 5, 'Crystal Glacier mission order needs five distinct room stations');
+      assert(crystalGlacierProfiles.some((profile) => profile?.choreography.stationStep === -1) && crystalGlacierProfiles.some((profile) => profile?.choreography.stationStep === 1), 'Crystal Glacier room crews need clockwise and counter-clockwise routes');
+      assert(crystalGlacierProfiles.every((profile) => Object.keys(profile?.choreography.phaseStationOffsets ?? {}).length >= 4), 'Crystal Glacier rooms need phase-shaped relocation routes');
+      assert(crystalGlacierProfiles.every((profile) => profile?.stageNames.some((name) => /room|chapel|inside the palace|Boss Hall|Frost Nest|Ice Bastion|Observatory|Oracle|Frozen Throne/i.test(name))), 'Crystal Glacier stages must build interior rooms inside one palace');
       const levels = [[0, 1], [1, 2], [2, 3]] as const;
       const island2Materials = createIsland2CelestialMaterials();
       const island3Materials = createIsland3FrostmoonMaterials();
@@ -1815,6 +1822,142 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
+    name: 'mounts the Island 015 production palace atomically without adding a second gameplay or renderer path',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(pilotSource.includes("island15PalaceAttachmentRoot.name = 'ISLAND_15_CRYSTAL_PALACE_ATTACHMENT_ROOT'"), 'the palace needs one named ambience-owned attachment root');
+      assert(pilotSource.includes('createIsland15UnifiedCrystalPalaceAsset(island15CrystalGlacierMaterials)'), 'Island 015 must build one validated unified procedural palace');
+      assert(pilotSource.includes('bindIsland15CrystalPalaceRuntime(palaceAsset)'), 'the procedural palace must pass through the same strict semantic runtime binder');
+      assert(pilotSource.includes('clickableLandmarks.length = 0') && pilotSource.includes('runtime.getHitAnchor(rendererId)'), 'validated semantic anchors must atomically replace fallback click targets');
+      assert(pilotSource.includes('landmarkRootsById.set(rendererId, runtime.nodes.rooms[room].root)'), 'construction and focus bounds must use semantic room roots after attachment');
+      assert(pilotSource.includes('island15FallbackRoot.visible = false'), 'the V4 rollback must hide only after the palace runtime binds successfully');
+      assert(pilotSource.includes('island15PalaceRuntime.cloneRoomAtLevel(landmarkId, currentLevel)'), 'Island 015 construction must use deep-owned runtime clones');
+      assert(pilotSource.includes('sceneBuildLevelDependency = isCrystalGlacier ? 0 : buildLevel'), 'Island 015 build levels must not recreate the Three scene');
+      assert(pilotSource.includes('isCrystalGlacier ? undefined : landmarkRootsById.get(\'boss\')'), 'Island 015 must bypass shared-material boss fading');
+      assert(!pilotSource.includes('createIsland15CrystalPalaceLoader({'), 'production must not depend on a missing asynchronous GLB asset');
+      assert(pilotSource.includes('disposeScene(scene);'), 'the ambience-owned procedural palace must be released by generic scene disposal');
+    },
+  },
+  {
+    name: 'enters the Island 015 palace through its exterior and navigates all five internal rooms without gameplay writes',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const cameraDirectorSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/island15/Island15CameraDirector.ts', 'utf8');
+      const productionStyles = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      assert(
+        pilotSource.includes('ISLAND_15_PALACE_ROOM_ORDER,')
+          && cameraDirectorSource.includes("'boss',\n  'hatchery',\n  'event',\n  'wisdom',\n  'habit',"),
+        'palace navigation must follow the R17 Boss, NW Frost, NE Observatory, SW Oracle, SE Bastion order',
+      );
+      assert(pilotSource.includes('const beginIsland15PalaceEntry = () =>'), 'the monumental exterior needs one dedicated entry choreography');
+      assert(
+        pilotSource.includes("canvas.dataset.island15PalaceNavigationMode = 'entering'")
+          && pilotSource.includes("canvas.dataset.island15PalaceNavigationMode = 'inside'")
+          && pilotSource.includes("canvas.dataset.island15PalaceNavigationMode = interiorRoom ? 'inside' : 'outside'"),
+        'QA must distinguish outside, entering, and inside palace states',
+      );
+      assert(
+        cameraDirectorSource.includes("phase: 'approach'")
+          && cameraDirectorSource.includes("phase: 'stair-crest'")
+          && cameraDirectorSource.includes("phase: 'threshold'")
+          && cameraDirectorSource.includes("phase: 'crossing'")
+          && cameraDirectorSource.includes("phase: 'boss-wonder'")
+          && pilotSource.includes('canvas.dataset.island15PalaceEntryPhase = stage.phase')
+          && pilotSource.includes("canvas.dataset.island15PalaceCurrentRoom = 'boss'"),
+        'the wall-crossing cinematic must expose the complete physical entry and Boss reveal semantics',
+      );
+      assert(
+        pilotSource.includes('raycaster.intersectObject(island15PalaceRuntime.root, true).length > 0')
+          && pilotSource.includes('beginIsland15PalaceEntry();'),
+        'clicking the real palace exterior must start the interior-entry transition',
+      );
+      assert(
+        pilotSource.includes('resolveIsland15CameraPose(id, {')
+          && pilotSource.includes('resolveIsland15PortalEntrySequence({')
+          && pilotSource.includes('resolveIsland15PortalExitSequence({')
+          && pilotSource.includes('fromFov: Number.isFinite(pose.fov) ? camera.fov : undefined')
+          && pilotSource.includes('toFov: Number.isFinite(pose.fov) ? pose.fov : undefined')
+          && cameraDirectorSource.includes('fov: portrait ? 62 : 60')
+          && !cameraDirectorSource.includes('fov: 104'),
+        'entry and direct focus must use the dedicated non-fisheye pose graph with interpolated lenses',
+      );
+      assert(
+        pilotSource.includes('resolveIsland15RoomNavigationHallPose(fromRoom, id)')
+          && pilotSource.includes("setBoardActorsVisibleForPreset('boss')")
+          && pilotSource.includes("canvas.dataset.island15PalaceNavigationMode = 'navigating-via-boss-hall'"),
+        'room-to-room moves must reveal the Boss Hall instead of travelling through palace walls',
+      );
+      assert(
+        pilotSource.includes('aria-label="Crystal Palace rooms"')
+          && pilotSource.includes('onClick={() => applyPresetRef.current(island15PreviousRoom)}')
+          && pilotSource.includes('onClick={() => applyPresetRef.current(island15NextRoom)}')
+          && pilotSource.includes('aria-label="Return to Boss Hall"')
+          && pilotSource.includes('aria-label="Exit Palace"')
+          && pilotSource.includes('onClick={() => exitIsland15PalaceRef.current()}'),
+        'the live island needs accessible previous, next, and Exit Palace navigation',
+      );
+      const navigationIndex = pilotSource.indexOf('aria-label="Crystal Palace rooms"');
+      const workbenchOnlyIndex = pilotSource.indexOf('{!useIsland15ProductPresentation ? (', navigationIndex);
+      assert(navigationIndex >= 0 && workbenchOnlyIndex > navigationIndex, 'palace room arrows must render in the embedded production island, not only the workbench');
+      assert(
+        pilotSource.includes("get('island15ProductAcceptance') === '1'")
+          && pilotSource.includes('const useIsland15ProductPresentation = isEmbedded || isIsland15ProductAcceptanceCapture')
+          && pilotSource.includes("' island-5-three-pilot--product-acceptance'"),
+        'the actual app must expose a presentation-only acceptance frame without dev or profiler chrome',
+      );
+      assert(
+        productionStyles.includes('.island-5-three-pilot__palace-navigation')
+          && productionStyles.includes('grid-template-columns: 44px minmax(0, 1fr) 44px auto')
+          && productionStyles.includes('.island-5-three-pilot--product-acceptance .island-5-three-pilot__palace-navigation button')
+          && productionStyles.includes('min-height: 44px'),
+        'the production bundle must style the embedded one-row navigator with touch-safe controls',
+      );
+
+      const entryStart = pilotSource.indexOf('const beginIsland15PalaceEntry = () =>');
+      const entryEnd = pilotSource.indexOf("controls.addEventListener('start', cancelTransition);", entryStart);
+      const entryChoreography = pilotSource.slice(entryStart, entryEnd);
+      assert(entryStart >= 0 && entryEnd > entryStart, 'entry choreography source boundary must remain inspectable');
+      assert(
+        !/onLandmarkClickRef|persistIslandRunRuntimeStatePatch|commitIslandRunState|islandRunStateActions/.test(entryChoreography),
+        'crossing the palace wall is presentation-only and cannot open a challenge or mutate gameplay',
+      );
+      assert(
+        entryChoreography.includes("canvas.dataset.island15PalaceShellSwitch = 'pending-camera-crossing'")
+          && entryChoreography.includes("canvas.dataset.island15PalaceShellSwitch = 'inside-after-crossing'")
+          && entryChoreography.includes("canvas.dataset.island15PalaceShellSwitch = 'open-until-camera-outside'")
+          && entryChoreography.includes("canvas.dataset.island15PalaceShellSwitch = 'closed-after-exit'"),
+        'entry and exit must expose the physical shell-switch boundary for browser QA',
+      );
+      assert(
+        pilotSource.includes('applyIsland15OrbitControlMode(pose.orbitMode)')
+          && pilotSource.includes("applyIsland15OrbitControlMode('authored-interior', true)")
+          && pilotSource.includes("applyIsland15OrbitControlMode('exterior', true)")
+          && pilotSource.includes('canvas.dataset.island15CameraPoseHash = hashIsland15CameraPose(pose)')
+          && pilotSource.includes('canvas.dataset.island15CameraSafety = JSON.stringify({'),
+        'authored Island 015 poses must bypass generic clamps and publish stable QA evidence',
+      );
+      assert(
+        pilotSource.includes('isCrystalGlacier ? 125 : 175')
+          && pilotSource.includes('isCrystalGlacier ? 110_000 : 180_000')
+          && pilotSource.includes('canvas.dataset.island15PerformanceBudget = JSON.stringify({ triangles: 110_000, drawCalls: 125 })'),
+        'Island 015 profiling must enforce the R17 110k triangle / 125 draw ceiling',
+      );
+
+      const navStart = pilotSource.lastIndexOf('<nav', navigationIndex);
+      const navEnd = pilotSource.indexOf('</nav>', navigationIndex);
+      const navigationUi = pilotSource.slice(navStart, navEnd);
+      assert(navStart >= 0 && navEnd > navStart, 'palace navigation source boundary must remain inspectable');
+      assert(
+        !/onLandmarkClick|persistIslandRunRuntimeStatePatch|commitIslandRunState|islandRunStateActions/.test(navigationUi),
+        'room arrows and Exit Palace may change only the presentation camera',
+      );
+    },
+  },
+  {
     name: 'keeps Frostwell Iceworks north in the ocean, route-clear, clickable, and state-driven',
     run: async () => {
       assertEqual(FROSTWELL_OFFSHORE_POSITION.x, 0, 'the Iceworks should stay centred on the north sightline');
@@ -2246,7 +2389,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(worldSource.includes('const surfaceUpdateInterval'), 'water-surface deformation must be cadence-limited per quality tier');
       assert(worldSource.includes('const focusView = cameraPosition.distanceTo(cameraTarget) < 13.5'), 'underwater landmark focus must cull distant transparent ambience by camera semantics');
       assert(worldSource.includes('const sideOrbitView = !focusView'), 'side-orbit cameras must cull only off-camera hero fauna before the geometry budget is sampled');
-      assert(pilotSource.includes('livingAmbience.updateView?.(camera.position, controls.target);'), 'view culling must receive the active camera target without reading gameplay state');
+      assert(pilotSource.includes('livingAmbience.updateView?.(camera.position, controls.target, isReducedMotion);'), 'view culling must receive the active camera target and accessibility motion preference without reading gameplay state');
       assert(pilotSource.includes("new URLSearchParams(window.location.search).get('island3dMapStripped') === '1'"), 'the Gauntlet must expose a deterministic map-stripped evidence route');
       assert(pilotSource.includes('if (object instanceof THREE.Points)'), 'map-stripped structural evidence must hide particles instead of flattening them into opaque clay');
       assert(pilotSource.includes('new THREE.MeshNormalMaterial'), 'map-stripped evidence must expose form and facing without authored maps or PBR response');
@@ -2414,7 +2557,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
-      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position, controls.target);');
+      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position, controls.target, isReducedMotion);');
       const reducedMotionIndex = pilotSource.indexOf('if (!isReducedMotion) {', viewUpdateIndex);
       const animateIndex = pilotSource.indexOf('livingAmbience.animate(elapsed);', reducedMotionIndex);
       assert(viewUpdateIndex >= 0 && viewUpdateIndex < reducedMotionIndex, 'camera-side scenery culling must still run in reduced-motion mode');
@@ -2939,7 +3082,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including preserved Island 011, promoted Island 016, Jungle Expedition and Lava Labyrinth Island 020');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including Crystal Glacier Island 015, promoted Island 016, Jungle Expedition and Lava Labyrinth Island 020');
       assert(pageSource.includes('assembly-crater-preview-controls') && pageSource.includes('Blast next'), 'the workbench must replay Assembly Crater sectors without writing a real gameplay save');
       assert(pageSource.includes('Play 3 + 5 + 2') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of the three charge batches');
       assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');
@@ -3048,6 +3191,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(!island2Source.includes('const levelScale = level === 1'), 'Island 002 progression must not regress to scale-only level changes');
       assert(boardSource.includes('3D quality') && boardSource.includes('Force High to judge phone smoothness.'), 'the live dev menu should expose the phone quality selector');
       assert(boardSource.includes('qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}'), 'quality override must be dev-mode only');
+      const embeddedQualityReader = boardSource.slice(
+        boardSource.indexOf('function readDevIsland5ThreeQuality()'),
+        boardSource.indexOf('function getHatcheryEggStage('),
+      );
+      assert(embeddedQualityReader.includes("get('island3dQuality')"), 'embedded QA must honor the same explicit quality query as the standalone scene');
+      assert(embeddedQualityReader.includes('if (import.meta.env.DEV)'), 'quality query must remain restricted to development builds');
+      assert(embeddedQualityReader.indexOf('return requested;') < embeddedQualityReader.indexOf('localStorage.getItem'), 'explicit QA quality must take precedence over the saved/default High override');
       assert(boardSource.includes('tokenIndex={tokenIndex}'), 'embedded renderer must read the canonical token index already owned by the live board');
       assert(boardSource.includes('pendingHopSequence={pendingHopSequence}'), 'embedded renderer must consume the canonical roll hop sequence without deriving movement');
       assert(boardSource.includes('landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}'), 'production landmarks must read their individual canonical build levels');

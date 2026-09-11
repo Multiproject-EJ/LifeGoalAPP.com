@@ -3,6 +3,9 @@ import {
   resolveIslandRun3DWorldRoute,
 } from '../islandRun3DWorldRouting';
 import { getIslandDisplayName } from '../islandNames';
+import { isIslandRunArenaIsland } from '../islandRunArenaCreaturePresentation';
+import { getIslandRunArenaCreatureForIsland } from '../islandRunArenaCreatureRoster';
+import { getIslandRunCreatureArenaBattleConfig } from '../islandRunCreatureArenaBattle';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const islandRun3DWorldRoutingTests: TestCase[] = [
@@ -33,6 +36,13 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(13)?.role, 'ordinary', 'Island 013 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(14)?.worldSourceNumber, 14, 'Island 014 owns the Honeycomb Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(14)?.role, 'ordinary', 'Island 014 keeps the ordinary-island role');
+      assertEqual(resolveIslandRun3DWorldRoute(15)?.worldSourceNumber, 15, 'Island 015 owns the Crystal Glacier Citadel world');
+      assertEqual(resolveIslandRun3DWorldRoute(15)?.role, 'ordinary', 'Island 015 keeps the ordinary-island role');
+      assertEqual(
+        Object.prototype.hasOwnProperty.call(resolveIslandRun3DWorldRoute(15), 'asset'),
+        false,
+        'Island 015 truthfully routes to its procedural palace without a nonexistent GLB',
+      );
       assertEqual(resolveIslandRun3DWorldRoute(18)?.worldSourceNumber, 8, 'Island 018 owns the Everblossom Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(18)?.role, 'ordinary', 'Island 018 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(16)?.worldSourceNumber, 22, 'runtime Island 016 owns the Fisherman\'s Village world');
@@ -45,11 +55,20 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
     },
   },
   {
+    name: 'keeps Island 015 on one ordinary-Boss classification across routing, roster, and battle services',
+    run: () => {
+      assertEqual(resolveIslandRun3DWorldRoute(15)?.role, 'ordinary', 'the Crystal Glacier Citadel route is ordinary');
+      assertEqual(isIslandRunArenaIsland(15), false, 'the shared arena predicate excludes Island 015');
+      assertEqual(getIslandRunArenaCreatureForIsland(15), null, 'the creature roster has no Island 015 opponent');
+      assertEqual(getIslandRunCreatureArenaBattleConfig(15), null, 'the arena battle engine cannot construct an Island 015 encounter');
+    },
+  },
+  {
     name: 'keeps every runtime island on an explicit authored source identity',
     run: () => {
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 18, 'eighteen authored world packs are currently routed');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 18, 'runtime islands are unique');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 18, 'visual source packs are unique');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 19, 'nineteen authored world packs are currently routed');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 19, 'runtime islands are unique');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 19, 'visual source packs are unique');
     },
   },
   {

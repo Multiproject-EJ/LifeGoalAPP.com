@@ -27,13 +27,17 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');
   const constructionLandmark = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'].includes(requestedLandmark ?? '')
     ? requestedLandmark!
     : 'hatchery';
+  const requestedFocus = params.get('focus');
+  const focusPreset = ['hatchery', 'habit', 'event', 'wisdom', 'boss'].includes(requestedFocus ?? '')
+    ? requestedFocus as 'hatchery' | 'habit' | 'event' | 'wisdom' | 'boss'
+    : null;
   const treasureRollsParam = Number(params.get('treasureRolls'));
   const treasureRolls = Number.isFinite(treasureRollsParam)
     ? Math.max(0, Math.min(SUNKEN_SANDS_TREASURE_ROLL_TARGET, Math.floor(treasureRollsParam)))
@@ -105,6 +109,7 @@ function readInitialPreviewState() {
     constructionLandmark,
     constructionReducedMotion: params.get('reduced') === '1',
     constructionCommissioning: params.get('commissioning') === '1',
+    focusPreset,
   };
 }
 
@@ -227,6 +232,7 @@ export default function IslandTemplateKitPage() {
   const updateFirebridgeController = useCallback((state: LavaSkiffControllerState) => {
     setFirebridgeEscape((current) => ({ ...current, ...state }));
   }, []);
+  const [previewFocusPreset, setPreviewFocusPreset] = useState<typeof initialState.focusPreset>(null);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
   const constructionPresentation = useMemo<IslandRunConstructionPresentation | null>(() => {
@@ -276,6 +282,15 @@ export default function IslandTemplateKitPage() {
     }, assemblyCharges === 0 ? 500 : 5_500);
     return () => window.clearTimeout(timer);
   }, [assemblyCharges, assemblyReplayActive]);
+
+  useEffect(() => {
+    if (!initialState.focusPreset || initialState.construction) return undefined;
+    // The renderer installs its controlled-camera bridge after mount. Defer a
+    // query-driven evidence focus by one task so it is handled exactly like a
+    // real landmark selection instead of being swallowed during initialization.
+    const timeout = window.setTimeout(() => setPreviewFocusPreset(initialState.focusPreset), 80);
+    return () => window.clearTimeout(timeout);
+  }, [initialState]);
 
   return (
     <main className="island-kit-page">
@@ -408,7 +423,7 @@ export default function IslandTemplateKitPage() {
                 ? initialState.constructionLandmark === 'mystery'
                   ? 'event'
                   : initialState.constructionLandmark as 'hatchery' | 'habit' | 'wisdom' | 'boss'
-                : null}
+                : previewFocusPreset}
               constructionPresentation={constructionPresentation}
               signatureMissionPresentation={{
                 metersDrilled: initialState.frostwellDepth,

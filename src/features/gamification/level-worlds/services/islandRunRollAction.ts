@@ -106,7 +106,6 @@ import {
 } from './islandRunSignatureMissions';
 import {
   getIslandMissionBriefingBeatId,
-  markIslandMissionBriefingSeen,
   resolveIslandMissionBriefingTrigger,
   type IslandMissionBriefingTrigger,
 } from './islandRunMissionBriefing';
@@ -580,16 +579,11 @@ async function performRollAction(options: {
     cycleIndex: state.cycleIndex,
     nowMs,
   });
-  const missionNarrativeSeenState = markIslandMissionBriefingSeen(
-    state.narrativeSeenState,
-    missionBriefingTrigger,
-    nowMs,
-  );
   const isLivingTicketLanding = ordinaryTileGameplayActive
     && newTokenIndex === getFreeTicketTileIndexForTileCount(boardProfile.tileCount);
   const livingTicketLanding = isLivingTicketLanding
     ? collectIslandRunLivingTicket({
-        narrativeSeenState: missionNarrativeSeenState,
+        narrativeSeenState: state.narrativeSeenState,
         minigameTicketsByEvent: state.minigameTicketsByEvent,
         cycleIndex: state.cycleIndex,
         islandNumber: state.currentIslandNumber,
@@ -598,7 +592,7 @@ async function performRollAction(options: {
         randomValue: Math.random(),
       })
     : {
-        narrativeSeenState: missionNarrativeSeenState,
+        narrativeSeenState: state.narrativeSeenState,
         minigameTicketsByEvent: state.minigameTicketsByEvent,
         pickup: null,
       };

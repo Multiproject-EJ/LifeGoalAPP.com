@@ -43,7 +43,11 @@ function markStructural(object: THREE.Mesh) {
  * keeps the embellished high-tier model from turning every window, rib and
  * baluster into its own phone draw call.
  */
-export function compactStaticGeometry(root: THREE.Group, batchName = 'CROWN_CITADEL') {
+export function compactStaticGeometry(
+  root: THREE.Group,
+  batchName = 'CROWN_CITADEL',
+  shouldInclude: (mesh: THREE.Mesh) => boolean = () => true,
+) {
   root.updateMatrixWorld(true);
   const inverseRoot = root.matrixWorld.clone().invert();
   const batches = new Map<string, {
@@ -54,18 +58,25 @@ export function compactStaticGeometry(root: THREE.Group, batchName = 'CROWN_CITA
   const sourceMeshes: THREE.Mesh[] = [];
 
   root.traverse((child) => {
-    if (!(child instanceof THREE.Mesh) || child.name === 'CROWN_CITADEL_VOICE_PRISM') return;
+    if (
+      !(child instanceof THREE.Mesh)
+      || child instanceof THREE.InstancedMesh
+      || child.name === 'CROWN_CITADEL_VOICE_PRISM'
+      || !shouldInclude(child)
+    ) return;
     const material = Array.isArray(child.material) ? child.material[0] : child.material;
-    const key = `${material.uuid}:${child.castShadow ? 'shadow' : 'visual'}`;
+    // Keep indexed and non-indexed sources in separate batches. Converting every
+    // primitive to non-indexed geometry multiplied first-frame vertex work on
+    // the procedural Island 15 palace even though Three can merge like-indexed
+    // geometry directly.
+    const key = `${material.uuid}:${child.castShadow ? 'shadow' : 'visual'}:${child.geometry.index ? 'indexed' : 'non-indexed'}`;
     const batch = batches.get(key) ?? {
       material,
       castShadow: child.castShadow,
       geometries: [] as THREE.BufferGeometry[],
     };
     const localMatrix = inverseRoot.clone().multiply(child.matrixWorld);
-    const cloned = child.geometry.clone();
-    const geometry = cloned.index ? cloned.toNonIndexed() : cloned;
-    if (geometry !== cloned) cloned.dispose();
+    const geometry = child.geometry.clone();
     geometry.applyMatrix4(localMatrix);
     batch.geometries.push(geometry);
     batches.set(key, batch);

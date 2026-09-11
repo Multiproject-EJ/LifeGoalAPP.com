@@ -40,6 +40,7 @@ const WORLD_LANDMARK_LABELS: Readonly<Record<number, Readonly<Record<Island5Land
   9: { boss: 'Heartshaft Crucible', hatchery: 'Blastglass Incubator', habit: 'The Great Fuse', wisdom: 'Memory Press', event: 'Seismic Switchyard' },
   10: { boss: 'Rootheart Arena', hatchery: 'Acorn Cradle Hatchery', habit: 'Canopy Rhythm Lodge', wisdom: 'Spiralwood Library', event: 'Firefly Pulley Workshop' },
   14: { boss: 'Royal Honeycomb Palace', hatchery: "Queen's Nursery Hatchery", habit: 'Pollinator Yard', wisdom: 'Hive Archives', event: 'Nectar Trials Pavilion' },
+  15: { boss: 'Frozen Throne', hatchery: 'Frost Nest', habit: 'Ice Bastion', wisdom: 'Crystal Oracle', event: 'Aurora Observatory' },
   18: { boss: 'Lost City Temple', hatchery: 'Explorer Nest', habit: 'Jungle Path', wisdom: "Explorer's Camp", event: 'Survival Trials' },
   20: { boss: 'Crucible Citadel', hatchery: 'Magma Crucible Hatchery', habit: 'Fire Path Sanctum', wisdom: 'Obsidian Archive', event: 'Ashen Trialworks' },
   19: { boss: 'Loopmaster Castle', hatchery: 'Hatchery Gondola Nursery', habit: 'Habit Momentum Station', wisdom: 'Wisdom Carousel of Perspectives', event: 'Mystery Courage Drop' },
@@ -704,6 +705,47 @@ const LAVA_LABYRINTH_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, Constructi
   boss: { styleId: 'lava-labyrinth-crucible-citadel-commissioning', stationOffset: 4, stationStep: 1, relocationSeconds: 1.44, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 }, phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'clamp', 'mini-artist': 'measuring-laser' }, frame: { 'heavy-worker': 'welder', 'project-manager': 'measuring-laser', 'mini-artist': 'wrench' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'welder' } }, phaseMaterials: { foundation: ['island-blocks','beam-stack','bolt-crate'], frame: ['beam-stack','pipe-bundle','cable-coil'], assemble: ['panel-stack','pipe-bundle','cable-coil'], finish: ['panel-stack','cable-coil','bolt-crate'] } },
 };
 
+const CRYSTAL_GLACIER_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
+  hatchery: ['Frost Nest chapel floor and egg-cradle bed', 'deep ice alcoves and hatchery arch ribs', 'crystal-vault shelter inside the palace', 'five-egg cradle, hearth, and climate channels', 'warm hatch light and living frost identity'],
+  habit: ['Ice Bastion room threshold and oath floor', 'discipline pillars and sapphire wall bays', 'protective chapel vault inside the palace', 'practice rails and rising will crystal', 'steady aurora signal and completed habit room'],
+  event: ['Aurora Observatory room footing and lens axis', 'traced arch chamber and alignment ribs', 'observatory vault inside the palace', 'armillary rings and moving aurora lens', 'natural-spectrum calibration and mystery light'],
+  wisdom: ['Crystal Oracle room floor and vision basin', 'archive alcoves and silver shelf arches', 'oracle chapel vault inside the palace', 'vision pool, index shelves, and crystal instruments', 'ancient-sight glow and completed wisdom room'],
+  boss: ['Frozen Throne nave and protected ring datum', 'Boss Hall arches and permanent north apse', 'supported cathedral roof and crown', 'throne dais, runes, and Held Dawn conduit', 'released aurora, victory light, and palace heart'],
+};
+
+const CRYSTAL_GLACIER_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
+  hatchery: {
+    styleId: 'crystal-glacier-frost-nest-room-awakening', stationOffset: 0, stationStep: 1, relocationSeconds: 1.62,
+    phaseStationOffsets: { foundation: 0, frame: 1, assemble: 2, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'drill', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  habit: {
+    styleId: 'crystal-glacier-ice-bastion-room-forging', stationOffset: 1, stationStep: -1, relocationSeconds: 1.54,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'drill', 'project-manager': 'cable-reel', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  event: {
+    styleId: 'crystal-glacier-aurora-observatory-room-alignment', stationOffset: 2, stationStep: 1, relocationSeconds: 1.46,
+    phaseStationOffsets: { foundation: 0, frame: 1, assemble: 3, finish: 2 },
+    phaseTools: { foundation: { 'heavy-worker': 'drill', 'project-manager': 'measuring-laser', 'mini-artist': 'clamp' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'measuring-laser', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'welder' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'pipe-bundle', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  wisdom: {
+    styleId: 'crystal-glacier-oracle-room-illumination', stationOffset: 3, stationStep: -1, relocationSeconds: 1.78,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 3, finish: 1 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'clamp', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'screwdriver', 'mini-artist': 'paint-sprayer' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+  boss: {
+    styleId: 'crystal-glacier-frozen-throne-held-dawn-release', stationOffset: 4, stationStep: 1, relocationSeconds: 1.58,
+    phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 },
+    phaseTools: { foundation: { 'heavy-worker': 'hammer', 'project-manager': 'measuring-laser', 'mini-artist': 'drill' }, frame: { 'heavy-worker': 'wrench', 'project-manager': 'measuring-laser', 'mini-artist': 'welder' }, assemble: { 'heavy-worker': 'cable-reel', 'project-manager': 'wrench', 'mini-artist': 'screwdriver' }, finish: { 'heavy-worker': 'measuring-laser', 'project-manager': 'wrench', 'mini-artist': 'welder' } },
+    phaseMaterials: { foundation: ['island-blocks', 'beam-stack', 'bolt-crate'], frame: ['beam-stack', 'panel-stack', 'cable-coil'], assemble: ['panel-stack', 'pipe-bundle', 'cable-coil'], finish: ['panel-stack', 'cable-coil', 'bolt-crate'] },
+  },
+};
+
 function resolveConstructionChoreography(
   worldSourceNumber: number,
   landmarkId: Island5LandmarkId,
@@ -718,6 +760,7 @@ function resolveConstructionChoreography(
   if (worldSourceNumber === 9) return HEARTSHAFT_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 10) return ROOTHEART_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 14) return HONEYCOMB_CHOREOGRAPHY[landmarkId];
+  if (worldSourceNumber === 15) return CRYSTAL_GLACIER_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 18) return JUNGLE_EXPEDITION_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 20) return LAVA_LABYRINTH_CHOREOGRAPHY[landmarkId];
   if (worldSourceNumber === 19) return COASTER_CARNIVAL_CHOREOGRAPHY[landmarkId];
@@ -752,6 +795,8 @@ export const ISLAND_LANDMARK_CONSTRUCTION_PROFILES: readonly IslandLandmarkConst
                       ? ROOTHEART_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 14
                       ? HONEYCOMB_STAGE_STORIES[landmarkId]
+                    : Number(worldSourceNumber) === 15
+                      ? CRYSTAL_GLACIER_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 18
                       ? JUNGLE_EXPEDITION_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 20

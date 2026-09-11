@@ -67,6 +67,46 @@ The base board set is therefore 17 required images per island:
 - 2 boss states
 - 1 arena/scenery image
 
+### Island 015 single-palace interior-landmark exception
+
+Island 015 may present all five canonical landmark identities as rooms inside
+one continuous Crystal Glacier palace. Its standard 36-tile route is visually
+inside the central Boss Hall, while Hatchery, Habit, Mystery and Wisdom occupy
+four unequal internal palace bays. This is a narrow Island-015 composition
+exception, not a reusable board topology or permission to move stops onto
+tiles.
+
+Island 015 is also the one documented exception to the normal five-island
+Creature Arena cadence. Its fifth room is the ordinary Frozen Throne Boss Hall:
+it has no arena-creature roster identity, creature-battle state, or arena shield
+pickups. This role decision follows the approved palace mission and does not
+change the cadence for Island 005, 010, 020, or later eligible arena islands.
+
+The exception keeps `spark36_ring`, exactly 36 logical and 36 visible raised
+tile blocks, the shared route radius/depth, canonical HUD anchors, door-tile
+service routing and all canonical stop/build actions. Physical room location
+must never determine stop progression or tile ownership. The four rooms retain
+stable room-local presentation roots and L1–L3 additive build groups even
+though they share one exterior shell.
+
+The normal gameplay view uses a reversible open-roof/near-wall presentation
+state from the same palace model so all 36 tiles remain visible. Closed exterior
+orbit views and four room-focus cutaways must remain spatially consistent with
+that model. A second board, enlarged route, 72-paver appearance, circular
+stadium shell, four detached landmark buildings or substitute flat dollhouse is
+not allowed. The active proposal and approval boundary live in
+`.img2threejs/island-015-crystal-glacier/gauntlet/assembly/V13_CENTRAL_BOSS_HALL_AUTHORITY_PROPOSAL.md`.
+
+On 2026-08-30 Eivind approved one further Island-015-only hero exception: the
+outer glacier shelf and palace envelope may exceed the ordinary landmark/base
+footprints so the single palace can carry a monumental horizontal silhouette.
+This does not resize, move or duplicate the canonical route. Island 015 may use
+an island-specific camera distance/FOV while preserving the shared 47-degree
+orientation, HUD/controller safe area and complete first-view route visibility.
+Its dated Gauntlet owns the approved world-space envelope, phone occupancy,
+pack budget and rollback evidence. This exception does not apply to other
+islands and does not authorize non-uniform stretching.
+
 An outer-board accent, inhabitants, narrative panels, technology fragments, creature art, and animation states are additional packs. Across 120 islands the base board set alone is 2,040 runtime images, so production must be manifest-driven and batch-validatable.
 
 ## Camera and style lock

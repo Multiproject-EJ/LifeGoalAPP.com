@@ -31,6 +31,7 @@ import {
   resolveSunkenSandsTreasureProgress,
 } from '../islandRunSignatureMissions';
 import { getIslandRunLivingTicketBeatId, ISLAND_RUN_LIVING_TICKET_REGROW_MS } from '../islandRunLivingTicket';
+import { acknowledgeIslandMissionBriefing } from '../islandRunStateActions';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'roll-action-test-user';
@@ -291,7 +292,7 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'first halfway crossing emits one cycle-scoped diplomatic briefing and persists its seen beat',
+    name: 'halfway briefing stays retriggerable until acknowledged, then suppresses within its cycle',
     run: async () => {
       resetEnvironment();
       seedState({
@@ -308,16 +309,36 @@ export const islandRunRollActionTests: TestCase[] = [
       );
       assertEqual(firstCrossing.newTokenIndex, 18, '2 + 2 crosses the canonical halfway tile');
       assertEqual(firstCrossing.missionBriefingTrigger?.beatId, 'MISSION-BRIEFING-C0-I002', 'briefing identifies this island visit');
-      assert(
-        typeof readIslandRunGameStateRecord(makeSession()).narrativeSeenState.beats['MISSION-BRIEFING-C0-I002'] === 'number',
-        'briefing seen marker is committed atomically with the roll',
+      assertEqual(
+        readIslandRunGameStateRecord(makeSession()).narrativeSeenState.beats['MISSION-BRIEFING-C0-I002'],
+        undefined,
+        'crossing alone must not irreversibly mark a briefing the player has not seen',
       );
 
       seedState({ tokenIndex: 16, dicePool: 30 });
       const repeatedCrossing = await withMockedRandom([0, 0], () =>
         executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
       );
-      assertEqual(repeatedCrossing.missionBriefingTrigger, null, 'later crossing in the same island cycle never repeats the briefing');
+      assertEqual(
+        repeatedCrossing.missionBriefingTrigger?.beatId,
+        'MISSION-BRIEFING-C0-I002',
+        'an interrupted presentation can be offered again on a later crossing',
+      );
+
+      if (!repeatedCrossing.missionBriefingTrigger) throw new Error('expected a repeatable briefing trigger');
+      const acknowledgement = acknowledgeIslandMissionBriefing({
+        session: makeSession(),
+        client: null,
+        trigger: repeatedCrossing.missionBriefingTrigger,
+        seenAtMs: 12_345,
+      });
+      assertEqual(acknowledgement.applied, true, 'acknowledgment should persist the seen receipt once');
+
+      seedState({ tokenIndex: 16, dicePool: 30 });
+      const afterAcknowledgement = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(afterAcknowledgement.missionBriefingTrigger, null, 'acknowledged briefing stays suppressed for this island cycle');
 
       seedState({ tokenIndex: 16, dicePool: 30, cycleIndex: 1 });
       const nextCycle = await withMockedRandom([0, 0], () =>

@@ -321,9 +321,103 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
 .island-5-three-pilot--evidence .island-5-three-pilot__topline,
 .island-5-three-pilot--evidence .island-5-three-pilot__metrics,
 .island-5-three-pilot--evidence .island-5-three-pilot__profiler,
-.island-5-three-pilot--evidence .island-5-three-pilot__camera-controls {
+.island-5-three-pilot--evidence .island-5-three-pilot__camera-controls,
+.island-5-three-pilot--evidence .island-5-three-pilot__palace-navigation {
   opacity: 0;
   pointer-events: none;
+}
+
+.island-5-three-pilot__palace-navigation {
+  position: absolute;
+  z-index: 11;
+  left: 50%;
+  bottom: max(calc(env(safe-area-inset-bottom) + 174px), 176px);
+  display: grid;
+  grid-template-columns: 43px minmax(0, 1fr) 43px auto;
+  gap: 7px;
+  width: min(calc(100% - 24px), 520px);
+  padding: 8px;
+  border: 1px solid rgba(187, 242, 255, .72);
+  border-radius: 18px;
+  color: #effdff;
+  background:
+    linear-gradient(135deg, rgba(7, 35, 61, .92), rgba(26, 39, 82, .86)),
+    radial-gradient(circle at 50% 0%, rgba(116, 237, 255, .2), transparent 58%);
+  box-shadow:
+    0 14px 42px rgba(0, 13, 35, .48),
+    inset 0 1px rgba(255, 255, 255, .17);
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+/* The product board owns a tall canonical controller/footer. Keep palace
+   navigation above it and narrow enough to leave the floating compass/reset
+   rail tappable at the right edge. */
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation {
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 12px);
+  width: min(76%, 330px);
+}
+
+.island-5-three-pilot__palace-navigation[data-entry-phase="crossing"] {
+  border-color: rgba(190, 167, 255, .88);
+  box-shadow: 0 14px 42px rgba(27, 16, 73, .52), inset 0 0 22px rgba(142, 223, 255, .14);
+}
+
+.island-5-three-pilot__palace-navigation button {
+  border: 1px solid rgba(159, 226, 255, .5);
+  color: #effdff;
+  background: linear-gradient(160deg, rgba(76, 173, 205, .52), rgba(47, 61, 128, .64));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .16);
+  font: 850 9px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.island-5-three-pilot__palace-navigation button:focus-visible {
+  outline: 2px solid #fff2ad;
+  outline-offset: 2px;
+}
+
+.island-5-three-pilot__palace-navigation button:disabled {
+  cursor: default;
+  opacity: .38;
+}
+
+.island-5-three-pilot__palace-navigation-arrow {
+  min-height: 58px;
+  border-radius: 14px;
+  font-size: 21px !important;
+}
+
+.island-5-three-pilot__palace-navigation-room {
+  min-width: 0;
+  align-self: center;
+  text-align: center;
+}
+
+.island-5-three-pilot__palace-navigation-room span,
+.island-5-three-pilot__palace-navigation-room strong,
+.island-5-three-pilot__palace-navigation-room small { display: block; }
+.island-5-three-pilot__palace-navigation-room span { color: #9eeeff; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.island-5-three-pilot__palace-navigation-room strong { overflow: hidden; margin-top: 4px; font: 800 13px/1.12 Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
+.island-5-three-pilot__palace-navigation-room small { margin-top: 4px; color: rgba(229, 249, 255, .74); font-size: 10px; }
+
+.island-5-three-pilot__palace-navigation-actions {
+  grid-column: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.island-5-three-pilot__palace-navigation-actions button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 6px;
+  border-radius: 9px;
+}
+
+.island-5-three-pilot__palace-navigation-actions button:last-child {
+  border-color: rgba(255, 232, 165, .58);
+  color: #fff4ca;
+  background: linear-gradient(155deg, rgba(120, 91, 139, .62), rgba(65, 49, 103, .72));
 }
 
 .island-5-three-pilot__loading {
@@ -619,6 +713,46 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
 .island-kit-checks strong { color: #e7f6fc; font-size: 13px; }
 .island-kit-checks p { margin: 4px 0 0; color: #86a5b6; font-size: 11px; line-height: 1.45; }
 
+/* Deterministic phone evidence is deliberately independent of the browser's
+ * outer-window minimum. Headless Chromium clamps very small windows to roughly
+ * 500px, so a max-width media query cannot prove the canonical 390x844 HUD.
+ * The explicit QA query class instead mounts one exact phone viewport at the
+ * top-left; capture tooling can crop that known rectangle byte-for-byte. */
+body.island-3d-evidence-capture {
+  margin: 0;
+  overflow: hidden;
+  background: #020914;
+}
+
+body.island-3d-evidence-capture .island-kit-page {
+  width: 390px;
+  min-height: 844px;
+  height: 844px;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.island-3d-evidence-capture .island-kit-header,
+body.island-3d-evidence-capture .island-kit-controls,
+body.island-3d-evidence-capture .island-kit-checks {
+  display: none;
+}
+
+body.island-3d-evidence-capture .island-kit-workbench {
+  display: block;
+  width: 390px;
+  min-height: 844px;
+  height: 844px;
+  overflow: hidden;
+}
+
+body.island-3d-evidence-capture .island-kit-phone--evidence-frame {
+  width: 390px;
+  height: 844px;
+  border: 0;
+  border-radius: 0;
+}
+
 @media (max-width: 920px) {
   .island-kit-page { padding: 14px; }
   .island-kit-header { align-items: stretch; flex-direction: column; }
@@ -644,4 +778,26 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
     width: 100vw;
     height: calc(100vw * 844 / 390);
   }
+}
+
+/* Keep the authored evidence pixels literal even when the host browser is
+ * wide enough to activate the desktop preview-scale rule above. */
+body.island-3d-evidence-capture .island-kit-page:has(.island-kit-phone--evidence-frame),
+body.island-3d-evidence-capture .island-kit-page:has(.island-kit-phone--evidence-frame) .island-kit-workbench {
+  width: 390px;
+  min-height: 844px;
+  height: 844px;
+  margin: 0;
+  overflow: hidden;
+}
+
+body.island-3d-evidence-capture .island-kit-page:has(.island-kit-phone--evidence-frame) .island-kit-workbench {
+  display: block;
+}
+
+body.island-3d-evidence-capture .island-kit-phone--evidence-frame {
+  width: 390px;
+  height: 844px;
+  transform: none;
+  transform-origin: top left;
 }

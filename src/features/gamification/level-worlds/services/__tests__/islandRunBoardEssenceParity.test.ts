@@ -123,7 +123,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
-    name: 'encounter/boss/sanctuary essence awards remain direct runtime-state increments (legacy parity)',
+    name: 'encounter/sanctuary legacy awards remain direct while Boss resolution uses one canonical reward action',
     run: async () => {
       const source = await readBoardSource();
 
@@ -133,11 +133,8 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Encounter reward should preserve direct runtime-state essence increment semantics.',
       );
 
-      assert(
-        source.includes("essence: prev.essence + bossReward.essence") &&
-          source.includes("essenceLifetimeEarned: prev.essenceLifetimeEarned + bossReward.essence"),
-        'Boss reward should preserve direct runtime-state essence increment semantics.',
-      );
+      assert(source.includes('applyBossTrialResolutionReward({'), 'Boss reward should use the canonical atomic resolution action.');
+      assert(!source.includes('essence: prev.essence + bossReward.essence'), 'Boss reward must not retain a UI-owned Essence increment.');
 
       assert(
         source.includes("essence: prev.essence + rewardEssence") &&

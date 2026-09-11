@@ -1,7 +1,16 @@
 import { MAX_ISLANDS } from './islandContentManifest';
 
 export const ISLAND_RUN_ARENA_INTERVAL = 5 as const;
-export const ISLAND_RUN_ARENA_CREATURE_COUNT = MAX_ISLANDS / ISLAND_RUN_ARENA_INTERVAL;
+/**
+ * Island 015 is the Crystal Glacier Citadel/Frozen Throne mission. It keeps the
+ * ordinary Boss challenge even though it falls on the normal five-island arena
+ * cadence. Keep this exception here so battle, roster, and presentation callers
+ * all resolve the same role.
+ */
+export const ISLAND_RUN_ORDINARY_BOSS_EXCEPTION_ISLANDS = Object.freeze([15] as const);
+const ISLAND_RUN_ORDINARY_BOSS_EXCEPTION_SET = new Set<number>(ISLAND_RUN_ORDINARY_BOSS_EXCEPTION_ISLANDS);
+export const ISLAND_RUN_ARENA_CREATURE_COUNT = MAX_ISLANDS / ISLAND_RUN_ARENA_INTERVAL
+  - ISLAND_RUN_ORDINARY_BOSS_EXCEPTION_ISLANDS.length;
 export const ISLAND_RUN_ARENA_CREATURE_MIN_BOSS_LEVEL = 1 as const;
 /**
  * Island 005 is the authored arena pilot: Crown Drifter is part of its opening
@@ -38,7 +47,8 @@ export function isIslandRunArenaIsland(islandNumber: number): boolean {
   return Number.isInteger(islandNumber)
     && islandNumber >= ISLAND_RUN_ARENA_INTERVAL
     && islandNumber <= MAX_ISLANDS
-    && islandNumber % ISLAND_RUN_ARENA_INTERVAL === 0;
+    && islandNumber % ISLAND_RUN_ARENA_INTERVAL === 0
+    && !ISLAND_RUN_ORDINARY_BOSS_EXCEPTION_SET.has(islandNumber);
 }
 
 export function getIslandRunArenaCreatureSlot(islandNumber: number): number | null {

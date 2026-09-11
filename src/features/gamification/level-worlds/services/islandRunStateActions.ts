@@ -69,6 +69,10 @@ import {
   mergeIslandNarrativeSeenState,
 } from '../narrative/islandNarrativeSeenState';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
+import {
+  markIslandMissionBriefingSeen,
+  type IslandMissionBriefingTrigger,
+} from './islandRunMissionBriefing';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
   applyEssenceDrift,
@@ -2783,6 +2787,23 @@ export interface ApplyBossTrialResolvedMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyBossTrialResolutionRewardOptions extends ApplyBossTrialResolvedMarkerOptions {
+  rewardDice: number;
+  rewardEssence: number;
+  rewardSpinTokens: number;
+}
+
+export interface ApplyBossTrialResolutionRewardResult {
+  record: IslandRunGameStateRecord;
+  /** False when this island's durable Boss marker proves the payout was already applied. */
+  applied: boolean;
+  appliedReward: {
+    dice: number;
+    essence: number;
+    spinTokens: number;
+  };
+}
+
 export interface ApplyQaProgressionSnapshotOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -2870,6 +2891,19 @@ export interface ApplyNarrativeSeenStateMarkerOptions {
   /** Full local seen-ledger to union into the canonical record. */
   narrativeSeenState: IslandNarrativeSeenState;
   triggerSource?: string;
+}
+
+export interface AcknowledgeIslandMissionBriefingOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  trigger: IslandMissionBriefingTrigger;
+  seenAtMs?: number;
+  triggerSource?: string;
+}
+
+export interface AcknowledgeIslandMissionBriefingResult {
+  record: IslandRunGameStateRecord;
+  applied: boolean;
 }
 
 export interface ApplyIslandOneExpeditionOrderAcknowledgementOptions {
@@ -3191,6 +3225,59 @@ export function applyBossTrialResolvedMarker(options: ApplyBossTrialResolvedMark
     triggerSource: triggerSource ?? 'apply_boss_trial_resolved_marker',
   });
   return next;
+}
+
+/**
+ * Commits the ordinary Boss payout and its durable resolution receipt as one
+ * canonical record. The marker is the idempotency key: a rapid replay or
+ * restored success callback cannot award the same island twice.
+ */
+export function applyBossTrialResolutionReward(
+  options: ApplyBossTrialResolutionRewardOptions,
+): ApplyBossTrialResolutionRewardResult {
+  const {
+    session,
+    client,
+    islandNumber,
+    rewardDice,
+    rewardEssence,
+    rewardSpinTokens,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const emptyReward = { dice: 0, essence: 0, spinTokens: 0 };
+  if (current.bossTrialResolvedIslandNumber === islandNumber) {
+    return { record: current, applied: false, appliedReward: emptyReward };
+  }
+
+  const appliedReward = {
+    dice: Number.isFinite(rewardDice) ? Math.max(0, Math.trunc(rewardDice)) : 0,
+    essence: Number.isFinite(rewardEssence) ? Math.max(0, Math.trunc(rewardEssence)) : 0,
+    spinTokens: Number.isFinite(rewardSpinTokens) ? Math.max(0, Math.trunc(rewardSpinTokens)) : 0,
+  };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    currentIslandNumber: islandNumber,
+    bossTrialResolvedIslandNumber: islandNumber,
+    dicePool: current.dicePool + appliedReward.dice,
+    essence: current.essence + appliedReward.essence,
+    essenceLifetimeEarned: current.essenceLifetimeEarned + appliedReward.essence,
+    spinTokens: current.spinTokens + appliedReward.spinTokens,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.bossTrialDice,
+    amount: appliedReward.dice,
+    sessionId: session.user.id,
+    metadata: { islandNumber, triggerSource: triggerSource ?? 'apply_boss_trial_resolution_reward' },
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_boss_trial_resolution_reward',
+  });
+  return { record: next, applied: true, appliedReward };
 }
 
 /**
@@ -3947,6 +4034,40 @@ export function applyNarrativeSeenStateMarker(options: ApplyNarrativeSeenStateMa
     triggerSource: triggerSource ?? 'apply_narrative_seen_state_marker',
   });
   return next;
+}
+
+/**
+ * Durably acknowledges a mission briefing only after its presentation owns the
+ * player's attention and the player accepts it. Replays are idempotent by beat ID.
+ */
+export function acknowledgeIslandMissionBriefing(
+  options: AcknowledgeIslandMissionBriefingOptions,
+): AcknowledgeIslandMissionBriefingResult {
+  const { session, client, trigger, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (typeof current.narrativeSeenState.beats[trigger.beatId] === 'number') {
+    return { record: current, applied: false };
+  }
+  const nextNarrativeSeenState = markIslandMissionBriefingSeen(
+    current.narrativeSeenState,
+    trigger,
+    options.seenAtMs ?? Date.now(),
+  );
+  if (isIslandNarrativeSeenStateEqual(current.narrativeSeenState, nextNarrativeSeenState)) {
+    return { record: current, applied: false };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    narrativeSeenState: nextNarrativeSeenState,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'acknowledge_island_mission_briefing',
+  });
+  return { record: next, applied: true };
 }
 
 /**

@@ -84,6 +84,8 @@ export const islandNarrativeSeenStateTests: TestCase[] = [
       assertIncludes(boardSource, 'applyNarrativeSeenStateMarker', 'Board should persist via the canonical action');
       assertIncludes(boardSource, 'persistedNarrativeSeenState: runtimeState.narrativeSeenState', 'Board should feed the canonical ledger to the hook');
       assertIncludes(boardSource, 'onPersistNarrativeSeen: handlePersistNarrativeSeen', 'Board should wire the persist callback');
+      assertIncludes(boardSource, 'acknowledgeIslandMissionBriefing({', 'Mission briefings should persist only through their canonical acknowledgment action');
+      assertIncludes(boardSource, 'trigger: activeMissionBriefing', 'Mission acknowledgment should receipt the briefing that actually owned the modal');
     },
   },
   {

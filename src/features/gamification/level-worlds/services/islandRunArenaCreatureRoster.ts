@@ -1,5 +1,9 @@
 import { MAX_ISLANDS } from './islandContentManifest';
-import { ISLAND_RUN_ARENA_INTERVAL } from './islandRunArenaCreaturePresentation';
+import {
+  ISLAND_RUN_ARENA_CREATURE_COUNT,
+  ISLAND_RUN_ARENA_INTERVAL,
+  isIslandRunArenaIsland,
+} from './islandRunArenaCreaturePresentation';
 
 export type IslandRunArenaCreatureImplementationStatus = 'implemented' | 'planned';
 
@@ -11,50 +15,54 @@ export interface IslandRunArenaCreatureRosterEntry {
   implementationStatus: IslandRunArenaCreatureImplementationStatus;
 }
 
-const ARENA_NAMES = [
-  ['rare-crown-drifter', 'Crown Drifter'],
-  ['arena-reefback-champion', 'Reefback Champion'],
-  ['arena-embercrest-rook', 'Embercrest Rook'],
-  ['arena-cloudhorn-regent', 'Cloudhorn Regent'],
-  ['arena-moss-titan', 'Moss Titan'],
-  ['arena-moonveil-lynx', 'Moonveil Lynx'],
-  ['arena-stormglass-roc', 'Stormglass Roc'],
-  ['arena-sunken-oracle', 'Sunken Oracle'],
-  ['arena-ironbloom-golem', 'Ironbloom Golem'],
-  ['arena-aurora-leviathan', 'Aurora Leviathan'],
-  ['arena-cinderwing-matriarch', 'Cinderwing Matriarch'],
-  ['arena-prismjaw-sentinel', 'Prismjaw Sentinel'],
-  ['arena-starroot-behemoth', 'Starroot Behemoth'],
-  ['arena-tidal-crown-serpent', 'Tidal Crown Serpent'],
-  ['arena-clockwork-chimera', 'Clockwork Chimera'],
-  ['arena-dreamfen-stag', 'Dreamfen Stag'],
-  ['arena-thunderreef-manta', 'Thunderreef Manta'],
-  ['arena-lumen-drake', 'Lumen Drake'],
-  ['arena-obsidian-bloom-warden', 'Obsidian Bloom Warden'],
-  ['arena-celestial-tortoise', 'Celestial Tortoise'],
-  ['arena-voidgarden-sphinx', 'Voidgarden Sphinx'],
-  ['arena-solstice-phoenix', 'Solstice Phoenix'],
-  ['arena-infinity-kirin', 'Infinity Kirin'],
-  ['arena-first-light-colossus', 'First Light Colossus'],
+const ARENA_IDENTITIES = [
+  [5, 'rare-crown-drifter', 'Crown Drifter'],
+  [10, 'arena-reefback-champion', 'Reefback Champion'],
+  [20, 'arena-cloudhorn-regent', 'Cloudhorn Regent'],
+  [25, 'arena-moss-titan', 'Moss Titan'],
+  [30, 'arena-moonveil-lynx', 'Moonveil Lynx'],
+  [35, 'arena-stormglass-roc', 'Stormglass Roc'],
+  [40, 'arena-sunken-oracle', 'Sunken Oracle'],
+  [45, 'arena-ironbloom-golem', 'Ironbloom Golem'],
+  [50, 'arena-aurora-leviathan', 'Aurora Leviathan'],
+  [55, 'arena-cinderwing-matriarch', 'Cinderwing Matriarch'],
+  [60, 'arena-prismjaw-sentinel', 'Prismjaw Sentinel'],
+  [65, 'arena-starroot-behemoth', 'Starroot Behemoth'],
+  [70, 'arena-tidal-crown-serpent', 'Tidal Crown Serpent'],
+  [75, 'arena-clockwork-chimera', 'Clockwork Chimera'],
+  [80, 'arena-dreamfen-stag', 'Dreamfen Stag'],
+  [85, 'arena-thunderreef-manta', 'Thunderreef Manta'],
+  [90, 'arena-lumen-drake', 'Lumen Drake'],
+  [95, 'arena-obsidian-bloom-warden', 'Obsidian Bloom Warden'],
+  [100, 'arena-celestial-tortoise', 'Celestial Tortoise'],
+  [105, 'arena-voidgarden-sphinx', 'Voidgarden Sphinx'],
+  [110, 'arena-solstice-phoenix', 'Solstice Phoenix'],
+  [115, 'arena-infinity-kirin', 'Infinity Kirin'],
+  [120, 'arena-first-light-colossus', 'First Light Colossus'],
 ] as const;
 
 /**
- * Stable content identity for the 24 every-fifth-island opponents. Planned
- * entries deliberately remain outside the ordinary creature catalog until
- * their art, 3D model, egg, and acquisition metadata are production-ready.
+ * Stable content identity for arena opponents. Cadence slots remain tied to
+ * their island number, so Island 015's ordinary-Boss exception leaves slot 2
+ * intentionally unused rather than renumbering every later opponent. Planned
+ * entries remain outside the ordinary creature catalog until production-ready.
  */
-export const ISLAND_RUN_ARENA_CREATURE_ROSTER: readonly IslandRunArenaCreatureRosterEntry[] = ARENA_NAMES.map(
-  ([creatureId, name], arenaSlot) => ({
-    arenaSlot,
-    islandNumber: (arenaSlot + 1) * ISLAND_RUN_ARENA_INTERVAL,
+export const ISLAND_RUN_ARENA_CREATURE_ROSTER: readonly IslandRunArenaCreatureRosterEntry[] = ARENA_IDENTITIES.map(
+  ([islandNumber, creatureId, name]) => ({
+    arenaSlot: islandNumber / ISLAND_RUN_ARENA_INTERVAL - 1,
+    islandNumber,
     creatureId,
     name,
-    implementationStatus: arenaSlot === 0 ? 'implemented' : 'planned',
+    implementationStatus: islandNumber === 5 ? 'implemented' : 'planned',
   }),
 );
 
-if (ISLAND_RUN_ARENA_CREATURE_ROSTER.length !== MAX_ISLANDS / ISLAND_RUN_ARENA_INTERVAL) {
-  throw new Error('Arena creature roster must define one unique opponent for every fifth island.');
+if (
+  ISLAND_RUN_ARENA_CREATURE_ROSTER.length !== ISLAND_RUN_ARENA_CREATURE_COUNT
+  || ISLAND_RUN_ARENA_CREATURE_ROSTER.some((entry) => !isIslandRunArenaIsland(entry.islandNumber))
+  || ISLAND_RUN_ARENA_CREATURE_ROSTER.some((entry) => entry.islandNumber > MAX_ISLANDS)
+) {
+  throw new Error('Arena creature roster must match the arena cadence and its documented ordinary-Boss exceptions.');
 }
 
 const ARENA_CREATURE_IDS = new Set(ISLAND_RUN_ARENA_CREATURE_ROSTER.map((entry) => entry.creatureId));

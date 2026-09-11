@@ -32,11 +32,13 @@ import {
   subscribeIslandRunState,
 } from '../islandRunStateStore';
 import {
+  acknowledgeIslandMissionBriefing,
   applyActiveCompanion,
   applyActivateCurrentIslandTimer,
   applyAudioEnabledMarker,
   applyAudioPreferencesMarker,
   applyBossTrialResolvedMarker,
+  applyBossTrialResolutionReward,
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
@@ -3357,6 +3359,123 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       assertEqual(result.runtimeVersion, 14, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyBossTrialResolutionReward atomically persists every ordinary Boss reward field and marker',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 14,
+        currentIslandNumber: 15,
+        bossTrialResolvedIslandNumber: null,
+        dicePool: 20,
+        essence: 100,
+        essenceLifetimeEarned: 600,
+        spinTokens: 2,
+      });
+
+      const result = applyBossTrialResolutionReward({
+        session,
+        client: null,
+        islandNumber: 15,
+        rewardDice: 12,
+        rewardEssence: 105,
+        rewardSpinTokens: 1,
+        triggerSource: 'test_island_15_boss_reward',
+      });
+
+      assertEqual(result.applied, true, 'first successful resolution should apply its payout');
+      assertEqual(result.record.dicePool, 32, 'dice payout should persist in the same record');
+      assertEqual(result.record.essence, 205, 'Essence payout should persist in the same record');
+      assertEqual(result.record.essenceLifetimeEarned, 705, 'lifetime Essence should advance with the payout');
+      assertEqual(result.record.spinTokens, 3, 'spin-token payout should persist in the same record');
+      assertEqual(result.record.bossTrialResolvedIslandNumber, 15, 'the idempotency marker should persist with the payout');
+      assertEqual(result.record.runtimeVersion, 15, 'the complete resolution should use one version increment');
+      assertEqual(getIslandRunStateSnapshot(session), result.record, 'the canonical store should publish the complete reward record');
+    },
+  },
+
+  {
+    name: 'applyBossTrialResolutionReward is idempotent for repeated Island 015 success callbacks',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 8,
+        currentIslandNumber: 15,
+        bossTrialResolvedIslandNumber: null,
+        dicePool: 9,
+        essence: 40,
+        essenceLifetimeEarned: 120,
+        spinTokens: 0,
+      });
+      const options = {
+        session,
+        client: null,
+        islandNumber: 15,
+        rewardDice: 12,
+        rewardEssence: 105,
+        rewardSpinTokens: 1,
+        triggerSource: 'test_island_15_boss_reward_replay',
+      } as const;
+
+      const first = applyBossTrialResolutionReward(options);
+      const replay = applyBossTrialResolutionReward(options);
+
+      assertEqual(first.applied, true, 'first callback should apply');
+      assertEqual(replay.applied, false, 'replayed callback should be rejected by the durable marker');
+      assertEqual(replay.appliedReward.dice, 0, 'replay reports no dice applied');
+      assertEqual(replay.appliedReward.essence, 0, 'replay reports no Essence applied');
+      assertEqual(replay.appliedReward.spinTokens, 0, 'replay reports no spin tokens applied');
+      assertEqual(replay.record.runtimeVersion, first.record.runtimeVersion, 'replay should not create another state version');
+      assertEqual(replay.record.dicePool, first.record.dicePool, 'replay should not duplicate dice');
+      assertEqual(replay.record.essence, first.record.essence, 'replay should not duplicate Essence');
+      assertEqual(replay.record.spinTokens, first.record.spinTokens, 'replay should not duplicate spin tokens');
+    },
+  },
+
+  {
+    name: 'acknowledgeIslandMissionBriefing persists one cycle-scoped receipt idempotently',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        currentIslandNumber: 15,
+        cycleIndex: 2,
+        narrativeSeenState: { beats: { 'existing-beat': 50 }, episodes: { intro: 25 } },
+      });
+      const trigger = {
+        beatId: 'MISSION-BRIEFING-C2-I015',
+        islandNumber: 15,
+        cycleIndex: 2,
+        triggerTileIndex: 18,
+      } as const;
+
+      const first = acknowledgeIslandMissionBriefing({
+        session,
+        client: null,
+        trigger,
+        seenAtMs: 9_876,
+      });
+      const replay = acknowledgeIslandMissionBriefing({
+        session,
+        client: null,
+        trigger,
+        seenAtMs: 10_000,
+      });
+
+      assertEqual(first.applied, true, 'first explicit acknowledgment should commit');
+      assertEqual(first.record.narrativeSeenState.beats[trigger.beatId], 9_876, 'receipt records the actual acknowledgment time');
+      assertEqual(first.record.narrativeSeenState.beats['existing-beat'], 50, 'other beat receipts remain intact');
+      assertEqual(first.record.narrativeSeenState.episodes.intro, 25, 'episode receipts remain intact');
+      assertEqual(first.record.runtimeVersion, 21, 'first acknowledgment increments the canonical version once');
+      assertEqual(replay.applied, false, 'replayed acknowledgment is idempotent');
+      assertEqual(replay.record.runtimeVersion, 21, 'replay does not create a second state version');
+      assertEqual(replay.record.narrativeSeenState.beats[trigger.beatId], 9_876, 'replay cannot rewrite the original seen time');
     },
   },
 

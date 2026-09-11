@@ -52,8 +52,11 @@ Useful implementation precedents:
 - Every landmark has authored L1, L2 and L3 growth. L1 is crafted and readable,
   L2 operational, and L3 restored/premium. Levels grow the same building rather
   than swapping identities.
-- Only every fifth island is a creature Arena island. Ordinary islands receive
-  an impressive central Boss landmark, not an arena.
+- Creature Arenas normally occur every fifth island. Island 015 is the single
+  documented cadence exception: its Crystal Glacier Citadel mission culminates
+  in the ordinary Frozen Throne Boss, with no arena creature, opponent roster
+  entry, battle state, or arena pickups. Other ordinary islands receive an
+  impressive central Boss landmark, not an arena.
 - The first phone view shows the whole route and all five landmarks between the
   real top HUD and controller. Landmark focus views may then move closer.
 - Scenery, plants and props never occupy the protected route corridor or hide

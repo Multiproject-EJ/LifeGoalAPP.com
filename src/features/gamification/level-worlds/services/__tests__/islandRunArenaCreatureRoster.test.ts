@@ -25,16 +25,17 @@ function packState(): IslandRunGameStateRecord {
 
 export const islandRunArenaCreatureRosterTests: TestCase[] = [
   {
-    name: 'defines 24 unique creature identities on Islands 005 through 120',
+    name: 'defines unique creature identities for arena islands while leaving Island 015 ordinary',
     run: () => {
-      assertEqual(ISLAND_RUN_ARENA_CREATURE_ROSTER.length, 24, 'one identity is reserved for every fifth island');
+      assertEqual(ISLAND_RUN_ARENA_CREATURE_ROSTER.length, 23, 'one identity is reserved for every arena island except Island 015');
       assertEqual(ISLAND_RUN_ARENA_CREATURE_ROSTER[0]?.islandNumber, 5, 'first identity belongs to Island 005');
-      assertEqual(ISLAND_RUN_ARENA_CREATURE_ROSTER[23]?.islandNumber, 120, 'last identity belongs to Island 120');
-      assertEqual(new Set(ISLAND_RUN_ARENA_CREATURE_ROSTER.map((entry) => entry.creatureId)).size, 24, 'creature ids must be unique');
-      assertEqual(new Set(ISLAND_RUN_ARENA_CREATURE_ROSTER.map((entry) => entry.name)).size, 24, 'creature names must be unique');
-      ISLAND_RUN_ARENA_CREATURE_ROSTER.forEach((entry, arenaSlot) => {
-        assertEqual(entry.arenaSlot, arenaSlot, `slot ${arenaSlot} should stay stable`);
-        assertEqual(entry.islandNumber, (arenaSlot + 1) * 5, `slot ${arenaSlot} should map to its fifth island`);
+      assertEqual(ISLAND_RUN_ARENA_CREATURE_ROSTER[22]?.islandNumber, 120, 'last identity belongs to Island 120');
+      assertEqual(new Set(ISLAND_RUN_ARENA_CREATURE_ROSTER.map((entry) => entry.creatureId)).size, 23, 'creature ids must be unique');
+      assertEqual(new Set(ISLAND_RUN_ARENA_CREATURE_ROSTER.map((entry) => entry.name)).size, 23, 'creature names must be unique');
+      assertEqual(getIslandRunArenaCreatureForIsland(15), null, 'Island 015 must not resolve an arena opponent');
+      ISLAND_RUN_ARENA_CREATURE_ROSTER.forEach((entry) => {
+        assertEqual(entry.arenaSlot, entry.islandNumber / 5 - 1, `Island ${entry.islandNumber} should keep its cadence slot`);
+        assert(entry.arenaSlot !== 2, 'arena slot 2 remains empty for the Island 015 ordinary-Boss exception');
         assertEqual(getIslandRunArenaCreatureForIsland(entry.islandNumber)?.creatureId, entry.creatureId, `Island ${entry.islandNumber} should resolve its reserved opponent`);
       });
     },

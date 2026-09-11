@@ -9,14 +9,16 @@ import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarne
 
 export const islandRunArenaCreaturePresentationTests: TestCase[] = [
   {
-    name: 'derives exactly 24 creature arenas from the canonical 120-island journey',
+    name: 'derives the arena cadence with Island 015 reserved for its ordinary Frozen Throne Boss',
     run: () => {
-      assertEqual(ISLAND_RUN_ARENA_CREATURE_COUNT, 24, '120 / 5 must yield 24 creature arenas');
+      assertEqual(ISLAND_RUN_ARENA_CREATURE_COUNT, 23, 'the 24 cadence positions minus Island 015 yield 23 creature arenas');
       const arenaIslands = Array.from({ length: 120 }, (_, index) => index + 1).filter(isIslandRunArenaIsland);
-      assertEqual(arenaIslands.length, 24, 'every fifth island and only every fifth island should host an arena creature');
+      assertEqual(arenaIslands.length, 23, 'all configured cadence islands except Island 015 should host an arena creature');
       assertEqual(arenaIslands[0], 5, 'the first arena creature should appear on Island 005');
-      assertEqual(arenaIslands[23], 120, 'the final arena creature should appear on Island 120');
+      assertEqual(arenaIslands[22], 120, 'the final arena creature should appear on Island 120');
       assertEqual(getIslandRunArenaCreatureSlot(5), 0, 'Island 005 owns arena slot zero');
+      assertEqual(isIslandRunArenaIsland(15), false, 'Island 015 is an ordinary-Boss exception to the cadence');
+      assertEqual(getIslandRunArenaCreatureSlot(15), null, 'Island 015 must not consume an arena-creature slot');
       assertEqual(getIslandRunArenaCreatureSlot(120), 23, 'Island 120 owns arena slot twenty-three');
       assertEqual(getIslandRunArenaCreatureSlot(2), null, 'ordinary islands must not consume an arena-creature slot');
     },
@@ -34,6 +36,7 @@ export const islandRunArenaCreaturePresentationTests: TestCase[] = [
       assertEqual(emerging.mode, 'emerging', 'later arenas should still stage the creature from Boss Level 1');
       assert(emerging.emergenceProgress > 0 && emerging.emergenceProgress < 1, 'Level-1 emergence should be visibly staged');
       assertEqual(resolveIslandRunArenaCreatureMotion({ islandNumber: 1, bossBuildLevel: 3, elapsedSeconds: 12 }).visible, false, 'non-arena islands stay creature-free');
+      assertEqual(resolveIslandRunArenaCreatureMotion({ islandNumber: 15, bossBuildLevel: 3, elapsedSeconds: 12 }).visible, false, 'Island 015 stays creature-free at every Boss build level');
     },
   },
   {

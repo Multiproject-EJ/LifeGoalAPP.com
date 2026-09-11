@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 18 | 19 | 20 | 22;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 18 | 19 | 20 | 22;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -43,6 +43,13 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   // The supplied concept image contains a baked Island 043 label, but runtime
   // Island 020 owns this authored Lava Labyrinth world and its Arena cadence.
   { runtimeIslandNumber: 20, worldSourceNumber: 20, role: 'arena' },
+  {
+    runtimeIslandNumber: 15,
+    worldSourceNumber: 15,
+    // Approved Frozen Throne mission exception: this is an ordinary Boss world.
+    // Its palace is authored procedurally by Island5ThreePilot; there is no GLB route.
+    role: 'ordinary',
+  },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

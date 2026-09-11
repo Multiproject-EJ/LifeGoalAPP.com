@@ -1,5 +1,12 @@
 # Creature Arena Battle and Exclusive Eggs Gauntlet
 
+> **Superseding exception — 2026-09-09:** Island 015 is the approved Crystal
+> Glacier Citadel/Frozen Throne ordinary-Boss mission. It is excluded from the
+> creature-arena predicate, roster, battle state, egg reward, and arena shield
+> pickups. The original 24-slot cadence language below is retained as historical
+> planning context; the active journey contains 23 creature arenas, with cadence
+> slot 2 intentionally unused so later island/opponent identities do not shift.
+
 ## Status
 
 Active implementation contract. The radial-tile top-face repair, Island 005

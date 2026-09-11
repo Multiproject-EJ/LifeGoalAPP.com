@@ -184,6 +184,11 @@ import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
 import { islandRun3DWorldRoutingTests } from './islandRun3DWorldRouting.test';
 import { island22WaterDragonMissionTests } from './island22WaterDragonMission.test';
 import { island5ThreePilotContractTests } from './island5ThreePilotContract.test';
+import { island15MissionBriefingTests } from './island15MissionBriefing.test';
+import { island15CrystalGlacierThreeWorldContractTests } from './island15CrystalGlacierThreeWorldContract.test';
+import { island15CrystalPalaceRuntimeTests } from './island15CrystalPalaceRuntime.test';
+import { island15CrystalPalaceLoaderTests } from './island15CrystalPalaceLoader.test';
+import { island15CameraDirectorTests } from './island15CameraDirector.test';
 import { island10RootheartThreeWorldContractTests } from './island10RootheartThreeWorldContract.test';
 import { island18JungleExpeditionThreeWorldContractTests } from './island18JungleExpeditionThreeWorldContract.test';
 import { island20LavaLabyrinthThreeWorldContractTests } from './island20LavaLabyrinthThreeWorldContract.test';
@@ -215,6 +220,11 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRun3DWorldRouting', tests: islandRun3DWorldRoutingTests },
   { label: 'island22WaterDragonMission', tests: island22WaterDragonMissionTests },
   { label: 'island5ThreePilotContract', tests: island5ThreePilotContractTests },
+  { label: 'island15MissionBriefing', tests: island15MissionBriefingTests },
+  { label: 'island15CrystalGlacierThreeWorldContract', tests: island15CrystalGlacierThreeWorldContractTests },
+  { label: 'island15CrystalPalaceRuntime', tests: island15CrystalPalaceRuntimeTests },
+  { label: 'island15CrystalPalaceLoader', tests: island15CrystalPalaceLoaderTests },
+  { label: 'island15CameraDirector', tests: island15CameraDirectorTests },
   { label: 'island10RootheartThreeWorldContract', tests: island10RootheartThreeWorldContractTests },
   { label: 'island18JungleExpeditionThreeWorldContract', tests: island18JungleExpeditionThreeWorldContractTests },
   { label: 'island20LavaLabyrinthThreeWorldContract', tests: island20LavaLabyrinthThreeWorldContractTests },

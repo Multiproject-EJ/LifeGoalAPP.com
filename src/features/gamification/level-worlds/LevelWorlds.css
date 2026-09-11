@@ -52,6 +52,139 @@
   --tile-stop-glow:  rgba(80, 200, 220, 0.55);
 }
 
+/* Island 015 palace navigation ships with the live board. The dev workbench
+   carries a matching copy, but production must not depend on a dev-only CSS
+   import for its room navigator or the V59 product-acceptance capture. */
+.island-5-three-pilot__palace-navigation {
+  position: absolute;
+  z-index: 11;
+  left: 50%;
+  bottom: max(calc(env(safe-area-inset-bottom) + 174px), 176px);
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px auto;
+  gap: 6px;
+  width: min(calc(100% - 24px), 520px);
+  padding: 7px;
+  border: 1px solid rgba(187, 242, 255, .72);
+  border-radius: 16px;
+  color: #effdff;
+  background:
+    linear-gradient(135deg, rgba(7, 35, 61, .92), rgba(26, 39, 82, .86)),
+    radial-gradient(circle at 50% 0%, rgba(116, 237, 255, .2), transparent 58%);
+  box-shadow: 0 14px 42px rgba(0, 13, 35, .48), inset 0 1px rgba(255, 255, 255, .17);
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation {
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 12px);
+  width: min(76%, 330px);
+}
+
+.island-5-three-pilot--embedded.island-5-three-pilot--product-acceptance .island-5-three-pilot__palace-navigation {
+  bottom: max(calc(env(safe-area-inset-bottom) + 18px), 18px);
+  width: min(76%, 330px);
+}
+
+.island-5-three-pilot--product-acceptance .island-5-three-pilot__palace-navigation button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.island-5-three-pilot__palace-navigation[data-entry-phase="crossing"] {
+  border-color: rgba(190, 167, 255, .88);
+  box-shadow: 0 14px 42px rgba(27, 16, 73, .52), inset 0 0 22px rgba(142, 223, 255, .14);
+}
+
+.island-5-three-pilot__palace-navigation button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(159, 226, 255, .5);
+  border-radius: 11px;
+  color: #effdff;
+  background: linear-gradient(160deg, rgba(76, 173, 205, .52), rgba(47, 61, 128, .64));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .16);
+  font: 850 9px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.island-5-three-pilot__palace-navigation button:focus-visible {
+  outline: 2px solid #fff2ad;
+  outline-offset: 2px;
+}
+
+.island-5-three-pilot__palace-navigation button:disabled {
+  cursor: default;
+  opacity: .38;
+}
+
+.island-5-three-pilot__palace-navigation-arrow { font-size: 21px !important; }
+.island-5-three-pilot__palace-navigation-room { min-width: 0; align-self: center; text-align: center; }
+.island-5-three-pilot__palace-navigation-room span,
+.island-5-three-pilot__palace-navigation-room strong,
+.island-5-three-pilot__palace-navigation-room small { display: block; }
+.island-5-three-pilot__palace-navigation-room span { color: #9eeeff; font-size: 8px; font-weight: 900; letter-spacing: .1em; }
+.island-5-three-pilot__palace-navigation-room strong { overflow: hidden; margin-top: 3px; font: 800 12px/1.1 Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
+.island-5-three-pilot__palace-navigation-room small { margin-top: 3px; color: rgba(229, 249, 255, .74); font-size: 9px; }
+.island-5-three-pilot__palace-navigation-actions { display: flex; gap: 4px; }
+.island-5-three-pilot__palace-navigation-actions button { padding: 0 6px; }
+.island-5-three-pilot__palace-navigation-actions button:last-child {
+  border-color: rgba(255, 232, 165, .58);
+  color: #fff4ca;
+  background: linear-gradient(155deg, rgba(120, 91, 139, .62), rgba(65, 49, 103, .72));
+}
+
+/* A room title must not be squeezed between four touch targets on phones.
+   Keep the complete name on its own shallow row; the four real controls share
+   the row below. This is presentation-only and preserves the controller rail. */
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation {
+  grid-template-columns: 44px minmax(44px, 1fr) minmax(44px, 1fr) 44px;
+  grid-template-rows: auto 44px;
+  gap: 5px;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-room {
+  grid-row: 1;
+  grid-column: 1 / -1;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-room span {
+  display: none;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-room strong {
+  display: inline;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-room small {
+  display: inline;
+  margin: 0 0 0 7px;
+  font-size: 9px;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-arrow {
+  grid-row: 2;
+  min-height: 44px;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-arrow:first-child {
+  grid-column: 1;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-arrow:nth-of-type(2) {
+  grid-column: 4;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-actions {
+  display: contents;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-actions button {
+  grid-row: 2;
+  grid-column: 2;
+  min-width: 44px;
+  min-height: 44px;
+}
+.island-5-three-pilot--embedded .island-5-three-pilot__palace-navigation-actions button:last-child {
+  grid-column: 3;
+}
+
 /* ── Demo island tile skins ─────────────────────────────────────────────────
    Apply on the board root (e.g. alongside `.island-run-board`) to reskin the
    slab material. Function accents intentionally stay inherited. Future skins
@@ -3158,6 +3291,91 @@
   outline-offset: 2px;
 }
 
+/* Island 015 presentation skin. Progress, timing, reward logic, and the
+ * accessible button structure remain canonical; only the citadel's crystal
+ * framing is island-specific. */
+.island-run-board__rewardbar--crystal-glacier {
+  --rewardbar-card-radius: 14px;
+  isolation: isolate;
+  border: 2px solid rgba(177, 247, 255, 0.96);
+  background:
+    radial-gradient(circle at 50% -36%, rgba(125, 246, 255, 0.48), transparent 52%),
+    linear-gradient(145deg, rgba(13, 68, 112, 0.96) 0%, rgba(7, 29, 68, 0.97) 54%, rgba(18, 77, 117, 0.96) 100%);
+  color: #e7fcff;
+  box-shadow:
+    inset 0 0 0 2px rgba(69, 183, 218, 0.36),
+    inset 0 -10px 20px rgba(0, 12, 39, 0.36),
+    0 0 0 1px rgba(21, 103, 155, 0.72),
+    0 7px 20px rgba(1, 20, 51, 0.4),
+    0 0 19px rgba(81, 225, 255, 0.24);
+}
+
+.island-run-board__rewardbar--crystal-glacier::before,
+.island-run-board__rewardbar--crystal-glacier::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  z-index: -1;
+  width: 30px;
+  height: 62px;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(225, 255, 255, 0.96), rgba(62, 198, 236, 0.72) 42%, rgba(18, 79, 147, 0.92));
+  filter: drop-shadow(0 4px 5px rgba(0, 18, 53, 0.42));
+  clip-path: polygon(50% 0, 78% 27%, 100% 48%, 72% 58%, 86% 100%, 46% 78%, 10% 96%, 22% 58%, 0 39%, 34% 28%);
+}
+
+.island-run-board__rewardbar--crystal-glacier::before {
+  left: -17px;
+  transform: translateY(-50%) rotate(-10deg);
+}
+
+.island-run-board__rewardbar--crystal-glacier::after {
+  right: -17px;
+  transform: translateY(-50%) scaleX(-1) rotate(-10deg);
+}
+
+.island-run-board__rewardbar--crystal-glacier:focus-visible {
+  outline-color: rgba(144, 245, 255, 0.98);
+  box-shadow: 0 0 0 4px rgba(70, 213, 255, 0.32), 0 0 24px rgba(70, 213, 255, 0.52);
+}
+
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-track {
+  height: 20px;
+  border-color: rgba(176, 247, 255, 0.78);
+  background: linear-gradient(180deg, rgba(0, 18, 49, 0.82), rgba(19, 71, 106, 0.74));
+  box-shadow: inset 0 2px 5px rgba(0, 8, 32, 0.62), 0 0 9px rgba(86, 229, 255, 0.2);
+}
+
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-track-fill {
+  background:
+    linear-gradient(90deg, #1689bf 0%, #39dbea 35%, #a8fff5 68%, #9d86ff 100%);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.58), 0 0 10px rgba(87, 236, 255, 0.72);
+}
+
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-avatar-indicator,
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-endcap {
+  border-color: rgba(187, 250, 255, 0.94);
+  background:
+    radial-gradient(circle at 34% 25%, rgba(255, 255, 255, 0.96), rgba(128, 232, 244, 0.88) 38%, rgba(37, 105, 167, 0.98) 100%);
+  color: #061f4a;
+  box-shadow: inset 0 0 7px rgba(255, 255, 255, 0.8), 0 0 11px rgba(77, 224, 255, 0.56);
+  clip-path: polygon(50% 0, 82% 12%, 100% 45%, 86% 82%, 52% 100%, 16% 85%, 0 51%, 14% 17%);
+}
+
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-endcap-amount {
+  border-color: rgba(125, 230, 246, 0.54);
+  background: rgba(7, 32, 69, 0.94);
+  color: #e8fdff;
+}
+
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-timers,
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-header,
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-footer {
+  color: #d9faff;
+  text-shadow: 0 1px 3px rgba(0, 11, 37, 0.8);
+}
+
 
 .island-run-board__rewardbar-hatchery-tray {
   position: absolute;
@@ -3651,6 +3869,19 @@
   border-color: rgba(220, 120, 255, 0.95);
   background: linear-gradient(180deg, #f4d6ff 0%, #c24cd8 100%);
   color: #fff;
+}
+
+/* The crystal citadel keeps its own spectral material language at every
+ * escalation tier; tier value remains visible through brightness and the
+ * canonical counter instead of replacing the island skin. */
+.island-run-board__rewardbar--crystal-glacier .island-run-board__rewardbar-track-fill {
+  background: linear-gradient(90deg, #1689bf 0%, #39dbea 35%, #a8fff5 68%, #9d86ff 100%);
+}
+
+.island-run-board__rewardbar--crystal-glacier.island-run-board__rewardbar--tier-4 .island-run-board__rewardbar-track-fill,
+.island-run-board__rewardbar--crystal-glacier.island-run-board__rewardbar--tier-5 .island-run-board__rewardbar-track-fill {
+  background: linear-gradient(90deg, #207cc7 0%, #49ecff 33%, #d7fff9 62%, #ca83ff 100%);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 0 13px rgba(106, 241, 255, 0.88);
 }
 
 /* ─── B8: fill "snap" when the bar crosses into a claimable state ──────────

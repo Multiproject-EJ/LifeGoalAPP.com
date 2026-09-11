@@ -12,8 +12,8 @@ export interface IslandConstructionRevealPart {
 }
 
 export interface IslandConstructionLevelDelta {
-  currentRoot: THREE.Group | null;
-  targetRoot: THREE.Group;
+  currentRoot: THREE.Object3D | null;
+  targetRoot: THREE.Object3D;
   revealParts: IslandConstructionRevealPart[];
   retainedMeshCount: number;
   additiveMeshCount: number;
@@ -46,12 +46,21 @@ function collectSignatureCounts(root: THREE.Object3D | null) {
   const counts = new Map<string, number>();
   if (!root) return counts;
   root.updateWorldMatrix(true, true);
-  root.traverse((entry) => {
+  root.traverseVisible((entry) => {
     if (!(entry instanceof THREE.Mesh)) return;
     const signature = meshSignature(entry, root);
     counts.set(signature, (counts.get(signature) ?? 0) + 1);
   });
   return counts;
+}
+
+function collectVisibleMeshBounds(root: THREE.Object3D): THREE.Box3 {
+  const bounds = new THREE.Box3();
+  root.updateWorldMatrix(true, true);
+  root.traverseVisible((entry) => {
+    if (entry instanceof THREE.Mesh) bounds.expandByObject(entry, true);
+  });
+  return bounds;
 }
 
 function resolveInheritedConstructionValue(entry: THREE.Object3D, key: string, root: THREE.Object3D) {
@@ -70,12 +79,12 @@ function resolveInheritedConstructionValue(entry: THREE.Object3D, key: string, r
  * repeated columns and rails do not collapse into one false match.
  */
 export function prepareIslandConstructionLevelDelta(options: {
-  currentRoot: THREE.Group | null;
-  targetRoot: THREE.Group;
+  currentRoot: THREE.Object3D | null;
+  targetRoot: THREE.Object3D;
 }): IslandConstructionLevelDelta {
   const currentSignatures = collectSignatureCounts(options.currentRoot);
   options.targetRoot.updateWorldMatrix(true, true);
-  const targetBounds = new THREE.Box3().setFromObject(options.targetRoot);
+  const targetBounds = collectVisibleMeshBounds(options.targetRoot);
   const targetHeight = Math.max(0.001, targetBounds.max.y - targetBounds.min.y);
   const additiveCandidates: Array<{
     mesh: THREE.Mesh;
@@ -87,7 +96,7 @@ export function prepareIslandConstructionLevelDelta(options: {
   const retainedMeshes: THREE.Mesh[] = [];
   let retainedMeshCount = 0;
 
-  options.targetRoot.traverse((entry) => {
+  options.targetRoot.traverseVisible((entry) => {
     if (!(entry instanceof THREE.Mesh)) return;
     const signature = meshSignature(entry, options.targetRoot);
     const remaining = currentSignatures.get(signature) ?? 0;

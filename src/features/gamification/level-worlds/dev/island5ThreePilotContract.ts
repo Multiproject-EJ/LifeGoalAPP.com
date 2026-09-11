@@ -101,9 +101,11 @@ export interface Island5LandmarkDefinition {
 
 export type Island5CameraPresetId =
   | 'overview'
+  | 'playable-overview'
   | 'survey'
   | 'orbit-left'
   | 'orbit-right'
+  | 'rear'
   | 'frostwell'
   | 'powerworks'
   | 'canyon-spiral'

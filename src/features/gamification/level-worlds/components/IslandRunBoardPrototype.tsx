@@ -217,8 +217,10 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
+  acknowledgeIslandMissionBriefing,
   applyAudioPreferencesMarker,
   applyBossTrialResolvedMarker,
+  applyBossTrialResolutionReward,
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
@@ -1632,6 +1634,14 @@ function readDevDiscoveryFogDisabled(): boolean {
 
 function readDevIsland5ThreeQuality(): Island3DQualitySelection {
   if (typeof window === 'undefined') return 'high';
+  // Match the standalone preview: an explicit QA selection must not be
+  // silently replaced by the embedded board's saved/default High override.
+  if (import.meta.env.DEV) {
+    const requested = new URLSearchParams(window.location.search).get('island3dQuality');
+    if (requested === 'auto' || requested === 'low' || requested === 'medium' || requested === 'high') {
+      return requested;
+    }
+  }
   try {
     const stored = window.localStorage.getItem(ISLAND_5_3D_DEV_QUALITY_KEY);
     return stored === 'auto' || stored === 'low' || stored === 'medium' || stored === 'high'
@@ -3295,6 +3305,14 @@ export function IslandRunBoardPrototype({
     if (!showVaultIslandCollection) return undefined;
     return lockFullscreenPageScroll({ root: true });
   }, [showVaultIslandCollection]);
+  // Island 015's room construction and completion presentation must follow the
+  // canonical store immediately. Keep the compatibility mirror for other
+  // islands until their migration slices land, but never source palace progress
+  // from it.
+  const islandProgressReadState = islandNumber === 15 ? __storeState : runtimeState;
+  const isProgressBossResolved = islandNumber === 15
+    ? islandProgressReadState.bossTrialResolvedIslandNumber === islandNumber
+    : bossTrialResolved || islandProgressReadState.bossTrialResolvedIslandNumber === islandNumber;
   // The Concord caretaker content resolves per island: Island 1 keeps the
   // canonical Luma acquisition story, islands 2+ use authored/fallback entries.
   const caretakerConcordContent = useMemo(
@@ -5781,23 +5799,23 @@ export function IslandRunBoardPrototype({
 
   // M13 + Egg Mania: per-island egg slot usage check.
   const currentIslandEggSlots = useMemo(
-    () => getEggSlotsForIsland(runtimeState.perIslandEggs, islandNumber),
-    [runtimeState.perIslandEggs, islandNumber],
+    () => getEggSlotsForIsland(islandProgressReadState.perIslandEggs, islandNumber),
+    [islandProgressReadState.perIslandEggs, islandNumber],
   );
   const islandEggEntry = useMemo(
-    () => currentIslandEggSlots.find((slot) => slot.slotIndex === 0)?.entry ?? runtimeState.perIslandEggs?.[String(islandNumber)] ?? null,
-    [currentIslandEggSlots, runtimeState.perIslandEggs, islandNumber],
+    () => currentIslandEggSlots.find((slot) => slot.slotIndex === 0)?.entry ?? islandProgressReadState.perIslandEggs?.[String(islandNumber)] ?? null,
+    [currentIslandEggSlots, islandProgressReadState.perIslandEggs, islandNumber],
   );
   const islandEggSlotUsed = useMemo(
-    () => areAllEggSlotsTerminalForIsland(runtimeState.perIslandEggs, islandNumber),
-    [runtimeState.perIslandEggs, islandNumber],
+    () => areAllEggSlotsTerminalForIsland(islandProgressReadState.perIslandEggs, islandNumber),
+    [islandProgressReadState.perIslandEggs, islandNumber],
   );
   const eggManiaState = useMemo(() => resolveEggManiaState({
     userId: session.user.id,
     islandNumber,
     cycleIndex,
-    perIslandEggs: runtimeState.perIslandEggs,
-  }), [cycleIndex, islandNumber, runtimeState.perIslandEggs, session.user.id]);
+    perIslandEggs: islandProgressReadState.perIslandEggs,
+  }), [cycleIndex, islandNumber, islandProgressReadState.perIslandEggs, session.user.id]);
   const isEggManiaActive = eggManiaState.active;
   const isEggManiaUnused = isEggManiaActive && !eggManiaState.consumed;
   const effectiveCompletedStops = useMemo(
@@ -5816,19 +5834,21 @@ export function IslandRunBoardPrototype({
   }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
 
   const mergedStopStatesByIndex = useMemo(() => {
-    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return runtimeState.stopStatesByIndex;
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED || islandNumber === 15) {
+      return islandProgressReadState.stopStatesByIndex;
+    }
     // Bridge: legacy completedStops may include stops that v2 stopStatesByIndex
     // hasn't marked objectiveComplete yet (e.g. completed before v2 migration).
     // Merge them so the resolver sees those stops as complete.
     const completedStopsSet = new Set(completedStops);
-    return runtimeState.stopStatesByIndex.map((entry, index) => {
+    return islandProgressReadState.stopStatesByIndex.map((entry, index) => {
       const stopId = islandStopPlan[index]?.stopId;
       if (stopId && completedStopsSet.has(stopId) && !entry?.objectiveComplete) {
         return { ...(entry ?? { buildComplete: false }), objectiveComplete: true };
       }
       return entry;
     });
-  }, [completedStops, islandStopPlan, runtimeState.stopStatesByIndex]);
+  }, [completedStops, islandNumber, islandProgressReadState.stopStatesByIndex, islandStopPlan]);
 
   const resolveCanonicalContractV2Stops = useCallback((options: {
     stopStatesByIndex: IslandRunRuntimeState['stopStatesByIndex'];
@@ -5837,19 +5857,19 @@ export function IslandRunBoardPrototype({
   }) => {
     return resolveIslandRunContractV2Stops({
       stopStatesByIndex: options.stopStatesByIndex,
-      stopTicketsPaidByIsland: options.stopTicketsPaidByIsland ?? runtimeState.stopTicketsPaidByIsland,
+      stopTicketsPaidByIsland: options.stopTicketsPaidByIsland ?? islandProgressReadState.stopTicketsPaidByIsland,
       islandNumber: options.islandNumber ?? islandNumber,
     });
-  }, [islandNumber, runtimeState.stopTicketsPaidByIsland]);
+  }, [islandNumber, islandProgressReadState.stopTicketsPaidByIsland]);
 
   const contractV2Stops = useMemo(() => {
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return null;
     return resolveCanonicalContractV2Stops({
       stopStatesByIndex: mergedStopStatesByIndex,
-      stopTicketsPaidByIsland: runtimeState.stopTicketsPaidByIsland,
+      stopTicketsPaidByIsland: islandProgressReadState.stopTicketsPaidByIsland,
       islandNumber,
     });
-  }, [islandNumber, mergedStopStatesByIndex, resolveCanonicalContractV2Stops, runtimeState.stopTicketsPaidByIsland]);
+  }, [islandNumber, islandProgressReadState.stopTicketsPaidByIsland, mergedStopStatesByIndex, resolveCanonicalContractV2Stops]);
 
   const bossStopStatus = contractV2Stops?.statusesByIndex[4] ?? null;
   const bossTicketCost = bossStopStatus === 'ticket_required'
@@ -5857,7 +5877,7 @@ export function IslandRunBoardPrototype({
     : null;
   const allLandmarkDoorsRouteToBoss = resolveAllLandmarkDoorsRouteToBoss({
     bossStatus: bossStopStatus,
-    essence: runtimeState.essence,
+    essence: islandProgressReadState.essence,
     bossTicketCost,
   });
   const expandedActiveLandmarkDoorStopId = resolveExpandedLandmarkDoorStopIdForStatuses(contractV2Stops?.statusesByIndex);
@@ -5897,7 +5917,7 @@ export function IslandRunBoardPrototype({
         if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
           status = 'partial';
         } else if (status === 'completed') {
-          const buildState = runtimeState.stopBuildStateByIndex[index];
+          const buildState = islandProgressReadState.stopBuildStateByIndex[index];
           const buildLevel = Math.max(0, Math.floor(buildState?.buildLevel ?? 0));
           if (buildLevel < MAX_BUILD_LEVEL) {
             status = 'build_pending';
@@ -5928,7 +5948,7 @@ export function IslandRunBoardPrototype({
     }
 
     return map;
-  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopBuildStateByIndex]);
+  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan]);
 
   const landmarkDiscoveryStates = useMemo(
     () => islandStopPlan.map((stop) => (
@@ -5963,8 +5983,8 @@ export function IslandRunBoardPrototype({
   }, [islandStopPlan]);
 
   const ticketsPaidForCurrentIsland = useMemo(
-    () => getStopTicketsPaidForIsland(runtimeState.stopTicketsPaidByIsland, islandNumber),
-    [runtimeState.stopTicketsPaidByIsland, islandNumber],
+    () => getStopTicketsPaidForIsland(islandProgressReadState.stopTicketsPaidByIsland, islandNumber),
+    [islandProgressReadState.stopTicketsPaidByIsland, islandNumber],
   );
 
   /**
@@ -5980,9 +6000,9 @@ export function IslandRunBoardPrototype({
       return contractV2Stops.statusesByIndex[stopIndex] === 'ticket_required';
     }
     if (isStopTicketPaid({ ticketsPaid: ticketsPaidForCurrentIsland, stopIndex })) return false;
-    const prevState = runtimeState.stopStatesByIndex[stopIndex - 1];
+    const prevState = islandProgressReadState.stopStatesByIndex[stopIndex - 1];
     return Boolean(prevState?.objectiveComplete);
-  }, [contractV2Stops, stopIndexByStopId, ticketsPaidForCurrentIsland, runtimeState.stopStatesByIndex]);
+  }, [contractV2Stops, islandProgressReadState.stopStatesByIndex, stopIndexByStopId, ticketsPaidForCurrentIsland]);
 
   const ticketRequirementByStopId = useMemo(() => {
     const requirements = new Map<string, { needsTicket: boolean; ticketCost?: number }>();
@@ -6261,7 +6281,7 @@ export function IslandRunBoardPrototype({
   // finish the builds. Once the boss is defeated we let them keep rolling to
   // earn what the remaining upgrades cost.
   const isBossDoorTrialResolved = requiredDoorStopId === 'boss'
-    && (bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber);
+    && isProgressBossResolved;
   const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
     && typeof requiredDoorStopIndex === 'number'
     && !isBossDoorTrialResolved
@@ -7027,17 +7047,17 @@ export function IslandRunBoardPrototype({
   const legacyStep1Complete = true;
   const step1Complete = true;
   const contractV2StopResolution = resolveCanonicalContractV2Stops({
-    stopStatesByIndex: runtimeState.stopStatesByIndex,
+    stopStatesByIndex: islandProgressReadState.stopStatesByIndex,
   });
   const contractV2ActiveStopIndex = contractV2StopResolution.activeStopIndex;
   const contractV2OpenedStopIndex = activeStopId ? islandStopPlan.findIndex((stop) => stop.stopId === activeStopId) : -1;
   // Show the build panel hint in stop modals when v2 is enabled and a stop is open.
   const showContractV2BuildPanel = ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2OpenedStopIndex >= 0;
   const contractV2BuildPanelBuildState = showContractV2BuildPanel
-    ? (runtimeState.stopBuildStateByIndex[contractV2OpenedStopIndex] ?? null)
+    ? (islandProgressReadState.stopBuildStateByIndex[contractV2OpenedStopIndex] ?? null)
     : null;
   const contractV2BuildPanelStopState = showContractV2BuildPanel
-    ? (runtimeState.stopStatesByIndex[contractV2OpenedStopIndex] ?? null)
+    ? (islandProgressReadState.stopStatesByIndex[contractV2OpenedStopIndex] ?? null)
     : null;
   const isIslandOneConcordActive = islandNumber !== 1 || getIslandTechnologyAccess(runtimeState, 'the-concord').active;
   const legacyIsCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
@@ -7046,16 +7066,16 @@ export function IslandRunBoardPrototype({
     || firstLightAssemblyCompleted;
   const isCurrentIslandFullyCleared = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFullyClearedV2({
-        stopStatesByIndex: runtimeState.stopStatesByIndex,
-        stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+        stopStatesByIndex: islandProgressReadState.stopStatesByIndex,
+        stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
   const isBaseIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFinishedForDepartureV2({
-        stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+        stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
-        bossDefeated: runtimeState.bossTrialResolvedIslandNumber === islandNumber,
+        bossDefeated: islandProgressReadState.bossTrialResolvedIslandNumber === islandNumber,
       })
     : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
   const isLavaLabyrinthFinaleComplete = islandNumber !== 20
@@ -7066,7 +7086,7 @@ export function IslandRunBoardPrototype({
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
       if (islandNumber === 1 && stopIndex === 4) return 0;
-      const buildState = runtimeState.stopBuildStateByIndex[stopIndex];
+      const buildState = islandProgressReadState.stopBuildStateByIndex[stopIndex];
       if (!buildState || isStopBuildFullyComplete(buildState)) return 0;
 
       let remainingToFull = Math.max(0, buildState.requiredEssence - buildState.spentEssence);
@@ -7079,7 +7099,7 @@ export function IslandRunBoardPrototype({
       }
       return remainingToFull;
     });
-  }, [effectiveIslandNumber, islandNumber, islandStopPlan, runtimeState.stopBuildStateByIndex]);
+  }, [effectiveIslandNumber, islandNumber, islandProgressReadState.stopBuildStateByIndex, islandStopPlan]);
   const { nextCheapestIndex: buildPanelNextCheapestIndex } = useMemo(() => (
     resolveNextCheapestIndex({ remainingCosts: buildPanelRemainingToFullByIndex })
   ), [buildPanelRemainingToFullByIndex]);
@@ -10155,6 +10175,21 @@ export function IslandRunBoardPrototype({
 
     const bossReward = getBossReward(islandNumber);
 
+    const resolution = applyBossTrialResolutionReward({
+      session,
+      client,
+      islandNumber,
+      rewardDice: bossReward.dice,
+      rewardEssence: bossReward.essence,
+      rewardSpinTokens: bossReward.spinTokens,
+      triggerSource: 'handle_resolve_boss_trial',
+    });
+    if (!resolution.applied) {
+      setBossTrialResolved(true);
+      setRuntimeState(resolution.record);
+      return;
+    }
+
     logGameSession(session.user.id, {
       gameId: 'shooter_blitz',
       action: 'reward',
@@ -10180,17 +10215,6 @@ export function IslandRunBoardPrototype({
     });
 
     setBossTrialResolved(true);
-    setDicePool((current) => current + bossReward.dice);
-    if (bossReward.essence > 0) {
-      setRuntimeState((prev) => ({
-        ...prev,
-        essence: prev.essence + bossReward.essence,
-        essenceLifetimeEarned: prev.essenceLifetimeEarned + bossReward.essence,
-      }));
-    }
-    if (bossReward.spinTokens > 0) {
-      setSpinTokens((t) => t + bossReward.spinTokens);
-    }
     // M10C: boss_trial_resolve sound + haptic
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
@@ -10199,13 +10223,7 @@ export function IslandRunBoardPrototype({
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Boss defeated. Finish building all landmarks to Level 3 to clear the island.`);
 
-    const record = applyBossTrialResolvedMarker({
-      session,
-      client,
-      islandNumber,
-      triggerSource: 'handle_resolve_boss_trial',
-    });
-    setRuntimeState(record);
+    setRuntimeState(resolution.record);
   };
 
   // M7-COMPLETE: boss trial timer countdown
@@ -13301,7 +13319,7 @@ export function IslandRunBoardPrototype({
   const shouldShowLegacyIslandBackground = !shouldShowIslandArtAmbientBackground && isIslandBackgroundAvailable && !isBackgroundHidden;
   const shouldUseNoBackgroundFallback = !shouldShowIslandArtAmbientBackground && (!isIslandBackgroundAvailable || isBackgroundHidden);
   const islandArtLandmarkBuildLevels = useMemo(
-    () => runtimeState.stopBuildStateByIndex.map((buildState, stopIndex) => {
+    () => islandProgressReadState.stopBuildStateByIndex.map((buildState, stopIndex) => {
       if (!isIslandVisualPreview || islandVisualLandmark === null) return buildState.buildLevel;
       const previewLandmarkId = ['hatchery', 'habit', 'mystery', 'wisdom'][stopIndex] ?? null;
       return islandVisualLandmark === 'all' || islandVisualLandmark === previewLandmarkId
@@ -13312,7 +13330,7 @@ export function IslandRunBoardPrototype({
       islandVisualBuildLevel,
       islandVisualLandmark,
       isIslandVisualPreview,
-      runtimeState.stopBuildStateByIndex,
+      islandProgressReadState.stopBuildStateByIndex,
     ],
   );
   const island5ThreeBuildLevels = useMemo(() => ({
@@ -13322,30 +13340,30 @@ export function IslandRunBoardPrototype({
     wisdom: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[3]),
     boss: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[4]),
   }), [islandArtLandmarkBuildLevels]);
-  const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
+  const isCurrentIslandBossDefeated = isProgressBossResolved;
   const runtimeBossCreatureArtState = resolveBossCreatureArtState({
-    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,
   });
   const bossCreatureArtState = isIslandVisualPreview && islandVisualBossState
     ? islandVisualBossState
     : runtimeBossCreatureArtState;
   const canChallengeCurrentBoss = canChallengeBoss({
-    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,
   });
   const currentBossChallengeLockReason = getBossChallengeLockReason({
-    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,
   });
   const bestNextAction = useMemo(() => {
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
     return resolveIslandRunBestNextAction({
-      record: runtimeState,
+      record: islandProgressReadState,
       nowMs,
       playerLevel,
     });
-  }, [nowMs, playerLevelInfo?.currentLevel, runtimeState]);
+  }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
@@ -15305,7 +15323,7 @@ export function IslandRunBoardPrototype({
 
           <button
             type="button"
-            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${isRewardBarNearlyFull ? ' island-run-board__rewardbar--nearly-full' : ''}${rewardBarTierClass}`}
+            className={`island-run-board__rewardbar${islandNumber === 15 ? ' island-run-board__rewardbar--crystal-glacier' : ''}${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${isRewardBarNearlyFull ? ' island-run-board__rewardbar--nearly-full' : ''}${rewardBarTierClass}`}
             aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}${hatcheryPendingEggAriaLabel}`}
             onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
           >
@@ -19741,6 +19759,14 @@ export function IslandRunBoardPrototype({
             setShowMissionPhoneBriefing(false);
             return;
           }
+          if (!activeMissionBriefing) return;
+          const acknowledgement = acknowledgeIslandMissionBriefing({
+            session,
+            client,
+            trigger: activeMissionBriefing,
+          });
+          runtimeStateRef.current = acknowledgement.record;
+          setRuntimeState(acknowledgement.record);
           setActiveMissionBriefing(null);
           setLandingText('Field order accepted. The Concord will keep the caretaker channel open.');
           playIslandRunSound('stop_land');

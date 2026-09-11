@@ -17,7 +17,7 @@ Status: **Production-ready naming draft adopted into code** via `getIslandDispla
 12. Festival of Waves
 13. Bluewater Bay
 14. Mango Isle
-15. Starfish Shore
+15. Crystal Glacier Citadel
 16. Windy Coast
 17. Hidden Lagoon
 18. Shrine of Sands

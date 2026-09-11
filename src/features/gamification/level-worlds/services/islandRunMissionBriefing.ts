@@ -20,6 +20,8 @@ export interface IslandMissionBriefingOfficer {
 
 export interface IslandMissionBriefingPresentation {
   islandNumber: number;
+  cycleIndex: number;
+  circuitLabel: string;
   islandName: string;
   organization: string;
   progressKind: IslandMissionProgressKind;
@@ -248,6 +250,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'Spend tickets in pairs. Commit each build stage, choose a front or middle wagon, then keep your eyes open through the plunge, treasure galleries and sea-cave reveal.',
     caretakerSignal: 'Courage is not the absence of the drop. It is choosing to ride again with your eyes open.',
   },
+  15: {
+    progressKind: 'standard_landmarks',
+    headline: 'The Aurora That Learned to Move',
+    missionStatement: 'A guardian froze the aurora to save her people—and the palace has not changed since. Restore its four living rooms, then help Nivara let the sky move again.',
+    primaryObjective: 'Reawaken the Frost Nest, Ice Bastion, Aurora Observatory, and Crystal Oracle—then enter the Frozen Throne.',
+    supportingObjective: 'Carry each room\'s living light into the Boss Hall and release the Held Dawn without breaking what the ice protected.',
+    fieldProtocol: 'Move with patience. Clarity guides; it does not control.',
+    caretakerSignal: 'We survived the storm. Now we need permission to live after it.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
@@ -269,6 +280,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   20: 'Lava Labyrinth',
   18: 'The Everblossom Kingdom',
   19: 'Coaster Carnival',
+  15: 'Crystal Glacier Citadel',
 });
 
 function padIsland(islandNumber: number): string {
@@ -316,8 +328,12 @@ export function markIslandMissionBriefingSeen(
   };
 }
 
-export function getIslandMissionBriefingPresentation(islandNumber: number): IslandMissionBriefingPresentation {
+export function getIslandMissionBriefingPresentation(
+  islandNumber: number,
+  cycleIndex = 0,
+): IslandMissionBriefingPresentation {
   const safeIslandNumber = Math.max(1, Math.floor(islandNumber));
+  const safeCycleIndex = Math.max(0, Math.floor(cycleIndex));
   const islandName = AUTHORED_MISSION_NAMES[safeIslandNumber] ?? getIslandDisplayName(safeIslandNumber);
   const authored = AUTHORED_MISSIONS[safeIslandNumber];
   const fallback: MissionCopy = {
@@ -331,6 +347,8 @@ export function getIslandMissionBriefingPresentation(islandNumber: number): Isla
   };
   return {
     islandNumber: safeIslandNumber,
+    cycleIndex: safeCycleIndex,
+    circuitLabel: safeCycleIndex === 0 ? 'first circuit' : `circuit ${safeCycleIndex + 1}`,
     islandName,
     organization: 'Universe Association · Compass Expedition',
     commandTeam: COMMAND_TEAM,

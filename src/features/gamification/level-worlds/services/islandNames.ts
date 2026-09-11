@@ -16,7 +16,7 @@ const ISLAND_NAMES: readonly string[] = [
   'Festival of Waves',
   'Bluewater Bay',
   'Mango Isle',
-  'Starfish Shore',
+  'Crystal Glacier Citadel',
   'Windy Coast',
   'Hidden Lagoon',
   'The Everblossom Kingdom',

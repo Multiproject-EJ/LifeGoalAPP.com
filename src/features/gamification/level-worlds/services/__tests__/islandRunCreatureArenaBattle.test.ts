@@ -28,13 +28,15 @@ function opponentDamage(result: ReturnType<typeof resolveIslandRunCreatureArenaT
 
 export const islandRunCreatureArenaBattleTests: TestCase[] = [
   {
-    name: 'creates battles only for the 24 every-fifth-island arenas',
+    name: 'creates battles only for configured arena islands and excludes Island 015',
     run: () => {
       const arenas = Array.from({ length: 120 }, (_, index) => index + 1)
         .filter((islandNumber) => getIslandRunCreatureArenaBattleConfig(islandNumber) !== null);
-      assertEqual(arenas.length, 24, 'exactly 24 islands should own creature battles');
+      assertEqual(arenas.length, 23, 'exactly 23 islands should own creature battles after the Island 015 exception');
       assertEqual(arenas[0], 5, 'Island 005 is the first creature arena');
-      assertEqual(arenas[23], 120, 'Island 120 is the final creature arena');
+      assertEqual(arenas[22], 120, 'Island 120 is the final creature arena');
+      assertEqual(getIslandRunCreatureArenaBattleConfig(15), null, 'Island 015 must use its ordinary Frozen Throne Boss');
+      assertEqual(createIslandRunCreatureArenaBattle({ islandNumber: 15, opponentCreatureId: 'x', shieldCharges: 3 }), null, 'Island 015 cannot create a creature battle');
       assertEqual(createIslandRunCreatureArenaBattle({ islandNumber: 4, opponentCreatureId: 'x', shieldCharges: 3 }), null, 'ordinary islands cannot create creature battles');
     },
   },
@@ -166,7 +168,7 @@ export const islandRunCreatureArenaBattleTests: TestCase[] = [
     run: () => {
       assertEqual(getIslandRunArenaShieldPickupCount(5), 3, 'Island 005 demonstrates the full shield affordance');
       assertEqual(getIslandRunArenaShieldPickupCount(10), 2, 'Island 010 has two pickups');
-      assertEqual(getIslandRunArenaShieldPickupCount(15), 1, 'Island 015 has one pickup');
+      assertEqual(getIslandRunArenaShieldPickupCount(15), 0, 'Island 015 receives no creature-arena shield pickup');
       assertEqual(getIslandRunArenaShieldPickupCount(20), 0, 'some arenas intentionally have no pickups');
       const eligible = [2, 4, 7, 9, 12, 18, 23, 31];
       const first = selectIslandRunArenaShieldPickupTiles({ islandNumber: 5, eligibleTileIndices: eligible });
