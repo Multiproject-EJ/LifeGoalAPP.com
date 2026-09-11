@@ -1,0 +1,54 @@
+{
+  "contacts": [
+    {
+      "xz": [
+        -0.93,
+        -0.45
+      ],
+      "roofHit": true,
+      "roofTop": 0.9950000047683716,
+      "shoulderBottom": 0.99,
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.87,
+        -0.7
+      ],
+      "roofHit": true,
+      "roofTop": 0.9950000047683716,
+      "shoulderBottom": 0.99,
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.96,
+        -0.1
+      ],
+      "roofHit": true,
+      "roofTop": 0.9950000047683716,
+      "shoulderBottom": 0.99,
+      "passed": true
+    },
+    {
+      "xz": [
+        -1.05,
+        0.2
+      ],
+      "roofHit": true,
+      "roofTop": 0.9950000047683716,
+      "shoulderBottom": 0.99,
+      "passed": true
+    },
+    {
+      "xz": [
+        -1.05,
+        0.1
+      ],
+      "roofHit": true,
+      "roofTop": 0.9950000047683716,
+      "shoulderBottom": 0.99,
+      "passed": true
+    }
+  ]
+}

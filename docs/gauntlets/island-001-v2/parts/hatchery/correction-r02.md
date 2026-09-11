@@ -1,0 +1,5 @@
+# One bounded correction — first construction family
+
+Hypothesis: wider/lower nursery wings plus a stepped central support and stairs that converge onto the court will remove the drum/pedestal read and restore visible circulation. Change the coupled architectural mass/contact system and petal envelope as prescribed by the independent review; retain egg, lighting and cameras.
+
+Wings expand from .58 to .72 radius and move inward/backward within the footprint. Replace the continuous .82-high court cylinder with three .26-high receding terraces. Stair centre radii now decrease from1.2 to.65 while rising from .305 to1.085, contacting the upper court at1.0925. Accepted inference: rear circulation is not shown in the reference. Expected visible delta: broad terraced wings and an uninterrupted ground-to-upper-court staircase in both three-quarter views. The lotus middle radial bulge increases from .47 to .56, angular half-width from .43 to .52, and tips are staggered lower in front/higher at rear (height1.55-.24cos theta). No detail pass is authorized by this correction.

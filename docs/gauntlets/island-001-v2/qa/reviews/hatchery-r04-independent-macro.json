@@ -1,0 +1,235 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-r04-independent-macro",
+  "action": "stop",
+  "family": 2,
+  "familyReview": 2,
+  "gateReview": 4,
+  "gate": "naked-macro-and-attachment",
+  "inspectionOrder": "Original approved crop,10r04clayframes,6structuralframes,transparentiso,thenr03scores. No code or builder metrics.",
+  "hardVeto": false,
+  "threshold": 0.85,
+  "previousWorstCritical": 0.63,
+  "worstCritical": 0.73,
+  "worstCriticalGain": 0.1,
+  "gainRequirementMet": true,
+  "criticalRegressionOver005": false,
+  "allRequiredScoresPass": false,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso-clay": [
+      0.81,
+      0.8,
+      0.83,
+      0.86,
+      0.8,
+      0.81
+    ],
+    "orbit-0-clay": [
+      0.79,
+      0.77,
+      0.82,
+      0.85,
+      0.78,
+      0.79
+    ],
+    "orbit-40-clay": [
+      0.82,
+      0.81,
+      0.84,
+      0.86,
+      0.81,
+      0.82
+    ],
+    "orbit-80-clay": [
+      0.79,
+      0.77,
+      0.82,
+      0.85,
+      0.79,
+      0.79
+    ],
+    "orbit-120-clay": [
+      0.76,
+      0.74,
+      0.8,
+      0.85,
+      0.77,
+      0.76
+    ],
+    "orbit-160-clay": [
+      0.74,
+      0.73,
+      0.79,
+      0.85,
+      0.76,
+      0.75
+    ],
+    "orbit-200-clay": [
+      0.77,
+      0.75,
+      0.8,
+      0.86,
+      0.77,
+      0.78
+    ],
+    "orbit-240-clay": [
+      0.78,
+      0.76,
+      0.81,
+      0.86,
+      0.78,
+      0.79
+    ],
+    "orbit-280-clay": [
+      0.76,
+      0.74,
+      0.8,
+      0.85,
+      0.77,
+      0.77
+    ],
+    "orbit-320-clay": [
+      0.75,
+      0.74,
+      0.8,
+      0.85,
+      0.76,
+      0.76
+    ],
+    "front-structural": [
+      0.82,
+      0.81,
+      0.84,
+      0.86,
+      0.81,
+      0.82
+    ],
+    "profile-structural": [
+      0.74,
+      0.73,
+      0.79,
+      0.85,
+      0.75,
+      0.75
+    ],
+    "back-structural": [
+      0.78,
+      0.75,
+      0.79,
+      0.86,
+      0.77,
+      0.79
+    ],
+    "top-structural": [
+      0.8,
+      0.78,
+      0.83,
+      0.86,
+      0.79,
+      0.79
+    ],
+    "contact-structural": [
+      0.81,
+      0.8,
+      0.84,
+      0.86,
+      0.81,
+      0.81
+    ],
+    "normals-structural": [
+      0.81,
+      0.8,
+      0.83,
+      0.86,
+      0.8,
+      0.81
+    ],
+    "iso-transparent": [
+      0.81,
+      0.83,
+      0.83,
+      0.86,
+      0.81,
+      0.82
+    ]
+  },
+  "evidenceCompleteness": {
+    "requestedFrameCount": 17,
+    "inspectedFrameCount": 17,
+    "missingRequestedFrames": []
+  },
+  "improvementsObserved": [
+    "Canopy no longer overwhelms base vertically as much.",
+    "Real lowerfront opening exposesegg inopaqueclay.",
+    "Upper court has more floor/landing space.",
+    "Middle fronttier broader.",
+    "Connectedplan/supportstairs/volumetricpetals remaincoherent."
+  ],
+  "remainingMacroFailures": [
+    {
+      "issue": "Nursery too narrow and elevated in least flattering views.",
+      "views": [
+        "profile-structural",
+        "orbit-160-clay",
+        "orbit-320-clay"
+      ],
+      "evidence": "Side silhouette chiefly tall retaining platform, small end pavilion and shelter above; lacks broad occupied terrace architecture."
+    },
+    {
+      "issue": "Nursery wings read as small end pavilions.",
+      "views": [
+        "iso-clay",
+        "orbit-200-clay",
+        "orbit-240-clay",
+        "back-structural"
+      ],
+      "evidence": "Central retaining mass dominates while arches concentrated atends; macrodistribution independent ofdecor."
+    },
+    {
+      "issue": "Lowerfrontage dominated by projecting retaining blocks.",
+      "views": [
+        "front-structural",
+        "contact-structural",
+        "iso-transparent"
+      ],
+      "evidence": "Large verticalfaces over narrow ledges; reference has substantialterrace/basin surfaces integratedwithapproaches."
+    },
+    {
+      "issue": "Shelter remains simplified closedbud awayfromentrance.",
+      "views": [
+        "orbit-120-clay",
+        "orbit-280-clay",
+        "profile-structural"
+      ],
+      "evidence": "Coherentvolume butlateral silhouette/layering doesnotmatch fullerconservatory; fine ribs/transparency alone insufficient."
+    }
+  ],
+  "excludedFromPenalty": [
+    "foliage/cypress",
+    "furniture/shelves",
+    "materialfinish/lighting",
+    "decorativeribs/trim",
+    "sharedlift",
+    "naturalclayeggocclusion"
+  ],
+  "interpretationLimits": [
+    "Hiddenrear assessedforcoherentmassing,notinventedexactlikeness.",
+    "No detachedcomponents/disappearingforms/flatcollapse established.",
+    "Isolatedmacroreview; notfinishedart/integratedroute/physicalphoneapproval."
+  ],
+  "stopReason": "Worst .73 below mandatory .85 and retirement .75. Bothfamilies/allfourreviews exhausted.",
+  "requiredDisposition": [
+    "Retirefamily2;preserver01-r04.",
+    "Do notapproveoruseasapprovedtemplate.",
+    "No finish orrenamedcorrectionwithinexhaustedgate.",
+    "Obtainauthorizationfordifferentrepresentation,newreferenceauthorityorapprovedproductionroute."
+  ]
+}

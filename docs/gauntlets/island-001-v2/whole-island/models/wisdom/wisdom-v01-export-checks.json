@@ -1,0 +1,769 @@
+{
+  "status": "mechanical-pass-awaiting-whole-island-review",
+  "sha256": "53cb158832bfdfe48f372502740f55b1e6cbff4137a99472e5891221fb3100d4",
+  "bytes": 1593864,
+  "bbox": {
+    "min": [
+      -1.4262362718582153,
+      0.0,
+      -1.4424935579299927
+    ],
+    "max": [
+      1.4500000476837158,
+      2.45500111579895,
+      1.3550000190734863
+    ]
+  },
+  "radius": 1.451387040075759,
+  "triangles": 24635,
+  "meshNodes": 47,
+  "completedOwnerMaterialBatches": 12,
+  "degenerateTriangles": 0,
+  "additiveSignaturesPreserved": true,
+  "levels": {
+    "1": {
+      "addedTriangles": 6999,
+      "totalTriangles": 6999,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "archive-terraces-L1-S1-archive-warm-limestone": "339faae9d9c2b518f22285aa4678244cb7ab2296bb6a174b57f9c2285addac0f",
+        "archive-terraces-L1-S3-archive-books-and-walnut": "13ca4660b611de57f956f5cc1c82a8ce83201e6280f5b2fb3d02d31cc4104ae3",
+        "archive-terraces-L1-S3-archive-warm-limestone": "c9cd6eac2ebf92a0ade559ffb3358a9148ea148b283000a3839be0c720b8d7bd",
+        "archive-terraces-L1-S4-archive-books-and-walnut": "beb2b9f927635378f9b0fdfbe34591eb8e695fd677b19603c7f83061c654216a",
+        "archive-terraces-L1-S4-archive-garden-colors": "6fa3c6449c0be9e11c38a372dfa38f017a381bb7bfbd69e258c4a86fb876ed86",
+        "archive-terraces-L1-S4-archive-warm-limestone": "de67863828ec1eb8ea79a10141fa0f4e76799cb3ad5fdfddee856a2c1380954c",
+        "archive-terraces-L1-S5-archive-warm-gold": "a6ec87a337610fbfbedc09ff26346cc9d749acf6cf8730e0a2f02a0ac01e31db",
+        "archive-terraces-L1-S5-archive-warm-limestone": "c1f4dd802cc9145dd6d88a0212b813ff42b70283261cca9f32ac85937224cd80",
+        "archive-wings-L1-S1-archive-warm-limestone": "0a8d879deab069bdbe823038b548345ec2a45a9892fb8d1d64c19c2943ce258b",
+        "archive-wings-L1-S2-archive-warm-limestone": "a7ac1ec5952163bbf65127aef38d3d710f3e2d88f0b574b755ed1cdddaf47217",
+        "archive-wings-L1-S3-archive-books-and-walnut": "275c2340769d2c8c043c372a5cff1c72743e889c920ba2e99ce2039a89412f3f",
+        "archive-wings-L1-S5-archive-clear-window-glass": "0e00f71ece26acb4a6ad4d7d2eaef253164d5b187fd301dad07168392ee1afb3",
+        "archive-wings-L1-S5-archive-reading-lights": "35fb92f8c04d1ad5fec4488c9cc4d6768c59704c088eeec7ff0d53fa6fbf0469",
+        "archive-wings-L1-S5-archive-warm-gold": "6e0b1a05ab93f6862d28b2fa00de8176e40309735fd13f01d1887d34698c9e9e"
+      }
+    },
+    "2": {
+      "addedTriangles": 10838,
+      "totalTriangles": 17837,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "archive-globe-L2-S3-archive-warm-gold": "ef7f5bfe2d338871189d2ea9b136c17239af474a908fa2f6908601a2229e1ddb",
+        "archive-globe-L2-S4-archive-celestial-blue": "c80c902d38c5c73fadb30a6e08b195e0e9c91812372b96269ffdf2ce5aaf2732",
+        "archive-globe-L2-S5-archive-warm-gold": "7b1613161a2bf80bc535ea5c6a0cc358240d10641fd93c11bbe0668289610787",
+        "archive-terraces-L1-S1-archive-warm-limestone": "339faae9d9c2b518f22285aa4678244cb7ab2296bb6a174b57f9c2285addac0f",
+        "archive-terraces-L1-S3-archive-books-and-walnut": "13ca4660b611de57f956f5cc1c82a8ce83201e6280f5b2fb3d02d31cc4104ae3",
+        "archive-terraces-L1-S3-archive-warm-limestone": "c9cd6eac2ebf92a0ade559ffb3358a9148ea148b283000a3839be0c720b8d7bd",
+        "archive-terraces-L1-S4-archive-books-and-walnut": "beb2b9f927635378f9b0fdfbe34591eb8e695fd677b19603c7f83061c654216a",
+        "archive-terraces-L1-S4-archive-garden-colors": "6fa3c6449c0be9e11c38a372dfa38f017a381bb7bfbd69e258c4a86fb876ed86",
+        "archive-terraces-L1-S4-archive-warm-limestone": "de67863828ec1eb8ea79a10141fa0f4e76799cb3ad5fdfddee856a2c1380954c",
+        "archive-terraces-L1-S5-archive-warm-gold": "a6ec87a337610fbfbedc09ff26346cc9d749acf6cf8730e0a2f02a0ac01e31db",
+        "archive-terraces-L1-S5-archive-warm-limestone": "c1f4dd802cc9145dd6d88a0212b813ff42b70283261cca9f32ac85937224cd80",
+        "archive-terraces-L2-S1-archive-warm-limestone": "90925853e2d1d565aded52724c7d74c290904bdd925b38208b949d02965817bd",
+        "archive-terraces-L2-S3-archive-books-and-walnut": "a512c1d80d56ab5d06502a4c7d255588fcf609b52d1cf23a485611d69f2caaaa",
+        "archive-terraces-L2-S3-archive-warm-limestone": "1fbd73b36e23d51161e3fc7a22f396948b15363c8a4e1044936751b862f90ad5",
+        "archive-terraces-L2-S4-archive-books-and-walnut": "1c5ae11f9fc828b11d57a327689b43a3e6a3f47054675a24a892f2c32a24e01a",
+        "archive-terraces-L2-S4-archive-garden-colors": "7c7c758b7745144191724b47680054381919c5d7c45e8176b9e3534dbedbae42",
+        "archive-terraces-L2-S4-archive-rooftop-water": "f4ff949cc90822282096f88d7742aa0ca0da7f3ceaabca718357f06c3edb8481",
+        "archive-terraces-L2-S4-archive-warm-limestone": "7e9fefc086c2fabc37e8fa5bcaa2fb596491374a81db69c0ff39b75c053c8c30",
+        "archive-terraces-L2-S5-archive-warm-gold": "4415ada146eb5335f1898a6b1558e183c341320ffe84d02fb44f88bb29c34508",
+        "archive-terraces-L2-S5-archive-warm-limestone": "488aeed4df9a1408ed4b7cfac5fd67da0ec5587127b942061ca9b5d433a2fbc6",
+        "archive-wings-L1-S1-archive-warm-limestone": "0a8d879deab069bdbe823038b548345ec2a45a9892fb8d1d64c19c2943ce258b",
+        "archive-wings-L1-S2-archive-warm-limestone": "a7ac1ec5952163bbf65127aef38d3d710f3e2d88f0b574b755ed1cdddaf47217",
+        "archive-wings-L1-S3-archive-books-and-walnut": "275c2340769d2c8c043c372a5cff1c72743e889c920ba2e99ce2039a89412f3f",
+        "archive-wings-L1-S5-archive-clear-window-glass": "0e00f71ece26acb4a6ad4d7d2eaef253164d5b187fd301dad07168392ee1afb3",
+        "archive-wings-L1-S5-archive-reading-lights": "35fb92f8c04d1ad5fec4488c9cc4d6768c59704c088eeec7ff0d53fa6fbf0469",
+        "archive-wings-L1-S5-archive-warm-gold": "6e0b1a05ab93f6862d28b2fa00de8176e40309735fd13f01d1887d34698c9e9e",
+        "archive-wings-L2-S1-archive-warm-limestone": "287b0960aaedf994a3f66b6759d25f6bfce632820d7ab72345f17129dbb1936c",
+        "archive-wings-L2-S2-archive-warm-limestone": "96343346f468c977cce6f0630ac59a7546a4b4c45349d41a0696cbf89b2c3636",
+        "archive-wings-L2-S3-archive-books-and-walnut": "3a3932b45eeb6ee39f4e5808360ab05fe51efaf553d95d01f9ca0c1496380755",
+        "archive-wings-L2-S5-archive-clear-window-glass": "7ed9c1d60ff7fb5a824658a724e5c0bd657992597fe2b3dda9a37a2f8be5ed09",
+        "archive-wings-L2-S5-archive-reading-lights": "6057e135e8216c91e090ef5173dcb6cddb29aeb93560dbd70cca6e0574861331",
+        "archive-wings-L2-S5-archive-warm-gold": "394ffc057df9a8757230ccde297091dd060200285d56cd02df9db8d711c79b24"
+      }
+    },
+    "3": {
+      "addedTriangles": 6798,
+      "totalTriangles": 24635,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "archive-globe-L2-S3-archive-warm-gold": "ef7f5bfe2d338871189d2ea9b136c17239af474a908fa2f6908601a2229e1ddb",
+        "archive-globe-L2-S4-archive-celestial-blue": "c80c902d38c5c73fadb30a6e08b195e0e9c91812372b96269ffdf2ce5aaf2732",
+        "archive-globe-L2-S5-archive-warm-gold": "7b1613161a2bf80bc535ea5c6a0cc358240d10641fd93c11bbe0668289610787",
+        "archive-globe-L3-S5-archive-warm-gold": "1c7ecf84700a96a92f09c18e3261c6c48411d4a022e82d51ef42ad4f855b4285",
+        "archive-terraces-L1-S1-archive-warm-limestone": "339faae9d9c2b518f22285aa4678244cb7ab2296bb6a174b57f9c2285addac0f",
+        "archive-terraces-L1-S3-archive-books-and-walnut": "13ca4660b611de57f956f5cc1c82a8ce83201e6280f5b2fb3d02d31cc4104ae3",
+        "archive-terraces-L1-S3-archive-warm-limestone": "c9cd6eac2ebf92a0ade559ffb3358a9148ea148b283000a3839be0c720b8d7bd",
+        "archive-terraces-L1-S4-archive-books-and-walnut": "beb2b9f927635378f9b0fdfbe34591eb8e695fd677b19603c7f83061c654216a",
+        "archive-terraces-L1-S4-archive-garden-colors": "6fa3c6449c0be9e11c38a372dfa38f017a381bb7bfbd69e258c4a86fb876ed86",
+        "archive-terraces-L1-S4-archive-warm-limestone": "de67863828ec1eb8ea79a10141fa0f4e76799cb3ad5fdfddee856a2c1380954c",
+        "archive-terraces-L1-S5-archive-warm-gold": "a6ec87a337610fbfbedc09ff26346cc9d749acf6cf8730e0a2f02a0ac01e31db",
+        "archive-terraces-L1-S5-archive-warm-limestone": "c1f4dd802cc9145dd6d88a0212b813ff42b70283261cca9f32ac85937224cd80",
+        "archive-terraces-L2-S1-archive-warm-limestone": "90925853e2d1d565aded52724c7d74c290904bdd925b38208b949d02965817bd",
+        "archive-terraces-L2-S3-archive-books-and-walnut": "a512c1d80d56ab5d06502a4c7d255588fcf609b52d1cf23a485611d69f2caaaa",
+        "archive-terraces-L2-S3-archive-warm-limestone": "1fbd73b36e23d51161e3fc7a22f396948b15363c8a4e1044936751b862f90ad5",
+        "archive-terraces-L2-S4-archive-books-and-walnut": "1c5ae11f9fc828b11d57a327689b43a3e6a3f47054675a24a892f2c32a24e01a",
+        "archive-terraces-L2-S4-archive-garden-colors": "7c7c758b7745144191724b47680054381919c5d7c45e8176b9e3534dbedbae42",
+        "archive-terraces-L2-S4-archive-rooftop-water": "f4ff949cc90822282096f88d7742aa0ca0da7f3ceaabca718357f06c3edb8481",
+        "archive-terraces-L2-S4-archive-warm-limestone": "7e9fefc086c2fabc37e8fa5bcaa2fb596491374a81db69c0ff39b75c053c8c30",
+        "archive-terraces-L2-S5-archive-warm-gold": "4415ada146eb5335f1898a6b1558e183c341320ffe84d02fb44f88bb29c34508",
+        "archive-terraces-L2-S5-archive-warm-limestone": "488aeed4df9a1408ed4b7cfac5fd67da0ec5587127b942061ca9b5d433a2fbc6",
+        "archive-terraces-L3-S1-archive-warm-limestone": "a6af27edac5be53e431cc191b7fa1bff22fa179c52c8e239b27ae273f54df711",
+        "archive-terraces-L3-S3-archive-books-and-walnut": "689cec45b15516119b8c3586453b6764ec74dadc4a0d00a5a0825374ff0aaa82",
+        "archive-terraces-L3-S3-archive-warm-limestone": "80b01bdb586c8d7e3e7ade17c73d5bcaf3957f7a23d16523dd4c861b2a2229b7",
+        "archive-terraces-L3-S4-archive-books-and-walnut": "3448421a9fa66f684f4a0694b2cbdb4eca913617082c15f4f32709f555b890bd",
+        "archive-terraces-L3-S4-archive-garden-colors": "9182455b023ed9406fa08cd423f8278c159f7a6cba2c7bea198264d9bef08c7c",
+        "archive-terraces-L3-S4-archive-warm-limestone": "a4e66cb10483c271c268207b04b50a5961f9c611127b37044fb31c7fa1c66615",
+        "archive-terraces-L3-S5-archive-warm-gold": "909cc11a743c5e68706516f659e21b39e5cc5892baf6dadff55d8f1af28528ee",
+        "archive-terraces-L3-S5-archive-warm-limestone": "db4398c8fe4f1a5ccda31571190ae9c9e81b734c82eaf93da1bfaf4e31133121",
+        "archive-wings-L1-S1-archive-warm-limestone": "0a8d879deab069bdbe823038b548345ec2a45a9892fb8d1d64c19c2943ce258b",
+        "archive-wings-L1-S2-archive-warm-limestone": "a7ac1ec5952163bbf65127aef38d3d710f3e2d88f0b574b755ed1cdddaf47217",
+        "archive-wings-L1-S3-archive-books-and-walnut": "275c2340769d2c8c043c372a5cff1c72743e889c920ba2e99ce2039a89412f3f",
+        "archive-wings-L1-S5-archive-clear-window-glass": "0e00f71ece26acb4a6ad4d7d2eaef253164d5b187fd301dad07168392ee1afb3",
+        "archive-wings-L1-S5-archive-reading-lights": "35fb92f8c04d1ad5fec4488c9cc4d6768c59704c088eeec7ff0d53fa6fbf0469",
+        "archive-wings-L1-S5-archive-warm-gold": "6e0b1a05ab93f6862d28b2fa00de8176e40309735fd13f01d1887d34698c9e9e",
+        "archive-wings-L2-S1-archive-warm-limestone": "287b0960aaedf994a3f66b6759d25f6bfce632820d7ab72345f17129dbb1936c",
+        "archive-wings-L2-S2-archive-warm-limestone": "96343346f468c977cce6f0630ac59a7546a4b4c45349d41a0696cbf89b2c3636",
+        "archive-wings-L2-S3-archive-books-and-walnut": "3a3932b45eeb6ee39f4e5808360ab05fe51efaf553d95d01f9ca0c1496380755",
+        "archive-wings-L2-S5-archive-clear-window-glass": "7ed9c1d60ff7fb5a824658a724e5c0bd657992597fe2b3dda9a37a2f8be5ed09",
+        "archive-wings-L2-S5-archive-reading-lights": "6057e135e8216c91e090ef5173dcb6cddb29aeb93560dbd70cca6e0574861331",
+        "archive-wings-L2-S5-archive-warm-gold": "394ffc057df9a8757230ccde297091dd060200285d56cd02df9db8d711c79b24",
+        "archive-wings-L3-S1-archive-warm-limestone": "467eb0fddd041400db9b958c16cda5d87e58dbc37b0790db649fcecc94e4749f",
+        "archive-wings-L3-S2-archive-warm-limestone": "11b3ee07577200cd6648413d5955ada6a6a59054ecdc8d0f3a9c49f7624c1033",
+        "archive-wings-L3-S3-archive-books-and-walnut": "9a2aa10f55a9a9a5bc3c0a1a0ed2bdd61dd1fb6b5a069d28aa47ec15457948d7",
+        "archive-wings-L3-S5-archive-clear-window-glass": "847e2edaa914f6f6d76aeb967d2689cdaa7f23e589d12c93418af103a96569c3",
+        "archive-wings-L3-S5-archive-reading-lights": "393bfeb901666e6eff2afb54bd7ab1076c059c26d2a7990a589eafbb3b50cf5a",
+        "archive-wings-L3-S5-archive-warm-gold": "2a98cf3da04d7c069dde1b5b82141128715e80725597101a71520dbf2d7618c9"
+      }
+    }
+  },
+  "materials": [
+    {
+      "name": "archive-warm-gold",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-celestial-blue",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-warm-limestone",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-books-and-walnut",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-garden-colors",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-rooftop-water",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-clear-window-glass",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "archive-reading-lights",
+      "doubleSided": true,
+      "emissiveFactor": [
+        1,
+        0.5299999713897705,
+        0.15000000596046448
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "node": "archive-globe-L2-S3-archive-warm-gold",
+      "level": 2,
+      "stage": 3,
+      "owner": "archive-globe",
+      "triangles": 276,
+      "degenerateTriangles": 0,
+      "signature": "ef7f5bfe2d338871189d2ea9b136c17239af474a908fa2f6908601a2229e1ddb",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-globe-L2-S4-archive-celestial-blue",
+      "level": 2,
+      "stage": 4,
+      "owner": "archive-globe",
+      "triangles": 624,
+      "degenerateTriangles": 0,
+      "signature": "c80c902d38c5c73fadb30a6e08b195e0e9c91812372b96269ffdf2ce5aaf2732",
+      "materials": [
+        "archive-celestial-blue"
+      ]
+    },
+    {
+      "node": "archive-globe-L2-S5-archive-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "archive-globe",
+      "triangles": 2838,
+      "degenerateTriangles": 0,
+      "signature": "7b1613161a2bf80bc535ea5c6a0cc358240d10641fd93c11bbe0668289610787",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-globe-L3-S5-archive-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "archive-globe",
+      "triangles": 1380,
+      "degenerateTriangles": 0,
+      "signature": "1c7ecf84700a96a92f09c18e3261c6c48411d4a022e82d51ef42ad4f855b4285",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S1-archive-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "archive-terraces",
+      "triangles": 420,
+      "degenerateTriangles": 0,
+      "signature": "339faae9d9c2b518f22285aa4678244cb7ab2296bb6a174b57f9c2285addac0f",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S3-archive-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "archive-terraces",
+      "triangles": 296,
+      "degenerateTriangles": 0,
+      "signature": "13ca4660b611de57f956f5cc1c82a8ce83201e6280f5b2fb3d02d31cc4104ae3",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S3-archive-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "archive-terraces",
+      "triangles": 312,
+      "degenerateTriangles": 0,
+      "signature": "c9cd6eac2ebf92a0ade559ffb3358a9148ea148b283000a3839be0c720b8d7bd",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S4-archive-books-and-walnut",
+      "level": 1,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 184,
+      "degenerateTriangles": 0,
+      "signature": "beb2b9f927635378f9b0fdfbe34591eb8e695fd677b19603c7f83061c654216a",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S4-archive-garden-colors",
+      "level": 1,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 762,
+      "degenerateTriangles": 0,
+      "signature": "6fa3c6449c0be9e11c38a372dfa38f017a381bb7bfbd69e258c4a86fb876ed86",
+      "materials": [
+        "archive-garden-colors"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S4-archive-warm-limestone",
+      "level": 1,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "de67863828ec1eb8ea79a10141fa0f4e76799cb3ad5fdfddee856a2c1380954c",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S5-archive-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "archive-terraces",
+      "triangles": 348,
+      "degenerateTriangles": 0,
+      "signature": "a6ec87a337610fbfbedc09ff26346cc9d749acf6cf8730e0a2f02a0ac01e31db",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-terraces-L1-S5-archive-warm-limestone",
+      "level": 1,
+      "stage": 5,
+      "owner": "archive-terraces",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "c1f4dd802cc9145dd6d88a0212b813ff42b70283261cca9f32ac85937224cd80",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S1-archive-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "archive-terraces",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "90925853e2d1d565aded52724c7d74c290904bdd925b38208b949d02965817bd",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S3-archive-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "archive-terraces",
+      "triangles": 296,
+      "degenerateTriangles": 0,
+      "signature": "a512c1d80d56ab5d06502a4c7d255588fcf609b52d1cf23a485611d69f2caaaa",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S3-archive-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "archive-terraces",
+      "triangles": 312,
+      "degenerateTriangles": 0,
+      "signature": "1fbd73b36e23d51161e3fc7a22f396948b15363c8a4e1044936751b862f90ad5",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S4-archive-books-and-walnut",
+      "level": 2,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 184,
+      "degenerateTriangles": 0,
+      "signature": "1c5ae11f9fc828b11d57a327689b43a3e6a3f47054675a24a892f2c32a24e01a",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S4-archive-garden-colors",
+      "level": 2,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 952,
+      "degenerateTriangles": 0,
+      "signature": "7c7c758b7745144191724b47680054381919c5d7c45e8176b9e3534dbedbae42",
+      "materials": [
+        "archive-garden-colors"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S4-archive-rooftop-water",
+      "level": 2,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 156,
+      "degenerateTriangles": 0,
+      "signature": "f4ff949cc90822282096f88d7742aa0ca0da7f3ceaabca718357f06c3edb8481",
+      "materials": [
+        "archive-rooftop-water"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S4-archive-warm-limestone",
+      "level": 2,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "7e9fefc086c2fabc37e8fa5bcaa2fb596491374a81db69c0ff39b75c053c8c30",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S5-archive-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "archive-terraces",
+      "triangles": 348,
+      "degenerateTriangles": 0,
+      "signature": "4415ada146eb5335f1898a6b1558e183c341320ffe84d02fb44f88bb29c34508",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-terraces-L2-S5-archive-warm-limestone",
+      "level": 2,
+      "stage": 5,
+      "owner": "archive-terraces",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "488aeed4df9a1408ed4b7cfac5fd67da0ec5587127b942061ca9b5d433a2fbc6",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S1-archive-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "archive-terraces",
+      "triangles": 336,
+      "degenerateTriangles": 0,
+      "signature": "a6af27edac5be53e431cc191b7fa1bff22fa179c52c8e239b27ae273f54df711",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S3-archive-books-and-walnut",
+      "level": 3,
+      "stage": 3,
+      "owner": "archive-terraces",
+      "triangles": 296,
+      "degenerateTriangles": 0,
+      "signature": "689cec45b15516119b8c3586453b6764ec74dadc4a0d00a5a0825374ff0aaa82",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S3-archive-warm-limestone",
+      "level": 3,
+      "stage": 3,
+      "owner": "archive-terraces",
+      "triangles": 312,
+      "degenerateTriangles": 0,
+      "signature": "80b01bdb586c8d7e3e7ade17c73d5bcaf3957f7a23d16523dd4c861b2a2229b7",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S4-archive-books-and-walnut",
+      "level": 3,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 184,
+      "degenerateTriangles": 0,
+      "signature": "3448421a9fa66f684f4a0694b2cbdb4eca913617082c15f4f32709f555b890bd",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S4-archive-garden-colors",
+      "level": 3,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 988,
+      "degenerateTriangles": 0,
+      "signature": "9182455b023ed9406fa08cd423f8278c159f7a6cba2c7bea198264d9bef08c7c",
+      "materials": [
+        "archive-garden-colors"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S4-archive-warm-limestone",
+      "level": 3,
+      "stage": 4,
+      "owner": "archive-terraces",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "a4e66cb10483c271c268207b04b50a5961f9c611127b37044fb31c7fa1c66615",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S5-archive-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "archive-terraces",
+      "triangles": 404,
+      "degenerateTriangles": 0,
+      "signature": "909cc11a743c5e68706516f659e21b39e5cc5892baf6dadff55d8f1af28528ee",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-terraces-L3-S5-archive-warm-limestone",
+      "level": 3,
+      "stage": 5,
+      "owner": "archive-terraces",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "db4398c8fe4f1a5ccda31571190ae9c9e81b734c82eaf93da1bfaf4e31133121",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L1-S1-archive-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "archive-wings",
+      "triangles": 48,
+      "degenerateTriangles": 0,
+      "signature": "0a8d879deab069bdbe823038b548345ec2a45a9892fb8d1d64c19c2943ce258b",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L1-S2-archive-warm-limestone",
+      "level": 1,
+      "stage": 2,
+      "owner": "archive-wings",
+      "triangles": 1088,
+      "degenerateTriangles": 0,
+      "signature": "a7ac1ec5952163bbf65127aef38d3d710f3e2d88f0b574b755ed1cdddaf47217",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L1-S3-archive-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "archive-wings",
+      "triangles": 2496,
+      "degenerateTriangles": 0,
+      "signature": "275c2340769d2c8c043c372a5cff1c72743e889c920ba2e99ce2039a89412f3f",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-wings-L1-S5-archive-clear-window-glass",
+      "level": 1,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 169,
+      "degenerateTriangles": 0,
+      "signature": "0e00f71ece26acb4a6ad4d7d2eaef253164d5b187fd301dad07168392ee1afb3",
+      "materials": [
+        "archive-clear-window-glass"
+      ]
+    },
+    {
+      "node": "archive-wings-L1-S5-archive-reading-lights",
+      "level": 1,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 156,
+      "degenerateTriangles": 0,
+      "signature": "35fb92f8c04d1ad5fec4488c9cc4d6768c59704c088eeec7ff0d53fa6fbf0469",
+      "materials": [
+        "archive-reading-lights"
+      ]
+    },
+    {
+      "node": "archive-wings-L1-S5-archive-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 156,
+      "degenerateTriangles": 0,
+      "signature": "6e0b1a05ab93f6862d28b2fa00de8176e40309735fd13f01d1887d34698c9e9e",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-wings-L2-S1-archive-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "archive-wings",
+      "triangles": 44,
+      "degenerateTriangles": 0,
+      "signature": "287b0960aaedf994a3f66b6759d25f6bfce632820d7ab72345f17129dbb1936c",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L2-S2-archive-warm-limestone",
+      "level": 2,
+      "stage": 2,
+      "owner": "archive-wings",
+      "triangles": 1004,
+      "degenerateTriangles": 0,
+      "signature": "96343346f468c977cce6f0630ac59a7546a4b4c45349d41a0696cbf89b2c3636",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L2-S3-archive-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "archive-wings",
+      "triangles": 2304,
+      "degenerateTriangles": 0,
+      "signature": "3a3932b45eeb6ee39f4e5808360ab05fe51efaf553d95d01f9ca0c1496380755",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-wings-L2-S5-archive-clear-window-glass",
+      "level": 2,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 156,
+      "degenerateTriangles": 0,
+      "signature": "7ed9c1d60ff7fb5a824658a724e5c0bd657992597fe2b3dda9a37a2f8be5ed09",
+      "materials": [
+        "archive-clear-window-glass"
+      ]
+    },
+    {
+      "node": "archive-wings-L2-S5-archive-reading-lights",
+      "level": 2,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 144,
+      "degenerateTriangles": 0,
+      "signature": "6057e135e8216c91e090ef5173dcb6cddb29aeb93560dbd70cca6e0574861331",
+      "materials": [
+        "archive-reading-lights"
+      ]
+    },
+    {
+      "node": "archive-wings-L2-S5-archive-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 144,
+      "degenerateTriangles": 0,
+      "signature": "394ffc057df9a8757230ccde297091dd060200285d56cd02df9db8d711c79b24",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    },
+    {
+      "node": "archive-wings-L3-S1-archive-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "archive-wings",
+      "triangles": 40,
+      "degenerateTriangles": 0,
+      "signature": "467eb0fddd041400db9b958c16cda5d87e58dbc37b0790db649fcecc94e4749f",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L3-S2-archive-warm-limestone",
+      "level": 3,
+      "stage": 2,
+      "owner": "archive-wings",
+      "triangles": 920,
+      "degenerateTriangles": 0,
+      "signature": "11b3ee07577200cd6648413d5955ada6a6a59054ecdc8d0f3a9c49f7624c1033",
+      "materials": [
+        "archive-warm-limestone"
+      ]
+    },
+    {
+      "node": "archive-wings-L3-S3-archive-books-and-walnut",
+      "level": 3,
+      "stage": 3,
+      "owner": "archive-wings",
+      "triangles": 1152,
+      "degenerateTriangles": 0,
+      "signature": "9a2aa10f55a9a9a5bc3c0a1a0ed2bdd61dd1fb6b5a069d28aa47ec15457948d7",
+      "materials": [
+        "archive-books-and-walnut"
+      ]
+    },
+    {
+      "node": "archive-wings-L3-S5-archive-clear-window-glass",
+      "level": 3,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 78,
+      "degenerateTriangles": 0,
+      "signature": "847e2edaa914f6f6d76aeb967d2689cdaa7f23e589d12c93418af103a96569c3",
+      "materials": [
+        "archive-clear-window-glass"
+      ]
+    },
+    {
+      "node": "archive-wings-L3-S5-archive-reading-lights",
+      "level": 3,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "393bfeb901666e6eff2afb54bd7ab1076c059c26d2a7990a589eafbb3b50cf5a",
+      "materials": [
+        "archive-reading-lights"
+      ]
+    },
+    {
+      "node": "archive-wings-L3-S5-archive-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "archive-wings",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "2a98cf3da04d7c069dde1b5b82141128715e80725597101a71520dbf2d7618c9",
+      "materials": [
+        "archive-warm-gold"
+      ]
+    }
+  ]
+}

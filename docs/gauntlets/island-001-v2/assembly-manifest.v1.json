@@ -1,0 +1,393 @@
+{
+  "status": "implemented-local-production-assets",
+  "partCount": 24,
+  "parts": [
+    {
+      "id": "island-mass",
+      "parent": null,
+      "dependencies": [],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "cliff-water",
+      "parent": null,
+      "dependencies": [],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyCoast.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "route-apron",
+      "parent": null,
+      "dependencies": [],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts",
+        "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "landscape",
+      "parent": null,
+      "dependencies": [],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts",
+        "src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "hatchery-terraces",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "hatchery-wings",
+      "parent": "hatchery-terraces",
+      "dependencies": [
+        "hatchery-terraces"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "hatchery-conservatory",
+      "parent": "hatchery-terraces",
+      "dependencies": [
+        "hatchery-terraces"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "hatchery-egg",
+      "parent": "hatchery-terraces",
+      "dependencies": [
+        "hatchery-terraces"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-mass",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-canopy",
+      "parent": "oak-mass",
+      "dependencies": [
+        "oak-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-balconies",
+      "parent": "oak-mass",
+      "dependencies": [
+        "oak-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-stairs",
+      "parent": "oak-mass",
+      "dependencies": [
+        "oak-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "archive-galleries",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/wisdom.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-wisdom-iso.png",
+        "qa/reviews/release-wisdom-runtime-check.json"
+      ]
+    },
+    {
+      "id": "archive-terraces",
+      "parent": "archive-galleries",
+      "dependencies": [
+        "archive-galleries"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/wisdom.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-wisdom-iso.png",
+        "qa/reviews/release-wisdom-runtime-check.json"
+      ]
+    },
+    {
+      "id": "archive-globe",
+      "parent": "archive-galleries",
+      "dependencies": [
+        "archive-galleries"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/wisdom.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-wisdom-iso.png",
+        "qa/reviews/release-wisdom-runtime-check.json"
+      ]
+    },
+    {
+      "id": "observatory-wings",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/event.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-event-iso.png",
+        "qa/reviews/release-event-runtime-check.json"
+      ]
+    },
+    {
+      "id": "observatory-dome",
+      "parent": "observatory-wings",
+      "dependencies": [
+        "observatory-wings"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/event.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-event-iso.png",
+        "qa/reviews/release-event-runtime-check.json"
+      ]
+    },
+    {
+      "id": "observatory-armillary",
+      "parent": "observatory-wings",
+      "dependencies": [
+        "observatory-wings"
+      ],
+      "implementation": [
+        "public/assets/islands/island-001/models/event.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb"
+      ],
+      "placement": "canonical shared landmark center, yaw 0",
+      "evidence": [
+        "qa/raw/release-v2-event-iso.png",
+        "qa/reviews/release-event-runtime-check.json"
+      ]
+    },
+    {
+      "id": "assembly-cavern",
+      "parent": null,
+      "dependencies": [],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyVault.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyCraterThreeWorld.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "assembly-delegates",
+      "parent": "assembly-cavern",
+      "dependencies": [
+        "assembly-cavern"
+      ],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "assembly-presidium",
+      "parent": "assembly-cavern",
+      "dependencies": [
+        "assembly-cavern"
+      ],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "assembly-concourse",
+      "parent": "assembly-cavern",
+      "dependencies": [
+        "assembly-cavern"
+      ],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyLayout.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "civic-lifts",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyAccess.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyLayout.ts"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "construction-reveal",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyCraterThreeWorld.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts",
+        "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx"
+      ],
+      "placement": "shared world origin and Island1AssemblyLayout elevations",
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    }
+  ],
+  "runtimeManifest": "src/features/gamification/level-worlds/dev/Island1V2AssetManifest.json",
+  "construction": "Ten charges: chain at 3, main excavation at 8, finishing blast and robot assembly at 10. Each landmark retains additive L1\u2013L3 and five stages per level.",
+  "authority": "User approved all 24 parts and whole-island iteration; previous failed representative gates remain historical.",
+  "invalidation": "Changing a parent invalidates dependent attachment and assembly reviews.",
+  "physicalPhoneVerified": false
+}

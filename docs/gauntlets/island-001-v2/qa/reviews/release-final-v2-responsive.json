@@ -1,0 +1,18 @@
+{
+  "scope": "Actual game renderer in desktop Chromium at short and wide phone viewports, plus comparison viewer. Not physical-device verification.",
+  "checks": [
+    "hatchery-public-url-hash-and-bytes",
+    "habit-public-url-hash-and-bytes",
+    "wisdom-public-url-hash-and-bytes",
+    "event-public-url-hash-and-bytes",
+    "375x667-overview-and-hall",
+    "430x932-overview-and-hall",
+    "comparison-Island",
+    "comparison-Assembly",
+    "comparison-Hatchery",
+    "comparison-Habit Oak",
+    "comparison-Archive",
+    "comparison-Observatory"
+  ],
+  "errors": []
+}

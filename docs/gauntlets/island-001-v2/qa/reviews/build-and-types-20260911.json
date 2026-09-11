@@ -1,0 +1,21 @@
+{
+  "typeScript": {
+    "command": "tsc -p tsconfig.island-run-tests.json --noEmit --incremental",
+    "result": "pass",
+    "scope": "family02 source"
+  },
+  "productionBundle": {
+    "command": "vite build",
+    "result": "pass",
+    "seconds": 75,
+    "warnings": [
+      "Existing large chunk warning"
+    ]
+  },
+  "notProven": [
+    "V2 visual fidelity",
+    "integrated V2 board layout",
+    "physicalphone performance"
+  ],
+  "status": "engineering-checks-only"
+}

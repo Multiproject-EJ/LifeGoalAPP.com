@@ -1,0 +1,35 @@
+{
+  "aperture": [
+    {
+      "y": 1.35,
+      "centreFrontBlockedByShell": [],
+      "passed": true
+    },
+    {
+      "y": 1.6,
+      "centreFrontBlockedByShell": [],
+      "passed": true
+    },
+    {
+      "y": 1.9,
+      "centreFrontBlockedByShell": [],
+      "passed": true
+    },
+    {
+      "y": 2.2,
+      "centreFrontBlockedByShell": [],
+      "passed": true
+    },
+    {
+      "y": 2.4,
+      "centreFrontBlockedByShell": [],
+      "passed": true
+    }
+  ],
+  "liftClearanceRadius": 0.2,
+  "liftClearanceHeight": [
+    0.2,
+    1.15
+  ],
+  "intrudingMeshes": []
+}

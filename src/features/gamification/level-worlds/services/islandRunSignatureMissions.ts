@@ -37,16 +37,20 @@ export const SUNKEN_SANDS_FIRST_TREASURE_DICE = 25;
 export const SUNKEN_SANDS_FIRST_TREASURE_BASE_ESSENCE = 120;
 
 export const FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER = 1;
-export const FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET = 20;
-/**
- * Twenty distinct cache positions for the 36-tile production ring. They avoid
- * the four canonical landmark-door indices (5, 14, 23, 32) and the Traffic
- * Light at 19. Each cache is a finite, collect-once mission pickup.
- */
+export const FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET = 10;
+/** Ten finite caches. Legacy positions remain admissible when hydrating old saves. */
 export const FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES = Object.freeze([
-  0, 1, 2, 3, 7, 8, 9, 10, 11, 13,
-  16, 17, 18, 20, 21, 25, 26, 27, 28, 29,
+  0, 1, 3, 7, 10, 13, 17, 21, 26, 29,
 ] as const);
+const FIRST_LIGHT_ASSEMBLY_LEGACY_TILE_INDICES = [
+  0, 1, 2, 3, 7, 8, 9, 10, 11, 13, 16, 17, 18, 20, 21, 25, 26, 27, 28, 29,
+] as const;
+export const FIRST_LIGHT_ASSEMBLY_BATCH_ENDS = [3, 8, 10] as const;
+export function getFirstLightAssemblyNextBatch(chargesDetonated: number) {
+  const end = FIRST_LIGHT_ASSEMBLY_BATCH_ENDS.find((value) => value > chargesDetonated) ?? 10;
+  return { end, cost: Math.max(0, end - chargesDetonated),
+    label: end === 3 ? 'Break the surface' : end === 8 ? 'Excavate the chamber' : 'Finish the foundations' };
+}
 
 export const CACTUS_CANYON_ISLAND_NUMBER = 13;
 export const CACTUS_CANYON_SPIRAL_MAX_SEGMENTS = 16;
@@ -267,7 +271,7 @@ export interface CactusCanyonSpiralProgress {
 
 export interface FirstLightAssemblyCraterProgress {
   missionId: 'first-light-assembly-crater';
-  version: 1;
+  version: 1 | 2;
   claimedDynamiteTileIndices: number[];
   chargesDetonated: number;
   lastDetonatedSector: number | null;
@@ -483,14 +487,16 @@ export function sanitizeIslandRunSignatureMissionProgress(
     if (record.missionId === 'first-light-assembly-crater' || record.mission_id === 'first-light-assembly-crater') {
       const claimedRaw = record.claimedDynamiteTileIndices ?? record.claimed_dynamite_tile_indices;
       const claimedDynamiteTileIndices = Array.isArray(claimedRaw)
-        ? FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.filter((tileIndex) => (
+        ? FIRST_LIGHT_ASSEMBLY_LEGACY_TILE_INDICES.filter((tileIndex) => (
             claimedRaw.some((candidate) => finiteInteger(candidate, -1) === tileIndex)
           ))
         : [];
       const chargesDetonated = Math.max(0, Math.min(
         claimedDynamiteTileIndices.length,
         FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
-        finiteInteger(record.chargesDetonated ?? record.charges_detonated),
+        record.version === 2
+          ? finiteInteger(record.chargesDetonated ?? record.charges_detonated)
+          : Math.floor(finiteInteger(record.chargesDetonated ?? record.charges_detonated) / 2),
       ));
       const startedAtRaw = record.startedAtMs ?? record.started_at_ms;
       const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
@@ -498,7 +504,7 @@ export function sanitizeIslandRunSignatureMissionProgress(
       const lastSectorRaw = record.lastDetonatedSector ?? record.last_detonated_sector;
       result[key] = {
         missionId: 'first-light-assembly-crater',
-        version: 1,
+        version: 2,
         claimedDynamiteTileIndices,
         chargesDetonated,
         lastDetonatedSector: typeof lastSectorRaw === 'number' && Number.isFinite(lastSectorRaw)
@@ -785,9 +791,11 @@ export function resolveFirstLightAssemblyCraterProgress(options: {
     options.islandNumber ?? FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER,
   );
   const current = options.ledger[key];
-  return current?.missionId === 'first-light-assembly-crater' ? current : {
+  return current?.missionId === 'first-light-assembly-crater'
+    ? current.version === 2 ? current : sanitizeIslandRunSignatureMissionProgress({ [key]: current })[key] as FirstLightAssemblyCraterProgress
+    : {
     missionId: 'first-light-assembly-crater',
-    version: 1,
+    version: 2,
     claimedDynamiteTileIndices: [],
     chargesDetonated: 0,
     lastDetonatedSector: null,
@@ -1063,7 +1071,7 @@ export function isFirstLightAssemblyDynamiteTile(islandNumber: number, tileIndex
 }
 
 export function getFirstLightAssemblyAvailableDynamite(progress: FirstLightAssemblyCraterProgress): number {
-  return Math.max(0, progress.claimedDynamiteTileIndices.length - progress.chargesDetonated);
+  return Math.max(0, Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, progress.claimedDynamiteTileIndices.length) - progress.chargesDetonated);
 }
 
 export function getFirstLightAssemblyBuildProgress(progress: FirstLightAssemblyCraterProgress): number {
@@ -1084,12 +1092,13 @@ export function collectFirstLightAssemblyDynamiteForLanding(options: {
   if (
     current.completedAtMs !== null
     || current.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+    || current.claimedDynamiteTileIndices.length >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
     || current.claimedDynamiteTileIndices.includes(options.tileIndex)
   ) {
     return { ledger: options.ledger, dynamiteCollected: 0 };
   }
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
-  const claimedDynamiteTileIndices = FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.filter((tileIndex) => (
+  const claimedDynamiteTileIndices = FIRST_LIGHT_ASSEMBLY_LEGACY_TILE_INDICES.filter((tileIndex) => (
     current.claimedDynamiteTileIndices.includes(tileIndex) || tileIndex === options.tileIndex
   ));
   return {
@@ -1510,8 +1519,14 @@ export function mergeIslandRunSignatureMissionProgress(
 ): IslandRunSignatureMissionProgressByIsland {
   const merged: IslandRunSignatureMissionProgressByIsland = {};
   new Set([...Object.keys(remote), ...Object.keys(local)]).forEach((key) => {
-    const a = remote[key];
-    const b = local[key];
+    let a = remote[key];
+    let b = local[key];
+    if (a?.missionId === 'first-light-assembly-crater' && a.version !== 2) {
+      a = sanitizeIslandRunSignatureMissionProgress({ [key]: a })[key];
+    }
+    if (b?.missionId === 'first-light-assembly-crater' && b.version !== 2) {
+      b = sanitizeIslandRunSignatureMissionProgress({ [key]: b })[key];
+    }
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
     const stagedA = getStagedRestorationMissionDescriptorById(a.missionId);
@@ -1605,7 +1620,7 @@ export function mergeIslandRunSignatureMissionProgress(
     if (a.missionId === 'first-light-assembly-crater' || b.missionId === 'first-light-assembly-crater') {
       if (a.missionId !== 'first-light-assembly-crater') { merged[key] = b; return; }
       if (b.missionId !== 'first-light-assembly-crater') { merged[key] = a; return; }
-      const claimedDynamiteTileIndices = FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.filter((tileIndex) => (
+      const claimedDynamiteTileIndices = FIRST_LIGHT_ASSEMBLY_LEGACY_TILE_INDICES.filter((tileIndex) => (
         a.claimedDynamiteTileIndices.includes(tileIndex) || b.claimedDynamiteTileIndices.includes(tileIndex)
       ));
       const chargesDetonated = Math.min(
@@ -1621,7 +1636,7 @@ export function mergeIslandRunSignatureMissionProgress(
       const latest = a.updatedAtMs >= b.updatedAtMs ? a : b;
       merged[key] = {
         missionId: 'first-light-assembly-crater',
-        version: 1,
+        version: 2,
         claimedDynamiteTileIndices,
         chargesDetonated,
         lastDetonatedSector: latest.lastDetonatedSector,

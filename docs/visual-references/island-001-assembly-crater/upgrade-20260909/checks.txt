@@ -1,0 +1,14 @@
+Full Island Run runner: 2043 passed, 0 failed
+Focused final Assembly runner: 11 passed, 0 failed
+Architecture guard: PASS, 0 violations
+Island art assets: PASS, 0 warnings
+Island art render wiring: PASS
+TypeScript service compile and incremental recheck: PASS
+In-game browser / phone visual acceptance: PENDING (automation timeouts)
+Latest visual proof: hall-geometry-review-v3.png (Blender render of actual Three.js geometry; not an in-game screenshot)
+Vite production bundle: PASS (publicDir copying disabled for validation; existing asset/chunk warnings)
+Git diff --check: PASS
+
+Landmark access follow-up: 11 focused tests PASS, architecture guard PASS (0 violations; 3 existing allowlisted warnings), TypeScript service noEmit PASS, focused review entry esbuild PASS. V4/V5 offline renders inspected. Browser preview navigation timed out. No phone or production acceptance claimed.
+2026-09-10 geology/entrance pass: focused 11/11 PASS; TypeScript service noEmit PASS; diff check PASS. V6 visually rejected (brick-like grid), V7 inspected after natural strata correction. No browser/device acceptance claimed.
+2026-09-10 coast pass: focused 11/11 PASS; TypeScript service noEmit PASS; focused browser review esbuild PASS; diff whitespace PASS. V8 surface geometry render inspected. Runtime checks cover coast inspection visibility, water flow, curtain clearance and canonical splash sea height. Local only; live browser and phone acceptance remain pending.

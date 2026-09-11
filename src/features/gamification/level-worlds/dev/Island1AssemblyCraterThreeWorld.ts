@@ -1,7 +1,16 @@
 import * as THREE from 'three';
+import { ASSEMBLY_CAVITY_DEPTH } from './Island1AssemblyLayout';
+import { createIsland001V2Terrain } from './Island1V2Terrain';
+import { createIsland001V2Asset, getIsland001V2LandmarkYaw } from './Island1V2Assets';
+import { createAssemblyHeroCoast } from './Island1AssemblyCoast';
+import { createAssemblyLandmarkAccess } from './Island1AssemblyAccess';
+import { createAssemblyVault } from './Island1AssemblyVault';
+import { createAssemblyDiplomaticHall } from './Island1AssemblyDiplomaticHall';
+import { FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET } from '../services/islandRunSignatureMissions';
 import type { Island3DQuality, Island5LandmarkDefinition } from './island5ThreePilotContract';
 import {
   buildIsland1Landmark,
+  ISLAND_1_OCEAN_SURFACE_Y,
   type Island1LandmarkBuildOptions,
   type Island1WorldMaterials,
 } from './Island1ThreeWorld';
@@ -10,12 +19,12 @@ export const ISLAND_1_ASSEMBLY_CRATER_NAME = 'Assembly Crater';
 export const ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT = 20;
 export const ISLAND_1_ASSEMBLY_CRATER_RADIUS = 2.72;
 export const ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y = 0.26;
-export const ISLAND_1_ASSEMBLY_CRATER_DEPTH = 4.72;
+export const ISLAND_1_ASSEMBLY_CRATER_DEPTH = ASSEMBLY_CAVITY_DEPTH;
 // The hall should feel implausibly capacious without overwhelming the island's
 // silhouette: 6.95 is only about 11% wider than the 6.25-unit surface crown.
 export const ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS = 6.95;
-export const ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS = 2.4;
-export const ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS = 7.2;
+export const ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS = 5.2;
+export const ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS = 8;
 
 export interface Island1AssemblyCraterPresentation {
   chargesDetonated: number;
@@ -67,8 +76,45 @@ export function buildIsland1AssemblyLandmark(
   materials: Island1WorldMaterials,
   options: Island1LandmarkBuildOptions = {},
 ) {
+  if (definition.id !== 'boss' && level === 0) {
+    const root = new THREE.Group(); root.name = `ISLAND_001_${definition.id}_CIVIC_BUILD_PLOT`; root.position.set(...definition.position);
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.42, 1.48, .06, 32), new THREE.MeshStandardMaterial({ color: 0xcfc3a5, roughness: .8 }));
+    pad.position.y = .10; root.add(pad); root.traverse(node => { node.userData.landmarkId = definition.id; }); return root;
+  }
+  if (definition.id !== 'boss' && level > 0) {
+    const model = createIsland001V2Asset(definition.id, level as 1|2|3, Boolean(options.constructionPreview));
+    if (model) {
+      const root = new THREE.Group(); root.name = `ISLAND_001_V2_${definition.id.toUpperCase()}_ROOT`; root.position.set(...definition.position);
+      model.rotation.y = getIsland001V2LandmarkYaw(definition.id); root.add(model);
+      root.traverse(child => { child.userData.landmarkId = definition.id; });
+      return root;
+    }
+  }
   if (definition.id !== 'boss') {
-    return buildIsland1Landmark(definition, level, quality, materials, options);
+    const landmark = buildIsland1Landmark(definition, level, quality, materials, options);
+    if (level > 0) {
+      const detail = new THREE.Group();
+      detail.name = `ISLAND_001_${definition.id}_CIVIC_FORECOURT_L${level}`;
+      const count = level === 3 ? 8 : level === 2 ? 6 : 4;
+      const plinths = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.055, 0.075, 0.18, 6), materials.gold, count);
+      const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(0.065, 6, 4), materials.warmGlow, count);
+      const transform = new THREE.Object3D();
+      for (let i = 0; i < count; i++) {
+        const angle = i / 8 * Math.PI * 2;
+        transform.position.set(Math.sin(angle) * 1.38, 0.23, Math.cos(angle) * 1.38);
+        transform.updateMatrix();
+        plinths.setMatrixAt(i, transform.matrix);
+        transform.position.y = 0.36;
+        transform.updateMatrix();
+        lamps.setMatrixAt(i, transform.matrix);
+      }
+      plinths.name = 'CIVIC_FORECOURT_BRASS_LANTERNS';
+      lamps.name = 'CIVIC_FORECOURT_WARM_LIGHTS';
+      detail.add(plinths, lamps);
+      detail.traverse((child) => { child.userData.landmarkId = definition.id; });
+      landmark.add(detail);
+    }
+    return landmark;
   }
 
   const root = new THREE.Group();
@@ -118,25 +164,7 @@ export function createIsland1AssemblyCraterTerrain(
   const outerRadius = 6.25;
   const outerDepth = 3.4;
 
-  const crown = new THREE.Mesh(
-    new THREE.RingGeometry(ISLAND_1_ASSEMBLY_CRATER_RADIUS, outerRadius, segments, 3),
-    materials.top,
-  );
-  crown.name = 'ISLAND_1_ASSEMBLY_CRATER_ROUTE_BEARING_CROWN';
-  crown.rotation.x = -Math.PI / 2;
-  crown.position.y = ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y;
-  crown.receiveShadow = true;
-  root.add(crown);
-
-  const outerCliff = new THREE.Mesh(
-    new THREE.CylinderGeometry(outerRadius, outerRadius * 1.07, outerDepth, segments, 5, true),
-    materials.cliff,
-  );
-  outerCliff.name = 'ISLAND_1_ASSEMBLY_CRATER_OUTER_CLIFF';
-  outerCliff.position.y = ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y - outerDepth / 2;
-  outerCliff.castShadow = quality !== 'low';
-  outerCliff.receiveShadow = true;
-  root.add(outerCliff);
+  root.add(createIsland001V2Terrain(quality));
 
   const soilDepth = 0.38;
   const soilFlareRadius = ISLAND_1_ASSEMBLY_CRATER_RADIUS + 0.12;
@@ -160,7 +188,7 @@ export function createIsland1AssemblyCraterTerrain(
   innerSoilCollar.receiveShadow = true;
   root.add(innerSoilCollar);
 
-  const rockDepth = ISLAND_1_ASSEMBLY_CRATER_DEPTH - soilDepth;
+  const rockDepth = .42; // Short finished oculus collar; the excavation owns its deep wall.
   const innerRockMaterial = materials.innerRock.clone();
   innerRockMaterial.name = 'ISLAND_1_ASSEMBLY_CRATER_DEEP_STONE_MATERIAL';
   innerRockMaterial.side = THREE.BackSide;
@@ -184,13 +212,15 @@ export function createIsland1AssemblyCraterTerrain(
   root.add(innerRockWall);
 
   const rim = new THREE.Mesh(
-    new THREE.TorusGeometry(ISLAND_1_ASSEMBLY_CRATER_RADIUS, 0.085, 8, segments),
+    new THREE.TorusGeometry(ISLAND_1_ASSEMBLY_CRATER_RADIUS, 0.022, 6, segments),
     materials.rim,
   );
   rim.name = 'ISLAND_1_ASSEMBLY_CRATER_PROTECTED_ROUTE_RIM';
   rim.rotation.x = Math.PI / 2;
   rim.position.y = ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y + 0.035;
   root.add(rim);
+  const coping = new THREE.Mesh(new THREE.RingGeometry(2.72, 2.92, segments), new THREE.MeshStandardMaterial({ color: 0xdaceb0, roughness: .7 }));
+  coping.rotation.x = -Math.PI / 2; coping.position.y = .283; root.add(coping);
 
   root.userData.routeInnerClearanceRadius = ISLAND_1_ASSEMBLY_CRATER_RADIUS;
   root.userData.presentationOnly = true;
@@ -222,6 +252,9 @@ export function createIsland1AssemblyCraterRuntime(
   root.userData.signatureMissionId = 'first-light-assembly-crater';
   root.userData.presentationOnly = true;
 
+  const heroCoast = createAssemblyHeroCoast(quality, materials);
+  root.add(heroCoast.root);
+
   const segmentAngle = Math.PI * 2 / ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT;
   const radialSegments = quality === 'high' ? 18 : quality === 'medium' ? 14 : 10;
   const dummy = new THREE.Object3D();
@@ -240,42 +273,9 @@ export function createIsland1AssemblyCraterRuntime(
   cutawayGrassMaterial.roughness = Math.max(0.88, cutawayGrassMaterial.roughness);
   const cutawaySoilMaterial = new THREE.MeshStandardMaterial({ color: 0x6f4d35, roughness: 0.94 });
   cutawaySoilMaterial.name = 'ISLAND_1_ASSEMBLY_CUTAWAY_SOIL_MATERIAL';
-  const cutawayStoneMaterial = new THREE.MeshStandardMaterial({ color: 0x3f4751, roughness: 0.96 });
+  const cutawayStoneMaterial = new THREE.MeshStandardMaterial({ color: 0x827b68, roughness: 0.96 });
   cutawayStoneMaterial.name = 'ISLAND_1_ASSEMBLY_CUTAWAY_DEEP_STONE_MATERIAL';
-  const rearGrassCrown = new THREE.Mesh(
-    new THREE.RingGeometry(
-      ISLAND_1_ASSEMBLY_CRATER_RADIUS,
-      6.25,
-      cutawaySegments,
-      2,
-      0,
-      Math.PI,
-    ),
-    cutawayGrassMaterial,
-  );
-  rearGrassCrown.name = 'ISLAND_1_ASSEMBLY_CANONICAL_REAR_GRASS_CROWN';
-  rearGrassCrown.rotation.x = -Math.PI / 2;
-  rearGrassCrown.position.y = ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y;
-  rearGrassCrown.receiveShadow = true;
-  inspectionCutawayContext.add(rearGrassCrown);
-
-  const rearStoneCliff = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      6.25,
-      6.48,
-      3.62,
-      cutawaySegments,
-      4,
-      true,
-      Math.PI / 2,
-      Math.PI,
-    ),
-    cutawayStoneMaterial,
-  );
-  rearStoneCliff.name = 'ISLAND_1_ASSEMBLY_CANONICAL_REAR_DEEP_STONE';
-  rearStoneCliff.position.y = ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y - 1.81;
-  rearStoneCliff.receiveShadow = true;
-  inspectionCutawayContext.add(rearStoneCliff);
+  inspectionCutawayContext.add(createIsland001V2Terrain(quality, true));
 
   const cutFaceWidth = (6.25 - ISLAND_1_ASSEMBLY_CRATER_RADIUS) / 2;
   const cutFaceCenter = ISLAND_1_ASSEMBLY_CRATER_RADIUS + cutFaceWidth;
@@ -286,14 +286,55 @@ export function createIsland1AssemblyCraterRuntime(
     );
     stoneFace.name = `ISLAND_1_ASSEMBLY_CUT_FACE_STONE_${side < 0 ? 'LEFT' : 'RIGHT'}`;
     stoneFace.position.set(side * cutFaceCenter, ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y - 1.81, 0);
+    stoneFace.rotation.y = 0;
     stoneFace.receiveShadow = true;
+    stoneFace.visible = false; // Superseded by the thin carved vault section.
     inspectionCutawayContext.add(stoneFace);
+    // Exposed excavation face: broken strata, not a smooth architectural wall.
+    const strata = new THREE.Group();
+    strata.name = `ISLAND_001_EXPOSED_GEOLOGY_${side}`;
+    strata.position.copy(stoneFace.position);
+    strata.rotation.copy(stoneFace.rotation);
+    const geologyMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0xaca18a, roughness: 0.98 }),
+      new THREE.MeshStandardMaterial({ color: 0x8f846e, roughness: 0.97 }),
+      new THREE.MeshStandardMaterial({ color: 0xc1b391, roughness: 0.94 }),
+    ];
+    const stoneDummy = new THREE.Object3D();
+    geologyMaterials.forEach((material, band) => {
+      const seamGeometry = new THREE.BoxGeometry(cutFaceWidth * 2, 1, 1, 24, 1, 1);
+      const seamVertices = seamGeometry.attributes.position;
+      for (let vertex = 0; vertex < seamVertices.count; vertex++) {
+        const x = seamVertices.getX(vertex);
+        seamVertices.setY(vertex, seamVertices.getY(vertex)
+          + Math.sin(x * 4.1 + band + side) * 0.1
+          + Math.sin(x * 11.3 + band * 2) * 0.045);
+      }
+      seamGeometry.computeVertexNormals();
+      const pieces = new THREE.InstancedMesh(seamGeometry, material, 3);
+      pieces.name = `EXCAVATION_STRATA_${side}_${band}`;
+      pieces.receiveShadow = true;
+      for (let i = 0; i < 3; i++) {
+        const row = i * 3 + band;
+        stoneDummy.position.set(0, -1.55 + row * 0.35, 0.12 + i * 0.009);
+        stoneDummy.rotation.set(0, 0, 0);
+        stoneDummy.scale.set(1, band === 2 ? 0.18 : 0.31, 0.06 + i * 0.025);
+        stoneDummy.updateMatrix();
+        pieces.setMatrixAt(i, stoneDummy.matrix);
+      }
+      strata.add(pieces);
+    });
+    strata.visible = false;
+    inspectionCutawayContext.add(strata);
+
     const soilFace = new THREE.Mesh(
       new THREE.BoxGeometry(cutFaceWidth * 2, 0.34, 0.215),
       cutawaySoilMaterial,
     );
     soilFace.name = `ISLAND_1_ASSEMBLY_CUT_FACE_SOIL_${side < 0 ? 'LEFT' : 'RIGHT'}`;
     soilFace.position.set(side * cutFaceCenter, ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y - 0.17, 0.005);
+    soilFace.rotation.y = 0;
+    soilFace.visible = false;
     inspectionCutawayContext.add(soilFace);
   });
   root.add(inspectionCutawayContext);
@@ -315,11 +356,11 @@ export function createIsland1AssemblyCraterRuntime(
 
   const foundationGeometry = new THREE.RingGeometry(
     0.18,
-    ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
-    radialSegments * 3,
+    1.18,
+    5,
     1,
-    -segmentAngle * 0.46,
-    segmentAngle * 0.92,
+    -segmentAngle * 0.5,
+    segmentAngle * 1.005,
   );
   foundationGeometry.rotateX(-Math.PI / 2);
   const rawExcavation = new THREE.Group();
@@ -341,6 +382,11 @@ export function createIsland1AssemblyCraterRuntime(
   rawExcavationWall.name = 'ISLAND_1_ASSEMBLY_PROGRESSIVE_RAW_EXCAVATION_WALL';
   rawExcavationWall.receiveShadow = true;
   rawExcavation.add(rawExcavationWall);
+  const rawShoulder=new THREE.Mesh(new THREE.RingGeometry(.001,ISLAND_1_ASSEMBLY_CRATER_RADIUS,72),rawExcavationWallMaterial.clone());
+  (rawShoulder.material as THREE.Material).side=THREE.DoubleSide;
+  rawShoulder.name='ISLAND_001_RAW_EXCAVATION_ROCK_SHOULDER';rawShoulder.rotation.x=-Math.PI/2;rawShoulder.position.y=ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y-.035;rawExcavation.add(rawShoulder);
+  const shoulderVertices=rawShoulder.geometry.attributes.position as THREE.BufferAttribute;
+
   const rawExcavationFloor = new THREE.Mesh(
     new THREE.CylinderGeometry(
       ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
@@ -356,7 +402,7 @@ export function createIsland1AssemblyCraterRuntime(
   root.add(rawExcavation);
   const foundationSectors = new THREE.InstancedMesh(
     foundationGeometry,
-    materials.navy,
+    materials.ivoryShade,
     ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT,
   );
   foundationSectors.name = 'ISLAND_1_ASSEMBLY_COLOSSAL_FOUNDATION_SECTORS';
@@ -367,10 +413,10 @@ export function createIsland1AssemblyCraterRuntime(
     const geometry = new THREE.RingGeometry(
       tier.inner,
       tier.outer,
-      radialSegments * 2,
+      5,
       1,
-      -segmentAngle * 0.44,
-      segmentAngle * 0.88,
+      -segmentAngle * 0.5,
+      segmentAngle * 1.005,
     );
     geometry.rotateX(-Math.PI / 2);
     const deck = new THREE.InstancedMesh(
@@ -428,28 +474,11 @@ export function createIsland1AssemblyCraterRuntime(
   });
   root.add(earthCover);
 
-  const rowRadii = megahallTierSpecs.map((tier) => (tier.inner + tier.outer) / 2);
-  const rowHeights = megahallTierSpecs.map((tier) => tier.y + 0.16);
-  const seatGeometry = new THREE.BoxGeometry(0.72, 0.18, 0.42);
-  const delegateSeats = new THREE.InstancedMesh(
-    seatGeometry,
-    materials.navy,
-    ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT * rowRadii.length,
-  );
-  delegateSeats.name = 'ISLAND_1_ASSEMBLY_CRATER_DELEGATE_SEATING';
-  delegateSeats.castShadow = quality !== 'low';
-  delegateSeats.receiveShadow = true;
-  root.add(delegateSeats);
-
-  const backGeometry = new THREE.BoxGeometry(0.72, 0.46, 0.09);
-  const delegateSeatBacks = new THREE.InstancedMesh(
-    backGeometry,
-    materials.ivory,
-    ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT * rowRadii.length,
-  );
-  delegateSeatBacks.name = 'ISLAND_1_ASSEMBLY_CRATER_DELEGATE_SEAT_BACKS';
-  delegateSeatBacks.castShadow = quality !== 'low';
-  root.add(delegateSeatBacks);
+  const vault = createAssemblyVault(chamberFloorY); root.add(vault.root);
+  const diplomaticHall = createAssemblyDiplomaticHall(materials, chamberFloorY);
+  root.add(diplomaticHall.root);
+  const landmarkAccess = createAssemblyLandmarkAccess(materials, chamberFloorY);
+  root.add(landmarkAccess.root);
 
   const aisleGeometry = new THREE.BoxGeometry(0.15, 0.055, aisleLength);
   const radialAisles = new THREE.InstancedMesh(
@@ -458,6 +487,7 @@ export function createIsland1AssemblyCraterRuntime(
     ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT,
   );
   radialAisles.name = 'ISLAND_1_ASSEMBLY_CRATER_RADIAL_AISLES';
+  radialAisles.visible = false;
   root.add(radialAisles);
 
   const buttressGeometry = new THREE.BoxGeometry(0.38, 3.28, 0.68);
@@ -469,7 +499,7 @@ export function createIsland1AssemblyCraterRuntime(
   vaultButtresses.name = 'ISLAND_1_ASSEMBLY_COLOSSAL_OUTER_BUTTRESSES';
   vaultButtresses.castShadow = quality !== 'low';
   vaultButtresses.receiveShadow = true;
-  root.add(vaultButtresses);
+  vaultButtresses.visible=false; root.add(vaultButtresses);
 
   const buttressCaps = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.52, 0.16, 0.82),
@@ -478,7 +508,7 @@ export function createIsland1AssemblyCraterRuntime(
   );
   buttressCaps.name = 'ISLAND_1_ASSEMBLY_COLOSSAL_BUTTRESS_GOLD_CAPS';
   buttressCaps.castShadow = quality !== 'low';
-  root.add(buttressCaps);
+  buttressCaps.visible=false; root.add(buttressCaps);
 
   const lampGeometry = new THREE.OctahedronGeometry(0.09, 0);
   const aisleLights = new THREE.InstancedMesh(
@@ -502,8 +532,8 @@ export function createIsland1AssemblyCraterRuntime(
   const lecternTop = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.11, 0.62), materials.gold);
   lecternTop.position.set(0, 0.9, -0.12);
   lecternTop.rotation.x = -0.16;
-  const speakingLight = new THREE.Mesh(new THREE.OctahedronGeometry(0.22, 0), materials.warmGlow);
-  speakingLight.position.set(0, 1.22, -0.18);
+  const speakingLight = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.025, 0.035), materials.warmGlow);
+  speakingLight.position.set(0, 0.99, -0.28);
   podium.add(podiumBase, podiumHalo, lectern, lecternTop, speakingLight);
   root.add(podium);
 
@@ -523,14 +553,16 @@ export function createIsland1AssemblyCraterRuntime(
   blastRubble.visible = false;
   root.add(blastRubble);
 
-  const dustMaterial = new THREE.MeshBasicMaterial({
+  const dustMaterial = new THREE.MeshStandardMaterial({
     color: 0xb78b61,
+    roughness: 1,
+    metalness: 0,
     transparent: true,
     opacity: 0,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-  const dustCount = quality === 'high' ? 18 : quality === 'medium' ? 14 : 10;
+  const dustCount = quality === 'high' ? 64 : quality === 'medium' ? 44 : 28;
   const blastDust = new THREE.InstancedMesh(
     new THREE.IcosahedronGeometry(0.34, 1),
     dustMaterial,
@@ -540,6 +572,11 @@ export function createIsland1AssemblyCraterRuntime(
   blastDust.visible = false;
   root.add(blastDust);
 
+  const splashMaterial = new THREE.MeshBasicMaterial({ color: 0xc8f4ef, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+  const waterImpacts = new THREE.InstancedMesh(new THREE.TorusGeometry(0.42, 0.035, 4, 20), splashMaterial, 12);
+  waterImpacts.name = 'ISLAND_1_ASSEMBLY_SEA_IMPACTS';
+  waterImpacts.frustumCulled = false;
+  root.add(waterImpacts);
   const sparkCount = quality === 'high' ? 40 : quality === 'medium' ? 28 : 18;
   const blastSparks = new THREE.InstancedMesh(
     new THREE.TetrahedronGeometry(0.055, 0),
@@ -622,11 +659,12 @@ export function createIsland1AssemblyCraterRuntime(
 
   let currentPresentation: Island1AssemblyCraterPresentation = {
     chargesDetonated: 0,
-    targetCharges: ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT,
+    targetCharges: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
     completed: false,
     constructionSequence: 0,
   };
   let lastConstructionSequence = 0;
+  let lastAnimationElapsed = 0;
   let blastStartedAt = Number.NEGATIVE_INFINITY;
   let blastQueued = false;
   let assemblyBuildStartedAt = Number.NEGATIVE_INFINITY;
@@ -650,9 +688,8 @@ export function createIsland1AssemblyCraterRuntime(
 
   const updateExcavationVisuals = () => {
     const excavationProgress = THREE.MathUtils.clamp(excavationVisualProgress, 0, 1);
-    // The first six charges break through the grass cap. The remaining fourteen
-    // are therefore visibly spent widening and lowering the underground void,
-    // instead of continuing to shave twenty cosmetic slices off the surface.
+    // The first batch breaches the cap; the second removes most of the void.
+    // Twenty mesh bands are geological detail, independent of charge count.
     const surfaceBreakProgress = THREE.MathUtils.smoothstep(
       THREE.MathUtils.clamp(excavationProgress / 0.3, 0, 1),
       0,
@@ -685,7 +722,11 @@ export function createIsland1AssemblyCraterRuntime(
         layer.scale.setScalar(Math.max(0.02, 1 - collapse * 0.28));
       }
     });
-    rawExcavation.visible = excavationProgress > 0 && assemblyBuildProgress < 1;
+    rawExcavation.visible = excavationProgress > 0 && assemblyBuildProgress <= 0;
+    const mouth=ISLAND_1_ASSEMBLY_CRATER_RADIUS*excavationRadiusProgress;
+    for(let i=0;i<73;i++){const a=i/72*Math.PI*2;shoulderVertices.setXY(i,Math.cos(a)*mouth,Math.sin(a)*mouth);}
+    shoulderVertices.needsUpdate=true;
+
     rawExcavationWall.scale.set(
       Math.max(0.001, excavationRadiusProgress),
       Math.max(0.001, excavationDepthProgress),
@@ -705,8 +746,6 @@ export function createIsland1AssemblyCraterRuntime(
   };
 
   const updateInstances = () => {
-    const target = Math.max(1, Math.floor(currentPresentation.targetCharges));
-    const detonated = clampChargeCount(currentPresentation.chargesDetonated, target);
     const hiddenScale = new THREE.Vector3(0.0001, 0.0001, 0.0001);
     const buildProgress = currentPresentation.completed ? assemblyBuildProgress : 0;
     const reveal = (start: number, duration: number) => THREE.MathUtils.smoothstep(
@@ -722,7 +761,7 @@ export function createIsland1AssemblyCraterRuntime(
 
     for (let sector = 0; sector < ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT; sector += 1) {
       const angle = sector * segmentAngle;
-      const open = sector < detonated;
+      const open = currentPresentation.completed;
       setInstanceTransform(
         foundationSectors,
         sector,
@@ -740,34 +779,11 @@ export function createIsland1AssemblyCraterRuntime(
           sector,
           new THREE.Vector3(0, megahallTierSpecs[tierIndex].y, 0),
           angle,
-          open && tierProgress > 0
+          open && Math.sin(angle) < 0.61 && tierProgress > 0
             ? new THREE.Vector3(tierProgress, tierProgress, tierProgress)
             : hiddenScale,
           dummy,
         );
-      });
-      setInstanceTransform(
-        radialAisles,
-        sector,
-        new THREE.Vector3(
-          Math.sin(angle) * aisleCenterRadius,
-          chamberFloorY + 1.48,
-          Math.cos(angle) * aisleCenterRadius,
-        ),
-        angle,
-        open && aisleProgress > 0 ? new THREE.Vector3(1, 1, aisleProgress) : hiddenScale,
-        dummy,
-      );
-      rowRadii.forEach((radius, row) => {
-        const seatProgress = reveal(0.28 + row * 0.065, 0.2);
-        const seatIndex = sector * rowRadii.length + row;
-        const seatPosition = new THREE.Vector3(Math.sin(angle) * radius, rowHeights[row], Math.cos(angle) * radius);
-        const seatScale = open && seatProgress > 0
-          ? new THREE.Vector3(seatProgress, seatProgress, seatProgress)
-          : hiddenScale;
-        setInstanceTransform(delegateSeats, seatIndex, seatPosition, angle, seatScale, dummy);
-        const backPosition = seatPosition.clone().add(new THREE.Vector3(Math.sin(angle) * 0.2, 0.28, Math.cos(angle) * 0.2));
-        setInstanceTransform(delegateSeatBacks, seatIndex, backPosition, angle, seatScale, dummy);
       });
       [1.04, ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS - 0.32].forEach((radius, lampIndex) => {
         setInstanceTransform(
@@ -817,9 +833,6 @@ export function createIsland1AssemblyCraterRuntime(
     [
       foundationSectors,
       ...terraceDecks,
-      delegateSeats,
-      delegateSeatBacks,
-      radialAisles,
       aisleLights,
       vaultButtresses,
       buttressCaps,
@@ -828,10 +841,10 @@ export function createIsland1AssemblyCraterRuntime(
       mesh.computeBoundingSphere();
     });
     const foundationRimProgress = reveal(0.08, 0.22);
-    lowerFoundationRim.visible = foundationRimProgress > 0;
+    lowerFoundationRim.visible = false;
     lowerFoundationRim.scale.setScalar(Math.max(0.001, foundationRimProgress));
     const vaultProgress = reveal(0.7, 0.22);
-    upperVaultRing.visible = vaultProgress > 0;
+    upperVaultRing.visible = false;
     upperVaultRing.scale.setScalar(Math.max(0.001, vaultProgress));
     const podiumProgress = reveal(0.82, 0.18);
     podium.visible = podiumProgress > 0;
@@ -841,18 +854,22 @@ export function createIsland1AssemblyCraterRuntime(
 
   const updateAssemblyCrater = (presentation: Island1AssemblyCraterPresentation, immediate = false) => {
     const previousExcavationTarget = excavationAnimationToProgress;
+    const previousPresentation = currentPresentation;
     currentPresentation = {
       ...presentation,
-      chargesDetonated: clampChargeCount(presentation.chargesDetonated, ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT),
-      targetCharges: ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT,
+      chargesDetonated: clampChargeCount(presentation.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET),
+      targetCharges: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
     };
     const sequence = Math.max(0, Math.floor(presentation.constructionSequence ?? 0));
+    const rewinding = currentPresentation.chargesDetonated < previousPresentation.chargesDetonated;
+    immediate = immediate || rewinding || (sequence === 0 && currentPresentation.completed);
     // The renderer supplies elapsed seconds from its own animation timer. Queue
     // the beat here and capture that same clock on the next animation frame;
     // performance.now() has a different origin and would leave the blast at a
     // permanently negative age after a committed detonation.
     const hasNewCommittedBlast = sequence > lastConstructionSequence;
-    const nextExcavationTarget = currentPresentation.chargesDetonated / ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT;
+    const used = currentPresentation.chargesDetonated;
+    const nextExcavationTarget = used >= 10 ? 1 : used >= 8 ? 0.92 : used >= 3 ? 0.24 : 0;
     if (!immediate && hasNewCommittedBlast) {
       blastQueued = true;
       excavationAnimationFromProgress = Math.min(excavationVisualProgress, previousExcavationTarget);
@@ -860,15 +877,20 @@ export function createIsland1AssemblyCraterRuntime(
     }
     if (
       !immediate
-      && hasNewCommittedBlast
+      && (hasNewCommittedBlast || !previousPresentation.completed)
       && currentPresentation.completed
-      && currentPresentation.chargesDetonated >= ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT
+      && currentPresentation.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
     ) {
       assemblyBuildProgress = 0;
-      assemblyBuildQueued = true;
-      assemblyBuildStartedAt = Number.NEGATIVE_INFINITY;
+      assemblyBuildQueued = blastQueued;
+      assemblyBuildStartedAt = blastQueued
+        ? Number.NEGATIVE_INFINITY
+        : Math.max(lastAnimationElapsed, blastStartedAt + ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS);
     }
     if (immediate) {
+      [blastRubble, blastDust, blastSparks, blastShockwave, pressureWave, blastFlash, blastCore, waterImpacts, ...internalBlastFlashes]
+        .forEach(effect => { effect.visible = false; });
+      blastLight.intensity = 0;
       blastQueued = false;
       blastStartedAt = Number.NEGATIVE_INFINITY;
       assemblyBuildQueued = false;
@@ -884,7 +906,8 @@ export function createIsland1AssemblyCraterRuntime(
         cameraShake: 0,
         impactPosition: [0, ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y, 0],
       };
-    } else if (!hasNewCommittedBlast) {
+    } else if (!hasNewCommittedBlast && !blastQueued
+      && lastAnimationElapsed - blastStartedAt >= ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS) {
       excavationVisualProgress = nextExcavationTarget;
       excavationAnimationFromProgress = nextExcavationTarget;
       excavationAnimationToProgress = nextExcavationTarget;
@@ -894,11 +917,15 @@ export function createIsland1AssemblyCraterRuntime(
       assemblyBuildStartedAt = Number.NEGATIVE_INFINITY;
       assemblyBuildProgress = 0;
     }
-    lastConstructionSequence = Math.max(lastConstructionSequence, sequence);
+    lastConstructionSequence = immediate ? sequence : Math.max(lastConstructionSequence, sequence);
     updateInstances();
+    vault.update(assemblyBuildProgress);
+    diplomaticHall.update(assemblyBuildProgress, 0);
+    landmarkAccess.update(assemblyBuildProgress, 0);
   };
 
   const animate = (elapsed: number) => {
+    lastAnimationElapsed = elapsed;
     if (blastQueued) {
       blastQueued = false;
       blastStartedAt = elapsed;
@@ -922,6 +949,20 @@ export function createIsland1AssemblyCraterRuntime(
     speakingLight.rotation.y = elapsed * 0.45;
     const blastAge = elapsed - blastStartedAt;
     const activeBlast = blastAge >= 0 && blastAge < ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS;
+    waterImpacts.visible = activeBlast && currentPresentation.chargesDetonated === 8;
+    if (waterImpacts.visible) {
+      const wave = THREE.MathUtils.clamp((blastAge / ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS - 0.68) / 0.32, 0, 1);
+      splashMaterial.opacity = Math.sin(wave * Math.PI) * 0.8;
+      for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6;
+        dummy.position.set(Math.sin(a) * (8.4 + i % 3 * 0.3), ISLAND_1_OCEAN_SURFACE_Y + 0.025, Math.cos(a) * (8.4 + i % 3 * 0.3));
+        dummy.rotation.set(Math.PI / 2, 0, 0);
+        dummy.scale.setScalar(0.01 + wave * 2.8);
+        dummy.updateMatrix();
+        waterImpacts.setMatrixAt(i, dummy.matrix);
+      }
+      waterImpacts.instanceMatrix.needsUpdate = true;
+    }
     blastRubble.visible = activeBlast;
     blastDust.visible = activeBlast;
     blastSparks.visible = activeBlast;
@@ -930,23 +971,22 @@ export function createIsland1AssemblyCraterRuntime(
     blastFlash.visible = activeBlast;
     blastCore.visible = activeBlast;
     if (activeBlast) {
-      const detonated = clampChargeCount(currentPresentation.chargesDetonated, 20);
-      const chargeIndex = Math.max(0, detonated - 1);
-      const angle = chargeIndex * Math.PI * (3 - Math.sqrt(5));
+      const detonated = clampChargeCount(currentPresentation.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET);
+      const act = detonated >= 10 ? 3 : detonated >= 8 ? 2 : 1;
+      const chargeIndex = act === 1 ? 2 : act === 2 ? 14 : 19;
+      const angle = act === 1 ? blastAge / 3.6 * Math.PI * 2 : chargeIndex * Math.PI * (3 - Math.sqrt(5));
       const excavationSpread = Math.sqrt(chargeIndex / Math.max(1, ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT - 1));
       const internalDigProgress = THREE.MathUtils.smoothstep(
         THREE.MathUtils.clamp((chargeIndex - 2) / 17, 0, 1),
         0,
         1,
       );
-      const impactRadius = THREE.MathUtils.lerp(
+      const impactRadius = act === 1 ? ISLAND_1_ASSEMBLY_CRATER_RADIUS * .82 : THREE.MathUtils.lerp(
         ISLAND_1_ASSEMBLY_CRATER_RADIUS * (0.1 + excavationSpread * 0.72),
         ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS * (0.3 + excavationSpread * 0.42),
         internalDigProgress,
       );
-      const milestoneBoost = detonated % 5 === 0 ? 0.24 : 0;
-      const finalBoost = detonated === ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT ? 0.38 : 0;
-      const intensity = 1 + excavationSpread * 0.42 + milestoneBoost + finalBoost;
+      const intensity = act === 2 ? 2.4 : act === 1 ? 1.35 : 1.1;
       const progress = Math.min(1, blastAge / ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS);
       const excavationBeat = THREE.MathUtils.smoothstep(
         THREE.MathUtils.clamp((progress - 0.1) / 0.76, 0, 1),
@@ -970,7 +1010,7 @@ export function createIsland1AssemblyCraterRuntime(
         ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y + 0.09,
         Math.cos(angle) * Math.min(impactRadius, ISLAND_1_ASSEMBLY_CRATER_RADIUS * 0.62),
       );
-      const flashEnvelope = Math.max(0, 1 - progress / 0.34);
+      const flashEnvelope = act === 1 ? Math.max(0, 1 - ((blastAge * 3) % 1) * 2) * Math.max(0, 1 - progress) : Math.max(0, 1 - progress / 0.28);
       const debrisProgress = THREE.MathUtils.clamp(progress / 0.82, 0, 1);
       const dustProgress = THREE.MathUtils.clamp((progress - 0.08) / 0.92, 0, 1);
       blastShockwave.position.copy(ventPosition);
@@ -989,7 +1029,7 @@ export function createIsland1AssemblyCraterRuntime(
       blastLight.intensity = flashEnvelope * 18 * intensity;
       blastLight.distance = 10 + intensity * 3;
 
-      const internalPulseCount = detonated >= 16 ? 3 : detonated >= 11 ? 2 : detonated >= 6 ? 1 : 0;
+      const internalPulseCount = act === 3 ? 3 : act === 2 ? 2 : 0;
       let internalShake = 0;
       internalBlastFlashes.forEach((flash, index) => {
         const pulseProgress = THREE.MathUtils.clamp(
@@ -1015,13 +1055,13 @@ export function createIsland1AssemblyCraterRuntime(
         internalShake = Math.max(internalShake, pulseEnvelope * (0.12 + internalDigProgress * 0.14));
       });
       for (let index = 0; index < blastRubble.count; index += 1) {
-        const scatter = (index / blastRubble.count - 0.5) * segmentAngle * 2.2;
-        const travel = debrisProgress * (1.5 + (index % 7) * 0.34) * Math.min(2.2, intensity);
+        const scatter = index / blastRubble.count * Math.PI * 2;
+        const travel = debrisProgress * (act === 2 ? 8.4 + (index % 7) * 0.3 : 1.5 + (index % 7) * 0.34);
         const rubbleAngle = angle + scatter;
         dummy.position.set(
-          impactPosition.x + Math.sin(rubbleAngle) * travel,
-          impactPosition.y + Math.sin(debrisProgress * Math.PI) * (1.15 + (index % 5) * 0.32) * intensity - debrisProgress * debrisProgress * 0.74,
-          impactPosition.z + Math.cos(rubbleAngle) * travel,
+          (act === 2 ? 0 : impactPosition.x) + Math.sin(rubbleAngle) * travel,
+          act === 2 ? 0.26 + Math.sin(debrisProgress * Math.PI) * (4.8 + (index % 5) * 0.4) + (ISLAND_1_OCEAN_SURFACE_Y - 0.26) * debrisProgress * debrisProgress : impactPosition.y + Math.sin(debrisProgress * Math.PI) * (1.15 + (index % 5) * 0.32) * intensity - debrisProgress * debrisProgress * 0.74,
+          (act === 2 ? 0 : impactPosition.z) + Math.cos(rubbleAngle) * travel,
         );
         dummy.rotation.set(debrisProgress * index * 1.4, rubbleAngle, debrisProgress * index * 0.9);
         dummy.scale.setScalar((0.62 + (index % 5) * 0.15) * Math.max(0.16, 1 - debrisProgress * 0.72));
@@ -1030,21 +1070,29 @@ export function createIsland1AssemblyCraterRuntime(
       }
       blastRubble.instanceMatrix.needsUpdate = true;
       for (let index = 0; index < blastDust.count; index += 1) {
-        const dustAngle = angle + (index / blastDust.count - 0.5) * segmentAngle * 3.4;
-        const travel = dustProgress * (0.72 + (index % 4) * 0.32) * intensity;
-        const ventRise = Math.max(0, ventPosition.y - impactPosition.y) * dustProgress;
-        dummy.position.set(
-          impactPosition.x + Math.sin(dustAngle) * travel,
-          impactPosition.y + ventRise + 0.08
-            + Math.sin(dustProgress * Math.PI) * (0.34 + (index % 3) * 0.16),
-          impactPosition.z + Math.cos(dustAngle) * travel,
-        );
+        const dustAngle = index * 2.399963;
+        const head = index >= blastDust.count * 0.28;
+        const rise = Math.sin(dustProgress * Math.PI * 0.72);
+        const spread = head ? (.55 + dustProgress * 3.2) * Math.sqrt(((index * 17) % 37 + .5)/37) : .15 + dustProgress * .5;
+        if (act === 2) {
+          dummy.position.set(Math.sin(dustAngle) * spread,
+            0.3 + rise * (head ? 4.8 + (index % 3) * 0.35 : 1 + (index % 5) * 0.6),
+            Math.cos(dustAngle) * spread);
+          dummy.scale.set(head ? 1.9 + dustProgress * 2.8 : 1 + dustProgress,
+            head ? 1.25 + dustProgress * 1.8 : 1.8 + dustProgress,
+            head ? 1.9 + dustProgress * 2.8 : 1 + dustProgress);
+        } else {
+          const travel = dustProgress * (0.72 + (index % 4) * 0.32) * intensity;
+          dummy.position.set(THREE.MathUtils.lerp(impactPosition.x,ventPosition.x,THREE.MathUtils.smoothstep(dustProgress,0,.6)) + Math.sin(dustAngle) * travel,
+            impactPosition.y + dustProgress * (ventPosition.y - impactPosition.y + 1.1),
+            THREE.MathUtils.lerp(impactPosition.z,ventPosition.z,THREE.MathUtils.smoothstep(dustProgress,0,.6)) + Math.cos(dustAngle) * travel);
+          dummy.scale.setScalar(0.2 + dustProgress * (1.8 + (index % 5) * 0.25) * intensity);
+        }
         dummy.rotation.set(0, dustAngle, 0);
-        dummy.scale.setScalar(0.2 + dustProgress * (1.8 + (index % 5) * 0.25) * intensity);
         dummy.updateMatrix();
         blastDust.setMatrixAt(index, dummy.matrix);
       }
-      dustMaterial.opacity = Math.max(0, (1 - dustProgress) * 0.46);
+      dustMaterial.opacity = Math.max(0, Math.pow(1-dustProgress,.65)*(act===2?.78:.48));
       blastDust.instanceMatrix.needsUpdate = true;
       for (let index = 0; index < blastSparks.count; index += 1) {
         const sparkAngle = angle + index * 2.399963;
@@ -1095,6 +1143,10 @@ export function createIsland1AssemblyCraterRuntime(
         impactPosition: blastPresentation.impactPosition,
       };
     }
+    if (heroCoast.root.visible) heroCoast.animate(elapsed);
+    vault.update(assemblyBuildProgress);
+    diplomaticHall.update(assemblyBuildProgress, elapsed);
+    landmarkAccess.update(assemblyBuildProgress, elapsed);
   };
 
   updateAssemblyCrater(currentPresentation, true);
@@ -1105,6 +1157,8 @@ export function createIsland1AssemblyCraterRuntime(
     updateAssemblyCrater,
     setInspectionCutaway: (active) => {
       inspectionCutawayContext.visible = active;
+      vault.setCutaway(active);
+      heroCoast.root.visible = !active;
     },
     getBlastPresentation: () => blastPresentation,
     getConstructionPresentation: () => ({

@@ -1,0 +1,245 @@
+[
+  {
+    "roof": "broad-lower-nursery-occupied-roof-court",
+    "supports": [
+      {
+        "name": "broad-lower-nursery-bay-0-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-0-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-1-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-1-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-2-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-2-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-2-pier-2",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-3-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-3-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-4-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-4-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-5-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-5-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-6-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-6-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-6-pier-2",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-6-pier-3",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-7-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-7-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-8-pier-0",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "broad-lower-nursery-bay-8-pier-1",
+        "minY": 0.21400000154972076,
+        "maxY": 0.9210000038146973,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  {
+    "roof": "upper-right-nursery-occupied-roof-court",
+    "supports": [
+      {
+        "name": "upper-right-nursery-bay-0-pier-0",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-0-pier-1",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-1-pier-0",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-1-pier-1",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-2-pier-0",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-2-pier-1",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-3-pier-0",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-3-pier-1",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-4-pier-0",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-4-pier-1",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-5-pier-0",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-right-nursery-bay-5-pier-1",
+        "minY": 0.9890000224113464,
+        "maxY": 1.5360000133514404,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  }
+]

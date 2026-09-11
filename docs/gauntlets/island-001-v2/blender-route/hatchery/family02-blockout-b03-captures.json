@@ -1,0 +1,96 @@
+{
+  "status": "captured-review-pending",
+  "route": "authored-Blender-GLB",
+  "family": 2,
+  "routeReview": 3,
+  "asset": "blender-route/hatchery/family02-blockout-b03.glb",
+  "source": "actual Chromium149 browser canvas via local Playwright fallback; CUA native pipe disconnected",
+  "controls": "Same Three185 harness,1440x1080 DPR1, fixed cameras,lighting and capture buttons",
+  "frames": [
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-back-structural.png",
+      "sha256": "d2855e18462123c6af394d8a089d6e41d6caa64ef51cacae1d34712413d77c64",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-back-structural.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-contact-structural.png",
+      "sha256": "820e1bb5d7b4419e65f77e835275b7520d90e9a1efa7cf7c8d11cceb037c9a30",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-contact-structural.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-front-structural.png",
+      "sha256": "5559f2a4c824db6a163cdd3c951ea4c01869c6cc31ef1ad0523fee3fdfdc0ef3",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-front-structural.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-iso-clay.png",
+      "sha256": "410974ac929f9abcf17ddb253c07a985f46eae911202480f348b7b8ad3216c61",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-iso-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-iso.png",
+      "sha256": "909c2c6ab7ef1ba53a1bcc38ad0cf2717f2cf1bb712c6403003c3bdd37409b47",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-iso.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-normals-structural.png",
+      "sha256": "2ff61dec20cb1fca305e645e43105cbf5ef7fa29f1a4861c45df10e3a4e0380c",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-normals-structural.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-0-clay.png",
+      "sha256": "b193be5479cf45534130283a3dd5f978a3adb946cb770ec3852a9f8b050b5fff",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-0-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-120-clay.png",
+      "sha256": "edeb3e306cd1eefaeb8389788ab49b3e11ddffc6ae85aca292fcac05253a3685",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-120-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-160-clay.png",
+      "sha256": "7409010b8d23f29187a33c39b7cf98f47bc770c5226d676a8506d010b17ded03",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-160-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-200-clay.png",
+      "sha256": "7ccc507517646364fce20edfff8580bf837db9626f24fb8de95a4455b1c5e7fd",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-200-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-240-clay.png",
+      "sha256": "6c05874ef83cc6b10aa9a7e15a4854f4b6ffbaece5f1499f1d8b0c0830c31acb",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-240-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-280-clay.png",
+      "sha256": "417d8491419019b89287bdf669e8f17d4c6b79a09f1fe74f6af263f9b4b7f48c",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-280-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-320-clay.png",
+      "sha256": "435e90ce0c7a49c69f3f74ff71f78608f7703f56a5a0bc7a7859bebd7c3df7f6",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-320-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-40-clay.png",
+      "sha256": "08e9c6a4863377ff11787408c8a4885495ded63b7bbdd0a7b42649bd584782ae",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-40-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-orbit-80-clay.png",
+      "sha256": "157665451af2369f4c39f92abf21347c03cbc7245981bda77a9f93655a6def12",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-orbit-80-clay.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-profile-structural.png",
+      "sha256": "6de09d01efbe92d55b527081712a82b787aa7ac26381dac248ff855fa385a8b9",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-profile-structural.json"
+    },
+    {
+      "path": "qa/raw/hatchery-blender-b03-hatchery-top-structural.png",
+      "sha256": "849f51bd9b0823f24a98a574e440ac4a1abdbf33059ec32bfc714db29220b6f5",
+      "metadata": "qa/raw/hatchery-blender-b03-hatchery-top-structural.json"
+    }
+  ]
+}

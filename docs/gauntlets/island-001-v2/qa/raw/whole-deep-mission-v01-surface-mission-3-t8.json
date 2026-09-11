@@ -1,0 +1,35 @@
+{
+  "mode": "surface",
+  "charges": 3,
+  "ageSeconds": 0.8,
+  "quality": "high",
+  "width": 1440,
+  "height": 1080,
+  "camera": [
+    12.021806265405163,
+    13.08,
+    19.608064007368633
+  ],
+  "target": [
+    0,
+    0.2,
+    0
+  ],
+  "blast": {
+    "active": true,
+    "progress": 0.15384615384615385,
+    "intensity": 1.35,
+    "cameraShake": 0.15603275469817354,
+    "impactPosition": [
+      0.8936035865751661,
+      0.36,
+      0.15756642237105428
+    ]
+  },
+  "construction": {
+    "active": false,
+    "progress": 0,
+    "completed": false
+  },
+  "three": "185"
+}

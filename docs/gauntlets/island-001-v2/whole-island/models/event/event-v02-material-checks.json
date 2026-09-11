@@ -1,0 +1,22 @@
+[
+  {
+    "node": "observatory-dome-L2-S2-observatory-celestial-blue",
+    "material": "observatory-celestial-blue",
+    "vertexColorsWhite": true
+  },
+  {
+    "node": "observatory-dome-L2-S2-observatory-celestial-blue",
+    "material": "observatory-dome-warm-interior",
+    "vertexColorsWhite": true
+  },
+  {
+    "node": "observatory-dome-L3-S2-observatory-celestial-blue",
+    "material": "observatory-celestial-blue",
+    "vertexColorsWhite": true
+  },
+  {
+    "node": "observatory-dome-L3-S2-observatory-celestial-blue",
+    "material": "observatory-dome-warm-interior",
+    "vertexColorsWhite": true
+  }
+]

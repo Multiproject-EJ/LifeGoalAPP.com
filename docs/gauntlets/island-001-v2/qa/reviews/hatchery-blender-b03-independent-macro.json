@@ -1,0 +1,259 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-blender-b03-independent-macro",
+  "route": "authored-Blender-GLB",
+  "family": 2,
+  "familyReview": 1,
+  "routeGateReview": 3,
+  "action": "one-bounded-correction",
+  "gate": "naked-macro-and-attachment",
+  "threshold": 0.85,
+  "worstCritical": 0.7,
+  "hardVeto": false,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso-clay": [
+      0.79,
+      0.76,
+      0.87,
+      0.87,
+      0.8,
+      0.79
+    ],
+    "orbit-0-clay": [
+      0.78,
+      0.74,
+      0.86,
+      0.87,
+      0.79,
+      0.78
+    ],
+    "orbit-40-clay": [
+      0.8,
+      0.77,
+      0.88,
+      0.88,
+      0.81,
+      0.8
+    ],
+    "orbit-80-clay": [
+      0.78,
+      0.75,
+      0.88,
+      0.87,
+      0.8,
+      0.78
+    ],
+    "orbit-120-clay": [
+      0.76,
+      0.73,
+      0.88,
+      0.87,
+      0.79,
+      0.76
+    ],
+    "orbit-160-clay": [
+      0.76,
+      0.73,
+      0.87,
+      0.87,
+      0.79,
+      0.76
+    ],
+    "orbit-200-clay": [
+      0.78,
+      0.75,
+      0.87,
+      0.88,
+      0.8,
+      0.78
+    ],
+    "orbit-240-clay": [
+      0.77,
+      0.74,
+      0.87,
+      0.88,
+      0.79,
+      0.77
+    ],
+    "orbit-280-clay": [
+      0.76,
+      0.73,
+      0.86,
+      0.87,
+      0.78,
+      0.76
+    ],
+    "orbit-320-clay": [
+      0.75,
+      0.72,
+      0.86,
+      0.87,
+      0.77,
+      0.75
+    ],
+    "front-structural": [
+      0.8,
+      0.77,
+      0.88,
+      0.88,
+      0.82,
+      0.81
+    ],
+    "profile-structural": [
+      0.76,
+      0.73,
+      0.88,
+      0.87,
+      0.79,
+      0.76
+    ],
+    "back-structural": [
+      0.77,
+      0.74,
+      0.88,
+      0.88,
+      0.8,
+      0.78
+    ],
+    "top-structural": [
+      0.72,
+      0.7,
+      0.86,
+      0.86,
+      0.76,
+      0.74
+    ],
+    "contact-structural": [
+      0.78,
+      0.75,
+      0.87,
+      0.87,
+      0.8,
+      0.78
+    ],
+    "normals-structural": [
+      0.79,
+      0.76,
+      0.87,
+      0.87,
+      0.8,
+      0.79
+    ],
+    "iso-transparent": [
+      0.81,
+      0.8,
+      0.88,
+      0.88,
+      0.82,
+      0.82
+    ]
+  },
+  "inspectionOrder": "Original approved landmark study and island overview first; all 17 raw b03 runtime PNGs; then family02 build contract, runtime and geometry diagnostics, capture manifest and the hatchery BUILD-SPEC. Authoring source was not inspected.",
+  "referenceAuthority": [
+    "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+    "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+  ],
+  "secondaryReferenceTreatment": "The neutral inferred canopy study is not a goal or approval source and was not used to override the original approved pixels.",
+  "evidenceCompleteness": {
+    "requested": 17,
+    "inspected": 17,
+    "missing": [],
+    "captureManifest": "blender-route/hatchery/family02-blockout-b03-captures.json"
+  },
+  "captureProvenance": {
+    "source": "Actual browser Three.js canvas, not an offline Blender render.",
+    "transportChange": "Parent reports Chromium 149.0.7827.55 via local Playwright after the CUA native pipe closed.",
+    "retainedControls": "Capture manifest records the same Three185 harness, locked cameras, 1440x1080 DPR1, lighting, materials and capture controls.",
+    "comparisonLimit": "This is the initial review of family 2. No numeric same-family correction gain is claimed against the prior family's images, and different capture transport is not used to relax the visual threshold."
+  },
+  "strengths": [
+    "The elevated right nursery is now a complete arched room with visible full-height roof support in front, profile, back, contact and orbit views.",
+    "The lower floor retains broad inhabited architectural volume and actual arched openings.",
+    "The central egg remains inside the conservatory footprint and visible through its front opening.",
+    "Stair flights retain continuous supporting masses and meet the roof court.",
+    "The deeper middle cascade landing has coherent arched support.",
+    "Rooted glazing edges and upright pointed boundaries remove much of the prior inflated-leaf appearance."
+  ],
+  "dominantDefects": [
+    {
+      "priority": 1,
+      "issue": "The conservatory reads as a ring of upright pointed wall bays around a large open crown, rather than the approved lotus vault arching inward over the egg.",
+      "views": [
+        "top-structural",
+        "front-structural",
+        "iso-clay",
+        "iso-transparent",
+        "orbit-120-clay",
+        "orbit-280-clay",
+        "orbit-320-clay"
+      ],
+      "evidence": "The top frame exposes the egg and a broad central court through an opening surrounded by separate bay tips. Front and three-quarter frames show several competing peaks around that opening, with high side/rear points and a lower front arch. The original study and overview show a clearer central high crown, lower side petals, and curved leaves returning inward to shelter the egg.",
+      "falsifiableDelta": "From the same top and three-quarter cameras, the petal surfaces must extend inward over the egg and establish a dominant central high crown with lower side tips. Preserve the real front opening; do not close the front with an opaque plate or add a generic dome."
+    },
+    {
+      "priority": 2,
+      "issue": "The glazing bases are broad nearly vertical wall panels, and the overall nursery composition remains too uniformly stacked.",
+      "views": [
+        "profile-structural",
+        "back-structural",
+        "orbit-160-clay",
+        "orbit-240-clay",
+        "orbit-320-clay",
+        "contact-structural"
+      ],
+      "evidence": "Large full-width panels run down to a continuous low sill, producing a lantern-like lower envelope. The approved shelter has narrower rooted lower arches, a broader middle span and an inward upper return. Around it, the current main floor and pool landing read as two parallel horizontal bands; the approved composition has stronger staggered terrace shoulders around the shelter.",
+      "falsifiableDelta": "Rebalance the same envelope into visibly rooted lower arches, a lateral middle swell and inward upper vault, while retaining enough exposed court and connected asymmetric terrace shoulder for the nursery to read as a broad inhabited setting."
+    }
+  ],
+  "hardVetoAssessment": "No unambiguous hard veto. The egg remains inside the shell footprint, the petals have three-dimensional curvature and clear pointed edges, the restored upper nursery roof has continuous supports, and required masses do not disappear or flatten across the orbit. The overly open crown is scored as insufficient shelter likeness, not an egg-outside-shell veto. Ordinary opaque-clay occlusion and deliberate detail exclusions are not penalized.",
+  "excludedFromPenalty": [
+    "foliage",
+    "furniture",
+    "material finish",
+    "decorative cross-ribs",
+    "lift detail",
+    "opaque clay's normal occlusion of the egg"
+  ],
+  "boundedCorrection": {
+    "hypothesis": "Reprofile the coupled petal-and-court envelope as an inward-vaulted lotus shelter: narrow the lower rooted arch zones, retain a broad middle swell, and bring the upper petal surfaces inward toward one dominant central crown with lower side tips. Redistribute only the immediately adjacent court/terrace shoulder as needed to retain broad asymmetric nursery space. This should change the large open ring into the approved shelter while preserving the newly successful positive arch supports.",
+    "controls": [
+      "Same second Blender family, original goal set, root, axes, footprint, cameras, lighting, material palette and threshold.",
+      "Preserve continuous positive pier/spandrel roof supports, inhabited lower and upper rooms, egg socket, clear front opening, stair contacts and lift socket.",
+      "No new foliage, furniture, cross-rib ornament, textures or lighting compensation.",
+      "Preserve frozen b03 binary, source, diagnostics and captures.",
+      "One final correction and one final route review remain; no third family within this route."
+    ],
+    "baselineWorst": 0.7,
+    "requiredWorstGain": 0.1,
+    "noCriticalRegressionOver": 0.05,
+    "approvalMinimumEveryScore": 0.85,
+    "expectedVisibleDelta": [
+      "Top view shows petal surfaces vaulting inward over the egg rather than a broad empty crown.",
+      "Front and both three-quarters show one central highest crown and lower lateral points.",
+      "Profile shows rooted lower arches, middle swell and upper inward return rather than full-height wall-like bays.",
+      "Roof support, stair arrivals and substantial arched nursery space remain intact across all 17 views."
+    ],
+    "nextEvidence": "Repeat the same 17 actual runtime frames after this single bounded correction.",
+    "finalGateRule": "Review 4 must reach at least 0.85 in every required view/category, improve the worst score by at least 0.10, and avoid a critical regression over 0.05. Any unresolved gate failure after the final correction requires stop at the authorized route ceiling."
+  },
+  "diagnosticsAfterPixels": {
+    "engineeringGate": "pass reported, not visual approval",
+    "runtimeTriangles": 40720,
+    "runtimeRadius": 1.5758684126573332,
+    "assetBytes": 1201816,
+    "notes": [
+      "Positive support contracts are consistent with the restored support visible in the raw frames.",
+      "Geometry/bounds/additive-level checks do not establish goal likeness.",
+      "L3 macro equals L2 pending an approved finish pass.",
+      "The isolated asset review does not approve full-board render budgets or phone performance."
+    ]
+  }
+}

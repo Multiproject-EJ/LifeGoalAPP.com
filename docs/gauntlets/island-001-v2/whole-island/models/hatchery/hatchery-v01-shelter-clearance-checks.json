@@ -1,0 +1,86 @@
+{
+  "shelter": [
+    {
+      "xz": [
+        0,
+        -0.18
+      ],
+      "overheadGlass": [
+        {
+          "petal": "central-rear-pointed-glass-envelope",
+          "height": 2.186448574066162
+        },
+        {
+          "petal": "rear-west-pointed-glass-envelope",
+          "height": 2.2136521339416504
+        },
+        {
+          "petal": "rear-east-pointed-glass-envelope",
+          "height": 2.2136523723602295
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.06,
+        -0.18
+      ],
+      "overheadGlass": [
+        {
+          "petal": "central-rear-pointed-glass-envelope",
+          "height": 2.184082508087158
+        },
+        {
+          "petal": "rear-west-pointed-glass-envelope",
+          "height": 2.1672544479370117
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.06,
+        -0.18
+      ],
+      "overheadGlass": [
+        {
+          "petal": "central-rear-pointed-glass-envelope",
+          "height": 2.1840896606445312
+        },
+        {
+          "petal": "rear-east-pointed-glass-envelope",
+          "height": 2.1672587394714355
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0,
+        -0.24
+      ],
+      "overheadGlass": [
+        {
+          "petal": "central-rear-pointed-glass-envelope",
+          "height": 2.1317758560180664
+        },
+        {
+          "petal": "rear-west-pointed-glass-envelope",
+          "height": 2.1672587394714355
+        },
+        {
+          "petal": "rear-east-pointed-glass-envelope",
+          "height": 2.1672544479370117
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "liftClearanceRadius": 0.2,
+  "liftClearanceHeight": [
+    0.2,
+    1.15
+  ],
+  "intrudingMeshes": []
+}

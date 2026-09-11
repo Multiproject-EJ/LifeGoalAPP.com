@@ -1,0 +1,30 @@
+{
+  "format": "glTF2binary",
+  "assetBytes": 1247700,
+  "sha256": "0bd33cb89714706d7b0fc06f02d04e8e72cde02b07c3455988c28c3fff6ca7e6",
+  "sceneRoot": "ISLAND_001_V2_LOTUS_HATCHERY",
+  "identityNodeTransforms": true,
+  "exportedBoundsYUp": {
+    "min": [
+      -1.4800000190734863,
+      0,
+      -1.1100000143051147
+    ],
+    "max": [
+      1.537743330001831,
+      2.4209423065185547,
+      1.2899999618530273
+    ]
+  },
+  "triangles": 37356,
+  "meshNodesByFundedLevel": {
+    "1": 8,
+    "2": 4
+  },
+  "allMeshExtrasValid": true,
+  "glassAlphaMode": "BLEND",
+  "glassDoubleSided": true,
+  "noCamerasOrLights": true,
+  "fundedLevelPolicy": "Filter only nodes with buildLevel greater than requested; retain the exact L1 node buffers and identity transforms. L3 macro currentlyequalsL2; detail deferred.",
+  "limits": "Mechanical export validation only; browser capture and independent likeness QC remain pending."
+}

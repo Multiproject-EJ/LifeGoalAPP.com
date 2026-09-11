@@ -1,0 +1,253 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-blender-b01-independent-macro",
+  "route": "authored-Blender-GLB",
+  "family": 1,
+  "familyReview": 1,
+  "routeGateReview": 1,
+  "action": "one-bounded-correction",
+  "gate": "naked-macro-and-attachment",
+  "inspectionOrder": "Original landmark study and island overview pixels; all 17 runtime PNGs; then workflow, runtime/export checks, and hatchery README. No authoring source inspected.",
+  "oldProceduralRoute": "Retired; its four reviews are not reused as this route's counters or source authority.",
+  "threshold": 0.85,
+  "worstCritical": 0.67,
+  "hardVeto": false,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso-clay": [
+      0.78,
+      0.73,
+      0.82,
+      0.86,
+      0.79,
+      0.77
+    ],
+    "orbit-0-clay": [
+      0.77,
+      0.71,
+      0.81,
+      0.86,
+      0.78,
+      0.76
+    ],
+    "orbit-40-clay": [
+      0.79,
+      0.74,
+      0.83,
+      0.87,
+      0.8,
+      0.78
+    ],
+    "orbit-80-clay": [
+      0.76,
+      0.7,
+      0.81,
+      0.86,
+      0.78,
+      0.75
+    ],
+    "orbit-120-clay": [
+      0.72,
+      0.68,
+      0.8,
+      0.85,
+      0.75,
+      0.72
+    ],
+    "orbit-160-clay": [
+      0.73,
+      0.68,
+      0.8,
+      0.86,
+      0.76,
+      0.73
+    ],
+    "orbit-200-clay": [
+      0.76,
+      0.7,
+      0.82,
+      0.86,
+      0.78,
+      0.75
+    ],
+    "orbit-240-clay": [
+      0.76,
+      0.7,
+      0.83,
+      0.87,
+      0.79,
+      0.76
+    ],
+    "orbit-280-clay": [
+      0.74,
+      0.69,
+      0.82,
+      0.86,
+      0.78,
+      0.74
+    ],
+    "orbit-320-clay": [
+      0.72,
+      0.68,
+      0.81,
+      0.86,
+      0.76,
+      0.72
+    ],
+    "front-structural": [
+      0.79,
+      0.75,
+      0.83,
+      0.87,
+      0.8,
+      0.79
+    ],
+    "profile-structural": [
+      0.71,
+      0.67,
+      0.8,
+      0.85,
+      0.75,
+      0.71
+    ],
+    "back-structural": [
+      0.77,
+      0.71,
+      0.83,
+      0.87,
+      0.8,
+      0.77
+    ],
+    "top-structural": [
+      0.76,
+      0.71,
+      0.82,
+      0.86,
+      0.77,
+      0.74
+    ],
+    "contact-structural": [
+      0.77,
+      0.73,
+      0.83,
+      0.86,
+      0.79,
+      0.77
+    ],
+    "normals-structural": [
+      0.78,
+      0.73,
+      0.82,
+      0.86,
+      0.79,
+      0.77
+    ],
+    "iso-transparent": [
+      0.78,
+      0.77,
+      0.82,
+      0.86,
+      0.8,
+      0.8
+    ]
+  },
+  "evidenceCompleteness": {
+    "requested": 17,
+    "inspected": 17,
+    "missing": []
+  },
+  "strengths": [
+    "The base reads as an actual hollow nursery with deep arch openings and interior floor, rather than a solid podium.",
+    "The broad roof court provides a coherent supporting plane for the shelter.",
+    "The egg remains inside the shelter, with a genuine front opening.",
+    "The two stair flights retain three-dimensional support and connect grade to the roof level.",
+    "No camera-dependent collapse or disappearing required mass was observed."
+  ],
+  "dominantDefects": [
+    {
+      "priority": 1,
+      "issue": "The lotus shell reads as rounded inflated leaves with curling upper edges instead of the approved upright pointed petal conservatory.",
+      "views": [
+        "profile-structural",
+        "orbit-120-clay",
+        "orbit-280-clay",
+        "orbit-320-clay",
+        "iso-transparent"
+      ],
+      "evidence": "Several upper contours roll over or flatten; wide rounded lower panel bellies create a squat pod appearance. The approved silhouette has clearly ascending pointed leaves, an apex hierarchy, and narrower rooted lower arches that frame the egg.",
+      "falsifiableDelta": "The same profile and rear-quarter cameras must show sustained ascending petal contours ending in clear upright points, a central high point and lower side points, and a rooted lower frame rather than broad padded panel feet."
+    },
+    {
+      "priority": 2,
+      "issue": "The upper-right nursery wing is a small box on a large undifferentiated roof rather than a substantial terraced wing.",
+      "views": [
+        "iso-clay",
+        "orbit-80-clay",
+        "profile-structural",
+        "top-structural"
+      ],
+      "evidence": "The arched lower floor is broad, but the higher nursery mass is confined to one small rooftop room. The approved image has a meaningful elevated arched wing and terrace shoulder supporting the conservatory composition.",
+      "falsifiableDelta": "The elevated right-side wing must form a connected terrace shoulder with visible architectural depth, while leaving the egg court, stair arrival and lift socket clear."
+    },
+    {
+      "priority": 3,
+      "issue": "The front middle basin is presented as a narrow slab over a low arched support rather than part of a broad stepped terrace sequence.",
+      "views": [
+        "front-structural",
+        "contact-structural",
+        "iso-transparent"
+      ],
+      "evidence": "A thin projecting ledge and the lower small basin dominate the front center. The reference's basin levels contribute substantial horizontal terrace surfaces to the overall mass.",
+      "falsifiableDelta": "The middle and lower levels must read as a connected descending terrace sequence in clay, with visible horizontal depth and continuous support, before water material is considered."
+    }
+  ],
+  "hardVetoAssessment": "No unambiguous hard veto. The shell retains distinct petal surfaces and three-dimensional volume, so its rounded silhouette is scored as insufficient likeness rather than a literal generic hemispherical-dome archetype. Opaque clay hiding the egg from rear views is not a veto.",
+  "excludedFromPenalty": [
+    "foliage",
+    "furniture",
+    "material finish",
+    "decorative cross-ribs",
+    "lift detail",
+    "opaque clay's normal occlusion of the egg"
+  ],
+  "diagnosticsAfterPixels": {
+    "engineeringGate": "pass reported, not visual approval",
+    "runtimeTriangles": 37356,
+    "runtimeRadius": 1.5758684126573332,
+    "assetBytes": 1247700,
+    "notes": [
+      "Finite geometry, metadata, cache teardown and bounds checks support runtime feasibility only.",
+      "L3 currently equals L2 at this macro gate; no funded-level visual completion claim is made.",
+      "No physical-phone performance finding is possible from these isolated captures."
+    ]
+  },
+  "boundedCorrection": {
+    "hypothesis": "Reprofile the coupled lotus-and-upper-wing silhouette while connecting the front terraces: replace curled panel tops and inflated lower bellies with upright pointed petal envelopes rooted around the egg court, and extend the elevated nursery room into a coherent terrace shoulder. This should recover the approved conservatory identity while preserving the new hollow nursery architecture.",
+    "controls": [
+      "Same GLB route family, fixed footprint/origin/cameras/reference/threshold.",
+      "Preserve the broad arched lower nursery, actual room depth, egg enclosure, and supported stairs.",
+      "Do not grow the canonical footprint.",
+      "No foliage, furniture, lighting, texture or ornamental compensation.",
+      "Keep all b01 evidence and asset hashes."
+    ],
+    "requiredWorstGain": 0.1,
+    "baselineWorst": 0.67,
+    "noCriticalRegressionOver": 0.05,
+    "approvalMinimumEveryScore": 0.85,
+    "expectedVisibleDelta": [
+      "Clear ascending pointed petals in profile and both rear quarters.",
+      "Lower ribs visibly rooted around a front opening framing the egg.",
+      "An inhabited elevated nursery wing connected to the court rather than an isolated rooftop box.",
+      "Connected broad front basin terraces identifiable in clay."
+    ],
+    "nextEvidence": "Repeat all 17 matched raw frames after the one bounded correction.",
+    "retirementRule": "Retire this family on a hard veto, the same dominant defect, a post-correction critical score below 0.75, or insufficient gain."
+  }
+}

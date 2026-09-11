@@ -1,0 +1,31 @@
+{
+  "referenceHashesUnchanged": true,
+  "publicModels": [
+    {
+      "model": "hatchery",
+      "revision": "v01",
+      "sha256": "f6778ccfe4140539a938604dc4ff2dc83dcc2d6a26bc16e90a0f04c1f16e4f4a",
+      "sourceAndPublicMatch": true
+    },
+    {
+      "model": "habit",
+      "revision": "v02",
+      "sha256": "68dc4983a6b803f0705bc3ac15d3bd9fd1be5448b398f1d12e878e9c0d36a458",
+      "sourceAndPublicMatch": true
+    },
+    {
+      "model": "wisdom",
+      "revision": "v01",
+      "sha256": "53cb158832bfdfe48f372502740f55b1e6cbff4137a99472e5891221fb3100d4",
+      "sourceAndPublicMatch": true
+    },
+    {
+      "model": "event",
+      "revision": "v02",
+      "sha256": "09c608704dde7eb94d1a561cfda739dedae2318c0d6acac4e1a6fe9c9ab6f917",
+      "sourceAndPublicMatch": true
+    }
+  ],
+  "installedBytes": 4863456,
+  "gzipBytes": 1542549
+}

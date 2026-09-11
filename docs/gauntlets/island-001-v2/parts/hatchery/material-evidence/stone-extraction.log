@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.86,
+  "estimatedFidelity": 0.86,
+  "targetThreshold": 0.7,
+  "materialId": "stone",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone-crop.png",
+  "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone",
+  "palette": [
+    "#905A2C",
+    "#C68B4C",
+    "#BA9C87",
+    "#502D17",
+    "#EDC493"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone/stone_albedo.png",
+      "url": "stone_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone/stone_roughness.png",
+      "url": "stone_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone/stone_height.png",
+      "url": "stone_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone/stone_normal.png",
+      "url": "stone_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence/stone/stone_ao.png",
+      "url": "stone_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 33,
+    "sourceHeight": 81,
+    "mapSize": 1024,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 33,
+      "height": 81
+    },
+    "mask": {
+      "backgroundColor": "#AC988E",
+      "backgroundNoise": 95.315,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.572
+    },
+    "mapStats": {
+      "valueRange": 0.6501,
+      "heightP90Gradient": 0.04281,
+      "roughnessBase": 0.694,
+      "roughnessVariation": 0.086,
+      "normalStrength": 0.206,
+      "blurRadius": 21
+    },
+    "palette": [
+      "#905A2C",
+      "#C68B4C",
+      "#BA9C87",
+      "#502D17",
+      "#EDC493"
+    ]
+  },
+  "warnings": [
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

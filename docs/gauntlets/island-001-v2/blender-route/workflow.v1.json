@@ -1,0 +1,75 @@
+{
+  "route": "authored-Blender-GLB",
+  "status": "stopped-at-authorized-route-ceiling",
+  "authorizedBy": "user yes, go ahead",
+  "authorityDate": "2026-09-10T23:35:25.492231+00:00",
+  "previousRoute": "retired procedural Three.js, four failed reviews preserved",
+  "referenceAuthority": "original three user-approved images",
+  "representative": "hatchery",
+  "currentPass": "awaiting-user-workflow-authority",
+  "currentFamily": 2,
+  "reviews": [
+    {
+      "id": "hatchery-blender-b01-independent-macro",
+      "family": 1,
+      "review": 1,
+      "action": "one-bounded-correction",
+      "worst": 0.67,
+      "path": "qa/reviews/hatchery-blender-b01-independent-macro.json"
+    },
+    {
+      "id": "hatchery-blender-b02-independent-macro",
+      "family": 1,
+      "review": 2,
+      "action": "retire-family",
+      "worst": 0.37,
+      "hardVeto": "floating upper-wing roof; supporting room absent",
+      "path": "qa/reviews/hatchery-blender-b02-independent-macro.json"
+    },
+    {
+      "id": "hatchery-blender-b03-independent-macro",
+      "family": 2,
+      "review": 3,
+      "action": "one-bounded-correction",
+      "worst": 0.7,
+      "path": "qa/reviews/hatchery-blender-b03-independent-macro.json"
+    },
+    {
+      "id": "hatchery-blender-b04-independent-macro",
+      "family": 2,
+      "review": 4,
+      "action": "stop",
+      "worst": 0.62,
+      "path": "qa/reviews/hatchery-blender-b04-independent-macro.json"
+    }
+  ],
+  "threshold": 0.85,
+  "budget": {
+    "families": 2,
+    "reviews": 4,
+    "correctionsPerFamily": 1
+  },
+  "roles": {
+    "root": "loader/capture/manifest/finalreview",
+    "v2_intake": "serialized Blender asset authoring",
+    "v2_integration_audit": "independentread-onlyQC"
+  },
+  "runtimeAxes": {
+    "up": "+Y",
+    "front": "+Z",
+    "ground": "XZ"
+  },
+  "preserve": [
+    "36tiles",
+    "radius1.6landmarkfootprint",
+    "L1L2L3fundedgeometry",
+    "canonicalstate/actions",
+    "Island011legacyfactories"
+  ],
+  "currentCandidate": "hatchery/family02-correction-b04.glb (frozen rejected draft)",
+  "correctionsUsedInFamily": 1,
+  "retiredFamilies": [
+    1
+  ],
+  "stopReason": "Two Blender families/four reviews exhausted; b04 worst .62 below .85, regressed from b03 .70. No V2 visual approval."
+}

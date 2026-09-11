@@ -1,0 +1,11 @@
+{
+  "scope": "Actual full pilot in desktop Chromium at phone viewport. Not a physical-phone measurement.",
+  "browser": "149.0.7827.55",
+  "viewport": [
+    390,
+    844
+  ],
+  "quality": "high",
+  "errors": [],
+  "failure": "locator.selectOption: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Quality', { exact: true })\u001b[22m\n\n    at /Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/scripts/profile-island001-v2-local.mjs:15:53"
+}

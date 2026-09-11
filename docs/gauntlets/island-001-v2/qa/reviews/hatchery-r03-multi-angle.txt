@@ -1,0 +1,6 @@
+reference area fraction: 0.1691
+collapse ratio threshold: 0.15
+  [ok] docs/gauntlets/island-001-v2/qa/raw/hatchery-r03-hatchery-orbit-80-clay.png area=0.1702 ratio=1.0064
+  [ok] docs/gauntlets/island-001-v2/qa/raw/hatchery-r03-hatchery-orbit-160-clay.png area=0.1396 ratio=0.8255
+  [ok] docs/gauntlets/island-001-v2/qa/raw/hatchery-r03-hatchery-orbit-240-clay.png area=0.1591 ratio=0.9412
+verdict: no degenerate view

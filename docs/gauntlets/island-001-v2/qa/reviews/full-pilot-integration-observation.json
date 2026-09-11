@@ -1,0 +1,17 @@
+{
+  "scope": "Integration observation, not visual or physical-device acceptance",
+  "url": "http://127.0.0.1:53282/dev/island-template-kit?island=1&mode=3d&level=3&assemblyCharges=10",
+  "evidence": "cua.getTab accessible UI readout; full pilot initialized after earlier CDP helper timeouts",
+  "quality": "Auto(low)",
+  "viewport": "376x830",
+  "drawCalls": 648,
+  "displayedTriangles": "215k",
+  "fps": "2 displayed in background tab, invalid as active performance measurement",
+  "assetLoadError": false,
+  "target": {
+    "drawCalls": 175,
+    "triangles": 180000
+  },
+  "status": "performance optimization pending V2 assembly",
+  "physicalPhoneValidated": false
+}

@@ -1,0 +1,96 @@
+{
+  "revision": "r04",
+  "family": 2,
+  "status": "retired-unapproved",
+  "sources": {
+    "src/features/gamification/level-worlds/dev/Island1V2Hatchery.ts": "e17a766d4bdfc4888bf29edf026d1d9f66b5f2ed5406848bde727bc28b164d3a",
+    "src/features/gamification/level-worlds/dev/Island1V2HatcheryGeometry.ts": "66717e51ca3a0cef12fa0aa7f8e35f48ecefdd4e9c6f58e0e4edb4bf699653fe"
+  },
+  "captures": [
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-back-structural.png",
+      "sha256": "622138947a6bf532c625972240d65af33b5b7dad7e61d09d2574e0fcad568e51",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-back-structural.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-contact-structural.png",
+      "sha256": "0b2c26c138e11dac360c6491d7629c24c9d70191103f4d7d4cd7f0c83e86a057",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-contact-structural.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-front-structural.png",
+      "sha256": "f57bb7167c8de08d869b99e0a4e98ccb17701fe6625badf7536bb36df04d10ce",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-front-structural.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-iso-clay.png",
+      "sha256": "d2f77793d1cf163d0679768b91ad06af6d60084d23b1f6428603f60b96c58644",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-iso-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-iso.png",
+      "sha256": "a861e40b546d52457584c375dc62e3bb465176ca37c39cdbd38cb19aac1635fb",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-iso.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-normals-structural.png",
+      "sha256": "62e999f1a4180f99111e86725323fada741543558bee93a8f13096dffb0f434f",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-normals-structural.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-0-clay.png",
+      "sha256": "109b454c64a4b44c7621d3942b5ebbf29f61d965cb46757511815dfb57f8c762",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-0-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-120-clay.png",
+      "sha256": "ff84a5c7492df29ffb36e851f23602b33840655e5d8ffbb2a75f5d9c6ec41e58",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-120-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-160-clay.png",
+      "sha256": "de05994ebf9bf778354f30e9d954308143a529ba4c5dde8e74c9d358c4e9fe03",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-160-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-200-clay.png",
+      "sha256": "e84db0995e953f4a3813cad963f6ee1690474352699aa398fb9be2ab350ff730",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-200-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-240-clay.png",
+      "sha256": "5d9e12554b361c359ce074a3b4edac8b8c102549844a04b9c5adb6a082fd6453",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-240-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-280-clay.png",
+      "sha256": "67a0949b6c022e774f7621d6ee3840b6c5c64caac936234f49fe8719fe438a6a",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-280-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-320-clay.png",
+      "sha256": "afb543036c01bb92461219664c41fe8c1ade041a38555338d1e21cbbb0ec3f06",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-320-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-40-clay.png",
+      "sha256": "5839818903947f574210de656efe1a42a4459f211dc6fa13f286e6d99102cb3e",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-40-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-80-clay.png",
+      "sha256": "ee92ce79b1104d2571af36f8c8faee76121983f1456e6c12bc086b0e2c6a95cd",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-orbit-80-clay.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-profile-structural.png",
+      "sha256": "547d4e52f10c2108e92984cefa096468b0167a738bacab47f49833d92c9935a5",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-profile-structural.json"
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-top-structural.png",
+      "sha256": "84a253b3094471d96b5942bba614e61379433c9b956cfabac1a29e6dea44b561",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r04-hatchery-top-structural.json"
+    }
+  ]
+}

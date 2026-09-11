@@ -1,0 +1,105 @@
+{
+  "asset": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/public/assets/islands/island-001/models/hatchery.glb",
+  "modelId": "hatchery",
+  "bytes": 1208712,
+  "engineeringGate": "pass",
+  "visualApproval": false,
+  "cachedSourceSurvivesTeardown": true,
+  "levels": [
+    {
+      "level": 1,
+      "meshes": 20,
+      "triangles": 11650,
+      "radius": 1.5080119526715734,
+      "invalid": 0,
+      "min": [
+        -1.4500000476837158,
+        0,
+        -1.4541993141174316
+      ],
+      "max": [
+        1.440000057220459,
+        2.4170000553131104,
+        1.2899999618530273
+      ],
+      "batches": 12
+    },
+    {
+      "level": 2,
+      "meshes": 39,
+      "triangles": 19322,
+      "radius": 1.5080119526715734,
+      "invalid": 0,
+      "min": [
+        -1.4500000476837158,
+        0,
+        -1.4541993141174316
+      ],
+      "max": [
+        1.462227463722229,
+        2.514296531677246,
+        1.2899999618530273
+      ],
+      "batches": 12
+    },
+    {
+      "level": 3,
+      "meshes": 50,
+      "triangles": 24710,
+      "radius": 1.5080119526715734,
+      "invalid": 0,
+      "min": [
+        -1.4500000476837158,
+        0,
+        -1.4541993141174316
+      ],
+      "max": [
+        1.462227463722229,
+        2.514296531677246,
+        1.2899999618530273
+      ],
+      "batches": 12
+    }
+  ],
+  "constructionTransitions": [
+    {
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 20,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 5,
+        "4": 5,
+        "5": 5
+      }
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "retained": 20,
+      "additive": 19,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 6
+      }
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "retained": 39,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 1,
+        "4": 4,
+        "5": 3
+      }
+    }
+  ]
+}

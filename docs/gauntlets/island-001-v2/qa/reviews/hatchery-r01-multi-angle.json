@@ -1,0 +1,26 @@
+{
+  "referenceAreaFraction": 0.1556423611111111,
+  "angles": [
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r01-hatchery-orbit-80-clay.png",
+      "areaFraction": 0.15512602880658435,
+      "ratio": 0.9966825721426948,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r01-hatchery-orbit-160-clay.png",
+      "areaFraction": 0.13490997942386831,
+      "ratio": 0.8667947367333871,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/hatchery-r01-hatchery-orbit-240-clay.png",
+      "areaFraction": 0.15718942901234567,
+      "ratio": 1.0099398896944909,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "deterministic; zero token; a flat-plane-faking-a-volume collapses in silhouette area when orbited"
+}

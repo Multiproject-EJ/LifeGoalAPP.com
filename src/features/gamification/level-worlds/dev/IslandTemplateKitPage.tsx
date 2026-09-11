@@ -42,7 +42,7 @@ function readInitialPreviewState() {
   const redockingRolls = Number.isFinite(redockingRollsParam)
     ? Math.max(0, Math.min(CELESTIAL_REDOCKING_ROLL_TARGET, Math.floor(redockingRollsParam)))
     : CELESTIAL_REDOCKING_ROLL_TARGET;
-  const assemblyChargesParam = Number(params.get('assemblyCharges'));
+  const assemblyChargesParam = Number(params.get('assemblyCharges') ?? Number.NaN);
   const assemblyCharges = Number.isFinite(assemblyChargesParam)
     ? Math.max(0, Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, Math.floor(assemblyChargesParam)))
     : FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET;
@@ -271,9 +271,9 @@ export default function IslandTemplateKitPage() {
       return undefined;
     }
     const timer = window.setTimeout(() => {
-      setAssemblyCharges((current) => Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, current + 1));
+      setAssemblyCharges((current) => current < 3 ? 3 : current < 8 ? 8 : 10);
       setAssemblyConstructionSequence((current) => current + 1);
-    }, assemblyCharges === 0 ? 500 : 2_680);
+    }, assemblyCharges === 0 ? 500 : 5_500);
     return () => window.clearTimeout(timer);
   }, [assemblyCharges, assemblyReplayActive]);
 
@@ -324,7 +324,7 @@ export default function IslandTemplateKitPage() {
                 type="button"
                 disabled={assemblyReplayActive || assemblyCharges >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}
                 onClick={() => {
-                  setAssemblyCharges((current) => Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, current + 1));
+                  setAssemblyCharges((current) => current < 3 ? 3 : current < 8 ? 8 : 10);
                   setAssemblyConstructionSequence((current) => current + 1);
                 }}
               >Blast next</button>
@@ -340,7 +340,7 @@ export default function IslandTemplateKitPage() {
                   setAssemblyConstructionSequence(0);
                   setAssemblyReplayActive(true);
                 }}
-              >{assemblyReplayActive ? 'Stop full replay' : 'Play full 20'}</button>
+              >{assemblyReplayActive ? 'Stop full replay' : 'Play 3 + 5 + 2'}</button>
               <output aria-live="polite">
                 {assemblyReplayActive ? 'Explosions ' : assemblyCharges >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 'Assembly sequence ' : ''}
                 {assemblyCharges}/{FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}

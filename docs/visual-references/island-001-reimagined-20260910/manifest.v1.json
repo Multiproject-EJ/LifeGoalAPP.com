@@ -36,5 +36,16 @@
   "approval": {
     "date": "2026-09-10",
     "userInstruction": "LOVE LOVE LOVe it, lets commit those iamges, and upgrade the island 001 to this new v2! use the gauntlet loop if you need to"
-  }
+  },
+  "secondaryStudies": [
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/secondary-inferred/conservatory-visible-clay-study.png",
+      "sha256": "c640f94baf10e4516a3327275cefb9a7dfc3374904c4344819f63178470ad3e4",
+      "authority": "secondary-inferred",
+      "generator": "built-in image_gen",
+      "reference": "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+      "metadata": "docs/visual-references/island-001-reimagined-20260910/secondary-inferred/conservatory-visible-clay-study.json",
+      "status": "modeling-aid-only, not user-approved goal"
+    }
+  ]
 }

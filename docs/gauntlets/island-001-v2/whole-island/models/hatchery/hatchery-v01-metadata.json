@@ -1,0 +1,1126 @@
+{
+  "status": "whole-island-complete-model-awaiting-integrated-review",
+  "landmarkId": "hatchery",
+  "axes": "Y-up/front+Z/ground0",
+  "sockets": {
+    "lift": [
+      0.72,
+      0.15,
+      1.07
+    ],
+    "egg": [
+      0,
+      1.37,
+      -0.18
+    ]
+  },
+  "bbox": {
+    "min": [
+      -1.4500000476837158,
+      0.0,
+      -1.4541993141174316
+    ],
+    "max": [
+      1.462227463722229,
+      2.514296531677246,
+      1.2899999618530273
+    ]
+  },
+  "radius": 1.5080119526715734,
+  "triangles": 24710,
+  "authoringMeshCount": 50,
+  "completedOwnerMaterialBatches": 12,
+  "materials": [
+    "hatchery-blue-conservatory-glass",
+    "hatchery-books-and-walnut",
+    "hatchery-garden-colors",
+    "hatchery-iridescent-opal-egg",
+    "hatchery-reading-lights",
+    "hatchery-rooftop-water",
+    "hatchery-warm-gold",
+    "hatchery-warm-limestone"
+  ],
+  "levels": {
+    "1": {
+      "addedTriangles": 11650,
+      "cumulativeTriangles": 11650,
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "2": {
+      "addedTriangles": 7672,
+      "cumulativeTriangles": 19322,
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "3": {
+      "addedTriangles": 5388,
+      "cumulativeTriangles": 24710,
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  },
+  "petalProfiles": [
+    [
+      "central-rear",
+      180,
+      2.4,
+      -0.24,
+      0.47,
+      1
+    ],
+    [
+      "rear-west",
+      -135,
+      2.29,
+      -0.08,
+      0.36,
+      1
+    ],
+    [
+      "rear-east",
+      135,
+      2.29,
+      -0.08,
+      0.36,
+      1
+    ],
+    [
+      "front-west",
+      -45,
+      2.21,
+      0.26,
+      0.35,
+      2
+    ],
+    [
+      "front-east",
+      45,
+      2.21,
+      0.26,
+      0.35,
+      2
+    ],
+    [
+      "side-west",
+      -90,
+      2.13,
+      0.3,
+      0.35,
+      3
+    ],
+    [
+      "side-east",
+      90,
+      2.13,
+      0.3,
+      0.35,
+      3
+    ]
+  ],
+  "meshes": [
+    {
+      "name": "hatchery-conservatory-L1-S2-hatchery-blue-conservatory-glass",
+      "level": 1,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-blue-conservatory-glass",
+      "triangles": 2376,
+      "sourceParts": [
+        "central-rear-pointed-glass-envelope",
+        "rear-east-pointed-glass-envelope",
+        "rear-west-pointed-glass-envelope"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L1-S2-hatchery-warm-gold",
+      "level": 1,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-warm-gold",
+      "triangles": 1596,
+      "sourceParts": [
+        "central-rear-rooted-gothic-frame--1",
+        "central-rear-rooted-gothic-frame-1",
+        "rear-east-rooted-gothic-frame--1",
+        "rear-east-rooted-gothic-frame-1",
+        "rear-west-rooted-gothic-frame--1",
+        "rear-west-rooted-gothic-frame-1"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L1-S5-hatchery-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-warm-gold",
+      "triangles": 1236,
+      "sourceParts": [
+        "central-rear-glazing-cross-rib-0",
+        "central-rear-glazing-cross-rib-1",
+        "central-rear-glazing-cross-rib-2",
+        "central-rear-gold-tip",
+        "rear-east-glazing-cross-rib-0",
+        "rear-east-glazing-cross-rib-1",
+        "rear-east-glazing-cross-rib-2",
+        "rear-east-gold-tip",
+        "rear-west-glazing-cross-rib-0",
+        "rear-west-glazing-cross-rib-1",
+        "rear-west-glazing-cross-rib-2",
+        "rear-west-gold-tip"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L2-S2-hatchery-blue-conservatory-glass",
+      "level": 2,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-blue-conservatory-glass",
+      "triangles": 1584,
+      "sourceParts": [
+        "front-east-pointed-glass-envelope",
+        "front-west-pointed-glass-envelope"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L2-S2-hatchery-warm-gold",
+      "level": 2,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-warm-gold",
+      "triangles": 1064,
+      "sourceParts": [
+        "front-east-rooted-gothic-frame--1",
+        "front-east-rooted-gothic-frame-1",
+        "front-west-rooted-gothic-frame--1",
+        "front-west-rooted-gothic-frame-1"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L2-S5-hatchery-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-warm-gold",
+      "triangles": 824,
+      "sourceParts": [
+        "front-east-glazing-cross-rib-0",
+        "front-east-glazing-cross-rib-1",
+        "front-east-glazing-cross-rib-2",
+        "front-east-gold-tip",
+        "front-west-glazing-cross-rib-0",
+        "front-west-glazing-cross-rib-1",
+        "front-west-glazing-cross-rib-2",
+        "front-west-gold-tip"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L3-S2-hatchery-blue-conservatory-glass",
+      "level": 3,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-blue-conservatory-glass",
+      "triangles": 1584,
+      "sourceParts": [
+        "side-east-pointed-glass-envelope",
+        "side-west-pointed-glass-envelope"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L3-S2-hatchery-warm-gold",
+      "level": 3,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-warm-gold",
+      "triangles": 1064,
+      "sourceParts": [
+        "side-east-rooted-gothic-frame--1",
+        "side-east-rooted-gothic-frame-1",
+        "side-west-rooted-gothic-frame--1",
+        "side-west-rooted-gothic-frame-1"
+      ]
+    },
+    {
+      "name": "hatchery-conservatory-L3-S5-hatchery-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "hatchery-conservatory",
+      "material": "hatchery-warm-gold",
+      "triangles": 824,
+      "sourceParts": [
+        "side-east-glazing-cross-rib-0",
+        "side-east-glazing-cross-rib-1",
+        "side-east-glazing-cross-rib-2",
+        "side-east-gold-tip",
+        "side-west-glazing-cross-rib-0",
+        "side-west-glazing-cross-rib-1",
+        "side-west-glazing-cross-rib-2",
+        "side-west-gold-tip"
+      ]
+    },
+    {
+      "name": "hatchery-egg-L1-S3-hatchery-warm-gold",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-egg",
+      "material": "hatchery-warm-gold",
+      "triangles": 124,
+      "sourceParts": [
+        "gold-egg-cradle"
+      ]
+    },
+    {
+      "name": "hatchery-egg-L1-S4-hatchery-iridescent-opal-egg",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-egg",
+      "material": "hatchery-iridescent-opal-egg",
+      "triangles": 1088,
+      "sourceParts": [
+        "one-sheltered-iridescent-egg"
+      ]
+    },
+    {
+      "name": "hatchery-egg-L2-S5-hatchery-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-egg",
+      "material": "hatchery-warm-gold",
+      "triangles": 108,
+      "sourceParts": [
+        "opal-gold-spark-2-0",
+        "opal-gold-spark-2-1",
+        "opal-gold-spark-2-2"
+      ]
+    },
+    {
+      "name": "hatchery-egg-L3-S5-hatchery-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "hatchery-egg",
+      "material": "hatchery-warm-gold",
+      "triangles": 108,
+      "sourceParts": [
+        "opal-gold-spark-3-0",
+        "opal-gold-spark-3-1",
+        "opal-gold-spark-3-2"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S1-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 388,
+      "sourceParts": [
+        "continuous-nursery-arrival-court",
+        "middle-water-landing-support",
+        "nursery-foundation-rock-12",
+        "nursery-foundation-rock-15",
+        "nursery-foundation-rock-18",
+        "nursery-foundation-rock-21",
+        "nursery-foundation-rock-6",
+        "nursery-foundation-rock-9",
+        "west-sweeping-nursery-stair-continuous-masonry"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S3-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 100,
+      "sourceParts": [
+        "nursery-garden-table-0-chair--1",
+        "nursery-garden-table-0-chair-1",
+        "nursery-garden-table-0-chairback--1",
+        "nursery-garden-table-0-chairback-1",
+        "nursery-garden-table-0-leg",
+        "nursery-garden-table-0-top"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S3-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 316,
+      "sourceParts": [
+        "middle-water-landing-rim",
+        "west-sweeping-nursery-stair-tread-0",
+        "west-sweeping-nursery-stair-tread-1",
+        "west-sweeping-nursery-stair-tread-10",
+        "west-sweeping-nursery-stair-tread-11",
+        "west-sweeping-nursery-stair-tread-12",
+        "west-sweeping-nursery-stair-tread-13",
+        "west-sweeping-nursery-stair-tread-14",
+        "west-sweeping-nursery-stair-tread-15",
+        "west-sweeping-nursery-stair-tread-16",
+        "west-sweeping-nursery-stair-tread-17",
+        "west-sweeping-nursery-stair-tread-18",
+        "west-sweeping-nursery-stair-tread-19",
+        "west-sweeping-nursery-stair-tread-2",
+        "west-sweeping-nursery-stair-tread-20",
+        "west-sweeping-nursery-stair-tread-21",
+        "west-sweeping-nursery-stair-tread-22",
+        "west-sweeping-nursery-stair-tread-23",
+        "west-sweeping-nursery-stair-tread-3",
+        "west-sweeping-nursery-stair-tread-4",
+        "west-sweeping-nursery-stair-tread-5",
+        "west-sweeping-nursery-stair-tread-6",
+        "west-sweeping-nursery-stair-tread-7",
+        "west-sweeping-nursery-stair-tread-8",
+        "west-sweeping-nursery-stair-tread-9"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S4-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 136,
+      "sourceParts": [
+        "roof-nursery-tree-stem-0",
+        "roof-nursery-tree-stem-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S4-hatchery-garden-colors",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-garden-colors",
+      "triangles": 1154,
+      "sourceParts": [
+        "nursery-cascading-ivy-0-0",
+        "nursery-cascading-ivy-0-1",
+        "nursery-cascading-ivy-0-2",
+        "nursery-cascading-ivy-0-3",
+        "nursery-cascading-ivy-0-4",
+        "nursery-cascading-ivy-1-0",
+        "nursery-cascading-ivy-1-1",
+        "nursery-cascading-ivy-1-2",
+        "nursery-cascading-ivy-1-3",
+        "nursery-cascading-ivy-1-4",
+        "nursery-cypress-0-0",
+        "nursery-cypress-0-1",
+        "nursery-cypress-0-2",
+        "nursery-cypress-0-3",
+        "nursery-cypress-0-4",
+        "nursery-roof-flowers-12",
+        "nursery-roof-flowers-15",
+        "nursery-roof-flowers-18",
+        "nursery-roof-flowers-21",
+        "nursery-roof-flowers-6",
+        "nursery-roof-flowers-9",
+        "nursery-root-garden-12",
+        "nursery-root-garden-15",
+        "nursery-root-garden-18",
+        "nursery-root-garden-21",
+        "nursery-root-garden-6",
+        "nursery-root-garden-9",
+        "roof-nursery-tree-0-0",
+        "roof-nursery-tree-0-1",
+        "roof-nursery-tree-1-0",
+        "roof-nursery-tree-1-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S4-hatchery-rooftop-water",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-rooftop-water",
+      "triangles": 56,
+      "sourceParts": [
+        "middle-reflecting-water",
+        "upper-court-cascade"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S4-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 72,
+      "sourceParts": [
+        "roof-nursery-planter-0",
+        "roof-nursery-planter-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S5-hatchery-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-gold",
+      "triangles": 88,
+      "sourceParts": [
+        "west-nursery-garden-edge-post-0",
+        "west-nursery-garden-edge-post-1",
+        "west-nursery-garden-edge-post-2",
+        "west-nursery-garden-edge-top"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L1-S5-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 492,
+      "sourceParts": [
+        "west-sweeping-nursery-stair-stone-balustrade--1",
+        "west-sweeping-nursery-stair-stone-balustrade-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S1-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 360,
+      "sourceParts": [
+        "east-sweeping-nursery-stair-continuous-masonry",
+        "lower-shallow-water-landing",
+        "nursery-foundation-rock-10",
+        "nursery-foundation-rock-13",
+        "nursery-foundation-rock-16",
+        "nursery-foundation-rock-19",
+        "nursery-foundation-rock-22",
+        "nursery-foundation-rock-4",
+        "nursery-foundation-rock-7"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S3-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 100,
+      "sourceParts": [
+        "nursery-garden-table-1-chair--1",
+        "nursery-garden-table-1-chair-1",
+        "nursery-garden-table-1-chairback--1",
+        "nursery-garden-table-1-chairback-1",
+        "nursery-garden-table-1-leg",
+        "nursery-garden-table-1-top"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S3-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 288,
+      "sourceParts": [
+        "east-sweeping-nursery-stair-tread-0",
+        "east-sweeping-nursery-stair-tread-1",
+        "east-sweeping-nursery-stair-tread-10",
+        "east-sweeping-nursery-stair-tread-11",
+        "east-sweeping-nursery-stair-tread-12",
+        "east-sweeping-nursery-stair-tread-13",
+        "east-sweeping-nursery-stair-tread-14",
+        "east-sweeping-nursery-stair-tread-15",
+        "east-sweeping-nursery-stair-tread-16",
+        "east-sweeping-nursery-stair-tread-17",
+        "east-sweeping-nursery-stair-tread-18",
+        "east-sweeping-nursery-stair-tread-19",
+        "east-sweeping-nursery-stair-tread-2",
+        "east-sweeping-nursery-stair-tread-20",
+        "east-sweeping-nursery-stair-tread-21",
+        "east-sweeping-nursery-stair-tread-22",
+        "east-sweeping-nursery-stair-tread-23",
+        "east-sweeping-nursery-stair-tread-3",
+        "east-sweeping-nursery-stair-tread-4",
+        "east-sweeping-nursery-stair-tread-5",
+        "east-sweeping-nursery-stair-tread-6",
+        "east-sweeping-nursery-stair-tread-7",
+        "east-sweeping-nursery-stair-tread-8",
+        "east-sweeping-nursery-stair-tread-9"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S4-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 136,
+      "sourceParts": [
+        "roof-nursery-tree-stem-2",
+        "roof-nursery-tree-stem-3"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S4-hatchery-garden-colors",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-garden-colors",
+      "triangles": 1236,
+      "sourceParts": [
+        "nursery-cascading-ivy-2-0",
+        "nursery-cascading-ivy-2-1",
+        "nursery-cascading-ivy-2-2",
+        "nursery-cascading-ivy-2-3",
+        "nursery-cascading-ivy-2-4",
+        "nursery-cascading-ivy-3-0",
+        "nursery-cascading-ivy-3-1",
+        "nursery-cascading-ivy-3-2",
+        "nursery-cascading-ivy-3-3",
+        "nursery-cascading-ivy-3-4",
+        "nursery-cypress-1-0",
+        "nursery-cypress-1-1",
+        "nursery-cypress-1-2",
+        "nursery-cypress-1-3",
+        "nursery-cypress-1-4",
+        "nursery-roof-flowers-10",
+        "nursery-roof-flowers-13",
+        "nursery-roof-flowers-16",
+        "nursery-roof-flowers-19",
+        "nursery-roof-flowers-22",
+        "nursery-roof-flowers-4",
+        "nursery-roof-flowers-7",
+        "nursery-root-garden-10",
+        "nursery-root-garden-13",
+        "nursery-root-garden-16",
+        "nursery-root-garden-19",
+        "nursery-root-garden-22",
+        "nursery-root-garden-4",
+        "nursery-root-garden-7",
+        "roof-nursery-tree-2-0",
+        "roof-nursery-tree-2-1",
+        "roof-nursery-tree-3-0",
+        "roof-nursery-tree-3-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S4-hatchery-rooftop-water",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-rooftop-water",
+      "triangles": 52,
+      "sourceParts": [
+        "lower-pool-cascade",
+        "lower-reflecting-water"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S4-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 72,
+      "sourceParts": [
+        "roof-nursery-planter-2",
+        "roof-nursery-planter-3"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S5-hatchery-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-gold",
+      "triangles": 116,
+      "sourceParts": [
+        "upper-nursery-garden-edge-post-0",
+        "upper-nursery-garden-edge-post-1",
+        "upper-nursery-garden-edge-post-2",
+        "upper-nursery-garden-edge-post-3",
+        "upper-nursery-garden-edge-top"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L2-S5-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 492,
+      "sourceParts": [
+        "east-sweeping-nursery-stair-stone-balustrade--1",
+        "east-sweeping-nursery-stair-stone-balustrade-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S1-hatchery-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 168,
+      "sourceParts": [
+        "east-roof-rill-stone",
+        "nursery-foundation-rock-11",
+        "nursery-foundation-rock-14",
+        "nursery-foundation-rock-17",
+        "nursery-foundation-rock-20",
+        "nursery-foundation-rock-5",
+        "nursery-foundation-rock-8",
+        "west-garden-approach-step",
+        "west-raised-reading-garden"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S3-hatchery-books-and-walnut",
+      "level": 3,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 200,
+      "sourceParts": [
+        "nursery-garden-table-2-chair--1",
+        "nursery-garden-table-2-chair-1",
+        "nursery-garden-table-2-chairback--1",
+        "nursery-garden-table-2-chairback-1",
+        "nursery-garden-table-2-leg",
+        "nursery-garden-table-2-top",
+        "nursery-garden-table-3-chair--1",
+        "nursery-garden-table-3-chair-1",
+        "nursery-garden-table-3-chairback--1",
+        "nursery-garden-table-3-chairback-1",
+        "nursery-garden-table-3-leg",
+        "nursery-garden-table-3-top"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S4-hatchery-books-and-walnut",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 68,
+      "sourceParts": [
+        "roof-nursery-tree-stem-4"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S4-hatchery-garden-colors",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-garden-colors",
+      "triangles": 1208,
+      "sourceParts": [
+        "nursery-cascading-ivy-4-0",
+        "nursery-cascading-ivy-4-1",
+        "nursery-cascading-ivy-4-2",
+        "nursery-cascading-ivy-4-3",
+        "nursery-cascading-ivy-4-4",
+        "nursery-cascading-ivy-5-0",
+        "nursery-cascading-ivy-5-1",
+        "nursery-cascading-ivy-5-2",
+        "nursery-cascading-ivy-5-3",
+        "nursery-cascading-ivy-5-4",
+        "nursery-cypress-2-0",
+        "nursery-cypress-2-1",
+        "nursery-cypress-2-2",
+        "nursery-cypress-2-3",
+        "nursery-cypress-2-4",
+        "nursery-cypress-3-0",
+        "nursery-cypress-3-1",
+        "nursery-cypress-3-2",
+        "nursery-cypress-3-3",
+        "nursery-cypress-3-4",
+        "nursery-roof-flowers-11",
+        "nursery-roof-flowers-14",
+        "nursery-roof-flowers-17",
+        "nursery-roof-flowers-20",
+        "nursery-roof-flowers-5",
+        "nursery-roof-flowers-8",
+        "nursery-root-garden-11",
+        "nursery-root-garden-14",
+        "nursery-root-garden-17",
+        "nursery-root-garden-20",
+        "nursery-root-garden-5",
+        "nursery-root-garden-8",
+        "roof-nursery-tree-4-0",
+        "roof-nursery-tree-4-1"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S4-hatchery-rooftop-water",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-rooftop-water",
+      "triangles": 12,
+      "sourceParts": [
+        "east-roof-rill-water"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S4-hatchery-warm-limestone",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-limestone",
+      "triangles": 36,
+      "sourceParts": [
+        "roof-nursery-planter-4"
+      ]
+    },
+    {
+      "name": "hatchery-terraces-L3-S5-hatchery-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "material": "hatchery-warm-gold",
+      "triangles": 116,
+      "sourceParts": [
+        "west-raised-garden-edge-post-0",
+        "west-raised-garden-edge-post-1",
+        "west-raised-garden-edge-post-2",
+        "west-raised-garden-edge-post-3",
+        "west-raised-garden-edge-top"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L1-S1-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "hatchery-wings",
+      "material": "hatchery-warm-limestone",
+      "triangles": 32,
+      "sourceParts": [
+        "broad-lower-nursery-interior-floor"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L1-S2-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 2,
+      "owner": "hatchery-wings",
+      "material": "hatchery-warm-limestone",
+      "triangles": 956,
+      "sourceParts": [
+        "broad-lower-nursery-bay-0-arch-0",
+        "broad-lower-nursery-bay-0-pier-0",
+        "broad-lower-nursery-bay-0-pier-1",
+        "broad-lower-nursery-bay-1-arch-0",
+        "broad-lower-nursery-bay-1-pier-0",
+        "broad-lower-nursery-bay-1-pier-1",
+        "broad-lower-nursery-bay-2-arch-0",
+        "broad-lower-nursery-bay-2-arch-1",
+        "broad-lower-nursery-bay-2-pier-0",
+        "broad-lower-nursery-bay-2-pier-1",
+        "broad-lower-nursery-bay-2-pier-2",
+        "broad-lower-nursery-bay-3-arch-0",
+        "broad-lower-nursery-bay-3-pier-0",
+        "broad-lower-nursery-bay-3-pier-1",
+        "broad-lower-nursery-bay-4-arch-0",
+        "broad-lower-nursery-bay-4-pier-0",
+        "broad-lower-nursery-bay-4-pier-1",
+        "broad-lower-nursery-bay-5-arch-0",
+        "broad-lower-nursery-bay-5-pier-0",
+        "broad-lower-nursery-bay-5-pier-1",
+        "broad-lower-nursery-bay-6-arch-0",
+        "broad-lower-nursery-bay-6-arch-1",
+        "broad-lower-nursery-bay-6-arch-2",
+        "broad-lower-nursery-bay-6-pier-0",
+        "broad-lower-nursery-bay-6-pier-1",
+        "broad-lower-nursery-bay-6-pier-2",
+        "broad-lower-nursery-bay-6-pier-3",
+        "broad-lower-nursery-bay-7-arch-0",
+        "broad-lower-nursery-bay-7-pier-0",
+        "broad-lower-nursery-bay-7-pier-1",
+        "broad-lower-nursery-bay-8-arch-0",
+        "broad-lower-nursery-bay-8-pier-0",
+        "broad-lower-nursery-bay-8-pier-1",
+        "broad-lower-nursery-occupied-roof-court"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L1-S3-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 288,
+      "sourceParts": [
+        "broad-lower-nursery-bay-0-0-nursery-back",
+        "broad-lower-nursery-bay-0-0-work-counter",
+        "broad-lower-nursery-bay-1-0-nursery-back",
+        "broad-lower-nursery-bay-1-0-work-counter",
+        "broad-lower-nursery-bay-2-0-nursery-back",
+        "broad-lower-nursery-bay-2-0-work-counter",
+        "broad-lower-nursery-bay-2-1-nursery-back",
+        "broad-lower-nursery-bay-2-1-work-counter",
+        "broad-lower-nursery-bay-3-0-nursery-back",
+        "broad-lower-nursery-bay-3-0-work-counter",
+        "broad-lower-nursery-bay-4-0-nursery-back",
+        "broad-lower-nursery-bay-4-0-work-counter",
+        "broad-lower-nursery-bay-5-0-nursery-back",
+        "broad-lower-nursery-bay-5-0-work-counter",
+        "broad-lower-nursery-bay-6-0-nursery-back",
+        "broad-lower-nursery-bay-6-0-work-counter",
+        "broad-lower-nursery-bay-6-1-nursery-back",
+        "broad-lower-nursery-bay-6-1-work-counter",
+        "broad-lower-nursery-bay-6-2-nursery-back",
+        "broad-lower-nursery-bay-6-2-work-counter",
+        "broad-lower-nursery-bay-7-0-nursery-back",
+        "broad-lower-nursery-bay-7-0-work-counter",
+        "broad-lower-nursery-bay-8-0-nursery-back",
+        "broad-lower-nursery-bay-8-0-work-counter"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L1-S3-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "material": "hatchery-warm-limestone",
+      "triangles": 720,
+      "sourceParts": [
+        "broad-lower-nursery-bay-0-0-incubated-egg--1",
+        "broad-lower-nursery-bay-0-0-incubated-egg-0",
+        "broad-lower-nursery-bay-0-0-incubated-egg-1",
+        "broad-lower-nursery-bay-1-0-incubated-egg--1",
+        "broad-lower-nursery-bay-1-0-incubated-egg-0",
+        "broad-lower-nursery-bay-1-0-incubated-egg-1",
+        "broad-lower-nursery-bay-2-0-incubated-egg--1",
+        "broad-lower-nursery-bay-2-0-incubated-egg-0",
+        "broad-lower-nursery-bay-2-0-incubated-egg-1",
+        "broad-lower-nursery-bay-2-1-incubated-egg--1",
+        "broad-lower-nursery-bay-2-1-incubated-egg-0",
+        "broad-lower-nursery-bay-2-1-incubated-egg-1",
+        "broad-lower-nursery-bay-3-0-incubated-egg--1",
+        "broad-lower-nursery-bay-3-0-incubated-egg-0",
+        "broad-lower-nursery-bay-3-0-incubated-egg-1",
+        "broad-lower-nursery-bay-4-0-incubated-egg--1",
+        "broad-lower-nursery-bay-4-0-incubated-egg-0",
+        "broad-lower-nursery-bay-4-0-incubated-egg-1",
+        "broad-lower-nursery-bay-5-0-incubated-egg--1",
+        "broad-lower-nursery-bay-5-0-incubated-egg-0",
+        "broad-lower-nursery-bay-5-0-incubated-egg-1",
+        "broad-lower-nursery-bay-6-0-incubated-egg--1",
+        "broad-lower-nursery-bay-6-0-incubated-egg-0",
+        "broad-lower-nursery-bay-6-0-incubated-egg-1",
+        "broad-lower-nursery-bay-6-1-incubated-egg--1",
+        "broad-lower-nursery-bay-6-1-incubated-egg-0",
+        "broad-lower-nursery-bay-6-1-incubated-egg-1",
+        "broad-lower-nursery-bay-6-2-incubated-egg--1",
+        "broad-lower-nursery-bay-6-2-incubated-egg-0",
+        "broad-lower-nursery-bay-6-2-incubated-egg-1",
+        "broad-lower-nursery-bay-7-0-incubated-egg--1",
+        "broad-lower-nursery-bay-7-0-incubated-egg-0",
+        "broad-lower-nursery-bay-7-0-incubated-egg-1",
+        "broad-lower-nursery-bay-8-0-incubated-egg--1",
+        "broad-lower-nursery-bay-8-0-incubated-egg-0",
+        "broad-lower-nursery-bay-8-0-incubated-egg-1"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L1-S5-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 288,
+      "sourceParts": [
+        "broad-lower-nursery-bay-0-0-timber-jamb--1",
+        "broad-lower-nursery-bay-0-0-timber-jamb-1",
+        "broad-lower-nursery-bay-1-0-timber-jamb--1",
+        "broad-lower-nursery-bay-1-0-timber-jamb-1",
+        "broad-lower-nursery-bay-2-0-timber-jamb--1",
+        "broad-lower-nursery-bay-2-0-timber-jamb-1",
+        "broad-lower-nursery-bay-2-1-timber-jamb--1",
+        "broad-lower-nursery-bay-2-1-timber-jamb-1",
+        "broad-lower-nursery-bay-3-0-timber-jamb--1",
+        "broad-lower-nursery-bay-3-0-timber-jamb-1",
+        "broad-lower-nursery-bay-4-0-timber-jamb--1",
+        "broad-lower-nursery-bay-4-0-timber-jamb-1",
+        "broad-lower-nursery-bay-5-0-timber-jamb--1",
+        "broad-lower-nursery-bay-5-0-timber-jamb-1",
+        "broad-lower-nursery-bay-6-0-timber-jamb--1",
+        "broad-lower-nursery-bay-6-0-timber-jamb-1",
+        "broad-lower-nursery-bay-6-1-timber-jamb--1",
+        "broad-lower-nursery-bay-6-1-timber-jamb-1",
+        "broad-lower-nursery-bay-6-2-timber-jamb--1",
+        "broad-lower-nursery-bay-6-2-timber-jamb-1",
+        "broad-lower-nursery-bay-7-0-timber-jamb--1",
+        "broad-lower-nursery-bay-7-0-timber-jamb-1",
+        "broad-lower-nursery-bay-8-0-timber-jamb--1",
+        "broad-lower-nursery-bay-8-0-timber-jamb-1"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L1-S5-hatchery-reading-lights",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "material": "hatchery-reading-lights",
+      "triangles": 144,
+      "sourceParts": [
+        "broad-lower-nursery-bay-0-0-warm-ceiling",
+        "broad-lower-nursery-bay-1-0-warm-ceiling",
+        "broad-lower-nursery-bay-2-0-warm-ceiling",
+        "broad-lower-nursery-bay-2-1-warm-ceiling",
+        "broad-lower-nursery-bay-3-0-warm-ceiling",
+        "broad-lower-nursery-bay-4-0-warm-ceiling",
+        "broad-lower-nursery-bay-5-0-warm-ceiling",
+        "broad-lower-nursery-bay-6-0-warm-ceiling",
+        "broad-lower-nursery-bay-6-1-warm-ceiling",
+        "broad-lower-nursery-bay-6-2-warm-ceiling",
+        "broad-lower-nursery-bay-7-0-warm-ceiling",
+        "broad-lower-nursery-bay-8-0-warm-ceiling"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L2-S1-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "hatchery-wings",
+      "material": "hatchery-warm-limestone",
+      "triangles": 20,
+      "sourceParts": [
+        "upper-right-nursery-interior-floor"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L2-S2-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 2,
+      "owner": "hatchery-wings",
+      "material": "hatchery-warm-limestone",
+      "triangles": 500,
+      "sourceParts": [
+        "upper-right-nursery-bay-0-arch-0",
+        "upper-right-nursery-bay-0-pier-0",
+        "upper-right-nursery-bay-0-pier-1",
+        "upper-right-nursery-bay-1-arch-0",
+        "upper-right-nursery-bay-1-pier-0",
+        "upper-right-nursery-bay-1-pier-1",
+        "upper-right-nursery-bay-2-arch-0",
+        "upper-right-nursery-bay-2-pier-0",
+        "upper-right-nursery-bay-2-pier-1",
+        "upper-right-nursery-bay-3-arch-0",
+        "upper-right-nursery-bay-3-pier-0",
+        "upper-right-nursery-bay-3-pier-1",
+        "upper-right-nursery-bay-4-arch-0",
+        "upper-right-nursery-bay-4-pier-0",
+        "upper-right-nursery-bay-4-pier-1",
+        "upper-right-nursery-bay-5-arch-0",
+        "upper-right-nursery-bay-5-pier-0",
+        "upper-right-nursery-bay-5-pier-1",
+        "upper-right-nursery-occupied-roof-court"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L2-S3-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 144,
+      "sourceParts": [
+        "upper-right-nursery-bay-0-0-nursery-back",
+        "upper-right-nursery-bay-0-0-work-counter",
+        "upper-right-nursery-bay-1-0-nursery-back",
+        "upper-right-nursery-bay-1-0-work-counter",
+        "upper-right-nursery-bay-2-0-nursery-back",
+        "upper-right-nursery-bay-2-0-work-counter",
+        "upper-right-nursery-bay-3-0-nursery-back",
+        "upper-right-nursery-bay-3-0-work-counter",
+        "upper-right-nursery-bay-4-0-nursery-back",
+        "upper-right-nursery-bay-4-0-work-counter",
+        "upper-right-nursery-bay-5-0-nursery-back",
+        "upper-right-nursery-bay-5-0-work-counter"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L2-S3-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "material": "hatchery-warm-limestone",
+      "triangles": 360,
+      "sourceParts": [
+        "upper-right-nursery-bay-0-0-incubated-egg--1",
+        "upper-right-nursery-bay-0-0-incubated-egg-0",
+        "upper-right-nursery-bay-0-0-incubated-egg-1",
+        "upper-right-nursery-bay-1-0-incubated-egg--1",
+        "upper-right-nursery-bay-1-0-incubated-egg-0",
+        "upper-right-nursery-bay-1-0-incubated-egg-1",
+        "upper-right-nursery-bay-2-0-incubated-egg--1",
+        "upper-right-nursery-bay-2-0-incubated-egg-0",
+        "upper-right-nursery-bay-2-0-incubated-egg-1",
+        "upper-right-nursery-bay-3-0-incubated-egg--1",
+        "upper-right-nursery-bay-3-0-incubated-egg-0",
+        "upper-right-nursery-bay-3-0-incubated-egg-1",
+        "upper-right-nursery-bay-4-0-incubated-egg--1",
+        "upper-right-nursery-bay-4-0-incubated-egg-0",
+        "upper-right-nursery-bay-4-0-incubated-egg-1",
+        "upper-right-nursery-bay-5-0-incubated-egg--1",
+        "upper-right-nursery-bay-5-0-incubated-egg-0",
+        "upper-right-nursery-bay-5-0-incubated-egg-1"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L2-S5-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "material": "hatchery-books-and-walnut",
+      "triangles": 144,
+      "sourceParts": [
+        "upper-right-nursery-bay-0-0-timber-jamb--1",
+        "upper-right-nursery-bay-0-0-timber-jamb-1",
+        "upper-right-nursery-bay-1-0-timber-jamb--1",
+        "upper-right-nursery-bay-1-0-timber-jamb-1",
+        "upper-right-nursery-bay-2-0-timber-jamb--1",
+        "upper-right-nursery-bay-2-0-timber-jamb-1",
+        "upper-right-nursery-bay-3-0-timber-jamb--1",
+        "upper-right-nursery-bay-3-0-timber-jamb-1",
+        "upper-right-nursery-bay-4-0-timber-jamb--1",
+        "upper-right-nursery-bay-4-0-timber-jamb-1",
+        "upper-right-nursery-bay-5-0-timber-jamb--1",
+        "upper-right-nursery-bay-5-0-timber-jamb-1"
+      ]
+    },
+    {
+      "name": "hatchery-wings-L2-S5-hatchery-reading-lights",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "material": "hatchery-reading-lights",
+      "triangles": 72,
+      "sourceParts": [
+        "upper-right-nursery-bay-0-0-warm-ceiling",
+        "upper-right-nursery-bay-1-0-warm-ceiling",
+        "upper-right-nursery-bay-2-0-warm-ceiling",
+        "upper-right-nursery-bay-3-0-warm-ceiling",
+        "upper-right-nursery-bay-4-0-warm-ceiling",
+        "upper-right-nursery-bay-5-0-warm-ceiling"
+      ]
+    }
+  ],
+  "sourceSha256": "f1449819767b59b072b20e5141f3173bce6a4e4b1c5b85bfaf4b5ad31261beeb"
+}

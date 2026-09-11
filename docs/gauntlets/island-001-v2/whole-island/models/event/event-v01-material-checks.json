@@ -1,0 +1,101 @@
+{
+  "pairedDomePrimitives": [
+    {
+      "name": "west-split-blue-dome-shell-mesh",
+      "primitives": [
+        {
+          "material": "observatory-celestial-blue",
+          "attributes": [
+            "POSITION",
+            "NORMAL",
+            "COLOR_0",
+            "COLOR_1"
+          ]
+        },
+        {
+          "material": "observatory-dome-warm-interior",
+          "attributes": [
+            "POSITION",
+            "NORMAL",
+            "COLOR_0",
+            "COLOR_1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "east-split-blue-dome-shell-mesh",
+      "primitives": [
+        {
+          "material": "observatory-celestial-blue",
+          "attributes": [
+            "POSITION",
+            "NORMAL",
+            "COLOR_0",
+            "COLOR_1"
+          ]
+        },
+        {
+          "material": "observatory-dome-warm-interior",
+          "attributes": [
+            "POSITION",
+            "NORMAL",
+            "COLOR_0",
+            "COLOR_1"
+          ]
+        }
+      ]
+    }
+  ],
+  "materialPolicy": "Neutral vertex colours and distinct constant blue/wood materials for paired shell faces",
+  "actualColorAccessorChecks": [
+    {
+      "mesh": "west-split-blue-dome-shell-mesh",
+      "material": "observatory-celestial-blue",
+      "attribute": "COLOR_0",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "west-split-blue-dome-shell-mesh",
+      "material": "observatory-celestial-blue",
+      "attribute": "COLOR_1",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "west-split-blue-dome-shell-mesh",
+      "material": "observatory-dome-warm-interior",
+      "attribute": "COLOR_0",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "west-split-blue-dome-shell-mesh",
+      "material": "observatory-dome-warm-interior",
+      "attribute": "COLOR_1",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "east-split-blue-dome-shell-mesh",
+      "material": "observatory-celestial-blue",
+      "attribute": "COLOR_0",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "east-split-blue-dome-shell-mesh",
+      "material": "observatory-celestial-blue",
+      "attribute": "COLOR_1",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "east-split-blue-dome-shell-mesh",
+      "material": "observatory-dome-warm-interior",
+      "attribute": "COLOR_0",
+      "neutralWhite": true
+    },
+    {
+      "mesh": "east-split-blue-dome-shell-mesh",
+      "material": "observatory-dome-warm-interior",
+      "attribute": "COLOR_1",
+      "neutralWhite": true
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.767,
+  "estimatedFidelity": 0.767,
+  "targetThreshold": 0.7,
+  "materialId": "glass",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass-crop.png",
+  "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass",
+  "palette": [
+    "#91D0EC",
+    "#76B9E1",
+    "#87C4E4",
+    "#AEDCEC",
+    "#70A0C0"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass/glass_albedo.png",
+      "url": "glass_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass/glass_roughness.png",
+      "url": "glass_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass/glass_height.png",
+      "url": "glass_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass/glass_normal.png",
+      "url": "glass_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass/glass_ao.png",
+      "url": "glass_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 13,
+    "sourceHeight": 26,
+    "mapSize": 256,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 13,
+      "height": 26
+    },
+    "mask": {
+      "backgroundColor": "#8BBEDF",
+      "backgroundNoise": 38.288,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.9734
+    },
+    "mapStats": {
+      "valueRange": 0.2329,
+      "heightP90Gradient": 0.09146,
+      "roughnessBase": 0.738,
+      "roughnessVariation": 0.172,
+      "normalStrength": 0.263,
+      "blurRadius": 5
+    },
+    "palette": [
+      "#91D0EC",
+      "#76B9E1",
+      "#87C4E4",
+      "#AEDCEC",
+      "#70A0C0"
+    ]
+  },
+  "warnings": [
+    "image is not clearly isolated from background; using most pixels as material evidence",
+    "object/background separation is weak",
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped",
+    "low value range weakens height/roughness inference"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

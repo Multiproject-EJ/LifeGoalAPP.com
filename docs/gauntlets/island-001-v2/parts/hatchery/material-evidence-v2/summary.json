@@ -1,0 +1,63 @@
+[
+  {
+    "material": "stone",
+    "confidence": 0.86,
+    "verdict": "pass",
+    "report": "docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/stone-report.json",
+    "warnings": [
+      "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+    ]
+  },
+  {
+    "material": "brass",
+    "confidence": 0.86,
+    "verdict": "pass",
+    "report": "docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass-report.json",
+    "warnings": [
+      "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+    ]
+  },
+  {
+    "material": "glass",
+    "confidence": 0.767,
+    "verdict": "pass",
+    "report": "docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/glass-report.json",
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence",
+      "object/background separation is weak",
+      "single-image inverse rendering cannot prove true physical PBR; confidence is capped",
+      "low value range weakens height/roughness inference"
+    ]
+  },
+  {
+    "material": "egg",
+    "confidence": 0.86,
+    "verdict": "pass",
+    "report": "docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/egg-report.json",
+    "warnings": [
+      "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+    ]
+  },
+  {
+    "material": "wood",
+    "confidence": 0.829,
+    "verdict": "pass",
+    "report": "docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/wood-report.json",
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence",
+      "object/background separation is weak",
+      "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+    ]
+  },
+  {
+    "material": "leaf",
+    "confidence": 0.829,
+    "verdict": "pass",
+    "report": "docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf-report.json",
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence",
+      "object/background separation is weak",
+      "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+    ]
+  }
+]

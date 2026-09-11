@@ -1,0 +1,21 @@
+{
+  "mode": "event",
+  "angle": 0,
+  "level": 3,
+  "quality": "high",
+  "width": 1440,
+  "height": 1080,
+  "camera": [
+    4.36,
+    4.934000000000001,
+    10.3
+  ],
+  "target": [
+    4.36,
+    1.35,
+    3.9
+  ],
+  "drawCalls": 23,
+  "triangles": 48973,
+  "three": "185"
+}

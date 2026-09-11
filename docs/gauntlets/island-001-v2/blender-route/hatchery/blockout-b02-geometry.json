@@ -1,0 +1,269 @@
+{
+  "status": "draft-awaiting-browser-QC",
+  "axes": "glTF Y-up,front+Z,rootground0",
+  "bbox": {
+    "min": [
+      -1.4800000190734863,
+      0.0,
+      -1.1100000143051147
+    ],
+    "max": [
+      1.537743330001831,
+      2.479398727416992,
+      1.2899999618530273
+    ]
+  },
+  "maxRadius": 1.5758684126573332,
+  "triangles": 37130,
+  "meshCount": 12,
+  "owners": [
+    "hatchery-terraces",
+    "hatchery-wings",
+    "hatchery-conservatory",
+    "hatchery-egg"
+  ],
+  "meshes": [
+    {
+      "name": "conservatory-level1-blue-petal-glass",
+      "triangles": 4872,
+      "buildLevel": 1,
+      "constructionStage": 3,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "lotus-loft-glass-petal-2",
+        "lotus-loft-glass-petal-5",
+        "lotus-loft-glass-petal-7"
+      ]
+    },
+    {
+      "name": "conservatory-level1-structural-brass",
+      "triangles": 4032,
+      "buildLevel": 1,
+      "constructionStage": 3,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "petal-2-structural-edge--1",
+        "petal-2-structural-edge-1",
+        "petal-5-structural-edge--1",
+        "petal-5-structural-edge-1",
+        "petal-7-structural-edge--1",
+        "petal-7-structural-edge-1"
+      ]
+    },
+    {
+      "name": "conservatory-level2-blue-petal-glass",
+      "triangles": 6496,
+      "buildLevel": 2,
+      "constructionStage": 3,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "lotus-loft-glass-petal-1",
+        "lotus-loft-glass-petal-3",
+        "lotus-loft-glass-petal-4",
+        "lotus-loft-glass-petal-6"
+      ]
+    },
+    {
+      "name": "conservatory-level2-structural-brass",
+      "triangles": 5376,
+      "buildLevel": 2,
+      "constructionStage": 3,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "petal-1-structural-edge--1",
+        "petal-1-structural-edge-1",
+        "petal-3-structural-edge--1",
+        "petal-3-structural-edge-1",
+        "petal-4-structural-edge--1",
+        "petal-4-structural-edge-1",
+        "petal-6-structural-edge--1",
+        "petal-6-structural-edge-1"
+      ]
+    },
+    {
+      "name": "egg-level1-pale-egg",
+      "triangles": 1840,
+      "buildLevel": 1,
+      "constructionStage": 4,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "one-sheltered-smooth-ovoid"
+      ]
+    },
+    {
+      "name": "egg-level1-structural-brass",
+      "triangles": 572,
+      "buildLevel": 1,
+      "constructionStage": 4,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "low-egg-cradle"
+      ]
+    },
+    {
+      "name": "terraces-level1-cascade-water",
+      "triangles": 108,
+      "buildLevel": 1,
+      "constructionStage": 1,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "lower-cascade-water-sheet",
+        "lower-pool-water",
+        "middle-pool-water",
+        "upper-cascade-water-sheet"
+      ]
+    },
+    {
+      "name": "terraces-level1-ivory-limestone",
+      "triangles": 1650,
+      "buildLevel": 1,
+      "constructionStage": 1,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "continuous-lower-arrival-court",
+        "east-sweeping-stair-continuous-stair-support",
+        "middle-landing-continuous-vaulted-support",
+        "west-sweeping-stair-continuous-stair-support"
+      ]
+    },
+    {
+      "name": "terraces-level1-light-limestone",
+      "triangles": 6328,
+      "buildLevel": 1,
+      "constructionStage": 1,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "broad-continuous-rooftop-egg-court",
+        "east-sweeping-stair-curved-parapet--1",
+        "east-sweeping-stair-curved-parapet-1",
+        "east-sweeping-stair-tread-0",
+        "east-sweeping-stair-tread-1",
+        "east-sweeping-stair-tread-10",
+        "east-sweeping-stair-tread-11",
+        "east-sweeping-stair-tread-12",
+        "east-sweeping-stair-tread-13",
+        "east-sweeping-stair-tread-14",
+        "east-sweeping-stair-tread-15",
+        "east-sweeping-stair-tread-16",
+        "east-sweeping-stair-tread-17",
+        "east-sweeping-stair-tread-18",
+        "east-sweeping-stair-tread-19",
+        "east-sweeping-stair-tread-2",
+        "east-sweeping-stair-tread-20",
+        "east-sweeping-stair-tread-21",
+        "east-sweeping-stair-tread-3",
+        "east-sweeping-stair-tread-4",
+        "east-sweeping-stair-tread-5",
+        "east-sweeping-stair-tread-6",
+        "east-sweeping-stair-tread-7",
+        "east-sweeping-stair-tread-8",
+        "east-sweeping-stair-tread-9",
+        "lower-nursery-continuous-interior-floor",
+        "lower-shallow-pool-landing",
+        "middle-cascade-landing",
+        "west-sweeping-stair-curved-parapet--1",
+        "west-sweeping-stair-curved-parapet-1",
+        "west-sweeping-stair-tread-0",
+        "west-sweeping-stair-tread-1",
+        "west-sweeping-stair-tread-10",
+        "west-sweeping-stair-tread-11",
+        "west-sweeping-stair-tread-12",
+        "west-sweeping-stair-tread-13",
+        "west-sweeping-stair-tread-14",
+        "west-sweeping-stair-tread-15",
+        "west-sweeping-stair-tread-16",
+        "west-sweeping-stair-tread-17",
+        "west-sweeping-stair-tread-18",
+        "west-sweeping-stair-tread-19",
+        "west-sweeping-stair-tread-2",
+        "west-sweeping-stair-tread-20",
+        "west-sweeping-stair-tread-21",
+        "west-sweeping-stair-tread-3",
+        "west-sweeping-stair-tread-4",
+        "west-sweeping-stair-tread-5",
+        "west-sweeping-stair-tread-6",
+        "west-sweeping-stair-tread-7",
+        "west-sweeping-stair-tread-8",
+        "west-sweeping-stair-tread-9"
+      ]
+    },
+    {
+      "name": "wings-level1-ivory-limestone",
+      "triangles": 5192,
+      "buildLevel": 1,
+      "constructionStage": 2,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "cross-gallery-structural-wall",
+        "lower-nursery-vaulted-perimeter"
+      ]
+    },
+    {
+      "name": "wings-level2-ivory-limestone",
+      "triangles": 280,
+      "buildLevel": 2,
+      "constructionStage": 2,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "upper-right-nursery-open-room"
+      ]
+    },
+    {
+      "name": "wings-level2-light-limestone",
+      "triangles": 384,
+      "buildLevel": 2,
+      "constructionStage": 2,
+      "invalidVertices": 0,
+      "sourceParts": [
+        "upper-right-nursery-floor",
+        "upper-right-nursery-roof-terrace"
+      ]
+    }
+  ],
+  "petals": [
+    {
+      "name": "lotus-loft-glass-petal-1",
+      "angleDegrees": -135,
+      "tipHeight": 2.35,
+      "buildLevel": 2
+    },
+    {
+      "name": "lotus-loft-glass-petal-2",
+      "angleDegrees": -90,
+      "tipHeight": 2.14,
+      "buildLevel": 1
+    },
+    {
+      "name": "lotus-loft-glass-petal-3",
+      "angleDegrees": -45,
+      "tipHeight": 2.29,
+      "buildLevel": 2
+    },
+    {
+      "name": "lotus-loft-glass-petal-4",
+      "angleDegrees": 45,
+      "tipHeight": 2.29,
+      "buildLevel": 2
+    },
+    {
+      "name": "lotus-loft-glass-petal-5",
+      "angleDegrees": 90,
+      "tipHeight": 2.14,
+      "buildLevel": 1
+    },
+    {
+      "name": "lotus-loft-glass-petal-6",
+      "angleDegrees": 135,
+      "tipHeight": 2.35,
+      "buildLevel": 2
+    },
+    {
+      "name": "lotus-loft-glass-petal-7",
+      "angleDegrees": 180,
+      "tipHeight": 2.47,
+      "buildLevel": 1
+    }
+  ],
+  "sourceScript": "scripts/island001-v2-blender/hatchery.py",
+  "scriptSha256": "da9aed03332ead1255155948843b129f6da30b49d16eacc5caa535df0272ea34"
+}

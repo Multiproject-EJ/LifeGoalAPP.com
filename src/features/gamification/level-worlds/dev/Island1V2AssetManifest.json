@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "island": 1,
+  "packClass": "hero-exception",
+  "justification": "Opening island: four authored landmarks and monumental underground Assembly mission reward. Shared procedural water, terrain and construction systems avoid extra texture packs.",
+  "models": {
+    "hatchery": {
+      "url": "/assets/islands/island-001/models/hatchery.glb",
+      "sha256": "f6778ccfe4140539a938604dc4ff2dc83dcc2d6a26bc16e90a0f04c1f16e4f4a",
+      "bytes": 1208712,
+      "gzipBytes": 383197,
+      "source": "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb",
+      "revision": "v01",
+      "constructionLevels": [
+        1,
+        2,
+        3
+      ],
+      "constructionStages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "habit": {
+      "url": "/assets/islands/island-001/models/habit.glb",
+      "sha256": "68dc4983a6b803f0705bc3ac15d3bd9fd1be5448b398f1d12e878e9c0d36a458",
+      "bytes": 764872,
+      "gzipBytes": 385291,
+      "source": "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb",
+      "revision": "v02",
+      "constructionLevels": [
+        1,
+        2,
+        3
+      ],
+      "constructionStages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "wisdom": {
+      "url": "/assets/islands/island-001/models/wisdom.glb",
+      "sha256": "53cb158832bfdfe48f372502740f55b1e6cbff4137a99472e5891221fb3100d4",
+      "bytes": 1593864,
+      "gzipBytes": 371360,
+      "source": "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb",
+      "revision": "v01",
+      "constructionLevels": [
+        1,
+        2,
+        3
+      ],
+      "constructionStages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "event": {
+      "url": "/assets/islands/island-001/models/event.glb",
+      "sha256": "09c608704dde7eb94d1a561cfda739dedae2318c0d6acac4e1a6fe9c9ab6f917",
+      "bytes": 1296008,
+      "gzipBytes": 402701,
+      "source": "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb",
+      "revision": "v02",
+      "constructionLevels": [
+        1,
+        2,
+        3
+      ],
+      "constructionStages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  },
+  "installedModelBytes": 4863456,
+  "gzipModelBytes": 1542549,
+  "dependencies": [
+    "canonical ISLAND_5_LANDMARKS placement",
+    "shared Three.js renderer and materials",
+    "Island1V2Terrain",
+    "Island1AssemblyCraterThreeWorld",
+    "canonical signature mission actions"
+  ],
+  "referenceManifest": "docs/visual-references/island-001-reimagined-20260910/manifest.v1.json",
+  "validationRecord": "docs/gauntlets/island-001-v2/STATUS.md",
+  "physicalPhoneVerified": false
+}

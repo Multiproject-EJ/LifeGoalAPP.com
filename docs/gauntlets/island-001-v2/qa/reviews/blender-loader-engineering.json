@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-10T23:48:24.648502+00:00",
+  "scope": "Blender GLB loader integration; macro b01 remains visually unapproved",
+  "typeScript": "pass: tsconfig.island-run-tests.json --noEmit",
+  "productionViteBuild": "pass: 74 seconds",
+  "draftAssetExcludedFromProduction": true,
+  "assetRuntimeChecks": "blender-route/hatchery/blockout-b01-runtime-checks.json",
+  "physicalPhonePerformance": "not validated",
+  "fullGameplaySuite": "last pre-GLB integration run 2043 passed; unchanged gameplay since then"
+}

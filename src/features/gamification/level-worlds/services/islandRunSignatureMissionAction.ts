@@ -30,6 +30,7 @@ import {
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getCactusCanyonAvailableDynamite,
   getFirstLightAssemblyAvailableDynamite,
+  getFirstLightAssemblyNextBatch,
   getGreatHoneyfallAvailableNectar,
   getFrostwellAvailableSpins,
   getIslandRunSignatureMissionKey,
@@ -355,10 +356,11 @@ export function detonateFirstLightAssemblyCharge(options: {
     if (progress.completedAtMs !== null || progress.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET) {
       return { status: 'already_complete' };
     }
-    if (getFirstLightAssemblyAvailableDynamite(progress) <= 0) return { status: 'no_dynamite' };
+    const batch = getFirstLightAssemblyNextBatch(progress.chargesDetonated);
+    if (getFirstLightAssemblyAvailableDynamite(progress) < batch.cost) return { status: 'no_dynamite' };
 
     const sectorBefore = progress.chargesDetonated;
-    const sectorAfter = Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, sectorBefore + 1);
+    const sectorAfter = batch.end;
     const nowMs = Date.now();
     const completedAtMs = sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
       ? progress.completedAtMs ?? nowMs

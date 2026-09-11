@@ -1,0 +1,419 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-blender-b04-independent-macro",
+  "route": "authored-Blender-GLB",
+  "family": 2,
+  "familyReview": 2,
+  "routeGateReview": 4,
+  "action": "stop",
+  "gate": "naked-macro-and-attachment",
+  "threshold": 0.85,
+  "worstCritical": 0.62,
+  "hardVeto": false,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso-clay": [
+      0.71,
+      0.68,
+      0.83,
+      0.85,
+      0.78,
+      0.74
+    ],
+    "orbit-0-clay": [
+      0.69,
+      0.65,
+      0.82,
+      0.85,
+      0.76,
+      0.72
+    ],
+    "orbit-40-clay": [
+      0.72,
+      0.69,
+      0.84,
+      0.85,
+      0.79,
+      0.75
+    ],
+    "orbit-80-clay": [
+      0.71,
+      0.67,
+      0.83,
+      0.84,
+      0.77,
+      0.73
+    ],
+    "orbit-120-clay": [
+      0.68,
+      0.65,
+      0.83,
+      0.84,
+      0.76,
+      0.7
+    ],
+    "orbit-160-clay": [
+      0.68,
+      0.64,
+      0.83,
+      0.84,
+      0.76,
+      0.7
+    ],
+    "orbit-200-clay": [
+      0.67,
+      0.64,
+      0.82,
+      0.85,
+      0.76,
+      0.7
+    ],
+    "orbit-240-clay": [
+      0.65,
+      0.63,
+      0.81,
+      0.84,
+      0.75,
+      0.68
+    ],
+    "orbit-280-clay": [
+      0.65,
+      0.62,
+      0.81,
+      0.84,
+      0.74,
+      0.68
+    ],
+    "orbit-320-clay": [
+      0.66,
+      0.63,
+      0.81,
+      0.84,
+      0.74,
+      0.69
+    ],
+    "front-structural": [
+      0.75,
+      0.72,
+      0.86,
+      0.86,
+      0.81,
+      0.79
+    ],
+    "profile-structural": [
+      0.68,
+      0.65,
+      0.83,
+      0.84,
+      0.77,
+      0.71
+    ],
+    "back-structural": [
+      0.64,
+      0.62,
+      0.82,
+      0.84,
+      0.75,
+      0.69
+    ],
+    "top-structural": [
+      0.65,
+      0.62,
+      0.8,
+      0.83,
+      0.72,
+      0.66
+    ],
+    "contact-structural": [
+      0.7,
+      0.66,
+      0.81,
+      0.84,
+      0.77,
+      0.72
+    ],
+    "normals-structural": [
+      0.71,
+      0.68,
+      0.83,
+      0.85,
+      0.78,
+      0.74
+    ],
+    "iso-transparent": [
+      0.78,
+      0.75,
+      0.85,
+      0.86,
+      0.81,
+      0.8
+    ]
+  },
+  "inspectionOrder": "Original approved landmark-study and island-overview pixels first; all 17 actual b04 raw runtime PNGs; then b03 scores and matched iso/back/top pixels, correction-b04 hypothesis and runtime diagnostics. No authoring geometry or workflow was edited.",
+  "referenceAuthority": [
+    "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+    "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+  ],
+  "secondaryReferenceTreatment": "No inferred canopy study was substituted for original goal pixels.",
+  "evidenceCompleteness": {
+    "requested": 17,
+    "inspected": 17,
+    "missing": [],
+    "captureManifest": "blender-route/hatchery/family02-correction-b04-captures.json"
+  },
+  "captureProvenance": {
+    "source": "Actual Three.js browser canvas, not offline Blender render.",
+    "controls": "Parent records the same Chromium149 / Three185 harness, locked cameras, 1440x1080 DPR1, lighting and materials as b03.",
+    "scope": "Only the isolated hatchery macro packet is scored. Mixed full-pilot geometry counts and desktop FPS are excluded from this visual verdict."
+  },
+  "comparison": {
+    "baselineReview": "qa/reviews/hatchery-blender-b03-independent-macro.json",
+    "baselineWorst": 0.7,
+    "currentWorst": 0.62,
+    "worstGain": -0.08,
+    "requiredWorstGain": 0.1,
+    "gainRequirementPassed": false,
+    "noCriticalRegressionOver": 0.05,
+    "largestRegression": {
+      "view": "back-structural",
+      "category": "silhouetteVolume",
+      "before": 0.77,
+      "after": 0.64,
+      "delta": -0.13
+    },
+    "regressionRequirementPassed": false,
+    "allRequiredScoresAtLeastThreshold": false,
+    "perViewCategoryDeltas": {
+      "iso-clay": [
+        -0.08,
+        -0.08,
+        -0.04,
+        -0.02,
+        -0.02,
+        -0.05
+      ],
+      "orbit-0-clay": [
+        -0.09,
+        -0.09,
+        -0.04,
+        -0.02,
+        -0.03,
+        -0.06
+      ],
+      "orbit-40-clay": [
+        -0.08,
+        -0.08,
+        -0.04,
+        -0.03,
+        -0.02,
+        -0.05
+      ],
+      "orbit-80-clay": [
+        -0.07,
+        -0.08,
+        -0.05,
+        -0.03,
+        -0.03,
+        -0.05
+      ],
+      "orbit-120-clay": [
+        -0.08,
+        -0.08,
+        -0.05,
+        -0.03,
+        -0.03,
+        -0.06
+      ],
+      "orbit-160-clay": [
+        -0.08,
+        -0.09,
+        -0.04,
+        -0.03,
+        -0.03,
+        -0.06
+      ],
+      "orbit-200-clay": [
+        -0.11,
+        -0.11,
+        -0.05,
+        -0.03,
+        -0.04,
+        -0.08
+      ],
+      "orbit-240-clay": [
+        -0.12,
+        -0.11,
+        -0.06,
+        -0.04,
+        -0.04,
+        -0.09
+      ],
+      "orbit-280-clay": [
+        -0.11,
+        -0.11,
+        -0.05,
+        -0.03,
+        -0.04,
+        -0.08
+      ],
+      "orbit-320-clay": [
+        -0.09,
+        -0.09,
+        -0.05,
+        -0.03,
+        -0.03,
+        -0.06
+      ],
+      "front-structural": [
+        -0.05,
+        -0.05,
+        -0.02,
+        -0.02,
+        -0.01,
+        -0.02
+      ],
+      "profile-structural": [
+        -0.08,
+        -0.08,
+        -0.05,
+        -0.03,
+        -0.02,
+        -0.05
+      ],
+      "back-structural": [
+        -0.13,
+        -0.12,
+        -0.06,
+        -0.04,
+        -0.05,
+        -0.09
+      ],
+      "top-structural": [
+        -0.07,
+        -0.08,
+        -0.06,
+        -0.03,
+        -0.04,
+        -0.08
+      ],
+      "contact-structural": [
+        -0.08,
+        -0.09,
+        -0.06,
+        -0.03,
+        -0.03,
+        -0.06
+      ],
+      "normals-structural": [
+        -0.08,
+        -0.08,
+        -0.04,
+        -0.02,
+        -0.02,
+        -0.05
+      ],
+      "iso-transparent": [
+        -0.03,
+        -0.05,
+        -0.03,
+        -0.02,
+        -0.01,
+        -0.02
+      ]
+    },
+    "interpretation": "The correction improves physical overhead coverage and central crown placement, but those local improvements do not improve the worst complete likeness score. Several silhouettes lose distinct petal structure."
+  },
+  "strengths": [
+    "The egg now has overhead shell coverage while the genuine front entrance remains open.",
+    "The main crown is centered and higher than the small lateral tips.",
+    "The positive arch and pier construction retains complete support for the upper nursery roof and the middle cascade terrace.",
+    "The stair flights and original nursery floors remain supported.",
+    "The localized west roof shoulder introduces a small change of terrace height."
+  ],
+  "dominantDefects": [
+    {
+      "priority": 1,
+      "issue": "The conservatory has become a nearly continuous swollen bulb rather than a layered lotus of readable architectural petals.",
+      "views": [
+        "iso-clay",
+        "orbit-0-clay",
+        "orbit-120-clay",
+        "orbit-160-clay",
+        "orbit-200-clay",
+        "orbit-240-clay",
+        "orbit-280-clay",
+        "orbit-320-clay",
+        "back-structural",
+        "top-structural"
+      ],
+      "evidence": "The opaque orbit and back frames are dominated by one rounded belly and one pointed cap. The four lower petal tips appear as small triangular fragments emerging from the larger surfaces. The reference's side petals have complete readable contours and their own rising silhouettes; they do not reduce to short projections on a mostly uniform bulb.",
+      "acceptanceConditionForAnyFutureAuthorizedRoute": "Distinct lateral petals must remain legible from root through curved middle span to their lower tips while the principal crown shelters the egg. Closing the top alone is insufficient."
+    },
+    {
+      "priority": 2,
+      "issue": "The main shell surfaces visually swallow significant stretches of their petal frames and lower petal boundaries.",
+      "views": [
+        "contact-structural",
+        "normals-structural",
+        "iso-clay",
+        "iso-transparent",
+        "top-structural"
+      ],
+      "evidence": "The clay close-up and normals frame show interrupted frame lines and triangular upper islands on broad smooth surfaces. Transparent glass exposes more of the hidden internal lines but does not recover the missing external petal silhouette. This is a macro surface relationship issue, not a demand for deferred decorative cross-ribs.",
+      "acceptanceConditionForAnyFutureAuthorizedRoute": "Structural borders should trace coherent petal edges on the outside of the shelter, and layered surfaces should remain perceptually distinct in opaque clay without relying on transparency."
+    },
+    {
+      "priority": 3,
+      "issue": "The broad nursery setting still reads as largely parallel stacked terrace bands beneath a dominant central shell.",
+      "views": [
+        "front-structural",
+        "contact-structural",
+        "iso-clay"
+      ],
+      "evidence": "The added west shoulder is small; the base and pool landing retain a largely uniform layered composition. The original reference gives more of its silhouette to staggered inhabited wings and generous terraces around the shelter.",
+      "acceptanceConditionForAnyFutureAuthorizedRoute": "The approved asymmetric nursery massing must be evident before foliage, furniture or material finish is added."
+    }
+  ],
+  "hardVetoAssessment": "No additional unambiguous hard veto is needed or asserted. The shell remains three-dimensional, the egg is inside and beneath it, and the architectural supports persist. The bulb-like silhouette and buried/intersecting visual boundaries are scored as substantial likeness and surface-coherence failures; they are not relabeled as a literal unpointed hemispherical dome or a confirmed detached roof. The threshold, gain and regression failures independently require stop.",
+  "excludedFromPenalty": [
+    "foliage",
+    "furniture",
+    "material finish",
+    "decorative cross-ribs",
+    "lift detail",
+    "opaque clay's normal occlusion of the egg",
+    "mixed full-pilot scene performance"
+  ],
+  "hypothesisResult": {
+    "hypothesis": "Three overlapping inward vaults form a central crown; four side petals remain lower; narrowed roots and middle swell restore the lotus shelter.",
+    "outcome": "Central crown and coverage achieved, but lateral petal identity regressed into a swollen continuous bulb and interrupted borders. The macro gate remains failed.",
+    "correctionBudgetRemaining": 0,
+    "familiesRemaining": 0,
+    "routeReviewsRemaining": 0,
+    "reasonForStop": [
+      "At least one required score remains below 0.85.",
+      "Worst score decreased by 0.08 instead of improving by at least 0.10.",
+      "Largest critical regression is 0.13, beyond the permitted 0.05.",
+      "Both construction families and all four authorized Blender-route reviews are exhausted."
+    ],
+    "authorizationBoundary": "Preserve frozen b01-b04 assets, sources, diagnostics and reviews. No further geometry iteration, detail work or production promotion is authorized by this review. Root must obtain a different user-approved route or authority before resuming this failed macro gate."
+  },
+  "diagnosticsAfterPixels": {
+    "engineeringGate": "pass reported, not visual approval",
+    "runtimeTriangles": 51064,
+    "runtimeRadius": 1.5758684126573332,
+    "assetBytes": 1391420,
+    "notes": [
+      "Overhead ray coverage confirms physical shelter coverage, consistent with top-view pixels; it does not prove lotus likeness.",
+      "Finite attributes, cache survival and retained support checks cannot override failed visual categories.",
+      "This review makes no approval claim for full V2 assembly, full-board budgets or phone performance."
+    ]
+  }
+}

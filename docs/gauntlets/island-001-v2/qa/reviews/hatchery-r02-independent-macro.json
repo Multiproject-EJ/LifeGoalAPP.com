@@ -1,0 +1,122 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-r02-independent-macro",
+  "action": "retire-family",
+  "family": 1,
+  "review": 2,
+  "gate": "naked-macro-and-attachment",
+  "inspectionOrder": "Approved goal pixels, all 10 r02 clay frames, then serialized r01 review. No builder narrative or model code inspected.",
+  "hardVeto": false,
+  "threshold": 0.85,
+  "previousWorstCritical": 0.55,
+  "worstCritical": 0.61,
+  "worstCriticalGain": 0.06,
+  "requiredGain": 0.1,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso": [
+      0.7,
+      0.73,
+      0.74,
+      0.84,
+      0.7,
+      0.75
+    ],
+    "orbit-0": [
+      0.68,
+      0.7,
+      0.7,
+      0.83,
+      0.67,
+      0.72
+    ],
+    "orbit-40": [
+      0.71,
+      0.74,
+      0.75,
+      0.85,
+      0.71,
+      0.76
+    ],
+    "orbit-80": [
+      0.69,
+      0.69,
+      0.71,
+      0.84,
+      0.67,
+      0.72
+    ],
+    "orbit-120": [
+      0.66,
+      0.66,
+      0.68,
+      0.83,
+      0.64,
+      0.7
+    ],
+    "orbit-160": [
+      0.63,
+      0.64,
+      0.69,
+      0.83,
+      0.62,
+      0.68
+    ],
+    "orbit-200": [
+      0.62,
+      0.64,
+      0.71,
+      0.84,
+      0.62,
+      0.68
+    ],
+    "orbit-240": [
+      0.61,
+      0.64,
+      0.72,
+      0.84,
+      0.61,
+      0.68
+    ],
+    "orbit-280": [
+      0.62,
+      0.64,
+      0.7,
+      0.84,
+      0.62,
+      0.69
+    ],
+    "orbit-320": [
+      0.65,
+      0.67,
+      0.68,
+      0.84,
+      0.64,
+      0.7
+    ]
+  },
+  "retirementReasons": [
+    "Dominant nursery-wing drum arrangement persists.",
+    "Worst improvement .06 below .10.",
+    "Post-correction worst .61 below .75.",
+    "Permitted correction used."
+  ],
+  "nextFamilyRequirements": [
+    "Continuous curved-plan or crescent terrace architecture with broad facades and roof terraces; no resizing same drums.",
+    "Connected terrace floor polygons and meaningful landings before walls/stairs.",
+    "Coherent enclosing layered petal boundary surfaces, not extra ornamental ribs."
+  ],
+  "evidenceLimitations": [
+    "No top/contact frames inspected; cannot overturn observed silhouette failure.",
+    "No penalty for missing foliage, materials, transparency, furniture, water or shared lift.",
+    "Opaque clay egg occlusion is not disappearing geometry.",
+    "Rear judged on coherent mass, not invented reference details."
+  ]
+}

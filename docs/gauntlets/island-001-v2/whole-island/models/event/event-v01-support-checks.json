@@ -1,0 +1,384 @@
+[
+  {
+    "roof": "west-central-observatory-hall-occupied-roof",
+    "supports": [
+      {
+        "name": "west-central-observatory-hall-bay-0-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-0-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-1-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-1-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-2-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-2-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-3-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-3-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-4-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-4-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-5-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-5-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-6-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-6-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-7-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-7-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-8-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-8-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-9-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-9-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-10-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-central-observatory-hall-bay-10-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 1.065999984741211,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  {
+    "roof": "east-arched-instrument-wing-occupied-roof",
+    "supports": [
+      {
+        "name": "east-arched-instrument-wing-bay-0-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-0-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-1-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-1-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-2-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-2-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-3-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-3-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-4-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-4-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-5-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-5-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-6-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-6-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-7-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-7-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-8-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "east-arched-instrument-wing-bay-8-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.9959999918937683,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  {
+    "roof": "rear-celestial-reading-gallery-occupied-roof",
+    "supports": [
+      {
+        "name": "rear-celestial-reading-gallery-bay-0-pier-0",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-0-pier-1",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-1-pier-0",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-1-pier-1",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-2-pier-0",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-2-pier-1",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-3-pier-0",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-3-pier-1",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-4-pier-0",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-4-pier-1",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-5-pier-0",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "rear-celestial-reading-gallery-bay-5-pier-1",
+        "minY": 1.2389999628067017,
+        "maxY": 1.746000051498413,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  }
+]

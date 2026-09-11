@@ -1,0 +1,1118 @@
+{
+  "partCount": 24,
+  "parts": [
+    {
+      "id": "island-mass",
+      "group": "terrain",
+      "parent": null,
+      "dependencies": [],
+      "ownedSurfaces": "Continuous terraced limestone island; preserve crown and central aperture.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "world-origin"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Continuous terraced limestone island; preserve crown and central aperture.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "cliff-water",
+      "group": "terrain",
+      "parent": null,
+      "dependencies": [],
+      "ownedSurfaces": "Layered coastal cliffs, coves, spring and hero waterfall.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "world-origin"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Layered coastal cliffs, coves, spring and hero waterfall.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyCoast.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "route-apron",
+      "group": "terrain",
+      "parent": null,
+      "dependencies": [],
+      "ownedSurfaces": "Quiet ground apron surrounding the canonical live tile ring.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "world-origin"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Quiet ground apron surrounding the canonical live tile ring.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts",
+        "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "landscape",
+      "group": "terrain",
+      "parent": null,
+      "dependencies": [],
+      "ownedSurfaces": "Grouped gardens, cypress and low planting; keep route and entrances clear.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "world-origin"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Grouped gardens, cypress and low planting; keep route and entrances clear.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1V2Terrain.ts",
+        "src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "hatchery-terraces",
+      "group": "hatchery",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "ownedSurfaces": "Wide stepped plinth and entrance stairs.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Wide stepped plinth and entrance stairs.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "hatchery-wings",
+      "group": "hatchery",
+      "parent": "hatchery-terraces",
+      "dependencies": [
+        "hatchery-terraces"
+      ],
+      "ownedSurfaces": "Two arched nursery wings with open sheltered rooms.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Two arched nursery wings with open sheltered rooms.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "hatchery-conservatory",
+      "group": "hatchery",
+      "parent": "hatchery-terraces",
+      "dependencies": [
+        "hatchery-terraces"
+      ],
+      "ownedSurfaces": "Sweeping lotus glass shell and brass ribs; no tower kit.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Sweeping lotus glass shell and brass ribs; no tower kit.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "hatchery-egg",
+      "group": "hatchery",
+      "parent": "hatchery-terraces",
+      "dependencies": [
+        "hatchery-terraces"
+      ],
+      "ownedSurfaces": "One sheltered luminous egg focal point.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "One sheltered luminous egg focal point.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/hatchery.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/hatchery/hatchery-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-hatchery-iso.png",
+        "qa/reviews/release-hatchery-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-mass",
+      "group": "oak",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "ownedSurfaces": "Continuous expressive roots, trunk and structural branches.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Continuous expressive roots, trunk and structural branches.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-canopy",
+      "group": "oak",
+      "parent": "oak-mass",
+      "dependencies": [
+        "oak-mass"
+      ],
+      "ownedSurfaces": "Broad asymmetric grouped leaf masses.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Broad asymmetric grouped leaf masses.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-balconies",
+      "group": "oak",
+      "parent": "oak-mass",
+      "dependencies": [
+        "oak-mass"
+      ],
+      "ownedSurfaces": "Timber galleries supported by the trunk.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Timber galleries supported by the trunk.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "oak-stairs",
+      "group": "oak",
+      "parent": "oak-mass",
+      "dependencies": [
+        "oak-mass"
+      ],
+      "ownedSurfaces": "Paired sweeping stone stairs and root-level entrance.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Paired sweeping stone stairs and root-level entrance.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/habit.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-habit-iso.png",
+        "qa/reviews/release-habit-runtime-check.json"
+      ]
+    },
+    {
+      "id": "archive-galleries",
+      "group": "archive",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "ownedSurfaces": "Crescent library wings and visible sheltered shelves.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Crescent library wings and visible sheltered shelves.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/wisdom.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-wisdom-iso.png",
+        "qa/reviews/release-wisdom-runtime-check.json"
+      ]
+    },
+    {
+      "id": "archive-terraces",
+      "group": "archive",
+      "parent": "archive-galleries",
+      "dependencies": [
+        "archive-galleries"
+      ],
+      "ownedSurfaces": "Roof reading gardens and connecting stairs.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Roof reading gardens and connecting stairs.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/wisdom.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-wisdom-iso.png",
+        "qa/reviews/release-wisdom-runtime-check.json"
+      ]
+    },
+    {
+      "id": "archive-globe",
+      "group": "archive",
+      "parent": "archive-galleries",
+      "dependencies": [
+        "archive-galleries"
+      ],
+      "ownedSurfaces": "Celestial globe on a coherent architectural pedestal.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Celestial globe on a coherent architectural pedestal.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/wisdom.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/wisdom/wisdom-v01.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-wisdom-iso.png",
+        "qa/reviews/release-wisdom-runtime-check.json"
+      ]
+    },
+    {
+      "id": "observatory-wings",
+      "group": "observatory",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "ownedSurfaces": "Curving stone institution wings and entry hierarchy.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Curving stone institution wings and entry hierarchy.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/event.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-event-iso.png",
+        "qa/reviews/release-event-runtime-check.json"
+      ]
+    },
+    {
+      "id": "observatory-dome",
+      "group": "observatory",
+      "parent": "observatory-wings",
+      "dependencies": [
+        "observatory-wings"
+      ],
+      "ownedSurfaces": "Split deep-blue shell, thickness, seams and supporting drum.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Split deep-blue shell, thickness, seams and supporting drum.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/event.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-event-iso.png",
+        "qa/reviews/release-event-runtime-check.json"
+      ]
+    },
+    {
+      "id": "observatory-armillary",
+      "group": "observatory",
+      "parent": "observatory-wings",
+      "dependencies": [
+        "observatory-wings"
+      ],
+      "ownedSurfaces": "Open brass rings and instrument pivots.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Open brass rings and instrument pivots.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "public/assets/islands/island-001/models/event.glb",
+        "docs/gauntlets/island-001-v2/whole-island/models/event/event-v02.glb"
+      ],
+      "evidence": [
+        "qa/raw/release-v2-event-iso.png",
+        "qa/reviews/release-event-runtime-check.json"
+      ]
+    },
+    {
+      "id": "assembly-cavern",
+      "group": "assembly",
+      "parent": null,
+      "dependencies": [],
+      "ownedSurfaces": "Cavern envelope, limestone cut faces, vault ribs and oculus.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "world-origin"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Cavern envelope, limestone cut faces, vault ribs and oculus.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyVault.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyCraterThreeWorld.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "assembly-delegates",
+      "group": "assembly",
+      "parent": "assembly-cavern",
+      "dependencies": [
+        "assembly-cavern"
+      ],
+      "ownedSurfaces": "Tiered chair/desk fields with real circulation aisles.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Tiered chair/desk fields with real circulation aisles.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "assembly-presidium",
+      "group": "assembly",
+      "parent": "assembly-cavern",
+      "dependencies": [
+        "assembly-cavern"
+      ],
+      "ownedSurfaces": "Presidential dais, rostrum and interpreter galleries.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Presidential dais, rostrum and interpreter galleries.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "assembly-concourse",
+      "group": "assembly",
+      "parent": "assembly-cavern",
+      "dependencies": [
+        "assembly-cavern"
+      ],
+      "ownedSurfaces": "Upper public concourse and stairs, connected to shared lift sockets.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Upper public concourse and stairs, connected to shared lift sockets.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyLayout.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "civic-lifts",
+      "group": "shared",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "ownedSurfaces": "Four integrated landmark entrances, shafts, cabins and landings.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Four integrated landmark entrances, shafts, cabins and landings.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyAccess.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyLayout.ts"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    },
+    {
+      "id": "construction-reveal",
+      "group": "shared",
+      "parent": "island-mass",
+      "dependencies": [
+        "island-mass"
+      ],
+      "ownedSurfaces": "Compatible 3+5+2 excavation and staged robotic commissioning.",
+      "exclusions": [
+        "canonical gameplay",
+        "route tile transforms",
+        "other part ownership",
+        "Island 011"
+      ],
+      "symmetry": "bilateral tendencies; preserve observed asymmetry",
+      "sockets": [
+        "parent-attachment"
+      ],
+      "requiredViews": [
+        "reference-three-quarter",
+        "opposite-three-quarter",
+        "front",
+        "side",
+        "rear",
+        "top",
+        "nine-angle-orbit"
+      ],
+      "confidence": {
+        "visible": "high",
+        "hidden": "inferred-medium"
+      },
+      "acceptanceCues": [
+        "Compatible 3+5+2 excavation and staged robotic commissioning.",
+        "No detached interfaces or camera-dependent flat forms.",
+        "Recognizable silhouette at intended phone scale."
+      ],
+      "status": "implemented-whole-island-v2",
+      "implementation": [
+        "src/features/gamification/level-worlds/dev/Island1AssemblyCraterThreeWorld.ts",
+        "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts",
+        "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx"
+      ],
+      "evidence": [
+        "qa/raw/complete-v02-surface-iso.png",
+        "qa/raw/complete-v02-hall-hero-iso.png",
+        "qa/reviews/complete-v02-independent-final.json"
+      ]
+    }
+  ],
+  "writerPolicy": "serialize geometry writers in shared worktree",
+  "reviewPolicy": "independent read-only reviewer; builder cannot self-approve",
+  "productionStatus": "active-Blender-GLB-representative-hatchery",
+  "approvalMeaning": "Any existing approved status means user admission/scope approval, not visual model approval. No V2 part has passed independent macro review.",
+  "currentProduction": {
+    "status": "stopped-at-blender-route-ceiling",
+    "representative": "hatchery",
+    "latestReview": "qa/reviews/hatchery-blender-b04-independent-macro.json",
+    "visualApproval": false,
+    "note": "Part approved-for-production statuses mean user-approved scope, not accepted geometry. Whole24-part V2 remains unfinished."
+  }
+}

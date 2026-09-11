@@ -1,0 +1,186 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-r03-independent-macro",
+  "action": "one-bounded-correction",
+  "family": 2,
+  "familyReview": 1,
+  "gateReview": 3,
+  "hardVeto": false,
+  "threshold": 0.85,
+  "worstCritical": 0.63,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso-clay": [
+      0.72,
+      0.71,
+      0.8,
+      0.85,
+      0.74,
+      0.73
+    ],
+    "orbit-0-clay": [
+      0.7,
+      0.69,
+      0.79,
+      0.84,
+      0.72,
+      0.71
+    ],
+    "orbit-40-clay": [
+      0.73,
+      0.72,
+      0.81,
+      0.85,
+      0.75,
+      0.74
+    ],
+    "orbit-80-clay": [
+      0.7,
+      0.68,
+      0.79,
+      0.84,
+      0.72,
+      0.71
+    ],
+    "orbit-120-clay": [
+      0.67,
+      0.66,
+      0.78,
+      0.84,
+      0.69,
+      0.69
+    ],
+    "orbit-160-clay": [
+      0.65,
+      0.65,
+      0.77,
+      0.84,
+      0.68,
+      0.67
+    ],
+    "orbit-200-clay": [
+      0.69,
+      0.67,
+      0.78,
+      0.85,
+      0.7,
+      0.7
+    ],
+    "orbit-240-clay": [
+      0.7,
+      0.68,
+      0.79,
+      0.85,
+      0.71,
+      0.71
+    ],
+    "orbit-280-clay": [
+      0.68,
+      0.67,
+      0.78,
+      0.84,
+      0.69,
+      0.7
+    ],
+    "orbit-320-clay": [
+      0.66,
+      0.65,
+      0.78,
+      0.84,
+      0.68,
+      0.68
+    ],
+    "front-structural": [
+      0.72,
+      0.7,
+      0.81,
+      0.85,
+      0.74,
+      0.73
+    ],
+    "profile-structural": [
+      0.63,
+      0.64,
+      0.77,
+      0.84,
+      0.66,
+      0.66
+    ],
+    "back-structural": [
+      0.7,
+      0.67,
+      0.77,
+      0.85,
+      0.69,
+      0.71
+    ],
+    "top-structural": [
+      0.73,
+      0.72,
+      0.8,
+      0.85,
+      0.72,
+      0.71
+    ],
+    "contact-structural": [
+      0.74,
+      0.71,
+      0.81,
+      0.85,
+      0.74,
+      0.74
+    ],
+    "normals-structural": [
+      0.72,
+      0.71,
+      0.8,
+      0.85,
+      0.74,
+      0.73
+    ],
+    "iso-transparent": [
+      0.72,
+      0.76,
+      0.8,
+      0.85,
+      0.75,
+      0.75
+    ]
+  },
+  "inspectionOrder": "Approved goal, all10 clayorbit/iso,6structural,transparentiso. No code or builder metrics.",
+  "dominantFindings": [
+    "Composition too tall and narrow; shelter dominates wings/terraces.",
+    "Upper court nearly entirely occupied byshell.",
+    "Lower frontage reads two narrow projecting tanks.",
+    "Closed upright bud lacks real lower front architectural entrance."
+  ],
+  "boundedCorrection": {
+    "hypothesis": "Coordinated shelter/court/nursery reproportioning creates broad terraced conservatory preserving continuous architecture and stairs.",
+    "controls": [
+      "fixedfootprint/origin/cameras/goals/threshold",
+      "connectedfloorplan/stairs",
+      "egginsidewithrealfrontopening",
+      "no foliage/texture/lighting/furniture/decorativecompensation"
+    ],
+    "requiredGain": 0.1,
+    "noCriticalRegressionOver": 0.05,
+    "everyRequiredMinimum": 0.85,
+    "remainingCorrections": 1,
+    "remainingReviews": 1
+  },
+  "excluded": [
+    "foliage/cypress",
+    "furniture",
+    "materialfinish/lighting",
+    "decorativeribs",
+    "sharedlift",
+    "normalopaqueclayeggocclusion"
+  ]
+}

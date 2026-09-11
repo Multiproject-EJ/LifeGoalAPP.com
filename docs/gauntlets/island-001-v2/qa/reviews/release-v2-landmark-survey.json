@@ -1,0 +1,151 @@
+{
+  "reviewId": "release-v2-landmark-survey",
+  "reviewer": "v2_integration_audit",
+  "date": "2026-09-11",
+  "verdict": "accept_static_landmark_survey_with_visual_limits",
+  "scope": "Final public landmark GLB browser captures: empty facades, camera-dependent thin shapes, missing supports and visible completed-model regressions. Whole-island workflow; no per-part score gate.",
+  "inspectionMethod": "Rear and profile structural PNGs inspected individually first for all four landmarks. Remaining 15 PNGs per landmark inspected in labelled contact sheets generated from the unmodified raw captures, each tile600x450. All68sourceviews included; no source image or geometry was altered.",
+  "referenceContext": [
+    "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png",
+    "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png"
+  ],
+  "landmarks": [
+    {
+      "part": "hatchery",
+      "individuallyInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-back-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-profile-structural.png"
+      ],
+      "contactSheetInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-front-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-contact-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-top-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-normals-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-iso-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-iso.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-0-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-40-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-80-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-120-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-160-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-200-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-240-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-280-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-hatchery-orbit-320-clay.png"
+      ],
+      "missingRequiredViews": [],
+      "highConfidenceStructuralDefects": [],
+      "finding": "The rear and sides retain inhabited arched wall bays, a continuous supported roof court and volumetric petal shelter. Stairs and terraces persist around the orbit. No blank missing rear facade or disappearing shell observed."
+    },
+    {
+      "part": "habit",
+      "individuallyInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-back-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-profile-structural.png"
+      ],
+      "contactSheetInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-front-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-contact-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-top-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-normals-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-iso-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-iso.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-0-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-40-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-80-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-120-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-160-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-200-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-240-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-280-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-orbit-320-clay.png"
+      ],
+      "missingRequiredViews": [],
+      "highConfidenceStructuralDefects": [],
+      "finding": "Roots and trunk remain substantial from rear and side; galleries connect to the trunk and vertical supports, with stairs reaching the lower gallery. Canopy has depth and does not collapse into a billboard when orbited. Rear room walls are visibly plain rectangular volumes, a finish limitation rather than missing architecture."
+    },
+    {
+      "part": "wisdom",
+      "individuallyInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-back-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-profile-structural.png"
+      ],
+      "contactSheetInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-front-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-contact-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-top-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-normals-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-iso-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-iso.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-0-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-40-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-80-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-120-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-160-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-200-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-240-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-280-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-wisdom-orbit-320-clay.png"
+      ],
+      "missingRequiredViews": [],
+      "highConfidenceStructuralDefects": [],
+      "finding": "The two-height library volumes retain facades and interior shelf/furniture masses around the full orbit. Roof terraces, stairs and globe plinth remain attached. No missing rear or unsupported rooftop globe observed."
+    },
+    {
+      "part": "event",
+      "individuallyInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-back-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-profile-structural.png"
+      ],
+      "contactSheetInspected": [
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-front-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-contact-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-top-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-normals-structural.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-iso-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-iso.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-0-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-40-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-80-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-120-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-160-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-200-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-240-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-280-clay.png",
+        "docs/gauntlets/island-001-v2/qa/raw/release-v2-event-orbit-320-clay.png"
+      ],
+      "missingRequiredViews": [],
+      "highConfidenceStructuralDefects": [],
+      "finding": "The split observatory shells remain volumetric in rear/profile views, with visible rims and inner faces. The armillary has a continuous pedestal and terrace support; lower arched architecture closes the footprint around the orbit."
+    }
+  ],
+  "concreteBlockingIssues": [],
+  "nonblockingVisualResiduals": [
+    {
+      "part": "habit",
+      "finding": "Large smooth canopy clusters and plain rear gallery-room walls remain visibly simpler than the reference. A few branch-colored patches meet the top of canopy clusters; cosmetic overlap, not a support failure.",
+      "evidence": [
+        "release-v2-habit-back-structural.png",
+        "release-v2-habit-iso.png"
+      ]
+    },
+    {
+      "part": "hatchery",
+      "finding": "Petal ribs and glazing retain an angular, sparse appearance; the solid clay rear is much more visually closed than the transparent beauty view. This is consistent material substitution, not evidence of missing geometry.",
+      "evidence": [
+        "release-v2-hatchery-back-structural.png",
+        "release-v2-hatchery-iso.png"
+      ]
+    },
+    {
+      "part": "all",
+      "finding": "Repeated foliage primitives, simple wall materials and sparse small furnishings remain an obvious reference-finish gap. The survey does not endorse perfect likeness."
+    }
+  ],
+  "limits": [
+    "All supplied release captures show completed models. They cannot independently verify the five construction reveal levels, animations, saved-progress migration or stage-specific visibility. Those require the separate runtime/stage tests; no new stage test was run in this read-only survey.",
+    "The contact-sheet portion checks gross cross-view form and attachment at reduced display scale. Subpixel cracks, UV defects, temporal transparency artifacts and tiny intersections are not ruled out.",
+    "The review did not operate a browser, edit source/runtime/geometry, inspect the GLB binary topology or measure full-game mobile performance.",
+    "Only this review report and temporary analysis contact sheets were written. Original evidence PNGs were unchanged."
+  ]
+}

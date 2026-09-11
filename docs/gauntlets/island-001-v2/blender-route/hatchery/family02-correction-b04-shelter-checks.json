@@ -1,0 +1,535 @@
+{
+  "status": "geometry-only-not-visual-approval",
+  "principalCrown": [
+    0,
+    2.46,
+    -0.2
+  ],
+  "samples": [
+    {
+      "xz": [
+        0.0,
+        -0.2
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.4600000381469727
+        },
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.4600000381469727
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.4600000381469727
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.0,
+        -0.1
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.402057647705078
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.049999999999999996,
+        -0.11339745962155613
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.3978958129882812
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.08660254037844387,
+        -0.15
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.385160446166992
+        },
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.3851218223571777
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.1,
+        -0.2
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.397690773010254
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.08660254037844388,
+        -0.25
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.40187668800354
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.049999999999999996,
+        -0.2866025403784439
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.3977017402648926
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        1.2246467991473533e-17,
+        -0.30000000000000004
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.385160446166992
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.3851218223571777
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.04999999999999998,
+        -0.2866025403784439
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.397690773010254
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.08660254037844384,
+        -0.25000000000000006
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.40187668800354
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.1,
+        -0.20000000000000004
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.3977017402648926
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.08660254037844387,
+        -0.15
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.3851218223571777
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.385160446166992
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.050000000000000044,
+        -0.11339745962155617
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.3978865146636963
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.0,
+        0.0
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.3357090950012207
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.09999999999999999,
+        -0.026794919243112253
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.326775074005127
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.17320508075688773,
+        -0.09999999999999998
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.2993416786193848
+        },
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.299293041229248
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.2,
+        -0.2
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.326489210128784
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.17320508075688776,
+        -0.3
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.3354578018188477
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.09999999999999999,
+        -0.37320508075688774
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.3265111446380615
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        2.4492935982947065e-17,
+        -0.4
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.2993416786193848
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.299293041229248
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.09999999999999996,
+        -0.3732050807568878
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.326489210128784
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.17320508075688767,
+        -0.3000000000000001
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.3354578018188477
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.2,
+        -0.20000000000000004
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.3265109062194824
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.17320508075688773,
+        -0.09999999999999998
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.299293041229248
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.2993416786193848
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.10000000000000009,
+        -0.026794919243112336
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.326772928237915
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.0,
+        0.08000000000000002
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.279311180114746
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.13999999999999999,
+        0.04248711305964284
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.2661101818084717
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.24248711305964282,
+        -0.05999999999999997
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.2257187366485596
+        },
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.2256920337677
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.28,
+        -0.19999999999999998
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.2659285068511963
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.24248711305964285,
+        -0.33999999999999997
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.2790915966033936
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        0.13999999999999999,
+        -0.44248711305964283
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.2659454345703125
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        3.4290110376125894e-17,
+        -0.48000000000000004
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-2",
+          "height": 2.2257189750671387
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.2256922721862793
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.13999999999999996,
+        -0.44248711305964294
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.2659285068511963
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.24248711305964277,
+        -0.34000000000000014
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.2790915966033936
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.28,
+        -0.20000000000000007
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.2659451961517334
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.24248711305964282,
+        -0.05999999999999997
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.2256920337677
+        },
+        {
+          "glass": "principal-inward-vault-3",
+          "height": 2.2257187366485596
+        }
+      ],
+      "passed": true
+    },
+    {
+      "xz": [
+        -0.14000000000000012,
+        0.042487113059642756
+      ],
+      "overheadGlass": [
+        {
+          "glass": "principal-inward-vault-1",
+          "height": 2.265949249267578
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

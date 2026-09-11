@@ -1,0 +1,1219 @@
+{
+  "status": "mechanical-check-only",
+  "noBooleanModifiers": true,
+  "roofChecks": [
+    {
+      "roof": "lower-nursery-supported-occupied-roof",
+      "buildLevel": 1,
+      "passed": true,
+      "stations": [
+        {
+          "support": "lower-nursery-wall-0-pier-0",
+          "station": [
+            -1.29,
+            -0.47
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-0-pier-1",
+          "station": [
+            -1.05,
+            -0.88
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-1-pier-0",
+          "station": [
+            -1.05,
+            -0.88
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-1-pier-1",
+          "station": [
+            -0.4,
+            -0.98
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-2-pier-0",
+          "station": [
+            -0.4,
+            -0.98
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-2-pier-1",
+          "station": [
+            0.16000000000000003,
+            -0.96
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-2-pier-2",
+          "station": [
+            0.7200000000000001,
+            -0.94
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-3-pier-0",
+          "station": [
+            0.72,
+            -0.94
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-3-pier-1",
+          "station": [
+            1.17,
+            -0.63
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-4-pier-0",
+          "station": [
+            1.17,
+            -0.63
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-4-pier-1",
+          "station": [
+            1.27,
+            0.20000000000000007
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-5-pier-0",
+          "station": [
+            1.27,
+            0.2
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-5-pier-1",
+          "station": [
+            0.96,
+            0.53
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-6-pier-0",
+          "station": [
+            0.96,
+            0.53
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-6-pier-1",
+          "station": [
+            0.3566666666666666,
+            0.53
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-6-pier-2",
+          "station": [
+            -0.2466666666666668,
+            0.53
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-6-pier-3",
+          "station": [
+            -0.8499999999999999,
+            0.53
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-7-pier-0",
+          "station": [
+            -0.85,
+            0.53
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-7-pier-1",
+          "station": [
+            -1.29,
+            0.3
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-8-pier-0",
+          "station": [
+            -1.29,
+            0.3
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "lower-nursery-wall-8-pier-1",
+          "station": [
+            -1.29,
+            -0.47000000000000003
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "interior-cross-gallery-pier-0",
+          "station": [
+            -1.1,
+            -0.25
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "interior-cross-gallery-pier-1",
+          "station": [
+            -0.36,
+            -0.25
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "interior-cross-gallery-pier-2",
+          "station": [
+            0.3800000000000001,
+            -0.25
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        },
+        {
+          "support": "interior-cross-gallery-pier-3",
+          "station": [
+            1.12,
+            -0.25
+          ],
+          "rayHit": true,
+          "actualTop": 0.9010000228881836,
+          "minY": 0.23000000417232513,
+          "maxY": 0.9010000228881836,
+          "roofUnderside": 0.883,
+          "contactPass": true
+        }
+      ],
+      "solidSupports": [
+        {
+          "name": "lower-nursery-wall-0-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-0-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-0-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-1-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-1-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-1-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-2-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-2-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-2-pier-2",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-2-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-2-arch-spandrel-1",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-3-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-3-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-3-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-4-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-4-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-4-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-5-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-5-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-5-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-6-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-6-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-6-pier-2",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-6-pier-3",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-6-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-6-arch-spandrel-1",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-6-arch-spandrel-2",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-7-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-7-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-7-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "lower-nursery-wall-8-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-8-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "lower-nursery-wall-8-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "interior-cross-gallery-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "interior-cross-gallery-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "interior-cross-gallery-pier-2",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "interior-cross-gallery-pier-3",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "interior-cross-gallery-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "interior-cross-gallery-arch-spandrel-1",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "interior-cross-gallery-arch-spandrel-2",
+          "vertices": 46,
+          "triangles": 88
+        }
+      ]
+    },
+    {
+      "roof": "upper-right-nursery-supported-occupied-roof",
+      "buildLevel": 2,
+      "passed": true,
+      "stations": [
+        {
+          "support": "upper-right-nursery-wall-0-pier-0",
+          "station": [
+            0.7,
+            -0.88
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-0-pier-1",
+          "station": [
+            1.06,
+            -0.76
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-1-pier-0",
+          "station": [
+            1.06,
+            -0.76
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-1-pier-1",
+          "station": [
+            1.23,
+            -0.47
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-2-pier-0",
+          "station": [
+            1.23,
+            -0.47
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-2-pier-1",
+          "station": [
+            1.23,
+            0.22999999999999998
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-3-pier-0",
+          "station": [
+            1.23,
+            0.23
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-3-pier-1",
+          "station": [
+            0.75,
+            0.34
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-4-pier-0",
+          "station": [
+            0.75,
+            0.34
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-4-pier-1",
+          "station": [
+            0.68,
+            -0.3
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-5-pier-0",
+          "station": [
+            0.68,
+            -0.3
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        },
+        {
+          "support": "upper-right-nursery-wall-5-pier-1",
+          "station": [
+            0.7,
+            -0.8800000000000001
+          ],
+          "rayHit": true,
+          "actualTop": 1.565999984741211,
+          "minY": 0.9950000047683716,
+          "maxY": 1.565999984741211,
+          "roofUnderside": 1.548,
+          "contactPass": true
+        }
+      ],
+      "solidSupports": [
+        {
+          "name": "upper-right-nursery-wall-0-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-0-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-0-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "upper-right-nursery-wall-1-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-1-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-1-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "upper-right-nursery-wall-2-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-2-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-2-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "upper-right-nursery-wall-3-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-3-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-3-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "upper-right-nursery-wall-4-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-4-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-4-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "upper-right-nursery-wall-5-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-5-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "upper-right-nursery-wall-5-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        }
+      ]
+    },
+    {
+      "roof": "middle-cascade-landing",
+      "buildLevel": 1,
+      "passed": true,
+      "stations": [
+        {
+          "support": "cascade-gallery-0-pier-0",
+          "station": [
+            -0.56,
+            0.43
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-0-pier-1",
+          "station": [
+            -0.10000000000000009,
+            0.43
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-0-pier-2",
+          "station": [
+            0.3599999999999999,
+            0.43
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-0-pier-3",
+          "station": [
+            0.8199999999999998,
+            0.43
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-1-pier-0",
+          "station": [
+            0.82,
+            0.43
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-1-pier-1",
+          "station": [
+            1.1,
+            0.57
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-2-pier-0",
+          "station": [
+            1.1,
+            0.57
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-2-pier-1",
+          "station": [
+            1.12,
+            0.76
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-3-pier-0",
+          "station": [
+            1.12,
+            0.76
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-3-pier-1",
+          "station": [
+            0.86,
+            0.91
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-4-pier-0",
+          "station": [
+            0.86,
+            0.91
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-4-pier-1",
+          "station": [
+            0.45,
+            0.91
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-5-pier-0",
+          "station": [
+            0.45,
+            0.91
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-5-pier-1",
+          "station": [
+            0.33,
+            0.96
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-6-pier-0",
+          "station": [
+            0.33,
+            0.96
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-6-pier-1",
+          "station": [
+            -0.44,
+            0.91
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-7-pier-0",
+          "station": [
+            -0.44,
+            0.91
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-7-pier-1",
+          "station": [
+            -0.66,
+            0.69
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-8-pier-0",
+          "station": [
+            -0.66,
+            0.69
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        },
+        {
+          "support": "cascade-gallery-8-pier-1",
+          "station": [
+            -0.56,
+            0.43
+          ],
+          "rayHit": true,
+          "actualTop": 0.531000018119812,
+          "minY": 0.18000000715255737,
+          "maxY": 0.531000018119812,
+          "roofUnderside": 0.515,
+          "contactPass": true
+        }
+      ],
+      "solidSupports": [
+        {
+          "name": "cascade-gallery-0-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-0-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-0-pier-2",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-0-pier-3",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-0-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-0-arch-spandrel-1",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-0-arch-spandrel-2",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-1-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-1-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-1-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-2-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-2-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-2-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-3-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-3-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-3-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-4-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-4-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-4-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-5-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-5-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-5-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-6-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-6-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-6-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-7-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-7-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-7-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        },
+        {
+          "name": "cascade-gallery-8-pier-0",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-8-pier-1",
+          "vertices": 8,
+          "triangles": 12
+        },
+        {
+          "name": "cascade-gallery-8-arch-spandrel-0",
+          "vertices": 46,
+          "triangles": 88
+        }
+      ]
+    }
+  ]
+}

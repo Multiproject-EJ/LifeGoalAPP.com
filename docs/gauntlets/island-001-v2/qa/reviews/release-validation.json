@@ -1,0 +1,132 @@
+{
+  "serviceTests": {
+    "status": "pass",
+    "passed": 2043,
+    "failed": 0,
+    "command": "node scripts/run-island-run-service-tests.mjs",
+    "scope": "Complete suite before final dust-material and review-harness type corrections; focused runtime verification repeated after those changes."
+  },
+  "runtimeAfterFinalMaterial": {
+    "status": "pass",
+    "command": "node scripts/check-island001-v2-runtime.mjs",
+    "covers": [
+      "waterfall finite transforms at every quality",
+      "repeated replay",
+      "reset during blast",
+      "completion before/during/after blast",
+      "same-sequence state updates",
+      "reduced motion",
+      "raw funnel hidden during robot build"
+    ]
+  },
+  "architecture": {
+    "status": "pass",
+    "violations": 0,
+    "existingAllowlistedWarnings": 3
+  },
+  "assetAndWiringChecks": {
+    "status": "pass",
+    "commands": [
+      "validate-island-art-assets.mjs",
+      "check-island-art-render-wiring.mjs",
+      "validate-island-template-kit.mjs",
+      "validate-island-visual-production-briefs.mjs"
+    ]
+  },
+  "publicModels": {
+    "status": "pass",
+    "evidence": "release-pack-integrity.json",
+    "engineeringEvidence": [
+      "release-hatchery-runtime-check.json",
+      "release-habit-runtime-check.json",
+      "release-wisdom-runtime-check.json",
+      "release-event-runtime-check.json"
+    ]
+  },
+  "browser": {
+    "status": "pass",
+    "evidence": [
+      "release-final-v2-browser.json",
+      "release-final-v2-responsive.json",
+      "release-viewer-check.json"
+    ],
+    "phoneViewports": [
+      [
+        390,
+        844
+      ],
+      [
+        375,
+        667
+      ],
+      [
+        430,
+        932
+      ]
+    ],
+    "errors": []
+  },
+  "visual": {
+    "status": "accepted-with-nonblocking-residuals",
+    "landmarkViews": 68,
+    "constructionFrames": 72,
+    "independentReviews": [
+      "complete-v02-independent-final.json",
+      "release-v2-landmark-survey.json",
+      "release-dust-v3-independent.json"
+    ],
+    "comparison": "../comparisons/island001-v2-before-after.html"
+  },
+  "typeScript": {
+    "status": "pass",
+    "command": "tsc -b",
+    "earlierFinding": "Review harness passed booleans where target/current option strings were required; both call sites corrected.",
+    "exitCode": 0
+  },
+  "productionBuild": {
+    "status": "pass",
+    "command": "vite build",
+    "exitCode": 0,
+    "duration": "1m 4s",
+    "modelOutputHashesMatch": true,
+    "modelUrlsPresentInProductionBundle": true,
+    "warnings": [
+      "Large application chunks above Vite 500 kB warning threshold."
+    ]
+  },
+  "profiles": [
+    {
+      "evidence": "release-performance-v2-high-profile.json",
+      "scope": "overview",
+      "quality": "high",
+      "report": "DEVICE PROFILE\nREVIEW\nAverage\n59.7 FPS\nP95 frame\n17.7 ms\nP95 / refresh\n17.7 ms \u00b7 PASS\nWorst\n133.4 ms\nSlow\n0.2%\nMax calls\n269\nMax tris\n206k\nRun again\nShare report\n\nREVIEW against high timing and geometry targets."
+    },
+    {
+      "evidence": "release-performance-v2-medium-profile.json",
+      "scope": "overview",
+      "quality": "medium",
+      "report": "DEVICE PROFILE\nREVIEW\nAverage\n59.7 FPS\nP95 frame\n17.7 ms\nP95 / refresh\n17.7 ms \u00b7 PASS\nWorst\n116.6 ms\nSlow\n0.2%\nMax calls\n263\nMax tris\n199k\nRun again\nShare report\n\nREVIEW against medium timing and geometry targets."
+    },
+    {
+      "evidence": "release-performance-v2-low-profile.json",
+      "scope": "overview",
+      "quality": "low",
+      "report": "DEVICE PROFILE\nREVIEW\nAverage\n57.4 FPS\nP95 frame\n17.7 ms\nP95 / refresh\n17.7 ms \u00b7 PASS\nWorst\n1016.6 ms\nSlow\n0.2%\nMax calls\n234\nMax tris\n185k\nRun again\nShare report\n\nREVIEW against low timing and geometry targets."
+    },
+    {
+      "evidence": "release-mission-v3-high-profile.json",
+      "scope": "mission",
+      "quality": "high",
+      "report": "DEVICE PROFILE\nREVIEW\nAverage\n59.2 FPS\nP95 frame\n18.5 ms\nP95 / refresh\n18.5 ms \u00b7 PASS\nWorst\n115.7 ms\nSlow\n0.6%\nMax calls\n317\nMax tris\n207k\nRun again\nShare report\n\nREVIEW against high timing and geometry targets."
+    }
+  ],
+  "limits": [
+    "Desktop Chromium at phone viewport is not physical-phone verification.",
+    "Timing measurements were taken on the local development host, with a TypeScript check running concurrently.",
+    "Scene draw-call and triangle targets remain above the profiler budgets.",
+    "Low-quality sample included one roughly one-second worst-frame stall; do not equate p95 success with no stalls.",
+    "Approved reference likeness is simplified; no perfect quality score is claimed."
+  ],
+  "physicalPhoneVerified": false,
+  "deployed": false
+}

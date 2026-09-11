@@ -1,0 +1,68 @@
+[
+  {
+    "material": "stone",
+    "source": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+    "box": [
+      91,
+      326,
+      124,
+      407
+    ],
+    "note": "Exact crop; reference composite shading still present."
+  },
+  {
+    "material": "brass",
+    "source": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+    "box": [
+      397,
+      389,
+      413,
+      452
+    ],
+    "note": "Exact crop; reference composite shading still present."
+  },
+  {
+    "material": "glass",
+    "source": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+    "box": [
+      306,
+      104,
+      336,
+      135
+    ],
+    "note": "Exact crop; reference composite shading still present."
+  },
+  {
+    "material": "egg",
+    "source": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+    "box": [
+      307,
+      199,
+      340,
+      252
+    ],
+    "note": "Exact crop; reference composite shading still present."
+  },
+  {
+    "material": "wood",
+    "source": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+    "box": [
+      517,
+      251,
+      541,
+      283
+    ],
+    "note": "Exact crop; reference composite shading still present."
+  },
+  {
+    "material": "leaf",
+    "source": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+    "box": [
+      38,
+      255,
+      72,
+      295
+    ],
+    "note": "Exact crop; reference composite shading still present."
+  }
+]

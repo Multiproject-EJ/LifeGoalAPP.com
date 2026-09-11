@@ -89,8 +89,8 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   1: {
     progressKind: 'first_light_assembly',
     headline: 'First Light Assembly',
-    missionStatement: 'First Light has no chamber where the whole island can be heard. Recover twenty finite dynamite charges, excavate one shared civic hall beneath the circular route, and restore the four outer landmarks so the community can convene.',
-    primaryObjective: 'Collect and detonate all twenty Assembly Crater charges.',
+    missionStatement: 'First Light has no chamber where the whole island can be heard. Recover ten finite dynamite charges, excavate one shared civic hall beneath the circular route, and restore the four outer landmarks so the community can convene.',
+    primaryObjective: 'Collect ten charges and detonate three batches: 3, 5, then 2.',
     supportingObjective: 'Raise Hatchery, Habit, Event Arena and Wisdom to Level 3. The Assembly replaces a separate Boss landmark on Island 001.',
     fieldProtocol: 'One controlled blast at a time. Protect the route above while every charge widens and deepens the same excavation.',
     caretakerSignal: 'Give us a place where disagreement can become understanding instead of distance.',

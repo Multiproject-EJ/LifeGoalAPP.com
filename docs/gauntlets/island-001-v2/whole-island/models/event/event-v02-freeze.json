@@ -1,0 +1,20 @@
+{
+  "version": "event-v02",
+  "frozen": true,
+  "unchangedArmillaryAndGardenNodes": [
+    "observatory-armillary-L1-S3-observatory-warm-gold",
+    "observatory-armillary-L1-S4-observatory-celestial-blue",
+    "observatory-armillary-L2-S5-observatory-celestial-blue",
+    "observatory-armillary-L2-S5-observatory-warm-gold",
+    "observatory-armillary-L3-S5-observatory-warm-gold",
+    "observatory-wings-L1-S4-observatory-garden-colors",
+    "observatory-wings-L2-S4-observatory-garden-colors",
+    "observatory-wings-L3-S4-observatory-garden-colors"
+  ],
+  "files": {
+    "event-v02.py": "e7c632f48812d336775176f6cd7676141c4550ee3a9cda160e6f64b3e71abf3e",
+    "event-v02.glb": "09c608704dde7eb94d1a561cfda739dedae2318c0d6acac4e1a6fe9c9ab6f917",
+    "event-v02.blend": "92df77ebb328bc3fbd3d29f40b81e1bff5c12525dfc0c9b739fe5821e656ed41"
+  },
+  "v01Preserved": true
+}

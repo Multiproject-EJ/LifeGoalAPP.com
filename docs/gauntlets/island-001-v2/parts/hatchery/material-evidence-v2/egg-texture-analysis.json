@@ -1,0 +1,3 @@
+finishClass: brushed-steel
+palette:     ['#CBC5C7', '#C2C6D8', '#ABBDD2', '#C4C7C9', '#A5937B']
+stats:       {'meanLum': 185.9, 'meanSaturation': 0.156, 'gradientStrength': 0.38, 'mottle': 0.03, 'streakRatio': 0.67, 'hueSpread': 0.543, 'specularFraction': 0.166}

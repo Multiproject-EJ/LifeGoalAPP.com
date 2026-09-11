@@ -1,0 +1,12 @@
+{
+  "command": "node scripts/run-island-run-service-tests.mjs",
+  "result": "pass",
+  "passed": 2043,
+  "failed": 0,
+  "architectureGuards": {
+    "result": "pass",
+    "violations": 0,
+    "allowlistedWarnings": 3
+  },
+  "scope": "V1 ten-charge gameplay and current V2 harness before second hatchery family. Does not constitute V2 visual approval."
+}

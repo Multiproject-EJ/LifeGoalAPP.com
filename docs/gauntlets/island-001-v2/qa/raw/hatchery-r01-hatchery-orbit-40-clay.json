@@ -1,0 +1,21 @@
+{
+  "mode": "hatchery",
+  "angle": 40,
+  "level": 3,
+  "quality": "high",
+  "width": 1440,
+  "height": 1080,
+  "camera": [
+    -0.2461592980061491,
+    4.934000000000001,
+    1.0026844359614597
+  ],
+  "target": [
+    -4.36,
+    1.35,
+    -3.9
+  ],
+  "drawCalls": 17,
+  "triangles": 23216,
+  "three": "185"
+}

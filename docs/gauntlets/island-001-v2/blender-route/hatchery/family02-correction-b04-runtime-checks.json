@@ -1,0 +1,63 @@
+{
+  "asset": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/blender-route/hatchery/family02-correction-b04.glb",
+  "bytes": 1391420,
+  "engineeringGate": "pass",
+  "visualApproval": false,
+  "cachedSourceSurvivesTeardown": true,
+  "levels": [
+    {
+      "level": 1,
+      "meshes": 9,
+      "triangles": 32848,
+      "radius": 1.5758684126573332,
+      "invalid": 0,
+      "min": [
+        -1.4800000190734863,
+        0,
+        -1.1100000143051147
+      ],
+      "max": [
+        1.537743330001831,
+        2.4747743606567383,
+        1.2899999618530273
+      ],
+      "batches": 9
+    },
+    {
+      "level": 2,
+      "meshes": 13,
+      "triangles": 51064,
+      "radius": 1.5758684126573332,
+      "invalid": 0,
+      "min": [
+        -1.4800000190734863,
+        0,
+        -1.1100000143051147
+      ],
+      "max": [
+        1.537743330001831,
+        2.4747743606567383,
+        1.2899999618530273
+      ],
+      "batches": 9
+    },
+    {
+      "level": 3,
+      "meshes": 13,
+      "triangles": 51064,
+      "radius": 1.5758684126573332,
+      "invalid": 0,
+      "min": [
+        -1.4800000190734863,
+        0,
+        -1.1100000143051147
+      ],
+      "max": [
+        1.537743330001831,
+        2.4747743606567383,
+        1.2899999618530273
+      ],
+      "batches": 9
+    }
+  ]
+}

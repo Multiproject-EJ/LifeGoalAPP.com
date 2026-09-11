@@ -1,0 +1,280 @@
+{
+  "reviewer": "v2_integration_audit",
+  "reviewId": "hatchery-blender-b02-independent-macro",
+  "route": "authored-Blender-GLB",
+  "family": 1,
+  "familyReview": 2,
+  "routeGateReview": 2,
+  "action": "retire-family",
+  "gate": "naked-macro-and-attachment",
+  "inspectionOrder": "Original approved landmark-study pixels first; all 17 actual b02 raw runtime frames; then b01 review and matched iso/profile/contact pixels, b02 correction hypothesis, runtime checks and capture manifest. No authoring source inspected.",
+  "referenceAuthority": [
+    "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+    "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+  ],
+  "oldProceduralRoute": "Retired; its four reviews are not counted in this separately authorized Blender route.",
+  "threshold": 0.85,
+  "worstCritical": 0.37,
+  "hardVeto": true,
+  "categories": [
+    "silhouetteVolume",
+    "identity",
+    "attachment",
+    "crossViewCoherence",
+    "assembly",
+    "intendedScaleReadability"
+  ],
+  "views": {
+    "iso-clay": [
+      0.73,
+      0.7,
+      0.4,
+      0.84,
+      0.53,
+      0.72
+    ],
+    "orbit-0-clay": [
+      0.76,
+      0.73,
+      0.55,
+      0.85,
+      0.63,
+      0.74
+    ],
+    "orbit-40-clay": [
+      0.74,
+      0.72,
+      0.4,
+      0.84,
+      0.53,
+      0.73
+    ],
+    "orbit-80-clay": [
+      0.71,
+      0.68,
+      0.39,
+      0.84,
+      0.51,
+      0.7
+    ],
+    "orbit-120-clay": [
+      0.68,
+      0.64,
+      0.38,
+      0.83,
+      0.49,
+      0.66
+    ],
+    "orbit-160-clay": [
+      0.69,
+      0.65,
+      0.38,
+      0.84,
+      0.5,
+      0.67
+    ],
+    "orbit-200-clay": [
+      0.72,
+      0.67,
+      0.4,
+      0.84,
+      0.53,
+      0.7
+    ],
+    "orbit-240-clay": [
+      0.75,
+      0.71,
+      0.48,
+      0.85,
+      0.58,
+      0.73
+    ],
+    "orbit-280-clay": [
+      0.77,
+      0.74,
+      0.66,
+      0.86,
+      0.69,
+      0.76
+    ],
+    "orbit-320-clay": [
+      0.78,
+      0.75,
+      0.8,
+      0.87,
+      0.79,
+      0.77
+    ],
+    "front-structural": [
+      0.76,
+      0.74,
+      0.4,
+      0.85,
+      0.55,
+      0.75
+    ],
+    "profile-structural": [
+      0.68,
+      0.63,
+      0.38,
+      0.83,
+      0.49,
+      0.66
+    ],
+    "back-structural": [
+      0.73,
+      0.68,
+      0.39,
+      0.84,
+      0.52,
+      0.7
+    ],
+    "top-structural": [
+      0.77,
+      0.72,
+      0.75,
+      0.85,
+      0.71,
+      0.75
+    ],
+    "contact-structural": [
+      0.72,
+      0.69,
+      0.37,
+      0.83,
+      0.49,
+      0.7
+    ],
+    "normals-structural": [
+      0.73,
+      0.7,
+      0.4,
+      0.84,
+      0.53,
+      0.72
+    ],
+    "iso-transparent": [
+      0.79,
+      0.8,
+      0.82,
+      0.87,
+      0.81,
+      0.81
+    ]
+  },
+  "evidenceCompleteness": {
+    "requested": 17,
+    "inspected": 17,
+    "missing": [],
+    "captureManifest": "blender-route/hatchery/blockout-b02-captures.json"
+  },
+  "comparison": {
+    "baselineReview": "qa/reviews/hatchery-blender-b01-independent-macro.json",
+    "baselineWorst": 0.67,
+    "currentWorst": 0.37,
+    "worstGain": -0.3,
+    "requiredWorstGain": 0.1,
+    "gainRequirementPassed": false,
+    "largestRegression": {
+      "view": "contact-structural",
+      "category": "attachment",
+      "before": 0.83,
+      "after": 0.37,
+      "delta": -0.46
+    },
+    "noCriticalRegressionOver": 0.05,
+    "regressionRequirementPassed": false,
+    "allRequiredScoresAtLeastThreshold": false,
+    "perViewCaution": "The hidden upper wing is less assessable from orbit-320 and transparent iso; these more favorable views cannot overrule the exposed attachment failure in the other required views."
+  },
+  "strengths": [
+    "The petals now finish in clearer points and have a more consistent ascending crown than b01.",
+    "The egg remains inside a genuinely three-dimensional shelter with a front opening.",
+    "The lower nursery retains hollow arched rooms and a broad supporting roof court.",
+    "The supported curved stairs still connect ground and roof levels.",
+    "The front middle and lower terraces have more horizontal depth and support than b01."
+  ],
+  "dominantDefects": [
+    {
+      "priority": 1,
+      "type": "hard-veto",
+      "issue": "The expanded elevated nursery wing has lost its supporting arched room volume, leaving an upper L-shaped roof visibly floating above the court.",
+      "views": [
+        "iso-clay",
+        "orbit-40-clay",
+        "orbit-80-clay",
+        "orbit-120-clay",
+        "orbit-160-clay",
+        "orbit-200-clay",
+        "front-structural",
+        "profile-structural",
+        "back-structural",
+        "contact-structural",
+        "normals-structural"
+      ],
+      "evidence": "Across the exposed angles, the entire gap between the upper slab and lower landing contains no continuous wall, arch or column. Small fragments at the landing and hanging near the rear do not support the roof. The b01 matched profile and contact views show a complete arched room in this location. b02 therefore regresses an actual architectural attachment, rather than merely lacking deferred decoration.",
+      "falsifiableAcceptanceCondition": "A future authorized family must show a coherent inhabited upper nursery volume with full-height supported arches or piers joining landing to roof in front, side, rear and contact views, with no levitating slab or isolated wall fragments."
+    },
+    {
+      "priority": 2,
+      "type": "macro-likeness",
+      "issue": "The lotus is more pointed but still reads as a closed bulb of broad curved leaves around much of the orbit.",
+      "views": [
+        "orbit-120-clay",
+        "orbit-160-clay",
+        "orbit-240-clay",
+        "orbit-280-clay",
+        "orbit-320-clay",
+        "profile-structural",
+        "back-structural"
+      ],
+      "evidence": "The broad rounded lower bellies and near-continuous enclosing side/back shell remain dominant. The approved study has a more upright, arched conservatory structure with slender lower roots and a clear hierarchy of rising petals. Pointed tips improve b01 without fully resolving the larger silhouette relationship.",
+      "falsifiableAcceptanceCondition": "The full petal envelope, not only its tips, must preserve ascending architectural leaves and narrower rooted lower arches from profile and both rear quarters while sheltering the egg."
+    },
+    {
+      "priority": 3,
+      "type": "macro-composition",
+      "issue": "The front cascade remains a relatively narrow central projecting terrace sequence inside a nearly uniform lower building footprint.",
+      "views": [
+        "front-structural",
+        "contact-structural",
+        "top-structural",
+        "iso-clay"
+      ],
+      "evidence": "b02 adds real landing depth, but the composition still falls short of the approved broad, staggered nursery terraces. The absent higher wing makes the building read even more as one low block with a shelter on top.",
+      "falsifiableAcceptanceCondition": "Terraced architectural shoulders and descending foreground surfaces must carry the broad asymmetric composition in opaque clay, before foliage or water finish."
+    }
+  ],
+  "hardVetoAssessment": "Confirmed actual attachment failure: a required elevated nursery room is absent in the raw runtime geometry presentation, leaving a large unsupported roof. The failure persists across clay, normals and multiple cameras. Normal opaque-clay occlusion of the egg is not a veto. The more pointed petals themselves are not classified as a spike or a generic-dome veto.",
+  "excludedFromPenalty": [
+    "foliage",
+    "furniture",
+    "material finish",
+    "decorative cross-ribs",
+    "lift detail",
+    "opaque clay's normal occlusion of the egg"
+  ],
+  "hypothesisResult": {
+    "hypothesis": "Reprofile petals and enlarge the upper nursery into a connected occupied terrace shoulder while deepening the front terraces.",
+    "outcome": "Partially improved petal tips and front terraces; failed the occupied connected upper-wing requirement and introduced a hard attachment regression.",
+    "sameFamilyCorrectionAvailable": false,
+    "retirementReasons": [
+      "Hard veto.",
+      "Post-correction critical score below 0.75.",
+      "Worst score did not improve by 0.10.",
+      "Critical attachment regression exceeds 0.05."
+    ],
+    "nextScope": "Retire Blender construction family 1 and preserve its two reviews and frozen assets. This review authorizes no additional geometry changes. The route's second construction family remains a parent-coordinated budget decision; this is not a route-wide stop or an approval to integrate."
+  },
+  "diagnosticsAfterPixels": {
+    "engineeringGate": "pass reported, not visual approval",
+    "runtimeTriangles": 37130,
+    "runtimeRadius": 1.5758684126573332,
+    "assetBytes": 1238468,
+    "notes": [
+      "Finite vertices, bounds, node counts and cache teardown checks do not establish an architectural support connection.",
+      "The correction document's claim of an occupied L-shaped room is contradicted by the exposed runtime pixels.",
+      "L3 still equals L2 at this macro gate; no detail completion or physical-phone performance claim is made."
+    ]
+  }
+}

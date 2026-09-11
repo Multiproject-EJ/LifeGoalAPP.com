@@ -1,0 +1,31 @@
+{
+  "reviewId": "release-dust-v3-independent",
+  "reviewer": "v2_integration_audit",
+  "date": "2026-09-11",
+  "verdict": "accept_material_change",
+  "inspected": [
+    "docs/gauntlets/island-001-v2/qa/raw/complete-mission-v01-surface-mission-8-t18.png",
+    "docs/gauntlets/island-001-v2/qa/raw/complete-mission-v01-surface-mission-8-t35.png",
+    "docs/gauntlets/island-001-v2/qa/raw/complete-mission-v01-surface-mission-10-t8.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-dust-v3-surface-mission-8-t18.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-dust-v3-surface-mission-8-t35.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-dust-v3-surface-mission-8-t53.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-dust-v3-surface-mission-10-t8.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-dust-v3-surface-mission-10-t35.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-dust-v3-surface-mission-10-t53.png"
+  ],
+  "missingRequestedView": "10-t18 is absent; inspected10-t8 plus10-t35 and10-t53 instead.",
+  "findings": [
+    "At8-t18 and8-t35 the new shading separates overlapping lobes and gives both the stem and mushroom head visible volume. It is a clear improvement over the prior flat brown silhouette.",
+    "The main plume remains centered over and visually connected to the excavation mouth. No detached puff mass or smoke emitted through an outer landmark was observed in these frames.",
+    "At8-t35 the plume is still dense and partly covers the Hatchery, consistent with the blast peak. At8-t53 it is completely absent: no opaque cover lingers.",
+    "The finishing-blast dust is below the mouth at10-t8, visible low inside the opening at10-t35, and absent at10-t53. No detached or lingering finish plume was observed."
+  ],
+  "blockingFindings": [],
+  "limits": [
+    "The smoke remains a stylized collection of faceted billows, not a physically simulated volumetric effect.",
+    "Sparse still-frame comparison cannot establish every intermediate transition, transparency sorting from other cameras, low-quality appearance or performance.",
+    "Scene differences outside the dust exist between the older comparison frames and release frames; this review attributes only the visible shading/readability difference to the material change.",
+    "No source, timing, geometry or material was edited by the reviewer; only this report was written."
+  ]
+}

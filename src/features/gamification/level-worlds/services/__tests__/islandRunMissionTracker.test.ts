@@ -254,10 +254,10 @@ export const islandRunMissionTrackerTests: TestCase[] = [
           signatureMissionProgressByIsland: {
             [key]: {
               missionId: 'first-light-assembly-crater',
-              version: 1,
+              version: 2,
               claimedDynamiteTileIndices: [...FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.slice(0, 10)],
-              chargesDetonated: 10,
-              lastDetonatedSector: 9,
+              chargesDetonated: 3,
+              lastDetonatedSector: 0,
               startedAtMs: 1,
               completedAtMs: null,
               updatedAtMs: 2,
@@ -266,9 +266,9 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         }),
       });
       assertEqual(tracker.objectives[0].label, 'Use Dynamite', 'Assembly objective uses compact approved copy');
-      assertEqual(tracker.objectives[0].value, 10, 'detonation progress comes from canonical mission state');
+      assertEqual(tracker.objectives[0].value, 3, 'detonation progress comes from canonical mission state');
       assertEqual(tracker.objectives[1].value, 4, 'all four outer objectives, builds and the egg are complete');
-      assertEqual(tracker.overallProgressPercent, 75, 'overall progress averages the two visible objectives');
+      assertEqual(tracker.overallProgressPercent, 65, 'overall progress averages the two visible objectives');
 
       const unresolvedEgg = resolveIslandMissionTrackerPresentation({
         islandNumber: 1,

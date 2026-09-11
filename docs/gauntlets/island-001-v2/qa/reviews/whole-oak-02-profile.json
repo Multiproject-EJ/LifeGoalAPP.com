@@ -1,0 +1,13 @@
+{
+  "scope": "Desktop Chromium rendering in phone viewport; whole-island iteration with batched ambience and tinted glass. Not physical-phone or V2 approval.",
+  "browser": "149.0.7827.55",
+  "viewport": [
+    390,
+    844
+  ],
+  "report": "DEVICE PROFILE\nREVIEW\nAverage\n60 FPS\nP95 frame\n17.1 ms\nP95 / refresh\n17.1 ms · PASS\nWorst\n34.3 ms\nSlow\n0.1%\nMax calls\n407\nMax tris\n218k\nRun again\nShare report\n\nREVIEW against high timing and geometry targets.",
+  "metrics": "60 FPS\n393 calls\n218k tris\n390×844 px",
+  "errors": [
+    "TypeError: Cannot read properties of undefined (reading 'x')\n    at _Vector3.distanceToSquared (http://127.0.0.1:53282/node_modules/.vite/deps/chunk-J47OV6IA.js?v=c5557797:2724:27)\n    at CatmullRomCurve3.getPoint (http://127.0.0.1:53282/node_modules/.vite/deps/chunk-J47OV6IA.js?v=c5557797:17813:29)\n    at Object.animate (http://127.0.0.1:53282/src/features/gamification/level-worlds/dev/Island1AssemblyCoast.ts?t=1789086788615:79:22)\n    at Object.animate (http://127.0.0.1:53282/src/features/gamification/level-worlds/dev/Island1AssemblyCraterThreeWorld.ts?t=1789086886230:1022:43)\n    at animate (http://127.0.0.1:53282/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx?t=1789086886232:6012:35)"
+  ]
+}

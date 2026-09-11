@@ -1,0 +1,35 @@
+{
+  "mode": "hall-hero",
+  "charges": 10,
+  "ageSeconds": 3.5,
+  "quality": "high",
+  "width": 1440,
+  "height": 1080,
+  "camera": [
+    0,
+    2.009999999999998,
+    18.3
+  ],
+  "target": [
+    0,
+    -2.55,
+    -0.7
+  ],
+  "blast": {
+    "active": true,
+    "progress": 0.673076923076923,
+    "intensity": 1.1,
+    "cameraShake": 0.18759865898239797,
+    "impactPosition": [
+      4.998658757899258,
+      -5.051999999999999,
+      -0.23114199548554243
+    ]
+  },
+  "construction": {
+    "active": true,
+    "progress": 0,
+    "completed": false
+  },
+  "three": "185"
+}

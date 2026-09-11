@@ -1,0 +1,36 @@
+{
+  "status": "frozen-awaiting-independent-b02-QC",
+  "bytes": 1238468,
+  "sha256": "0b8f7e38f4b60b31fdf20dc6baafbad23bef5b9a0a7b803fde9429cbf6622af9",
+  "blenderSourceSha256": "769ac1dbf9a89c9ba1aca5c292479ee488ae9c4e6ae0adc430992cd44e2a7642",
+  "b01AssetUnchanged": true,
+  "b01AuthoringSnapshotMatchesOriginalReport": true,
+  "mainLowerNurseryAndStairSourceUnchanged": true,
+  "triangles": 37130,
+  "meshCount": 12,
+  "meshNodesByFundedLevel": {
+    "1": 8,
+    "2": 4
+  },
+  "axes": "Y-up/front+Z;rootground0;identitynode transforms",
+  "bounds": {
+    "min": [
+      -1.4800000190734863,
+      0,
+      -1.1100000143051147
+    ],
+    "max": [
+      1.537743330001831,
+      2.479398727416992,
+      1.2899999618530273
+    ]
+  },
+  "maxRadius": 1.5758684126573332,
+  "allLevelAndStageExtrasValid": true,
+  "glass": {
+    "alphaMode": "BLEND",
+    "doubleSided": true
+  },
+  "fundedContinuity": "L1geometry remains on8 fixednodes;level2 adds4nodes;loader filters bybuildLevel withoutmutatingfundedbuffers. L3 macro equalsL2.",
+  "limitations": "Mechanical checks only. No screenshot/likeness approval by builder."
+}

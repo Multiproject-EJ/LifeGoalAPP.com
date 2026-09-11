@@ -549,6 +549,7 @@ import {
   getCactusCanyonAvailableDynamite,
   getCelestialRedockingDockedPlatformCount,
   getFirstLightAssemblyAvailableDynamite,
+  getFirstLightAssemblyNextBatch,
   getGreatHoneyfallAvailableNectar,
   getStagedRestorationAvailableCharges,
   getStagedRestorationMissionDescriptor,
@@ -3339,6 +3340,7 @@ export function IslandRunBoardPrototype({
     cycleIndex: runtimeState.cycleIndex,
     islandNumber: 1,
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const firstLightAssemblyNextBatch = getFirstLightAssemblyNextBatch(firstLightAssemblyProgress.chargesDetonated);
   const firstLightAssemblyAvailableDynamite = getFirstLightAssemblyAvailableDynamite(firstLightAssemblyProgress);
   const firstLightAssemblyCompleted = firstLightAssemblyProgress.completedAtMs !== null;
   const firstLightOuterLandmarksAtMax = runtimeState.stopBuildStateByIndex
@@ -7259,7 +7261,7 @@ export function IslandRunBoardPrototype({
       && latestAssembly.completedAtMs === null
       && source !== 'dev_clear_island'
     ) {
-      setLandingText('Complete the twenty-charge Assembly Crater mission before finishing Island 1.');
+      setLandingText('Complete the ten-charge Assembly Crater mission before finishing Island 1.');
       return;
     }
     if (islandNumber === 20 && source !== 'dev_clear_island') {
@@ -13701,7 +13703,7 @@ export function IslandRunBoardPrototype({
       const result = await detonateFirstLightAssemblyCharge({ session, client });
       if (result.status !== 'ok') {
         if (result.status === 'no_dynamite') {
-          setLandingText('Land on an uncollected dynamite tile before deepening the Assembly Crater again.');
+          setLandingText('Collect enough dynamite for the next demolition batch.');
         }
         return;
       }
@@ -13710,13 +13712,13 @@ export function IslandRunBoardPrototype({
       setShowFirstLightAssemblyCrater(false);
       setFirstLightAssemblyPendingSector(result.sectorAfter);
       setFirstLightAssemblyConstructionSequence((value) => value + 1);
-      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setBuildCameraFocusRequest({ preset: result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 'boss' : 'overview', transition: 'quick' });
       playIslandRunSound('boss_trial_resolve');
       triggerIslandRunHaptic('boss_trial_resolve');
       const prefersReducedMotion = typeof window !== 'undefined'
         && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!prefersReducedMotion) {
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 2_650));
+        await new Promise<void>((resolve) => window.setTimeout(resolve, result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 13_400 : 5_400));
       }
       refreshIslandRunStateFromLocal(session);
       const fresh = getIslandRunStateSnapshot(session);
@@ -13725,14 +13727,14 @@ export function IslandRunBoardPrototype({
       setFirstLightAssemblyPendingSector(null);
       const completed = result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET;
       setLandingText(completed
-        ? '🏛️ The twentieth blast is complete — the First Light General Assembly is open!'
+        ? '🏛️ Construction complete — the First Light General Assembly is open!'
         : `🧨 Assembly charge ${result.sectorAfter}/${FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET} widened and deepened the shared crater.`);
       if (completed) {
         playIslandRunSound('reward_bar_claim_burst');
         triggerIslandRunHaptic('reward_claim');
         openWinCelebrationModal([
           { icon: '🏛️', label: 'General Assembly', value: 'OPEN' },
-          { icon: '🧨', label: 'Controlled blasts', value: '20 / 20' },
+          { icon: '🧨', label: 'Controlled blasts', value: '10 / 10' },
         ], 'Mission complete — First Light can convene');
       }
     } finally {
@@ -15707,7 +15709,7 @@ export function IslandRunBoardPrototype({
                   targetCharges: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
                   completed: isIslandVisualPreview && islandArtPreviewNumber === 1
                     ? true
-                    : firstLightAssemblyCompleted,
+                    : firstLightAssemblyCompleted || firstLightAssemblyPendingSector === FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
                   claimedDynamiteTileIndices: firstLightAssemblyProgress.claimedDynamiteTileIndices,
                   constructionSequence: firstLightAssemblyConstructionSequence,
                 }}
@@ -20434,7 +20436,7 @@ export function IslandRunBoardPrototype({
             <span className="frostwell-mission-modal__eyebrow">ISLAND 001 · CIVIC EXCAVATION</span>
             <h2 id="first-light-assembly-title">Assembly Crater</h2>
             <p className="frostwell-mission-modal__lede">
-              Recover twenty finite dynamite charges from the route. Every controlled blast widens and deepens the same shared excavation beneath the circular board.
+              Collect ten charges in three batches: 3 to break the surface, 5 for the great excavation, and 2 to finish the foundations. Then watch the robots build your General Assembly.
             </p>
             <div
               className="first-light-assembly-modal__sector-ring"
@@ -20468,17 +20470,17 @@ export function IslandRunBoardPrototype({
               <button
                 type="button"
                 className="cactus-canyon-spiral-modal__blast-button"
-                disabled={isDetonatingFirstLightAssembly || firstLightAssemblyAvailableDynamite < 1 || firstLightAssemblyCompleted}
+                disabled={isDetonatingFirstLightAssembly || firstLightAssemblyAvailableDynamite < firstLightAssemblyNextBatch.cost || firstLightAssemblyCompleted}
                 onClick={() => void handleDetonateFirstLightAssembly()}
               >
                 {isDetonatingFirstLightAssembly
                   ? 'FUSE BURNING…'
                   : firstLightAssemblyCompleted
                     ? 'ASSEMBLY OPEN'
-                    : firstLightAssemblyAvailableDynamite > 0
-                      ? 'DETONATE NEXT CHARGE'
-                      : 'LAND ON DYNAMITE'}
-                <small>One stick widens and deepens the common crater</small>
+                    : firstLightAssemblyAvailableDynamite >= firstLightAssemblyNextBatch.cost
+                      ? `DETONATE ${firstLightAssemblyNextBatch.cost} CHARGES`
+                      : `COLLECT ${firstLightAssemblyNextBatch.cost - firstLightAssemblyAvailableDynamite} MORE`}
+                <small>{firstLightAssemblyNextBatch.label}</small>
               </button>
             </div>
             <div className={`frostwell-mission-modal__status${firstLightAssemblyCompleted ? ' frostwell-mission-modal__status--online' : ''}`}>

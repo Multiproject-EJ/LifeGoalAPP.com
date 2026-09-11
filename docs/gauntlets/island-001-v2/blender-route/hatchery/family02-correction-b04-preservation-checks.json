@@ -1,0 +1,84 @@
+{
+  "status": "passed-mechanical-preservation-only",
+  "allExistingNonConservatoryTrianglesUnchanged": true,
+  "checks": [
+    {
+      "mesh": "egg-level1-pale-egg",
+      "priorTrianglesRetained": 1840,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "egg-level1-structural-brass",
+      "priorTrianglesRetained": 572,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "terraces-level1-cascade-water",
+      "priorTrianglesRetained": 112,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "terraces-level1-ivory-limestone",
+      "priorTrianglesRetained": 1788,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "terraces-level1-light-limestone",
+      "priorTrianglesRetained": 5860,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "wings-level1-ivory-limestone",
+      "priorTrianglesRetained": 1620,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "wings-level1-light-limestone",
+      "priorTrianglesRetained": 432,
+      "missingTriangles": 0,
+      "addedTriangles": 376,
+      "addedParts": [
+        "west-court-approach-step-1",
+        "west-court-approach-step-2",
+        "west-raised-occupied-court-shoulder"
+      ],
+      "passed": true
+    },
+    {
+      "mesh": "wings-level2-ivory-limestone",
+      "priorTrianglesRetained": 672,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    },
+    {
+      "mesh": "wings-level2-light-limestone",
+      "priorTrianglesRetained": 296,
+      "missingTriangles": 0,
+      "addedTriangles": 0,
+      "addedParts": [],
+      "passed": true
+    }
+  ],
+  "frozenB03SHA256": "f31bf502f93c5f18d4e8fbe1b7db359871631111c2d0460c63ddfe131f68bc7b",
+  "currentB04SHA256": "3b5450760f0b3fe8dc540e7c7e9340795086f219a90a7c15b383b51dadda4970"
+}

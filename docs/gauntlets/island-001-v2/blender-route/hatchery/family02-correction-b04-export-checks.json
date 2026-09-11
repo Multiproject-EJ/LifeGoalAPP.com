@@ -1,0 +1,423 @@
+{
+  "status": "mechanical-passed-awaiting-independent-visual-QC",
+  "asset": "family02-correction-b04.glb",
+  "sha256": "3b5450760f0b3fe8dc540e7c7e9340795086f219a90a7c15b383b51dadda4970",
+  "bytes": 1391420,
+  "axes": "Y-up/front+Z/ground0",
+  "bbox": {
+    "min": [
+      -1.4800000190734863,
+      0.0,
+      -1.1100000143051147
+    ],
+    "max": [
+      1.537743330001831,
+      2.4747743606567383,
+      1.2899999618530273
+    ]
+  },
+  "maxRadius": 1.5758684126573332,
+  "levels": {
+    "1": {
+      "meshes": 9,
+      "triangles": 32848,
+      "signatures": {
+        "conservatory-level1-blue-petal-glass": "c0b86a906cae72347c87aec49bcde6c4338cde8f5826e6863ed0f5aed51f20c4",
+        "conservatory-level1-structural-brass": "131a3f979ca8a348d9037553171364ce077ca47aabe0e3a8180ccc91c9c12626",
+        "egg-level1-pale-egg": "63078ed5e7e0dc9e8458e706a67e0e154338019ac78ec0c0e3e77f213e2f68c2",
+        "egg-level1-structural-brass": "bba118aa1a0f2cfc78ce141ac8ca46f379ab184556d551e5a4131d078790b991",
+        "terraces-level1-cascade-water": "78b0575afeba13a773e4841dd08047674f43533eeac556744680e15b1151a471",
+        "terraces-level1-ivory-limestone": "72ca18af17185b53113d083fa3a21a6badcf1a90593bc0213374634fd09ce40a",
+        "terraces-level1-light-limestone": "d6035d4c20a4b6d2d3c4525c77a720499bbbd6f599fac8753fb62b7299a09f69",
+        "wings-level1-ivory-limestone": "074d09f17e7dbb97493b053f656b6aade3399d3d19d83800ce06d92948d5f040",
+        "wings-level1-light-limestone": "b958bc13c6142b9967d6e80a8499072d75a6276220e10555da7bb590f34ae50b"
+      }
+    },
+    "2": {
+      "meshes": 13,
+      "triangles": 51064,
+      "signatures": {
+        "conservatory-level1-blue-petal-glass": "c0b86a906cae72347c87aec49bcde6c4338cde8f5826e6863ed0f5aed51f20c4",
+        "conservatory-level1-structural-brass": "131a3f979ca8a348d9037553171364ce077ca47aabe0e3a8180ccc91c9c12626",
+        "conservatory-level2-blue-petal-glass": "5153292e856ccec56eda3f2ba08d96cdc6f2e1a1d33b4e859fccd0e60b3eee84",
+        "conservatory-level2-structural-brass": "365db546da8aef5e6cebad9a2e8ebc0624d288e7ac8460a90fed20241a400790",
+        "egg-level1-pale-egg": "63078ed5e7e0dc9e8458e706a67e0e154338019ac78ec0c0e3e77f213e2f68c2",
+        "egg-level1-structural-brass": "bba118aa1a0f2cfc78ce141ac8ca46f379ab184556d551e5a4131d078790b991",
+        "terraces-level1-cascade-water": "78b0575afeba13a773e4841dd08047674f43533eeac556744680e15b1151a471",
+        "terraces-level1-ivory-limestone": "72ca18af17185b53113d083fa3a21a6badcf1a90593bc0213374634fd09ce40a",
+        "terraces-level1-light-limestone": "d6035d4c20a4b6d2d3c4525c77a720499bbbd6f599fac8753fb62b7299a09f69",
+        "wings-level1-ivory-limestone": "074d09f17e7dbb97493b053f656b6aade3399d3d19d83800ce06d92948d5f040",
+        "wings-level1-light-limestone": "b958bc13c6142b9967d6e80a8499072d75a6276220e10555da7bb590f34ae50b",
+        "wings-level2-ivory-limestone": "9fd07b98b409cd3a5b90e102653d7810d67f25772dc72a83292567b364297b96",
+        "wings-level2-light-limestone": "44b0b9f44936682e5ce9856e99e6046de1668d4932a6ad50fc0df31ac2b88a59"
+      }
+    },
+    "3": {
+      "meshes": 13,
+      "triangles": 51064,
+      "signatures": {
+        "conservatory-level1-blue-petal-glass": "c0b86a906cae72347c87aec49bcde6c4338cde8f5826e6863ed0f5aed51f20c4",
+        "conservatory-level1-structural-brass": "131a3f979ca8a348d9037553171364ce077ca47aabe0e3a8180ccc91c9c12626",
+        "conservatory-level2-blue-petal-glass": "5153292e856ccec56eda3f2ba08d96cdc6f2e1a1d33b4e859fccd0e60b3eee84",
+        "conservatory-level2-structural-brass": "365db546da8aef5e6cebad9a2e8ebc0624d288e7ac8460a90fed20241a400790",
+        "egg-level1-pale-egg": "63078ed5e7e0dc9e8458e706a67e0e154338019ac78ec0c0e3e77f213e2f68c2",
+        "egg-level1-structural-brass": "bba118aa1a0f2cfc78ce141ac8ca46f379ab184556d551e5a4131d078790b991",
+        "terraces-level1-cascade-water": "78b0575afeba13a773e4841dd08047674f43533eeac556744680e15b1151a471",
+        "terraces-level1-ivory-limestone": "72ca18af17185b53113d083fa3a21a6badcf1a90593bc0213374634fd09ce40a",
+        "terraces-level1-light-limestone": "d6035d4c20a4b6d2d3c4525c77a720499bbbd6f599fac8753fb62b7299a09f69",
+        "wings-level1-ivory-limestone": "074d09f17e7dbb97493b053f656b6aade3399d3d19d83800ce06d92948d5f040",
+        "wings-level1-light-limestone": "b958bc13c6142b9967d6e80a8499072d75a6276220e10555da7bb590f34ae50b",
+        "wings-level2-ivory-limestone": "9fd07b98b409cd3a5b90e102653d7810d67f25772dc72a83292567b364297b96",
+        "wings-level2-light-limestone": "44b0b9f44936682e5ce9856e99e6046de1668d4932a6ad50fc0df31ac2b88a59"
+      }
+    }
+  },
+  "additiveL1PreservedInL2": true,
+  "L3MacroEqualsL2": true,
+  "qualityTiers": "Same maximal asset in all quality tiers for macro; optimization deferred",
+  "meshCount": 13,
+  "triangles": 51064,
+  "degenerateTriangles": 0,
+  "roofSupportStations": 57,
+  "meshes": [
+    {
+      "node": "conservatory-level1-blue-petal-glass",
+      "buildLevel": 1,
+      "stage": 3,
+      "triangles": 15000,
+      "degenerateTriangles": 0,
+      "signature": "c0b86a906cae72347c87aec49bcde6c4338cde8f5826e6863ed0f5aed51f20c4",
+      "sourceParts": [
+        "principal-inward-vault-1",
+        "principal-inward-vault-2",
+        "principal-inward-vault-3"
+      ]
+    },
+    {
+      "node": "conservatory-level1-structural-brass",
+      "buildLevel": 1,
+      "stage": 3,
+      "triangles": 5248,
+      "degenerateTriangles": 0,
+      "signature": "131a3f979ca8a348d9037553171364ce077ca47aabe0e3a8180ccc91c9c12626",
+      "sourceParts": [
+        "principal-front-open-entrance-arch",
+        "principal-vault-1-root-to-crown--1",
+        "principal-vault-1-root-to-crown-1",
+        "principal-vault-2-root-to-crown--1",
+        "principal-vault-2-root-to-crown-1",
+        "principal-vault-3-root-to-crown--1",
+        "principal-vault-3-root-to-crown-1"
+      ]
+    },
+    {
+      "node": "conservatory-level2-blue-petal-glass",
+      "buildLevel": 2,
+      "stage": 3,
+      "triangles": 12128,
+      "degenerateTriangles": 0,
+      "signature": "5153292e856ccec56eda3f2ba08d96cdc6f2e1a1d33b4e859fccd0e60b3eee84",
+      "sourceParts": [
+        "lower-layered-side-petal-4",
+        "lower-layered-side-petal-5",
+        "lower-layered-side-petal-6",
+        "lower-layered-side-petal-7"
+      ]
+    },
+    {
+      "node": "conservatory-level2-structural-brass",
+      "buildLevel": 2,
+      "stage": 3,
+      "triangles": 5120,
+      "degenerateTriangles": 0,
+      "signature": "365db546da8aef5e6cebad9a2e8ebc0624d288e7ac8460a90fed20241a400790",
+      "sourceParts": [
+        "lower-side-petal-4-rooted-frame--1",
+        "lower-side-petal-4-rooted-frame-1",
+        "lower-side-petal-5-rooted-frame--1",
+        "lower-side-petal-5-rooted-frame-1",
+        "lower-side-petal-6-rooted-frame--1",
+        "lower-side-petal-6-rooted-frame-1",
+        "lower-side-petal-7-rooted-frame--1",
+        "lower-side-petal-7-rooted-frame-1"
+      ]
+    },
+    {
+      "node": "egg-level1-pale-egg",
+      "buildLevel": 1,
+      "stage": 4,
+      "triangles": 1840,
+      "degenerateTriangles": 0,
+      "signature": "63078ed5e7e0dc9e8458e706a67e0e154338019ac78ec0c0e3e77f213e2f68c2",
+      "sourceParts": [
+        "one-sheltered-smooth-ovoid"
+      ]
+    },
+    {
+      "node": "egg-level1-structural-brass",
+      "buildLevel": 1,
+      "stage": 4,
+      "triangles": 572,
+      "degenerateTriangles": 0,
+      "signature": "bba118aa1a0f2cfc78ce141ac8ca46f379ab184556d551e5a4131d078790b991",
+      "sourceParts": [
+        "low-egg-cradle"
+      ]
+    },
+    {
+      "node": "terraces-level1-cascade-water",
+      "buildLevel": 1,
+      "stage": 1,
+      "triangles": 112,
+      "degenerateTriangles": 0,
+      "signature": "78b0575afeba13a773e4841dd08047674f43533eeac556744680e15b1151a471",
+      "sourceParts": [
+        "lower-cascade-water-sheet",
+        "lower-pool-water",
+        "middle-pool-water",
+        "upper-cascade-water-sheet"
+      ]
+    },
+    {
+      "node": "terraces-level1-ivory-limestone",
+      "buildLevel": 1,
+      "stage": 1,
+      "triangles": 1788,
+      "degenerateTriangles": 0,
+      "signature": "72ca18af17185b53113d083fa3a21a6badcf1a90593bc0213374634fd09ce40a",
+      "sourceParts": [
+        "cascade-gallery-0-arch-spandrel-0",
+        "cascade-gallery-0-arch-spandrel-1",
+        "cascade-gallery-0-arch-spandrel-2",
+        "cascade-gallery-0-pier-0",
+        "cascade-gallery-0-pier-1",
+        "cascade-gallery-0-pier-2",
+        "cascade-gallery-0-pier-3",
+        "cascade-gallery-1-arch-spandrel-0",
+        "cascade-gallery-1-pier-0",
+        "cascade-gallery-1-pier-1",
+        "cascade-gallery-2-arch-spandrel-0",
+        "cascade-gallery-2-pier-0",
+        "cascade-gallery-2-pier-1",
+        "cascade-gallery-3-arch-spandrel-0",
+        "cascade-gallery-3-pier-0",
+        "cascade-gallery-3-pier-1",
+        "cascade-gallery-4-arch-spandrel-0",
+        "cascade-gallery-4-pier-0",
+        "cascade-gallery-4-pier-1",
+        "cascade-gallery-5-arch-spandrel-0",
+        "cascade-gallery-5-pier-0",
+        "cascade-gallery-5-pier-1",
+        "cascade-gallery-6-arch-spandrel-0",
+        "cascade-gallery-6-pier-0",
+        "cascade-gallery-6-pier-1",
+        "cascade-gallery-7-arch-spandrel-0",
+        "cascade-gallery-7-pier-0",
+        "cascade-gallery-7-pier-1",
+        "cascade-gallery-8-arch-spandrel-0",
+        "cascade-gallery-8-pier-0",
+        "cascade-gallery-8-pier-1",
+        "continuous-lower-arrival-court",
+        "east-sweeping-stair-continuous-stair-support",
+        "west-sweeping-stair-continuous-stair-support"
+      ]
+    },
+    {
+      "node": "terraces-level1-light-limestone",
+      "buildLevel": 1,
+      "stage": 1,
+      "triangles": 5860,
+      "degenerateTriangles": 0,
+      "signature": "d6035d4c20a4b6d2d3c4525c77a720499bbbd6f599fac8753fb62b7299a09f69",
+      "sourceParts": [
+        "east-sweeping-stair-curved-parapet--1",
+        "east-sweeping-stair-curved-parapet-1",
+        "east-sweeping-stair-tread-0",
+        "east-sweeping-stair-tread-1",
+        "east-sweeping-stair-tread-10",
+        "east-sweeping-stair-tread-11",
+        "east-sweeping-stair-tread-12",
+        "east-sweeping-stair-tread-13",
+        "east-sweeping-stair-tread-14",
+        "east-sweeping-stair-tread-15",
+        "east-sweeping-stair-tread-16",
+        "east-sweeping-stair-tread-17",
+        "east-sweeping-stair-tread-18",
+        "east-sweeping-stair-tread-19",
+        "east-sweeping-stair-tread-2",
+        "east-sweeping-stair-tread-20",
+        "east-sweeping-stair-tread-21",
+        "east-sweeping-stair-tread-3",
+        "east-sweeping-stair-tread-4",
+        "east-sweeping-stair-tread-5",
+        "east-sweeping-stair-tread-6",
+        "east-sweeping-stair-tread-7",
+        "east-sweeping-stair-tread-8",
+        "east-sweeping-stair-tread-9",
+        "lower-shallow-pool-landing",
+        "middle-cascade-landing",
+        "west-sweeping-stair-curved-parapet--1",
+        "west-sweeping-stair-curved-parapet-1",
+        "west-sweeping-stair-tread-0",
+        "west-sweeping-stair-tread-1",
+        "west-sweeping-stair-tread-10",
+        "west-sweeping-stair-tread-11",
+        "west-sweeping-stair-tread-12",
+        "west-sweeping-stair-tread-13",
+        "west-sweeping-stair-tread-14",
+        "west-sweeping-stair-tread-15",
+        "west-sweeping-stair-tread-16",
+        "west-sweeping-stair-tread-17",
+        "west-sweeping-stair-tread-18",
+        "west-sweeping-stair-tread-19",
+        "west-sweeping-stair-tread-2",
+        "west-sweeping-stair-tread-20",
+        "west-sweeping-stair-tread-21",
+        "west-sweeping-stair-tread-3",
+        "west-sweeping-stair-tread-4",
+        "west-sweeping-stair-tread-5",
+        "west-sweeping-stair-tread-6",
+        "west-sweeping-stair-tread-7",
+        "west-sweeping-stair-tread-8",
+        "west-sweeping-stair-tread-9"
+      ]
+    },
+    {
+      "node": "wings-level1-ivory-limestone",
+      "buildLevel": 1,
+      "stage": 2,
+      "triangles": 1620,
+      "degenerateTriangles": 0,
+      "signature": "074d09f17e7dbb97493b053f656b6aade3399d3d19d83800ce06d92948d5f040",
+      "sourceParts": [
+        "interior-cross-gallery-arch-spandrel-0",
+        "interior-cross-gallery-arch-spandrel-1",
+        "interior-cross-gallery-arch-spandrel-2",
+        "interior-cross-gallery-pier-0",
+        "interior-cross-gallery-pier-1",
+        "interior-cross-gallery-pier-2",
+        "interior-cross-gallery-pier-3",
+        "lower-nursery-wall-0-arch-spandrel-0",
+        "lower-nursery-wall-0-pier-0",
+        "lower-nursery-wall-0-pier-1",
+        "lower-nursery-wall-1-arch-spandrel-0",
+        "lower-nursery-wall-1-pier-0",
+        "lower-nursery-wall-1-pier-1",
+        "lower-nursery-wall-2-arch-spandrel-0",
+        "lower-nursery-wall-2-arch-spandrel-1",
+        "lower-nursery-wall-2-pier-0",
+        "lower-nursery-wall-2-pier-1",
+        "lower-nursery-wall-2-pier-2",
+        "lower-nursery-wall-3-arch-spandrel-0",
+        "lower-nursery-wall-3-pier-0",
+        "lower-nursery-wall-3-pier-1",
+        "lower-nursery-wall-4-arch-spandrel-0",
+        "lower-nursery-wall-4-pier-0",
+        "lower-nursery-wall-4-pier-1",
+        "lower-nursery-wall-5-arch-spandrel-0",
+        "lower-nursery-wall-5-pier-0",
+        "lower-nursery-wall-5-pier-1",
+        "lower-nursery-wall-6-arch-spandrel-0",
+        "lower-nursery-wall-6-arch-spandrel-1",
+        "lower-nursery-wall-6-arch-spandrel-2",
+        "lower-nursery-wall-6-pier-0",
+        "lower-nursery-wall-6-pier-1",
+        "lower-nursery-wall-6-pier-2",
+        "lower-nursery-wall-6-pier-3",
+        "lower-nursery-wall-7-arch-spandrel-0",
+        "lower-nursery-wall-7-pier-0",
+        "lower-nursery-wall-7-pier-1",
+        "lower-nursery-wall-8-arch-spandrel-0",
+        "lower-nursery-wall-8-pier-0",
+        "lower-nursery-wall-8-pier-1"
+      ]
+    },
+    {
+      "node": "wings-level1-light-limestone",
+      "buildLevel": 1,
+      "stage": 2,
+      "triangles": 808,
+      "degenerateTriangles": 0,
+      "signature": "b958bc13c6142b9967d6e80a8499072d75a6276220e10555da7bb590f34ae50b",
+      "sourceParts": [
+        "lower-nursery-interior-floor",
+        "lower-nursery-supported-occupied-roof",
+        "west-court-approach-step-1",
+        "west-court-approach-step-2",
+        "west-raised-occupied-court-shoulder"
+      ]
+    },
+    {
+      "node": "wings-level2-ivory-limestone",
+      "buildLevel": 2,
+      "stage": 2,
+      "triangles": 672,
+      "degenerateTriangles": 0,
+      "signature": "9fd07b98b409cd3a5b90e102653d7810d67f25772dc72a83292567b364297b96",
+      "sourceParts": [
+        "upper-right-nursery-wall-0-arch-spandrel-0",
+        "upper-right-nursery-wall-0-pier-0",
+        "upper-right-nursery-wall-0-pier-1",
+        "upper-right-nursery-wall-1-arch-spandrel-0",
+        "upper-right-nursery-wall-1-pier-0",
+        "upper-right-nursery-wall-1-pier-1",
+        "upper-right-nursery-wall-2-arch-spandrel-0",
+        "upper-right-nursery-wall-2-pier-0",
+        "upper-right-nursery-wall-2-pier-1",
+        "upper-right-nursery-wall-3-arch-spandrel-0",
+        "upper-right-nursery-wall-3-pier-0",
+        "upper-right-nursery-wall-3-pier-1",
+        "upper-right-nursery-wall-4-arch-spandrel-0",
+        "upper-right-nursery-wall-4-pier-0",
+        "upper-right-nursery-wall-4-pier-1",
+        "upper-right-nursery-wall-5-arch-spandrel-0",
+        "upper-right-nursery-wall-5-pier-0",
+        "upper-right-nursery-wall-5-pier-1"
+      ]
+    },
+    {
+      "node": "wings-level2-light-limestone",
+      "buildLevel": 2,
+      "stage": 2,
+      "triangles": 296,
+      "degenerateTriangles": 0,
+      "signature": "44b0b9f44936682e5ce9856e99e6046de1668d4932a6ad50fc0df31ac2b88a59",
+      "sourceParts": [
+        "upper-right-nursery-interior-floor",
+        "upper-right-nursery-supported-occupied-roof"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "blue-petal-glass",
+      "alphaMode": "BLEND",
+      "doubleSided": true
+    },
+    {
+      "name": "structural-brass",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    },
+    {
+      "name": "pale-egg",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    },
+    {
+      "name": "cascade-water",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    },
+    {
+      "name": "ivory-limestone",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    },
+    {
+      "name": "light-limestone",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    }
+  ]
+}

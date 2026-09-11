@@ -1,0 +1,3 @@
+finishClass: painted-metal
+palette:     ['#9C892E', '#5E5516', '#554F11', '#B3A861', '#6C6C29']
+stats:       {'meanLum': 117.3, 'meanSaturation': 0.69, 'gradientStrength': 0.473, 'mottle': 0.026, 'streakRatio': 0.63, 'hueSpread': 0.004, 'specularFraction': 0.023}

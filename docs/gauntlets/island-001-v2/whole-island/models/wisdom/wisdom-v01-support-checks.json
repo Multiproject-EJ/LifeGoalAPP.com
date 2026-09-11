@@ -1,0 +1,524 @@
+[
+  {
+    "roof": "lower-crescent-archive-occupied-roof",
+    "supports": [
+      {
+        "name": "lower-crescent-archive-bay-0-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-0-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-1-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-1-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-2-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-2-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-3-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-3-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-4-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-4-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-5-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-5-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-6-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-6-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-7-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-7-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-8-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-8-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-9-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-9-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-10-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-10-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-11-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-11-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-12-pier-0",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "lower-crescent-archive-bay-12-pier-1",
+        "minY": 0.164000004529953,
+        "maxY": 0.6710000038146973,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  {
+    "roof": "upper-sweeping-reading-wing-occupied-roof",
+    "supports": [
+      {
+        "name": "upper-sweeping-reading-wing-bay-0-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-0-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-1-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-1-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-2-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-2-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-3-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-3-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-4-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-4-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-5-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-5-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-6-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-6-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-7-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-7-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-8-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-8-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-9-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-9-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-10-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-10-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-11-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "upper-sweeping-reading-wing-bay-11-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.2610000371932983,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  {
+    "roof": "west-high-reading-gallery-occupied-roof",
+    "supports": [
+      {
+        "name": "west-high-reading-gallery-bay-0-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-0-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-1-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-1-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-2-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-2-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-3-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-3-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-4-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-4-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-5-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-5-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-6-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-6-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-7-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-7-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-8-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-8-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-9-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-9-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-10-pier-0",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      },
+      {
+        "name": "west-high-reading-gallery-bay-10-pier-1",
+        "minY": 0.7239999771118164,
+        "maxY": 1.5110000371932983,
+        "triangles": 12,
+        "passed": true
+      }
+    ],
+    "passed": true
+  }
+]

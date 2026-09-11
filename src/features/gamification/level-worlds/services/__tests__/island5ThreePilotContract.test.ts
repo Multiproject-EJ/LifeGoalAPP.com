@@ -53,6 +53,7 @@ import {
   ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y,
   ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
 } from '../../dev/Island1AssemblyCraterThreeWorld';
+import { ASSEMBLY_UPPER_CONCOURSE_Y } from '../../dev/Island1AssemblyLayout';
 import { prepareIslandConstructionLevelDelta } from '../../dev/IslandConstructionLevelDelta';
 import {
   ISLAND_CONSTRUCTION_COMMISSIONING_DURATION_SECONDS,
@@ -1047,14 +1048,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const buttresses = runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_COLOSSAL_OUTER_BUTTRESSES');
       const buttressCaps = runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_COLOSSAL_BUTTRESS_GOLD_CAPS');
       assert(earth instanceof THREE.Group, 'the crater needs twenty addressable concentric grass excavation layers');
-      assert(rawExcavation instanceof THREE.Group, 'all twenty charges must deepen one continuous raw excavation volume');
+      assert(rawExcavation instanceof THREE.Group, 'the three committed batches must deepen one continuous raw excavation volume');
       assert(rawExcavationWall instanceof THREE.Mesh && rawExcavationFloor instanceof THREE.Mesh, 'the progressive hole needs one expanding wall and one descending floor');
       assert(seats instanceof THREE.InstancedMesh, 'the chamber needs an addressable delegate-seating batch');
       assert(foundation instanceof THREE.InstancedMesh, 'the chamber needs a sector-addressable subterranean foundation larger than the surface island');
       assert(buttresses instanceof THREE.InstancedMesh, 'the outer assembly needs twenty structural stone buttresses');
       assert(buttressCaps instanceof THREE.InstancedMesh, 'the dark outer buttresses need civic-gold caps instead of reading like a white fence');
       if (!(earth instanceof THREE.Group) || !(seats instanceof THREE.InstancedMesh) || !(foundation instanceof THREE.InstancedMesh)) return;
-      assertEqual(earth.children.length, ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT, 'one full concentric excavation stage must map to each of twenty blasts');
+      assertEqual(earth.children.length, ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT, 'the twenty geological bands must remain independent of the three blast batches');
       assert(
         earth.children.every((layer) => (
           layer instanceof THREE.Mesh
@@ -1069,7 +1070,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
         assertEqual(buttressCaps.count, ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT, 'one gold cap must finish each dark buttress');
         assertEqual((buttresses.material as THREE.Material).name, 'ISLAND_1_ASSEMBLY_CUTAWAY_DEEP_STONE_MATERIAL', 'outer buttresses must use dark structural stone instead of ivory fence-like rails');
       }
-      assertEqual(seats.count, ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT * 7, 'seven stadium-scale parliamentary seating rows must wrap every sector');
+      assertEqual(seats.count, 252, 'seven stadium-scale parliamentary seating rows must wrap every sector');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_CRATER_SPEAKER_PODIUM')), 'the completed chamber needs a central speaking podium');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_CRATER_MISSION_HIT_TARGET')), 'the chamber must remain tappable through the shared signature-mission dispatcher');
       assert(
@@ -1082,7 +1083,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const cutawayContext = runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_CANONICAL_REAR_HALF_CUTAWAY_CONTEXT');
       assert(Boolean(cutawayContext), 'the Assembly focus needs a canonical-radius geological context for scale');
       assertEqual(cutawayContext?.visible, false, 'the geological cutaway context must stay out of the playable overview');
-      assert(Boolean(cutawayContext?.getObjectByName('ISLAND_1_ASSEMBLY_CANONICAL_REAR_GRASS_CROWN')), 'the cutaway must preserve a green rear-half surface crown');
+      assert(Boolean(cutawayContext?.getObjectByName('ISLAND_001_V2_CONTINUOUS_LIMESTONE')), 'the cutaway must preserve the V2 limestone rear-half surface crown');
       assert(Boolean(cutawayContext?.getObjectByName('ISLAND_1_ASSEMBLY_CUT_FACE_SOIL_LEFT')), 'the cutaway must expose a thin soil layer above deep stone');
       assert(!runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_WHITE_PERIMETER_FENCE'), 'generated concept-art fencing must never become runtime geometry');
       runtime.setInspectionCutaway(true);
@@ -1100,8 +1101,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const secondInternalBlast = runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_INTERNAL_DIGGING_BLAST_2');
       const untouchedExcavationFloorY = rawExcavationFloor?.position.y ?? 0;
       runtime.updateAssemblyCrater({
-        chargesDetonated: 1,
-        targetCharges: 20,
+        chargesDetonated: 3,
+        targetCharges: 10,
         completed: false,
         constructionSequence: 1,
       });
@@ -1119,7 +1120,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const unfinishedFoundationScale = new THREE.Vector3();
       foundation.getMatrixAt(0, unfinishedFoundationMatrix);
       unfinishedFoundationMatrix.decompose(new THREE.Vector3(), new THREE.Quaternion(), unfinishedFoundationScale);
-      assert(unfinishedFoundationScale.x < 0.01, 'Assembly foundations must stay hidden throughout blasts one through nineteen');
+      assert(unfinishedFoundationScale.x < 0.01, 'Assembly foundations must stay hidden until the final batch is complete');
       runtime.animate(42 + ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS * 0.9);
       assertEqual(earth.children[0]?.visible, false, 'the first blast must visibly collapse its part of the grass cap during the explosion');
       assert((rawExcavationFloor?.position.y ?? 0) < untouchedExcavationFloorY, 'the common floor must descend during blast one rather than jumping after it');
@@ -1129,20 +1130,28 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(shockwave?.visible, false, 'the shockwave expires with the blast instead of becoming permanent scenery');
       assertEqual(runtime.getBlastPresentation().active, false, 'the camera-shake impulse must expire with the visual blast');
 
+      runtime.updateAssemblyCrater({ chargesDetonated: 8, targetCharges: 10, completed: false, constructionSequence: 2 });
+      runtime.animate(70);
+      runtime.animate(74);
+      const seaImpacts = runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_SEA_IMPACTS') as THREE.InstancedMesh;
+      const splashMatrix = new THREE.Matrix4();
+      seaImpacts.getMatrixAt(0, splashMatrix);
+      assert(Math.abs(new THREE.Vector3().setFromMatrixPosition(splashMatrix).y - (ISLAND_1_OCEAN_SURFACE_Y + 0.025)) < 0.001, 'blast splashes meet First Light water rather than the generic ocean height');
+
       runtime.updateAssemblyCrater({
-        chargesDetonated: 2,
-        targetCharges: 20,
+        chargesDetonated: 8,
+        targetCharges: 10,
         completed: false,
         constructionSequence: 2,
       }, true);
       runtime.animate(80);
       assertEqual(rubble?.visible, false, 'the immediate/reduced-motion path applies geometry without queuing a delayed blast');
-      assertEqual(earth.children[1]?.visible, false, 'early charges must rapidly break through the grass cap instead of spending all twenty blasts on it');
+      assertEqual(earth.children[1]?.visible, false, 'early charges must rapidly break through the grass cap instead of spending all ten charges on it');
       assert((rawExcavationFloor?.position.y ?? 0) < firstExcavationFloorY, 'blast two must deepen the common excavation floor as well as widen it');
 
       runtime.updateAssemblyCrater({
-        chargesDetonated: 12,
-        targetCharges: 20,
+        chargesDetonated: 10,
+        targetCharges: 10,
         completed: false,
         constructionSequence: 3,
       });
@@ -1159,20 +1168,62 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(firstInternalBlast?.visible, false, 'internal flashes must expire with their blast window');
 
       runtime.updateAssemblyCrater({
-        chargesDetonated: 20,
-        targetCharges: 20,
+        chargesDetonated: 10,
+        targetCharges: 10,
         completed: true,
         constructionSequence: 4,
       });
       runtime.animate(100);
-      assertEqual(runtime.getConstructionPresentation().active, true, 'the twentieth blast must queue a distinct automatic construction phase');
-      assertEqual(runtime.getConstructionPresentation().progress, 0, 'construction must wait until the twentieth blast presentation has finished');
+      assertEqual(runtime.getConstructionPresentation().active, true, 'the final batch must queue a distinct automatic construction phase');
+      assertEqual(runtime.getConstructionPresentation().progress, 0, 'construction must wait until the final batch presentation has finished');
       runtime.animate(100 + ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS * 0.5);
       const halfBuild = runtime.getConstructionPresentation();
+      assertEqual(rawExcavation?.visible, false, 'the raw funnel must clear the room before robots furnish it');
+      const crew = runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_ROBOT_BUILD_CREW');
+      const robot = crew?.getObjectByName('ASSEMBLY_CONSTRUCTION_ROBOT_0');
+      const weldingArm = robot?.getObjectByName('ROBOT_WELDING_ARM');
+      assertEqual(crew?.visible, true, 'robots work during the automatic build');
+      assert(Math.abs(weldingArm?.rotation.x ?? 0) > 0.001, 'tool animation uses the live renderer clock rather than being reset by geometry updates');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_DELEGATE_DESKS')), 'delegates need real desks, not only seats');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_1_ASSEMBLY_PRESIDENTIAL_DAIS')), 'the hall needs an architectural presidential dais');
       assert(halfBuild.progress > 0.45 && halfBuild.progress < 0.55, 'the Assembly must rise progressively rather than pop into existence');
       runtime.animate(100 + ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS + 0.1);
       assertEqual(runtime.getConstructionPresentation().completed, true, 'the automatic build must finish after its bounded reveal duration');
-      assert(earth.children.every((layer) => !layer.visible), 'the twentieth blast must clear the final grass ring and complete the whole opening');
+      assertEqual(crew?.visible, false, 'the crew clears away after commissioning');
+      const coast = runtime.root.getObjectByName('ISLAND_001_HERO_WATERFALL_COAST');
+      assert(Boolean(coast), 'Island 001 has its own authored coastal waterfall');
+      runtime.setInspectionCutaway(true);
+      assertEqual(coast?.visible, false, 'the coastal waterfall clears the underground inspection');
+      runtime.setInspectionCutaway(false);
+      assertEqual(coast?.visible, true, 'surface mode restores the coastal waterfall');
+      const waterCurtain = coast!.getObjectByName('HERO_CASCADE_WATER_CURTAIN') as THREE.Mesh;
+      waterCurtain.geometry.computeBoundingBox();
+      assert((waterCurtain.geometry.boundingBox?.min.z ?? 0) >= 6.29, 'the waterfall stays outside the route-bearing crown');
+      const flow = coast!.getObjectByName('HERO_CASCADE_FLOW_STREAKS') as THREE.InstancedMesh;
+      const firstFlow = new THREE.Matrix4(), laterFlow = new THREE.Matrix4();
+      flow.getMatrixAt(0, firstFlow);
+      runtime.animate(118);
+      flow.getMatrixAt(0, laterFlow);
+      assert(!firstFlow.equals(laterFlow), 'water highlights flow along the falls during animation');
+      const access = runtime.root.getObjectByName('ISLAND_001_LANDMARK_ASSEMBLY_ACCESS');
+      assertEqual(access?.visible, true, 'commissioning connects all four satellite landmarks to the hall');
+      const cabins = ISLAND_5_LANDMARKS.filter(def => def.id !== 'boss').map(def => {
+        const station = runtime.root.getObjectByName(`ASSEMBLY_ACCESS_${def.id}`);
+        assert(Boolean(station), `${def.id} must have a gallery entrance`);
+        assert(Math.hypot(station!.position.x - def.position[0], station!.position.z - def.position[2]) < 1.3, 'lift terminal stays inside its canonical landmark footprint');
+        return runtime.root.getObjectByName(`ASSEMBLY_LIFT_CABIN_${def.id}`)!;
+      });
+      const beforeTravel = cabins.map(cabin => cabin.position.y);
+      runtime.animate(120);
+      assert(cabins.some((cabin, i) => Math.abs(cabin.position.y - beforeTravel[i]) > 0.1), 'commissioned lifts travel between the two landings');
+      assert(cabins.every(cabin => cabin.position.y >= ASSEMBLY_UPPER_CONCOURSE_Y + .069 && cabin.position.y <= 0.26), 'cabins remain within the gallery and surface landing bounds');
+      runtime.updateAssemblyCrater({ chargesDetonated: 10, targetCharges: 10, completed: true }, true);
+      assert(Math.abs(cabins[0].position.y - (ASSEMBLY_UPPER_CONCOURSE_Y + .07)) < 0.001, 'immediate/reduced-motion presentation parks the first cabin at the gallery landing');
+      runtime.updateAssemblyCrater({ chargesDetonated: 0, targetCharges: 10, completed: false }, true);
+      assertEqual(access?.visible, false, 'resetting excavation removes the unbuilt lift network');
+      runtime.updateAssemblyCrater({ chargesDetonated: 10, targetCharges: 10, completed: true }, true);
+
+      assert(earth.children.every((layer) => !layer.visible), 'the final batch must clear the final grass ring and complete the whole opening');
       const completedFoundationMatrix = new THREE.Matrix4();
       const completedFoundationScale = new THREE.Vector3();
       foundation.getMatrixAt(19, completedFoundationMatrix);
@@ -2249,14 +2300,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
+        pilotSource.includes('const useInstancedRouteTiles = isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
         'Islands 007, 012, 013, 014, 018, runtime 016 and non-Circuit-G Island 019 should use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];'), 'Circuit G must substitute its own one-to-one canonical mesh route instead of layering a second board');
       assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
       assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
-      assert(pilotSource.includes('compactCollectibles: isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
+      assert(pilotSource.includes('compactCollectibles: isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
       assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
       assert(pilotSource.includes('canvas.dataset.island12ScenePerformanceInventory'), 'the full Island 012 scene must expose read-only renderer-family evidence');
       assert(rewardSource.includes('root.userData.sculptRuntime = {'), 'reward objects must keep explicit presentation-only runtime metadata');
@@ -2331,7 +2382,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts', 'utf8');
-      assert(worldSource.includes('const cascadeCount = lifeBudget.cascadeCount;'), 'First Light should source cascade density from the audited quality budget');
+      assert(worldSource.includes('const cascadeCount = options.batchStatic ? 0 : lifeBudget.cascadeCount;'), 'preserved First Light retains its quality budget while Assembly V2 uses its authored coastal waterfall');
       assert(worldSource.includes("springPools.name = 'ISLAND_1_CRYSTAL_SPRING_POOLS'"), 'each cascade needs a visible spring source on the island');
       assert(worldSource.includes("plungeFoam.name = 'ISLAND_1_WATERFALL_PLUNGE_FOAM'"), 'waterfalls need animated contact foam at sea level');
       assert(worldSource.includes("flowHighlights.name = 'ISLAND_1_CASCADE_FLOW_HIGHLIGHTS'"), 'water motion should read down the complete course, not as a static blue plane');
@@ -2890,7 +2941,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
       assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including preserved Island 011, promoted Island 016, Jungle Expedition and Lava Labyrinth Island 020');
       assert(pageSource.includes('assembly-crater-preview-controls') && pageSource.includes('Blast next'), 'the workbench must replay Assembly Crater sectors without writing a real gameplay save');
-      assert(pageSource.includes('Play full 20') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of all twenty detonations');
+      assert(pageSource.includes('Play 3 + 5 + 2') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of the three charge batches');
       assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
@@ -2971,7 +3022,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(moonveilSource.includes("root.name = 'ISLAND_6_MOONVEIL_LIVING_AMBIENCE'") && moonveilSource.includes("nebula.name = 'ISLAND_6_VIOLET_NEBULA'"), 'Island 006 must carry its dark-neon living void and spiral-nebula ambience');
       assert(moonveilSource.includes('addEnergyFall') && moonveilSource.includes('createDistantShard'), 'Island 006 must retain animated energy falls and varied distant floating fragments');
       assert(pilotSource.includes('firstLightFocusOverrides') && pilotSource.includes('boss: { position:') && pilotSource.includes('event: { position:'), 'Island 001 must keep authored front-facing focus cameras for every landmark family');
-      assert(pilotSource.includes('assemblyCraterFocusOverrides') && pilotSource.includes('target: [0, -2.95, 0]'), 'the colossal Assembly Crater needs a dedicated interior descent camera instead of the preserved Sun Court framing');
+      assert(pilotSource.includes('assemblyCraterFocusOverrides') && pilotSource.includes('target: [0, -2.55, -0.7]'), 'the colossal Assembly Crater needs a dedicated interior descent camera instead of the preserved Sun Court framing');
       assert(island1Source.includes("boss: 'Aureon’s Sun Court'"), 'the preserved First Light source used by Island 011 must retain its Aureon/Sun Court manifest');
       assert(island1Source.includes('function addScaffoldTower') && island1Source.includes('function addConstructionCrane'), 'Island 001 L1/L2 states must use authored construction geometry');
       assert(island1Source.includes('function createRhythmTree') && island1Source.includes('function createStarArchive') && island1Source.includes('function createEchoObservatory'), 'each Island 001 outer family must keep its own authored procedural factory');
@@ -2981,7 +3032,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('createIsland1AssemblyCraterTerrain(qualityProfile.id') && assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_CRATER_ANNULAR_TERRAIN') && assemblyCraterSource.includes('THREE.BackSide'), 'runtime Island 001 must cut a visible annular terrain opening with an inward-facing crater wall instead of layering seats under the solid First Light cap');
       assert(pilotSource.includes('ISLAND_1_ASSEMBLY_CRATER_OCEAN_WITH_MEGAHALL_CLEARANCE') && pilotSource.includes('subterranean-cutaway'), 'the deep chamber focus must remove the preserved lagoon/ocean occluders instead of presenting the megahall as a shallow pool');
       assert(assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_COLOSSAL_FOUNDATION_SECTORS') && assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_COLOSSAL_OUTER_BUTTRESSES'), 'the final Assembly must be a sector-built subterranean megastructure rather than a shallow bowl');
-      assert(assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_TWENTY_STAGE_EXCAVATION_VOLUME') && assemblyCraterSource.includes('surfaceBreakProgress') && assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_INTERNAL_DIGGING_BLAST_') && assemblyCraterSource.includes('assemblyBuildQueued'), 'all twenty charges must progressively deepen the shared hole, add internal blasts, and stay separate from post-blast Assembly construction');
+      assert(assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_TWENTY_STAGE_EXCAVATION_VOLUME') && assemblyCraterSource.includes('surfaceBreakProgress') && assemblyCraterSource.includes('ISLAND_1_ASSEMBLY_INTERNAL_DIGGING_BLAST_') && assemblyCraterSource.includes('assemblyBuildQueued'), 'the three batches must progressively deepen the shared hole, add internal blasts, and stay separate from post-blast Assembly construction');
       assert(pilotSource.includes("child.name.startsWith('ISLAND_1_LAGOON_FISH_')") && pilotSource.includes('child.visible = false'), 'runtime Island 001 must remove the obsolete centre-orbiting lagoon fish while Island 011 keeps the preserved ambience');
       assert(pilotSource.includes('ISLAND_1_ASSEMBLY_POV_TOUR_STEPS') && pilotSource.includes('startAssemblyTour'), 'the commissioned Assembly must launch a dedicated interior POV tour');
       assert(pilotSource.includes('assemblyBlastCameraShake') && pilotSource.includes('restoreAssemblyCameraAfterRender'), 'each non-reduced-motion detonation must shake only the rendered camera frame and restore the canonical controls pose afterward');

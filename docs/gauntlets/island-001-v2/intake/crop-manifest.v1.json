@@ -1,0 +1,58 @@
+{
+  "source": "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+  "sourceSize": [
+    1312,
+    1199
+  ],
+  "sourceSha256": "aa7fcb230045d93de487059b2fe4ff4c81c5e7e4d98277fe81fc3127a150224f",
+  "crops": [
+    {
+      "id": "hatchery",
+      "path": "docs/gauntlets/island-001-v2/intake/hatchery-approved-crop.png",
+      "cropBoxPixels": [
+        0,
+        0,
+        656,
+        583
+      ],
+      "sha256": "aa01f80c4e1a8594919377a95bb52a9af127f5c983a60a79db43e7eced47f996",
+      "operation": "exact axis-aligned crop, no resizing or generative modification"
+    },
+    {
+      "id": "oak",
+      "path": "docs/gauntlets/island-001-v2/intake/oak-approved-crop.png",
+      "cropBoxPixels": [
+        657,
+        0,
+        1312,
+        583
+      ],
+      "sha256": "7c97027314a87446e1b02850d73ba227b2f5a094513a2d5c4b246be4baf07d92",
+      "operation": "exact axis-aligned crop, no resizing or generative modification"
+    },
+    {
+      "id": "archive",
+      "path": "docs/gauntlets/island-001-v2/intake/archive-approved-crop.png",
+      "cropBoxPixels": [
+        0,
+        584,
+        656,
+        1199
+      ],
+      "sha256": "48b67a269e6cbed682b8f1f06be7c27cee85a2b2146ed3cbc09cd0e7d2583188",
+      "operation": "exact axis-aligned crop, no resizing or generative modification"
+    },
+    {
+      "id": "observatory",
+      "path": "docs/gauntlets/island-001-v2/intake/observatory-approved-crop.png",
+      "cropBoxPixels": [
+        657,
+        584,
+        1312,
+        1199
+      ],
+      "sha256": "9247c5fc258fa5c93a27ad777708da635a722c01bd32312dbfa1707275a97fde",
+      "operation": "exact axis-aligned crop, no resizing or generative modification"
+    }
+  ]
+}

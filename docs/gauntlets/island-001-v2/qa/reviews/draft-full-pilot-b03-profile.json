@@ -1,0 +1,11 @@
+{
+  "scope": "Desktop Chromium rendering in phone viewport; draft b03 plus remaining V1 scene. Not physical-phone or V2 approval.",
+  "browser": "149.0.7827.55",
+  "viewport": [
+    390,
+    844
+  ],
+  "report": "DEVICE PROFILE\nREVIEW\nAverage\n49.4 FPS\nP95 frame\n33.4 ms\nP95 / refresh\n16.7 ms · REVIEW\nWorst\n764.7 ms\nSlow\n11.7%\nMax calls\n967\nMax tris\n339k\nRun again\nShare report\n\nREVIEW against high timing and geometry targets.",
+  "metrics": "55 FPS\n925 calls\n337k tris\n390×844 px",
+  "errors": []
+}

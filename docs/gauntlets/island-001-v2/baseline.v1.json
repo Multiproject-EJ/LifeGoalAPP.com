@@ -1,0 +1,158 @@
+{
+  "goalAuthority": [
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png",
+      "sha256": "9ac33d19017e0c23bf3448a36a6b3269eeec554b3c6a466ad0896818459b02b8",
+      "prompt": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.prompt.txt",
+      "authority": "user-approved-goal",
+      "generator": "built-in image_gen",
+      "reference": null
+    },
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+      "sha256": "aa7fcb230045d93de487059b2fe4ff4c81c5e7e4d98277fe81fc3127a150224f",
+      "prompt": "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.prompt.txt",
+      "authority": "user-approved-goal",
+      "generator": "built-in image_gen",
+      "reference": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+    },
+    {
+      "path": "docs/visual-references/island-001-reimagined-20260910/03-assembly-chamber.png",
+      "sha256": "6183b5fea22621243b96e15a15cbdc11494cc5b84d65c51f19294f659dfb17e8",
+      "prompt": "docs/visual-references/island-001-reimagined-20260910/03-assembly-chamber.prompt.txt",
+      "authority": "user-approved-goal",
+      "generator": "built-in image_gen",
+      "reference": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
+    }
+  ],
+  "baseline": "deliberately-blank-v2-geometry",
+  "salvageDecision": "Preserve V1 implementation as rollback; retain canonical gameplay, renderer, ten-charge state/actions, camera infrastructure. Rebuild visible art families from approved goals.",
+  "priorEvidence": [
+    "docs/visual-references/island-001-assembly-crater/upgrade-20260909/island-coast-review-v8.png",
+    "docs/visual-references/island-001-assembly-crater/upgrade-20260909/hall-geometry-review-v7-geology.png"
+  ],
+  "priorEvidenceLimits": "Offline Blender exports; not matched browser render evidence.",
+  "matchedV2Captures": [],
+  "browserCapturePathCheck": {
+    "date": "2026-09-10",
+    "result": "Chrome extension successfully loaded and captured the existing Assembly review",
+    "url": "http://127.0.0.1:53281/island001-assembly-review.html",
+    "observedDrawCalls": 209,
+    "evidence": "CUA screenshot in task conversation; not a persisted matched V2 capture",
+    "observations": [
+      "V1 geometry is visibly simpler than the approved V2 goals.",
+      "Reference reconstruction must improve shape and lighting, not just add detail."
+    ]
+  },
+  "browserBeforeCaptures": [
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/before-v2-event-iso.png",
+      "sha256": "1e4912ecfc9f2e8d8448828ae89df97c24be199d85b1a0ba519a123982c6510b",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/before-v2-event-iso.json",
+      "mode": "event",
+      "camera": [
+        7.70519826515622,
+        4.934000000000001,
+        9.356156941180835
+      ],
+      "target": [
+        4.36,
+        1.35,
+        3.9
+      ],
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/before-v2-habit-iso.png",
+      "sha256": "ea9085a5ba99fb771f3594e7dfa134ba49ca79749ad3c01ea5aa550a4f86e26f",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/before-v2-habit-iso.json",
+      "mode": "habit",
+      "camera": [
+        7.70519826515622,
+        4.934000000000001,
+        1.5561569411808356
+      ],
+      "target": [
+        4.36,
+        1.35,
+        -3.9
+      ],
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/before-v2-hall-iso.png",
+      "sha256": "8ae12c434891c33928a1c646bf13ac51e7be051c9c55c2dba4d25925e0cac563",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/before-v2-hall-iso.json",
+      "mode": "hall",
+      "camera": [
+        12.021806265405163,
+        11.13,
+        19.608064007368633
+      ],
+      "target": [
+        0,
+        -1.75,
+        0
+      ],
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/before-v2-hatchery-iso.png",
+      "sha256": "61ce79a0575e6241d1286c0bec7df8238db3be6d9a3fe4d18cd371f6e4da7ccf",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/before-v2-hatchery-iso.json",
+      "mode": "hatchery",
+      "camera": [
+        -1.014801734843782,
+        4.934000000000001,
+        1.5561569411808356
+      ],
+      "target": [
+        -4.36,
+        1.35,
+        -3.9
+      ],
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/before-v2-surface-iso.png",
+      "sha256": "385b2f534c986eff87d5c31829ac5ed8632207f69d0c6ef449a88635229085e6",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/before-v2-surface-iso.json",
+      "mode": "surface",
+      "camera": [
+        12.021806265405163,
+        13.08,
+        19.608064007368633
+      ],
+      "target": [
+        0,
+        0.2,
+        0
+      ],
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "docs/gauntlets/island-001-v2/qa/raw/before-v2-wisdom-iso.png",
+      "sha256": "57e6c92e2f439f29c9053e906147cb5a8ab3caf3033c21d9c7ab8c9b2cddc729",
+      "metadata": "docs/gauntlets/island-001-v2/qa/raw/before-v2-wisdom-iso.json",
+      "mode": "wisdom",
+      "camera": [
+        -1.014801734843782,
+        4.934000000000001,
+        9.356156941180835
+      ],
+      "target": [
+        -4.36,
+        1.35,
+        3.9
+      ],
+      "width": 1440,
+      "height": 1080
+    }
+  ],
+  "captureAuthority": "Actual Three.js WebGL canvas captures from Chrome, written by explicit local review-page Save capture control."
+}

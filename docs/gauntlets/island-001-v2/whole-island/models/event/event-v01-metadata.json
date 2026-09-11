@@ -1,0 +1,1527 @@
+{
+  "status": "whole-island-complete-model-awaiting-integrated-review",
+  "landmarkId": "event",
+  "axes": "Y-up/front+Z/ground0",
+  "sockets": {
+    "lift": [
+      0.72,
+      0.15,
+      1.07
+    ]
+  },
+  "bbox": {
+    "min": [
+      -1.4639849662780762,
+      0.0,
+      -1.4539257287979126
+    ],
+    "max": [
+      1.4483169317245483,
+      2.4638731479644775,
+      1.340000033378601
+    ]
+  },
+  "radius": 1.4644010454859486,
+  "triangles": 24649,
+  "authoringMeshCount": 48,
+  "completedOwnerMaterialBatches": 12,
+  "materials": [
+    "observatory-books-and-walnut",
+    "observatory-celestial-blue",
+    "observatory-clear-window-glass",
+    "observatory-dome-warm-interior",
+    "observatory-garden-colors",
+    "observatory-reading-lights",
+    "observatory-warm-gold",
+    "observatory-warm-limestone"
+  ],
+  "levels": {
+    "1": {
+      "addedTriangles": 7551,
+      "cumulativeTriangles": 7551,
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "2": {
+      "addedTriangles": 9747,
+      "cumulativeTriangles": 17298,
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "3": {
+      "addedTriangles": 7351,
+      "cumulativeTriangles": 24649,
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  },
+  "meshes": [
+    {
+      "name": "observatory-armillary-L1-S3-observatory-warm-gold",
+      "level": 1,
+      "stage": 3,
+      "owner": "observatory-armillary",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 1256,
+      "sourceParts": [
+        "armillary-central-golden-sun",
+        "armillary-equatorial-ring",
+        "armillary-pedestal-0",
+        "armillary-pedestal-1",
+        "armillary-pedestal-2",
+        "armillary-pedestal-3",
+        "armillary-upright-axis",
+        "armillary-vertical-meridian",
+        "sun-radial-axis-0",
+        "sun-radial-axis-1",
+        "sun-radial-axis-2",
+        "sun-radial-axis-3",
+        "sun-radial-axis-4"
+      ]
+    },
+    {
+      "name": "observatory-armillary-L1-S4-observatory-celestial-blue",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-armillary",
+      "materials": [
+        "observatory-celestial-blue"
+      ],
+      "triangles": 92,
+      "sourceParts": [
+        "blue-instrument-dais-inlay"
+      ]
+    },
+    {
+      "name": "observatory-armillary-L2-S5-observatory-celestial-blue",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-armillary",
+      "materials": [
+        "observatory-celestial-blue"
+      ],
+      "triangles": 260,
+      "sourceParts": [
+        "armillary-blue-zodiac-band"
+      ]
+    },
+    {
+      "name": "observatory-armillary-L2-S5-observatory-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-armillary",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 520,
+      "sourceParts": [
+        "armillary-inclined-gimbal",
+        "armillary-zodiac-gold-edge"
+      ]
+    },
+    {
+      "name": "observatory-armillary-L3-S5-observatory-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-armillary",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 560,
+      "sourceParts": [
+        "armillary-outer-tracking-ring",
+        "orbiting-gold-planet-0",
+        "orbiting-gold-planet-1",
+        "orbiting-gold-planet-2"
+      ]
+    },
+    {
+      "name": "observatory-dome-L1-S5-observatory-celestial-blue",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-celestial-blue"
+      ],
+      "triangles": 16,
+      "sourceParts": [
+        "west-celestial-banner-blue-cloth"
+      ]
+    },
+    {
+      "name": "observatory-dome-L1-S5-observatory-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 228,
+      "sourceParts": [
+        "west-celestial-banner-compass-ray-0",
+        "west-celestial-banner-compass-ray-1",
+        "west-celestial-banner-compass-ray-2",
+        "west-celestial-banner-compass-ray-3",
+        "west-celestial-banner-gold-compass",
+        "west-celestial-banner-gold-crossbar"
+      ]
+    },
+    {
+      "name": "observatory-dome-L2-S1-observatory-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 388,
+      "sourceParts": [
+        "west-dome-limestone-footing"
+      ]
+    },
+    {
+      "name": "observatory-dome-L2-S2-observatory-celestial-blue",
+      "level": 2,
+      "stage": 2,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-celestial-blue",
+        "observatory-dome-warm-interior"
+      ],
+      "triangles": 1200,
+      "sourceParts": [
+        "west-split-blue-dome-shell"
+      ]
+    },
+    {
+      "name": "observatory-dome-L2-S3-observatory-celestial-blue",
+      "level": 2,
+      "stage": 3,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-celestial-blue"
+      ],
+      "triangles": 28,
+      "sourceParts": [
+        "telescope-blue-optical-tube"
+      ]
+    },
+    {
+      "name": "observatory-dome-L2-S5-observatory-celestial-blue",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-celestial-blue"
+      ],
+      "triangles": 16,
+      "sourceParts": [
+        "front-celestial-banner-blue-cloth"
+      ]
+    },
+    {
+      "name": "observatory-dome-L2-S5-observatory-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 1810,
+      "sourceParts": [
+        "front-celestial-banner-compass-ray-0",
+        "front-celestial-banner-compass-ray-1",
+        "front-celestial-banner-compass-ray-2",
+        "front-celestial-banner-compass-ray-3",
+        "front-celestial-banner-gold-compass",
+        "front-celestial-banner-gold-crossbar",
+        "telescope-gold-collar-0",
+        "telescope-gold-collar-1",
+        "west-constellation-star-0",
+        "west-constellation-star-1",
+        "west-constellation-star-2",
+        "west-constellation-star-3",
+        "west-constellation-star-4",
+        "west-constellation-star-5",
+        "west-constellation-star-6",
+        "west-constellation-star-7",
+        "west-curved-grid-band-0",
+        "west-curved-grid-band-1",
+        "west-curved-grid-band-2",
+        "west-gold-dome-sill",
+        "west-open-aperture-structural-arch",
+        "west-radial-grid-rib-0",
+        "west-radial-grid-rib-1",
+        "west-radial-grid-rib-2",
+        "west-radial-grid-rib-3"
+      ]
+    },
+    {
+      "name": "observatory-dome-L3-S1-observatory-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 388,
+      "sourceParts": [
+        "east-dome-limestone-footing"
+      ]
+    },
+    {
+      "name": "observatory-dome-L3-S2-observatory-celestial-blue",
+      "level": 3,
+      "stage": 2,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-celestial-blue",
+        "observatory-dome-warm-interior"
+      ],
+      "triangles": 1200,
+      "sourceParts": [
+        "east-split-blue-dome-shell"
+      ]
+    },
+    {
+      "name": "observatory-dome-L3-S5-observatory-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 1422,
+      "sourceParts": [
+        "east-constellation-star-0",
+        "east-constellation-star-1",
+        "east-constellation-star-2",
+        "east-constellation-star-3",
+        "east-constellation-star-4",
+        "east-constellation-star-5",
+        "east-constellation-star-6",
+        "east-constellation-star-7",
+        "east-curved-grid-band-0",
+        "east-curved-grid-band-1",
+        "east-curved-grid-band-2",
+        "east-gold-dome-sill",
+        "east-open-aperture-structural-arch",
+        "east-radial-grid-rib-0",
+        "east-radial-grid-rib-1",
+        "east-radial-grid-rib-2",
+        "east-radial-grid-rib-3"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S1-observatory-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 428,
+      "sourceParts": [
+        "observatory-arrival-garden-court",
+        "observatory-arrival-step-0",
+        "observatory-arrival-step-1",
+        "observatory-arrival-step-2",
+        "observatory-arrival-step-3",
+        "observatory-arrival-step-4",
+        "observatory-foundation-rock-12",
+        "observatory-foundation-rock-15",
+        "observatory-foundation-rock-18",
+        "observatory-foundation-rock-21",
+        "observatory-foundation-rock-6",
+        "observatory-foundation-rock-9",
+        "west-central-observatory-hall-continuous-floor",
+        "west-curving-observatory-stair-continuous-masonry"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S2-observatory-warm-limestone",
+      "level": 1,
+      "stage": 2,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 932,
+      "sourceParts": [
+        "west-celestial-banner-stone-backing",
+        "west-central-observatory-hall-bay-0-arch-spandrel",
+        "west-central-observatory-hall-bay-0-pier-0",
+        "west-central-observatory-hall-bay-0-pier-1",
+        "west-central-observatory-hall-bay-1-arch-spandrel",
+        "west-central-observatory-hall-bay-1-pier-0",
+        "west-central-observatory-hall-bay-1-pier-1",
+        "west-central-observatory-hall-bay-10-arch-spandrel",
+        "west-central-observatory-hall-bay-10-pier-0",
+        "west-central-observatory-hall-bay-10-pier-1",
+        "west-central-observatory-hall-bay-2-arch-spandrel",
+        "west-central-observatory-hall-bay-2-pier-0",
+        "west-central-observatory-hall-bay-2-pier-1",
+        "west-central-observatory-hall-bay-3-arch-spandrel",
+        "west-central-observatory-hall-bay-3-pier-0",
+        "west-central-observatory-hall-bay-3-pier-1",
+        "west-central-observatory-hall-bay-4-arch-spandrel",
+        "west-central-observatory-hall-bay-4-pier-0",
+        "west-central-observatory-hall-bay-4-pier-1",
+        "west-central-observatory-hall-bay-5-arch-spandrel",
+        "west-central-observatory-hall-bay-5-pier-0",
+        "west-central-observatory-hall-bay-5-pier-1",
+        "west-central-observatory-hall-bay-6-arch-spandrel",
+        "west-central-observatory-hall-bay-6-pier-0",
+        "west-central-observatory-hall-bay-6-pier-1",
+        "west-central-observatory-hall-bay-7-arch-spandrel",
+        "west-central-observatory-hall-bay-7-pier-0",
+        "west-central-observatory-hall-bay-7-pier-1",
+        "west-central-observatory-hall-bay-8-arch-spandrel",
+        "west-central-observatory-hall-bay-8-pier-0",
+        "west-central-observatory-hall-bay-8-pier-1",
+        "west-central-observatory-hall-bay-9-arch-spandrel",
+        "west-central-observatory-hall-bay-9-pier-0",
+        "west-central-observatory-hall-bay-9-pier-1",
+        "west-central-observatory-hall-occupied-roof"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S3-observatory-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-books-and-walnut"
+      ],
+      "triangles": 2236,
+      "sourceParts": [
+        "observatory-reading-table-0-chair--1",
+        "observatory-reading-table-0-chair-1",
+        "observatory-reading-table-0-chairback--1",
+        "observatory-reading-table-0-chairback-1",
+        "observatory-reading-table-0-chairleg--1",
+        "observatory-reading-table-0-chairleg-1",
+        "observatory-reading-table-0-leg",
+        "observatory-reading-table-0-top",
+        "west-central-observatory-hall-bay-0-book-0-0",
+        "west-central-observatory-hall-bay-0-book-0-1",
+        "west-central-observatory-hall-bay-0-book-0-2",
+        "west-central-observatory-hall-bay-0-book-0-3",
+        "west-central-observatory-hall-bay-0-book-1-0",
+        "west-central-observatory-hall-bay-0-book-1-1",
+        "west-central-observatory-hall-bay-0-book-1-2",
+        "west-central-observatory-hall-bay-0-book-1-3",
+        "west-central-observatory-hall-bay-0-book-2-0",
+        "west-central-observatory-hall-bay-0-book-2-1",
+        "west-central-observatory-hall-bay-0-book-2-2",
+        "west-central-observatory-hall-bay-0-book-2-3",
+        "west-central-observatory-hall-bay-0-bookcase-back",
+        "west-central-observatory-hall-bay-0-shelf-0",
+        "west-central-observatory-hall-bay-0-shelf-1",
+        "west-central-observatory-hall-bay-0-shelf-2",
+        "west-central-observatory-hall-bay-1-book-0-0",
+        "west-central-observatory-hall-bay-1-book-0-1",
+        "west-central-observatory-hall-bay-1-book-0-2",
+        "west-central-observatory-hall-bay-1-book-0-3",
+        "west-central-observatory-hall-bay-1-book-1-0",
+        "west-central-observatory-hall-bay-1-book-1-1",
+        "west-central-observatory-hall-bay-1-book-1-2",
+        "west-central-observatory-hall-bay-1-book-1-3",
+        "west-central-observatory-hall-bay-1-book-2-0",
+        "west-central-observatory-hall-bay-1-book-2-1",
+        "west-central-observatory-hall-bay-1-book-2-2",
+        "west-central-observatory-hall-bay-1-book-2-3",
+        "west-central-observatory-hall-bay-1-bookcase-back",
+        "west-central-observatory-hall-bay-1-shelf-0",
+        "west-central-observatory-hall-bay-1-shelf-1",
+        "west-central-observatory-hall-bay-1-shelf-2",
+        "west-central-observatory-hall-bay-10-book-0-0",
+        "west-central-observatory-hall-bay-10-book-0-1",
+        "west-central-observatory-hall-bay-10-book-0-2",
+        "west-central-observatory-hall-bay-10-book-0-3",
+        "west-central-observatory-hall-bay-10-book-1-0",
+        "west-central-observatory-hall-bay-10-book-1-1",
+        "west-central-observatory-hall-bay-10-book-1-2",
+        "west-central-observatory-hall-bay-10-book-1-3",
+        "west-central-observatory-hall-bay-10-book-2-0",
+        "west-central-observatory-hall-bay-10-book-2-1",
+        "west-central-observatory-hall-bay-10-book-2-2",
+        "west-central-observatory-hall-bay-10-book-2-3",
+        "west-central-observatory-hall-bay-10-bookcase-back",
+        "west-central-observatory-hall-bay-10-shelf-0",
+        "west-central-observatory-hall-bay-10-shelf-1",
+        "west-central-observatory-hall-bay-10-shelf-2",
+        "west-central-observatory-hall-bay-2-book-0-0",
+        "west-central-observatory-hall-bay-2-book-0-1",
+        "west-central-observatory-hall-bay-2-book-0-2",
+        "west-central-observatory-hall-bay-2-book-0-3",
+        "west-central-observatory-hall-bay-2-book-1-0",
+        "west-central-observatory-hall-bay-2-book-1-1",
+        "west-central-observatory-hall-bay-2-book-1-2",
+        "west-central-observatory-hall-bay-2-book-1-3",
+        "west-central-observatory-hall-bay-2-book-2-0",
+        "west-central-observatory-hall-bay-2-book-2-1",
+        "west-central-observatory-hall-bay-2-book-2-2",
+        "west-central-observatory-hall-bay-2-book-2-3",
+        "west-central-observatory-hall-bay-2-bookcase-back",
+        "west-central-observatory-hall-bay-2-shelf-0",
+        "west-central-observatory-hall-bay-2-shelf-1",
+        "west-central-observatory-hall-bay-2-shelf-2",
+        "west-central-observatory-hall-bay-3-book-0-0",
+        "west-central-observatory-hall-bay-3-book-0-1",
+        "west-central-observatory-hall-bay-3-book-0-2",
+        "west-central-observatory-hall-bay-3-book-0-3",
+        "west-central-observatory-hall-bay-3-book-1-0",
+        "west-central-observatory-hall-bay-3-book-1-1",
+        "west-central-observatory-hall-bay-3-book-1-2",
+        "west-central-observatory-hall-bay-3-book-1-3",
+        "west-central-observatory-hall-bay-3-book-2-0",
+        "west-central-observatory-hall-bay-3-book-2-1",
+        "west-central-observatory-hall-bay-3-book-2-2",
+        "west-central-observatory-hall-bay-3-book-2-3",
+        "west-central-observatory-hall-bay-3-bookcase-back",
+        "west-central-observatory-hall-bay-3-shelf-0",
+        "west-central-observatory-hall-bay-3-shelf-1",
+        "west-central-observatory-hall-bay-3-shelf-2",
+        "west-central-observatory-hall-bay-4-book-0-0",
+        "west-central-observatory-hall-bay-4-book-0-1",
+        "west-central-observatory-hall-bay-4-book-0-2",
+        "west-central-observatory-hall-bay-4-book-0-3",
+        "west-central-observatory-hall-bay-4-book-1-0",
+        "west-central-observatory-hall-bay-4-book-1-1",
+        "west-central-observatory-hall-bay-4-book-1-2",
+        "west-central-observatory-hall-bay-4-book-1-3",
+        "west-central-observatory-hall-bay-4-book-2-0",
+        "west-central-observatory-hall-bay-4-book-2-1",
+        "west-central-observatory-hall-bay-4-book-2-2",
+        "west-central-observatory-hall-bay-4-book-2-3",
+        "west-central-observatory-hall-bay-4-bookcase-back",
+        "west-central-observatory-hall-bay-4-shelf-0",
+        "west-central-observatory-hall-bay-4-shelf-1",
+        "west-central-observatory-hall-bay-4-shelf-2",
+        "west-central-observatory-hall-bay-5-book-0-0",
+        "west-central-observatory-hall-bay-5-book-0-1",
+        "west-central-observatory-hall-bay-5-book-0-2",
+        "west-central-observatory-hall-bay-5-book-0-3",
+        "west-central-observatory-hall-bay-5-book-1-0",
+        "west-central-observatory-hall-bay-5-book-1-1",
+        "west-central-observatory-hall-bay-5-book-1-2",
+        "west-central-observatory-hall-bay-5-book-1-3",
+        "west-central-observatory-hall-bay-5-book-2-0",
+        "west-central-observatory-hall-bay-5-book-2-1",
+        "west-central-observatory-hall-bay-5-book-2-2",
+        "west-central-observatory-hall-bay-5-book-2-3",
+        "west-central-observatory-hall-bay-5-bookcase-back",
+        "west-central-observatory-hall-bay-5-shelf-0",
+        "west-central-observatory-hall-bay-5-shelf-1",
+        "west-central-observatory-hall-bay-5-shelf-2",
+        "west-central-observatory-hall-bay-6-book-0-0",
+        "west-central-observatory-hall-bay-6-book-0-1",
+        "west-central-observatory-hall-bay-6-book-0-2",
+        "west-central-observatory-hall-bay-6-book-0-3",
+        "west-central-observatory-hall-bay-6-book-1-0",
+        "west-central-observatory-hall-bay-6-book-1-1",
+        "west-central-observatory-hall-bay-6-book-1-2",
+        "west-central-observatory-hall-bay-6-book-1-3",
+        "west-central-observatory-hall-bay-6-book-2-0",
+        "west-central-observatory-hall-bay-6-book-2-1",
+        "west-central-observatory-hall-bay-6-book-2-2",
+        "west-central-observatory-hall-bay-6-book-2-3",
+        "west-central-observatory-hall-bay-6-bookcase-back",
+        "west-central-observatory-hall-bay-6-shelf-0",
+        "west-central-observatory-hall-bay-6-shelf-1",
+        "west-central-observatory-hall-bay-6-shelf-2",
+        "west-central-observatory-hall-bay-7-book-0-0",
+        "west-central-observatory-hall-bay-7-book-0-1",
+        "west-central-observatory-hall-bay-7-book-0-2",
+        "west-central-observatory-hall-bay-7-book-0-3",
+        "west-central-observatory-hall-bay-7-book-1-0",
+        "west-central-observatory-hall-bay-7-book-1-1",
+        "west-central-observatory-hall-bay-7-book-1-2",
+        "west-central-observatory-hall-bay-7-book-1-3",
+        "west-central-observatory-hall-bay-7-book-2-0",
+        "west-central-observatory-hall-bay-7-book-2-1",
+        "west-central-observatory-hall-bay-7-book-2-2",
+        "west-central-observatory-hall-bay-7-book-2-3",
+        "west-central-observatory-hall-bay-7-bookcase-back",
+        "west-central-observatory-hall-bay-7-shelf-0",
+        "west-central-observatory-hall-bay-7-shelf-1",
+        "west-central-observatory-hall-bay-7-shelf-2",
+        "west-central-observatory-hall-bay-8-book-0-0",
+        "west-central-observatory-hall-bay-8-book-0-1",
+        "west-central-observatory-hall-bay-8-book-0-2",
+        "west-central-observatory-hall-bay-8-book-0-3",
+        "west-central-observatory-hall-bay-8-book-1-0",
+        "west-central-observatory-hall-bay-8-book-1-1",
+        "west-central-observatory-hall-bay-8-book-1-2",
+        "west-central-observatory-hall-bay-8-book-1-3",
+        "west-central-observatory-hall-bay-8-book-2-0",
+        "west-central-observatory-hall-bay-8-book-2-1",
+        "west-central-observatory-hall-bay-8-book-2-2",
+        "west-central-observatory-hall-bay-8-book-2-3",
+        "west-central-observatory-hall-bay-8-bookcase-back",
+        "west-central-observatory-hall-bay-8-shelf-0",
+        "west-central-observatory-hall-bay-8-shelf-1",
+        "west-central-observatory-hall-bay-8-shelf-2",
+        "west-central-observatory-hall-bay-9-book-0-0",
+        "west-central-observatory-hall-bay-9-book-0-1",
+        "west-central-observatory-hall-bay-9-book-0-2",
+        "west-central-observatory-hall-bay-9-book-0-3",
+        "west-central-observatory-hall-bay-9-book-1-0",
+        "west-central-observatory-hall-bay-9-book-1-1",
+        "west-central-observatory-hall-bay-9-book-1-2",
+        "west-central-observatory-hall-bay-9-book-1-3",
+        "west-central-observatory-hall-bay-9-book-2-0",
+        "west-central-observatory-hall-bay-9-book-2-1",
+        "west-central-observatory-hall-bay-9-book-2-2",
+        "west-central-observatory-hall-bay-9-book-2-3",
+        "west-central-observatory-hall-bay-9-bookcase-back",
+        "west-central-observatory-hall-bay-9-shelf-0",
+        "west-central-observatory-hall-bay-9-shelf-1",
+        "west-central-observatory-hall-bay-9-shelf-2"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S3-observatory-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 252,
+      "sourceParts": [
+        "observatory-reading-table-0-star-chart",
+        "west-curving-observatory-stair-tread-0",
+        "west-curving-observatory-stair-tread-1",
+        "west-curving-observatory-stair-tread-10",
+        "west-curving-observatory-stair-tread-11",
+        "west-curving-observatory-stair-tread-12",
+        "west-curving-observatory-stair-tread-13",
+        "west-curving-observatory-stair-tread-14",
+        "west-curving-observatory-stair-tread-15",
+        "west-curving-observatory-stair-tread-16",
+        "west-curving-observatory-stair-tread-17",
+        "west-curving-observatory-stair-tread-18",
+        "west-curving-observatory-stair-tread-19",
+        "west-curving-observatory-stair-tread-2",
+        "west-curving-observatory-stair-tread-3",
+        "west-curving-observatory-stair-tread-4",
+        "west-curving-observatory-stair-tread-5",
+        "west-curving-observatory-stair-tread-6",
+        "west-curving-observatory-stair-tread-7",
+        "west-curving-observatory-stair-tread-8",
+        "west-curving-observatory-stair-tread-9"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S4-observatory-books-and-walnut",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-books-and-walnut"
+      ],
+      "triangles": 160,
+      "sourceParts": [
+        "observatory-tree-trunk-0",
+        "observatory-tree-trunk-1"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S4-observatory-garden-colors",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-garden-colors"
+      ],
+      "triangles": 916,
+      "sourceParts": [
+        "observatory-cypress-0-0",
+        "observatory-cypress-0-1",
+        "observatory-cypress-0-2",
+        "observatory-cypress-0-3",
+        "observatory-garden-bed-12",
+        "observatory-garden-bed-15",
+        "observatory-garden-bed-18",
+        "observatory-garden-bed-21",
+        "observatory-garden-bed-6",
+        "observatory-garden-bed-9",
+        "observatory-hanging-ivy-0-0",
+        "observatory-hanging-ivy-0-1",
+        "observatory-hanging-ivy-0-2",
+        "observatory-hanging-ivy-0-3",
+        "observatory-hanging-ivy-1-0",
+        "observatory-hanging-ivy-1-1",
+        "observatory-hanging-ivy-1-2",
+        "observatory-hanging-ivy-1-3",
+        "observatory-roof-tree-0-0",
+        "observatory-roof-tree-0-1",
+        "observatory-roof-tree-1-0",
+        "observatory-roof-tree-1-1",
+        "observatory-violet-bed-15",
+        "observatory-violet-bed-21",
+        "observatory-violet-bed-9"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S4-observatory-warm-limestone",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 72,
+      "sourceParts": [
+        "observatory-tree-pot-0",
+        "observatory-tree-pot-1"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S5-observatory-clear-window-glass",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-clear-window-glass"
+      ],
+      "triangles": 143,
+      "sourceParts": [
+        "west-central-observatory-hall-bay-0-clear-glazing",
+        "west-central-observatory-hall-bay-1-clear-glazing",
+        "west-central-observatory-hall-bay-10-clear-glazing",
+        "west-central-observatory-hall-bay-2-clear-glazing",
+        "west-central-observatory-hall-bay-3-clear-glazing",
+        "west-central-observatory-hall-bay-4-clear-glazing",
+        "west-central-observatory-hall-bay-5-clear-glazing",
+        "west-central-observatory-hall-bay-6-clear-glazing",
+        "west-central-observatory-hall-bay-7-clear-glazing",
+        "west-central-observatory-hall-bay-8-clear-glazing",
+        "west-central-observatory-hall-bay-9-clear-glazing"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S5-observatory-reading-lights",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-reading-lights"
+      ],
+      "triangles": 132,
+      "sourceParts": [
+        "west-central-observatory-hall-bay-0-warm-reading-strip",
+        "west-central-observatory-hall-bay-1-warm-reading-strip",
+        "west-central-observatory-hall-bay-10-warm-reading-strip",
+        "west-central-observatory-hall-bay-2-warm-reading-strip",
+        "west-central-observatory-hall-bay-3-warm-reading-strip",
+        "west-central-observatory-hall-bay-4-warm-reading-strip",
+        "west-central-observatory-hall-bay-5-warm-reading-strip",
+        "west-central-observatory-hall-bay-6-warm-reading-strip",
+        "west-central-observatory-hall-bay-7-warm-reading-strip",
+        "west-central-observatory-hall-bay-8-warm-reading-strip",
+        "west-central-observatory-hall-bay-9-warm-reading-strip"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S5-observatory-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 276,
+      "sourceParts": [
+        "left-roof-garden-post-0",
+        "left-roof-garden-post-1",
+        "left-roof-garden-post-2",
+        "left-roof-garden-post-3",
+        "left-roof-garden-post-4",
+        "left-roof-garden-rail",
+        "west-central-observatory-hall-bay-0-window-mullion",
+        "west-central-observatory-hall-bay-1-window-mullion",
+        "west-central-observatory-hall-bay-10-window-mullion",
+        "west-central-observatory-hall-bay-2-window-mullion",
+        "west-central-observatory-hall-bay-3-window-mullion",
+        "west-central-observatory-hall-bay-4-window-mullion",
+        "west-central-observatory-hall-bay-5-window-mullion",
+        "west-central-observatory-hall-bay-6-window-mullion",
+        "west-central-observatory-hall-bay-7-window-mullion",
+        "west-central-observatory-hall-bay-8-window-mullion",
+        "west-central-observatory-hall-bay-9-window-mullion"
+      ]
+    },
+    {
+      "name": "observatory-wings-L1-S5-observatory-warm-limestone",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 412,
+      "sourceParts": [
+        "west-curving-observatory-stair-stone-balustrade--1",
+        "west-curving-observatory-stair-stone-balustrade-1"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S1-observatory-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 336,
+      "sourceParts": [
+        "east-arched-instrument-wing-continuous-floor",
+        "east-roof-observation-stair-continuous-masonry",
+        "observatory-foundation-rock-10",
+        "observatory-foundation-rock-13",
+        "observatory-foundation-rock-16",
+        "observatory-foundation-rock-19",
+        "observatory-foundation-rock-22",
+        "observatory-foundation-rock-4",
+        "observatory-foundation-rock-7"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S2-observatory-warm-limestone",
+      "level": 2,
+      "stage": 2,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 764,
+      "sourceParts": [
+        "east-arched-instrument-wing-bay-0-arch-spandrel",
+        "east-arched-instrument-wing-bay-0-pier-0",
+        "east-arched-instrument-wing-bay-0-pier-1",
+        "east-arched-instrument-wing-bay-1-arch-spandrel",
+        "east-arched-instrument-wing-bay-1-pier-0",
+        "east-arched-instrument-wing-bay-1-pier-1",
+        "east-arched-instrument-wing-bay-2-arch-spandrel",
+        "east-arched-instrument-wing-bay-2-pier-0",
+        "east-arched-instrument-wing-bay-2-pier-1",
+        "east-arched-instrument-wing-bay-3-arch-spandrel",
+        "east-arched-instrument-wing-bay-3-pier-0",
+        "east-arched-instrument-wing-bay-3-pier-1",
+        "east-arched-instrument-wing-bay-4-arch-spandrel",
+        "east-arched-instrument-wing-bay-4-pier-0",
+        "east-arched-instrument-wing-bay-4-pier-1",
+        "east-arched-instrument-wing-bay-5-arch-spandrel",
+        "east-arched-instrument-wing-bay-5-pier-0",
+        "east-arched-instrument-wing-bay-5-pier-1",
+        "east-arched-instrument-wing-bay-6-arch-spandrel",
+        "east-arched-instrument-wing-bay-6-pier-0",
+        "east-arched-instrument-wing-bay-6-pier-1",
+        "east-arched-instrument-wing-bay-7-arch-spandrel",
+        "east-arched-instrument-wing-bay-7-pier-0",
+        "east-arched-instrument-wing-bay-7-pier-1",
+        "east-arched-instrument-wing-bay-8-arch-spandrel",
+        "east-arched-instrument-wing-bay-8-pier-0",
+        "east-arched-instrument-wing-bay-8-pier-1",
+        "east-arched-instrument-wing-occupied-roof",
+        "front-celestial-banner-stone-backing"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S3-observatory-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-books-and-walnut"
+      ],
+      "triangles": 2024,
+      "sourceParts": [
+        "east-arched-instrument-wing-bay-0-book-0-0",
+        "east-arched-instrument-wing-bay-0-book-0-1",
+        "east-arched-instrument-wing-bay-0-book-0-2",
+        "east-arched-instrument-wing-bay-0-book-0-3",
+        "east-arched-instrument-wing-bay-0-book-1-0",
+        "east-arched-instrument-wing-bay-0-book-1-1",
+        "east-arched-instrument-wing-bay-0-book-1-2",
+        "east-arched-instrument-wing-bay-0-book-1-3",
+        "east-arched-instrument-wing-bay-0-book-2-0",
+        "east-arched-instrument-wing-bay-0-book-2-1",
+        "east-arched-instrument-wing-bay-0-book-2-2",
+        "east-arched-instrument-wing-bay-0-book-2-3",
+        "east-arched-instrument-wing-bay-0-bookcase-back",
+        "east-arched-instrument-wing-bay-0-shelf-0",
+        "east-arched-instrument-wing-bay-0-shelf-1",
+        "east-arched-instrument-wing-bay-0-shelf-2",
+        "east-arched-instrument-wing-bay-1-book-0-0",
+        "east-arched-instrument-wing-bay-1-book-0-1",
+        "east-arched-instrument-wing-bay-1-book-0-2",
+        "east-arched-instrument-wing-bay-1-book-0-3",
+        "east-arched-instrument-wing-bay-1-book-1-0",
+        "east-arched-instrument-wing-bay-1-book-1-1",
+        "east-arched-instrument-wing-bay-1-book-1-2",
+        "east-arched-instrument-wing-bay-1-book-1-3",
+        "east-arched-instrument-wing-bay-1-book-2-0",
+        "east-arched-instrument-wing-bay-1-book-2-1",
+        "east-arched-instrument-wing-bay-1-book-2-2",
+        "east-arched-instrument-wing-bay-1-book-2-3",
+        "east-arched-instrument-wing-bay-1-bookcase-back",
+        "east-arched-instrument-wing-bay-1-shelf-0",
+        "east-arched-instrument-wing-bay-1-shelf-1",
+        "east-arched-instrument-wing-bay-1-shelf-2",
+        "east-arched-instrument-wing-bay-2-book-0-0",
+        "east-arched-instrument-wing-bay-2-book-0-1",
+        "east-arched-instrument-wing-bay-2-book-0-2",
+        "east-arched-instrument-wing-bay-2-book-0-3",
+        "east-arched-instrument-wing-bay-2-book-1-0",
+        "east-arched-instrument-wing-bay-2-book-1-1",
+        "east-arched-instrument-wing-bay-2-book-1-2",
+        "east-arched-instrument-wing-bay-2-book-1-3",
+        "east-arched-instrument-wing-bay-2-book-2-0",
+        "east-arched-instrument-wing-bay-2-book-2-1",
+        "east-arched-instrument-wing-bay-2-book-2-2",
+        "east-arched-instrument-wing-bay-2-book-2-3",
+        "east-arched-instrument-wing-bay-2-bookcase-back",
+        "east-arched-instrument-wing-bay-2-shelf-0",
+        "east-arched-instrument-wing-bay-2-shelf-1",
+        "east-arched-instrument-wing-bay-2-shelf-2",
+        "east-arched-instrument-wing-bay-3-book-0-0",
+        "east-arched-instrument-wing-bay-3-book-0-1",
+        "east-arched-instrument-wing-bay-3-book-0-2",
+        "east-arched-instrument-wing-bay-3-book-0-3",
+        "east-arched-instrument-wing-bay-3-book-1-0",
+        "east-arched-instrument-wing-bay-3-book-1-1",
+        "east-arched-instrument-wing-bay-3-book-1-2",
+        "east-arched-instrument-wing-bay-3-book-1-3",
+        "east-arched-instrument-wing-bay-3-book-2-0",
+        "east-arched-instrument-wing-bay-3-book-2-1",
+        "east-arched-instrument-wing-bay-3-book-2-2",
+        "east-arched-instrument-wing-bay-3-book-2-3",
+        "east-arched-instrument-wing-bay-3-bookcase-back",
+        "east-arched-instrument-wing-bay-3-shelf-0",
+        "east-arched-instrument-wing-bay-3-shelf-1",
+        "east-arched-instrument-wing-bay-3-shelf-2",
+        "east-arched-instrument-wing-bay-4-book-0-0",
+        "east-arched-instrument-wing-bay-4-book-0-1",
+        "east-arched-instrument-wing-bay-4-book-0-2",
+        "east-arched-instrument-wing-bay-4-book-0-3",
+        "east-arched-instrument-wing-bay-4-book-1-0",
+        "east-arched-instrument-wing-bay-4-book-1-1",
+        "east-arched-instrument-wing-bay-4-book-1-2",
+        "east-arched-instrument-wing-bay-4-book-1-3",
+        "east-arched-instrument-wing-bay-4-book-2-0",
+        "east-arched-instrument-wing-bay-4-book-2-1",
+        "east-arched-instrument-wing-bay-4-book-2-2",
+        "east-arched-instrument-wing-bay-4-book-2-3",
+        "east-arched-instrument-wing-bay-4-bookcase-back",
+        "east-arched-instrument-wing-bay-4-shelf-0",
+        "east-arched-instrument-wing-bay-4-shelf-1",
+        "east-arched-instrument-wing-bay-4-shelf-2",
+        "east-arched-instrument-wing-bay-5-book-0-0",
+        "east-arched-instrument-wing-bay-5-book-0-1",
+        "east-arched-instrument-wing-bay-5-book-0-2",
+        "east-arched-instrument-wing-bay-5-book-0-3",
+        "east-arched-instrument-wing-bay-5-book-1-0",
+        "east-arched-instrument-wing-bay-5-book-1-1",
+        "east-arched-instrument-wing-bay-5-book-1-2",
+        "east-arched-instrument-wing-bay-5-book-1-3",
+        "east-arched-instrument-wing-bay-5-book-2-0",
+        "east-arched-instrument-wing-bay-5-book-2-1",
+        "east-arched-instrument-wing-bay-5-book-2-2",
+        "east-arched-instrument-wing-bay-5-book-2-3",
+        "east-arched-instrument-wing-bay-5-bookcase-back",
+        "east-arched-instrument-wing-bay-5-shelf-0",
+        "east-arched-instrument-wing-bay-5-shelf-1",
+        "east-arched-instrument-wing-bay-5-shelf-2",
+        "east-arched-instrument-wing-bay-6-book-0-0",
+        "east-arched-instrument-wing-bay-6-book-0-1",
+        "east-arched-instrument-wing-bay-6-book-0-2",
+        "east-arched-instrument-wing-bay-6-book-0-3",
+        "east-arched-instrument-wing-bay-6-book-1-0",
+        "east-arched-instrument-wing-bay-6-book-1-1",
+        "east-arched-instrument-wing-bay-6-book-1-2",
+        "east-arched-instrument-wing-bay-6-book-1-3",
+        "east-arched-instrument-wing-bay-6-book-2-0",
+        "east-arched-instrument-wing-bay-6-book-2-1",
+        "east-arched-instrument-wing-bay-6-book-2-2",
+        "east-arched-instrument-wing-bay-6-book-2-3",
+        "east-arched-instrument-wing-bay-6-bookcase-back",
+        "east-arched-instrument-wing-bay-6-shelf-0",
+        "east-arched-instrument-wing-bay-6-shelf-1",
+        "east-arched-instrument-wing-bay-6-shelf-2",
+        "east-arched-instrument-wing-bay-7-book-0-0",
+        "east-arched-instrument-wing-bay-7-book-0-1",
+        "east-arched-instrument-wing-bay-7-book-0-2",
+        "east-arched-instrument-wing-bay-7-book-0-3",
+        "east-arched-instrument-wing-bay-7-book-1-0",
+        "east-arched-instrument-wing-bay-7-book-1-1",
+        "east-arched-instrument-wing-bay-7-book-1-2",
+        "east-arched-instrument-wing-bay-7-book-1-3",
+        "east-arched-instrument-wing-bay-7-book-2-0",
+        "east-arched-instrument-wing-bay-7-book-2-1",
+        "east-arched-instrument-wing-bay-7-book-2-2",
+        "east-arched-instrument-wing-bay-7-book-2-3",
+        "east-arched-instrument-wing-bay-7-bookcase-back",
+        "east-arched-instrument-wing-bay-7-shelf-0",
+        "east-arched-instrument-wing-bay-7-shelf-1",
+        "east-arched-instrument-wing-bay-7-shelf-2",
+        "east-arched-instrument-wing-bay-8-book-0-0",
+        "east-arched-instrument-wing-bay-8-book-0-1",
+        "east-arched-instrument-wing-bay-8-book-0-2",
+        "east-arched-instrument-wing-bay-8-book-0-3",
+        "east-arched-instrument-wing-bay-8-book-1-0",
+        "east-arched-instrument-wing-bay-8-book-1-1",
+        "east-arched-instrument-wing-bay-8-book-1-2",
+        "east-arched-instrument-wing-bay-8-book-1-3",
+        "east-arched-instrument-wing-bay-8-book-2-0",
+        "east-arched-instrument-wing-bay-8-book-2-1",
+        "east-arched-instrument-wing-bay-8-book-2-2",
+        "east-arched-instrument-wing-bay-8-book-2-3",
+        "east-arched-instrument-wing-bay-8-bookcase-back",
+        "east-arched-instrument-wing-bay-8-shelf-0",
+        "east-arched-instrument-wing-bay-8-shelf-1",
+        "east-arched-instrument-wing-bay-8-shelf-2",
+        "observatory-reading-table-1-chair--1",
+        "observatory-reading-table-1-chair-1",
+        "observatory-reading-table-1-chairback--1",
+        "observatory-reading-table-1-chairback-1",
+        "observatory-reading-table-1-chairleg--1",
+        "observatory-reading-table-1-chairleg-1",
+        "observatory-reading-table-1-leg",
+        "observatory-reading-table-1-top",
+        "observatory-reading-table-2-chair--1",
+        "observatory-reading-table-2-chair-1",
+        "observatory-reading-table-2-chairback--1",
+        "observatory-reading-table-2-chairback-1",
+        "observatory-reading-table-2-chairleg--1",
+        "observatory-reading-table-2-chairleg-1",
+        "observatory-reading-table-2-leg",
+        "observatory-reading-table-2-top",
+        "telescope-tripod-0",
+        "telescope-tripod-1",
+        "telescope-tripod-2"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S3-observatory-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 264,
+      "sourceParts": [
+        "east-roof-observation-stair-tread-0",
+        "east-roof-observation-stair-tread-1",
+        "east-roof-observation-stair-tread-10",
+        "east-roof-observation-stair-tread-11",
+        "east-roof-observation-stair-tread-12",
+        "east-roof-observation-stair-tread-13",
+        "east-roof-observation-stair-tread-14",
+        "east-roof-observation-stair-tread-15",
+        "east-roof-observation-stair-tread-16",
+        "east-roof-observation-stair-tread-17",
+        "east-roof-observation-stair-tread-18",
+        "east-roof-observation-stair-tread-19",
+        "east-roof-observation-stair-tread-2",
+        "east-roof-observation-stair-tread-3",
+        "east-roof-observation-stair-tread-4",
+        "east-roof-observation-stair-tread-5",
+        "east-roof-observation-stair-tread-6",
+        "east-roof-observation-stair-tread-7",
+        "east-roof-observation-stair-tread-8",
+        "east-roof-observation-stair-tread-9",
+        "observatory-reading-table-1-star-chart",
+        "observatory-reading-table-2-star-chart"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S4-observatory-books-and-walnut",
+      "level": 2,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-books-and-walnut"
+      ],
+      "triangles": 160,
+      "sourceParts": [
+        "observatory-tree-trunk-2",
+        "observatory-tree-trunk-3"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S4-observatory-garden-colors",
+      "level": 2,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-garden-colors"
+      ],
+      "triangles": 960,
+      "sourceParts": [
+        "observatory-cypress-1-0",
+        "observatory-cypress-1-1",
+        "observatory-cypress-1-2",
+        "observatory-cypress-1-3",
+        "observatory-garden-bed-10",
+        "observatory-garden-bed-13",
+        "observatory-garden-bed-16",
+        "observatory-garden-bed-19",
+        "observatory-garden-bed-22",
+        "observatory-garden-bed-4",
+        "observatory-garden-bed-7",
+        "observatory-hanging-ivy-2-0",
+        "observatory-hanging-ivy-2-1",
+        "observatory-hanging-ivy-2-2",
+        "observatory-hanging-ivy-2-3",
+        "observatory-hanging-ivy-3-0",
+        "observatory-hanging-ivy-3-1",
+        "observatory-hanging-ivy-3-2",
+        "observatory-hanging-ivy-3-3",
+        "observatory-roof-tree-2-0",
+        "observatory-roof-tree-2-1",
+        "observatory-roof-tree-3-0",
+        "observatory-roof-tree-3-1",
+        "observatory-violet-bed-13",
+        "observatory-violet-bed-19",
+        "observatory-violet-bed-7"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S4-observatory-warm-limestone",
+      "level": 2,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 72,
+      "sourceParts": [
+        "observatory-tree-pot-2",
+        "observatory-tree-pot-3"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S5-observatory-clear-window-glass",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-clear-window-glass"
+      ],
+      "triangles": 117,
+      "sourceParts": [
+        "east-arched-instrument-wing-bay-0-clear-glazing",
+        "east-arched-instrument-wing-bay-1-clear-glazing",
+        "east-arched-instrument-wing-bay-2-clear-glazing",
+        "east-arched-instrument-wing-bay-3-clear-glazing",
+        "east-arched-instrument-wing-bay-4-clear-glazing",
+        "east-arched-instrument-wing-bay-5-clear-glazing",
+        "east-arched-instrument-wing-bay-6-clear-glazing",
+        "east-arched-instrument-wing-bay-7-clear-glazing",
+        "east-arched-instrument-wing-bay-8-clear-glazing"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S5-observatory-reading-lights",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-reading-lights"
+      ],
+      "triangles": 108,
+      "sourceParts": [
+        "east-arched-instrument-wing-bay-0-warm-reading-strip",
+        "east-arched-instrument-wing-bay-1-warm-reading-strip",
+        "east-arched-instrument-wing-bay-2-warm-reading-strip",
+        "east-arched-instrument-wing-bay-3-warm-reading-strip",
+        "east-arched-instrument-wing-bay-4-warm-reading-strip",
+        "east-arched-instrument-wing-bay-5-warm-reading-strip",
+        "east-arched-instrument-wing-bay-6-warm-reading-strip",
+        "east-arched-instrument-wing-bay-7-warm-reading-strip",
+        "east-arched-instrument-wing-bay-8-warm-reading-strip"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S5-observatory-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 308,
+      "sourceParts": [
+        "east-arched-instrument-wing-bay-0-window-mullion",
+        "east-arched-instrument-wing-bay-1-window-mullion",
+        "east-arched-instrument-wing-bay-2-window-mullion",
+        "east-arched-instrument-wing-bay-3-window-mullion",
+        "east-arched-instrument-wing-bay-4-window-mullion",
+        "east-arched-instrument-wing-bay-5-window-mullion",
+        "east-arched-instrument-wing-bay-6-window-mullion",
+        "east-arched-instrument-wing-bay-7-window-mullion",
+        "east-arched-instrument-wing-bay-8-window-mullion",
+        "right-observation-terrace-post-0",
+        "right-observation-terrace-post-1",
+        "right-observation-terrace-post-2",
+        "right-observation-terrace-post-3",
+        "right-observation-terrace-post-4",
+        "right-observation-terrace-post-5",
+        "right-observation-terrace-post-6",
+        "right-observation-terrace-rail"
+      ]
+    },
+    {
+      "name": "observatory-wings-L2-S5-observatory-warm-limestone",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 412,
+      "sourceParts": [
+        "east-roof-observation-stair-stone-balustrade--1",
+        "east-roof-observation-stair-stone-balustrade-1"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S1-observatory-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 304,
+      "sourceParts": [
+        "observatory-foundation-rock-11",
+        "observatory-foundation-rock-14",
+        "observatory-foundation-rock-17",
+        "observatory-foundation-rock-20",
+        "observatory-foundation-rock-5",
+        "observatory-foundation-rock-8",
+        "rear-celestial-reading-gallery-continuous-floor",
+        "rear-gallery-access-stair-continuous-masonry"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S2-observatory-warm-limestone",
+      "level": 3,
+      "stage": 2,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 500,
+      "sourceParts": [
+        "rear-celestial-reading-gallery-bay-0-arch-spandrel",
+        "rear-celestial-reading-gallery-bay-0-pier-0",
+        "rear-celestial-reading-gallery-bay-0-pier-1",
+        "rear-celestial-reading-gallery-bay-1-arch-spandrel",
+        "rear-celestial-reading-gallery-bay-1-pier-0",
+        "rear-celestial-reading-gallery-bay-1-pier-1",
+        "rear-celestial-reading-gallery-bay-2-arch-spandrel",
+        "rear-celestial-reading-gallery-bay-2-pier-0",
+        "rear-celestial-reading-gallery-bay-2-pier-1",
+        "rear-celestial-reading-gallery-bay-3-arch-spandrel",
+        "rear-celestial-reading-gallery-bay-3-pier-0",
+        "rear-celestial-reading-gallery-bay-3-pier-1",
+        "rear-celestial-reading-gallery-bay-4-arch-spandrel",
+        "rear-celestial-reading-gallery-bay-4-pier-0",
+        "rear-celestial-reading-gallery-bay-4-pier-1",
+        "rear-celestial-reading-gallery-bay-5-arch-spandrel",
+        "rear-celestial-reading-gallery-bay-5-pier-0",
+        "rear-celestial-reading-gallery-bay-5-pier-1",
+        "rear-celestial-reading-gallery-occupied-roof"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S3-observatory-books-and-walnut",
+      "level": 3,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-books-and-walnut"
+      ],
+      "triangles": 1084,
+      "sourceParts": [
+        "observatory-reading-table-3-chair--1",
+        "observatory-reading-table-3-chair-1",
+        "observatory-reading-table-3-chairback--1",
+        "observatory-reading-table-3-chairback-1",
+        "observatory-reading-table-3-chairleg--1",
+        "observatory-reading-table-3-chairleg-1",
+        "observatory-reading-table-3-leg",
+        "observatory-reading-table-3-top",
+        "rear-celestial-reading-gallery-bay-0-book-0-0",
+        "rear-celestial-reading-gallery-bay-0-book-0-1",
+        "rear-celestial-reading-gallery-bay-0-book-0-2",
+        "rear-celestial-reading-gallery-bay-0-book-0-3",
+        "rear-celestial-reading-gallery-bay-0-book-1-0",
+        "rear-celestial-reading-gallery-bay-0-book-1-1",
+        "rear-celestial-reading-gallery-bay-0-book-1-2",
+        "rear-celestial-reading-gallery-bay-0-book-1-3",
+        "rear-celestial-reading-gallery-bay-0-book-2-0",
+        "rear-celestial-reading-gallery-bay-0-book-2-1",
+        "rear-celestial-reading-gallery-bay-0-book-2-2",
+        "rear-celestial-reading-gallery-bay-0-book-2-3",
+        "rear-celestial-reading-gallery-bay-0-bookcase-back",
+        "rear-celestial-reading-gallery-bay-0-shelf-0",
+        "rear-celestial-reading-gallery-bay-0-shelf-1",
+        "rear-celestial-reading-gallery-bay-0-shelf-2",
+        "rear-celestial-reading-gallery-bay-1-book-0-0",
+        "rear-celestial-reading-gallery-bay-1-book-0-1",
+        "rear-celestial-reading-gallery-bay-1-book-0-2",
+        "rear-celestial-reading-gallery-bay-1-book-0-3",
+        "rear-celestial-reading-gallery-bay-1-book-1-0",
+        "rear-celestial-reading-gallery-bay-1-book-1-1",
+        "rear-celestial-reading-gallery-bay-1-book-1-2",
+        "rear-celestial-reading-gallery-bay-1-book-1-3",
+        "rear-celestial-reading-gallery-bay-1-book-2-0",
+        "rear-celestial-reading-gallery-bay-1-book-2-1",
+        "rear-celestial-reading-gallery-bay-1-book-2-2",
+        "rear-celestial-reading-gallery-bay-1-book-2-3",
+        "rear-celestial-reading-gallery-bay-1-bookcase-back",
+        "rear-celestial-reading-gallery-bay-1-shelf-0",
+        "rear-celestial-reading-gallery-bay-1-shelf-1",
+        "rear-celestial-reading-gallery-bay-1-shelf-2",
+        "rear-celestial-reading-gallery-bay-2-book-0-0",
+        "rear-celestial-reading-gallery-bay-2-book-0-1",
+        "rear-celestial-reading-gallery-bay-2-book-0-2",
+        "rear-celestial-reading-gallery-bay-2-book-0-3",
+        "rear-celestial-reading-gallery-bay-2-book-1-0",
+        "rear-celestial-reading-gallery-bay-2-book-1-1",
+        "rear-celestial-reading-gallery-bay-2-book-1-2",
+        "rear-celestial-reading-gallery-bay-2-book-1-3",
+        "rear-celestial-reading-gallery-bay-2-book-2-0",
+        "rear-celestial-reading-gallery-bay-2-book-2-1",
+        "rear-celestial-reading-gallery-bay-2-book-2-2",
+        "rear-celestial-reading-gallery-bay-2-book-2-3",
+        "rear-celestial-reading-gallery-bay-2-bookcase-back",
+        "rear-celestial-reading-gallery-bay-2-shelf-0",
+        "rear-celestial-reading-gallery-bay-2-shelf-1",
+        "rear-celestial-reading-gallery-bay-2-shelf-2",
+        "rear-celestial-reading-gallery-bay-4-book-0-0",
+        "rear-celestial-reading-gallery-bay-4-book-0-1",
+        "rear-celestial-reading-gallery-bay-4-book-0-2",
+        "rear-celestial-reading-gallery-bay-4-book-0-3",
+        "rear-celestial-reading-gallery-bay-4-book-1-0",
+        "rear-celestial-reading-gallery-bay-4-book-1-1",
+        "rear-celestial-reading-gallery-bay-4-book-1-2",
+        "rear-celestial-reading-gallery-bay-4-book-1-3",
+        "rear-celestial-reading-gallery-bay-4-book-2-0",
+        "rear-celestial-reading-gallery-bay-4-book-2-1",
+        "rear-celestial-reading-gallery-bay-4-book-2-2",
+        "rear-celestial-reading-gallery-bay-4-book-2-3",
+        "rear-celestial-reading-gallery-bay-4-bookcase-back",
+        "rear-celestial-reading-gallery-bay-4-shelf-0",
+        "rear-celestial-reading-gallery-bay-4-shelf-1",
+        "rear-celestial-reading-gallery-bay-4-shelf-2",
+        "rear-celestial-reading-gallery-bay-5-book-0-0",
+        "rear-celestial-reading-gallery-bay-5-book-0-1",
+        "rear-celestial-reading-gallery-bay-5-book-0-2",
+        "rear-celestial-reading-gallery-bay-5-book-0-3",
+        "rear-celestial-reading-gallery-bay-5-book-1-0",
+        "rear-celestial-reading-gallery-bay-5-book-1-1",
+        "rear-celestial-reading-gallery-bay-5-book-1-2",
+        "rear-celestial-reading-gallery-bay-5-book-1-3",
+        "rear-celestial-reading-gallery-bay-5-book-2-0",
+        "rear-celestial-reading-gallery-bay-5-book-2-1",
+        "rear-celestial-reading-gallery-bay-5-book-2-2",
+        "rear-celestial-reading-gallery-bay-5-book-2-3",
+        "rear-celestial-reading-gallery-bay-5-bookcase-back",
+        "rear-celestial-reading-gallery-bay-5-shelf-0",
+        "rear-celestial-reading-gallery-bay-5-shelf-1",
+        "rear-celestial-reading-gallery-bay-5-shelf-2"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S3-observatory-warm-limestone",
+      "level": 3,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 252,
+      "sourceParts": [
+        "observatory-reading-table-3-star-chart",
+        "rear-gallery-access-stair-tread-0",
+        "rear-gallery-access-stair-tread-1",
+        "rear-gallery-access-stair-tread-10",
+        "rear-gallery-access-stair-tread-11",
+        "rear-gallery-access-stair-tread-12",
+        "rear-gallery-access-stair-tread-13",
+        "rear-gallery-access-stair-tread-14",
+        "rear-gallery-access-stair-tread-15",
+        "rear-gallery-access-stair-tread-16",
+        "rear-gallery-access-stair-tread-17",
+        "rear-gallery-access-stair-tread-18",
+        "rear-gallery-access-stair-tread-19",
+        "rear-gallery-access-stair-tread-2",
+        "rear-gallery-access-stair-tread-3",
+        "rear-gallery-access-stair-tread-4",
+        "rear-gallery-access-stair-tread-5",
+        "rear-gallery-access-stair-tread-6",
+        "rear-gallery-access-stair-tread-7",
+        "rear-gallery-access-stair-tread-8",
+        "rear-gallery-access-stair-tread-9"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S4-observatory-books-and-walnut",
+      "level": 3,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-books-and-walnut"
+      ],
+      "triangles": 80,
+      "sourceParts": [
+        "observatory-tree-trunk-4"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S4-observatory-garden-colors",
+      "level": 3,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-garden-colors"
+      ],
+      "triangles": 812,
+      "sourceParts": [
+        "observatory-cypress-2-0",
+        "observatory-cypress-2-1",
+        "observatory-cypress-2-2",
+        "observatory-cypress-2-3",
+        "observatory-cypress-3-0",
+        "observatory-cypress-3-1",
+        "observatory-cypress-3-2",
+        "observatory-cypress-3-3",
+        "observatory-garden-bed-11",
+        "observatory-garden-bed-14",
+        "observatory-garden-bed-17",
+        "observatory-garden-bed-20",
+        "observatory-garden-bed-5",
+        "observatory-garden-bed-8",
+        "observatory-hanging-ivy-4-0",
+        "observatory-hanging-ivy-4-1",
+        "observatory-hanging-ivy-4-2",
+        "observatory-hanging-ivy-4-3",
+        "observatory-roof-tree-4-0",
+        "observatory-roof-tree-4-1",
+        "observatory-violet-bed-11",
+        "observatory-violet-bed-17",
+        "observatory-violet-bed-5"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S4-observatory-warm-limestone",
+      "level": 3,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 36,
+      "sourceParts": [
+        "observatory-tree-pot-4"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S5-observatory-clear-window-glass",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-clear-window-glass"
+      ],
+      "triangles": 65,
+      "sourceParts": [
+        "rear-celestial-reading-gallery-bay-0-clear-glazing",
+        "rear-celestial-reading-gallery-bay-1-clear-glazing",
+        "rear-celestial-reading-gallery-bay-2-clear-glazing",
+        "rear-celestial-reading-gallery-bay-4-clear-glazing",
+        "rear-celestial-reading-gallery-bay-5-clear-glazing"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S5-observatory-reading-lights",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-reading-lights"
+      ],
+      "triangles": 60,
+      "sourceParts": [
+        "rear-celestial-reading-gallery-bay-0-warm-reading-strip",
+        "rear-celestial-reading-gallery-bay-1-warm-reading-strip",
+        "rear-celestial-reading-gallery-bay-2-warm-reading-strip",
+        "rear-celestial-reading-gallery-bay-4-warm-reading-strip",
+        "rear-celestial-reading-gallery-bay-5-warm-reading-strip"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S5-observatory-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-gold"
+      ],
+      "triangles": 176,
+      "sourceParts": [
+        "rear-celestial-reading-gallery-bay-0-window-mullion",
+        "rear-celestial-reading-gallery-bay-1-window-mullion",
+        "rear-celestial-reading-gallery-bay-2-window-mullion",
+        "rear-celestial-reading-gallery-bay-4-window-mullion",
+        "rear-celestial-reading-gallery-bay-5-window-mullion",
+        "rear-roof-gallery-post-0",
+        "rear-roof-gallery-post-1",
+        "rear-roof-gallery-post-2",
+        "rear-roof-gallery-post-3",
+        "rear-roof-gallery-rail"
+      ]
+    },
+    {
+      "name": "observatory-wings-L3-S5-observatory-warm-limestone",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "materials": [
+        "observatory-warm-limestone"
+      ],
+      "triangles": 412,
+      "sourceParts": [
+        "rear-gallery-access-stair-stone-balustrade--1",
+        "rear-gallery-access-stair-stone-balustrade-1"
+      ]
+    }
+  ],
+  "sourceSha256": "5c3e2541d371c50d08da57af4dae6d159ea8713df686d441b7db59dd6186a87d"
+}

@@ -1,0 +1,821 @@
+{
+  "status": "mechanical-pass-awaiting-whole-island-review",
+  "sha256": "f6778ccfe4140539a938604dc4ff2dc83dcc2d6a26bc16e90a0f04c1f16e4f4a",
+  "bytes": 1208712,
+  "bbox": {
+    "min": [
+      -1.4500000476837158,
+      0.0,
+      -1.4541993141174316
+    ],
+    "max": [
+      1.462227463722229,
+      2.514296531677246,
+      1.2899999618530273
+    ]
+  },
+  "radius": 1.5080119526715734,
+  "triangles": 24710,
+  "meshNodes": 50,
+  "completedOwnerMaterialBatches": 12,
+  "degenerateTriangles": 0,
+  "additiveSignaturesPreserved": true,
+  "levels": {
+    "1": {
+      "addedTriangles": 11650,
+      "totalTriangles": 11650,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "hatchery-conservatory-L1-S2-hatchery-blue-conservatory-glass": "6339705997b75dc8a222376a9a46e462db8802262b68a219cb6898a4116ef534",
+        "hatchery-conservatory-L1-S2-hatchery-warm-gold": "15e83f4ad69e86073f036cb3ad6cb7b20eb338a0314fbdd6a5abc8b4474c439d",
+        "hatchery-conservatory-L1-S5-hatchery-warm-gold": "68d147fbb72ccbc8bfb4ce756c91334bfc86731d5037aece7af8dea94a14bee9",
+        "hatchery-egg-L1-S3-hatchery-warm-gold": "15f26826bff91bd838bf3cb34b7d99a82042bbe51bb10636b1c71e7917a2a11e",
+        "hatchery-egg-L1-S4-hatchery-iridescent-opal-egg": "7488f57650feb749d2a62c844d37304e519fe8f46b7051ed2f29944839cd1ee8",
+        "hatchery-terraces-L1-S1-hatchery-warm-limestone": "39231045242cb4756e99e7c86a18ac56aad86b212fb4ace115a3326abde41c25",
+        "hatchery-terraces-L1-S3-hatchery-books-and-walnut": "e665776e3bda024f515e9d3d6c8986bd3b7e34f2bb15e2949b3429620c468efc",
+        "hatchery-terraces-L1-S3-hatchery-warm-limestone": "11d9751bbeb5fbb7d6ebb94699f11872db2e93c55c78eaa2d12685f382d7a8df",
+        "hatchery-terraces-L1-S4-hatchery-books-and-walnut": "3ef5f1d01b16502ba9c3fdfb100abdf74520d223ac659c0b300d4ae048b50062",
+        "hatchery-terraces-L1-S4-hatchery-garden-colors": "dd018548865daa0a0eb779f44a1113a22979e4e8044756ae8c0fd69c7af64a7d",
+        "hatchery-terraces-L1-S4-hatchery-rooftop-water": "f8f75816b0c4c96ff4753e6de43e8c3a77217585b285e7571ef5b828fc231aea",
+        "hatchery-terraces-L1-S4-hatchery-warm-limestone": "798d7e22b09305320e8050149fba2acf9f465be0221e127974ce73288c0df740",
+        "hatchery-terraces-L1-S5-hatchery-warm-gold": "74cc4807723a017478b35d89e6baddce002072ae7a23eed96899535b2b0a78e1",
+        "hatchery-terraces-L1-S5-hatchery-warm-limestone": "ae78ea7250bcb4c94225add661ce2b663bb1444c862a6871d695255022e48393",
+        "hatchery-wings-L1-S1-hatchery-warm-limestone": "ef74a12163d05136784991900b26d6c1f4af876d51a3646c9063e079ca3497f7",
+        "hatchery-wings-L1-S2-hatchery-warm-limestone": "4546e598fe35b4e8c0497a653758a15e1e176125d032e374ff2aefc29a488374",
+        "hatchery-wings-L1-S3-hatchery-books-and-walnut": "9a92d611f70342d82e9ab3ad24d9aabba2652abc978d3458cc2d0d9b5eeebabd",
+        "hatchery-wings-L1-S3-hatchery-warm-limestone": "c5c2a6b68ff060693c65413f332832190f28dc7f5c0c2ef4d2755bf93815a57d",
+        "hatchery-wings-L1-S5-hatchery-books-and-walnut": "c7b749fe46ffb725c27b035b8f6d4957748547508bc994604def6d452ac957a9",
+        "hatchery-wings-L1-S5-hatchery-reading-lights": "c15f44601e9de8bfa534c91b2385269f8168b55206753726f6c21d9a5e640abb"
+      }
+    },
+    "2": {
+      "addedTriangles": 7672,
+      "totalTriangles": 19322,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "hatchery-conservatory-L1-S2-hatchery-blue-conservatory-glass": "6339705997b75dc8a222376a9a46e462db8802262b68a219cb6898a4116ef534",
+        "hatchery-conservatory-L1-S2-hatchery-warm-gold": "15e83f4ad69e86073f036cb3ad6cb7b20eb338a0314fbdd6a5abc8b4474c439d",
+        "hatchery-conservatory-L1-S5-hatchery-warm-gold": "68d147fbb72ccbc8bfb4ce756c91334bfc86731d5037aece7af8dea94a14bee9",
+        "hatchery-conservatory-L2-S2-hatchery-blue-conservatory-glass": "d65b07d5a150f4f5d610822ac89e7ae3f15d9deeefd19f95acdb95ded14666f2",
+        "hatchery-conservatory-L2-S2-hatchery-warm-gold": "038d460bf1e6ff5192a95ed667a40457972e83f113917a5d5cb18a6becdc90dc",
+        "hatchery-conservatory-L2-S5-hatchery-warm-gold": "d398bf34c39a428dfbc9c049f9b5ba45ac476ce00869ea7c4949f57c0a165be5",
+        "hatchery-egg-L1-S3-hatchery-warm-gold": "15f26826bff91bd838bf3cb34b7d99a82042bbe51bb10636b1c71e7917a2a11e",
+        "hatchery-egg-L1-S4-hatchery-iridescent-opal-egg": "7488f57650feb749d2a62c844d37304e519fe8f46b7051ed2f29944839cd1ee8",
+        "hatchery-egg-L2-S5-hatchery-warm-gold": "8f0fcf6947bc66edbb42dc3c877a67acd0f15a778ff36308d738432cf99f54b8",
+        "hatchery-terraces-L1-S1-hatchery-warm-limestone": "39231045242cb4756e99e7c86a18ac56aad86b212fb4ace115a3326abde41c25",
+        "hatchery-terraces-L1-S3-hatchery-books-and-walnut": "e665776e3bda024f515e9d3d6c8986bd3b7e34f2bb15e2949b3429620c468efc",
+        "hatchery-terraces-L1-S3-hatchery-warm-limestone": "11d9751bbeb5fbb7d6ebb94699f11872db2e93c55c78eaa2d12685f382d7a8df",
+        "hatchery-terraces-L1-S4-hatchery-books-and-walnut": "3ef5f1d01b16502ba9c3fdfb100abdf74520d223ac659c0b300d4ae048b50062",
+        "hatchery-terraces-L1-S4-hatchery-garden-colors": "dd018548865daa0a0eb779f44a1113a22979e4e8044756ae8c0fd69c7af64a7d",
+        "hatchery-terraces-L1-S4-hatchery-rooftop-water": "f8f75816b0c4c96ff4753e6de43e8c3a77217585b285e7571ef5b828fc231aea",
+        "hatchery-terraces-L1-S4-hatchery-warm-limestone": "798d7e22b09305320e8050149fba2acf9f465be0221e127974ce73288c0df740",
+        "hatchery-terraces-L1-S5-hatchery-warm-gold": "74cc4807723a017478b35d89e6baddce002072ae7a23eed96899535b2b0a78e1",
+        "hatchery-terraces-L1-S5-hatchery-warm-limestone": "ae78ea7250bcb4c94225add661ce2b663bb1444c862a6871d695255022e48393",
+        "hatchery-terraces-L2-S1-hatchery-warm-limestone": "5ee8fa97fe9e6ecd6c3108379279232ccccc426654f34273bb8066436084fb12",
+        "hatchery-terraces-L2-S3-hatchery-books-and-walnut": "0e9159bb7bccb5373270ec9d82713646a885740f8c85b17303550f88523c14c7",
+        "hatchery-terraces-L2-S3-hatchery-warm-limestone": "875586e51a24baf0992ce66938e5d88d9c66718bf60c550d917cbd91654eeeaa",
+        "hatchery-terraces-L2-S4-hatchery-books-and-walnut": "6ff0996d6d44c8baeab6ec7bc1dee828f69948acda7f3550bca338bc7a3867ec",
+        "hatchery-terraces-L2-S4-hatchery-garden-colors": "e560bce9cde383890d3d0222474b9ab2ce10bcd7449006681d65cd7b5c71a7b8",
+        "hatchery-terraces-L2-S4-hatchery-rooftop-water": "02a7c5231eff27413f120ab3907186cc0ed10f5113f717b9a857f5327fa9602f",
+        "hatchery-terraces-L2-S4-hatchery-warm-limestone": "fce9fb69ac1585a4f8cb80192681b22851ab279d4a28661775e6a8ce3e17f147",
+        "hatchery-terraces-L2-S5-hatchery-warm-gold": "d9d91306786ade34809c26b733653e14b50569fec16e6066c5567a720b0f3e05",
+        "hatchery-terraces-L2-S5-hatchery-warm-limestone": "dcec013e98d5282087907e56091e79125fd42d0c8e5d566702c602a36fa1ded6",
+        "hatchery-wings-L1-S1-hatchery-warm-limestone": "ef74a12163d05136784991900b26d6c1f4af876d51a3646c9063e079ca3497f7",
+        "hatchery-wings-L1-S2-hatchery-warm-limestone": "4546e598fe35b4e8c0497a653758a15e1e176125d032e374ff2aefc29a488374",
+        "hatchery-wings-L1-S3-hatchery-books-and-walnut": "9a92d611f70342d82e9ab3ad24d9aabba2652abc978d3458cc2d0d9b5eeebabd",
+        "hatchery-wings-L1-S3-hatchery-warm-limestone": "c5c2a6b68ff060693c65413f332832190f28dc7f5c0c2ef4d2755bf93815a57d",
+        "hatchery-wings-L1-S5-hatchery-books-and-walnut": "c7b749fe46ffb725c27b035b8f6d4957748547508bc994604def6d452ac957a9",
+        "hatchery-wings-L1-S5-hatchery-reading-lights": "c15f44601e9de8bfa534c91b2385269f8168b55206753726f6c21d9a5e640abb",
+        "hatchery-wings-L2-S1-hatchery-warm-limestone": "a51feaa5495d4cc1031a97e1db61274f241fb47e5db426af30669feaeaf9b625",
+        "hatchery-wings-L2-S2-hatchery-warm-limestone": "335f5be5774a847f6147696a244c6bf8435bc3a91b62348403635aa546538ea5",
+        "hatchery-wings-L2-S3-hatchery-books-and-walnut": "775edf1a318784e2f1176ef080caa640ac8168aae0292559d00f20dcfbd10025",
+        "hatchery-wings-L2-S3-hatchery-warm-limestone": "682d512594b2cac1f41e01099a559a384eb785428d6a4c7559dd042c0c42c47b",
+        "hatchery-wings-L2-S5-hatchery-books-and-walnut": "13e9fbd8d05d31a0de40748ce368647e17ad2cdc69589df210dfe4715c48454d",
+        "hatchery-wings-L2-S5-hatchery-reading-lights": "7eb4540caff475d1159d14e3362ef115c71f096b138514cb21f25dcdf1b130b6"
+      }
+    },
+    "3": {
+      "addedTriangles": 5388,
+      "totalTriangles": 24710,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "hatchery-conservatory-L1-S2-hatchery-blue-conservatory-glass": "6339705997b75dc8a222376a9a46e462db8802262b68a219cb6898a4116ef534",
+        "hatchery-conservatory-L1-S2-hatchery-warm-gold": "15e83f4ad69e86073f036cb3ad6cb7b20eb338a0314fbdd6a5abc8b4474c439d",
+        "hatchery-conservatory-L1-S5-hatchery-warm-gold": "68d147fbb72ccbc8bfb4ce756c91334bfc86731d5037aece7af8dea94a14bee9",
+        "hatchery-conservatory-L2-S2-hatchery-blue-conservatory-glass": "d65b07d5a150f4f5d610822ac89e7ae3f15d9deeefd19f95acdb95ded14666f2",
+        "hatchery-conservatory-L2-S2-hatchery-warm-gold": "038d460bf1e6ff5192a95ed667a40457972e83f113917a5d5cb18a6becdc90dc",
+        "hatchery-conservatory-L2-S5-hatchery-warm-gold": "d398bf34c39a428dfbc9c049f9b5ba45ac476ce00869ea7c4949f57c0a165be5",
+        "hatchery-conservatory-L3-S2-hatchery-blue-conservatory-glass": "eef80c5e3fcd755ccdc98389b0f7d07cd591709fd25550284e1f7e11c5345171",
+        "hatchery-conservatory-L3-S2-hatchery-warm-gold": "7af031282da4f5f2065f8387f7818b8510d73616760bcfd0b392de9adb2b878e",
+        "hatchery-conservatory-L3-S5-hatchery-warm-gold": "57b6bcf2d9733937093f8663b9906be78bf9850c4f08ea6e0c5f3b1d940eb191",
+        "hatchery-egg-L1-S3-hatchery-warm-gold": "15f26826bff91bd838bf3cb34b7d99a82042bbe51bb10636b1c71e7917a2a11e",
+        "hatchery-egg-L1-S4-hatchery-iridescent-opal-egg": "7488f57650feb749d2a62c844d37304e519fe8f46b7051ed2f29944839cd1ee8",
+        "hatchery-egg-L2-S5-hatchery-warm-gold": "8f0fcf6947bc66edbb42dc3c877a67acd0f15a778ff36308d738432cf99f54b8",
+        "hatchery-egg-L3-S5-hatchery-warm-gold": "dc2212f66c71e9f68cee139bb26eb0dfc47efd51f889311d08eb0d7dfe2f1447",
+        "hatchery-terraces-L1-S1-hatchery-warm-limestone": "39231045242cb4756e99e7c86a18ac56aad86b212fb4ace115a3326abde41c25",
+        "hatchery-terraces-L1-S3-hatchery-books-and-walnut": "e665776e3bda024f515e9d3d6c8986bd3b7e34f2bb15e2949b3429620c468efc",
+        "hatchery-terraces-L1-S3-hatchery-warm-limestone": "11d9751bbeb5fbb7d6ebb94699f11872db2e93c55c78eaa2d12685f382d7a8df",
+        "hatchery-terraces-L1-S4-hatchery-books-and-walnut": "3ef5f1d01b16502ba9c3fdfb100abdf74520d223ac659c0b300d4ae048b50062",
+        "hatchery-terraces-L1-S4-hatchery-garden-colors": "dd018548865daa0a0eb779f44a1113a22979e4e8044756ae8c0fd69c7af64a7d",
+        "hatchery-terraces-L1-S4-hatchery-rooftop-water": "f8f75816b0c4c96ff4753e6de43e8c3a77217585b285e7571ef5b828fc231aea",
+        "hatchery-terraces-L1-S4-hatchery-warm-limestone": "798d7e22b09305320e8050149fba2acf9f465be0221e127974ce73288c0df740",
+        "hatchery-terraces-L1-S5-hatchery-warm-gold": "74cc4807723a017478b35d89e6baddce002072ae7a23eed96899535b2b0a78e1",
+        "hatchery-terraces-L1-S5-hatchery-warm-limestone": "ae78ea7250bcb4c94225add661ce2b663bb1444c862a6871d695255022e48393",
+        "hatchery-terraces-L2-S1-hatchery-warm-limestone": "5ee8fa97fe9e6ecd6c3108379279232ccccc426654f34273bb8066436084fb12",
+        "hatchery-terraces-L2-S3-hatchery-books-and-walnut": "0e9159bb7bccb5373270ec9d82713646a885740f8c85b17303550f88523c14c7",
+        "hatchery-terraces-L2-S3-hatchery-warm-limestone": "875586e51a24baf0992ce66938e5d88d9c66718bf60c550d917cbd91654eeeaa",
+        "hatchery-terraces-L2-S4-hatchery-books-and-walnut": "6ff0996d6d44c8baeab6ec7bc1dee828f69948acda7f3550bca338bc7a3867ec",
+        "hatchery-terraces-L2-S4-hatchery-garden-colors": "e560bce9cde383890d3d0222474b9ab2ce10bcd7449006681d65cd7b5c71a7b8",
+        "hatchery-terraces-L2-S4-hatchery-rooftop-water": "02a7c5231eff27413f120ab3907186cc0ed10f5113f717b9a857f5327fa9602f",
+        "hatchery-terraces-L2-S4-hatchery-warm-limestone": "fce9fb69ac1585a4f8cb80192681b22851ab279d4a28661775e6a8ce3e17f147",
+        "hatchery-terraces-L2-S5-hatchery-warm-gold": "d9d91306786ade34809c26b733653e14b50569fec16e6066c5567a720b0f3e05",
+        "hatchery-terraces-L2-S5-hatchery-warm-limestone": "dcec013e98d5282087907e56091e79125fd42d0c8e5d566702c602a36fa1ded6",
+        "hatchery-terraces-L3-S1-hatchery-warm-limestone": "f8901f54b9487a16d5a50f0d4cda639a45738d452c15307c2d95b1f94e8e9768",
+        "hatchery-terraces-L3-S3-hatchery-books-and-walnut": "ea360ef83587e286324422ad4aa22f0f195a8e0b5758904809341fd5c2367b70",
+        "hatchery-terraces-L3-S4-hatchery-books-and-walnut": "8b5c29a6923145192a5cc7550209e61b89fd3f681eb9fa092498052e039c5cb4",
+        "hatchery-terraces-L3-S4-hatchery-garden-colors": "6975289295c15676c98fe182696e5e3441837701b5c626a3e3130c8c3f0e4f83",
+        "hatchery-terraces-L3-S4-hatchery-rooftop-water": "1f21b16199ee6bfefa292c9e081afbf4c68ae1b64bb938056cb877f4a0749bc2",
+        "hatchery-terraces-L3-S4-hatchery-warm-limestone": "97941887af6339a96d9528b4d6b5c78fd0e019805a84caa6898fe4afc01e92eb",
+        "hatchery-terraces-L3-S5-hatchery-warm-gold": "a06d0f72ac4ef8bdf0e5168b4e65db4a80ba9a9bace06239ebe9a1be865705ad",
+        "hatchery-wings-L1-S1-hatchery-warm-limestone": "ef74a12163d05136784991900b26d6c1f4af876d51a3646c9063e079ca3497f7",
+        "hatchery-wings-L1-S2-hatchery-warm-limestone": "4546e598fe35b4e8c0497a653758a15e1e176125d032e374ff2aefc29a488374",
+        "hatchery-wings-L1-S3-hatchery-books-and-walnut": "9a92d611f70342d82e9ab3ad24d9aabba2652abc978d3458cc2d0d9b5eeebabd",
+        "hatchery-wings-L1-S3-hatchery-warm-limestone": "c5c2a6b68ff060693c65413f332832190f28dc7f5c0c2ef4d2755bf93815a57d",
+        "hatchery-wings-L1-S5-hatchery-books-and-walnut": "c7b749fe46ffb725c27b035b8f6d4957748547508bc994604def6d452ac957a9",
+        "hatchery-wings-L1-S5-hatchery-reading-lights": "c15f44601e9de8bfa534c91b2385269f8168b55206753726f6c21d9a5e640abb",
+        "hatchery-wings-L2-S1-hatchery-warm-limestone": "a51feaa5495d4cc1031a97e1db61274f241fb47e5db426af30669feaeaf9b625",
+        "hatchery-wings-L2-S2-hatchery-warm-limestone": "335f5be5774a847f6147696a244c6bf8435bc3a91b62348403635aa546538ea5",
+        "hatchery-wings-L2-S3-hatchery-books-and-walnut": "775edf1a318784e2f1176ef080caa640ac8168aae0292559d00f20dcfbd10025",
+        "hatchery-wings-L2-S3-hatchery-warm-limestone": "682d512594b2cac1f41e01099a559a384eb785428d6a4c7559dd042c0c42c47b",
+        "hatchery-wings-L2-S5-hatchery-books-and-walnut": "13e9fbd8d05d31a0de40748ce368647e17ad2cdc69589df210dfe4715c48454d",
+        "hatchery-wings-L2-S5-hatchery-reading-lights": "7eb4540caff475d1159d14e3362ef115c71f096b138514cb21f25dcdf1b130b6"
+      }
+    }
+  },
+  "materials": [
+    {
+      "name": "hatchery-blue-conservatory-glass",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-warm-gold",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-iridescent-opal-egg",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-warm-limestone",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-books-and-walnut",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-garden-colors",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-rooftop-water",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "hatchery-reading-lights",
+      "doubleSided": true,
+      "emissiveFactor": [
+        1,
+        0.5299999713897705,
+        0.15000000596046448
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "node": "hatchery-conservatory-L1-S2-hatchery-blue-conservatory-glass",
+      "level": 1,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "triangles": 2376,
+      "degenerateTriangles": 0,
+      "signature": "6339705997b75dc8a222376a9a46e462db8802262b68a219cb6898a4116ef534",
+      "materials": [
+        "hatchery-blue-conservatory-glass"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L1-S2-hatchery-warm-gold",
+      "level": 1,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "triangles": 1596,
+      "degenerateTriangles": 0,
+      "signature": "15e83f4ad69e86073f036cb3ad6cb7b20eb338a0314fbdd6a5abc8b4474c439d",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L1-S5-hatchery-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-conservatory",
+      "triangles": 1236,
+      "degenerateTriangles": 0,
+      "signature": "68d147fbb72ccbc8bfb4ce756c91334bfc86731d5037aece7af8dea94a14bee9",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L2-S2-hatchery-blue-conservatory-glass",
+      "level": 2,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "triangles": 1584,
+      "degenerateTriangles": 0,
+      "signature": "d65b07d5a150f4f5d610822ac89e7ae3f15d9deeefd19f95acdb95ded14666f2",
+      "materials": [
+        "hatchery-blue-conservatory-glass"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L2-S2-hatchery-warm-gold",
+      "level": 2,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "triangles": 1064,
+      "degenerateTriangles": 0,
+      "signature": "038d460bf1e6ff5192a95ed667a40457972e83f113917a5d5cb18a6becdc90dc",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L2-S5-hatchery-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-conservatory",
+      "triangles": 824,
+      "degenerateTriangles": 0,
+      "signature": "d398bf34c39a428dfbc9c049f9b5ba45ac476ce00869ea7c4949f57c0a165be5",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L3-S2-hatchery-blue-conservatory-glass",
+      "level": 3,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "triangles": 1584,
+      "degenerateTriangles": 0,
+      "signature": "eef80c5e3fcd755ccdc98389b0f7d07cd591709fd25550284e1f7e11c5345171",
+      "materials": [
+        "hatchery-blue-conservatory-glass"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L3-S2-hatchery-warm-gold",
+      "level": 3,
+      "stage": 2,
+      "owner": "hatchery-conservatory",
+      "triangles": 1064,
+      "degenerateTriangles": 0,
+      "signature": "7af031282da4f5f2065f8387f7818b8510d73616760bcfd0b392de9adb2b878e",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-conservatory-L3-S5-hatchery-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "hatchery-conservatory",
+      "triangles": 824,
+      "degenerateTriangles": 0,
+      "signature": "57b6bcf2d9733937093f8663b9906be78bf9850c4f08ea6e0c5f3b1d940eb191",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-egg-L1-S3-hatchery-warm-gold",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-egg",
+      "triangles": 124,
+      "degenerateTriangles": 0,
+      "signature": "15f26826bff91bd838bf3cb34b7d99a82042bbe51bb10636b1c71e7917a2a11e",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-egg-L1-S4-hatchery-iridescent-opal-egg",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-egg",
+      "triangles": 1088,
+      "degenerateTriangles": 0,
+      "signature": "7488f57650feb749d2a62c844d37304e519fe8f46b7051ed2f29944839cd1ee8",
+      "materials": [
+        "hatchery-iridescent-opal-egg"
+      ]
+    },
+    {
+      "node": "hatchery-egg-L2-S5-hatchery-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-egg",
+      "triangles": 108,
+      "degenerateTriangles": 0,
+      "signature": "8f0fcf6947bc66edbb42dc3c877a67acd0f15a778ff36308d738432cf99f54b8",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-egg-L3-S5-hatchery-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "hatchery-egg",
+      "triangles": 108,
+      "degenerateTriangles": 0,
+      "signature": "dc2212f66c71e9f68cee139bb26eb0dfc47efd51f889311d08eb0d7dfe2f1447",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S1-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "hatchery-terraces",
+      "triangles": 388,
+      "degenerateTriangles": 0,
+      "signature": "39231045242cb4756e99e7c86a18ac56aad86b212fb4ace115a3326abde41c25",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S3-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "triangles": 100,
+      "degenerateTriangles": 0,
+      "signature": "e665776e3bda024f515e9d3d6c8986bd3b7e34f2bb15e2949b3429620c468efc",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S3-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "triangles": 316,
+      "degenerateTriangles": 0,
+      "signature": "11d9751bbeb5fbb7d6ebb94699f11872db2e93c55c78eaa2d12685f382d7a8df",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S4-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 136,
+      "degenerateTriangles": 0,
+      "signature": "3ef5f1d01b16502ba9c3fdfb100abdf74520d223ac659c0b300d4ae048b50062",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S4-hatchery-garden-colors",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 1154,
+      "degenerateTriangles": 0,
+      "signature": "dd018548865daa0a0eb779f44a1113a22979e4e8044756ae8c0fd69c7af64a7d",
+      "materials": [
+        "hatchery-garden-colors"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S4-hatchery-rooftop-water",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 56,
+      "degenerateTriangles": 0,
+      "signature": "f8f75816b0c4c96ff4753e6de43e8c3a77217585b285e7571ef5b828fc231aea",
+      "materials": [
+        "hatchery-rooftop-water"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S4-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "798d7e22b09305320e8050149fba2acf9f465be0221e127974ce73288c0df740",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S5-hatchery-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "triangles": 88,
+      "degenerateTriangles": 0,
+      "signature": "74cc4807723a017478b35d89e6baddce002072ae7a23eed96899535b2b0a78e1",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L1-S5-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "ae78ea7250bcb4c94225add661ce2b663bb1444c862a6871d695255022e48393",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S1-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "hatchery-terraces",
+      "triangles": 360,
+      "degenerateTriangles": 0,
+      "signature": "5ee8fa97fe9e6ecd6c3108379279232ccccc426654f34273bb8066436084fb12",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S3-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "triangles": 100,
+      "degenerateTriangles": 0,
+      "signature": "0e9159bb7bccb5373270ec9d82713646a885740f8c85b17303550f88523c14c7",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S3-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "triangles": 288,
+      "degenerateTriangles": 0,
+      "signature": "875586e51a24baf0992ce66938e5d88d9c66718bf60c550d917cbd91654eeeaa",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S4-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 136,
+      "degenerateTriangles": 0,
+      "signature": "6ff0996d6d44c8baeab6ec7bc1dee828f69948acda7f3550bca338bc7a3867ec",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S4-hatchery-garden-colors",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 1236,
+      "degenerateTriangles": 0,
+      "signature": "e560bce9cde383890d3d0222474b9ab2ce10bcd7449006681d65cd7b5c71a7b8",
+      "materials": [
+        "hatchery-garden-colors"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S4-hatchery-rooftop-water",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 52,
+      "degenerateTriangles": 0,
+      "signature": "02a7c5231eff27413f120ab3907186cc0ed10f5113f717b9a857f5327fa9602f",
+      "materials": [
+        "hatchery-rooftop-water"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S4-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "fce9fb69ac1585a4f8cb80192681b22851ab279d4a28661775e6a8ce3e17f147",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S5-hatchery-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "triangles": 116,
+      "degenerateTriangles": 0,
+      "signature": "d9d91306786ade34809c26b733653e14b50569fec16e6066c5567a720b0f3e05",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L2-S5-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "dcec013e98d5282087907e56091e79125fd42d0c8e5d566702c602a36fa1ded6",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S1-hatchery-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "hatchery-terraces",
+      "triangles": 168,
+      "degenerateTriangles": 0,
+      "signature": "f8901f54b9487a16d5a50f0d4cda639a45738d452c15307c2d95b1f94e8e9768",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S3-hatchery-books-and-walnut",
+      "level": 3,
+      "stage": 3,
+      "owner": "hatchery-terraces",
+      "triangles": 200,
+      "degenerateTriangles": 0,
+      "signature": "ea360ef83587e286324422ad4aa22f0f195a8e0b5758904809341fd5c2367b70",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S4-hatchery-books-and-walnut",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 68,
+      "degenerateTriangles": 0,
+      "signature": "8b5c29a6923145192a5cc7550209e61b89fd3f681eb9fa092498052e039c5cb4",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S4-hatchery-garden-colors",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 1208,
+      "degenerateTriangles": 0,
+      "signature": "6975289295c15676c98fe182696e5e3441837701b5c626a3e3130c8c3f0e4f83",
+      "materials": [
+        "hatchery-garden-colors"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S4-hatchery-rooftop-water",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 12,
+      "degenerateTriangles": 0,
+      "signature": "1f21b16199ee6bfefa292c9e081afbf4c68ae1b64bb938056cb877f4a0749bc2",
+      "materials": [
+        "hatchery-rooftop-water"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S4-hatchery-warm-limestone",
+      "level": 3,
+      "stage": 4,
+      "owner": "hatchery-terraces",
+      "triangles": 36,
+      "degenerateTriangles": 0,
+      "signature": "97941887af6339a96d9528b4d6b5c78fd0e019805a84caa6898fe4afc01e92eb",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-terraces-L3-S5-hatchery-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "hatchery-terraces",
+      "triangles": 116,
+      "degenerateTriangles": 0,
+      "signature": "a06d0f72ac4ef8bdf0e5168b4e65db4a80ba9a9bace06239ebe9a1be865705ad",
+      "materials": [
+        "hatchery-warm-gold"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L1-S1-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "hatchery-wings",
+      "triangles": 32,
+      "degenerateTriangles": 0,
+      "signature": "ef74a12163d05136784991900b26d6c1f4af876d51a3646c9063e079ca3497f7",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L1-S2-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 2,
+      "owner": "hatchery-wings",
+      "triangles": 956,
+      "degenerateTriangles": 0,
+      "signature": "4546e598fe35b4e8c0497a653758a15e1e176125d032e374ff2aefc29a488374",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L1-S3-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "triangles": 288,
+      "degenerateTriangles": 0,
+      "signature": "9a92d611f70342d82e9ab3ad24d9aabba2652abc978d3458cc2d0d9b5eeebabd",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L1-S3-hatchery-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "triangles": 720,
+      "degenerateTriangles": 0,
+      "signature": "c5c2a6b68ff060693c65413f332832190f28dc7f5c0c2ef4d2755bf93815a57d",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L1-S5-hatchery-books-and-walnut",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "triangles": 288,
+      "degenerateTriangles": 0,
+      "signature": "c7b749fe46ffb725c27b035b8f6d4957748547508bc994604def6d452ac957a9",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L1-S5-hatchery-reading-lights",
+      "level": 1,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "triangles": 144,
+      "degenerateTriangles": 0,
+      "signature": "c15f44601e9de8bfa534c91b2385269f8168b55206753726f6c21d9a5e640abb",
+      "materials": [
+        "hatchery-reading-lights"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L2-S1-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "hatchery-wings",
+      "triangles": 20,
+      "degenerateTriangles": 0,
+      "signature": "a51feaa5495d4cc1031a97e1db61274f241fb47e5db426af30669feaeaf9b625",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L2-S2-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 2,
+      "owner": "hatchery-wings",
+      "triangles": 500,
+      "degenerateTriangles": 0,
+      "signature": "335f5be5774a847f6147696a244c6bf8435bc3a91b62348403635aa546538ea5",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L2-S3-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "triangles": 144,
+      "degenerateTriangles": 0,
+      "signature": "775edf1a318784e2f1176ef080caa640ac8168aae0292559d00f20dcfbd10025",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L2-S3-hatchery-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "hatchery-wings",
+      "triangles": 360,
+      "degenerateTriangles": 0,
+      "signature": "682d512594b2cac1f41e01099a559a384eb785428d6a4c7559dd042c0c42c47b",
+      "materials": [
+        "hatchery-warm-limestone"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L2-S5-hatchery-books-and-walnut",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "triangles": 144,
+      "degenerateTriangles": 0,
+      "signature": "13e9fbd8d05d31a0de40748ce368647e17ad2cdc69589df210dfe4715c48454d",
+      "materials": [
+        "hatchery-books-and-walnut"
+      ]
+    },
+    {
+      "node": "hatchery-wings-L2-S5-hatchery-reading-lights",
+      "level": 2,
+      "stage": 5,
+      "owner": "hatchery-wings",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "7eb4540caff475d1159d14e3362ef115c71f096b138514cb21f25dcdf1b130b6",
+      "materials": [
+        "hatchery-reading-lights"
+      ]
+    }
+  ]
+}

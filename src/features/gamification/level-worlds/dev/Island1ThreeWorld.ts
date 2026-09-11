@@ -2657,6 +2657,7 @@ export function createIsland1LivingAmbience(
   materials: Island1WorldMaterials,
   ocean: THREE.Mesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>,
   cliffMaterial: THREE.Material,
+  options: { batchStatic?: boolean } = {},
 ): Island1AmbienceRuntime {
   const root = new THREE.Group();
   root.name = 'ISLAND_1_LIVING_AMBIENCE';
@@ -2672,6 +2673,7 @@ export function createIsland1LivingAmbience(
   const cloudLayout = buildIsland1CloudLayout(profile.id);
   const clouds = cloudLayout.map((entry, index) => {
     const cloud = createCloudCluster(index * 2.1, profile.id, cloudMaterial);
+    if (options.batchStatic) compactStaticGeometry(cloud, `ISLAND_001_CLOUD_${index}`);
     cloud.name = `ISLAND_1_ELEVATED_CLOUD_${index + 1}`;
     cloud.position.set(Math.cos(entry.angle) * entry.radius, entry.centerY, Math.sin(entry.angle) * entry.radius);
     cloud.scale.setScalar(entry.scale);
@@ -2681,18 +2683,20 @@ export function createIsland1LivingAmbience(
     return cloud;
   });
   const mountains = addIsland1DistantMountains(root, profile.id);
+  if (options.batchStatic) mountains.children.forEach((cluster,index) => compactStaticGeometry(cluster as THREE.Group, `ISLAND_001_DISTANT_CLUSTER_${index}`));
 
-  addIsland1CoastalRelief(root, profile, materials, cliffMaterial);
+  if (!options.batchStatic) addIsland1CoastalRelief(root, profile, materials, cliffMaterial);
 
   const isletCount = profile.id === 'high' ? 6 : profile.id === 'medium' ? 4 : 2;
   const seaStacks: THREE.Group[] = [];
   for (let index = 0; index < isletCount; index += 1) {
     const angle = index / isletCount * Math.PI * 2 + 0.4;
     const seaStack = addSeaStack(root, Math.cos(angle) * (17 + index), Math.sin(angle) * (17 + index), 0.62 + (index % 2) * 0.2, materials, profile.id);
+    if (options.batchStatic) compactStaticGeometry(seaStack, `ISLAND_001_SEA_STACK_${index}`);
     seaStacks.push(seaStack);
   }
 
-  const cascadeCount = lifeBudget.cascadeCount;
+  const cascadeCount = options.batchStatic ? 0 : lifeBudget.cascadeCount;
   const waterfallMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x72ddff,
     emissive: 0x1688bd,
@@ -2701,7 +2705,7 @@ export function createIsland1LivingAmbience(
     metalness: 0.02,
     transparent: true,
     opacity: profile.id === 'low' ? 0.66 : 0.78,
-    transmission: profile.id === 'high' ? 0.12 : 0,
+    transmission: !options.batchStatic && profile.id === 'high' ? 0.12 : 0,
     thickness: 0.12,
     clearcoat: 0.72,
     clearcoatRoughness: 0.08,
@@ -2716,7 +2720,7 @@ export function createIsland1LivingAmbience(
     roughness: 0.06,
     transparent: true,
     opacity: 0.76,
-    transmission: profile.id === 'high' ? 0.18 : 0,
+    transmission: !options.batchStatic && profile.id === 'high' ? 0.18 : 0,
     side: THREE.DoubleSide,
     depthWrite: false,
   });
@@ -2946,6 +2950,37 @@ export function createIsland1LivingAmbience(
     root.add(butterfly);
     return butterfly;
   });
+  // Preserve the existing flight/flap pivots as transform drivers. Only the
+  // render submission is instanced; Island011 retains its original objects.
+  const animatedBatches: Array<{ mesh: THREE.InstancedMesh; sources: THREE.Mesh[] }> = [];
+  if (options.batchStatic) {
+    butterflyWingMaterial.forceSinglePass = true;
+    const groups = new Map<string, THREE.Mesh[]>();
+    [...birds, ...butterflies].forEach(actor => actor.traverse(node => {
+      if (!(node instanceof THREE.Mesh) || Array.isArray(node.material)) return;
+      const geometry = node.geometry as THREE.BufferGeometry & { parameters?: object };
+      const key = `${geometry.type}:${JSON.stringify(geometry.parameters)}:${node.material.uuid}`;
+      const sources = groups.get(key) ?? []; sources.push(node); groups.set(key, sources);
+      node.visible = false;
+    }));
+    groups.forEach(sources => {
+      const mesh = new THREE.InstancedMesh(sources[0].geometry, sources[0].material, sources.length);
+      mesh.name = `ISLAND_001_ANIMATED_WILDLIFE_${animatedBatches.length}`;
+      mesh.frustumCulled = false; mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      root.add(mesh); animatedBatches.push({ mesh, sources });
+    });
+  }
+  const wildlifeInverse = new THREE.Matrix4(), wildlifeMatrix = new THREE.Matrix4();
+  function updateAnimatedBatches() {
+    if (!animatedBatches.length) return;
+    root.updateWorldMatrix(true, true); wildlifeInverse.copy(root.matrixWorld).invert();
+    animatedBatches.forEach(({ mesh, sources }) => {
+      sources.forEach((source, index) => mesh.setMatrixAt(index, wildlifeMatrix.multiplyMatrices(wildlifeInverse, source.matrixWorld)));
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+  }
+  updateAnimatedBatches();
+
   const fishCount = profile.id === 'high' ? 8 : profile.id === 'medium' ? 4 : 0;
   const lagoonFish = Array.from({ length: fishCount }, (_, index) => {
     const fish = createFirstLightFish(materials, profile.id);
@@ -2954,21 +2989,27 @@ export function createIsland1LivingAmbience(
     return fish;
   });
 
-  const crystalCount = profile.id === 'high' ? 32 : profile.id === 'medium' ? 18 : 10;
+  const staticGardens = options.batchStatic ? new THREE.Group() : root;
+  const crystalCount = options.batchStatic ? 0 : profile.id === 'high' ? 32 : profile.id === 'medium' ? 18 : 10;
   for (let index = 0; index < crystalCount; index += 1) {
     const angle = index / crystalCount * Math.PI * 2 + (index % 3) * 0.07;
     const radius = 5.35 + (index % 2) * 0.32;
-    addCrystal(root, [Math.cos(angle) * radius, 0.48 + (index % 3) * 0.05, Math.sin(angle) * radius], 0.055 + (index % 4) * 0.012, materials.crystal);
+    addCrystal(staticGardens, [Math.cos(angle) * radius, 0.48 + (index % 3) * 0.05, Math.sin(angle) * radius], 0.055 + (index % 4) * 0.012, materials.crystal);
   }
 
-  const gardenCount = profile.id === 'high' ? 48 : profile.id === 'medium' ? 28 : 14;
+  const gardenCount = options.batchStatic ? 0 : profile.id === 'high' ? 48 : profile.id === 'medium' ? 28 : 14;
   for (let index = 0; index < gardenCount; index += 1) {
     const angle = index / gardenCount * Math.PI * 2;
     const radius = 4.5 + (index % 3) * 0.34;
     const topiary = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 + (index % 3) * 0.035, 1), materials.leaf);
     topiary.position.set(Math.cos(angle) * radius, 0.45, Math.sin(angle) * radius);
     topiary.scale.y = 1.35;
-    root.add(topiary);
+    staticGardens.add(topiary);
+  }
+
+  if (options.batchStatic) {
+    compactStaticGeometry(staticGardens, 'ISLAND_001_STATIC_GARDENS');
+    root.add(staticGardens);
   }
 
   const sparkGeometry = new THREE.BufferGeometry();
@@ -3068,6 +3109,7 @@ export function createIsland1LivingAmbience(
         (butterfly.userData.leftWing as THREE.Mesh).rotation.y = flap;
         (butterfly.userData.rightWing as THREE.Mesh).rotation.y = -flap;
       });
+      updateAnimatedBatches();
       lagoonFish.forEach((fish, index) => {
         const angle = elapsed * (0.22 + index * 0.008) + index / fishCount * Math.PI * 2;
         const radius = 0.82 + (index % 3) * 0.34;

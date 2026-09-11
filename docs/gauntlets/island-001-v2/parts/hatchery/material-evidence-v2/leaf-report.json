@@ -1,0 +1,87 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.829,
+  "estimatedFidelity": 0.829,
+  "targetThreshold": 0.7,
+  "materialId": "leaf",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf-crop.png",
+  "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf",
+  "palette": [
+    "#8A7F2D",
+    "#C9BA49",
+    "#3B3509",
+    "#605717",
+    "#EDE5CC"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf/leaf_albedo.png",
+      "url": "leaf_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf/leaf_roughness.png",
+      "url": "leaf_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf/leaf_height.png",
+      "url": "leaf_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf/leaf_normal.png",
+      "url": "leaf_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/leaf/leaf_ao.png",
+      "url": "leaf_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 16,
+    "sourceHeight": 20,
+    "mapSize": 256,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 20
+    },
+    "mask": {
+      "backgroundColor": "#6B6425",
+      "backgroundNoise": 65.833,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 1.0
+    },
+    "mapStats": {
+      "valueRange": 0.7051,
+      "heightP90Gradient": 0.10858,
+      "roughnessBase": 0.769,
+      "roughnessVariation": 0.187,
+      "normalStrength": 0.283,
+      "blurRadius": 5
+    },
+    "palette": [
+      "#8A7F2D",
+      "#C9BA49",
+      "#3B3509",
+      "#605717",
+      "#EDE5CC"
+    ]
+  },
+  "warnings": [
+    "image is not clearly isolated from background; using most pixels as material evidence",
+    "object/background separation is weak",
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

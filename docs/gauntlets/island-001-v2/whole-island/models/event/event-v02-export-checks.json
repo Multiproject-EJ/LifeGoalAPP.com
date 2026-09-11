@@ -1,0 +1,786 @@
+{
+  "status": "mechanical-pass-awaiting-whole-island-review",
+  "sha256": "09c608704dde7eb94d1a561cfda739dedae2318c0d6acac4e1a6fe9c9ab6f917",
+  "bytes": 1296008,
+  "bbox": {
+    "min": [
+      -1.4639849662780762,
+      0.0,
+      -1.4539257287979126
+    ],
+    "max": [
+      1.4483169317245483,
+      2.3098137378692627,
+      1.340000033378601
+    ]
+  },
+  "radius": 1.4644010454859486,
+  "triangles": 24649,
+  "meshNodes": 48,
+  "completedOwnerMaterialBatches": 12,
+  "degenerateTriangles": 0,
+  "additiveSignaturesPreserved": true,
+  "levels": {
+    "1": {
+      "addedTriangles": 7551,
+      "totalTriangles": 7551,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "observatory-armillary-L1-S3-observatory-warm-gold": "44e055c7718cc92aa6cfb8c46e54e453db86eea4e171f13de4b0248a43ed040b",
+        "observatory-armillary-L1-S4-observatory-celestial-blue": "eeb6d0281845015097494f5c7ed67db08e07508cb405a3d09a2b5367316d3e3a",
+        "observatory-dome-L1-S5-observatory-celestial-blue": "b59b4de7e82c287206b798c3ae6302fa7e1e7f96c7121cda1785f9084f7abfdb",
+        "observatory-dome-L1-S5-observatory-warm-gold": "4bcee1d47a86aeb2aa3816348cec26436d30ed34839efe34ef30e8e75842804d",
+        "observatory-wings-L1-S1-observatory-warm-limestone": "f7bf35e70b9ef771b9754f7ebefd86bf6ed1b6888b3624a3b16b02951880e16e",
+        "observatory-wings-L1-S2-observatory-warm-limestone": "67c2258274a0f6c7e57a4957724a1eec3dd892d71e9853bb4a797814231b350b",
+        "observatory-wings-L1-S3-observatory-books-and-walnut": "dc15989da407255e44df761fdb26566c6efd5a4cfd5814c837c6795f93d97e54",
+        "observatory-wings-L1-S3-observatory-warm-limestone": "58208785be828f35bf1f32fb8e89383f5ad3151d2012f20af7de1a2e38918f6a",
+        "observatory-wings-L1-S4-observatory-books-and-walnut": "23b1358a9e11e0c6d250e5740f218f8a690309fa8b5f24b473e9366138c11241",
+        "observatory-wings-L1-S4-observatory-garden-colors": "7ec09d85ecd4b2318d97c1859fc036eac8f2bdffe1c72416a747b82c1b7f9148",
+        "observatory-wings-L1-S4-observatory-warm-limestone": "d81d1178e0b1e44ecfa86156c528758f4400c53db27880fcbfac746a2a4cd330",
+        "observatory-wings-L1-S5-observatory-clear-window-glass": "54e54b28a42fc01b31d23c8ee3f9df03165236c6f132272f17f1c9324c524ab6",
+        "observatory-wings-L1-S5-observatory-reading-lights": "73328be0db08acc04a782d2bcb06fe172db28f5a11b95753552395c73da0947c",
+        "observatory-wings-L1-S5-observatory-warm-gold": "0a5a1cde7c3098465a0b7e3cbdf67bc7bd127212fa75850da675078f45df62ae",
+        "observatory-wings-L1-S5-observatory-warm-limestone": "b34830a7a828470959974450019d9a3f0f80dfd58c721349ee5f9b80e5888a67"
+      }
+    },
+    "2": {
+      "addedTriangles": 9747,
+      "totalTriangles": 17298,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "observatory-armillary-L1-S3-observatory-warm-gold": "44e055c7718cc92aa6cfb8c46e54e453db86eea4e171f13de4b0248a43ed040b",
+        "observatory-armillary-L1-S4-observatory-celestial-blue": "eeb6d0281845015097494f5c7ed67db08e07508cb405a3d09a2b5367316d3e3a",
+        "observatory-armillary-L2-S5-observatory-celestial-blue": "c541d7544720f0d10d3c319f2c44b8c3ca40b2a357f71f7ee997ebaada25f662",
+        "observatory-armillary-L2-S5-observatory-warm-gold": "5a914a17f8ba1120a83c12847f45361c1ebda7dc2e6314dfdd4a1b61aba75164",
+        "observatory-dome-L1-S5-observatory-celestial-blue": "b59b4de7e82c287206b798c3ae6302fa7e1e7f96c7121cda1785f9084f7abfdb",
+        "observatory-dome-L1-S5-observatory-warm-gold": "4bcee1d47a86aeb2aa3816348cec26436d30ed34839efe34ef30e8e75842804d",
+        "observatory-dome-L2-S1-observatory-warm-limestone": "df0aff03f90e3a0fedb2add02bc2ec8e07a59c4a37105277bafef8ccedb756ae",
+        "observatory-dome-L2-S2-observatory-celestial-blue": "59de9e8354a5a2fb287fa295cb2e82956e2e6e21663f212fa6755a0c46be2398",
+        "observatory-dome-L2-S3-observatory-celestial-blue": "0492a8825c287dd43c6ee2c35b264d6af49aef56592361671fb558aa03d151ca",
+        "observatory-dome-L2-S5-observatory-celestial-blue": "cfded91ae979cecda6f199ff6a33c0b261f52227dd80f1ff93b7ff3672b20a26",
+        "observatory-dome-L2-S5-observatory-warm-gold": "a45ce23d56fa0d1be43790e7a69980732741ed7753f7914bdfde977e6da52a5e",
+        "observatory-wings-L1-S1-observatory-warm-limestone": "f7bf35e70b9ef771b9754f7ebefd86bf6ed1b6888b3624a3b16b02951880e16e",
+        "observatory-wings-L1-S2-observatory-warm-limestone": "67c2258274a0f6c7e57a4957724a1eec3dd892d71e9853bb4a797814231b350b",
+        "observatory-wings-L1-S3-observatory-books-and-walnut": "dc15989da407255e44df761fdb26566c6efd5a4cfd5814c837c6795f93d97e54",
+        "observatory-wings-L1-S3-observatory-warm-limestone": "58208785be828f35bf1f32fb8e89383f5ad3151d2012f20af7de1a2e38918f6a",
+        "observatory-wings-L1-S4-observatory-books-and-walnut": "23b1358a9e11e0c6d250e5740f218f8a690309fa8b5f24b473e9366138c11241",
+        "observatory-wings-L1-S4-observatory-garden-colors": "7ec09d85ecd4b2318d97c1859fc036eac8f2bdffe1c72416a747b82c1b7f9148",
+        "observatory-wings-L1-S4-observatory-warm-limestone": "d81d1178e0b1e44ecfa86156c528758f4400c53db27880fcbfac746a2a4cd330",
+        "observatory-wings-L1-S5-observatory-clear-window-glass": "54e54b28a42fc01b31d23c8ee3f9df03165236c6f132272f17f1c9324c524ab6",
+        "observatory-wings-L1-S5-observatory-reading-lights": "73328be0db08acc04a782d2bcb06fe172db28f5a11b95753552395c73da0947c",
+        "observatory-wings-L1-S5-observatory-warm-gold": "0a5a1cde7c3098465a0b7e3cbdf67bc7bd127212fa75850da675078f45df62ae",
+        "observatory-wings-L1-S5-observatory-warm-limestone": "b34830a7a828470959974450019d9a3f0f80dfd58c721349ee5f9b80e5888a67",
+        "observatory-wings-L2-S1-observatory-warm-limestone": "62eb2a74d763347c49d659baa3650a472e887f9fb29c383710c4a9cfe88acf82",
+        "observatory-wings-L2-S2-observatory-warm-limestone": "9889d25c1d19fb61d9eb12dd1a928ee5215792fc702c4c662b780deb4d2921bd",
+        "observatory-wings-L2-S3-observatory-books-and-walnut": "688237ddb99da3ceba263508fcb0174c4b5b0f7429373cf77a5e67631d657b37",
+        "observatory-wings-L2-S3-observatory-warm-limestone": "75f61551addd4238484d80422555c0efdc0ce10c6c3bb4f61d57504807deda57",
+        "observatory-wings-L2-S4-observatory-books-and-walnut": "763eabad6d5b096d07f2dc167e5b75d4b96dc217417af3236604c4d6ea666cd8",
+        "observatory-wings-L2-S4-observatory-garden-colors": "f8ed0fbca55ed1d25d35d4652bc5224545b468adbdc10b51871cf796015edb48",
+        "observatory-wings-L2-S4-observatory-warm-limestone": "05bcdf6712137234f68adb934eba19dd8f53ac3420781e1681e3a118d2284a0f",
+        "observatory-wings-L2-S5-observatory-clear-window-glass": "2a81b421a7a63ca163d72fa6bc1498f5303510cd5f50f2ba80337102cf3e0143",
+        "observatory-wings-L2-S5-observatory-reading-lights": "0c57d3a189d0db173dae58a756871c83877d19d1c07524472ac98635756a3e4b",
+        "observatory-wings-L2-S5-observatory-warm-gold": "f5865f4c85f1e88d3f7d600c904099676ccf66f321074c369f9688f59fb1e9bd",
+        "observatory-wings-L2-S5-observatory-warm-limestone": "8e43771577469658cf6895fe6163c06e716e03ab49a266be070caf271efe2947"
+      }
+    },
+    "3": {
+      "addedTriangles": 7351,
+      "totalTriangles": 24649,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "observatory-armillary-L1-S3-observatory-warm-gold": "44e055c7718cc92aa6cfb8c46e54e453db86eea4e171f13de4b0248a43ed040b",
+        "observatory-armillary-L1-S4-observatory-celestial-blue": "eeb6d0281845015097494f5c7ed67db08e07508cb405a3d09a2b5367316d3e3a",
+        "observatory-armillary-L2-S5-observatory-celestial-blue": "c541d7544720f0d10d3c319f2c44b8c3ca40b2a357f71f7ee997ebaada25f662",
+        "observatory-armillary-L2-S5-observatory-warm-gold": "5a914a17f8ba1120a83c12847f45361c1ebda7dc2e6314dfdd4a1b61aba75164",
+        "observatory-armillary-L3-S5-observatory-warm-gold": "5999b7c9621e8ed6974eea2c1db6f5579e7faf9d00247499af7372dbaa9394d1",
+        "observatory-dome-L1-S5-observatory-celestial-blue": "b59b4de7e82c287206b798c3ae6302fa7e1e7f96c7121cda1785f9084f7abfdb",
+        "observatory-dome-L1-S5-observatory-warm-gold": "4bcee1d47a86aeb2aa3816348cec26436d30ed34839efe34ef30e8e75842804d",
+        "observatory-dome-L2-S1-observatory-warm-limestone": "df0aff03f90e3a0fedb2add02bc2ec8e07a59c4a37105277bafef8ccedb756ae",
+        "observatory-dome-L2-S2-observatory-celestial-blue": "59de9e8354a5a2fb287fa295cb2e82956e2e6e21663f212fa6755a0c46be2398",
+        "observatory-dome-L2-S3-observatory-celestial-blue": "0492a8825c287dd43c6ee2c35b264d6af49aef56592361671fb558aa03d151ca",
+        "observatory-dome-L2-S5-observatory-celestial-blue": "cfded91ae979cecda6f199ff6a33c0b261f52227dd80f1ff93b7ff3672b20a26",
+        "observatory-dome-L2-S5-observatory-warm-gold": "a45ce23d56fa0d1be43790e7a69980732741ed7753f7914bdfde977e6da52a5e",
+        "observatory-dome-L3-S1-observatory-warm-limestone": "af1977f14a9052598f8f658020e833a4411fc4ffca193408cffd9735d3d664a7",
+        "observatory-dome-L3-S2-observatory-celestial-blue": "570d09c79441722fe12ea2e9f52d8b26717aea7dcda802766a5c53162ae23a89",
+        "observatory-dome-L3-S5-observatory-warm-gold": "1c3bf3b71d040d35f41e884bef1a2510dca02bcb1e5d12ac3734aca4f69bad0a",
+        "observatory-wings-L1-S1-observatory-warm-limestone": "f7bf35e70b9ef771b9754f7ebefd86bf6ed1b6888b3624a3b16b02951880e16e",
+        "observatory-wings-L1-S2-observatory-warm-limestone": "67c2258274a0f6c7e57a4957724a1eec3dd892d71e9853bb4a797814231b350b",
+        "observatory-wings-L1-S3-observatory-books-and-walnut": "dc15989da407255e44df761fdb26566c6efd5a4cfd5814c837c6795f93d97e54",
+        "observatory-wings-L1-S3-observatory-warm-limestone": "58208785be828f35bf1f32fb8e89383f5ad3151d2012f20af7de1a2e38918f6a",
+        "observatory-wings-L1-S4-observatory-books-and-walnut": "23b1358a9e11e0c6d250e5740f218f8a690309fa8b5f24b473e9366138c11241",
+        "observatory-wings-L1-S4-observatory-garden-colors": "7ec09d85ecd4b2318d97c1859fc036eac8f2bdffe1c72416a747b82c1b7f9148",
+        "observatory-wings-L1-S4-observatory-warm-limestone": "d81d1178e0b1e44ecfa86156c528758f4400c53db27880fcbfac746a2a4cd330",
+        "observatory-wings-L1-S5-observatory-clear-window-glass": "54e54b28a42fc01b31d23c8ee3f9df03165236c6f132272f17f1c9324c524ab6",
+        "observatory-wings-L1-S5-observatory-reading-lights": "73328be0db08acc04a782d2bcb06fe172db28f5a11b95753552395c73da0947c",
+        "observatory-wings-L1-S5-observatory-warm-gold": "0a5a1cde7c3098465a0b7e3cbdf67bc7bd127212fa75850da675078f45df62ae",
+        "observatory-wings-L1-S5-observatory-warm-limestone": "b34830a7a828470959974450019d9a3f0f80dfd58c721349ee5f9b80e5888a67",
+        "observatory-wings-L2-S1-observatory-warm-limestone": "62eb2a74d763347c49d659baa3650a472e887f9fb29c383710c4a9cfe88acf82",
+        "observatory-wings-L2-S2-observatory-warm-limestone": "9889d25c1d19fb61d9eb12dd1a928ee5215792fc702c4c662b780deb4d2921bd",
+        "observatory-wings-L2-S3-observatory-books-and-walnut": "688237ddb99da3ceba263508fcb0174c4b5b0f7429373cf77a5e67631d657b37",
+        "observatory-wings-L2-S3-observatory-warm-limestone": "75f61551addd4238484d80422555c0efdc0ce10c6c3bb4f61d57504807deda57",
+        "observatory-wings-L2-S4-observatory-books-and-walnut": "763eabad6d5b096d07f2dc167e5b75d4b96dc217417af3236604c4d6ea666cd8",
+        "observatory-wings-L2-S4-observatory-garden-colors": "f8ed0fbca55ed1d25d35d4652bc5224545b468adbdc10b51871cf796015edb48",
+        "observatory-wings-L2-S4-observatory-warm-limestone": "05bcdf6712137234f68adb934eba19dd8f53ac3420781e1681e3a118d2284a0f",
+        "observatory-wings-L2-S5-observatory-clear-window-glass": "2a81b421a7a63ca163d72fa6bc1498f5303510cd5f50f2ba80337102cf3e0143",
+        "observatory-wings-L2-S5-observatory-reading-lights": "0c57d3a189d0db173dae58a756871c83877d19d1c07524472ac98635756a3e4b",
+        "observatory-wings-L2-S5-observatory-warm-gold": "f5865f4c85f1e88d3f7d600c904099676ccf66f321074c369f9688f59fb1e9bd",
+        "observatory-wings-L2-S5-observatory-warm-limestone": "8e43771577469658cf6895fe6163c06e716e03ab49a266be070caf271efe2947",
+        "observatory-wings-L3-S1-observatory-warm-limestone": "74c3229f72bfb020a9a9b16d5ebfc3237c1d4652ea69ab7b597e1473853d8c92",
+        "observatory-wings-L3-S2-observatory-warm-limestone": "46f5f6220161db70fba83ad35e94284a8f3fac3e6fde7aff92bb4b5a9aaf9ab1",
+        "observatory-wings-L3-S3-observatory-books-and-walnut": "18d5302abd73c2a00c6abd53b17e5f47357ecdee7bc0e253374a52e3c11f24de",
+        "observatory-wings-L3-S3-observatory-warm-limestone": "1a3a88d5f2b8ecbf4c703bacc3a790381e1e5f67ea8a0698401485eae37d7401",
+        "observatory-wings-L3-S4-observatory-books-and-walnut": "e65f843c8a776358773524e7523f498ec8660be819a54281d459aa849eebfab9",
+        "observatory-wings-L3-S4-observatory-garden-colors": "381f92293c137fab8bc84bc71724f9455b4bb875a616e4f7f7b3ec03e6627014",
+        "observatory-wings-L3-S4-observatory-warm-limestone": "cd86b753ac50d626749844e00589d9d9cc8b7acfcc26c08834e942d737cc7ef1",
+        "observatory-wings-L3-S5-observatory-clear-window-glass": "f2b3cd55006e5e2fe7ae6e383302a0f8eb2c3535792cfab2e825d19a2c77ffb9",
+        "observatory-wings-L3-S5-observatory-reading-lights": "eb59a2d640deee821c7ab00392362b9d43c4a275ad122057367174eff4f4f3ae",
+        "observatory-wings-L3-S5-observatory-warm-gold": "226b2cad9e4efe35cae1a9398a8b3d0e7f5ae84fc2e684e691a454676216d7ba",
+        "observatory-wings-L3-S5-observatory-warm-limestone": "416f091e20db9fe41a0b511b73c68f80bf2f950f872fb66e3ee769d58188cb03"
+      }
+    }
+  },
+  "materials": [
+    {
+      "name": "observatory-warm-gold",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-celestial-blue",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-warm-limestone",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-dome-warm-interior",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-books-and-walnut",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-garden-colors",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-clear-window-glass",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "observatory-reading-lights",
+      "doubleSided": true,
+      "emissiveFactor": [
+        1,
+        0.5299999713897705,
+        0.15000000596046448
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "node": "observatory-armillary-L1-S3-observatory-warm-gold",
+      "level": 1,
+      "stage": 3,
+      "owner": "observatory-armillary",
+      "triangles": 1256,
+      "degenerateTriangles": 0,
+      "signature": "44e055c7718cc92aa6cfb8c46e54e453db86eea4e171f13de4b0248a43ed040b",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-armillary-L1-S4-observatory-celestial-blue",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-armillary",
+      "triangles": 92,
+      "degenerateTriangles": 0,
+      "signature": "eeb6d0281845015097494f5c7ed67db08e07508cb405a3d09a2b5367316d3e3a",
+      "materials": [
+        "observatory-celestial-blue"
+      ]
+    },
+    {
+      "node": "observatory-armillary-L2-S5-observatory-celestial-blue",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-armillary",
+      "triangles": 260,
+      "degenerateTriangles": 0,
+      "signature": "c541d7544720f0d10d3c319f2c44b8c3ca40b2a357f71f7ee997ebaada25f662",
+      "materials": [
+        "observatory-celestial-blue"
+      ]
+    },
+    {
+      "node": "observatory-armillary-L2-S5-observatory-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-armillary",
+      "triangles": 520,
+      "degenerateTriangles": 0,
+      "signature": "5a914a17f8ba1120a83c12847f45361c1ebda7dc2e6314dfdd4a1b61aba75164",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-armillary-L3-S5-observatory-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-armillary",
+      "triangles": 560,
+      "degenerateTriangles": 0,
+      "signature": "5999b7c9621e8ed6974eea2c1db6f5579e7faf9d00247499af7372dbaa9394d1",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-dome-L1-S5-observatory-celestial-blue",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "triangles": 16,
+      "degenerateTriangles": 0,
+      "signature": "b59b4de7e82c287206b798c3ae6302fa7e1e7f96c7121cda1785f9084f7abfdb",
+      "materials": [
+        "observatory-celestial-blue"
+      ]
+    },
+    {
+      "node": "observatory-dome-L1-S5-observatory-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "triangles": 228,
+      "degenerateTriangles": 0,
+      "signature": "4bcee1d47a86aeb2aa3816348cec26436d30ed34839efe34ef30e8e75842804d",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-dome-L2-S1-observatory-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "observatory-dome",
+      "triangles": 388,
+      "degenerateTriangles": 0,
+      "signature": "df0aff03f90e3a0fedb2add02bc2ec8e07a59c4a37105277bafef8ccedb756ae",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-dome-L2-S2-observatory-celestial-blue",
+      "level": 2,
+      "stage": 2,
+      "owner": "observatory-dome",
+      "triangles": 1200,
+      "degenerateTriangles": 0,
+      "signature": "59de9e8354a5a2fb287fa295cb2e82956e2e6e21663f212fa6755a0c46be2398",
+      "materials": [
+        "observatory-celestial-blue",
+        "observatory-dome-warm-interior"
+      ]
+    },
+    {
+      "node": "observatory-dome-L2-S3-observatory-celestial-blue",
+      "level": 2,
+      "stage": 3,
+      "owner": "observatory-dome",
+      "triangles": 28,
+      "degenerateTriangles": 0,
+      "signature": "0492a8825c287dd43c6ee2c35b264d6af49aef56592361671fb558aa03d151ca",
+      "materials": [
+        "observatory-celestial-blue"
+      ]
+    },
+    {
+      "node": "observatory-dome-L2-S5-observatory-celestial-blue",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "triangles": 16,
+      "degenerateTriangles": 0,
+      "signature": "cfded91ae979cecda6f199ff6a33c0b261f52227dd80f1ff93b7ff3672b20a26",
+      "materials": [
+        "observatory-celestial-blue"
+      ]
+    },
+    {
+      "node": "observatory-dome-L2-S5-observatory-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "triangles": 1810,
+      "degenerateTriangles": 0,
+      "signature": "a45ce23d56fa0d1be43790e7a69980732741ed7753f7914bdfde977e6da52a5e",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-dome-L3-S1-observatory-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "observatory-dome",
+      "triangles": 388,
+      "degenerateTriangles": 0,
+      "signature": "af1977f14a9052598f8f658020e833a4411fc4ffca193408cffd9735d3d664a7",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-dome-L3-S2-observatory-celestial-blue",
+      "level": 3,
+      "stage": 2,
+      "owner": "observatory-dome",
+      "triangles": 1200,
+      "degenerateTriangles": 0,
+      "signature": "570d09c79441722fe12ea2e9f52d8b26717aea7dcda802766a5c53162ae23a89",
+      "materials": [
+        "observatory-celestial-blue",
+        "observatory-dome-warm-interior"
+      ]
+    },
+    {
+      "node": "observatory-dome-L3-S5-observatory-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-dome",
+      "triangles": 1422,
+      "degenerateTriangles": 0,
+      "signature": "1c3bf3b71d040d35f41e884bef1a2510dca02bcb1e5d12ac3734aca4f69bad0a",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S1-observatory-warm-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "observatory-wings",
+      "triangles": 428,
+      "degenerateTriangles": 0,
+      "signature": "f7bf35e70b9ef771b9754f7ebefd86bf6ed1b6888b3624a3b16b02951880e16e",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S2-observatory-warm-limestone",
+      "level": 1,
+      "stage": 2,
+      "owner": "observatory-wings",
+      "triangles": 932,
+      "degenerateTriangles": 0,
+      "signature": "67c2258274a0f6c7e57a4957724a1eec3dd892d71e9853bb4a797814231b350b",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S3-observatory-books-and-walnut",
+      "level": 1,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "triangles": 520,
+      "degenerateTriangles": 0,
+      "signature": "dc15989da407255e44df761fdb26566c6efd5a4cfd5814c837c6795f93d97e54",
+      "materials": [
+        "observatory-books-and-walnut"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S3-observatory-warm-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "triangles": 252,
+      "degenerateTriangles": 0,
+      "signature": "58208785be828f35bf1f32fb8e89383f5ad3151d2012f20af7de1a2e38918f6a",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S4-observatory-books-and-walnut",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 160,
+      "degenerateTriangles": 0,
+      "signature": "23b1358a9e11e0c6d250e5740f218f8a690309fa8b5f24b473e9366138c11241",
+      "materials": [
+        "observatory-books-and-walnut"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S4-observatory-garden-colors",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 916,
+      "degenerateTriangles": 0,
+      "signature": "7ec09d85ecd4b2318d97c1859fc036eac8f2bdffe1c72416a747b82c1b7f9148",
+      "materials": [
+        "observatory-garden-colors"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S4-observatory-warm-limestone",
+      "level": 1,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "d81d1178e0b1e44ecfa86156c528758f4400c53db27880fcbfac746a2a4cd330",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S5-observatory-clear-window-glass",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 143,
+      "degenerateTriangles": 0,
+      "signature": "54e54b28a42fc01b31d23c8ee3f9df03165236c6f132272f17f1c9324c524ab6",
+      "materials": [
+        "observatory-clear-window-glass"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S5-observatory-reading-lights",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 264,
+      "degenerateTriangles": 0,
+      "signature": "73328be0db08acc04a782d2bcb06fe172db28f5a11b95753552395c73da0947c",
+      "materials": [
+        "observatory-reading-lights"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S5-observatory-warm-gold",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 1860,
+      "degenerateTriangles": 0,
+      "signature": "0a5a1cde7c3098465a0b7e3cbdf67bc7bd127212fa75850da675078f45df62ae",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-wings-L1-S5-observatory-warm-limestone",
+      "level": 1,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 412,
+      "degenerateTriangles": 0,
+      "signature": "b34830a7a828470959974450019d9a3f0f80dfd58c721349ee5f9b80e5888a67",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S1-observatory-warm-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "observatory-wings",
+      "triangles": 336,
+      "degenerateTriangles": 0,
+      "signature": "62eb2a74d763347c49d659baa3650a472e887f9fb29c383710c4a9cfe88acf82",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S2-observatory-warm-limestone",
+      "level": 2,
+      "stage": 2,
+      "owner": "observatory-wings",
+      "triangles": 764,
+      "degenerateTriangles": 0,
+      "signature": "9889d25c1d19fb61d9eb12dd1a928ee5215792fc702c4c662b780deb4d2921bd",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S3-observatory-books-and-walnut",
+      "level": 2,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "triangles": 620,
+      "degenerateTriangles": 0,
+      "signature": "688237ddb99da3ceba263508fcb0174c4b5b0f7429373cf77a5e67631d657b37",
+      "materials": [
+        "observatory-books-and-walnut"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S3-observatory-warm-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "triangles": 264,
+      "degenerateTriangles": 0,
+      "signature": "75f61551addd4238484d80422555c0efdc0ce10c6c3bb4f61d57504807deda57",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S4-observatory-books-and-walnut",
+      "level": 2,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 160,
+      "degenerateTriangles": 0,
+      "signature": "763eabad6d5b096d07f2dc167e5b75d4b96dc217417af3236604c4d6ea666cd8",
+      "materials": [
+        "observatory-books-and-walnut"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S4-observatory-garden-colors",
+      "level": 2,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 960,
+      "degenerateTriangles": 0,
+      "signature": "f8ed0fbca55ed1d25d35d4652bc5224545b468adbdc10b51871cf796015edb48",
+      "materials": [
+        "observatory-garden-colors"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S4-observatory-warm-limestone",
+      "level": 2,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 72,
+      "degenerateTriangles": 0,
+      "signature": "05bcdf6712137234f68adb934eba19dd8f53ac3420781e1681e3a118d2284a0f",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S5-observatory-clear-window-glass",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 117,
+      "degenerateTriangles": 0,
+      "signature": "2a81b421a7a63ca163d72fa6bc1498f5303510cd5f50f2ba80337102cf3e0143",
+      "materials": [
+        "observatory-clear-window-glass"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S5-observatory-reading-lights",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 216,
+      "degenerateTriangles": 0,
+      "signature": "0c57d3a189d0db173dae58a756871c83877d19d1c07524472ac98635756a3e4b",
+      "materials": [
+        "observatory-reading-lights"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S5-observatory-warm-gold",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 1604,
+      "degenerateTriangles": 0,
+      "signature": "f5865f4c85f1e88d3f7d600c904099676ccf66f321074c369f9688f59fb1e9bd",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-wings-L2-S5-observatory-warm-limestone",
+      "level": 2,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 412,
+      "degenerateTriangles": 0,
+      "signature": "8e43771577469658cf6895fe6163c06e716e03ab49a266be070caf271efe2947",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S1-observatory-warm-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "observatory-wings",
+      "triangles": 304,
+      "degenerateTriangles": 0,
+      "signature": "74c3229f72bfb020a9a9b16d5ebfc3237c1d4652ea69ab7b597e1473853d8c92",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S2-observatory-warm-limestone",
+      "level": 3,
+      "stage": 2,
+      "owner": "observatory-wings",
+      "triangles": 500,
+      "degenerateTriangles": 0,
+      "signature": "46f5f6220161db70fba83ad35e94284a8f3fac3e6fde7aff92bb4b5a9aaf9ab1",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S3-observatory-books-and-walnut",
+      "level": 3,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "triangles": 304,
+      "degenerateTriangles": 0,
+      "signature": "18d5302abd73c2a00c6abd53b17e5f47357ecdee7bc0e253374a52e3c11f24de",
+      "materials": [
+        "observatory-books-and-walnut"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S3-observatory-warm-limestone",
+      "level": 3,
+      "stage": 3,
+      "owner": "observatory-wings",
+      "triangles": 252,
+      "degenerateTriangles": 0,
+      "signature": "1a3a88d5f2b8ecbf4c703bacc3a790381e1e5f67ea8a0698401485eae37d7401",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S4-observatory-books-and-walnut",
+      "level": 3,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 80,
+      "degenerateTriangles": 0,
+      "signature": "e65f843c8a776358773524e7523f498ec8660be819a54281d459aa849eebfab9",
+      "materials": [
+        "observatory-books-and-walnut"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S4-observatory-garden-colors",
+      "level": 3,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 812,
+      "degenerateTriangles": 0,
+      "signature": "381f92293c137fab8bc84bc71724f9455b4bb875a616e4f7f7b3ec03e6627014",
+      "materials": [
+        "observatory-garden-colors"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S4-observatory-warm-limestone",
+      "level": 3,
+      "stage": 4,
+      "owner": "observatory-wings",
+      "triangles": 36,
+      "degenerateTriangles": 0,
+      "signature": "cd86b753ac50d626749844e00589d9d9cc8b7acfcc26c08834e942d737cc7ef1",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S5-observatory-clear-window-glass",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 65,
+      "degenerateTriangles": 0,
+      "signature": "f2b3cd55006e5e2fe7ae6e383302a0f8eb2c3535792cfab2e825d19a2c77ffb9",
+      "materials": [
+        "observatory-clear-window-glass"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S5-observatory-reading-lights",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 120,
+      "degenerateTriangles": 0,
+      "signature": "eb59a2d640deee821c7ab00392362b9d43c4a275ad122057367174eff4f4f3ae",
+      "materials": [
+        "observatory-reading-lights"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S5-observatory-warm-gold",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 896,
+      "degenerateTriangles": 0,
+      "signature": "226b2cad9e4efe35cae1a9398a8b3d0e7f5ae84fc2e684e691a454676216d7ba",
+      "materials": [
+        "observatory-warm-gold"
+      ]
+    },
+    {
+      "node": "observatory-wings-L3-S5-observatory-warm-limestone",
+      "level": 3,
+      "stage": 5,
+      "owner": "observatory-wings",
+      "triangles": 412,
+      "degenerateTriangles": 0,
+      "signature": "416f091e20db9fe41a0b511b73c68f80bf2f950f872fb66e3ee769d58188cb03",
+      "materials": [
+        "observatory-warm-limestone"
+      ]
+    }
+  ]
+}

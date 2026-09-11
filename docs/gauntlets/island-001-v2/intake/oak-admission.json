@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "reference-three-quarter",
+    "sourcePath": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/intake/oak-approved-crop.png",
+    "width": 655,
+    "height": 583,
+    "foregroundCoverage": 0.7067,
+    "largestComponentFraction": 1.0,
+    "pHash": 16875789111144473127,
+    "duplicateOfHash": null
+  }
+}

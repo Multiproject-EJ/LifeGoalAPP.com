@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.86,
+  "estimatedFidelity": 0.86,
+  "targetThreshold": 0.7,
+  "materialId": "brass",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass-crop.png",
+  "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass",
+  "palette": [
+    "#82582E",
+    "#E2B371",
+    "#A38958",
+    "#A46E39",
+    "#E9DEB1"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass/brass_albedo.png",
+      "url": "brass_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass/brass_roughness.png",
+      "url": "brass_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass/brass_height.png",
+      "url": "brass_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass/brass_normal.png",
+      "url": "brass_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island-001-assembly-upgrade-20260909/docs/gauntlets/island-001-v2/parts/hatchery/material-evidence-v2/brass/brass_ao.png",
+      "url": "brass_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 9,
+    "sourceHeight": 56,
+    "mapSize": 256,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 9,
+      "height": 56
+    },
+    "mask": {
+      "backgroundColor": "#A9A287",
+      "backgroundNoise": 116.726,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.8313
+    },
+    "mapStats": {
+      "valueRange": 0.4904,
+      "heightP90Gradient": 0.08333,
+      "roughnessBase": 0.704,
+      "roughnessVariation": 0.147,
+      "normalStrength": 0.254,
+      "blurRadius": 5
+    },
+    "palette": [
+      "#82582E",
+      "#E2B371",
+      "#A38958",
+      "#A46E39",
+      "#E9DEB1"
+    ]
+  },
+  "warnings": [
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

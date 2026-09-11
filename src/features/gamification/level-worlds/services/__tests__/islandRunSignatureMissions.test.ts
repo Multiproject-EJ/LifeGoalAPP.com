@@ -245,7 +245,7 @@ async function seedFirstLightAssembly(options: {
       signatureMissionProgressByIsland: {
         [key]: {
           missionId: 'first-light-assembly-crater',
-          version: 1,
+          version: 2,
           claimedDynamiteTileIndices,
           chargesDetonated: options.chargesDetonated ?? 0,
           lastDetonatedSector: null,
@@ -352,14 +352,14 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'First Light places exactly twenty finite Assembly Crater charges on non-door board tiles',
+    name: 'First Light places exactly ten finite Assembly Crater charges on non-door board tiles',
     run: () => {
       const map = applyLandmarkDoorTiles(
         generateTileMap(1, getIslandRarity(1), 'first-light', 2),
         { expandedActiveStopId: 'hatchery' },
       );
       const caches = map.filter((entry) => entry.signatureMissionKind === 'first_light_dynamite');
-      assertEqual(caches.length, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'twenty distinct dynamite caches are authored');
+      assertEqual(caches.length, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'ten distinct dynamite caches are authored');
       assertEqual(new Set(caches.map((entry) => entry.index)).size, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'every cache has a unique tile');
       assert(caches.every((entry) => entry.tileType !== 'landmark_door'), 'no cache replaces a canonical landmark door');
 
@@ -406,21 +406,21 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'First Light detonation consumes one collected charge and completes the twentieth sector exactly once',
+    name: 'First Light final batch consumes two charges and completes the mission exactly once',
     run: async () => {
       await seedFirstLightAssembly({
         claimedTileIndices: [...FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES],
-        chargesDetonated: 19,
+        chargesDetonated: 8,
       });
       const result = await detonateFirstLightAssemblyCharge({ session: makeSession(), client: null });
-      assertEqual(result.status, 'ok', 'twentieth detonation succeeds');
+      assertEqual(result.status, 'ok', 'final batch succeeds');
       if (result.status !== 'ok') return;
       const after = readIslandRunGameStateRecord(makeSession());
       const progress = resolveFirstLightAssemblyCraterProgress({
         ledger: after.signatureMissionProgressByIsland, islandNumber: 1, cycleIndex: 0,
       });
-      assertEqual(result.sectorAfter, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'progress caps at twenty sectors');
-      assertEqual(progress.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'twentieth sector persists');
+      assertEqual(result.sectorAfter, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'progress caps at ten charges');
+      assertEqual(progress.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, 'tenth charge persists');
       assert(progress.completedAtMs !== null, 'completion timestamp persists');
       const finaleReward = getIslandRunBossReward(1);
       assertEqual(after.bossTrialResolvedIslandNumber, 1, 'Assembly finale fulfils the hidden fifth-stop compatibility marker');
@@ -434,11 +434,54 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
+    name: 'Assembly batches require 3 then 5 then 2 charges and preserve wallet on insufficient inventory',
+    run: async () => {
+      await seedFirstLightAssembly({ claimedTileIndices: [...FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.slice(0, 2)] });
+      const blocked = await detonateFirstLightAssemblyCharge({ session: makeSession(), client: null });
+      assertEqual(blocked.status, 'no_dynamite', 'two charges cannot start the surface chain');
+      await seedFirstLightAssembly({ claimedTileIndices: [...FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES] });
+      for (const expected of [3, 8, 10]) {
+        const result = await detonateFirstLightAssemblyCharge({ session: makeSession(), client: null });
+        assertEqual(result.status, 'ok', 'funded batch commits');
+        if (result.status === 'ok') {
+          assertEqual(result.sectorAfter, expected, 'batch reaches its authored boundary');
+          assertEqual(result.dynamiteRemaining, 10 - expected, 'only this batch is spent');
+        }
+      }
+    },
+  },
+  {
+    name: 'Assembly old saves migrate once without losing legacy cache claims or completed status',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 1);
+      const oldTiles = [0, 1, 2, 3, 7, 8, 9, 10, 11, 13, 16, 17, 18, 20, 21, 25, 26, 27, 28, 29];
+      const migrated = sanitizeIslandRunSignatureMissionProgress({ [key]: {
+        missionId: 'first-light-assembly-crater', version: 1,
+        claimedDynamiteTileIndices: oldTiles, chargesDetonated: 19,
+      } });
+      const current = resolveFirstLightAssemblyCraterProgress({ ledger: migrated, cycleIndex: 0 });
+      assertEqual(current.chargesDetonated, 9, 'nineteen old charges retain proportional progress without silently banking a finale');
+      assertEqual(current.claimedDynamiteTileIndices.length, 20, 'legacy pickup identities survive');
+      assertEqual(current.completedAtMs, null, 'unfinished migration leaves the final action available');
+      const twice = resolveFirstLightAssemblyCraterProgress({ ledger: sanitizeIslandRunSignatureMissionProgress(migrated), cycleIndex: 0 });
+      assertEqual(twice.chargesDetonated, 9, 'v2 hydration cannot halve progress again');
+      const rawOld = { ...current, version: 1 as const, chargesDetonated: 19 };
+      const merged = resolveFirstLightAssemblyCraterProgress({ ledger: mergeIslandRunSignatureMissionProgress({ [key]: rawOld }, migrated), cycleIndex: 0 });
+      assertEqual(merged.chargesDetonated, 9, 'merging an old device cannot silently finish the new mission');
+      assertEqual(merged.completedAtMs, null, 'the final canonical reward action remains available after merge');
+      const finished = sanitizeIslandRunSignatureMissionProgress({ [key]: {
+        missionId: 'first-light-assembly-crater', version: 1,
+        claimedDynamiteTileIndices: oldTiles, chargesDetonated: 20, completedAtMs: 77,
+      } });
+      assertEqual(resolveFirstLightAssemblyCraterProgress({ ledger: finished, cycleIndex: 0 }).completedAtMs, 77, 'old completion remains completed');
+    },
+  },
+  {
     name: 'Island 001 briefing states the Assembly mission and excludes a separate Boss landmark',
     run: () => {
       const briefing = getIslandMissionBriefingPresentation(1);
       assert(briefing.headline.includes('Assembly'), 'headline names the Assembly mission');
-      assert(briefing.primaryObjective.includes('twenty'), 'primary objective states the twenty-charge target');
+      assert(briefing.primaryObjective.includes('ten'), 'primary objective states the ten-charge target');
       assert(briefing.supportingObjective.includes('Level 3'), 'supporting objective states the landmark build target');
       assert(briefing.supportingObjective.includes('replaces a separate Boss landmark'), 'briefing explains that no Boss landmark is counted');
     },
@@ -497,6 +540,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const remote = sanitizeIslandRunSignatureMissionProgress({
         [key]: {
           mission_id: 'first-light-assembly-crater',
+          version: 2,
           claimed_dynamite_tile_indices: [0, 1, 2, 2, 99],
           charges_detonated: 2,
           updated_at_ms: 10,
@@ -505,6 +549,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const local = sanitizeIslandRunSignatureMissionProgress({
         [key]: {
           mission_id: 'first-light-assembly-crater',
+          version: 2,
           claimed_dynamite_tile_indices: [0, 1, 2, 3, 7],
           charges_detonated: 4,
           updated_at_ms: 20,

@@ -1,0 +1,20 @@
+{
+  "authority": "secondary-inferred",
+  "status": "modeling-aid-only",
+  "source": "../02-landmark-studies.png",
+  "sha256": "c640f94baf10e4516a3327275cefb9a7dfc3374904c4344819f63178470ad3e4",
+  "tool": "built-in image_gen",
+  "prompt": "conservatory-visible-clay-study-prompt.md",
+  "dimensions": [
+    1312,
+    1199
+  ],
+  "mode": "RGB",
+  "alphaExtrema": null,
+  "limitations": [
+    "Generated isolated canopy only; not runtime geometry or final design approval.",
+    "View is more frontal than the original, so original pixels control proportions and silhouette.",
+    "Fine ribs and contacts are inferred. No failed model was provided as a reference.",
+    "Checker background is baked into RGB; this is not transparent runtime art."
+  ]
+}

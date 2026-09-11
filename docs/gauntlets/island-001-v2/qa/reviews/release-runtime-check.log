@@ -1,0 +1,2 @@
+PASS: waterfall startup, nonfinite input, steady flow and long-session transforms at all qualities.
+PASS: repeated replay, reset during blast, late completion before/during/after blast, same-sequence updates and reduced motion.
