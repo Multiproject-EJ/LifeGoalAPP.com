@@ -1,0 +1,61 @@
+{
+  "review": "Island 001 release V3 independent final visual comparison",
+  "date": "2026-09-11",
+  "outcome": "accepted_no_meaningful_visible_regression",
+  "scope": "Rendered comparison of final optimized hall, surface and full-Pilot phone-viewport capture; no source or geometry edits.",
+  "views_inspected": [
+    {
+      "file": "qa/raw/complete-v02-hall-hero-iso.png",
+      "role": "Previous matched hero reference",
+      "inspection": "Full image"
+    },
+    {
+      "file": "qa/raw/release-v3-hero-hall-hero-iso.png",
+      "role": "Final matched hero",
+      "inspection": "Full image"
+    },
+    {
+      "file": "qa/raw/release-v3-hall-hall-iso.png",
+      "role": "Final oblique chamber",
+      "inspection": "Full image"
+    },
+    {
+      "file": "qa/raw/release-v3-surface-surface-iso.png",
+      "role": "Final surface overview",
+      "inspection": "Full image"
+    },
+    {
+      "file": "qa/raw/release-v3-verified-full-pilot-hall-phone.png",
+      "role": "Final full-Pilot phone viewport",
+      "inspection": "Full image"
+    }
+  ],
+  "findings": [
+    {
+      "area": "Reduced rib, gallery rail and globe-emblem tessellation",
+      "result": "No meaningful visible regression at the supplied matched 1440x1080 hero framing. Curves retain continuous outlines; the globe and laurels remain recognizable, and ribs/railings remain attached. Fine faceting fits the existing style."
+    },
+    {
+      "area": "Chamber structure",
+      "result": "Concentric seating, central aisle/podium, monumental limestone and walnut presidium, both gallery levels, side stairs and four lift structures remain present. The oblique view confirms chamber depth and occupied side rows; no newly missing wall, cutaway wedge or collapsed furnishing is visible."
+    },
+    {
+      "area": "Surface",
+      "result": "All four landmarks remain visible around the central opening; cliffs, waterfall, bridge and planted edges remain intact. Habit Oak shows the previously reviewed richer canopy."
+    },
+    {
+      "area": "Full-Pilot phone viewport",
+      "result": "The hall is centered and legible in its completed focus view. Seating, emblem, galleries and lift frames render coherently without apparent batching displacement, large missing surfaces or foreground sea occlusion. This frame supports correct final presentation, not the interaction transition itself."
+    }
+  ],
+  "remaining_blockers": [],
+  "nonblocking_observations": [
+    "The phone composition retains substantial open sky/foreground around the chamber; fine furnishings are necessarily small at this width. This is an existing framing/presentation tradeoff, not a demonstrated batching regression.",
+    "The final work remains a simplified stylized interpretation; this report makes no 10/10 or exact-reference-likeness claim."
+  ],
+  "limits": [
+    "Reviewed static PNG evidence only; no fresh browser controls, motion sequence, GPU-console inspection or physical iPhone session in this review.",
+    "The phone PNG is a phone-sized viewport capture and must not be described as physical-device verification.",
+    "The 2043-test result and 173-call/179k-triangle profile were reported by root and are not independently rerun or asserted by this visual report."
+  ]
+}

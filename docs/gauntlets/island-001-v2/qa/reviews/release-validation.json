@@ -4,7 +4,7 @@
     "passed": 2043,
     "failed": 0,
     "command": "node scripts/run-island-run-service-tests.mjs",
-    "scope": "Complete suite before final dust-material and review-harness type corrections; focused runtime verification repeated after those changes."
+    "scope": "Complete 2043-test suite repeated after V3 renderer, seating and canopy integration."
   },
   "runtimeAfterFinalMaterial": {
     "status": "pass",
@@ -16,8 +16,16 @@
       "completion before/during/after blast",
       "same-sequence state updates",
       "reduced motion",
-      "raw funnel hidden during robot build"
-    ]
+      "raw funnel hidden during robot build",
+      "batch transforms and nonuniform scaling",
+      "ancestor visibility and draw ranges",
+      "perspective face culling",
+      "complete shadow shell",
+      "original surface raycasting",
+      "controller bounds",
+      "resource teardown and remount"
+    ],
+    "additionalCommand": "node scripts/check-island001-v2-batches.mjs"
   },
   "architecture": {
     "status": "pass",
@@ -40,15 +48,16 @@
       "release-hatchery-runtime-check.json",
       "release-habit-runtime-check.json",
       "release-wisdom-runtime-check.json",
-      "release-event-runtime-check.json"
-    ]
+      "release-event-runtime-check.json",
+      "release-v3-habit-glb.json"
+    ],
+    "productionHashesReverified": true
   },
   "browser": {
     "status": "pass",
     "evidence": [
-      "release-final-v2-browser.json",
-      "release-final-v2-responsive.json",
-      "release-viewer-check.json"
+      "release-v3-verified-browser.json",
+      "release-v3-verified-responsive.json"
     ],
     "phoneViewports": [
       [
@@ -73,60 +82,72 @@
     "independentReviews": [
       "complete-v02-independent-final.json",
       "release-v2-landmark-survey.json",
-      "release-dust-v3-independent.json"
+      "release-dust-v3-independent.json",
+      "release-v3-habit-independent.json",
+      "release-v3-batching-independent.json",
+      "release-v3-final-visual-independent.json"
     ],
-    "comparison": "../comparisons/island001-v2-before-after.html"
+    "comparison": "../comparisons/island001-v2-before-after.html",
+    "additionalCanopyViews": 17,
+    "additionalCanopyConstructionFrames": 18
   },
   "typeScript": {
     "status": "pass",
     "command": "tsc -b",
     "earlierFinding": "Review harness passed booleans where target/current option strings were required; both call sites corrected.",
-    "exitCode": 0
+    "exitCode": 0,
+    "finalFocusedBatchingCheck": "pass"
   },
   "productionBuild": {
     "status": "pass",
     "command": "vite build",
     "exitCode": 0,
-    "duration": "1m 4s",
+    "duration": "2m 20s",
     "modelOutputHashesMatch": true,
     "modelUrlsPresentInProductionBundle": true,
     "warnings": [
       "Large application chunks above Vite 500 kB warning threshold."
-    ]
+    ],
+    "prebuildScripts": "generate-supa-client.mjs and copy-app-icon.mjs passed"
   },
   "profiles": [
     {
-      "evidence": "release-performance-v2-high-profile.json",
-      "scope": "overview",
-      "quality": "high",
-      "report": "DEVICE PROFILE\nREVIEW\nAverage\n59.7 FPS\nP95 frame\n17.7 ms\nP95 / refresh\n17.7 ms \u00b7 PASS\nWorst\n133.4 ms\nSlow\n0.2%\nMax calls\n269\nMax tris\n206k\nRun again\nShare report\n\nREVIEW against high timing and geometry targets."
-    },
-    {
-      "evidence": "release-performance-v2-medium-profile.json",
-      "scope": "overview",
-      "quality": "medium",
-      "report": "DEVICE PROFILE\nREVIEW\nAverage\n59.7 FPS\nP95 frame\n17.7 ms\nP95 / refresh\n17.7 ms \u00b7 PASS\nWorst\n116.6 ms\nSlow\n0.2%\nMax calls\n263\nMax tris\n199k\nRun again\nShare report\n\nREVIEW against medium timing and geometry targets."
-    },
-    {
-      "evidence": "release-performance-v2-low-profile.json",
-      "scope": "overview",
-      "quality": "low",
-      "report": "DEVICE PROFILE\nREVIEW\nAverage\n57.4 FPS\nP95 frame\n17.7 ms\nP95 / refresh\n17.7 ms \u00b7 PASS\nWorst\n1016.6 ms\nSlow\n0.2%\nMax calls\n234\nMax tris\n185k\nRun again\nShare report\n\nREVIEW against low timing and geometry targets."
-    },
-    {
-      "evidence": "release-mission-v3-high-profile.json",
+      "evidence": "release-v3-final2-high-profile.json",
       "scope": "mission",
       "quality": "high",
-      "report": "DEVICE PROFILE\nREVIEW\nAverage\n59.2 FPS\nP95 frame\n18.5 ms\nP95 / refresh\n18.5 ms \u00b7 PASS\nWorst\n115.7 ms\nSlow\n0.6%\nMax calls\n317\nMax tris\n207k\nRun again\nShare report\n\nREVIEW against high timing and geometry targets."
+      "report": "DEVICE PROFILE\nPASS\nAverage\n56.5 FPS\nP95 frame\n17.8 ms\nP95 / refresh\n17.8 ms \u00b7 PASS\nWorst\n134.4 ms\nSlow\n4.9%\nMax calls\n173\nMax tris\n179k\nRun again\nShare report\n\nPASS against high timing and geometry targets."
+    },
+    {
+      "evidence": "release-v3-overview-high-profile.json",
+      "scope": "overview",
+      "quality": "high",
+      "report": "DEVICE PROFILE\nFAIL\nAverage\n30 FPS\nP95 frame\n34.3 ms\nP95 / refresh\n34.3 ms \u00b7 REVIEW\nWorst\n66.1 ms\nSlow\n100%\nMax calls\n171\nMax tris\n178k\nRun again\nShare report\n\nFAIL against high timing and geometry targets."
+    },
+    {
+      "evidence": "release-v3-overview-medium-profile.json",
+      "scope": "overview",
+      "quality": "medium",
+      "report": "DEVICE PROFILE\nFAIL\nAverage\n30 FPS\nP95 frame\n34.3 ms\nP95 / refresh\n34.3 ms \u00b7 REVIEW\nWorst\n66.6 ms\nSlow\n100%\nMax calls\n165\nMax tris\n173k\nRun again\nShare report\n\nFAIL against medium timing and geometry targets."
+    },
+    {
+      "evidence": "release-v3-overview-low-profile.json",
+      "scope": "overview",
+      "quality": "low",
+      "report": "DEVICE PROFILE\nREVIEW\nAverage\n30 FPS\nP95 frame\n35.2 ms\nP95 / refresh\n35.2 ms \u00b7 PASS\nWorst\n66.7 ms\nSlow\n0.1%\nMax calls\n153\nMax tris\n162k\nRun again\nShare report\n\nREVIEW against low timing and geometry targets."
     }
   ],
   "limits": [
-    "Desktop Chromium at phone viewport is not physical-phone verification.",
-    "Timing measurements were taken on the local development host, with a TypeScript check running concurrently.",
-    "Scene draw-call and triangle targets remain above the profiler budgets.",
-    "Low-quality sample included one roughly one-second worst-frame stall; do not equate p95 success with no stalls.",
-    "Approved reference likeness is simplified; no perfect quality score is claimed."
+    "Physical iPhone is paired but remains locked; Safari session could not be established. No physical-device or thermal certification.",
+    "Desktop Chromium phone-viewport measurements are from the development host; final high mission sample overlapped compiler work.",
+    "Geometry and timing targets now pass in the final high mission profile; individual frame stalls are still present (worst134.4ms).",
+    "Reference detail remains stylized; no perfect quality score is claimed.",
+    "Later high/medium overview profiles report FAIL and low reports REVIEW at30FPS. Blank-page diagnostic also runs at30FPS; do not interpret this as a60FPS hardware certification or suppress raw results."
   ],
   "physicalPhoneVerified": false,
-  "deployed": false
+  "deployed": false,
+  "snapshotScope": "Pre-deployment validation for authorized September 11 release; GitHub Actions is authoritative for deployment status.",
+  "previousLocalImplementation": "d8d88c8e",
+  "productionUrl": "https://habitgame.app/",
+  "overviewTimingCaveat": "Later high/medium overview profiles report FAIL and low reports REVIEW at30FPS. Blank-page diagnostic also runs at30FPS; do not interpret this as a60FPS hardware certification or suppress raw results.",
+  "framePacingDiagnostic": "release-v3-frame-pacing-diagnostic.json"
 }

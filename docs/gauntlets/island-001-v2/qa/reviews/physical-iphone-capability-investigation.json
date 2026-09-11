@@ -1,0 +1,84 @@
+{
+  "reviewId": "physical-iphone-capability-investigation",
+  "date": "2026-09-11",
+  "reviewer": "v2_integration_audit",
+  "status": "paired_device_available_but_browser_inspection_not_established",
+  "device": {
+    "name": "Eivind sin iPhone",
+    "model": "iPhone 16 Pro",
+    "os": "iOS26.6.1",
+    "physical": true,
+    "transport": "localNetwork",
+    "paired": true,
+    "developerMode": "enabled",
+    "ddiServicesAvailable": true,
+    "lastObservedLockState": {
+      "passcodeRequired": true,
+      "unlockedSinceBoot": true,
+      "localObservationTime": "13:22"
+    }
+  },
+  "installedCapabilities": [
+    {
+      "name": "Apple CoreDevice/devicectl",
+      "available": true,
+      "evidence": "Escalated device info details and lockState succeeded. It advertises Application Control and View Device Screen."
+    },
+    {
+      "name": "Native Safari WebDriver",
+      "available": true,
+      "path": "/System/Cryptexes/App/usr/bin/safaridriver",
+      "evidence": "Installed man page explicitly supports platformName:iOS, safari:useSimulator:false and safari:deviceUDID for a paired physical device.",
+      "temporaryEndpoint": "http://127.0.0.1:53291",
+      "ownedListenerPid": 61812
+    },
+    {
+      "name": "Playwright",
+      "available": true,
+      "evidence": "Bundled Node package found. Its presence alone does not demonstrate attachment to this physical iPhone."
+    }
+  ],
+  "notFoundInCheckedLocations": [
+    "pymobiledevice3 CLI or module in bundled Python",
+    "tidevice CLI or module in bundled Python",
+    "ios CLI",
+    "ios_webkit_debug_proxy",
+    "ideviceinfo/libimobiledevice CLI",
+    "Appium/remote-debugger packages in checked workspace/bundled package paths"
+  ],
+  "attempts": [
+    {
+      "operation": "WebDriver create physical iOS Safari session using exact paired-device UDID",
+      "count": 2,
+      "result": "session not created",
+      "message": "Could not create a session: Some devices were found, but could not be used:",
+      "detail": "Second attempt requested safari:diagnose; no diagnostic files found in expected WebDriver logs. No DOM or screenshot command could be executed without a session."
+    },
+    {
+      "operation": "CoreDevice launch MobileSafari with about:blank payload",
+      "result": "timed out after15seconds",
+      "detail": "Tunnel and usage assertion succeeded. Launch success was not returned; device remained last observed locked. No application content was inspected."
+    }
+  ],
+  "settingsEvidence": {
+    "macSafariDevelopMenu": true,
+    "macAllowRemoteAutomationPreference": "key absent; this is not sufficient evidence that automation is disabled",
+    "phoneWebInspectorEnabled": "unknown",
+    "phoneRemoteAutomationEnabled": "unknown"
+  },
+  "nextSteps": [
+    "After the user unlocks the phone and keeps it awake, retry the temporary WebDriver endpoint with platformName:iOS and safari:useSimulator:false.",
+    "If session creation succeeds, use the session to navigate only the authorized review URL, then read document/DOM and execute the application profiler through WebDriver; request a WebDriver screenshot. These operations remain untested.",
+    "If the same generic session failure persists while unlocked, inspect Safari's existing remote-automation/Web Inspector availability before proposing any setting change or package installation.",
+    "The current review server binds localhost only. A reachable LAN or deployed review URL is necessary for a physical phone; root is handling server exposure."
+  ],
+  "alternativeAvailableButUntested": {
+    "detail": "CoreDevice advertises native device screen viewing. No screen session, screenshot capture or Web Inspector attachment was attempted through GUI."
+  },
+  "limits": [
+    "No physical phone gameplay, rendering, DOM, performance profile or screenshot was successfully collected.",
+    "A paired developer-mode device is not evidence that Safari inspection or remote automation is enabled.",
+    "No source, user settings or device configuration was changed; no package/app was installed, signed or purchased. Only capability queries, temporary WebDriver startup and authorized blank-page launch/session tests were attempted.",
+    "Tool absence is limited to checked PATHs, common local/bin paths, bundled Python and workspace/bundled Node package paths, not a forensic whole-disk guarantee."
+  ]
+}

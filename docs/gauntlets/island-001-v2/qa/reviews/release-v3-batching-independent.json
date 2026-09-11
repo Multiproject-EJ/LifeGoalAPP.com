@@ -1,0 +1,66 @@
+{
+  "review": "Island 001 release V3 batching independent engineering review",
+  "date": "2026-09-11",
+  "scope": "Read-only source review; report file only. Current Island 001 animated surface batching, Pilot wiring, seating instance compaction and single-pass shoreline foam.",
+  "outcome": "accepted_after_lifecycle_corrections",
+  "remaining_blockers": [],
+  "sources": [
+    "src/features/gamification/level-worlds/dev/Island1AnimatedBatches.ts",
+    "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx",
+    "src/features/gamification/level-worlds/dev/Island1AssemblyDiplomaticHall.ts",
+    "src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts",
+    "scripts/check-island001-v2-batches.mjs",
+    "node_modules/three/src/renderers/webgl/WebGLGeometries.js",
+    "node_modules/three/src/renderers/webgl/WebGLShadowMap.js",
+    "node_modules/three/src/renderers/webgl/WebGLBindingStates.js"
+  ],
+  "resolved_findings": [
+    {
+      "issue": "Caretaker originals were restored after their owner had already been removed and disposed.",
+      "resolution": "Pilot now calls batcher.dispose before caretaker and ambience disposal, so restored original geometry reaches its proper owner.",
+      "verification": "Read current Pilot teardown; independent disposal-event repro confirms both original caretaker-family geometries disposed."
+    },
+    {
+      "issue": "Alternate shadowIndex was uploaded during shadows but detached when geometry.dispose ran.",
+      "resolution": "The alternate index is registered as geometry-owned islandShadowIndex only immediately before geometry.dispose. It is absent during rendering, avoiding ARRAY_BUFFER/ELEMENT_ARRAY_BUFFER reuse.",
+      "verification": "Installed Three WebGLGeometries disposal hook repro confirms both color and shadow index removed. Current runtime has no vertex alias during rendering."
+    },
+    {
+      "issue": "Empty source-controller geometry removed authored bounds used by downstream construction measurements.",
+      "resolution": "Controllers preserve cloned original boundingBox and boundingSphere.",
+      "verification": "Current regression and independent Box3.setFromObject comparison both pass."
+    }
+  ],
+  "checks": {
+    "transforms_normals": "Source world transforms are carried by per-part matrices in color, depth and distance shaders. Normal inverse-transpose accounts for nonuniform scale; batching root transform is accounted for. This is correct for current rigid positive-scale sources.",
+    "visibility_build_focus": "All ancestor Object3D.visible flags are checked each sync; transform/visibility changes update draw submission before render. Controllers stay in authored hierarchy. Raw excavation geometry that mutates vertices is excluded. Instanced, skinned, transparent and position-morph meshes stay native.",
+    "backface_submission": "Current PerspectiveCamera eye transformed to each source's local coordinates gives the correct triangle-plane facing test. DoubleSide surfaces remain intact. Complete visible shell is retained separately for shadows; color index and count restore after each shadow pass.",
+    "picking_bounds": "Original source raycast is restored around temporary original-geometry access; existing Pilot explicit source target arrays preserve hit identity. Bounds remain available on source controllers. Batches are not added to those target arrays.",
+    "material_updates": "Runtime color, emissive, emissiveIntensity, roughness, metalness and opacity changes propagate. Initial shared material features remain cloned.",
+    "seating": "All six furniture instance counts are compacted together; aisle holes and reveal timing remain unchanged. frustumCulled=false avoids stale instance-bounds clipping during reveal.",
+    "foam": "forceSinglePass is applied only to scene-owned thin shoreline ribbon materials when the Island 001 batchStatic option is enabled.",
+    "ownership": "Original geometry/raycast is restored before scene and owner disposal. Batch geometry, material, depth material and distance material are disposed. Alternate shadow index cleanup now follows Three's geometry disposal path.",
+    "island_scope": "Pilot creates/syncs/disposes this helper only when isAssemblyCraterFirstLight is true. No gameplay state mutation paths were introduced. Other island scene factories do not invoke the helper."
+  },
+  "verification": [
+    {
+      "command": "node scripts/check-island001-v2-batches.mjs",
+      "result": "PASS on current source: transforms/nonuniform scale, visibility/index ranges, animated material, depth transform, exclusions, bounds, shadow-index ownership, teardown/remount, perspective backface selection, complete shadow shell, reverse view and source picking."
+    },
+    {
+      "kind": "Independent installed-Three disposal and bounds repro",
+      "result": {
+        "originalsDisposed": 2,
+        "colorIndexDisposed": true,
+        "shadowIndexDisposed": true,
+        "noVertexAliasDuringRender": true,
+        "boundsPreserved": true
+      }
+    }
+  ],
+  "limits": [
+    "This review did not run a browser or verify GPU shader compilation, visible shadows, final hall appearance, physical-phone performance or release deployment. Root is running those checks separately.",
+    "Current helper is specialized for rigid meshes and the Pilot perspective camera. It should not be extended to reflected transforms, orthographic views, geometry mutation or additional dynamically changed material features without corresponding handling/tests.",
+    "Runtime regression tests exercise CPU transforms and shader construction; they do not themselves constitute actual WebGL rendering evidence."
+  ]
+}

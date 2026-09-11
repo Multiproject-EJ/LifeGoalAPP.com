@@ -7,7 +7,7 @@ const output=`docs/gauntlets/island-001-v2/qa/reviews/${prefix}-browser.json`;if
 const browser=await chromium.launch({headless:true,executablePath:'/Users/ejmac/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'});
 const result={browser:browser.version(),scope:'Actual full pilot at phone viewport; functional browser evidence, not physical phone.',checks:[],errors:[]};
 try{
- const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});page.on('pageerror',e=>result.errors.push(e.stack));
+ const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});page.on('pageerror',e=>result.errors.push(e.stack));page.on('console',m=>{if(m.type()==='error' && /THREE|WebGL|INVALID_OPERATION|shader/i.test(m.text()))result.errors.push(m.text());});
  await page.goto('http://127.0.0.1:53282/dev/island-template-kit?island=1&mode=3d&level=3&assemblyCharges=10',{waitUntil:'domcontentloaded',timeout:60000});
  const selector='canvas[aria-label="Interactive 3D Assembly Crater island"]',canvas=page.locator(selector);
  await page.locator(`${selector}[data-assembly-construction-phase="complete"]`).waitFor({timeout:60000});
@@ -32,7 +32,7 @@ try{
  await page.getByRole('button',{name:'Hide overlays for evidence',exact:true}).click();
  await canvas.screenshot({path:`docs/gauntlets/island-001-v2/qa/raw/${prefix}-full-pilot-hall-phone.png`});
  await page.close();
- const reduced=await browser.newPage({viewport:{width:1440,height:1080},deviceScaleFactor:1,reducedMotion:'reduce'});reduced.on('pageerror',e=>result.errors.push(e.stack));
+ const reduced=await browser.newPage({viewport:{width:1440,height:1080},deviceScaleFactor:1,reducedMotion:'reduce'});reduced.on('pageerror',e=>result.errors.push(e.stack));reduced.on('console',m=>{if(m.type()==='error' && /THREE|WebGL|INVALID_OPERATION|shader/i.test(m.text()))result.errors.push(m.text());});
  await reduced.goto('http://127.0.0.1:53282/dev/island-template-kit?island=1&mode=3d&level=3&assemblyCharges=0',{waitUntil:'domcontentloaded',timeout:60000});
  const reducedCanvas=reduced.locator(selector),reducedControls=reduced.getByTestId('assembly-crater-preview-controls');
  await reduced.locator(`${selector}[data-assembly-construction-phase="excavating"]`).waitFor({timeout:60000});

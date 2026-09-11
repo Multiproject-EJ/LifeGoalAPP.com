@@ -7,6 +7,7 @@ import { JUNGLE_COMPASS_CEREMONY_DURATION_MS, JUNGLE_COMPASS_REDUCED_CEREMONY_DU
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { createIsland1AnimatedBatches } from './Island1AnimatedBatches';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import {
   applyLandmarkDoorTiles,
@@ -7566,6 +7567,7 @@ export default function Island5ThreePilot({
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointerup', handlePointerUp);
 
+    const island1AnimatedBatches = isAssemblyCraterFirstLight ? createIsland1AnimatedBatches(scene) : null;
     let appliedConstructionCameraKey = '';
     const animate = (now: number) => {
       animationFrame = window.requestAnimationFrame(animate);
@@ -9010,6 +9012,7 @@ export default function Island5ThreePilot({
           });
         }
       }
+      island1AnimatedBatches?.sync(camera);
       renderer.render(scene, camera);
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
         const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
@@ -9225,6 +9228,7 @@ export default function Island5ThreePilot({
       };
       controls.dispose();
       timer.dispose();
+      island1AnimatedBatches?.dispose();
       if (encounterCaretaker) {
         scene.remove(encounterCaretaker.root);
         encounterCaretaker.dispose();

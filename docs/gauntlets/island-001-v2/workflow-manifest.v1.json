@@ -26,7 +26,7 @@
       "reference": "docs/visual-references/island-001-reimagined-20260910/01-island-overview.png"
     }
   ],
-  "status": "implementation-complete-local-delivery",
+  "status": "release-ready",
   "coordinates": {
     "up": "+Y",
     "ground": "XZ",
@@ -86,23 +86,26 @@
     "References do not establish hidden geometry.",
     "Reference detail density must be reconciled with mobile cost.",
     "CUA native pipe disconnected after b02. Actual Chromium149 browser capture fallback succeeded for all b03/b04 views and full-pilot b03 phone-size/profile baseline.",
-    "Physical-device testing is not available in this session. Desktop Chromium at phone viewport is separately labeled.",
+    "Paired iPhone is available but locked; physical-device testing remains unverified.",
     "Whole-scene structural review accepted with nonblocking visual residuals; perfect reference likeness is not claimed."
   ],
-  "authority": "User explicitly approved entire 24-part plan and requested complete implementation with before/after images.",
+  "authority": "User explicitly approved entire 24-part plan and requested complete implementation with before/after images. User explicitly requested finishing optimization and pushing live; later requested richer Habit Oak greenery.",
   "latestReview": [
     "qa/reviews/complete-v02-independent-final.json",
     "qa/reviews/release-v2-landmark-survey.json",
-    "qa/reviews/release-dust-v3-independent.json"
+    "qa/reviews/release-dust-v3-independent.json",
+    "qa/reviews/release-v3-habit-independent.json",
+    "qa/reviews/release-v3-batching-independent.json",
+    "qa/reviews/release-v3-final-visual-independent.json"
   ],
   "activeRoute": "whole-island-iteration-proposal.md",
   "proposedAuthority": "whole-island-iteration-proposal.md (approved by user proceed)",
   "userOverride": "User proceed approved replacement of per-part gates/caps with integrated whole-island reviews; preserve failed evidence.",
   "currentProduction": {
-    "phase": "complete-local-implementation",
+    "phase": "release-ready",
     "integratedAssets": {
       "hatchery": "v01",
-      "habit": "v02",
+      "habit": "v03",
       "wisdom": "v01",
       "event": "v02"
     },
@@ -110,5 +113,7 @@
     "publicAssetsPackaged": true,
     "deployed": false
   },
-  "validation": "qa/reviews/release-validation.json"
+  "validation": "qa/reviews/release-validation.json",
+  "productionUrl": "https://habitgame.app/",
+  "deploymentStatusSource": "GitHub Actions Deploy static site workflow (push to main)"
 }

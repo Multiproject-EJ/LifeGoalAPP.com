@@ -45,3 +45,7 @@ Final model evidence: release-v2-* has 17 views per model; release-stages-v2-* h
 
 
 Final validation completed: 2,043 service tests pass; full-project TypeScript and production Vite build pass. The full-project checker caught two review-harness boolean options; they now use the typed target/current values (equivalent truthiness at runtime). Final dust shading uses a rough Standard material; independent review accepts the improved lobes/stem and verifies timely clearing. Focused runtime checks pass after those final edits. All four built GLB hashes and production bundle URLs match the manifest. All six comparison tabs and the final demolition-image section load without browser errors. See release-validation.json for timing, geometry-budget and physical-device limits.
+
+## September 11 release pass
+
+User authorized finishing optimization and pushing live, then requested richer tree greenery. Habit v03 updates the canopy only, keeps23,153triangles and preserves non-canopy geometry. Root integrated the hash-addressed public model and received independent17-view acceptance. Runtime batching, invisible-seat compaction, single-pass foam and smaller Assembly curve tessellation bring the high mission within175calls/180ktriangles. Independent review found and root fixed controller bounds and two cleanup ownership issues before final browser validation. Physical iPhone remains locked; no physical-phone claim is made.

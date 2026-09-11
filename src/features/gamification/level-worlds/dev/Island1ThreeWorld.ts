@@ -2876,6 +2876,8 @@ export function createIsland1LivingAmbience(
     });
     const wave = new THREE.Mesh(geometry, material);
     wave.name = `ISLAND_1_SHORELINE_WAVE_FRONT_${String(index + 1).padStart(2, '0')}`;
+    // A thin foam ribbon has no layered volume requiring two transparency passes.
+    if (options.batchStatic) wave.material.forceSinglePass = true;
     wave.position.y = ISLAND_1_OCEAN_SURFACE_Y + 0.045;
     wave.renderOrder = 2;
     wave.userData.lifePhase = index / Math.max(1, lifeBudget.shorelineWaveCount);

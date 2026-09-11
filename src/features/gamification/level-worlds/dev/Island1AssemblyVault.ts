@@ -51,8 +51,8 @@ export function createAssemblyVault(floorY:number) {
       const a=(i+.5)/16*Math.PI*2;if((Math.cos(a)>0)!==front)continue;
       const radial=(r:number,y:number)=>new THREE.Vector3(Math.sin(a)*r,y,Math.cos(a)*r);
       const curve=new THREE.CatmullRomCurve3([radial(6.77,floorY+.2),radial(6.77,floorY+1.4),radial(6.72,-1.1),radial(6.22,-.30),radial(4.92,-.07),radial(3.73,.08),radial(2.75,.18)]);
-      const rib=new THREE.Mesh(new THREE.TubeGeometry(curve,18,.19,6,false),limestone);rib.name='ASSEMBLY_SWEPT_LIMESTONE_RIB';rib.receiveShadow=true;ribs.add(rib);
-      const inlay=new THREE.Mesh(new THREE.TubeGeometry(curve,18,.018,4,false),gold);inlay.position.set(-Math.sin(a)*.19,0,-Math.cos(a)*.19);ribs.add(inlay);
+      const rib=new THREE.Mesh(new THREE.TubeGeometry(curve,12,.19,5,false),limestone);rib.name='ASSEMBLY_SWEPT_LIMESTONE_RIB';rib.receiveShadow=true;ribs.add(rib);
+      const inlay=new THREE.Mesh(new THREE.TubeGeometry(curve,12,.018,3,false),gold);inlay.position.set(-Math.sin(a)*.19,0,-Math.cos(a)*.19);ribs.add(inlay);
       const lamp=new THREE.Mesh(new THREE.BoxGeometry(.055,.52,.035),glow);lamp.position.copy(radial(6.66,floorY+1.42));lamp.rotation.y=a;ribs.add(lamp);
     }
     compactStaticGeometry(ribs,front?'ASSEMBLY_FRONT_RIBS':'ASSEMBLY_REAR_RIBS');

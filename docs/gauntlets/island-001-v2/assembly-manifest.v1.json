@@ -133,12 +133,12 @@
       ],
       "implementation": [
         "public/assets/islands/island-001/models/habit.glb",
-        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v03.glb"
       ],
       "placement": "canonical shared landmark center, yaw 0",
       "evidence": [
-        "qa/raw/release-v2-habit-iso.png",
-        "qa/reviews/release-habit-runtime-check.json"
+        "qa/raw/release-v3-habit-habit-iso.png",
+        "qa/reviews/release-v3-habit-glb.json"
       ]
     },
     {
@@ -149,12 +149,12 @@
       ],
       "implementation": [
         "public/assets/islands/island-001/models/habit.glb",
-        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v03.glb"
       ],
       "placement": "canonical shared landmark center, yaw 0",
       "evidence": [
-        "qa/raw/release-v2-habit-iso.png",
-        "qa/reviews/release-habit-runtime-check.json"
+        "qa/raw/release-v3-habit-habit-iso.png",
+        "qa/reviews/release-v3-habit-glb.json"
       ]
     },
     {
@@ -165,12 +165,12 @@
       ],
       "implementation": [
         "public/assets/islands/island-001/models/habit.glb",
-        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v03.glb"
       ],
       "placement": "canonical shared landmark center, yaw 0",
       "evidence": [
-        "qa/raw/release-v2-habit-iso.png",
-        "qa/reviews/release-habit-runtime-check.json"
+        "qa/raw/release-v3-habit-habit-iso.png",
+        "qa/reviews/release-v3-habit-glb.json"
       ]
     },
     {
@@ -181,12 +181,12 @@
       ],
       "implementation": [
         "public/assets/islands/island-001/models/habit.glb",
-        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb"
+        "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v03.glb"
       ],
       "placement": "canonical shared landmark center, yaw 0",
       "evidence": [
-        "qa/raw/release-v2-habit-iso.png",
-        "qa/reviews/release-habit-runtime-check.json"
+        "qa/raw/release-v3-habit-habit-iso.png",
+        "qa/reviews/release-v3-habit-glb.json"
       ]
     },
     {

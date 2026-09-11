@@ -1,0 +1,13 @@
+{
+  "scope": "Actual full pilot in desktop Chromium at phone viewport. Not a physical-phone measurement.",
+  "browser": "149.0.7827.55",
+  "viewport": [
+    390,
+    844
+  ],
+  "quality": "high",
+  "mission": false,
+  "errors": [],
+  "report": "DEVICE PROFILE\nFAIL\nAverage\n30 FPS\nP95 frame\n34.3 ms\nP95 / refresh\n34.3 ms · REVIEW\nWorst\n66.1 ms\nSlow\n100%\nMax calls\n171\nMax tris\n178k\nRun again\nShare report\n\nFAIL against high timing and geometry targets.",
+  "metrics": "30 FPS\n169 calls\n177k tris\n390×844 px"
+}

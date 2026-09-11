@@ -1,0 +1,46 @@
+{
+  "version": "habit-v03",
+  "frozen": true,
+  "liftClearancePassed": true,
+  "allNonCanopySignaturesUnchanged": [
+    "oak-galleries-L1-S3-oak-warm-timber",
+    "oak-galleries-L1-S5-oak-aged-brass",
+    "oak-galleries-L1-S5-oak-blue-habit-banners",
+    "oak-galleries-L1-S5-oak-warm-timber",
+    "oak-galleries-L1-S5-oak-warm-window-light",
+    "oak-galleries-L2-S3-oak-warm-timber",
+    "oak-galleries-L2-S5-oak-aged-brass",
+    "oak-galleries-L2-S5-oak-blue-habit-banners",
+    "oak-galleries-L2-S5-oak-warm-timber",
+    "oak-galleries-L2-S5-oak-warm-window-light",
+    "oak-galleries-L3-S3-oak-warm-timber",
+    "oak-galleries-L3-S5-oak-aged-brass",
+    "oak-galleries-L3-S5-oak-blue-habit-banners",
+    "oak-galleries-L3-S5-oak-warm-timber",
+    "oak-galleries-L3-S5-oak-warm-window-light",
+    "oak-stairs-L1-S1-oak-garden-limestone",
+    "oak-stairs-L1-S3-oak-garden-limestone",
+    "oak-stairs-L1-S5-oak-garden-limestone",
+    "oak-stairs-L2-S1-oak-garden-limestone",
+    "oak-stairs-L2-S3-oak-garden-limestone",
+    "oak-stairs-L2-S5-oak-garden-limestone",
+    "oak-stairs-L3-S1-oak-garden-limestone",
+    "oak-stairs-L3-S3-oak-garden-limestone",
+    "oak-stairs-L3-S5-oak-garden-limestone",
+    "oak-trunk-L1-S1-oak-sculpted-bark",
+    "oak-trunk-L1-S2-oak-sculpted-bark",
+    "oak-trunk-L2-S1-oak-sculpted-bark",
+    "oak-trunk-L2-S2-oak-sculpted-bark",
+    "oak-trunk-L3-S1-oak-sculpted-bark",
+    "oak-trunk-L3-S2-oak-sculpted-bark"
+  ],
+  "priorFilesPreserved": {
+    "habit-v01": "e714b56ef956abc087dad0fc9670b9d6f8f2f9a2d94760b0a78a1cf3ed53b604",
+    "habit-v02": "68dc4983a6b803f0705bc3ac15d3bd9fd1be5448b398f1d12e878e9c0d36a458"
+  },
+  "files": {
+    "habit-v03.py": "1ca64b3b02e0651777dad0f1571a75a1032c9149bb9145c9b00f2781410354c4",
+    "habit-v03.glb": "89459f97bd5b6bfb58364255ff599f7d2e2241b1517094347a5e77cabfe1e574",
+    "habit-v03.blend": "a83e74e58d6a931427373b09b38cc639c045119d1faf9cb48402c58a56cf80bc"
+  }
+}

@@ -1,0 +1,462 @@
+{
+  "browser": "149.0.7827.55",
+  "scope": "Actual full pilot at phone viewport; functional browser evidence, not physical phone.",
+  "checks": [
+    "replay-1-completed",
+    "replay-2-completed",
+    "focus-hatchery",
+    "focus-habit",
+    "focus-wisdom",
+    "focus-event",
+    "focus-boss",
+    "focused-resize-landscape-and-portrait",
+    "reduced-motion-immediate-completion-without-camera-shake"
+  ],
+  "errors": [],
+  "inventory": {
+    "topLevel": [
+      {
+        "name": "ISLAND_1_LIVING_AMBIENCE",
+        "family": "ISLAND_1_LIVING_AMBIENCE",
+        "renderables": 112,
+        "triangles": 15808,
+        "estimatedCalls": 112,
+        "logicalInstances": 159,
+        "shadowCasters": 0,
+        "transparentRenderables": 43
+      },
+      {
+        "name": "ISLAND_1_ASSEMBLY_CRATER_RUNTIME_ROOT",
+        "family": "ISLAND_1_ASSEMBLY_CRATER_RUNTIME_ROOT",
+        "renderables": 77,
+        "triangles": 47832,
+        "estimatedCalls": 77,
+        "logicalInstances": 1566,
+        "shadowCasters": 8,
+        "transparentRenderables": 5
+      },
+      {
+        "name": "ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS",
+        "family": "canonical-tile-rewards",
+        "renderables": 33,
+        "triangles": 13068,
+        "estimatedCalls": 33,
+        "logicalInstances": 33,
+        "shadowCasters": 33,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_5_CARETAKER_BOARD_LOD",
+        "family": "caretaker",
+        "renderables": 24,
+        "triangles": 1488,
+        "estimatedCalls": 24,
+        "logicalInstances": 24,
+        "shadowCasters": 6,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_1_ASSEMBLY_CRATER_ANNULAR_TERRAIN",
+        "family": "ISLAND_1_ASSEMBLY_CRATER_ANNULAR_TERRAIN",
+        "renderables": 22,
+        "triangles": 24532,
+        "estimatedCalls": 22,
+        "logicalInstances": 311,
+        "shadowCasters": 3,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_V2_EVENT_ROOT",
+        "family": "ISLAND_001_V2_EVENT_ROOT",
+        "renderables": 12,
+        "triangles": 24649,
+        "estimatedCalls": 12,
+        "logicalInstances": 12,
+        "shadowCasters": 11,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_001_V2_HATCHERY_ROOT",
+        "family": "ISLAND_001_V2_HATCHERY_ROOT",
+        "renderables": 12,
+        "triangles": 24710,
+        "estimatedCalls": 12,
+        "logicalInstances": 12,
+        "shadowCasters": 10,
+        "transparentRenderables": 2
+      },
+      {
+        "name": "ISLAND_001_V2_WISDOM_ROOT",
+        "family": "ISLAND_001_V2_WISDOM_ROOT",
+        "renderables": 12,
+        "triangles": 24635,
+        "estimatedCalls": 12,
+        "logicalInstances": 12,
+        "shadowCasters": 10,
+        "transparentRenderables": 2
+      },
+      {
+        "name": "ISLAND_001_V2_HABIT_ROOT",
+        "family": "ISLAND_001_V2_HABIT_ROOT",
+        "renderables": 7,
+        "triangles": 23153,
+        "estimatedCalls": 7,
+        "logicalInstances": 7,
+        "shadowCasters": 7,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_5_PLAYER_TOKEN",
+        "family": "player-token",
+        "renderables": 6,
+        "triangles": 576,
+        "estimatedCalls": 6,
+        "logicalInstances": 6,
+        "shadowCasters": 6,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_TILE_SURFACE_BATCH_1",
+        "family": "canonical-route-tiles",
+        "renderables": 1,
+        "triangles": 72,
+        "estimatedCalls": 1,
+        "logicalInstances": 6,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_TILE_SURFACE_BATCH_2",
+        "family": "canonical-route-tiles",
+        "renderables": 1,
+        "triangles": 108,
+        "estimatedCalls": 1,
+        "logicalInstances": 9,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_TILE_SURFACE_BATCH_3",
+        "family": "canonical-route-tiles",
+        "renderables": 1,
+        "triangles": 36,
+        "estimatedCalls": 1,
+        "logicalInstances": 3,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_TILE_SURFACE_BATCH_4",
+        "family": "canonical-route-tiles",
+        "renderables": 1,
+        "triangles": 72,
+        "estimatedCalls": 1,
+        "logicalInstances": 6,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_TILE_SURFACE_BATCH_5",
+        "family": "canonical-route-tiles",
+        "renderables": 1,
+        "triangles": 108,
+        "estimatedCalls": 1,
+        "logicalInstances": 9,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_001_TILE_SURFACE_BATCH_6",
+        "family": "canonical-route-tiles",
+        "renderables": 1,
+        "triangles": 36,
+        "estimatedCalls": 1,
+        "logicalInstances": 3,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_1_ASSEMBLY_CRATER_OCEAN_WITH_MEGAHALL_CLEARANCE",
+        "family": "ISLAND_1_ASSEMBLY_CRATER_OCEAN_WITH_MEGAHALL_CLEARANCE",
+        "renderables": 1,
+        "triangles": 4080,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_5_CARETAKER_CONTACT_SHADOW",
+        "family": "caretaker",
+        "renderables": 1,
+        "triangles": 12,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_5_CARETAKER_FOOTPLATE",
+        "family": "caretaker",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 1,
+        "transparentRenderables": 0
+      },
+      {
+        "name": "ISLAND_5_CARETAKER_HIT_TARGET",
+        "family": "caretaker",
+        "renderables": 1,
+        "triangles": 80,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_5_PLAYER_TOKEN_SHADOW",
+        "family": "player-token",
+        "renderables": 1,
+        "triangles": 16,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_SHARED_BOSS_HIT_TARGET",
+        "family": "ISLAND_SHARED_BOSS_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_SHARED_EVENT_HIT_TARGET",
+        "family": "ISLAND_SHARED_EVENT_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_SHARED_HABIT_HIT_TARGET",
+        "family": "ISLAND_SHARED_HABIT_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_SHARED_HATCHERY_HIT_TARGET",
+        "family": "ISLAND_SHARED_HATCHERY_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "ISLAND_SHARED_WISDOM_HIT_TARGET",
+        "family": "ISLAND_SHARED_WISDOM_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "name": "Mesh",
+        "family": "Mesh",
+        "renderables": 1,
+        "triangles": 1536,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 0
+      }
+    ],
+    "families": [
+      {
+        "family": "ISLAND_1_LIVING_AMBIENCE",
+        "renderables": 112,
+        "triangles": 15808,
+        "estimatedCalls": 112,
+        "logicalInstances": 159,
+        "shadowCasters": 0,
+        "transparentRenderables": 43
+      },
+      {
+        "family": "ISLAND_1_ASSEMBLY_CRATER_RUNTIME_ROOT",
+        "renderables": 77,
+        "triangles": 47832,
+        "estimatedCalls": 77,
+        "logicalInstances": 1566,
+        "shadowCasters": 8,
+        "transparentRenderables": 5
+      },
+      {
+        "family": "canonical-tile-rewards",
+        "renderables": 33,
+        "triangles": 13068,
+        "estimatedCalls": 33,
+        "logicalInstances": 33,
+        "shadowCasters": 33,
+        "transparentRenderables": 0
+      },
+      {
+        "family": "caretaker",
+        "renderables": 27,
+        "triangles": 1628,
+        "estimatedCalls": 27,
+        "logicalInstances": 27,
+        "shadowCasters": 7,
+        "transparentRenderables": 2
+      },
+      {
+        "family": "ISLAND_1_ASSEMBLY_CRATER_ANNULAR_TERRAIN",
+        "renderables": 22,
+        "triangles": 24532,
+        "estimatedCalls": 22,
+        "logicalInstances": 311,
+        "shadowCasters": 3,
+        "transparentRenderables": 0
+      },
+      {
+        "family": "ISLAND_001_V2_EVENT_ROOT",
+        "renderables": 12,
+        "triangles": 24649,
+        "estimatedCalls": 12,
+        "logicalInstances": 12,
+        "shadowCasters": 11,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "ISLAND_001_V2_HATCHERY_ROOT",
+        "renderables": 12,
+        "triangles": 24710,
+        "estimatedCalls": 12,
+        "logicalInstances": 12,
+        "shadowCasters": 10,
+        "transparentRenderables": 2
+      },
+      {
+        "family": "ISLAND_001_V2_WISDOM_ROOT",
+        "renderables": 12,
+        "triangles": 24635,
+        "estimatedCalls": 12,
+        "logicalInstances": 12,
+        "shadowCasters": 10,
+        "transparentRenderables": 2
+      },
+      {
+        "family": "ISLAND_001_V2_HABIT_ROOT",
+        "renderables": 7,
+        "triangles": 23153,
+        "estimatedCalls": 7,
+        "logicalInstances": 7,
+        "shadowCasters": 7,
+        "transparentRenderables": 0
+      },
+      {
+        "family": "player-token",
+        "renderables": 7,
+        "triangles": 592,
+        "estimatedCalls": 7,
+        "logicalInstances": 7,
+        "shadowCasters": 6,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "canonical-route-tiles",
+        "renderables": 6,
+        "triangles": 432,
+        "estimatedCalls": 6,
+        "logicalInstances": 36,
+        "shadowCasters": 6,
+        "transparentRenderables": 0
+      },
+      {
+        "family": "ISLAND_1_ASSEMBLY_CRATER_OCEAN_WITH_MEGAHALL_CLEARANCE",
+        "renderables": 1,
+        "triangles": 4080,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "ISLAND_SHARED_BOSS_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "ISLAND_SHARED_EVENT_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "ISLAND_SHARED_HABIT_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "ISLAND_SHARED_HATCHERY_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "ISLAND_SHARED_WISDOM_HIT_TARGET",
+        "renderables": 1,
+        "triangles": 48,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 1
+      },
+      {
+        "family": "Mesh",
+        "renderables": 1,
+        "triangles": 1536,
+        "estimatedCalls": 1,
+        "logicalInstances": 1,
+        "shadowCasters": 0,
+        "transparentRenderables": 0
+      }
+    ],
+    "totals": {
+      "renderables": 334,
+      "triangles": 206895,
+      "estimatedCalls": 334,
+      "logicalInstances": 2189,
+      "shadowCasters": 101,
+      "transparentRenderables": 62
+    }
+  }
+}

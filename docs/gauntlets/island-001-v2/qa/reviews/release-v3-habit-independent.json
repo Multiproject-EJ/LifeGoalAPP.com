@@ -1,0 +1,60 @@
+{
+  "reviewId": "release-v3-habit-independent",
+  "reviewer": "v2_integration_audit",
+  "date": "2026-09-11",
+  "scope": "User-requested richer canopy on Habit Oak only; other landmarks and runtime performance excluded.",
+  "verdict": "accept_incremental_canopy_improvement_with_finish_limits",
+  "asset": {
+    "path": "public/assets/islands/island-001/models/habit.glb",
+    "expectedSha256": "89459f97bd5b6bfb58364255ff599f7d2e2241b1517094347a5e77cabfe1e574"
+  },
+  "comparisonEvidence": [
+    "docs/gauntlets/island-001-v2/intake/oak-approved-crop.png",
+    "docs/visual-references/island-001-reimagined-20260910/02-landmark-studies.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v2-habit-iso.png"
+  ],
+  "individuallyInspected": [
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-back-structural.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-profile-structural.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-iso.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-iso-clay.png"
+  ],
+  "contactSheetInspected": [
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-front-structural.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-contact-structural.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-top-structural.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-normals-structural.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-0-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-40-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-80-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-120-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-160-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-200-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-240-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-280-clay.png",
+    "docs/gauntlets/island-001-v2/qa/raw/release-v3-habit-habit-orbit-320-clay.png"
+  ],
+  "method": "Approved reference and prior beauty viewed first; new rear/profile/beauty/clay inspected individually. Remaining13frames inspected in labelled600x450-per-frame contact sheet. Total17newviews.",
+  "findings": {
+    "richness": "Deeper green tones and light/dark differences between overlapping clusters make the beauty image materially richer than v2. Added small leaf shapes break up the smooth outer contour.",
+    "attachment": "The rear and side clay views preserve substantial branch connections. No detached canopy mass, disappearing rear face or missing major support was observed across the nine-angle orbit.",
+    "readability": "Main trunk, roots, lower galleries, entrance and twin stairs remain readable. Front-right foliage still partially screens upper treehouse detail, broadly consistent with the previous composition rather than a new identity loss.",
+    "identity": "The same broad Oak/treehouse silhouette, supporting trunk and surrounding galleries remain recognizable; no visible architectural rearrangement is introduced by the canopy."
+  },
+  "blockingFindings": [],
+  "residuals": [
+    {
+      "severity": "nonblocking_visual",
+      "finding": "Large rounded flattened clusters still dominate. The improvement is strongest in green palette and modest surface breakup; it does not reproduce the reference's dense fine-leaf canopy."
+    },
+    {
+      "severity": "nonblocking_visual",
+      "finding": "Several new leaf accents read as small pointed shards on top of the clay clusters rather than coherent leafy sprays. Visible branch-colored patches still meet the canopy surface in the beauty view."
+    }
+  ],
+  "limits": [
+    "Completed stills do not verify stage-dependent canopy reveal, animation, phone frame rate or runtime batching behavior.",
+    "Contact-sheet review establishes broad cross-view consistency, not subpixel geometry or material correctness.",
+    "No geometry, runtime source or public asset was edited by the reviewer; only report and temporary analysis contact sheet were written."
+  ]
+}

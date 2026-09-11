@@ -1,0 +1,16 @@
+{
+  "scope": "Desktop Chromium149 at390x844; blank page versus final local island,150 animation frames each; no settings changed.",
+  "command": "node scripts/check-island001-v2-frame-pacing.cjs",
+  "blank": {
+    "fps": 30.01020346917952,
+    "p95Ms": 35,
+    "visibility": "visible"
+  },
+  "island": {
+    "fps": 30.003600432051844,
+    "p95Ms": 35.100000000000364,
+    "visibility": "visible"
+  },
+  "interpretation": "Both blank and island pages are paced at30FPS in the later host/browser environment. This makes later high/medium overview timing gates inconclusive for rendering capacity; report their raw FAIL results without changing thresholds. Earlier high full-mission profile passed at56.5FPS.",
+  "physicalPhoneVerified": false
+}

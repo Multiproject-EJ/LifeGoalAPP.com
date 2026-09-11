@@ -1,0 +1,569 @@
+{
+  "status": "mechanical-pass-awaiting-whole-island-review",
+  "sha256": "89459f97bd5b6bfb58364255ff599f7d2e2241b1517094347a5e77cabfe1e574",
+  "bytes": 789492,
+  "bbox": {
+    "min": [
+      -1.479207158088684,
+      0.0,
+      -1.374456763267517
+    ],
+    "max": [
+      1.4234142303466797,
+      2.6952474117279053,
+      1.399999976158142
+    ]
+  },
+  "radius": 1.5550000283652918,
+  "triangles": 23153,
+  "meshNodes": 33,
+  "completedOwnerMaterialBatches": 7,
+  "degenerateTriangles": 0,
+  "additiveSignaturesPreserved": true,
+  "levels": {
+    "1": {
+      "addedTriangles": 10147,
+      "totalTriangles": 10147,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "oak-canopy-L1-S4-oak-leaf-and-garden-color": "145b7e52167b94f8559a19d6a80b1a074075ca77c3828bdfe17465138247389a",
+        "oak-galleries-L1-S3-oak-warm-timber": "75847a021f1880f558a636a2816ce42ab06b77163c5893f151d3e34949df2311",
+        "oak-galleries-L1-S5-oak-aged-brass": "57df1d01fbc39ebbc605b1917231b222ec6f5c3d4cce860477f3a795eba5795f",
+        "oak-galleries-L1-S5-oak-blue-habit-banners": "0be68087431692f60c46393bab92c1721632a66c72fb61648b6794f3a7a76876",
+        "oak-galleries-L1-S5-oak-warm-timber": "582131060eb95b29dd20183874342934386c329ad9c96fc4af07cfe748131e81",
+        "oak-galleries-L1-S5-oak-warm-window-light": "109d7056d844140245034306201bb8b2c927ffe97d67f1a4071f790819ebbaa8",
+        "oak-stairs-L1-S1-oak-garden-limestone": "b532df67015c8cd6be3e0ed7244b5342339ed9c0716ded52d6f7b483d0095647",
+        "oak-stairs-L1-S3-oak-garden-limestone": "ab759446fd0995abc31458d37e77c1d232b30af28f9aa9a55efdb06ff0954272",
+        "oak-stairs-L1-S5-oak-garden-limestone": "aa14718e5742aa210d7a53146d30ec153252fe34a3178d374b6f3897dd827756",
+        "oak-trunk-L1-S1-oak-sculpted-bark": "b2846980fe66336ef2ade00fb2d6575ec83ee8cd7d2cced345da3c39f8b33180",
+        "oak-trunk-L1-S2-oak-sculpted-bark": "82bc9d6cb86aac8e675ec56f7c2183e212fe4ea34634b7b6798ba3f98b3c85e3"
+      }
+    },
+    "2": {
+      "addedTriangles": 7153,
+      "totalTriangles": 17300,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "oak-canopy-L1-S4-oak-leaf-and-garden-color": "145b7e52167b94f8559a19d6a80b1a074075ca77c3828bdfe17465138247389a",
+        "oak-canopy-L2-S4-oak-leaf-and-garden-color": "e1241b2695d38c74b0dd239553271238da79dcf36545df40bd8826af0980162f",
+        "oak-galleries-L1-S3-oak-warm-timber": "75847a021f1880f558a636a2816ce42ab06b77163c5893f151d3e34949df2311",
+        "oak-galleries-L1-S5-oak-aged-brass": "57df1d01fbc39ebbc605b1917231b222ec6f5c3d4cce860477f3a795eba5795f",
+        "oak-galleries-L1-S5-oak-blue-habit-banners": "0be68087431692f60c46393bab92c1721632a66c72fb61648b6794f3a7a76876",
+        "oak-galleries-L1-S5-oak-warm-timber": "582131060eb95b29dd20183874342934386c329ad9c96fc4af07cfe748131e81",
+        "oak-galleries-L1-S5-oak-warm-window-light": "109d7056d844140245034306201bb8b2c927ffe97d67f1a4071f790819ebbaa8",
+        "oak-galleries-L2-S3-oak-warm-timber": "04055a7b7fd9aa47117c2c4433a63bfc5783e4b62bc78dbcfb3da7a9ca3a1f0d",
+        "oak-galleries-L2-S5-oak-aged-brass": "6370ed4c23ec50699dc6467c28bb3ad070831eec295c43417b84211d58392291",
+        "oak-galleries-L2-S5-oak-blue-habit-banners": "8cc4960806105dd4dd57cefc03c3f2dce87ac9a4300223da229f495aca327777",
+        "oak-galleries-L2-S5-oak-warm-timber": "04fbbc175402bad2999dbb8b339cf7c09881904a79aae8b6ec1aacd8727d16ea",
+        "oak-galleries-L2-S5-oak-warm-window-light": "098c5c28882a5c4f4ebf0376792efe2822ad3b90a04be6bce436aaaf7dc2054d",
+        "oak-stairs-L1-S1-oak-garden-limestone": "b532df67015c8cd6be3e0ed7244b5342339ed9c0716ded52d6f7b483d0095647",
+        "oak-stairs-L1-S3-oak-garden-limestone": "ab759446fd0995abc31458d37e77c1d232b30af28f9aa9a55efdb06ff0954272",
+        "oak-stairs-L1-S5-oak-garden-limestone": "aa14718e5742aa210d7a53146d30ec153252fe34a3178d374b6f3897dd827756",
+        "oak-stairs-L2-S1-oak-garden-limestone": "bd9ee24f589c512820d682c9345ba4d744dbd49009c092dae1bf4bbe44382871",
+        "oak-stairs-L2-S3-oak-garden-limestone": "4768d478b375b35035d90b7839eac2f4241434a2eb5e2fd496a31369cf631a8a",
+        "oak-stairs-L2-S5-oak-garden-limestone": "8554e53b25b8e5f8d45f3a6b5ddc6a16f160865925276f835f2de5545ef5dd11",
+        "oak-trunk-L1-S1-oak-sculpted-bark": "b2846980fe66336ef2ade00fb2d6575ec83ee8cd7d2cced345da3c39f8b33180",
+        "oak-trunk-L1-S2-oak-sculpted-bark": "82bc9d6cb86aac8e675ec56f7c2183e212fe4ea34634b7b6798ba3f98b3c85e3",
+        "oak-trunk-L2-S1-oak-sculpted-bark": "56ba584ec0d32c29f41d7f550bc99a3547efe5dfeca1f835b081fe27e1dd23bc",
+        "oak-trunk-L2-S2-oak-sculpted-bark": "33b72a064b3195b6f6ee19b70b1fa183ea9b00679d1899ea6c1ded7992abe70b"
+      }
+    },
+    "3": {
+      "addedTriangles": 5853,
+      "totalTriangles": 23153,
+      "stagesInAddition": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "signatures": {
+        "oak-canopy-L1-S4-oak-leaf-and-garden-color": "145b7e52167b94f8559a19d6a80b1a074075ca77c3828bdfe17465138247389a",
+        "oak-canopy-L2-S4-oak-leaf-and-garden-color": "e1241b2695d38c74b0dd239553271238da79dcf36545df40bd8826af0980162f",
+        "oak-canopy-L3-S4-oak-leaf-and-garden-color": "173d64908e1542c9304d9082192043d17af73a97335bf162947ac537fb82790c",
+        "oak-galleries-L1-S3-oak-warm-timber": "75847a021f1880f558a636a2816ce42ab06b77163c5893f151d3e34949df2311",
+        "oak-galleries-L1-S5-oak-aged-brass": "57df1d01fbc39ebbc605b1917231b222ec6f5c3d4cce860477f3a795eba5795f",
+        "oak-galleries-L1-S5-oak-blue-habit-banners": "0be68087431692f60c46393bab92c1721632a66c72fb61648b6794f3a7a76876",
+        "oak-galleries-L1-S5-oak-warm-timber": "582131060eb95b29dd20183874342934386c329ad9c96fc4af07cfe748131e81",
+        "oak-galleries-L1-S5-oak-warm-window-light": "109d7056d844140245034306201bb8b2c927ffe97d67f1a4071f790819ebbaa8",
+        "oak-galleries-L2-S3-oak-warm-timber": "04055a7b7fd9aa47117c2c4433a63bfc5783e4b62bc78dbcfb3da7a9ca3a1f0d",
+        "oak-galleries-L2-S5-oak-aged-brass": "6370ed4c23ec50699dc6467c28bb3ad070831eec295c43417b84211d58392291",
+        "oak-galleries-L2-S5-oak-blue-habit-banners": "8cc4960806105dd4dd57cefc03c3f2dce87ac9a4300223da229f495aca327777",
+        "oak-galleries-L2-S5-oak-warm-timber": "04fbbc175402bad2999dbb8b339cf7c09881904a79aae8b6ec1aacd8727d16ea",
+        "oak-galleries-L2-S5-oak-warm-window-light": "098c5c28882a5c4f4ebf0376792efe2822ad3b90a04be6bce436aaaf7dc2054d",
+        "oak-galleries-L3-S3-oak-warm-timber": "04238bcd98db7f1aaa955a411fdb1063038247aba54c87ec7d0c08236d9555c5",
+        "oak-galleries-L3-S5-oak-aged-brass": "b5c0237d9251e86e0838168ac5717e127ef712dbcd5f26454e97df45b70544c0",
+        "oak-galleries-L3-S5-oak-blue-habit-banners": "9eef5fed6613e63325259da60189e3ae708f96ee88ffc9909e682e97b78c3b63",
+        "oak-galleries-L3-S5-oak-warm-timber": "edadfdd5d6f878449a18fdaac80804698ab3c8b87066db002fd21e43f2dbb021",
+        "oak-galleries-L3-S5-oak-warm-window-light": "c0c72b5a9d08be046c80a958e3a04787f75c81e046503e53108c010fc8a56292",
+        "oak-stairs-L1-S1-oak-garden-limestone": "b532df67015c8cd6be3e0ed7244b5342339ed9c0716ded52d6f7b483d0095647",
+        "oak-stairs-L1-S3-oak-garden-limestone": "ab759446fd0995abc31458d37e77c1d232b30af28f9aa9a55efdb06ff0954272",
+        "oak-stairs-L1-S5-oak-garden-limestone": "aa14718e5742aa210d7a53146d30ec153252fe34a3178d374b6f3897dd827756",
+        "oak-stairs-L2-S1-oak-garden-limestone": "bd9ee24f589c512820d682c9345ba4d744dbd49009c092dae1bf4bbe44382871",
+        "oak-stairs-L2-S3-oak-garden-limestone": "4768d478b375b35035d90b7839eac2f4241434a2eb5e2fd496a31369cf631a8a",
+        "oak-stairs-L2-S5-oak-garden-limestone": "8554e53b25b8e5f8d45f3a6b5ddc6a16f160865925276f835f2de5545ef5dd11",
+        "oak-stairs-L3-S1-oak-garden-limestone": "637d0119937f9248339322e1ef6357dee2a52d5ea327415bf301ceeac2ac9533",
+        "oak-stairs-L3-S3-oak-garden-limestone": "87da68271988ce95996cecef21b27c543154719379c24fc7328fa441631396a6",
+        "oak-stairs-L3-S5-oak-garden-limestone": "b42a262cb64a57a48cf42e326889c84699ead62c6502fd61ebe0b8bec709d22e",
+        "oak-trunk-L1-S1-oak-sculpted-bark": "b2846980fe66336ef2ade00fb2d6575ec83ee8cd7d2cced345da3c39f8b33180",
+        "oak-trunk-L1-S2-oak-sculpted-bark": "82bc9d6cb86aac8e675ec56f7c2183e212fe4ea34634b7b6798ba3f98b3c85e3",
+        "oak-trunk-L2-S1-oak-sculpted-bark": "56ba584ec0d32c29f41d7f550bc99a3547efe5dfeca1f835b081fe27e1dd23bc",
+        "oak-trunk-L2-S2-oak-sculpted-bark": "33b72a064b3195b6f6ee19b70b1fa183ea9b00679d1899ea6c1ded7992abe70b",
+        "oak-trunk-L3-S1-oak-sculpted-bark": "b0927b02d1843105722326fd9ffa4d1db727ec01051ecf4a800e4532d3776389",
+        "oak-trunk-L3-S2-oak-sculpted-bark": "cc6b51504533f510eeb14394bfe511d0abb6da551980310f90f5570f1686de05"
+      }
+    }
+  },
+  "materials": [
+    {
+      "name": "oak-leaf-and-garden-color",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "oak-warm-timber",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "oak-aged-brass",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "oak-blue-habit-banners",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "oak-warm-window-light",
+      "doubleSided": true,
+      "emissiveFactor": [
+        1,
+        0.5199999809265137,
+        0.11999999731779099
+      ]
+    },
+    {
+      "name": "oak-garden-limestone",
+      "doubleSided": true,
+      "emissiveFactor": null
+    },
+    {
+      "name": "oak-sculpted-bark",
+      "doubleSided": true,
+      "emissiveFactor": null
+    }
+  ],
+  "meshes": [
+    {
+      "node": "oak-canopy-L1-S4-oak-leaf-and-garden-color",
+      "level": 1,
+      "stage": 4,
+      "owner": "oak-canopy",
+      "triangles": 2380,
+      "degenerateTriangles": 0,
+      "signature": "145b7e52167b94f8559a19d6a80b1a074075ca77c3828bdfe17465138247389a",
+      "materials": [
+        "oak-leaf-and-garden-color"
+      ]
+    },
+    {
+      "node": "oak-canopy-L2-S4-oak-leaf-and-garden-color",
+      "level": 2,
+      "stage": 4,
+      "owner": "oak-canopy",
+      "triangles": 2220,
+      "degenerateTriangles": 0,
+      "signature": "e1241b2695d38c74b0dd239553271238da79dcf36545df40bd8826af0980162f",
+      "materials": [
+        "oak-leaf-and-garden-color"
+      ]
+    },
+    {
+      "node": "oak-canopy-L3-S4-oak-leaf-and-garden-color",
+      "level": 3,
+      "stage": 4,
+      "owner": "oak-canopy",
+      "triangles": 1800,
+      "degenerateTriangles": 0,
+      "signature": "173d64908e1542c9304d9082192043d17af73a97335bf162947ac537fb82790c",
+      "materials": [
+        "oak-leaf-and-garden-color"
+      ]
+    },
+    {
+      "node": "oak-galleries-L1-S3-oak-warm-timber",
+      "level": 1,
+      "stage": 3,
+      "owner": "oak-galleries",
+      "triangles": 854,
+      "degenerateTriangles": 0,
+      "signature": "75847a021f1880f558a636a2816ce42ab06b77163c5893f151d3e34949df2311",
+      "materials": [
+        "oak-warm-timber"
+      ]
+    },
+    {
+      "node": "oak-galleries-L1-S5-oak-aged-brass",
+      "level": 1,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 300,
+      "degenerateTriangles": 0,
+      "signature": "57df1d01fbc39ebbc605b1917231b222ec6f5c3d4cce860477f3a795eba5795f",
+      "materials": [
+        "oak-aged-brass"
+      ]
+    },
+    {
+      "node": "oak-galleries-L1-S5-oak-blue-habit-banners",
+      "level": 1,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 16,
+      "degenerateTriangles": 0,
+      "signature": "0be68087431692f60c46393bab92c1721632a66c72fb61648b6794f3a7a76876",
+      "materials": [
+        "oak-blue-habit-banners"
+      ]
+    },
+    {
+      "node": "oak-galleries-L1-S5-oak-warm-timber",
+      "level": 1,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 862,
+      "degenerateTriangles": 0,
+      "signature": "582131060eb95b29dd20183874342934386c329ad9c96fc4af07cfe748131e81",
+      "materials": [
+        "oak-warm-timber"
+      ]
+    },
+    {
+      "node": "oak-galleries-L1-S5-oak-warm-window-light",
+      "level": 1,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 69,
+      "degenerateTriangles": 0,
+      "signature": "109d7056d844140245034306201bb8b2c927ffe97d67f1a4071f790819ebbaa8",
+      "materials": [
+        "oak-warm-window-light"
+      ]
+    },
+    {
+      "node": "oak-galleries-L2-S3-oak-warm-timber",
+      "level": 2,
+      "stage": 3,
+      "owner": "oak-galleries",
+      "triangles": 774,
+      "degenerateTriangles": 0,
+      "signature": "04055a7b7fd9aa47117c2c4433a63bfc5783e4b62bc78dbcfb3da7a9ca3a1f0d",
+      "materials": [
+        "oak-warm-timber"
+      ]
+    },
+    {
+      "node": "oak-galleries-L2-S5-oak-aged-brass",
+      "level": 2,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 300,
+      "degenerateTriangles": 0,
+      "signature": "6370ed4c23ec50699dc6467c28bb3ad070831eec295c43417b84211d58392291",
+      "materials": [
+        "oak-aged-brass"
+      ]
+    },
+    {
+      "node": "oak-galleries-L2-S5-oak-blue-habit-banners",
+      "level": 2,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 16,
+      "degenerateTriangles": 0,
+      "signature": "8cc4960806105dd4dd57cefc03c3f2dce87ac9a4300223da229f495aca327777",
+      "materials": [
+        "oak-blue-habit-banners"
+      ]
+    },
+    {
+      "node": "oak-galleries-L2-S5-oak-warm-timber",
+      "level": 2,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 510,
+      "degenerateTriangles": 0,
+      "signature": "04fbbc175402bad2999dbb8b339cf7c09881904a79aae8b6ec1aacd8727d16ea",
+      "materials": [
+        "oak-warm-timber"
+      ]
+    },
+    {
+      "node": "oak-galleries-L2-S5-oak-warm-window-light",
+      "level": 2,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 69,
+      "degenerateTriangles": 0,
+      "signature": "098c5c28882a5c4f4ebf0376792efe2822ad3b90a04be6bce436aaaf7dc2054d",
+      "materials": [
+        "oak-warm-window-light"
+      ]
+    },
+    {
+      "node": "oak-galleries-L3-S3-oak-warm-timber",
+      "level": 3,
+      "stage": 3,
+      "owner": "oak-galleries",
+      "triangles": 750,
+      "degenerateTriangles": 0,
+      "signature": "04238bcd98db7f1aaa955a411fdb1063038247aba54c87ec7d0c08236d9555c5",
+      "materials": [
+        "oak-warm-timber"
+      ]
+    },
+    {
+      "node": "oak-galleries-L3-S5-oak-aged-brass",
+      "level": 3,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 300,
+      "degenerateTriangles": 0,
+      "signature": "b5c0237d9251e86e0838168ac5717e127ef712dbcd5f26454e97df45b70544c0",
+      "materials": [
+        "oak-aged-brass"
+      ]
+    },
+    {
+      "node": "oak-galleries-L3-S5-oak-blue-habit-banners",
+      "level": 3,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 16,
+      "degenerateTriangles": 0,
+      "signature": "9eef5fed6613e63325259da60189e3ae708f96ee88ffc9909e682e97b78c3b63",
+      "materials": [
+        "oak-blue-habit-banners"
+      ]
+    },
+    {
+      "node": "oak-galleries-L3-S5-oak-warm-timber",
+      "level": 3,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 422,
+      "degenerateTriangles": 0,
+      "signature": "edadfdd5d6f878449a18fdaac80804698ab3c8b87066db002fd21e43f2dbb021",
+      "materials": [
+        "oak-warm-timber"
+      ]
+    },
+    {
+      "node": "oak-galleries-L3-S5-oak-warm-window-light",
+      "level": 3,
+      "stage": 5,
+      "owner": "oak-galleries",
+      "triangles": 69,
+      "degenerateTriangles": 0,
+      "signature": "c0c72b5a9d08be046c80a958e3a04787f75c81e046503e53108c010fc8a56292",
+      "materials": [
+        "oak-warm-window-light"
+      ]
+    },
+    {
+      "node": "oak-stairs-L1-S1-oak-garden-limestone",
+      "level": 1,
+      "stage": 1,
+      "owner": "oak-stairs",
+      "triangles": 404,
+      "degenerateTriangles": 0,
+      "signature": "b532df67015c8cd6be3e0ed7244b5342339ed9c0716ded52d6f7b483d0095647",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L1-S3-oak-garden-limestone",
+      "level": 1,
+      "stage": 3,
+      "owner": "oak-stairs",
+      "triangles": 336,
+      "degenerateTriangles": 0,
+      "signature": "ab759446fd0995abc31458d37e77c1d232b30af28f9aa9a55efdb06ff0954272",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L1-S5-oak-garden-limestone",
+      "level": 1,
+      "stage": 5,
+      "owner": "oak-stairs",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "aa14718e5742aa210d7a53146d30ec153252fe34a3178d374b6f3897dd827756",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L2-S1-oak-garden-limestone",
+      "level": 2,
+      "stage": 1,
+      "owner": "oak-stairs",
+      "triangles": 352,
+      "degenerateTriangles": 0,
+      "signature": "bd9ee24f589c512820d682c9345ba4d744dbd49009c092dae1bf4bbe44382871",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L2-S3-oak-garden-limestone",
+      "level": 2,
+      "stage": 3,
+      "owner": "oak-stairs",
+      "triangles": 288,
+      "degenerateTriangles": 0,
+      "signature": "4768d478b375b35035d90b7839eac2f4241434a2eb5e2fd496a31369cf631a8a",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L2-S5-oak-garden-limestone",
+      "level": 2,
+      "stage": 5,
+      "owner": "oak-stairs",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "8554e53b25b8e5f8d45f3a6b5ddc6a16f160865925276f835f2de5545ef5dd11",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L3-S1-oak-garden-limestone",
+      "level": 3,
+      "stage": 1,
+      "owner": "oak-stairs",
+      "triangles": 332,
+      "degenerateTriangles": 0,
+      "signature": "637d0119937f9248339322e1ef6357dee2a52d5ea327415bf301ceeac2ac9533",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L3-S3-oak-garden-limestone",
+      "level": 3,
+      "stage": 3,
+      "owner": "oak-stairs",
+      "triangles": 288,
+      "degenerateTriangles": 0,
+      "signature": "87da68271988ce95996cecef21b27c543154719379c24fc7328fa441631396a6",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-stairs-L3-S5-oak-garden-limestone",
+      "level": 3,
+      "stage": 5,
+      "owner": "oak-stairs",
+      "triangles": 492,
+      "degenerateTriangles": 0,
+      "signature": "b42a262cb64a57a48cf42e326889c84699ead62c6502fd61ebe0b8bec709d22e",
+      "materials": [
+        "oak-garden-limestone"
+      ]
+    },
+    {
+      "node": "oak-trunk-L1-S1-oak-sculpted-bark",
+      "level": 1,
+      "stage": 1,
+      "owner": "oak-trunk",
+      "triangles": 1180,
+      "degenerateTriangles": 0,
+      "signature": "b2846980fe66336ef2ade00fb2d6575ec83ee8cd7d2cced345da3c39f8b33180",
+      "materials": [
+        "oak-sculpted-bark"
+      ]
+    },
+    {
+      "node": "oak-trunk-L1-S2-oak-sculpted-bark",
+      "level": 1,
+      "stage": 2,
+      "owner": "oak-trunk",
+      "triangles": 3254,
+      "degenerateTriangles": 0,
+      "signature": "82bc9d6cb86aac8e675ec56f7c2183e212fe4ea34634b7b6798ba3f98b3c85e3",
+      "materials": [
+        "oak-sculpted-bark"
+      ]
+    },
+    {
+      "node": "oak-trunk-L2-S1-oak-sculpted-bark",
+      "level": 2,
+      "stage": 1,
+      "owner": "oak-trunk",
+      "triangles": 472,
+      "degenerateTriangles": 0,
+      "signature": "56ba584ec0d32c29f41d7f550bc99a3547efe5dfeca1f835b081fe27e1dd23bc",
+      "materials": [
+        "oak-sculpted-bark"
+      ]
+    },
+    {
+      "node": "oak-trunk-L2-S2-oak-sculpted-bark",
+      "level": 2,
+      "stage": 2,
+      "owner": "oak-trunk",
+      "triangles": 1660,
+      "degenerateTriangles": 0,
+      "signature": "33b72a064b3195b6f6ee19b70b1fa183ea9b00679d1899ea6c1ded7992abe70b",
+      "materials": [
+        "oak-sculpted-bark"
+      ]
+    },
+    {
+      "node": "oak-trunk-L3-S1-oak-sculpted-bark",
+      "level": 3,
+      "stage": 1,
+      "owner": "oak-trunk",
+      "triangles": 300,
+      "degenerateTriangles": 0,
+      "signature": "b0927b02d1843105722326fd9ffa4d1db727ec01051ecf4a800e4532d3776389",
+      "materials": [
+        "oak-sculpted-bark"
+      ]
+    },
+    {
+      "node": "oak-trunk-L3-S2-oak-sculpted-bark",
+      "level": 3,
+      "stage": 2,
+      "owner": "oak-trunk",
+      "triangles": 1084,
+      "degenerateTriangles": 0,
+      "signature": "cc6b51504533f510eeb14394bfe511d0abb6da551980310f90f5570f1686de05",
+      "materials": [
+        "oak-sculpted-bark"
+      ]
+    }
+  ]
+}

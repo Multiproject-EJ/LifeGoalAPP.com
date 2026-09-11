@@ -63,10 +63,10 @@ export function createAssemblyDiplomaticHall(materials: Island1WorldMaterials, f
   for(let step=0;step<4;step++)box(dais,'PRESIDIUM_BROAD_ARRIVAL_STEP',[3.25+step*.22,.10,.26],[0,-.06-step*.085,.90+step*.23],materials.ivoryShade);
   const emblem=new THREE.Group();emblem.name='ASSEMBLY_GLOBE_AND_LAUREL_EMBLEM';emblem.position.set(0,3.65,-.60);dais.add(emblem);
   for(let i=0;i<3;i++) {
-    const meridian=new THREE.Mesh(new THREE.TorusGeometry(.84,.018,5,48),materials.gold);meridian.rotation.y=i*Math.PI/3;emblem.add(meridian);
+    const meridian=new THREE.Mesh(new THREE.TorusGeometry(.84,.018,4,32),materials.gold);meridian.rotation.y=i*Math.PI/3;emblem.add(meridian);
   }
   for(const y of [-.42,0,.42]) {
-    const latitude=new THREE.Mesh(new THREE.TorusGeometry(Math.sqrt(.84**2-y**2),.014,5,40),materials.gold);latitude.rotation.x=Math.PI/2;latitude.position.y=y;emblem.add(latitude);
+    const latitude=new THREE.Mesh(new THREE.TorusGeometry(Math.sqrt(.84**2-y**2),.014,4,28),materials.gold);latitude.rotation.x=Math.PI/2;latitude.position.y=y;emblem.add(latitude);
   }
   for(const side of [-1,1])for(let i=0;i<9;i++) {
     const a=.20+i*.14;const leaf=new THREE.Mesh(new THREE.SphereGeometry(1,7,5),materials.gold);leaf.position.set(side*(.89+Math.sin(a)*.3),-.75+Math.cos(a)*.08+i*.16,.03);leaf.scale.set(.055,.14,.02);leaf.rotation.z=-side*(.6+i*.05);emblem.add(leaf);
@@ -99,7 +99,7 @@ export function createAssemblyDiplomaticHall(materials: Island1WorldMaterials, f
       }
     }
     const points=Array.from({length:65},(_,i)=>new THREE.Vector3(Math.sin(Math.PI/2+i/64*Math.PI)*inner,y+.33,Math.cos(Math.PI/2+i/64*Math.PI)*inner));
-    gallery.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),64,.024,5,false),materials.gold));
+    gallery.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),48,.024,4,false),materials.gold));
     for(let i=0;i<13;i++) {
       const a=Math.PI-1.08+i*.18;
       const booth=new THREE.Group();booth.position.set(Math.sin(a)*6.72,y+.34,Math.cos(a)*6.72);booth.rotation.y=a;
@@ -169,22 +169,24 @@ export function createAssemblyDiplomaticHall(materials: Island1WorldMaterials, f
       seatsPerRow.forEach((count, row) => {
         const reveal = smooth(progress, 0.22 + row * 0.065, 0.18);
         const y = floorY + 0.28 + row * 0.4;
-        for (let n = 0; n < count; n++, index++) {
+        for (let n = 0; n < count; n++) {
           // A broad horseshoe keeps the presidential stage and central speaking floor clear.
           const a = -2.22 + 4.44 * (n + 0.5) / count;
           const arrivalAisle = row === 6 && entranceAngles.some(entry => Math.abs(Math.atan2(Math.sin(a - entry), Math.cos(a - entry))) < 0.1);
           const aisle = (Math.abs(Math.sin(a)*radii[row]) < .70+row*.025 && Math.cos(a)>0) || arrivalAisle || n === Math.floor(count / 3) || n === Math.floor(count * 2 / 3);
+          if (aisle || reveal <= 0) continue;
           const positions = [[radii[row], y + 0.2], [radii[row] + 0.12, y + 0.4], [radii[row] - 0.25, y + 0.45], [radii[row] - 0.25, y + 0.26], [radii[row] - 0.25, y + 0.5], [radii[row] - 0.35, y + 0.51]];
           furniture.forEach((mesh, part) => {
             dummy.position.set(Math.sin(a) * positions[part][0], positions[part][1] - (1 - reveal) * 0.5, Math.cos(a) * positions[part][0]);
             dummy.rotation.set(0, a, 0);
-            dummy.scale.setScalar(aisle ? 0.0001 : Math.max(0.0001, reveal));
+            dummy.scale.setScalar(Math.max(0.0001, reveal));
             dummy.updateMatrix();
             mesh.setMatrixAt(index, dummy.matrix);
           });
+          index++;
         }
       });
-      furniture.forEach((mesh) => { mesh.instanceMatrix.needsUpdate = true; });
+      furniture.forEach((mesh) => { mesh.count = index; mesh.instanceMatrix.needsUpdate = true; });
       centralAisle.visible = progress > 0.35;
       dais.visible = progress > 0.67;
       dais.position.y = floorY + 0.34 - (1 - smooth(progress, 0.67, 0.2)) * 1.2;

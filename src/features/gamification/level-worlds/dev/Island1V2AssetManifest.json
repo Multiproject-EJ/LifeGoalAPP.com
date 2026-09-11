@@ -26,11 +26,11 @@
     },
     "habit": {
       "url": "/assets/islands/island-001/models/habit.glb",
-      "sha256": "68dc4983a6b803f0705bc3ac15d3bd9fd1be5448b398f1d12e878e9c0d36a458",
-      "bytes": 764872,
-      "gzipBytes": 385291,
-      "source": "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v02.glb",
-      "revision": "v02",
+      "sha256": "89459f97bd5b6bfb58364255ff599f7d2e2241b1517094347a5e77cabfe1e574",
+      "bytes": 789492,
+      "gzipBytes": 396275,
+      "source": "docs/gauntlets/island-001-v2/whole-island/models/habit/habit-v03.glb",
+      "revision": "v03",
       "constructionLevels": [
         1,
         2,
@@ -85,8 +85,8 @@
       ]
     }
   },
-  "installedModelBytes": 4863456,
-  "gzipModelBytes": 1542549,
+  "installedModelBytes": 4888076,
+  "gzipModelBytes": 1553533,
   "dependencies": [
     "canonical ISLAND_5_LANDMARKS placement",
     "shared Three.js renderer and materials",
