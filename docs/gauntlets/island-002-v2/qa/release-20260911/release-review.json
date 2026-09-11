@@ -1,0 +1,40 @@
+{
+  "status": "held-performance-device",
+  "sourceSetSha256": "85fb46452ad8dfacb2cdc11f85eeb9f2ae67cbf200763112861ebabaed182973",
+  "visualAcceptance": true,
+  "performanceAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "releaseAcceptance": false,
+  "publishingAuthorizedWhenComplete": true,
+  "pushedToMain": false,
+  "deployed": false,
+  "completedChecks": {
+    "focused": {
+      "passed": 33,
+      "failed": 0
+    },
+    "islandRun": {
+      "passed": 2089,
+      "failed": 0,
+      "scope": "Integrated base before final floor material/local matrix cache; final changes covered by focused suite and build."
+    },
+    "typecheck": "pass",
+    "productionBuild": "pass",
+    "visualMinimum": 0.85
+  },
+  "finalHighTrace": {
+    "path": "../release-profile-high-dpr2-v3/profile.json",
+    "fps": 26.7,
+    "p95Ms": 50.2,
+    "slowPercent": 95.1,
+    "maxCalls": 175,
+    "maxTriangles": 179896,
+    "timing": "fail",
+    "geometry": "pass"
+  },
+  "supportingDiagnostic": "same-host-ab-diagnostic.json is a short stationary diagnostic; it does not clear the failed full trace.",
+  "mediumReplay": "Timing passes, shadow-inclusive peak 252 calls / 368538 triangles requires review. Timed window does not cover all 20 rolls.",
+  "lowReduced": "Pass on desktop phone viewport, not physical phone.",
+  "physicalDevice": "Paired iPhone reported passcode required; Safari launch timed out. No physical-device pass.",
+  "requiredNextStep": "Resolve performance and physical-device validation or obtain explicit documented waiver; then reconcile latest main, push and verify exact-SHA live deployment."
+}

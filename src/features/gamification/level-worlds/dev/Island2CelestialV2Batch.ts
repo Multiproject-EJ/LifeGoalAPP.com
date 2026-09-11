@@ -39,11 +39,12 @@ export function batchCelestialStatic(root: THREE.Group, exclusions: readonly THR
       // Preserve named sockets and semantic anchors; presentation hit proxies are separate.
       const anchor = new THREE.Group();
       anchor.name = source.name; anchor.position.copy(source.position); anchor.quaternion.copy(source.quaternion);
-      anchor.scale.copy(source.scale); anchor.userData = { ...source.userData, batchedInto: mesh.name };
+      anchor.scale.copy(source.scale); anchor.updateMatrix(); anchor.matrixAutoUpdate = false; anchor.userData = { ...source.userData, batchedInto: mesh.name };
       const parent = source.parent;
       while (source.children.length) anchor.add(source.children[0]);
       parent?.add(anchor); source.removeFromParent();
     }
+    mesh.updateMatrix(); mesh.matrixAutoUpdate = false;
     root.add(mesh);
   }
   root.userData.celestialStaticBatches = count;

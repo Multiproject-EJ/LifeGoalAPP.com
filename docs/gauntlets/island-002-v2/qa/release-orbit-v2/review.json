@@ -1,0 +1,47 @@
+{
+  "reviewer": "island002_review",
+  "status": "approved",
+  "action": "approve",
+  "scope": "Final visual-only acceptance of optimized Island 002 V2: retained approved landmark and terrain macro, accepted surface style, landscape attachment, camera readability, and corrected Court floor at the exact wide 135-degree view.",
+  "sourceSetSha256": "85fb46452ad8dfacb2cdc11f85eeb9f2ae67cbf200763112861ebabaed182973",
+  "evidenceValidation": {
+    "manifestStatus": "captured-unreviewed",
+    "failures": [],
+    "changedDuringCapture": [],
+    "sourceStartEqualsSourceEnd": true,
+    "actualFramesInspected": 9
+  },
+  "scores": {
+    "context-overview": 0.88,
+    "context-boss": 0.87,
+    "context-left": 0.86,
+    "context-right": 0.86,
+    "beauty-000": 0.88,
+    "beauty-090": 0.86,
+    "beauty-135": 0.85,
+    "beauty-180": 0.85,
+    "beauty-270": 0.86
+  },
+  "minimumScore": 0.85,
+  "courtFloorMaterialScores": {
+    "beauty-090": 0.89,
+    "beauty-135": 0.89,
+    "beauty-180": 0.89
+  },
+  "findings": [
+    "The exact wide beauty-135 view now retains a blue Court floor with readable gold inlays; the prior white specular washout is resolved.",
+    "Gate landing remains clear of the previously intersecting shrubs; visible landmark foundations, stairs and terrain attachment retain the accepted result.",
+    "Palace hierarchy, all five landmark identities, connected planting volumes and waterfall forms remain intact after rendering optimizations.",
+    "No new visible missing surfaces or camera-dependent geometry loss was found in the nine final frames.",
+    "Rear-view airship overlap is the previously reviewed transient crossing; it does not invalidate canonical play-view readability."
+  ],
+  "limitations": [
+    "This is visual approval only. Performance acceptance remains unresolved, including the reported failed latest full High trace; stationary A/B/A timing does not clear that trace.",
+    "Physical-phone acceptance remains unverified. Desktop Chromium at phone viewport does not replace physical-device testing.",
+    "Earlier complete orbit, responsive and focused attachment reviews remain supporting evidence; this nine-frame verification does not claim newly captured views beyond its listed files.",
+    "The user's accepted angular foliage and water styling is retained. No further artistic correction is requested."
+  ],
+  "performanceAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "releaseAcceptance": false
+}

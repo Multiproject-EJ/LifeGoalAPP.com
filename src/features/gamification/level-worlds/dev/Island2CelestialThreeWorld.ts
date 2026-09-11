@@ -1056,7 +1056,7 @@ export function createIsland2CelestialLivingAmbience(
   ocean.visible = false;
   // An inexpensive atmospheric sky stays coherent above and below the island.
   // Directional cloud noise avoids stretching a photographic horizon underfoot.
-  const skyDome = new THREE.Mesh(new THREE.SphereGeometry(120, 36, 24), new THREE.ShaderMaterial({
+  const skyDome = new THREE.Mesh(new THREE.SphereGeometry(120, 16, 12), new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
     uniforms: {
       zenith: { value: new THREE.Color(0x75b3e8) },

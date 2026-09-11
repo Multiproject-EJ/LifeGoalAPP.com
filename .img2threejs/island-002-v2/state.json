@@ -203,5 +203,7 @@
   "passHistory": [],
   "reviewCursor": 0,
   "iterationAction": "initial",
-  "stopReason": ""
+  "stopReason": "",
+  "productionRecord": "docs/gauntlets/island-002-v2/IMPLEMENTATION-STATUS.md",
+  "productionNote": "The intake-generated checklist below is preserved as pipeline provenance. Serialized landmark/landscape production and independent visual reviews are recorded in the linked Gauntlet, including completed macros and current release verification. Do not restart blockout from this historical scaffold."
 }

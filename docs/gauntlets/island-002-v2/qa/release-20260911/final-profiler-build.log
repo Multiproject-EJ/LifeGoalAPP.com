@@ -1,0 +1,97 @@
+vite v5.4.21 building for island-profiler...
+
+(!) outDir /private/tmp/island002-integrated-final-profiler-v3 is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+
+transforming...
+✓ 1446 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/index.html                                                   9.80 kB │ gzip:   3.06 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Cinzel-700-Dkw14w9r.woff2                            15.18 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/EBGaramond-400i-DSEbMgZu.woff2                       25.39 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/EBGaramond-400-CRpggXlh.woff2                        44.34 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/tozengarden-BNpnGN29.webp                            51.01 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Dark_controller-CV4GbjXG.webp                       117.76 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Gold_controller-B1mAp9Xu.webp                       136.18 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Blue_darkcontroller-C8lePwNf.webp                   137.59 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Controller_lightblue-SrV3mTds.webp                  137.64 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Score_achievements-D_056y5n.webp                    153.50 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Score_shop-Bc3tLJnL.webp                            199.06 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/score_Bank-CnaSdtEX.webp                            224.84 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Score_zengarden-BICZBFAw.webp                       238.74 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Visiontablight-CHtAiN0O.webp                        341.41 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/fleet-evolution-strip-v1-B0h8LDzN.png               345.86 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Visiontabdark-Dh_ahfLp.webp                         514.83 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/zengardenplotdark-B9ZVIoqG.webp                     519.90 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/zengardenplotlight-8li_PTkX.webp                    609.16 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Zen_shopV2-D1A5YUEk.webp                            865.78 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/MinigameHudStrip-CsGib9NE.css                         2.18 kB │ gzip:   0.81 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/SignalPathMinigame-Cr2UpGX_.css                       2.77 kB │ gzip:   1.04 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ShooterBlitz-BLnpw5n8.css                             2.84 kB │ gzip:   1.02 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Island5ThreePilot-CJE36te5.css                        2.97 kB │ gzip:   1.13 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ConcordCategoriesMinigame-DbYSufwQ.css                3.04 kB │ gzip:   1.14 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/TwinSigilsMinigame-D0W2o_NY.css                       3.44 kB │ gzip:   1.16 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/LexiconRelayMinigame-mHWLi74_.css                     3.73 kB │ gzip:   1.26 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ExpeditionShipGarageShowcase-Dh2Hwq4o.css             5.12 kB │ gzip:   1.60 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ExpeditionShipGarageQualitySelector-D-9aIr1D.css      5.14 kB │ gzip:   1.63 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/VisionQuestIslandRunAdapter-CvGaF705.css              5.64 kB │ gzip:   1.43 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/BossRhythmMinigame-C30AKzNL.css                       5.65 kB │ gzip:   1.67 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ExpeditionShipGarageEntrance-CiXScj1J.css             5.93 kB │ gzip:   1.81 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ArenaPuzzleFrame-oHtjEBzL.css                         8.05 kB │ gzip:   2.39 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/CompanionFeastMinigame-ArMUGh_x.css                   8.27 kB │ gzip:   2.23 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/MomentumMatrixMinigame-C2to4aW0.css                  14.13 kB │ gzip:   3.66 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/VaultIslandCollectionModal-nYKI9ilG.css              18.38 kB │ gzip:   4.23 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/IslandWorkshopMinigame-vQkVINCw.css                  21.76 kB │ gzip:   4.87 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/FortuneEngineMinigame-DMv5i9iI.css                   22.17 kB │ gzip:   5.34 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/IslandTemplateKitPage-DCHU39bZ.css                   23.99 kB │ gzip:   5.69 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/SpaceExcavatorMinigame-CB9FLJJ2.css                  30.46 kB │ gzip:   5.87 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/VaultCasinoLab-C8esJjg6.css                          35.90 kB │ gzip:   8.51 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/SkyboundExpeditionMinigame-BgWZ0wfZ.css              39.32 kB │ gzip:   8.47 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/JourneyDiscArenaMinigame-CC4aLIVv.css                60.26 kB │ gzip:  11.22 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/index-bG7O5CZr.css                                  993.04 kB │ gzip: 162.97 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/main-BShrBFuG.css                                 1,703.27 kB │ gzip: 315.13 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/web-2BVLhllD.js                                       0.41 kB │ gzip:   0.27 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/bossService-B8hDqW4i.js                               0.47 kB │ gzip:   0.29 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/web-C5lPUl-2.js                                       0.87 kB │ gzip:   0.42 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/web-B0q0HuEw.js                                       0.97 kB │ gzip:   0.49 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/RoundedBoxGeometry-CG-5ugUr.js                        1.72 kB │ gzip:   0.81 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/RoomEnvironment-BSssXWiV.js                           2.06 kB │ gzip:   0.88 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ExpeditionShipGarageEntrance-xMkj1tfn.js              2.49 kB │ gzip:   0.88 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/MinigameFxOverlay-BlQuNSEu.js                         2.53 kB │ gzip:   1.23 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/luckyRollTileEffects-BxOjTkrM.js                      2.54 kB │ gzip:   0.88 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/MinigameHudStrip-MXLsd7NP.js                          2.86 kB │ gzip:   1.21 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ExpeditionShipGarageShowcase-CXi5ki0w.js              4.29 kB │ gzip:   1.54 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/LexiconRelayMinigame-o2i364mb.js                      4.58 kB │ gzip:   1.97 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ConcordCategoriesMinigame-KX0KQcHd.js                 4.68 kB │ gzip:   1.89 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/TwinSigilsMinigame-DqzmAPZi.js                        5.04 kB │ gzip:   2.04 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/SignalPathMinigame-DaBfxNGf.js                        5.78 kB │ gzip:   2.43 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/BufferGeometryUtils-orDj8tNm.js                       6.28 kB │ gzip:   2.04 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/minigameCanvasKit-DoU2NL-J.js                         6.87 kB │ gzip:   2.75 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ShooterBlitz-DI4mtEku.js                              9.63 kB │ gzip:   3.27 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/MomentumMatrixMinigame-BRhU5I0H.js                   11.18 kB │ gzip:   4.05 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ArenaPuzzleFrame-CtT98pmV.js                         13.32 kB │ gzip:   5.17 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/index-D5PjD5g2.js                                    13.83 kB │ gzip:   5.28 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/VisionQuestIslandRunAdapter-B3spi-yP.js              13.91 kB │ gzip:   4.66 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/IslandTemplateKitPage-D3-kdO1W.js                    16.44 kB │ gzip:   5.35 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/CompanionFeastMinigame-DNbAQsl8.js                   18.32 kB │ gzip:   6.02 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/SpaceExcavatorMinigame-D9uULrT6.js                   25.89 kB │ gzip:   7.65 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/BossRhythmMinigame-CWMP0Suy.js                       28.41 kB │ gzip:   9.77 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/VaultCasinoLab-uVQnpmkR.js                           31.34 kB │ gzip:  10.94 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/IslandWorkshopMinigame-CMDgSqlt.js                   36.82 kB │ gzip:  11.44 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/FortuneEngineMinigame-DarZOGhh.js                    40.88 kB │ gzip:  12.88 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/GLTFLoader-AUVIMOhw.js                               63.59 kB │ gzip:  17.47 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/JourneyDiscArenaMinigame-Ct2aRhCy.js                 94.58 kB │ gzip:  28.38 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/ExpeditionShipGarageQualitySelector-DcyqoUuX.js      97.31 kB │ gzip:  31.60 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/CompassBookThreeShell-BNDvXWfo.js                   103.56 kB │ gzip:  32.02 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/SkyboundExpeditionMinigame-w8WoSjLD.js              123.92 kB │ gzip:  42.05 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/VaultIslandCollectionModal-CPFmJbvz.js              218.39 kB │ gzip:  64.38 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/three.module-D0oplK2M.js                            620.14 kB │ gzip: 159.37 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/main-BYu81TEh.js                                  1,017.23 kB │ gzip: 281.35 kB
+../../../../../../private/tmp/island002-integrated-final-profiler-v3/assets/Island5ThreePilot-CmMXuOA6.js                     2,550.46 kB │ gzip: 709.92 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 13.14s

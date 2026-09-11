@@ -9,6 +9,7 @@ import { createServer, transformWithEsbuild } from 'vite';
 const trackedSources = [
   'src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts',
   'src/features/gamification/level-worlds/dev/Island2CelestialV2Batch.ts',
+  'src/features/gamification/level-worlds/dev/Island2CelestialV2PlantRuntimeBatch.ts',
   'src/features/gamification/level-worlds/dev/Island2CelestialV2Landmarks.ts',
   'src/features/gamification/level-worlds/dev/Island2CelestialV2Terrain.ts',
   'src/features/gamification/level-worlds/dev/Island2CelestialV2Botany.ts',
@@ -82,7 +83,7 @@ try {
       'finishes landmark levels with one bounded pop and reduced-motion-safe sparkle beat',
       // This existing contract covers all five Celestial landmarks at 0->1, 1->2,
       // and 2->3, retained funded geometry, five reveal stages and temporary rigs.
-      'requires authored five-stage landmark construction across Islands 002 through 010, 014, 018, 019 and 020',
+      'requires authored five-stage landmark construction across Islands 002 through 010, 014, 015, 018, 019 and 020',
     ]],
   ];
   for (const [file, exportName, names] of suites) {
@@ -966,6 +967,83 @@ try {
   }
 
   const { batchCelestialStatic, batchCelestialPlantInstances } = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island2CelestialV2Batch.ts');
+  await check('Plant runtime batching tracks owner motion, instance changes and visibility without mutating source buffers', async () => {
+    const { createCelestialPlantRuntimeBatches } = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island2CelestialV2PlantRuntimeBatch.ts');
+    const scene = new THREE.Scene(), ambience = new THREE.Group(); ambience.name = 'ISLAND_2_CELESTIAL_LIVING_AMBIENCE'; scene.add(ambience);
+    const owners = [0, 1].map(i => {
+      const owner = new THREE.Group(); owner.name = `ISLAND_2_REDOCKING_PLATFORM_${i + 1}`;
+      owner.position.set(i ? 4.36 : -4.36, .1 * i, -3.9); owner.rotation.set(.1, .2 * i, -.1); ambience.add(owner);
+      const parent = new THREE.Group(); parent.position.set(.2, .36, -.3); parent.rotation.set(.12, -.23, .07); parent.scale.set(.8, 1.2, 1.1); owner.add(parent); return { owner, parent };
+    });
+    const geometry = new THREE.BoxGeometry(.2, .3, .4), material = new THREE.MeshStandardMaterial({ color: 0x669944 });
+    const ownedGeometries = new Set([geometry]), ownedMaterials = new Set([material]);
+    const make = (parent, name, count, shape = geometry, paint = material) => {
+      const mesh = new THREE.InstancedMesh(shape, paint, count); mesh.name = name; mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.position.set(.13, .2, -.14); mesh.rotation.set(.07, -.11, .09); mesh.scale.set(1.1, .9, .8);
+      for (let i = 0; i < count; i++) mesh.setMatrixAt(i, new THREE.Matrix4().compose(new THREE.Vector3(i * .4, .1, -.2 * i), new THREE.Quaternion().setFromEuler(new THREE.Euler(.1 * i, .3, .2)), new THREE.Vector3(.8, 1.2, .9)));
+      parent.add(mesh); ownedGeometries.add(shape); ownedMaterials.add(paint); return mesh;
+    };
+    const sources = [make(owners[0].parent, 'PLATFORM_A_BOTANICAL_INSTANCES_0', 2), make(owners[1].parent, 'PLATFORM_B_BOTANICAL_INSTANCES_0', 3, geometry.clone())];
+    const differentGeometry = geometry.clone(); differentGeometry.attributes.position.setX(0, differentGeometry.attributes.position.getX(0) + .017);
+    const distinct = [make(owners[0].parent, 'DISTINCT_SHAPE_BOTANICAL_INSTANCES_0', 1, differentGeometry), make(owners[1].parent, 'DISTINCT_MATERIAL_BOTANICAL_INSTANCES_0', 1, geometry, material.clone()), make(owners[0].parent, 'UNSELECTED_DECORATION', 2)];
+    const originals = [...sources, ...distinct].map(mesh => ({ mesh, geometry: mesh.geometry, material: mesh.material, parent: mesh.parent,
+      buffers: Object.fromEntries(Object.entries(mesh.geometry.attributes).map(([key, attr]) => [key, Array.from(attr.array)])), index: Array.from(mesh.geometry.index.array), instances: Array.from(mesh.instanceMatrix.array) }));
+    const expected = () => {
+      scene.updateMatrixWorld(true);
+      return sources.flatMap(source => Array.from({ length: source.count }, (_, i) => { const local = new THREE.Matrix4(); source.getMatrixAt(i, local); return source.matrixWorld.clone().multiply(local); }));
+    };
+    let runtime;
+    try {
+      const before = expected(); runtime = createCelestialPlantRuntimeBatches(scene); runtime.sync();
+      const batches = []; runtime.root.traverse(node => { if (node instanceof THREE.InstancedMesh) batches.push(node); });
+      const batch = batches.find(node => node.material === material && node.count === 5);
+      assert.ok(batch, 'two identical shapes/materials combine across independent owner frames');
+      assert.notEqual(batch.geometry, geometry, 'global renderer owns a geometry copy');
+      const inspect = (matrices, hiddenSource = -1) => {
+        scene.updateMatrixWorld(true); let offset = 0;
+        assert.ok(Array.isArray(batch.userData.sourceRanges), 'global batch exposes actual source ownership ranges');
+        assert.equal(batch.count, sources.reduce((count, source, i) => count + (i === hiddenSource ? 0 : source.count), 0));
+        sources.forEach((source, sourceIndex) => {
+          const range = batch.userData.sourceRanges.find(range => range.name === source.name);
+          if (sourceIndex === hiddenSource) { assert.ok(!range || range.count === 0, 'hidden owner has no submitted instances'); offset += source.count; return; }
+          assert.ok(range); assert.equal(range.count, source.count);
+          for (let i = 0; i < source.count; i++, offset++) {
+            const instance = new THREE.Matrix4(); batch.getMatrixAt(range.offset + i, instance); const actual = batch.matrixWorld.clone().multiply(instance);
+            actual.elements.forEach((value, j) => assert.ok(Math.abs(value - matrices[offset].elements[j]) < 2e-5, `source ${sourceIndex}/${i} world matrix ${j}`));
+            const position = geometry.getAttribute('position');
+            for (let vertex = 0; vertex < position.count; vertex++) {
+              const point = new THREE.Vector3().fromBufferAttribute(position, vertex);
+              assert.ok(point.clone().applyMatrix4(actual).distanceTo(point.applyMatrix4(matrices[offset])) < 2e-5, 'every rendered instance vertex retains authored world pose');
+            }
+          }
+        });
+      };
+      inspect(before);
+      let version = batch.instanceMatrix.version; runtime.sync(); assert.equal(batch.instanceMatrix.version, version, 'static repeated sync does not upload instance matrices');
+      owners[1].owner.position.add(new THREE.Vector3(-1.2, .1, .9)); owners[1].owner.rotation.y += .45;
+      owners[0].parent.rotation.z -= .23; const moved = expected(); runtime.sync(); inspect(moved);
+      assert.ok(batch.instanceMatrix.version > version, 'docking movement updates global plant matrices');
+      version = batch.instanceMatrix.version; runtime.sync(); assert.equal(batch.instanceMatrix.version, version);
+      owners[0].owner.visible = false; runtime.sync(); inspect(expected(), 0);
+      owners[0].owner.visible = true; runtime.sync(); inspect(expected());
+      sources[1].setMatrixAt(1, new THREE.Matrix4().compose(new THREE.Vector3(.3, .7, -.8), new THREE.Quaternion().setFromEuler(new THREE.Euler(.2, .4, .1)), new THREE.Vector3(.6, .7, .8))); sources[1].instanceMatrix.needsUpdate = true;
+      const updated = expected(); runtime.sync(); inspect(updated);
+      version = batch.instanceMatrix.version; runtime.sync(); assert.equal(batch.instanceMatrix.version, version, 'unchanged instance data does not upload again');
+      for (const state of originals) {
+        assert.equal(state.mesh.parent, state.parent); assert.equal(state.mesh.material, state.material);
+        for (const [name, values] of Object.entries(state.buffers)) assert.deepEqual(Array.from(state.geometry.attributes[name].array), values, 'authored vertex buffers unchanged');
+        assert.deepEqual(Array.from(state.geometry.index.array), state.index);
+        if (state.mesh !== sources[1]) assert.deepEqual(Array.from(state.mesh.instanceMatrix.array), state.instances, 'batching cannot mutate source instance arrays');
+      }
+      assert.equal(distinct[2].geometry, geometry, 'unselected instances remain native');
+      // A different shape or material may have its own batch, but can never
+      // contaminate the five compatible source instances validated above.
+      assert.equal(batch.count, sources.reduce((count, mesh) => count + mesh.count, 0));
+      runtime.dispose(); runtime = undefined;
+      originals.forEach(state => assert.equal(state.mesh.geometry, state.geometry, 'dispose restores the exact original geometry object'));
+    } finally { runtime?.dispose(); ownedGeometries.forEach(shape => shape.dispose()); ownedMaterials.forEach(paint => paint.dispose()); }
+  });
+
   await check('Rigid batching preserves mechanism transforms through static batching and subsequent motion', async () => {
     const { createIslandRigidSurfaceBatches } = await server.ssrLoadModule('/src/features/gamification/level-worlds/dev/Island1AnimatedBatches.ts');
     const scene = new THREE.Scene(), family = new THREE.Group(); family.name = 'MECHANISM_BATCH_FIXTURE'; family.position.set(2, .7, -1); family.rotation.set(.1, .3, -.2); scene.add(family);

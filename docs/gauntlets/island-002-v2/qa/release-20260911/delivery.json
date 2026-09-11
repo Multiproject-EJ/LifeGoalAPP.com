@@ -1,0 +1,38 @@
+{
+  "classification": "new-base",
+  "delivery": "Bundled procedural Three.js world; no new public raster runtime files or independent downloadable pack.",
+  "sourceGeometryAndModules": {
+    "rawBytes": 680968,
+    "gzipSumBytes": 96481,
+    "files": [
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Archive.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Landmarks.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Cloudnest.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2ResolveCourt.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2PlantRuntimeBatch.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Gate.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2WaterMaterial.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Landscape.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Finish.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Terrain.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Botany.ts",
+      "src/features/gamification/level-worlds/dev/Island2CelestialV2Batch.ts",
+      "src/features/gamification/level-worlds/dev/generated/island002-palace-roof.json"
+    ]
+  },
+  "measurementNote": "Source payload sizes are authoring-size indicators, not separately attributable deployed bytes. The final production shared pilot chunk is measured separately; it has not been published.",
+  "dependencies": [
+    "Shared Three.js runtime",
+    "Canonical Island Run actions/state/36-tile geometry",
+    "Shared construction authoring and rigid batching"
+  ],
+  "duplicates": "One runtime roof JSON; source concepts, Blender masters and QA images live under docs and are not copied into public/dist.",
+  "builtSharedChunks": [
+    {
+      "name": "Island5ThreePilot-DCUqHMIz.js",
+      "bytes": 2547428,
+      "gzipBytes": 704402
+    }
+  ],
+  "published": false
+}

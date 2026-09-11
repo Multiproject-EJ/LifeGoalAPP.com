@@ -28,7 +28,7 @@ function randomSource(seed: number) {
 function taperedBranch(points: THREE.Vector3[], startRadius: number, endRadius: number, quality: Island3DQuality) {
   const curve = new THREE.CatmullRomCurve3(points);
   const lengthSegments = quality === 'high' ? 12 : quality === 'medium' ? 9 : 3;
-  const radialSegments = quality === 'low' ? 5 : 7;
+  const radialSegments = quality === 'low' ? 4 : 7;
   const geometry = new THREE.TubeGeometry(curve, lengthSegments, 1, radialSegments, false);
   const positions = geometry.getAttribute('position');
   for (let ring = 0; ring <= lengthSegments; ring += 1) {

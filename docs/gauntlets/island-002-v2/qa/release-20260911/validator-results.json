@@ -1,0 +1,31 @@
+{
+  "head": "9072d06cd3286f2c93d50b09933d85043a1c870e",
+  "checks": {
+    "architecture": {
+      "result": "pass",
+      "violations": 0,
+      "allowlistedWarnings": 3
+    },
+    "art-assets": {
+      "result": "pass",
+      "manifests": 12,
+      "warnings": 0
+    },
+    "render-wiring": {
+      "result": "pass"
+    },
+    "audio-assets": {
+      "result": "pass",
+      "files": 18,
+      "sfxEvents": 31,
+      "existingPlaceholders": 7
+    },
+    "camera-kit": {
+      "result": "pass"
+    },
+    "visual-briefs": {
+      "result": "pass",
+      "briefs": 5
+    }
+  }
+}

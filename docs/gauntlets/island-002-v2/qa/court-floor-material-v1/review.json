@@ -1,0 +1,11 @@
+{
+  "reviewer": "island002_review",
+  "decision": "approve-scoped",
+  "scores": {
+    "beauty-090": 0.89,
+    "beauty-135": 0.89,
+    "beauty-180": 0.89
+  },
+  "minimum": 0.89,
+  "scope": "Court stone-inlay material remains blue with legible gold lines; unchanged geometry, attachment and roof style. Matching wide135 comparison pending."
+}

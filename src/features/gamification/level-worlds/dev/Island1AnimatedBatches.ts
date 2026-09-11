@@ -23,7 +23,7 @@ export function createIsland1AnimatedBatches(scene: THREE.Scene) {
 }
 
 /** Shared rigid-surface renderer; callers explicitly own their selected families. */
-export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: readonly string[], rootName: string) {
+export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: readonly string[], rootName: string, partsPerBatch = PARTS_PER_BATCH) {
   const root = new THREE.Group();
   root.name = rootName;
   const groups = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>[]>();
@@ -58,10 +58,10 @@ export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: re
     shadowIndex: THREE.BufferAttribute;
     mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
   }[] = [];
-  for (const group of groups.values()) for (let start = 0; start < group.length; start += PARTS_PER_BATCH) {
-    const sources = group.slice(start, start + PARTS_PER_BATCH);
+  for (const group of groups.values()) for (let start = 0; start < group.length; start += partsPerBatch) {
+    const sources = group.slice(start, start + partsPerBatch);
     if (sources.length < 2 && sources[0].geometry.attributes.position.count < 384) continue;
-    const matrices = Array.from({ length: PARTS_PER_BATCH }, () => new THREE.Matrix4());
+    const matrices = Array.from({ length: partsPerBatch }, () => new THREE.Matrix4());
     const offsets: number[] = [], counts: number[] = [];
     let vertexCount = 0;
     const pieces = sources.map((source, index) => {
@@ -87,11 +87,11 @@ export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: re
     const patch = (material: THREE.Material) => {
       material.onBeforeCompile = (shader) => {
         shader.uniforms.islandPartMatrices = { value: matrices };
-        shader.vertexShader = `attribute float islandBatchIndex;\nuniform mat4 islandPartMatrices[${PARTS_PER_BATCH}];\n${shader.vertexShader}`
+        shader.vertexShader = `attribute float islandBatchIndex;\nuniform mat4 islandPartMatrices[${partsPerBatch}];\n${shader.vertexShader}`
           .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nmat3 islandNormalMatrix = mat3(islandPartMatrices[int(islandBatchIndex)]); if (abs(determinant(islandNormalMatrix)) > 0.00000001) objectNormal = transpose(inverse(islandNormalMatrix)) * objectNormal;')
           .replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed = (islandPartMatrices[int(islandBatchIndex)] * vec4(transformed, 1.0)).xyz;');
       };
-      material.customProgramCacheKey = () => 'island001-rigid-surfaces-v1';
+      material.customProgramCacheKey = () => `island-rigid-surfaces-v1-${partsPerBatch}`;
     };
     const material = sources[0].material.clone();
     patch(material);

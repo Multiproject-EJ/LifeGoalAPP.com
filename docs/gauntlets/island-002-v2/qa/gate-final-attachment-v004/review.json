@@ -1,0 +1,24 @@
+{
+  "reviewer": "island002_review",
+  "status": "approved",
+  "scope": "Gate environmental clearance, final visible attachment and retained accepted style",
+  "sourceSetSha256": "7991aaa639bfb6d34fcf27d9628c5f2a236f5b2198cb91330a3e8a3ba565111e",
+  "scores": {
+    "beauty-000": 0.89,
+    "beauty-225": 0.89,
+    "beauty-270": 0.89,
+    "context-overview": 0.88,
+    "context-event": 0.89,
+    "context-left": 0.87,
+    "context-right": 0.87
+  },
+  "landscapeGateMinimum": 0.85,
+  "improvementFromInitial": 0.17,
+  "findings": [
+    "Landing beneath portal is clear in225/270; stairs, supports and foundations remain grounded.",
+    "Planting volume and accepted styling retained."
+  ],
+  "limitations": [
+    "Performance and physical-device verification are separate gates."
+  ]
+}

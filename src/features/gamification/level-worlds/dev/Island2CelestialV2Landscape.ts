@@ -128,7 +128,7 @@ function pondGeometry(radiusX: number, radiusZ: number, seed: number) {
 
 /** Thick curved water ribbons have side surfaces and a physical spill socket. */
 function streamGeometry(points: THREE.Vector3[], width: number, falling: boolean) {
-  const curve = new THREE.CatmullRomCurve3(points), rows = falling ? 32 : 20;
+  const curve = new THREE.CatmullRomCurve3(points), rows = falling ? 18 : 12;
   const positions: number[] = [], uv: number[] = [], indices: number[] = [];
   for (let i = 0; i <= rows; i++) {
     const t = i / rows, p = curve.getPoint(t), tangent = curve.getTangent(t);

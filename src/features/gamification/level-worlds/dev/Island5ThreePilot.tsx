@@ -8,6 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createIsland1AnimatedBatches, createIslandRigidSurfaceBatches } from './Island1AnimatedBatches';
+import { createCelestialPlantRuntimeBatches } from './Island2CelestialV2PlantRuntimeBatch';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import {
   applyLandmarkDoorTiles,
@@ -8416,7 +8417,8 @@ export default function Island5ThreePilot({
         ...['BOSS', 'HATCHERY', 'HABIT', 'WISDOM', 'EVENT'].map(id => `ISLAND_2_CELESTIAL_${id}_ROOT`),
         'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS',
         'ISLAND_5_CARETAKER_BOARD_LOD',
-      ], 'ISLAND_002_ANIMATED_SURFACE_BATCHES') : null;
+      ], 'ISLAND_002_ANIMATED_SURFACE_BATCHES', 32) : null;
+    const celestialPlantBatches = isCelestialSkyKingdom ? createCelestialPlantRuntimeBatches(scene) : null;
     let appliedConstructionCameraKey = '';
     let appliedIsland15ConstructionRevealKey = '';
     const animate = (now: number) => {
@@ -9896,6 +9898,7 @@ export default function Island5ThreePilot({
         }
       }
       island1AnimatedBatches?.sync(camera);
+      celestialPlantBatches?.sync(true);
       if (livingAmbience.consumeShadowUpdate?.() && sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
       renderer.render(scene, camera);
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
@@ -10117,6 +10120,7 @@ export default function Island5ThreePilot({
       };
       controls.dispose();
       timer.dispose();
+      celestialPlantBatches?.dispose();
       island1AnimatedBatches?.dispose();
       if (encounterCaretaker) {
         scene.remove(encounterCaretaker.root);

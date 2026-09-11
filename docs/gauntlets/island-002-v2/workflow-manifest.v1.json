@@ -1,5 +1,5 @@
 {
-  "status": "blender-route-production-authorized",
+  "status": "release-candidate-held-performance-device",
   "sourceSha256": "8ef9bd73c0edfc8350d425cf0b76ca62332800ed3aec5c4c1566a116d16dd66b",
   "branch": "codex/island-002-v2-concept-20260911",
   "scope": "Approved concept adapted to canonical board and five landmarks",
@@ -16,13 +16,19 @@
     "tier": "standard",
     "targetDeltaMiB": 5
   },
-  "authorityNote": "User explicitly approved concept and said update it to V2, begin now. Routine decomposition follows already approved five-landmark landscape and mission scope.",
-  "nextDecision": null,
+  "authorityNote": "User approved actual before/after and explicitly authorized live publishing when complete. No additional publishing permission is needed once release gates pass.",
+  "nextDecision": "Resolve failed final High performance trace and complete physical-phone verification, or obtain explicit documented validation waiver. General conditional publishing authority already exists.",
   "routeAuthorization": {
     "date": "2026-09-11",
     "decision": "approved-local-blender-continuous-palace-route",
     "authority": "User: good, proceed. In reply to explicit Blender roof/keep route proposal after family ceiling.",
     "preserve": "exact-source, canonical board, prior failed review history and quality thresholds",
     "scope": "local Blender mesh authoring, optimized synchronous Three.js geometry export, integration and continuing Island002V2"
+  },
+  "currentRecord": "docs/gauntlets/island-002-v2/IMPLEMENTATION-STATUS.md",
+  "releaseAuthorization": {
+    "authorized": true,
+    "condition": "all done",
+    "userRequest": "yeah that looks really good, do push to live if its all done"
   }
 }

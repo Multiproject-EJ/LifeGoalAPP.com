@@ -1,0 +1,45 @@
+{
+  "purpose": "Same-host diagnostic only; 10s stationary overview, not the release profiler. Prior artifact A and final artifact B. No source mutation.",
+  "runs": [
+    {
+      "name": "blank",
+      "port": null,
+      "samples": 602,
+      "durationMs": 10005.999999976159,
+      "averageFps": 60.16390165914795,
+      "p95": 17.59999999999991,
+      "slowPercent": 0,
+      "metrics": null
+    },
+    {
+      "name": "prior-A",
+      "port": 4177,
+      "samples": 562,
+      "durationMs": 10005.999999988078,
+      "averageFps": 56.166300219934996,
+      "p95": 33.29999999999927,
+      "slowPercent": 7.117437722419929,
+      "metrics": "57 FPS\n167 calls\n177k tris\n780×1688 px"
+    },
+    {
+      "name": "final-B",
+      "port": 4178,
+      "samples": 555,
+      "durationMs": 10012.29999998808,
+      "averageFps": 55.43181886286475,
+      "p95": 33.29999999999927,
+      "slowPercent": 8.468468468468469,
+      "metrics": "52 FPS\n168 calls\n177k tris\n780×1688 px"
+    },
+    {
+      "name": "prior-A-repeat",
+      "port": 4177,
+      "samples": 581,
+      "durationMs": 10004.8,
+      "averageFps": 58.07212537981769,
+      "p95": 17.700000000000728,
+      "slowPercent": 3.442340791738382,
+      "metrics": "57 FPS\n167 calls\n177k tris\n780×1688 px"
+    }
+  ]
+}

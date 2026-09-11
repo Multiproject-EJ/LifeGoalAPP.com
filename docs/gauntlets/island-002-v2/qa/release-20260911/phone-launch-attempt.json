@@ -1,0 +1,34 @@
+{
+  "error" : {
+    "code" : 2,
+    "domain" : "ArgumentParserInternal.ExitCode",
+    "userInfo" : {
+
+    }
+  },
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "launch",
+      "--device",
+      "1419CEE7-5C04-5A0B-B166-2E99FD62DAC9",
+      "--payload-url",
+      "http://172.20.10.9:4177/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20",
+      "com.apple.mobilesafari",
+      "--json-output",
+      "/private/tmp/island002-phone-launch-final.json",
+      "--timeout",
+      "15"
+    ],
+    "commandType" : "devicectl.device.process.launch",
+    "details" : "Exceeded command timeout",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 3,
+    "outcome" : "timeout",
+    "version" : "518.33"
+  }
+}

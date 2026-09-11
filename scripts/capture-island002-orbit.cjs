@@ -57,7 +57,9 @@ function requireStableSources(start, label) {
 }
 const viewport = { width: 390, height: 844 };
 const dpr = 2;
-const baseUrl = 'http://127.0.0.1:53284/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20';
+const origin = new URL(process.env.ISLAND002_CAPTURE_ORIGIN || 'http://127.0.0.1:53284');
+if (!['localhost', '127.0.0.1', '[::1]'].includes(origin.hostname)) throw Error('Capture requires a local build');
+const baseUrl = new URL('/dev/island-template-kit?island=2&mode=3d&level=3&redockingRolls=20', origin).href;
 const launchOptions = { executablePath: process.env.ISLAND_CHROME || '/Users/ejmac/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing', headless: true };
 
 const angleArgument = process.argv.find(arg => arg.startsWith('--angles='))?.split('=')[1];

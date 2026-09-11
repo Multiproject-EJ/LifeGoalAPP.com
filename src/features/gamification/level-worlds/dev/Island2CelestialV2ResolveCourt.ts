@@ -158,7 +158,12 @@ export function createCelestialV2ResolveCourt(
     arcade(first, `RESOLVE_TERRACE_ARCADE_${i}`, 0.60, 0.32, [Math.sin(angle) * 1.32, 0.13, Math.cos(angle) * 1.32], angle);
   }
   drum(first, 'RESOLVE_IVORY_TERRACE', 1.51, 0.11, [0, 0.485, 0]);
-  drum(first, 'RESOLVE_OPEN_SAPPHIRE_PRACTICE_FLOOR', 1.15, 0.034, [0, 0.557, 0], materials.sapphire, 2);
+  // A walkable stone inlay needs a broad, subdued highlight; the roof's
+  // clear coat otherwise washes its blue identity white at the rear survey.
+  const practiceFloor = materials.sapphire.clone();
+  practiceFloor.name = 'RESOLVE_SAPPHIRE_STONE_INLAY';
+  practiceFloor.roughness = .72; practiceFloor.clearcoat = 0;
+  drum(first, 'RESOLVE_OPEN_SAPPHIRE_PRACTICE_FLOOR', 1.15, 0.034, [0, 0.557, 0], practiceFloor, 2);
   const rim = torus(first, 'RESOLVE_PRACTICE_FLOOR_GOLD_RIM', 1.13, 0.018, [0, 0.578, 0], 2);
   rim.rotation.x = Math.PI / 2;
   const center = torus(first, 'RESOLVE_COMPASS_CENTRE', 0.21, 0.011, [0, 0.582, 0], 2);

@@ -1,0 +1,15 @@
+{
+  "reviewer": "island002_review",
+  "decision": "approve-scoped",
+  "scores": {
+    "short-phone": 0.87,
+    "wide-phone": 0.88,
+    "desktop": 0.87,
+    "reduced-motion": 0.88,
+    "level-one": 0.87,
+    "level-two": 0.87,
+    "undocked": 0.86
+  },
+  "minimum": 0.86,
+  "scope": "Responsive layout and static attachment; screenshots do not establish physical touch, production HUD or motion behavior."
+}
