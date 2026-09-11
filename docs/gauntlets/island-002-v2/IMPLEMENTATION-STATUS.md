@@ -1,4 +1,4 @@
-# Island 002 V2 release candidate
+# Island 002 V2 release
 
 The user approved the before/after and authorized publishing when complete. The candidate is based on main `86e76895214ffdde3a8fdebef63bbb69e74c00ef`, preserving Island 015. Implementation commit `9072d06c` is followed by the final optimization/evidence commit containing this record. **Neither has been pushed to main or deployed.**
 
@@ -27,10 +27,14 @@ A subsequent short stationary same-host A/B/A diagnostic showed comparable prior
 
 The paired iPhone 16 Pro reported passcode required; the user was asked to unlock it. A Safari launch acquired a device tunnel but timed out. No physical-phone validation or new native-app installation is claimed.
 
-Per `docs/gameplay/ISLAND_ACTUAL_3D_PRODUCTION_PLAYBOOK.md` (mobile optimization and completion definition), physical-device and static budgets must pass or have an explicit review/waiver. General publishing permission does not waive those validation gates. **Publishing remains on hold.** Next: clear performance/device gates (or document an explicit user waiver), fetch/reconcile latest main, push normally, verify the exact-SHA Pages deployment and live scene.
+Per `docs/gameplay/ISLAND_ACTUAL_3D_PRODUCTION_PLAYBOOK.md` (mobile optimization and completion definition), physical-device and static budgets must pass or have an explicit review/waiver. General publishing permission does not waive those validation gates. The subsequent user instruction “great stuff, push live”, directly following disclosure of these unresolved checks and the waiver option, authorizes publishing this candidate with a validation waiver. The failed/missing checks remain recorded honestly. Next: push normally and verify the exact-SHA Pages deployment and live scene.
 
 ## Evidence and delivery
 
 `qa/release-20260911` contains final build/typecheck/focused/full-suite logs, validators, phone attempt, same-host diagnostic and payload accounting. The world is bundled procedural Three.js with one runtime roof JSON; concept images, Blender masters and QA media remain documentation, not public runtime assets. Shared production bundle sizes are recorded in `delivery.json`; no separately attributable island compressed chunk is claimed.
 
 Historical checkpoints remain in `IMPLEMENTATION-HISTORY.md`. Earlier requests for general publishing permission are superseded by the user's explicit conditional authorization.
+
+## Latest release authority
+
+The user explicitly instructed “great stuff, push live” after being told the performance and physical-device gates were unresolved. This supersedes the earlier conditional hold for this release only. Main was refreshed and remains `86e76895214ffdde3a8fdebef63bbb69e74c00ef`; no integration change or repeated source tests are necessary. Runtime source is unchanged from the reviewed candidate.
