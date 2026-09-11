@@ -1,6 +1,6 @@
 # Island 002 V2 release
 
-The user approved the before/after and authorized publishing when complete. The candidate is based on main `86e76895214ffdde3a8fdebef63bbb69e74c00ef`, preserving Island 015. Implementation commit `9072d06c` is followed by the final optimization/evidence commit containing this record. **Neither has been pushed to main or deployed.**
+The user approved the before/after and authorized publishing when complete. The candidate is based on main `86e76895214ffdde3a8fdebef63bbb69e74c00ef`, preserving Island 015. Implementation commit `9072d06c` is followed by the final optimization/evidence commit containing this record. **Released to main and deployed successfully as `e24cc58fdacdfa70833fa40f9fe7060169099e8b`.**
 
 ## Visuals and implementation
 
@@ -38,3 +38,7 @@ Historical checkpoints remain in `IMPLEMENTATION-HISTORY.md`. Earlier requests f
 ## Latest release authority
 
 The user explicitly instructed “great stuff, push live” after being told the performance and physical-device gates were unresolved. This supersedes the earlier conditional hold for this release only. Main was refreshed and remains `86e76895214ffdde3a8fdebef63bbb69e74c00ef`; no integration change or repeated source tests are necessary. Runtime source is unchanged from the reviewed candidate.
+
+## Deployment verified
+
+GitHub Actions run `34653063429` completed build and Pages deployment successfully for `e24cc58fdacdfa70833fa40f9fe7060169099e8b`. Fresh-browser `https://habitgame.app/` returned 200 with no page errors or failed requests. The production `Island5ThreePilot-DIyw5L96.js` contains the final V2 runtime; its code matches the reviewed local build after generated dependency filenames/import aliases are normalized. This verifies deployment and homepage startup, not signed-in gameplay or physical-phone performance. Receipts: `qa/release-20260911/deployment.json` and `live-smoke.json`. The validation waiver remains in force; failed/missing checks remain unresolved.

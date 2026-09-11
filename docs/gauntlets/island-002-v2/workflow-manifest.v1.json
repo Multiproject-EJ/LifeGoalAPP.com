@@ -1,5 +1,5 @@
 {
-  "status": "authorized-release-with-validation-waiver",
+  "status": "deployed-with-validation-waiver",
   "sourceSha256": "8ef9bd73c0edfc8350d425cf0b76ca62332800ed3aec5c4c1566a116d16dd66b",
   "branch": "codex/island-002-v2-concept-20260911",
   "scope": "Approved concept adapted to canonical board and five landmarks",
@@ -17,7 +17,7 @@
     "targetDeltaMiB": 5
   },
   "authorityNote": "User approved actual before/after and explicitly authorized live publishing when complete. No additional publishing permission is needed once release gates pass.",
-  "nextDecision": "Execute authorized main push and verify deployment.",
+  "nextDecision": "Release complete; no further publishing permission needed. Physical-device/performance follow-up remains separate.",
   "routeAuthorization": {
     "date": "2026-09-11",
     "decision": "approved-local-blender-continuous-palace-route",
@@ -36,5 +36,6 @@
     "context": "Direct reply after the failed High trace and unavailable physical iPhone check were disclosed, with an explicit waiver identified as the alternative.",
     "decision": "Publish current candidate with unresolved performance and physical-device validation; interpreted as explicit release waiver in context.",
     "scope": "This Island 002 V2 release only; does not mark the failed or missing checks as passed."
-  }
+  },
+  "deployedSha": "e24cc58fdacdfa70833fa40f9fe7060169099e8b"
 }

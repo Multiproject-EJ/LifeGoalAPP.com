@@ -1,13 +1,13 @@
 {
-  "status": "authorized-release-with-validation-waiver",
+  "status": "deployed-with-validation-waiver",
   "sourceSetSha256": "85fb46452ad8dfacb2cdc11f85eeb9f2ae67cbf200763112861ebabaed182973",
   "visualAcceptance": true,
   "performanceAcceptance": false,
   "physicalDeviceAcceptance": false,
   "releaseAcceptance": true,
   "publishingAuthorizedWhenComplete": true,
-  "pushedToMain": false,
-  "deployed": false,
+  "pushedToMain": true,
+  "deployed": true,
   "completedChecks": {
     "focused": {
       "passed": 33,
@@ -36,11 +36,12 @@
   "mediumReplay": "Timing passes, shadow-inclusive peak 252 calls / 368538 triangles requires review. Timed window does not cover all 20 rolls.",
   "lowReduced": "Pass on desktop phone viewport, not physical phone.",
   "physicalDevice": "Paired iPhone reported passcode required; Safari launch timed out. No physical-device pass.",
-  "requiredNextStep": "Push to main and verify exact-SHA deployment and live application.",
+  "requiredNextStep": "Release complete. Performance and physical-phone validation remain follow-up items, waived for this release.",
   "validationWaiver": {
     "userRequest": "great stuff, push live",
     "context": "Direct reply after the failed High trace and unavailable physical iPhone check were disclosed, with an explicit waiver identified as the alternative.",
     "decision": "Publish current candidate with unresolved performance and physical-device validation; interpreted as explicit release waiver in context.",
     "scope": "This Island 002 V2 release only; does not mark the failed or missing checks as passed."
-  }
+  },
+  "deployedSha": "e24cc58fdacdfa70833fa40f9fe7060169099e8b"
 }

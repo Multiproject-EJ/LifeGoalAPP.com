@@ -1,0 +1,20 @@
+{
+  "at": "2026-09-11T22:18:05.559Z",
+  "releaseSha": "e24cc58fdacdfa70833fa40f9fe7060169099e8b",
+  "url": "https://habitgame.app/?release=e24cc58f",
+  "status": 200,
+  "title": "HabitGame \u2014 Level Up Your Life",
+  "bodyExcerpt": "HabitGame\n\u25cf\nApp Store\nComing soon\nGoogle Play\nComing soon\n\u25c7\nInstall Web App\nAdd to Home Screen\n\nTHE COZY RPG POWERED BY YOUR REAL LIFE\n\n\u2726\nGame login\nOpens at launch \u00b7 join the waitlist\n\u2192\nJoin early access\n\u2193\n\nYOUR LIFE BECOMES THE GAME\n\nMEET YOUR GUIDE\nFollow the light.\n01 \u00b7 DO\nLive your day\n02 \u00b7 BUILD\nGrow your island\n03 \u00b7 RETURN\nKeep momentum\n\nMEET YOUR GUIDES\n\nA world that smiles back.\nYour progress is not just counted. It is welcomed, celebrated, and carried into the next part of your adventure.\nTHE CARETAKER\nA quiet welcome.\n\nA friendly guide is waiting whenever you return\u2014no perfect streak required.\n\nTHE COMPASS LIGHT\nFollow the mystery.\n\nLet the light draw you toward the next path without revealing everything at once.\n\nVISUAL DEVELOPMENT \u00b7 APPEARANCE MAY CHANGE\nTHE BUILDERS \u00b7 IN DEVELOPMENT\nProgress deserves a smile.\n\nThe builder family is being shaped to make every finished landmark feel shared.\n\nONE GLIMPSE. NO SPOILERS.\n\nSome parts of you are still waiting to be discovered.\nTh",
+  "pageErrors": [],
+  "failedRequests": [],
+  "pilotAsset": {
+    "url": "https://habitgame.app/assets/Island5ThreePilot-DIyw5L96.js",
+    "status": 200,
+    "bytes": 2547428,
+    "rawSha256": "7cf1f9e2758f5d03b09fce389f54828188190eeb037b318390a416ad1a1a8659",
+    "comparisonMethod": "Normalize dependency filenames, remove import declarations, and swap the two CI-generated Eu/Ru import aliases. The remaining runtime matches exactly.",
+    "containsFinalCourtMaterial": true,
+    "runtimeBodyMatchesLocalAfterImportAliasNormalization": true
+  },
+  "scope": "Fresh desktop Chromium mobile viewport homepage startup and production runtime code verification. No signed-in gameplay, physical-phone or performance pass claimed."
+}
