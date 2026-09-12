@@ -47,7 +47,7 @@ learns that the stars did not move—the ship did.
 
 Supabase migration:
 
-`20260728223000_add_momentum_matrix_progress.sql`
+`20260728221744_add_momentum_matrix_progress.sql`
 
 Column:
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const migrationPath =
-  'supabase/migrations/20260729181905_add_sanitized_campaign_sharing_rpc.sql';
+  'supabase/migrations/20260729191520_add_sanitized_campaign_sharing_rpc.sql';
 const migration = readFileSync(migrationPath, 'utf8').toLowerCase();
 const databaseTest = readFileSync(
   'supabase/tests/database/sanitized_campaign_sharing.test.sql',

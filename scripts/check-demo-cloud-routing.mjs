@@ -14,7 +14,7 @@ const habitMonthly = read('src/services/habitMonthlyQueries.ts');
 const habitsV2 = read('src/services/habitsV2.ts');
 const goalsRepo = read('src/data/goalsRepo.ts');
 const islandRunDebugPanel = read('src/features/gamification/level-worlds/components/IslandRunDebugPanel.tsx');
-const waitlistMigration = read('supabase/migrations/20260801204019_harden_public_launch_waitlist.sql');
+const waitlistMigration = read('supabase/migrations/20260801210228_harden_public_launch_waitlist.sql');
 
 assert.match(
   supabaseClient,

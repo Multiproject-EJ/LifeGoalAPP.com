@@ -1,5 +1,3 @@
--- Adventure League is explicitly opt-in: a player is publicly ranked only
--- while their row exists. The table contains no private profile columns.
 create table if not exists public.adventure_league_entries (
   user_id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null check (char_length(display_name) between 1 and 60),
@@ -49,11 +47,8 @@ create policy adventure_league_owner_delete
   using ((select auth.uid()) = user_id);
 
 revoke all on table public.adventure_league_entries from anon;
-revoke all on table public.adventure_league_entries from authenticated;
 grant select, insert, update, delete on table public.adventure_league_entries to authenticated;
 
--- Arena preferences are private and cross-device. Exactly one of four games
--- may be disabled (25%); the app also normalizes values defensively.
 create table if not exists public.arena_minigame_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
   ranked_event_ids jsonb not null default '["feeding_frenzy","lucky_spin","space_excavator","companion_feast"]'::jsonb,
@@ -96,5 +91,4 @@ create policy arena_preferences_owner_delete
   using ((select auth.uid()) = user_id);
 
 revoke all on table public.arena_minigame_preferences from anon;
-revoke all on table public.arena_minigame_preferences from authenticated;
 grant select, insert, update, delete on table public.arena_minigame_preferences to authenticated;
