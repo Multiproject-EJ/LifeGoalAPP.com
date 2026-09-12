@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "status": "captured-not-accepted-as-final-quality",
+  "captureManifest": "baseline-v002/capture.json",
+  "sourceSha": "e8db4af0541e356951380477d7d17d0dc5c04019",
+  "sourceSetSha256": "a01077f877282a7fed1517360685df5379d1d0f1319df1b2aad768f81c68e54b",
+  "views": [
+    "overview.png",
+    "keep.png",
+    "hatchery.png",
+    "habit.png",
+    "wisdom.png",
+    "event.png",
+    "left.png",
+    "right.png",
+    "survey.png",
+    "night.png",
+    "frostwell.png"
+  ],
+  "sourceStable": true,
+  "salvage": "Keep approved landmark identity and mechanics; revise macro dominance, terrain, planting, ocean, materials, performance and mission presentation.",
+  "goal": {
+    "path": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+    "sha256": "2b44fa140ff878f39a43d57c518d070401195bbdfa4d09048781da254ba0e206",
+    "authority": "secondary-inferred-current-proposal-not-approved",
+    "prompt": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-prompt.md",
+    "generator": "built-in image_gen",
+    "derivedFrom": "docs/gauntlets/island-003-v2/concepts/01-frostmoon-v2-goal.png"
+  },
+  "limits": "Actual dev renderer at phone viewport, overlays hidden; not signed-in HUD interaction or physical-phone evidence."
+}

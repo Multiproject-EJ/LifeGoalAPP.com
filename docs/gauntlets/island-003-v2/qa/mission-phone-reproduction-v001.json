@@ -1,0 +1,1246 @@
+{
+  "at": "2026-09-12T22:32:46.928Z",
+  "commit": "e8db4af0541e356951380477d7d17d0dc5c04019",
+  "scope": "Synthetic canonical state fixtures; no private account data, persistence writes or gameplay actions.",
+  "rows": [
+    {
+      "islandNumber": 1,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 4,
+      "objectives": [
+        {
+          "label": "Use Dynamite",
+          "value": 0,
+          "target": 10,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 4,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 1,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 4,
+      "objectives": [
+        {
+          "label": "Use Dynamite",
+          "value": 0,
+          "target": 10,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 3,
+          "target": 4,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 38,
+      "complete": false
+    },
+    {
+      "islandNumber": 1,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 4,
+      "objectives": [
+        {
+          "label": "Use Dynamite",
+          "value": 0,
+          "target": 10,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 4,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 2,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Dock Platforms",
+          "value": 0,
+          "target": 20,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 2,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Dock Platforms",
+          "value": 0,
+          "target": 20,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 2,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Dock Platforms",
+          "value": 0,
+          "target": 20,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 3,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Drill to Water",
+          "value": 0,
+          "target": 10000,
+          "displayValue": "0 / 500m",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 3,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Drill to Water",
+          "value": 0,
+          "target": 10000,
+          "displayValue": "0 / 500m",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 3,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Drill to Water",
+          "value": 0,
+          "target": 10000,
+          "displayValue": "0 / 500m",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 4,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Causeway Spans",
+          "value": 0,
+          "target": 3,
+          "displayValue": "0 / 3",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 4,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Causeway Spans",
+          "value": 0,
+          "target": 3,
+          "displayValue": "0 / 3",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 4,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Causeway Spans",
+          "value": 0,
+          "target": 3,
+          "displayValue": "0 / 3",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 5,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Defeat Guardian",
+          "value": 0,
+          "target": 1,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 5,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Defeat Guardian",
+          "value": 1,
+          "target": 1,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 90,
+      "complete": false
+    },
+    {
+      "islandNumber": 5,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Defeat Guardian",
+          "value": 1,
+          "target": 1,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 100,
+      "complete": true
+    },
+    {
+      "islandNumber": 6,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Mirrors Aligned",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 6,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Mirrors Aligned",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 6,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Mirrors Aligned",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 7,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Districts Breathing",
+          "value": 0,
+          "target": 4,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 7,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Districts Breathing",
+          "value": 0,
+          "target": 4,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 7,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Districts Breathing",
+          "value": 0,
+          "target": 4,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 8,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Compass Seals Awakened",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 8,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Compass Seals Awakened",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 8,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Compass Seals Awakened",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 9,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Systems Ignited",
+          "value": 0,
+          "target": 8,
+          "displayValue": "0 / 8",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 9,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Systems Ignited",
+          "value": 0,
+          "target": 8,
+          "displayValue": "0 / 8",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 9,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Systems Ignited",
+          "value": 0,
+          "target": 8,
+          "displayValue": "0 / 8",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 10,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Collect Parts",
+          "value": 0,
+          "target": 11,
+          "displayValue": "0 / 8",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 10,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Collect Parts",
+          "value": 0,
+          "target": 11,
+          "displayValue": "0 / 8",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 10,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Collect Parts",
+          "value": 0,
+          "target": 11,
+          "displayValue": "0 / 8",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 11,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Complete Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 11,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Complete Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 90,
+      "complete": false
+    },
+    {
+      "islandNumber": 11,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Complete Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 100,
+      "complete": true
+    },
+    {
+      "islandNumber": 12,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Search the Ruins",
+          "value": 0,
+          "target": 21,
+          "displayValue": "0 / 20",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 12,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Search the Ruins",
+          "value": 0,
+          "target": 21,
+          "displayValue": "0 / 20",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 12,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Search the Ruins",
+          "value": 0,
+          "target": 21,
+          "displayValue": "0 / 20",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 13,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Blast Rail Sections",
+          "value": 0,
+          "target": 16,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 13,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Blast Rail Sections",
+          "value": 0,
+          "target": 16,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 13,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Blast Rail Sections",
+          "value": 0,
+          "target": 16,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 14,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Fill Royal Reservoir",
+          "value": 0,
+          "target": 4,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 14,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Fill Royal Reservoir",
+          "value": 0,
+          "target": 4,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 14,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Fill Royal Reservoir",
+          "value": 0,
+          "target": 4,
+          "displayValue": "0 / 4",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 15,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Complete Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 15,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Complete Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 90,
+      "complete": false
+    },
+    {
+      "islandNumber": 15,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Complete Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 100,
+      "complete": true
+    },
+    {
+      "islandNumber": 16,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Catch Fish",
+          "value": 0,
+          "target": 100,
+          "displayValue": "Land on a 🎣 tile",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 16,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Catch Fish",
+          "value": 0,
+          "target": 100,
+          "displayValue": "Land on a 🎣 tile",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 16,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Catch Fish",
+          "value": 0,
+          "target": 100,
+          "displayValue": "Land on a 🎣 tile",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 18,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Gardens Blooming",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 18,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Gardens Blooming",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 18,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Gardens Blooming",
+          "value": 0,
+          "target": 5,
+          "displayValue": "0 / 5",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 19,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Circuit Systems Online",
+          "value": 0,
+          "target": 3,
+          "displayValue": "0 / 3",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 19,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Circuit Systems Online",
+          "value": 0,
+          "target": 3,
+          "displayValue": "0 / 3",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 19,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Circuit Systems Online",
+          "value": 0,
+          "target": 3,
+          "displayValue": "0 / 3",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Build Landmarks",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    },
+    {
+      "islandNumber": 20,
+      "activity": "unfinished",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Escape Mission Locked",
+          "value": 0,
+          "target": 13,
+          "displayValue": "Solve the labyrinth first",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Solve Level-3 Labyrinth",
+          "value": 0,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 0,
+      "complete": false
+    },
+    {
+      "islandNumber": 20,
+      "activity": "done-egg-ready",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Escape Mission Locked",
+          "value": 0,
+          "target": 13,
+          "displayValue": "Solve the labyrinth first",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Solve Level-3 Labyrinth",
+          "value": 4,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 40,
+      "complete": false
+    },
+    {
+      "islandNumber": 20,
+      "activity": "done-egg-collected",
+      "actualLevel3Buildings": 5,
+      "objectives": [
+        {
+          "label": "Escape Mission Locked",
+          "value": 0,
+          "target": 13,
+          "displayValue": "Solve the labyrinth first",
+          "completeLabel": "Complete"
+        },
+        {
+          "label": "Solve Level-3 Labyrinth",
+          "value": 5,
+          "target": 5,
+          "completeLabel": "Complete"
+        }
+      ],
+      "overallProgressPercent": 50,
+      "complete": false
+    }
+  ]
+}

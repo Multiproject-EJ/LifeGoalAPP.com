@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "status": "awaiting-direction-and-decomposition-approval",
+  "subject": "Island 003 Frostmoon Haven V2",
+  "branch": "codex/island-003-v2-20260912",
+  "baseSha": "e8db4af0541e356951380477d7d17d0dc5c04019",
+  "referencePacket": "docs/visual-references/island-003-frostmoon-v2",
+  "goalSha256": "2b44fa140ff878f39a43d57c518d070401195bbdfa4d09048781da254ba0e206",
+  "qualityGate": {
+    "minPerRequiredView": 0.85,
+    "worstViewGoverns": true,
+    "independentReviewer": true
+  },
+  "performance": {
+    "maxDrawCalls": 175,
+    "maxTriangles": 180000,
+    "minimumAverageFps": 50,
+    "maximumP95Ms": 29,
+    "maximumSlowFramesPercent": 15,
+    "physicalTargetPhoneRequired": true,
+    "waiver": null
+  },
+  "delivery": {
+    "classification": "new-base-revision",
+    "tier": "standard",
+    "targetDeltaMiB": [
+      2,
+      5
+    ],
+    "reviewAboveMiB": 8
+  },
+  "authority": {
+    "conceptAndDiscovery": true,
+    "broadImplementation": "after visual direction/decomposition approval",
+    "publish": false,
+    "merge": false,
+    "releaseWaiver": false
+  },
+  "roles": {
+    "root": "integration, manifests, serialized implementation",
+    "qualityLord": "independent bounded read-only review after representative slice"
+  },
+  "next": "Approve revised goal and 15-group scope; representative dominant Keep + frozen terrain/planting, with performance gate before detail.",
+  "expandedScope": [
+    "Full Frostwell entry/spin/drill/camera/celebration upgrade",
+    "Proposed Moonwell L3\u2192tile pickup\u2192Boil water mission",
+    "Shared mission-phone counter investigation/correction"
+  ]
+}

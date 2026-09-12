@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed-awaiting-approval",
+  "count": 15,
+  "rootOwner": "root",
+  "geometryWriters": "serialized",
+  "representativeSlice": [
+    "terrain",
+    "aurora-keep",
+    "winter-planting"
+  ],
+  "parts": [
+    {
+      "id": "terrain",
+      "parent": "island003",
+      "ownedSurfaces": "Continuous snow/rock/ice shelf and five plot attachments",
+      "dependencies": [],
+      "acceptanceCue": "Continuous organic mass; no cookie-shaped disconnected plot discs",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "shore-water",
+      "parent": "island003",
+      "ownedSurfaces": "Continuous deep frozen ocean, sealed cracks, pressure ridges and layered ice",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "No open liquid sea or floating floes",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "horizon",
+      "parent": "island003",
+      "ownedSurfaces": "Distant winter crags and world-space sky anchors",
+      "dependencies": [],
+      "acceptanceCue": "Depth without giant generic cones",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "winter-planting",
+      "parent": "island003",
+      "ownedSurfaces": "Shared instanced fir boughs, shrubs, berries and grasses",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "Varied silhouettes; clear route and landmark entrances",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "snowfeather",
+      "parent": "island003",
+      "ownedSurfaces": "Roost shell, feather roof, incubators and entry",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "Two visible eggs and warmers; cream/sage accents",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "hearthguard",
+      "parent": "island003",
+      "ownedSurfaces": "Open training court, gate, rigs and forge shelter",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "Readable exercise apparatus; charcoal/oxblood accents",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "moonwell",
+      "parent": "island003",
+      "ownedSurfaces": "Open ribs, well basin, armillary and telescope",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "Airy instrument silhouette; pale stone/patina",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "frostfire",
+      "parent": "island003",
+      "ownedSurfaces": "Octagonal archive, reading alcove, roof and fire cage",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "Squat library identity; walnut/burgundy accents",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "aurora-keep",
+      "parent": "island003",
+      "ownedSurfaces": "Continuous civic hall, roof network, turrets and service rear",
+      "dependencies": [
+        "terrain"
+      ],
+      "acceptanceCue": "Grand central hall; dark stone/crimson; route remains visible",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "frostwell-trade",
+      "parent": "island003",
+      "ownedSurfaces": "Existing drill, cutaway, iceworks and trade visual integration",
+      "dependencies": [
+        "shore-water"
+      ],
+      "acceptanceCue": "Preserve full 500m automatic commissioning and existing animation",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "ambience",
+      "parent": "island003",
+      "ownedSurfaces": "Day/blizzard/dusk/night lighting and restrained life",
+      "dependencies": [
+        "horizon",
+        "winter-planting"
+      ],
+      "acceptanceCue": "No aurora; warm night windows; quality/reduced-motion safe",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "construction",
+      "parent": "island003",
+      "ownedSurfaces": "Fifteen additive level transitions and facade rigs",
+      "dependencies": [
+        "snowfeather",
+        "hearthguard",
+        "moonwell",
+        "frostfire",
+        "aurora-keep"
+      ],
+      "acceptanceCue": "Retained funded geometry and shared commissioning beats",
+      "exclusions": [
+        "canonical route",
+        "gameplay writes",
+        "sibling geometry"
+      ],
+      "views": [
+        "overview",
+        "front",
+        "left",
+        "right",
+        "rear"
+      ],
+      "confidence": "medium; approved landmark refs, inferred terrain",
+      "sockets": "existing authored plot root; terrain owns ground collar",
+      "motion": "presentation-only where applicable",
+      "status": "proposed"
+    },
+    {
+      "id": "frostwell-experience",
+      "parent": "island003-upgrade",
+      "ownedSurfaces": "Mission-phone entry, spin tray, drill camera, payoff and celebration",
+      "dependencies": [
+        "frostwell-trade"
+      ],
+      "acceptanceCue": "Exciting readable complete loop; canonical result committed before animation",
+      "exclusions": [
+        "unrelated island geometry",
+        "alternate gameplay authority"
+      ],
+      "views": [
+        "phone-portrait",
+        "short-phone",
+        "reduced-motion"
+      ],
+      "confidence": "proposal with canonical-code investigation",
+      "sockets": "existing canonical services and scene presentation contracts",
+      "motion": "presentation-only; service owns state",
+      "status": "proposed"
+    },
+    {
+      "id": "moonwell-thermal-mission",
+      "parent": "island003-upgrade",
+      "ownedSurfaces": "L3 eligibility, reserved heat tile, canonical activation and thaw presentation",
+      "dependencies": [
+        "moonwell"
+      ],
+      "acceptanceCue": "One-time optional thaw, no lost state on cancel/reload",
+      "exclusions": [
+        "unrelated island geometry",
+        "alternate gameplay authority"
+      ],
+      "views": [
+        "phone-portrait",
+        "short-phone",
+        "reduced-motion"
+      ],
+      "confidence": "proposal with canonical-code investigation",
+      "sockets": "existing canonical services and scene presentation contracts",
+      "motion": "presentation-only; service owns state",
+      "status": "proposed"
+    },
+    {
+      "id": "mission-phone-readout",
+      "parent": "island003-upgrade",
+      "ownedSurfaces": "Shared tracker build/activity readout and matching tests",
+      "dependencies": [],
+      "acceptanceCue": "5 L3 buildings display 5/5 builds; activities and clear gates stay explicit",
+      "exclusions": [
+        "unrelated island geometry",
+        "alternate gameplay authority"
+      ],
+      "views": [
+        "phone-portrait",
+        "short-phone",
+        "reduced-motion"
+      ],
+      "confidence": "proposal with canonical-code investigation",
+      "sockets": "existing canonical services and scene presentation contracts",
+      "motion": "presentation-only; service owns state",
+      "status": "proposed"
+    }
+  ]
+}

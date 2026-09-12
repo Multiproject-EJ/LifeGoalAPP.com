@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "islandNumber": 3,
+  "status": "proposal-awaiting-user-direction",
+  "exactRuntimeBaselineCommit": "e8db4af0541e356951380477d7d17d0dc5c04019",
+  "priorPacket": "docs/visual-references/island-003-frostmoon-upgrade/manifest.v1.json",
+  "priorApprovals": ".img2threejs/island-003-frostmoon-upgrade/user-decisions.v1.jsonl",
+  "referenceIntegrity": {
+    "priorReferencesChecked": 20,
+    "mismatches": []
+  },
+  "limits": [
+    "Generated concept, not a runtime render.",
+    "Exact canonical route, locked footprints and real phone safe area override concept geometry.",
+    "V002 demonstrates central dominance and continuous frozen ocean; no liquid sea may be introduced.",
+    "Moonwell is shown in proposed post-restoration warm state; pre-activation L3 basin must be frozen.",
+    "V002 appears to omit one of the two Keep ridge rings from old goal; reconstruct against approved old references unless explicitly changed.",
+    "Existing accent palettes and hidden-side approval limits remain."
+  ],
+  "resume": "docs/gauntlets/island-003-v2/IMPLEMENTATION-STATUS.md",
+  "supersededConcepts": [
+    {
+      "path": "docs/gauntlets/island-003-v2/concepts/01-frostmoon-v2-goal.png",
+      "sha256": "f462627d2b5bf9be0374ba3bb8677fd60068df9a01b49a5dd82408d66abd9f23",
+      "authority": "secondary-inferred-unapproved-v2-proposal",
+      "prompt": "docs/gauntlets/island-003-v2/concepts/01-frostmoon-v2-goal-prompt.md",
+      "generator": "built-in image_gen",
+      "originalOutput": "/Users/ejmac/.codex/generated_images/01a097a5-21ac-7392-9eeb-a0116d48cad4/exec-2be6ed02-00f0-42a3-b4e6-0cd22366cbf2.png"
+    }
+  ],
+  "concept": {
+    "path": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+    "sha256": "2b44fa140ff878f39a43d57c518d070401195bbdfa4d09048781da254ba0e206",
+    "authority": "secondary-inferred-current-proposal-not-approved",
+    "prompt": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-prompt.md",
+    "generator": "built-in image_gen",
+    "derivedFrom": "docs/gauntlets/island-003-v2/concepts/01-frostmoon-v2-goal.png"
+  }
+}
