@@ -1,0 +1,1 @@
+Read img2threejs grimoire/review/gates_reference.md and self_correction.md completely before review. Gauntlet independent reviewer /root/build_modal_review owns .85 threshold approval; builder cannot self-approve. Full-image Tier1 mismatch is preserved, and generic full-asset pipeline completion is not claimed.

@@ -46,7 +46,7 @@ export interface IslandMissionTrackerObjective {
 export interface IslandMissionTrackerPresentation {
   registryVersion: typeof ISLAND_MISSION_TRACKER_REGISTRY_VERSION;
   briefing: IslandMissionBriefingPresentation;
-  objectives: readonly [IslandMissionTrackerObjective, IslandMissionTrackerObjective];
+  objectives: readonly IslandMissionTrackerObjective[];
   overallProgressPercent: number;
   complete: boolean;
   usesLiveSignatureProgress: boolean;
@@ -138,7 +138,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
   const landmarkCount = islandNumber === 1 ? 4 : 5;
   const landmarkProgress = resolveLandmarkProgress({ islandNumber, state, landmarkCount });
   let usesLiveSignatureProgress = true;
-  let objectives: readonly [IslandMissionTrackerObjective, IslandMissionTrackerObjective];
+  let objectives: readonly IslandMissionTrackerObjective[];
 
   switch (briefing.progressKind) {
     case 'first_light_assembly': {
@@ -149,7 +149,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
       });
       objectives = [
         objective('Use Dynamite', progress.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -167,7 +167,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
           CELESTIAL_REDOCKING_ROLL_TARGET,
           `${dockedPlatforms} / ${CELESTIAL_REDOCKING_PLATFORM_COUNT}`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -188,7 +188,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
             ? 'Done'
             : `${progress.metersDrilled} / ${FROSTWELL_DEPTH_METERS}m`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -200,7 +200,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
         );
       objectives = [
         objective('Defeat Guardian', guardianDefeated ? 1 : 0, 1),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -221,7 +221,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
             ? `${progress.buildStage} / ${ROOTHEART_POWERWORKS_MAX_STAGE}`
             : `${collectedParts} / ${ROOTHEART_POWER_COMPONENTS.length}`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -243,7 +243,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
               ? 'Ready'
               : `${progress.rollsCompleted} / ${SUNKEN_SANDS_TREASURE_ROLL_TARGET}`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -255,7 +255,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
       });
       objectives = [
         objective('Blast Rail Sections', progress.segmentsExcavated, CACTUS_CANYON_SPIRAL_MAX_SEGMENTS),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -277,7 +277,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
               ? `Nectar ready · ${progress.activatedReservoirs} / ${GREAT_HONEYFALL_MAX_STAGE}`
               : `${progress.activatedReservoirs} / ${GREAT_HONEYFALL_MAX_STAGE}`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -297,7 +297,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
             ? 'Land on a 🎣 tile'
             : `${progress.fishCaughtKg} kg / ${pounds.toFixed(1)} lb`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -356,7 +356,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
               ? `${chargesReady} ready · ${progress.activatedStages} / ${descriptor.stageCount}`
               : `${progress.activatedStages} / ${descriptor.stageCount}`,
         ),
-        objective('Build Landmarks', landmarkProgress.fullyRestored, landmarkCount),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];
       break;
     }
@@ -371,6 +371,12 @@ export function resolveIslandMissionTrackerPresentation(options: {
       usesLiveSignatureProgress = false;
       objectives = resolveStandardObjectives({ islandNumber, state, landmarkCount });
       break;
+  }
+
+  // Building upgrades and landmark activities are separate canonical goals.
+  // Keep both visible so an unfinished egg cannot erase funded build credit.
+  if (usesLiveSignatureProgress && islandNumber !== 20) {
+    objectives = [...objectives, objective('Complete Landmarks', landmarkProgress.objectivesComplete, landmarkCount)];
   }
 
   return {

@@ -1,0 +1,109 @@
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 0.6438,
+    "aspectRatioDelta": 0.3208,
+    "scaleDelta": 0.2429,
+    "bilateralSymmetryError": 0.058,
+    "colorDelta": {
+      "checked": 21,
+      "maxDeltaE": 60.18,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 14.93
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.93
+        },
+        {
+          "componentId": null,
+          "deltaE": 3.29
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.65
+        },
+        {
+          "componentId": null,
+          "deltaE": 3.29
+        },
+        {
+          "componentId": null,
+          "deltaE": 30.46
+        },
+        {
+          "componentId": null,
+          "deltaE": 51.48
+        },
+        {
+          "componentId": null,
+          "deltaE": 51.48
+        },
+        {
+          "componentId": null,
+          "deltaE": 51.48
+        },
+        {
+          "componentId": null,
+          "deltaE": 51.4
+        },
+        {
+          "componentId": null,
+          "deltaE": 51.4
+        },
+        {
+          "componentId": null,
+          "deltaE": 60.18
+        },
+        {
+          "componentId": null,
+          "deltaE": 30.46
+        },
+        {
+          "componentId": null,
+          "deltaE": 30.46
+        },
+        {
+          "componentId": null,
+          "deltaE": 51.48
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.16
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.16
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.16
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.16
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.16
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.16
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [
+    "silhouette IoU 0.644 is below threshold 0.85",
+    "aspect-ratio delta 0.321 exceeds threshold 0.05",
+    "scale delta 0.243 exceeds threshold 0.08",
+    "blockout requires --map-stripped-render evidence"
+  ],
+  "maskWarnings": [],
+  "renderHash": "a2cccce5d15eee3c",
+  "passId": "blockout"
+}

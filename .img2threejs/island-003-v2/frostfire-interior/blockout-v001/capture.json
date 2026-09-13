@@ -1,0 +1,96 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "file": "clay-0.png",
+      "angle": 0,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-1.png",
+      "angle": 0.6981317007977318,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-2.png",
+      "angle": 1.3962634015954636,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-3.png",
+      "angle": 2.0943951023931953,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-4.png",
+      "angle": 2.792526803190927,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-5.png",
+      "angle": 3.490658503988659,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-6.png",
+      "angle": 4.1887902047863905,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-7.png",
+      "angle": 4.886921905584122,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "clay-8.png",
+      "angle": 5.585053606381854,
+      "level": 2,
+      "mode": "clay",
+      "meshes": 108
+    },
+    {
+      "file": "wire.png",
+      "angle": 0.5,
+      "level": 2,
+      "mode": "wire",
+      "meshes": 108
+    },
+    {
+      "file": "beauty.png",
+      "angle": 0,
+      "level": 2,
+      "mode": "beauty",
+      "meshes": 108
+    },
+    {
+      "file": "L1.png",
+      "angle": 0,
+      "level": 1,
+      "mode": "beauty",
+      "meshes": 46
+    },
+    {
+      "file": "L3.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "beauty",
+      "meshes": 191
+    }
+  ]
+}

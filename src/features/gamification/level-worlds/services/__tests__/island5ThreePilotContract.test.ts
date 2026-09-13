@@ -439,7 +439,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
         true,
       );
       assert(start.active && start.scaleMultiplier < 1, 'commissioning should begin from a bounded visual compression');
-      assert(overshoot.scaleMultiplier > 1 && overshoot.scaleMultiplier <= 1.12, 'commissioning should overshoot without becoming a giant landmark');
+      assert(overshoot.scaleMultiplier > 1 && overshoot.scaleMultiplier <= 1.04, 'commissioning should overshoot without becoming a giant landmark');
       assertEqual(settled.active, false, 'commissioning must terminate instead of looping');
       assertEqual(settled.scaleMultiplier, 1, 'commissioning must return additive geometry to authored scale');
       assertEqual(reduced.scaleMultiplier, 1, 'reduced motion must not scale landmark geometry');
@@ -1740,8 +1740,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_OCTAGONAL_STONE_AND_TIMBER_SHELL'), 'L1 must establish the squat octagonal stone-and-timber archive shell');
       assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_DARK_TIMBER_BUTTRESS_SYSTEM'), 'L1 must establish grounded heavy timber buttresses');
       assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_FRONT_STAIR_AND_ARCHIVE_DOOR'), 'L1 must establish a broad front entry');
-      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST'), 'L1 must already read as an archive through its open-book crest');
-      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF'), 'L1 must start with the approved low warm-copper roof family');
+      assert(level1.getObjectByName('ISLAND_3_FROSTFIRE_INTERIOR_TABLE_OPEN_BOOK'), 'L1 must already read as an archive through its usable reading table and open book');
+      assert(!level1.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST'), 'the roof-mounted crest belongs to final L3 enclosure');
+      assert(!level1.getObjectByName('ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF'), 'L1 must expose its interior construction before the final roof');
+      assert(!level2.getObjectByName('ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF'), 'L2 must keep the reading room visible until final L3 enclosure');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF'), 'L3 completes the approved low warm-copper roof');
+      assert(level3.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST'), 'the final roof carries the archive crest');
       assert(!level1.getObjectByName('ISLAND_3_FROSTFIRE_READING_WINDOW_SYSTEM'), 'paired reading windows remain an L2 operational upgrade');
       assert(level2.getObjectByName('ISLAND_3_FROSTFIRE_READING_WINDOW_SYSTEM'), 'L2 must add paired warm reading windows');
       assert(level2.getObjectByName('ISLAND_3_FROSTFIRE_EXTERIOR_READING_ALCOVE'), 'L2 must add the sheltered public reading alcove');
@@ -1758,7 +1762,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const level1Size = new THREE.Box3().setFromObject(level1).getSize(new THREE.Vector3());
       const level2Size = new THREE.Box3().setFromObject(level2).getSize(new THREE.Vector3());
       const level3Size = new THREE.Box3().setFromObject(level3).getSize(new THREE.Vector3());
-      assert(level2Size.y > level1Size.y, 'L2 chimney and fuller shell must create a stronger operational silhouette');
+      assert(level2Size.y > level1Size.y, 'L2 fuller rear enclosure must create a stronger operational silhouette');
       assert(level3Size.y > level2Size.y, 'L3 open frostfire stack must complete the restored vertical silhouette');
       assert(level3Size.x <= 3.7 && level3Size.z <= 3.7, 'Frostfire Archive must stay inside its compact satellite-landmark envelope');
       assert(materials.indigoLight.color.r > materials.indigoLight.color.b, 'Frostfire roof metal must remain warm copper rather than blue');
@@ -3042,7 +3046,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes("canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3)"), 'live QA must expose the resolved building-aware miniature scale');
       assert(pilotSource.includes('completionCelebration: next?.completionCelebration ?? false'), 'the live renderer must forward the fully-built victory state to the robot theatre');
       assert(theatreSource.includes("isCompletionCelebration") && theatreSource.includes("? 'celebrate'"), 'all three robots must use their authored celebration motion in the fully-built state');
-      assert(pilotSource.includes('const proudJump = revealSeconds < 0.7') && pilotSource.includes('const landingJiggle ='), 'the newly completed authored level should perform a proud jump and damped landing jiggle');
+      assert(!pilotSource.includes('const proudJump =') && !pilotSource.includes('const landingJiggle ='), 'funded structures stay grounded with no stacked jump or scale pulse');
+      assert(pilotSource.includes('constructionStageBuilding.visible = isActive;'), 'final celebration must retain the same scaled preview');
+      assert(!pilotSource.includes('constructionSourceRoot.visible = Boolean('), 'final celebration must never swap to the larger board root');
       assert(theatreSource.includes('keepMiniatureCrewInPhoneForecourt(targetPosition, role)'), 'the physical-phone crew must stay in distinct camera-facing work lanes instead of disappearing beyond the modal crop');
       assert(!theatreSource.includes('const workPulse ='), 'working robot roots must remain stabilized; vibration belongs to explicit contact tools only');
       assert(theatreSource.includes('const contactVibration = TOOL_CONTACT_VIBRATION[toolId]'), 'drill, saw and impact vibration must remain localized to the active tool');

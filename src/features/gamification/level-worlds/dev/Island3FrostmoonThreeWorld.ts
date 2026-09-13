@@ -1342,40 +1342,183 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
   group.userData.sculptRuntime = {
     clickable: true,
     explodable: true,
-    representativeSlice: 'frostfire-archive-l3-v001',
-    parts: ['foundation', 'octagonal-shell', 'buttress-system', 'entry', 'reading-windows', 'reading-alcove', 'archive-shelves', 'radial-copper-roof', 'book-crest', 'frostfire-stack', 'rear-furnace', 'rear-document-chests', 'rear-tools-and-logs', 'roof-finish'],
+    representativeSlice: 'frostfire-interior-first-v002',
+    parts: ['foundation', 'octagonal-shell', 'buttress-system', 'entry', 'reading-windows', 'reading-alcove', 'archive-shelves', 'radial-copper-roof', 'book-crest', 'frostfire-stack', 'rear-furnace', 'rear-document-chests', 'rear-tools-and-logs', 'roof-finish', 'interior-floor', 'interior-reading-table', 'interior-hearth', 'interior-shelf-banks', 'interior-reading-benches'],
     sockets: {
       doorHinge: 'ISLAND_3_FROSTFIRE_ARCHIVE_MAIN_DOOR',
       frostfireFx: 'ISLAND_3_FROSTFIRE_STACK_FLAME',
       furnaceFx: 'ISLAND_3_FROSTFIRE_REAR_FURNACE_GLOW',
+      interiorHearth: 'ISLAND_3_FROSTFIRE_INTERIOR_HEARTH_FIRE',
+      readingTable: 'ISLAND_3_FROSTFIRE_INTERIOR_READING_TABLE',
     },
   };
   addFoundation(group, 1.42, materials, quality);
 
-  const shellRadius = level === 1 ? 0.78 : level === 2 ? 0.88 : 0.96;
-  const shellHeight = level === 1 ? 0.68 : level === 2 ? 0.84 : 0.98;
+  // Funded courses share one envelope: later levels add structure, never resize
+  // the room or bury its furnishings inside a second solid cylinder.
+  const shellRadius = 0.96;
+  const shellHeight = 0.98;
   const shellBaseY = 0.42;
   const shellTopY = shellBaseY + shellHeight;
   const shell = createFrostfirePart('ISLAND_3_FROSTFIRE_OCTAGONAL_STONE_AND_TIMBER_SHELL');
-  const stoneCourse = cylinder(shellRadius + 0.04, shellRadius + 0.1, 0.38, materials.frostRockDark, 8);
-  stoneCourse.position.y = shellBaseY + 0.19;
-  stoneCourse.rotation.y = Math.PI / 8;
-  const timberWall = cylinder(shellRadius, shellRadius + 0.035, shellHeight - 0.22, materials.timberDark, 8);
-  timberWall.position.y = shellBaseY + 0.2 + (shellHeight - 0.22) / 2;
-  timberWall.rotation.y = Math.PI / 8;
-  const copperWallBand = cylinder(shellRadius + 0.025, shellRadius + 0.025, 0.075, materials.indigoLight, 8);
-  copperWallBand.position.y = shellTopY - 0.08;
-  copperWallBand.rotation.y = Math.PI / 8;
-  shell.add(stoneCourse, timberWall, copperWallBand);
+  const wallApothem = shellRadius * Math.cos(Math.PI / 8);
+  const wallWidth = 2 * shellRadius * Math.sin(Math.PI / 8) + 0.035;
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index * Math.PI / 4;
+    const wall = createFrostfirePart(`ISLAND_3_FROSTFIRE_WALL_PANEL_${index}`);
+    wall.position.set(Math.cos(angle) * wallApothem, 0, Math.sin(angle) * wallApothem);
+    wall.rotation.y = Math.PI / 2 - angle;
+    wall.userData.frostfireCutaway = Math.sin(angle) > 0.1 ? 'near-wall' : 'wall';
+    // The front bay is a real doorway. Its two jambs retain a walk-through gap.
+    const spans = index === 2 ? [-1, 1] : [0];
+    // The open front is real unfinished architecture until the last L3 stage.
+    const isFinalEnclosure = index >= 1 && index <= 3;
+    const hasUpperWall = level === 3 || (level >= 2 && !isFinalEnclosure);
+    spans.forEach((side) => {
+      const width = side ? 0.16 : wallWidth;
+      const x = side * (wallWidth / 2 - 0.08);
+      const stone = box(width, 0.28, 0.13, materials.frostRockDark);
+      stone.position.set(x, shellBaseY + 0.14, 0);
+      stone.userData.constructionStage = 1;
+      wall.add(stone);
+      if (hasUpperWall) {
+        const timber = box(width, 0.7, 0.1, materials.timberDark);
+        timber.position.set(x, 1.05, 0);
+        timber.userData.constructionStage = isFinalEnclosure ? 5 : 2;
+        wall.add(timber);
+      }
+    });
+    if (hasUpperWall) {
+      const band = box(wallWidth, 0.075, 0.135, materials.indigoLight);
+      band.position.y = shellTopY - 0.04;
+      band.userData.constructionStage = isFinalEnclosure ? 5 : 2;
+      wall.add(band);
+    }
+    shell.add(wall);
+  }
   group.add(shell);
+  const floor = createFrostfirePart('ISLAND_3_FROSTFIRE_INTERIOR_STONE_FLOOR');
+  const floorSlab = cylinder(0.85, 0.85, 0.06, materials.frostRock, 8);
+  floorSlab.rotation.y = Math.PI / 8;
+  floorSlab.position.y = 0.48;
+  floorSlab.userData.constructionStage = 1;
+  floor.add(floorSlab);
+  group.add(floor);
+
+  const interior = createFrostfirePart('ISLAND_3_FROSTFIRE_INTERIOR_READING_ROOM');
+  interior.userData.sculptRuntime = { clickable: true, explodable: true, floorY: 0.51 };
+  const table = createFrostfirePart('ISLAND_3_FROSTFIRE_INTERIOR_READING_TABLE');
+  const tableBase = cylinder(0.17, 0.2, 0.19, materials.timberDark, 8);
+  tableBase.position.y = 0.605;
+  const tableTop = cylinder(0.28, 0.28, 0.065, materials.timber, 8);
+  tableTop.position.y = 0.7325;
+  table.add(tableBase, tableTop);
+  const readingBook = addFrostfireOpenBook(table, 'ISLAND_3_FROSTFIRE_INTERIOR_TABLE_OPEN_BOOK', 0, 0.8, 0.025, 0.75, materials);
+  readingBook.rotation.x = -Math.PI / 2;
+  if (level === 3) {
+    const tableRim = new THREE.Mesh(new THREE.TorusGeometry(0.265, 0.013, 4, 8), materials.brass);
+    tableRim.rotation.x = Math.PI / 2;
+    tableRim.position.y = 0.77;
+    table.add(tableRim);
+  }
+  table.traverse((part) => { if (part instanceof THREE.Mesh) part.userData.constructionStage = 3; });
+  interior.add(table);
+  if (level >= 2) {
+    const hearth = createFrostfirePart('ISLAND_3_FROSTFIRE_INTERIOR_REAR_HEARTH');
+    const hearthBase = box(0.46, 0.08, 0.27, materials.frostRockDark);
+    hearthBase.position.set(0, 0.55, -0.61);
+    const mantle = box(0.47, 0.11, 0.24, materials.frostRock);
+    mantle.position.set(0, 1.05, -0.65);
+    [-1, 1].forEach((side) => {
+      const pier = box(0.1, 0.45, 0.22, materials.frostRockDark);
+      pier.position.set(side * 0.175, 0.805, -0.65);
+      hearth.add(pier);
+    });
+    const back = box(0.26, 0.45, 0.05, materials.timberDark);
+    back.position.set(0, 0.805, -0.75);
+    hearth.add(hearthBase, mantle, back);
+    hearth.traverse((part) => { if (part instanceof THREE.Mesh) part.userData.constructionStage = 2; });
+    const fire = createFrostfirePart('ISLAND_3_FROSTFIRE_INTERIOR_HEARTH_FIRE');
+    const embers = box(0.22, 0.045, 0.13, materials.windowGlow);
+    embers.position.set(0, 0.61, -0.62);
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.22, 6), materials.windowGlow);
+    flame.position.set(0, 0.735, -0.63);
+    fire.add(embers, flame);
+    fire.traverse((part) => { if (part instanceof THREE.Mesh) part.userData.constructionStage = 4; });
+    hearth.add(fire);
+    // One local hearth fill separates room furniture without washing the snow.
+    const hearthLight = new THREE.PointLight(0xffc082, quality === 'low' ? 0.8 : 1.15, 2.5, 1.35);
+    hearthLight.name = 'ISLAND_3_FROSTFIRE_INTERIOR_HEARTH_LIGHT';
+    hearthLight.position.set(0, 1.18, -0.32);
+    hearth.add(hearthLight);
+    if (level === 3) {
+      const hanging = box(0.23, 0.23, 0.018, materials.banner);
+      hanging.position.set(0, 1.22, -0.77);
+      hanging.userData.constructionStage = 2;
+      hearth.add(hanging);
+    }
+    interior.add(hearth);
+    [-1, 1].forEach((side) => {
+      const bank = createFrostfirePart(`ISLAND_3_FROSTFIRE_INTERIOR_SHELF_BANK_${side}`);
+      bank.position.set(side * 0.51, 0, -0.43);
+      bank.rotation.y = side * Math.PI / 4;
+      const backing = box(0.42, 0.65, 0.1, materials.timberDark);
+      backing.position.y = 0.835;
+      bank.add(backing);
+      const rowCount = level === 3 ? 3 : 2;
+      for (let row = 0; row < rowCount; row += 1) {
+        const shelf = box(0.44, 0.035, 0.16, materials.timber);
+        shelf.position.set(0, 0.56 + row * 0.2, 0.075);
+        bank.add(shelf);
+        const count = quality === 'low' ? 3 : 5;
+        for (let book = 0; book < count; book += 1) {
+          const volume = box(0.045, 0.11 + (book % 2) * 0.035, 0.08, book % 3 === 0 ? materials.paper : book % 2 ? materials.banner : materials.timber);
+          volume.position.set(-0.16 + book * (0.32 / (count - 1)), 0.6325 + row * 0.2 + (book % 2) * 0.0175, 0.11);
+          bank.add(volume);
+        }
+      }
+      bank.traverse((part) => { if (part instanceof THREE.Mesh) part.userData.constructionStage = 3; });
+      interior.add(bank);
+      const bench = createFrostfirePart(`ISLAND_3_FROSTFIRE_INTERIOR_READING_BENCH_${side}`);
+      const seat = box(0.16, 0.065, 0.38, materials.timber);
+      seat.position.set(side * 0.5, 0.69, 0.13);
+      const base = box(0.12, 0.1475, 0.3, materials.timberDark);
+      base.position.set(side * 0.5, 0.58375, 0.13);
+      bench.add(seat, base);
+      const cushion = box(0.165, 0.055, 0.32, materials.banner);
+      cushion.position.set(side * 0.5, 0.75, 0.13);
+      bench.add(cushion);
+      if (level === 3) {
+        const backRest = box(0.045, 0.18, 0.34, materials.banner);
+        backRest.position.set(side * 0.59, 0.81, 0.13);
+        bench.add(backRest);
+      }
+      bench.traverse((part) => { if (part instanceof THREE.Mesh) part.userData.constructionStage = 4; });
+      interior.add(bench);
+    });
+  }
+  // Pale pages and bronze lamps carry the interior read at the real phone POV.
+  if (level === 3) {
+    const lamp = createFrostfirePart('ISLAND_3_FROSTFIRE_INTERIOR_READING_LAMP');
+    const foot = cylinder(0.055, 0.065, 0.035, materials.brass, 8);
+    foot.position.set(-0.17, 0.79, -0.12);
+    const stem = cylinder(0.017, 0.017, 0.12, materials.brass, 6);
+    stem.position.set(-0.17, 0.8675, -0.12);
+    const glass = cylinder(0.035, 0.035, 0.065, materials.windowGlow, 6);
+    glass.position.set(-0.17, 0.96, -0.12);
+    lamp.add(foot, stem, glass);
+    lamp.traverse((part) => { if (part instanceof THREE.Mesh) part.userData.constructionStage = 4; });
+    interior.add(lamp);
+  }
+  group.add(interior);
 
   const buttresses = createFrostfirePart('ISLAND_3_FROSTFIRE_DARK_TIMBER_BUTTRESS_SYSTEM');
-  const buttressCount = level === 1 ? 4 : 8;
+  const buttressCount = 8;
   for (let index = 0; index < buttressCount; index += 1) {
     const angle = index / buttressCount * Math.PI * 2 + Math.PI / 8;
     const low = new THREE.Vector3(Math.cos(angle) * (shellRadius + 0.19), 0.48, Math.sin(angle) * (shellRadius + 0.19));
     const high = new THREE.Vector3(Math.cos(angle) * (shellRadius + 0.05), shellTopY - 0.04, Math.sin(angle) * (shellRadius + 0.05));
-    addHearthguardBeam(buttresses, low, high, level === 3 ? 0.075 : 0.065, materials.timberDark);
+    addHearthguardBeam(buttresses, low, high, 0.075, materials.timberDark);
     const foot = box(0.2, 0.24, 0.2, materials.frostRockDark);
     foot.position.copy(low);
     foot.position.y = 0.53;
@@ -1388,25 +1531,30 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
   group.add(buttresses);
 
   const entry = createFrostfirePart('ISLAND_3_FROSTFIRE_FRONT_STAIR_AND_ARCHIVE_DOOR');
-  const stepCount = level === 1 ? 2 : level === 2 ? 3 : 4;
+  const stepCount = 4;
   for (let index = 0; index < stepCount; index += 1) {
     const step = box(0.64 + index * 0.14, 0.1, 0.23, index % 2 ? materials.frostRock : materials.frostRockDark);
     step.position.set(0, 0.46 - index * 0.055, shellRadius + 0.13 + index * 0.13);
     entry.add(step);
   }
-  const door = box(level === 3 ? 0.48 : 0.4, level === 3 ? 0.68 : 0.58, 0.1, materials.timber);
+  const door = box(0.48, 0.68, 0.1, materials.timber);
   door.name = 'ISLAND_3_FROSTFIRE_ARCHIVE_MAIN_DOOR';
   door.position.set(0, 0.78, shellRadius + 0.045);
-  const doorFrame = new THREE.Mesh(new THREE.TorusGeometry(level === 3 ? 0.33 : 0.28, 0.055, 6, quality === 'high' ? 24 : 16), materials.indigoLight);
+  const doorFrame = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.055, 6, quality === 'high' ? 24 : 16), materials.indigoLight);
   doorFrame.position.set(0, 0.89, shellRadius + 0.1);
   doorFrame.scale.y = 1.12;
-  entry.add(door, doorFrame);
-  [-1, 1].forEach((side) => {
+  entry.add(doorFrame);
+  if (level === 3) {
+    door.userData.constructionStage = 5;
+    entry.add(door);
+  }
+  if (level === 3) [-1, 1].forEach((side) => {
     const hinge = box(0.17, 0.045, 0.13, materials.brass);
     hinge.position.set(side * 0.14, 0.69 + (side + 1) * 0.08, shellRadius + 0.11);
+    hinge.userData.constructionStage = 5;
     entry.add(hinge);
   });
-  if (level >= 2) [-1, 1].forEach((side) => addLantern(entry, side * 0.38, 0.92, shellRadius + 0.14, materials, level === 3 ? 0.72 : 0.58));
+  if (level >= 2) [-1, 1].forEach((side) => addLantern(entry, side * 0.38, 0.92, shellRadius + 0.14, materials, 0.72));
   if (level === 3 && quality === 'high') {
     const entryLight = new THREE.PointLight(0xffa45c, 0.68, 2.25, 1.9);
     entryLight.name = 'ISLAND_3_FROSTFIRE_ARCHIVE_ENTRY_WARM_LIGHT';
@@ -1415,13 +1563,13 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
   }
   group.add(entry);
 
-  const crestScale = level === 1 ? 0.75 : level === 2 ? 0.98 : 1.28;
-  addFrostfireOpenBook(group, 'ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST', 0, shellTopY + 0.11, shellRadius + 0.2, crestScale, materials, true);
+  const crestScale = 1.28;
+  if (level === 3) addFrostfireOpenBook(group, 'ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST', 0, shellTopY + 0.11, shellRadius + 0.2, crestScale, materials, true);
 
   const roof = createFrostfirePart('ISLAND_3_FROSTFIRE_LOW_RADIAL_COPPER_ROOF');
-  const roofHeight = level === 1 ? 0.3 : level === 2 ? 0.37 : 0.43;
+  const roofHeight = 0.43;
   const roofBottomRadius = shellRadius + 0.2;
-  const roofTopRadius = level === 1 ? 0.29 : level === 2 ? 0.34 : 0.39;
+  const roofTopRadius = 0.39;
   const roofBody = new THREE.Mesh(new THREE.CylinderGeometry(roofTopRadius, roofBottomRadius, roofHeight, 8), materials.indigoLight);
   roofBody.name = 'ISLAND_3_FROSTFIRE_RADIAL_COPPER_ROOF_BODY';
   roofBody.position.y = shellTopY + roofHeight / 2 - 0.02;
@@ -1432,23 +1580,23 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
   eave.rotation.z = Math.PI / 8;
   eave.position.y = shellTopY - 0.01;
   roof.add(eave);
-  group.add(roof);
+  if (level === 3) group.add(roof);
 
   if (level >= 2) {
     const windows = createFrostfirePart('ISLAND_3_FROSTFIRE_READING_WINDOW_SYSTEM');
-    addFrostfireWindow(windows, 'ISLAND_3_FROSTFIRE_READING_WINDOW_LEFT', -shellRadius - 0.035, 0.89, 0.08, -Math.PI / 2, materials, level === 3 ? 1 : 0.82);
-    addFrostfireWindow(windows, 'ISLAND_3_FROSTFIRE_READING_WINDOW_RIGHT', shellRadius + 0.035, 0.89, 0.08, Math.PI / 2, materials, level === 3 ? 1 : 0.82);
+    addFrostfireWindow(windows, 'ISLAND_3_FROSTFIRE_READING_WINDOW_LEFT', -shellRadius - 0.035, 0.89, 0.08, -Math.PI / 2, materials, 1);
+    addFrostfireWindow(windows, 'ISLAND_3_FROSTFIRE_READING_WINDOW_RIGHT', shellRadius + 0.035, 0.89, 0.08, Math.PI / 2, materials, 1);
     group.add(windows);
 
     const alcove = createFrostfirePart('ISLAND_3_FROSTFIRE_EXTERIOR_READING_ALCOVE');
     const alcoveX = -0.78;
     const canopy = box(0.72, 0.1, 0.43, materials.indigoLight);
-    canopy.position.set(alcoveX, level === 3 ? 1.33 : 1.2, shellRadius + 0.2);
+    canopy.position.set(alcoveX, 1.33, shellRadius + 0.2);
     canopy.rotation.x = -0.08;
     alcove.add(canopy);
     [-1, 1].forEach((side) => {
-      const post = box(0.075, level === 3 ? 0.76 : 0.61, 0.075, materials.timberDark);
-      post.position.set(alcoveX + side * 0.32, level === 3 ? 0.88 : 0.81, shellRadius + 0.33);
+      const post = box(0.075, 0.76, 0.075, materials.timberDark);
+      post.position.set(alcoveX + side * 0.32, 0.88, shellRadius + 0.33);
       alcove.add(post);
     });
     const counter = box(0.7, 0.1, 0.28, materials.timber);
@@ -1458,7 +1606,7 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
 
     const shelves = createFrostfirePart('ISLAND_3_FROSTFIRE_ARCHIVE_SHELVES_BOOKS_AND_CHARTS');
     const rows = level === 3 ? 3 : 2;
-    const bookCount = quality === 'low' ? 4 : level === 3 ? 7 : 5;
+    const bookCount = quality === 'low' ? 4 : 7;
     for (let row = 0; row < rows; row += 1) {
       const shelf = box(0.58, 0.055, 0.12, materials.timber);
       shelf.position.set(-0.78, 0.74 + row * 0.19, shellRadius + 0.18);
@@ -1498,7 +1646,7 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
     }
   }
   if (level === 3) addIcicles(roofFinish, 1.36, shellTopY - 0.03, roofBottomRadius * 0.78, materials, quality);
-  group.add(roofFinish);
+  if (level === 3) group.add(roofFinish);
 
   const stack = createFrostfirePart(level === 3 ? 'ISLAND_3_FROSTFIRE_OPEN_LANTERN_STACK' : 'ISLAND_3_FROSTFIRE_CAPPED_CHIMNEY');
   const curbY = shellTopY + roofHeight - 0.01;
@@ -1542,7 +1690,7 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
     cap.position.y = chimney.position.y + (level === 2 ? 0.28 : 0.21);
     stack.add(chimney, cap);
   }
-  group.add(stack);
+  if (level === 3) group.add(stack);
 
   if (level === 3) {
     const furnace = createFrostfirePart('ISLAND_3_FROSTFIRE_REAR_FURNACE_AND_CAPPED_FLUE');
@@ -1594,6 +1742,11 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
     });
     group.add(service);
   }
+  [roof, roofFinish, stack, group.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST')].forEach((part) => {
+    if (!part) return;
+    part.userData.frostfireCutaway = 'roof';
+    part.traverse((child) => { if (child instanceof THREE.Mesh) child.userData.constructionStage = 5; });
+  });
   return group;
 }
 

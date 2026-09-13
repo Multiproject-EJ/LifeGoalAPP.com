@@ -1,0 +1,16 @@
+{
+  "reviewer": "/root/build_modal_review",
+  "family": "open-front-construction-courtyard",
+  "action": "approve-macro-layout",
+  "minimumScore": 0.85,
+  "threshold": 0.85,
+  "views": {
+    "front": 0.86,
+    "plus40": 0.89,
+    "minus40": 0.85,
+    "rear": "coherent wall and supports"
+  },
+  "scope": "Macro layout and staged open room only; not final material or phone quality.",
+  "requiredNext": "Improve near-black interior readability with cream open book, warm hearth, walnut shelves and burgundy benches; verify normal phone construction POV.",
+  "detailPermission": true
+}

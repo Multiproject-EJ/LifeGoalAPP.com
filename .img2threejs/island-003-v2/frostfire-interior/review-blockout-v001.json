@@ -1,0 +1,17 @@
+{
+  "reviewer": "/root/build_modal_review",
+  "action": "retire-family",
+  "family": "opaque-full-height-L2",
+  "worstScore": 0.35,
+  "threshold": 0.85,
+  "failedViews": [
+    "clay-0",
+    "clay-1",
+    "clay-8",
+    "L2-beauty"
+  ],
+  "veto": "Interior floor/table/furniture arrangement occluded by opaque full-height foreground wall.",
+  "scope": "Closed L2 presentation only; preserve approved exterior L3.",
+  "nextFamily": "Open front construction courtyard with upper front infill and roof deferred to L3 stage5",
+  "detailPermission": false
+}

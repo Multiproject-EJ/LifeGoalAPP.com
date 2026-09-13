@@ -1,0 +1,21 @@
+FAIL
+warning: quality: detailInventory detail 'octagonal-floor-contact' has unknown kind 'structure'
+warning: quality: detailInventory detail 'rear-hearth-opening' has unknown kind 'structure'
+warning: quality: detailInventory detail 'shelf-row-spacing' has unknown kind 'structure'
+warning: quality: detailInventory detail 'octagonal-table-edge' has unknown kind 'structure'
+warning: quality: detailInventory detail 'paired-bench-clearance' has unknown kind 'structure'
+error: component 'interior-floor' primitive must be one of: box, capsule, cone, curve-sweep, cylinder, ellipsoid, extrude, ground-blade, instanced-cluster, lathe, plane-card, sphere, torus, tube
+error: component 'interior-floor' references missing evidence 'docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png'
+error: component 'interior-hearth' primitive must be one of: box, capsule, cone, curve-sweep, cylinder, ellipsoid, extrude, ground-blade, instanced-cluster, lathe, plane-card, sphere, torus, tube
+error: component 'interior-hearth' references missing evidence 'docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png'
+error: component 'interior-shelf-banks' primitive must be one of: box, capsule, cone, curve-sweep, cylinder, ellipsoid, extrude, ground-blade, instanced-cluster, lathe, plane-card, sphere, torus, tube
+error: component 'interior-shelf-banks' references missing evidence 'docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png'
+error: component 'interior-reading-table' primitive must be one of: box, capsule, cone, curve-sweep, cylinder, ellipsoid, extrude, ground-blade, instanced-cluster, lathe, plane-card, sphere, torus, tube
+error: component 'interior-reading-table' references missing evidence 'docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png'
+error: component 'interior-reading-benches' primitive must be one of: box, capsule, cone, curve-sweep, cylinder, ellipsoid, extrude, ground-blade, instanced-cluster, lathe, plane-card, sphere, torus, tube
+error: component 'interior-reading-benches' references missing evidence 'docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png'
+error: strict quality failure: detailInventory detail 'octagonal-floor-contact' has unknown kind 'structure'
+error: strict quality failure: detailInventory detail 'rear-hearth-opening' has unknown kind 'structure'
+error: strict quality failure: detailInventory detail 'shelf-row-spacing' has unknown kind 'structure'
+error: strict quality failure: detailInventory detail 'octagonal-table-edge' has unknown kind 'structure'
+error: strict quality failure: detailInventory detail 'paired-bench-clearance' has unknown kind 'structure'

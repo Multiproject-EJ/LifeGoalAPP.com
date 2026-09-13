@@ -1,0 +1,33 @@
+{
+  "reviewer": "build_modal_review",
+  "action": "approve",
+  "scope": "Bounded Frostfire Archive furnished interior and final roof states at the captured 390x844 construction-preview POV; not whole-island or release approval.",
+  "pixelFirst": true,
+  "threshold": 0.85,
+  "worstScore": 0.85,
+  "sourceCorrespondence": {
+    "verifiedAgainstCurrentFiles": true,
+    "startEndHashesMatch": true,
+    "allFourPngHashesMatch": true,
+    "manifest": "capture.json"
+  },
+  "scores": {
+    "L2-to-L3-interior.png": { "roomReadability": 0.86, "furnitureSeparation": 0.85, "visibleContact": 0.86, "exteriorContinuity": 0.88 },
+    "L2-to-L3-interior-later.png": { "roomReadability": 0.87, "furnitureSeparation": 0.86, "visibleContact": 0.86, "exteriorContinuity": 0.88 },
+    "L3-roof-closed.png": { "roofReadability": 0.88, "enclosureClosure": 0.88, "visibleContact": 0.86, "exteriorContinuity": 0.87 },
+    "L3-roof-closed-later.png": { "roofReadability": 0.88, "enclosureClosure": 0.88, "visibleContact": 0.86, "exteriorContinuity": 0.87 }
+  },
+  "findings": [
+    "Interior no longer reads as a black empty enclosure: two book banks, central horizontal open book/table, rear hearth and burgundy seating are distinguishable.",
+    "The table book appears seated horizontally; no visible floating furniture or structural separation is apparent at this capture scale.",
+    "Both interior frames retain an open front and absent main roof; both completed frames close the front and show coherent roof, book crest and lantern stack.",
+    "No hare occludes the room in either supplied interior frame. Ground and exterior reading bay remain coherent across the supplied states."
+  ],
+  "limits": [
+    "These are static development preview captures with working=0 at progress 0.6 and 1, not a timed recording of the live hold-to-build modal.",
+    "The frames establish readable end states, not the requested approximate 50 percent interior construction duration or roof-last timing throughout the transition.",
+    "The room is compact at phone scale; fine book text and upholstery detail are not readable and were not required for this bounded gate.",
+    "No physical mobile device, reduced-motion, performance, full modal control overlap, or whole-island visual approval is included.",
+    "Exterior continuity is assessed against the inherited runtime form; this is not full likeness approval against the exploded concept reference."
+  ]
+}

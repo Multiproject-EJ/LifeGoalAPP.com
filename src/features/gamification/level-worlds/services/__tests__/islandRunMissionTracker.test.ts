@@ -42,6 +42,22 @@ function restoredStops(count = 5) {
 
 export const islandRunMissionTrackerTests: TestCase[] = [
   {
+    name: 'mission phones preserve all L3 build credit while activities remain unfinished',
+    run: () => {
+      for (const islandNumber of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19]) {
+        const state = makeState({ currentIslandNumber: islandNumber, stopBuildStateByIndex: restoredStops().stopBuildStateByIndex });
+        const tracker = resolveIslandMissionTrackerPresentation({ islandNumber, state });
+        const builds = tracker.objectives.find(item => item.label === 'Build Landmarks');
+        const activities = tracker.objectives.find(item => item.label === 'Complete Landmarks');
+        assertEqual(builds?.value, islandNumber === 1 ? 4 : 5, `Island ${islandNumber} displays funded L3 buildings`);
+        assertEqual(activities?.value, 0, `Island ${islandNumber} displays unfinished activities separately`);
+        assertEqual(tracker.complete, false, 'building upgrades alone never complete the mission');
+        const other = resolveIslandMissionTrackerPresentation({ islandNumber, state: { ...state, currentIslandNumber: 99 } });
+        assertEqual(other.objectives.find(item => item.label === 'Build Landmarks')?.value, 0, 'another island cannot borrow active build credit');
+      }
+    },
+  },
+  {
     name: 'mission registry aligns every authored production world with its approved header',
     run: () => {
       const expected = [
@@ -268,7 +284,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
       assertEqual(tracker.objectives[0].label, 'Use Dynamite', 'Assembly objective uses compact approved copy');
       assertEqual(tracker.objectives[0].value, 3, 'detonation progress comes from canonical mission state');
       assertEqual(tracker.objectives[1].value, 4, 'all four outer objectives, builds and the egg are complete');
-      assertEqual(tracker.overallProgressPercent, 65, 'overall progress averages the two visible objectives');
+      assertEqual(tracker.overallProgressPercent, 77, 'overall progress includes the separate activities row');
 
       const unresolvedEgg = resolveIslandMissionTrackerPresentation({
         islandNumber: 1,
@@ -277,7 +293,9 @@ export const islandRunMissionTrackerTests: TestCase[] = [
           perIslandEggs: { '1': { tier: 'common', setAtMs: 1, hatchAtMs: 2, status: 'ready' } },
         }),
       });
-      assertEqual(unresolvedEgg.objectives[1].value, 3, 'Hatchery is not counted before its egg is collected or sold');
+      assertEqual(unresolvedEgg.objectives[1].value, 4, 'a ready egg does not erase a completed building');
+      assertEqual(unresolvedEgg.objectives[2].value, 3, 'Hatchery activity waits for its egg to be collected or sold');
+      assertEqual(unresolvedEgg.complete, false, 'unfinished activities still prevent mission completion');
     },
   },
   {

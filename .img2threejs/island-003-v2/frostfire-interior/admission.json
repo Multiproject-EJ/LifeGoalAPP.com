@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "reference",
+    "sourcePath": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png",
+    "width": 1536,
+    "height": 1024,
+    "foregroundCoverage": 0.4772,
+    "largestComponentFraction": 1.0,
+    "pHash": 16845977120339042434,
+    "duplicateOfHash": null
+  }
+}

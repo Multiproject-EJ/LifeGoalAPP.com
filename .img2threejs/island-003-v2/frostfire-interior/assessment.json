@@ -1,0 +1,246 @@
+{
+  "objectClass": {
+    "primaryType": "stylized winter archive landmark",
+    "primaryDomain": "object",
+    "formLanguage": [
+      "architectural",
+      "hard-surface",
+      "octagonal",
+      "radial-low-roof"
+    ],
+    "structureKind": [
+      "compound-object",
+      "layered-shell",
+      "repeated-modules",
+      "service-assembly"
+    ],
+    "motionPotential": [
+      "static-landmark",
+      "hinged-door",
+      "effect-emitter"
+    ],
+    "materialFamilies": [
+      "frost-stone",
+      "dark-timber",
+      "copper",
+      "brass",
+      "paper",
+      "snow",
+      "emissive-glass"
+    ],
+    "notes": "Approved multi-view goal sheet shows a squat octagonal archive with dark buttresses, low radial copper roof, central frostfire stack, open-book entrance, public reading alcove and rear furnace service face. New hidden-room inference supplies rear hearth, paired shelves, central table and benches."
+  },
+  "complexity": {
+    "tier": "complex",
+    "scores": {
+      "silhouetteComplexity": 3,
+      "componentCount": 3,
+      "hierarchyDepth": 2,
+      "repetitionDensity": 3,
+      "materialLayerCount": 3,
+      "localDetailDensity": 3,
+      "occlusionRisk": 2,
+      "actionReadinessNeed": 2
+    },
+    "estimatedCounts": {
+      "macroComponents": 6,
+      "mesoComponents": 7,
+      "microFeatureGroups": 10,
+      "materialLayers": 7,
+      "repetitionSystems": 5
+    },
+    "reasoning": [
+      "The identity depends on a squat octagonal shell, eight grounded buttresses, a low radial roof, a separate open frostfire stack, front reading systems and a distinct service rear.",
+      "Stone, timber, weathered copper, brass, paper, snow and emissive amber surfaces need independent responses rather than one brown material.",
+      "The asset must stay explodable and clickable, with stable door, furnace and frostfire effect sockets, while adding no gameplay authority."
+    ]
+  },
+  "specDepthDecision": {
+    "requiredDepth": "complex",
+    "minimumComponentLevels": [
+      "macro",
+      "meso",
+      "micro"
+    ],
+    "needsRepetitionSystems": true,
+    "needsMaterialLocalOverrides": true,
+    "needsMultipleReviewViews": true,
+    "needsActionReadyHierarchy": true,
+    "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+  },
+  "unknownsToResolveBeforeImplementation": [],
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+    "details": [
+      {
+        "id": "roof-radial-seams",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "roof-radial-ribs"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "copper-edge-wear",
+        "kind": "gloss",
+        "mapsTo": {
+          "ref": "copper-worn-edges"
+        },
+        "realization": "material override"
+      },
+      {
+        "id": "buttress-bracket-row",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "buttress-copper-brackets"
+        },
+        "realization": "repeated geometry"
+      },
+      {
+        "id": "snow-filled-stone-joints",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "stone-joint-snow"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "door-hinge-and-clasp",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "door-hardware"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "book-page-lines",
+        "kind": "linework",
+        "mapsTo": {
+          "ref": "book-page-relief"
+        },
+        "realization": "raised geometry"
+      },
+      {
+        "id": "window-diamond-muntins",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "window-muntins"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "shelf-index-tags",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "shelf-index-plates"
+        },
+        "realization": "repeated geometry"
+      },
+      {
+        "id": "furnace-fire-glow",
+        "kind": "emissive",
+        "mapsTo": {
+          "ref": "furnace-emissive"
+        },
+        "realization": "emissive material and point light"
+      },
+      {
+        "id": "eave-icicles",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "roof-icicles"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "timber-grain-wear",
+        "kind": "scratch",
+        "mapsTo": {
+          "ref": "longitudinal-timber-grain"
+        },
+        "realization": "procedural material response"
+      },
+      {
+        "id": "snow-tool-hooks",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "rear-tool-hooks"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "octagonal-floor-contact",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "octagonal-floor-contact"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "rear-hearth-opening",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "rear-hearth-opening"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "shelf-row-spacing",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "shelf-row-spacing"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "octagonal-table-edge",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "octagonal-table-edge"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "paired-bench-clearance",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "paired-bench-clearance"
+        },
+        "realization": "geometry"
+      }
+    ]
+  },
+  "anatomy": {
+    "applies": false,
+    "styleHeads": 0.0,
+    "proportions": {
+      "headUnit": 0.0,
+      "torso": 0.0,
+      "legs": 0.0,
+      "shoulderWidth": 0.0,
+      "hipWidth": 0.0
+    },
+    "pose": {
+      "type": "unassessed",
+      "jointAngles": {}
+    },
+    "faceLandmarks": {
+      "eyeLine": 0.0,
+      "eyeSpacing": 0.0,
+      "noseBase": 0.0,
+      "mouthLine": 0.0,
+      "hairline": 0.0
+    },
+    "features": [],
+    "confidence": 0.0,
+    "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+  },
+  "sourceImage": "docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png",
+  "resolvedUnknowns": [
+    "Hidden furnace ducting and shelf interiors remain intentionally inferred and do not alter the visible exterior hierarchy.",
+    "Book titles, chart marks and exact fastener counts are represented as grouped phone-scale construction cues.",
+    "Alcove and rear-service depth are compressed inside the frozen 3.7-world-unit envelope without removing their functional read."
+  ]
+}

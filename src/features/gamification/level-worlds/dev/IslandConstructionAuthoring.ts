@@ -164,7 +164,7 @@ const FROSTMOON_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [stri
   hatchery: ['frozen plinth and sled runners', 'icewood roost ribs and windbreak', 'snow-loaded feather roof', 'heated nest cradle and vent wheel', 'feather lantern and frost-crystal clamps'],
   habit: ['packed-snow court and timber sleepers', 'hearthguard posts and shield walls', 'indigo shelter roof and snow braces', 'training dummies and warming braziers', 'yard banners and ice-lantern commissioning'],
   event: ['moonwell footing and alignment sled', 'observatory drum and icewood access frame', 'snow canopy and telescope cradle', 'moon lens, gears, and tracking rail', 'violet optics and frost-crystal calibration'],
-  wisdom: ['archive stone ring and book-sled dock', 'timber stacks and insulated reading hall', 'round indigo roof and frostfire chimney', 'book lift, shelves, and hearth mechanism', 'frostfire crown light and brass index marks'],
+  wisdom: ['archive stone ring and open reading-room floor', 'insulated room walls and rear hearth', 'reading table and walnut bookcases', 'reading benches, books, and warm hearth light', 'final copper roof, book crest, and frostfire chimney'],
   boss: ['aurora court and keep foundations', 'lower keep walls and icewood gates', 'snow towers, bridges, and indigo roofs', 'aurora focusing engine and hoist works', 'keep crown, beacon crystals, and victory light'],
 };
 

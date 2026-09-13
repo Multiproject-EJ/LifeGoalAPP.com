@@ -110,6 +110,8 @@ function readInitialPreviewState() {
     constructionLandmark,
     constructionReducedMotion: params.get('reduced') === '1',
     constructionCommissioning: params.get('commissioning') === '1',
+    constructionReview: params.get('constructionState') === 'review',
+    constructionCelebration: params.get('constructionState') === 'celebration',
     focusPreset,
   };
 }
@@ -243,30 +245,39 @@ export default function IslandTemplateKitPage() {
   const [previewFocusPreset, setPreviewFocusPreset] = useState<typeof initialState.focusPreset>(null);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
+  // Developer-only presentation controls; never persist or purchase progress.
+  const [constructionFixture, setConstructionFixture] = useState<'initial' | 'closed' | 'working' | 'review' | 'celebration'>('initial');
+  const [constructionFixtureSequence, setConstructionFixtureSequence] = useState(1);
+  const [constructionFixtureLandmark, setConstructionFixtureLandmark] = useState(initialState.constructionLandmark);
   const constructionPresentation = useMemo<IslandRunConstructionPresentation | null>(() => {
-    if (!initialState.construction) return null;
+    if (!initialState.construction || constructionFixture === 'closed') return null;
+    const review = constructionFixture === 'review' || constructionFixture === 'initial' && initialState.constructionReview;
+    const celebration = constructionFixture === 'celebration' || constructionFixture === 'initial' && initialState.constructionCelebration;
+    // Production review holds its work camera until the player continues.
+    const working = review || constructionFixture === 'working' || constructionFixture === 'initial' && initialState.constructionWorking;
+    const progress = review || celebration ? 1 : initialState.constructionProgress;
     return {
       active: true,
-      working: initialState.constructionWorking,
-      cameraLocked: initialState.constructionWorking,
-      completionCelebration: false,
-      phase: initialState.constructionProgress < 0.2
+      working,
+      cameraLocked: working || celebration,
+      completionCelebration: celebration,
+      phase: review || celebration ? 'reveal' : progress < 0.2
         ? 'foundation'
-        : initialState.constructionProgress < 0.45
+        : progress < 0.45
           ? 'frame'
-          : initialState.constructionProgress < 0.8
+          : progress < 0.8
             ? 'assemble'
             : 'finish',
-      progress: initialState.constructionProgress,
-      sequence: 1,
+      progress,
+      sequence: constructionFixtureSequence,
       sourceLevel: initialState.buildLevel,
-      commissioning: initialState.constructionCommissioning,
-      cloudCover: initialState.constructionWorking ? 0.46 : 0,
-      targetStopId: initialState.constructionLandmark,
+      commissioning: review || celebration || initialState.constructionCommissioning,
+      cloudCover: working ? 0.46 : 0,
+      targetStopId: constructionFixtureLandmark,
       targetLevel: Math.min(3, initialState.buildLevel + 1),
       reducedMotion: initialState.constructionReducedMotion,
     };
-  }, [initialState]);
+  }, [initialState, constructionFixture, constructionFixtureSequence, constructionFixtureLandmark]);
   const evidenceCapture = useMemo(
     () => new URLSearchParams(window.location.search).get('island3dEvidence') === '1',
     [],
@@ -328,6 +339,19 @@ export default function IslandTemplateKitPage() {
               <button key={level} type="button" aria-pressed={buildLevel === level} onClick={() => setBuildLevel(level)}>L{level}</button>
             ))}
           </div>
+          {initialState.construction ? <div className="island-kit-control-group" aria-label="Construction replay controls">
+            {(['closed', 'working', 'review', 'celebration'] as const).map((state) => (
+              <button key={state} type="button" onClick={() => {
+                setConstructionFixture(state);
+                setConstructionFixtureSequence(value => value + 1);
+              }}>Construction {state}</button>
+            ))}
+            <button type="button" onClick={() => {
+              setConstructionFixtureLandmark('wisdom');
+              setConstructionFixture('working');
+              setConstructionFixtureSequence(value => value + 1);
+            }}>Build Wisdom immediately</button>
+          </div> : null}
           <label className="island-kit-toggle">
             <input type="checkbox" checked={overlays} onChange={(event) => setOverlays(event.target.checked)} />
             Production guides

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "awaiting-direction-and-decomposition-approval",
+  "status": "approved-direction-implementation-in-progress",
   "subject": "Island 003 Frostmoon Haven V2",
   "branch": "codex/island-003-v2-20260912",
   "baseSha": "e8db4af0541e356951380477d7d17d0dc5c04019",
@@ -31,7 +31,7 @@
   },
   "authority": {
     "conceptAndDiscovery": true,
-    "broadImplementation": "after visual direction/decomposition approval",
+    "broadImplementation": true,
     "publish": false,
     "merge": false,
     "releaseWaiver": false
@@ -40,10 +40,17 @@
     "root": "integration, manifests, serialized implementation",
     "qualityLord": "independent bounded read-only review after representative slice"
   },
-  "next": "Approve revised goal and 15-group scope; representative dominant Keep + frozen terrain/planting, with performance gate before detail.",
+  "next": "Continue the dominant Keep and deeply frozen world representative slice, then Frostwell and Moonwell; retain physical-device and performance gates.",
   "expandedScope": [
     "Full Frostwell entry/spin/drill/camera/celebration upgrade",
     "Proposed Moonwell L3\u2192tile pickup\u2192Boil water mission",
-    "Shared mission-phone counter investigation/correction"
+    "Shared mission-phone counter investigation/correction",
+    "Frostfire Archive interior-first construction, final L3 roof",
+    "Shared closer building-modal POV and bounded completion pulse"
+  ],
+  "completedLocalRefinements": [
+    "Frostfire Archive furnished construction interior and final L3 roof",
+    "Shared standard construction framing and bounded commissioning pulse",
+    "Mission-phone separate build and activity counts"
   ]
 }

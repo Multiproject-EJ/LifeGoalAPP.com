@@ -1,0 +1,83 @@
+{
+  "records": [
+    {
+      "name": "mission-phone-390x844",
+      "layout": [
+        {
+          "text": "Drill to Water0 / 500m›",
+          "top": 367.15625,
+          "bottom": 419.15625,
+          "left": 66.640625,
+          "right": 323.359375
+        },
+        {
+          "text": "✓Build Landmarks5 / 5›",
+          "top": 425.15625,
+          "bottom": 477.15625,
+          "left": 66.640625,
+          "right": 323.359375
+        },
+        {
+          "text": "Complete Landmarks0 / 5›",
+          "top": 483.15625,
+          "bottom": 535.15625,
+          "left": 66.640625,
+          "right": 323.359375
+        }
+      ]
+    },
+    {
+      "name": "mission-phone-360x640",
+      "layout": [
+        {
+          "text": "Drill to Water0 / 500m›",
+          "top": 263.390625,
+          "bottom": 315.390625,
+          "left": 61.484375,
+          "right": 298.5
+        },
+        {
+          "text": "✓Build Landmarks5 / 5›",
+          "top": 321.390625,
+          "bottom": 373.390625,
+          "left": 61.484375,
+          "right": 298.5
+        },
+        {
+          "text": "Complete Landmarks0 / 5›",
+          "top": 379.390625,
+          "bottom": 431.390625,
+          "left": 61.484375,
+          "right": 298.5
+        }
+      ]
+    },
+    {
+      "name": "mission-phone-844x390",
+      "layout": [
+        {
+          "text": "Drill to Water0 / 500m›",
+          "top": 168.796875,
+          "bottom": 227.703125,
+          "left": 341.109375,
+          "right": 502.890625
+        },
+        {
+          "text": "✓Build Landmarks5 / 5›",
+          "top": 233.703125,
+          "bottom": 285.703125,
+          "left": 341.109375,
+          "right": 502.890625
+        },
+        {
+          "text": "Complete Landmarks0 / 5›",
+          "top": 291.703125,
+          "bottom": 343.703125,
+          "left": 341.109375,
+          "right": 502.890625
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

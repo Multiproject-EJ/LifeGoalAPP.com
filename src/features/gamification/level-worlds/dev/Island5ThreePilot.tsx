@@ -5097,6 +5097,11 @@ export default function Island5ThreePilot({
         ].map((name) => livingAmbience.root.getObjectByName(name)).filter(Boolean) as THREE.Object3D[]
       : [];
     let jungleInspectionOccludersHidden = false;
+    const constructionWildlife: THREE.Object3D[] = [];
+    if (isFrostmoonHaven) livingAmbience.root.traverse((child) => {
+      if (child.name === 'ISLAND_3_SNOW_HARE') constructionWildlife.push(child);
+    });
+    const constructionWildlifeVisibility = new Map<THREE.Object3D, boolean>();
     if (isAssemblyCraterFirstLight) {
       // Island 001 no longer has the central lagoon. Keep First Light's wider
       // living world, but remove the fish school that otherwise appears to
@@ -6044,8 +6049,6 @@ export default function Island5ThreePilot({
     let constructionPreviewKey = '';
     let constructionLevelDelta: IslandConstructionLevelDelta | null = null;
     let constructionSourceRoot: THREE.Object3D | null = null;
-    let constructionRevealStartedAtMs = Number.NEGATIVE_INFINITY;
-    let previousConstructionPhase: IslandRunConstructionPresentation['phase'] | null = null;
     const disposeDetachedConstructionRoot = (root: THREE.Object3D) => {
       root.traverse((entry) => {
         if (!(entry instanceof THREE.Mesh || entry instanceof THREE.Line || entry instanceof THREE.Points || entry instanceof THREE.Sprite)) return;
@@ -6122,6 +6125,13 @@ export default function Island5ThreePilot({
         // The crew's semantic +Z axis follows the camera, but the building
         // retains its authored world orientation throughout camera travel.
         constructionPreviewRoot.rotation.y = -constructionAnchor.rotation.y;
+        // Counter-rotate the centering translation too. Otherwise an
+        // asymmetric landmark drifts sideways as the crew faces the camera.
+        constructionPreviewRoot.position.set(
+          -constructionPreviewCenter.x * constructionPreviewRoot.scale.x,
+          -constructionPreviewBounds.min.y * constructionPreviewRoot.scale.y,
+          -constructionPreviewCenter.z * constructionPreviewRoot.scale.z,
+        ).applyAxisAngle(THREE.Object3D.DEFAULT_UP, -constructionAnchor.rotation.y);
       }
     };
     let appliedConstructionKey = '';
@@ -6145,7 +6155,7 @@ export default function Island5ThreePilot({
         : null;
       constructionAnchor.visible = isActive;
       constructionFamily.root.visible = isActive;
-      constructionStageBuilding.visible = isActive && !next?.completionCelebration;
+      constructionStageBuilding.visible = isActive;
       constructionTheatre.setPresentation({
         active: isActive,
         working: next?.working ?? false,
@@ -6182,14 +6192,9 @@ export default function Island5ThreePilot({
         return;
       }
 
-      if (next?.phase === 'reveal' && previousConstructionPhase !== 'reveal') {
-        constructionRevealStartedAtMs = performance.now();
-      }
-      previousConstructionPhase = next?.phase ?? null;
-
       if (constructionSourceRoot && constructionSourceRoot !== targetRoot) constructionSourceRoot.visible = true;
       constructionSourceRoot = targetRoot;
-      constructionSourceRoot.visible = Boolean(next?.completionCelebration);
+      constructionSourceRoot.visible = false;
 
       const authoredCurrentLevel = next?.sourceLevel
         ?? landmarkBuildLevelsRef.current?.[mappedStopId as Island5LandmarkId]
@@ -6207,10 +6212,10 @@ export default function Island5ThreePilot({
         0,
         3,
       ) as BuildLevel;
-      if (!next?.completionCelebration) {
-        ensureConstructionPreview(mappedStopId as Island5LandmarkId, currentLevel, previewLevel);
-        applyConstructionPreviewProgress(next?.progress ?? 0, next?.working ?? false);
-      }
+      // Keep the same authored preview through review and the 15/15 finale.
+      // Swapping to the board root here changes apparent size by up to 2.4x.
+      ensureConstructionPreview(mappedStopId as Island5LandmarkId, currentLevel, previewLevel);
+      applyConstructionPreviewProgress(next?.completionCelebration ? 1 : next?.progress ?? 0, next?.working ?? false);
 
       constructionBounds.setFromObject(targetRoot);
       constructionBounds.getCenter(constructionBoundsCenter);
@@ -6923,6 +6928,28 @@ export default function Island5ThreePilot({
           ),
         } : {}),
       };
+      if (constructionAnchor.visible && constructionPreviewRoot) {
+        const bounds = new THREE.Box3();
+        constructionPreviewRoot.updateWorldMatrix(true, true);
+        constructionPreviewRoot.traverseVisible((entry) => {
+          if (entry instanceof THREE.Mesh && !entry.userData.constructionTemporary) bounds.expandByObject(entry, true);
+        });
+        if (!bounds.isEmpty()) {
+          const projected = new THREE.Box2();
+          for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+            const point = new THREE.Vector3(x, y, z).project(camera);
+            projected.expandByPoint(new THREE.Vector2(point.x, point.y));
+          }
+          canvas.dataset.constructionEvidence = JSON.stringify({
+            sourceVisible: constructionSourceRoot?.visible ?? false,
+            previewVisible: constructionStageBuilding.visible,
+            stageY: constructionStageBuilding.position.y,
+            stageScale: constructionStageBuilding.scale.toArray(),
+            projectedMin: projected.min.toArray().map(round),
+            projectedMax: projected.max.toArray().map(round),
+          });
+        }
+      }
       const payload = JSON.stringify(pose);
       canvas.dataset.cameraAuthoringPose = payload;
       if (payload === lastCameraAuthoringPayload) return;
@@ -7463,6 +7490,24 @@ export default function Island5ThreePilot({
           position: authoredTarget.clone().add(framingOffset).toArray() as [number, number, number],
           target: authoredTarget.toArray() as [number, number, number],
         };
+      }
+      const buildPresentation = constructionPresentationRef.current;
+      const buildPreset = buildPresentation?.targetStopId === 'mystery' ? 'event' : buildPresentation?.targetStopId;
+      if (buildPresentation?.active && id === buildPreset && constructionPreviewRoot) {
+        // Frame the actual miniature, including off-centre authored landmarks.
+        // Twenty percent more apparent size comes from the camera, not from
+        // compounding funded geometry or changing the board footprint.
+        const offset = new THREE.Vector3(...preset.position).sub(new THREE.Vector3(...preset.target));
+        offset.multiplyScalar(1 / 1.2);
+        const target = constructionAnchor.position.clone();
+        const previewHeight = constructionPreviewSize.y * constructionPreviewRoot.scale.y
+          * constructionAnchor.scale.y * constructionStageBuilding.scale.y;
+        target.y += previewHeight * 0.44;
+        preset = { ...preset,
+          position: target.clone().add(offset).toArray() as [number, number, number],
+          target: target.toArray() as [number, number, number],
+        };
+        canvas.dataset.constructionFraming = 'centred-1.20';
       }
       setActivePreset(id);
       if (isReducedMotion || instant) {
@@ -8433,6 +8478,8 @@ export default function Island5ThreePilot({
         activeWonderRide.startedAt += (actualFrameDeltaSeconds - .05) * 1000;
       }
       lastAnimationFrameAt = now;
+      // Prepare the current target before an immediate work-lock captures its POV.
+      updateConstructionPresentation();
       const constructionCameraPresentation = constructionPresentationRef.current;
       const constructionCameraActive = Boolean(constructionCameraPresentation?.active);
       const constructionCameraWorking = Boolean(
@@ -8925,12 +8972,23 @@ export default function Island5ThreePilot({
         }
       }
 
+      // Close construction views must not be obscured by roaming wildlife.
+      // Preserve the frozen ambience visibility as well when reduced motion is on.
+      if (constructionPresentationRef.current?.active) {
+        constructionWildlife.forEach((animal) => {
+          if (!constructionWildlifeVisibility.has(animal)) constructionWildlifeVisibility.set(animal, animal.visible);
+          animal.visible = false;
+        });
+      } else if (constructionWildlifeVisibility.size > 0) {
+        if (isReducedMotion) constructionWildlifeVisibility.forEach((visible, animal) => { animal.visible = visible; });
+        constructionWildlifeVisibility.clear();
+      }
+
       if (isLavaLabyrinth && livingAmbience.consumeIronSkiffCompletion?.()) {
         canvas.dataset.island20SkiffNavigation = 'extracted';
         onIsland20SkiffRunCompleteRef.current?.();
       }
 
-      updateConstructionPresentation();
       if (constructionAnchor.visible) {
         const activeConstruction = constructionPresentationRef.current;
         const constructionPreset = activeConstruction?.targetStopId === 'mystery'
@@ -8975,46 +9033,21 @@ export default function Island5ThreePilot({
         // Keep the original plot hidden while its exact authored build-stage
         // preview occupies the focused construction theatre.
         if (constructionSourceRoot) {
-          constructionSourceRoot.visible = Boolean(activeConstruction?.completionCelebration);
+          constructionSourceRoot.visible = false;
         }
-        if (constructionStageBuilding.visible && activeConstruction?.phase === 'reveal') {
-          const authoredBuildingScale = Number(
-            constructionStageBuilding.userData.authoredBuildingScale ?? 1,
-          );
-          const revealSeconds = Math.max(0, (performance.now() - constructionRevealStartedAtMs) / 1000);
-          if (isReducedMotion || activeConstruction.reducedMotion) {
-            constructionStageBuilding.position.y = 0;
-            constructionStageBuilding.scale.setScalar(authoredBuildingScale);
-          } else {
-            const proudJump = revealSeconds < 0.7
-              ? Math.sin((revealSeconds / 0.7) * Math.PI) * 0.34
-              : 0;
-            const landingJiggle = revealSeconds >= 0.7 && revealSeconds < 2.7
-              ? Math.sin((revealSeconds - 0.7) * 10.5) * Math.exp(-(revealSeconds - 0.7) * 2.35) * 0.11
-              : 0;
-            constructionStageBuilding.position.y = proudJump + landingJiggle;
-            const proudScale = revealSeconds < 0.7
-              ? Math.sin((revealSeconds / 0.7) * Math.PI) * 0.055
-              : 0;
-            const landingScale = revealSeconds >= 0.7 && revealSeconds < 2.7
-              ? Math.cos((revealSeconds - 0.7) * 10.5) * Math.exp(-(revealSeconds - 0.7) * 2.35) * 0.028
-              : 0;
-            constructionStageBuilding.scale.setScalar(
-              authoredBuildingScale * (1 + proudScale + landingScale),
-            );
-          }
-        } else {
-          constructionStageBuilding.position.y = 0;
-          constructionStageBuilding.scale.setScalar(Number(
-            constructionStageBuilding.userData.authoredBuildingScale ?? 1,
-          ));
-        }
+        // The single additive commissioning beat owns the pulse. Funded
+        // structure stays grounded and never receives a second scale/jump.
+        constructionStageBuilding.position.y = 0;
+        constructionStageBuilding.scale.setScalar(Number(
+          constructionStageBuilding.userData.authoredBuildingScale ?? 1,
+        ));
         updateConstructionFacing();
         const constructionReducedMotion = isReducedMotion
           || Boolean(constructionPresentationRef.current?.reducedMotion);
         constructionFamily.update(elapsed, frameDeltaSeconds, constructionReducedMotion);
         constructionTheatre.update(elapsed, frameDeltaSeconds, constructionReducedMotion);
         const commissioningBeat = constructionCommissioningFx.update(elapsed, constructionReducedMotion);
+        canvas.dataset.constructionCommissioningScale = commissioningBeat.scaleMultiplier.toFixed(4);
         const jungleBuildPresentation = constructionPresentationRef.current;
         const jungleBuildFxActive = Boolean(
           isJungleExpedition

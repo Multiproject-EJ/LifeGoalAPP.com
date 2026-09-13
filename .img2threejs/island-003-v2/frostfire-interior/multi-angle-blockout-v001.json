@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.332996875,
+  "angles": [
+    {
+      "path": ".img2threejs/island-003-v2/frostfire-interior/blockout-v001/clay-3.png",
+      "areaFraction": 0.422840625,
+      "ratio": 1.2698035829915821,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/frostfire-interior/blockout-v001/clay-6.png",
+      "areaFraction": 0.35299375,
+      "ratio": 1.060051239219587,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "deterministic; zero token; a flat-plane-faking-a-volume collapses in silhouette area when orbited"
+}

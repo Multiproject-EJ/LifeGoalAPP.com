@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "islandNumber": 3,
-  "status": "proposal-awaiting-user-direction",
+  "status": "direction-approved-runtime-work-in-progress",
   "exactRuntimeBaselineCommit": "e8db4af0541e356951380477d7d17d0dc5c04019",
   "priorPacket": "docs/visual-references/island-003-frostmoon-upgrade/manifest.v1.json",
   "priorApprovals": ".img2threejs/island-003-frostmoon-upgrade/user-decisions.v1.jsonl",
@@ -31,9 +31,16 @@
   "concept": {
     "path": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
     "sha256": "2b44fa140ff878f39a43d57c518d070401195bbdfa4d09048781da254ba0e206",
-    "authority": "secondary-inferred-current-proposal-not-approved",
+    "authority": "secondary-inferred-user-approved-direction",
     "prompt": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-prompt.md",
     "generator": "built-in image_gen",
     "derivedFrom": "docs/gauntlets/island-003-v2/concepts/01-frostmoon-v2-goal.png"
+  },
+  "interiorStudy": {
+    "path": "docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.png",
+    "sha256": "7a9016be727920c540eec29814927696769d5c181b4f58c63478c871433ed0d3",
+    "authority": "secondary-inferred-user-requested-interior-study",
+    "provenance": "docs/visual-references/island-003-frostmoon-v2/secondary-inferred/frostfire-interior-v001.md",
+    "limitations": "Hidden interior inferred; lifted roof is an explanatory pose."
   }
 }

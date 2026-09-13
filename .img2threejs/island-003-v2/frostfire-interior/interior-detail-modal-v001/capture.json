@@ -1,0 +1,47 @@
+{
+  "errors": [],
+  "records": [
+    {
+      "name": "L1-to-L2-complete",
+      "url": "http://127.0.0.1:53303/dev/island-template-kit?island=3&mode=3d&level=1&construction=1&working=0&constructionProgress=1&landmark=wisdom&cameraAuthoring=1",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "39922",
+        "constructionCrewDrawCalls": "58",
+        "constructionCrewRuntime": "rendering",
+        "constructionCrewActive": "true",
+        "constructionCrewTarget": "wisdom",
+        "constructionCrewPhase": "finish",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "frostmoon-archive-book-lift:station-4",
+        "constructionCrewBuilding": "wisdom:L1->L2:additive-delta",
+        "constructionCrewLevelDelta": "52:88",
+        "constructionCrewRevealStages": "{\"1\":1,\"2\":20,\"3\":30,\"4\":35,\"5\":2}",
+        "constructionCrewRevealBatches": "23",
+        "constructionLandmarkGrounding": "{\"sourceFloorY\":0.01,\"previewFloorY\":0.01,\"verticalError\":0}",
+        "constructionCrewScale": "0.084",
+        "constructionScaffoldMode": "authored-landmark-only",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "true",
+        "constructionEvidence": "{\"sourceVisible\":false,\"previewVisible\":true,\"stageY\":0,\"stageScale\":[1,1,1],\"projectedMin\":[-0.94,-0.284],\"projectedMax\":[1.25,0.43]}",
+        "cameraAuthoringPose": "{\"islandNumber\":3,\"preset\":\"wisdom\",\"position\":[-1.789,3.88,-1.654],\"target\":[-4.354,0.464,3.895],\"fov\":42,\"zoom\":1,\"aspect\":0.462,\"signatureMissionSocketActive\":false,\"signatureMissionMetersDrilled\":0}",
+        "constructionFraming": "centred-1.20",
+        "constructionCommissioningScale": "1.0000",
+        "constructionCommissioningBeat": "{\"active\":false,\"scale\":1,\"flash\":0,\"sparkle\":1}",
+        "constructionCrewOccupancy": "{\"schema\":\"construction-occupancy-v1\",\"active\":true,\"pairViolations\":0,\"buildingViolations\":0,\"minimumPairClearance\":null,\"minimumBuildingClearance\":0.0064,\"targetCorrections\":1,\"actualCorrections\":0}",
+        "constructionCrewScreen": "{\"heavy-worker\":{\"x\":-1.191,\"y\":-0.408,\"z\":0.966,\"localX\":-3.165,\"localY\":0.825,\"localZ\":4.156,\"scale\":0.083,\"rotationY\":1.981,\"emotion\":\"curious\"},\"project-manager\":{\"x\":0.246,\"y\":-0.16,\"z\":0.966,\"localX\":0.663,\"localY\":1.954,\"localZ\":3.27,\"scale\":0.072,\"rotationY\":7.936,\"emotion\":\"focused\"},\"mini-artist\":{\"x\":1.291,\"y\":-0.392,\"z\":0.965,\"localX\":3.346,\"localY\":1.132,\"localZ\":4.402,\"scale\":0.039,\"rotationY\":-1.317,\"emotion\":\"delighted\"}}",
+        "constructionManagerBrain": "focused",
+        "assemblyBlastCameraShake": "0.000",
+        "constructionSceneDrawCalls": "329",
+        "constructionSceneTriangles": "45440",
+        "ambientCameraMode": "build-modal-gentle-orbit",
+        "ambientCameraStep": "1"
+      },
+      "geometrySha256": "2a8e06e6abb9336db91e2606d776de1a0db97771fc3e9f1019edfd819d309543"
+    }
+  ],
+  "captureFailure": "Second scene: Hide overlays button absent because evidence mode persisted. First image valid; no second image claimed."
+}

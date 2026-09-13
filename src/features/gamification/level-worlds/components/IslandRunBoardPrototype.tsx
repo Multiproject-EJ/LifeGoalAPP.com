@@ -3418,7 +3418,9 @@ export function IslandRunBoardPrototype({
     currentMissionTracker.objectives.map((objective, objectiveIndex) => (
       objective.label.toLowerCase().includes('build landmarks')
         ? 'Open Build and raise every island landmark to its final level.'
-        : objectiveIndex === 0
+        : objective.label === 'Complete Landmarks'
+          ? 'Finish each landmark activity, including collecting or selling all Hatchery eggs. Building upgrades are counted separately.'
+          : objectiveIndex === 0
           ? currentMissionTracker.briefing.primaryObjective
           : currentMissionTracker.briefing.supportingObjective
     ))

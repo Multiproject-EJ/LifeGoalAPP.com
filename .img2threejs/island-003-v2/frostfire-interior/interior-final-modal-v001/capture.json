@@ -1,0 +1,5 @@
+{
+  "errors": [],
+  "records": [],
+  "captureFailure": "Initial renderer wait reached default 30s: waitForFunction timeout argument was passed as page argument. No image captured; corrected helper now uses third-argument timeout."
+}

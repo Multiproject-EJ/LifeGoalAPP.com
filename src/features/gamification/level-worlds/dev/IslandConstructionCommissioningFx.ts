@@ -50,11 +50,11 @@ export function resolveIslandConstructionCommissioningBeat(
 
   let scaleMultiplier: number;
   if (progress < 0.24) {
-    scaleMultiplier = THREE.MathUtils.lerp(0.88, 1.105, smooth01(progress / 0.24));
+    scaleMultiplier = THREE.MathUtils.lerp(0.98, 1.04, smooth01(progress / 0.24));
   } else if (progress < 0.56) {
-    scaleMultiplier = THREE.MathUtils.lerp(1.105, 0.982, smooth01((progress - 0.24) / 0.32));
+    scaleMultiplier = THREE.MathUtils.lerp(1.04, 0.995, smooth01((progress - 0.24) / 0.32));
   } else {
-    scaleMultiplier = THREE.MathUtils.lerp(0.982, 1, smooth01((progress - 0.56) / 0.44));
+    scaleMultiplier = THREE.MathUtils.lerp(0.995, 1, smooth01((progress - 0.56) / 0.44));
   }
 
   return {

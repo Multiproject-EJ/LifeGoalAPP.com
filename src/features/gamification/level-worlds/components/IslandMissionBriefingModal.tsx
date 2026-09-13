@@ -205,7 +205,7 @@ export function IslandMissionBriefingModal({
     : normalizedProgress[selectedObjectiveIndex] ?? null;
 
   return createPortal(
-    <div className="island-mission-tracker" data-phase={phase} data-variant={variant} role="presentation">
+    <div className="island-mission-tracker" data-phase={phase} data-variant={variant} data-objective-count={normalizedProgress.length} role="presentation">
       <section
         className="island-mission-tracker__phone"
         role="dialog"
@@ -293,7 +293,7 @@ export function IslandMissionBriefingModal({
                       <strong>{item.label}</strong>
                     </span>
                     <span className="island-mission-tracker__objective-count">
-                      {item.complete ? 'Done' : item.displayValue ?? `${Math.floor(item.value)} / ${Math.floor(item.target)}`}
+                      {item.complete && item.label !== 'Build Landmarks' ? 'Done' : item.displayValue ?? `${Math.floor(item.value)} / ${Math.floor(item.target)}`}
                     </span>
                     {onObjectiveSelect ? <span className="island-mission-tracker__objective-chevron" aria-hidden="true">›</span> : null}
                   </>

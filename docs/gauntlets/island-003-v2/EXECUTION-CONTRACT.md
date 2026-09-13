@@ -1,6 +1,6 @@
 # Island 003 V2 — Frostmoon Haven
 
-Date: 2026-09-12. Status: updated proposal awaiting direction/decomposition approval. Runtime implementation has not begun.
+Date: 2026-09-13. Status: revised direction approved; shared modal/tracker fixes and Archive interior construction in progress.
 
 ## Outcome and authority
 
@@ -16,7 +16,7 @@ Source authorities: repository AGENTS.md; four Island Run contracts; actual-3D p
 - Upgrade the full Frostwell experience, including entry modal/mission phone, spin, drilling animation, camera and completion celebration.
 - Investigate the recurring mission-phone 0/5 after upgrading all buildings, across islands.
 
-The first generated concept is superseded for ocean and central hierarchy. V002 is the current proposal, not an approved or actual game render. All original images remain intact. Existing August landmark goals and accent palettes remain constraints unless explicitly superseded. Generated ring geometry, hidden construction and exact camera are not runtime authority.
+The first generated concept is superseded for ocean and central hierarchy. V002 is the user-approved direction, not an actual game render. All original images remain intact. Existing August landmark goals and accent palettes remain constraints unless explicitly superseded. Generated ring geometry, hidden construction and exact camera are not runtime authority.
 
 ## Visual direction
 
@@ -52,7 +52,7 @@ Recommended interpretation: one-time optional permanent restoration per island/c
 4. Presentation focuses Moonwell; frost softens, ice cracks and recedes, the water warms, then gentle bubbles and steam settle into a permanent operational state.
 5. Reduced motion skips moving camera/particles and reveals the same completed basin. Interruptions cannot lose or replay rewards/state writes.
 
-Suggested 8–12 second first-time thaw, interruptible with a settled-state fallback. Timing and physical clarity require runtime review. Existing L3 saves should become eligible, not silently consume their one-time experience. New state fields must have safe old-save defaults and persistence round-trip tests. This is a proposal awaiting approval with the expanded execution contract.
+Suggested 8–12 second first-time thaw, interruptible with a settled-state fallback. Timing and physical clarity require runtime review. Existing L3 saves should become eligible, not silently consume their one-time experience. New state fields must have safe old-save defaults and persistence round-trip tests. This interpretation was included in the expanded direction approved September 13.
 
 ## Mission-phone investigation and proposed correction
 
@@ -79,3 +79,9 @@ High starting ceiling: max 175 calls, 180k triangles, average ≥50 FPS, p95 ≤
 ## Rollback, recovery and stopping rules
 
 Commit bounded slices on the dedicated branch; do not touch other worktrees. Keep previous source and all failed evidence. Separate shared tracker correction from island visual/mission changes. Stop on gameplay-authority regression, new route/vehicle obstruction, source races, unresolved macro failure, performance regression or hard skill gates. No publication without separate explicit authority. Another worker starts at IMPLEMENTATION-STATUS.md, verifies main/branch and reference hashes, reads the active contract and full applicable skills, runs the appropriate img2threejs state gate, and resumes only the named slice.
+
+## September 13 approved refinements
+
+The user approved the corrected visual direction and requested roughly half of the Frostfire Archive construction presentation to feature interior work: hearth, shelves, reading alcoves, furnishings. Close the copper roof at the very end of L3, with a reversible inspection cutaway keeping the interior accessible afterward. This changes presentation and authored part order, not purchase counts or prices.
+
+All standard building modals need closer framing, a single small grounded completion pulse, and continuity through the final celebration. Aim for about 20% stronger apparent size while retaining canonical level geometry and footprints; do not multiply the whole building by 1.2 at every purchase. Island 015 retains its specialized interior camera. Broad implementation is approved; publishing remains separate.
