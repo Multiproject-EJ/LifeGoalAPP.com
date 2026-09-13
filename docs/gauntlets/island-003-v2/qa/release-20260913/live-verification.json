@@ -1,0 +1,29 @@
+{
+  "status": "pass",
+  "releaseCommit": "918799c289babc4e36dbc2f7fc472409e9b6167e",
+  "productionUrl": "https://habitgame.app/",
+  "httpStatus": 200,
+  "entryUrl": "https://habitgame.app/assets/index-COX-v8t0.js",
+  "entrySha256": "73c36729ffd830538ca01d2692ddc148d4564f84d5defe47a3e519719c2cfc1d",
+  "islandAssets": [
+    {
+      "url": "https://habitgame.app/assets/main-Cw--53PU.js",
+      "status": 200,
+      "sha256": "2ccf819c28207899a37103ea88d654903da45e4b8bab269484decec5d3cfe695",
+      "bytes": 5696366
+    },
+    {
+      "url": "https://habitgame.app/assets/Island5ThreePilot-Hthkl07g.js",
+      "status": 200,
+      "sha256": "43b01945a0968da0c01facbab081470e2ad882d515a5b9a1ee9ddf82bd4531e4",
+      "bytes": 2569488
+    }
+  ],
+  "featureMarkers": {
+    "FROSTWELL_INSULATED_OPERATOR_CROWN": true,
+    "FROSTWELL_INSULATED_RESERVOIR_JACKET": true,
+    "ISLAND_3_LAYERED_ALPINE_SNOW_TREE": true,
+    "moonwell-thermal-modal": true
+  },
+  "scope": "Hosted HTML and compiled asset verification, not authenticated gameplay or physical-phone validation."
+}

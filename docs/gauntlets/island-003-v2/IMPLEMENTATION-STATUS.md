@@ -1,6 +1,10 @@
-# Island 003 V2 — implemented local candidate
+# Island 003 V2 — released September 13
 
-2026-09-13 · Branch `codex/island-003-v2-20260912`. The approved entire-island implementation is authored. The actual before-and-after gallery is complete and checked across all 11 views. Physical-device and performance acceptance remain open. Nothing has been published or merged.
+2026-09-13 · Branch `codex/island-003-v2-20260912`. The approved entire-island implementation is authored. The actual before-and-after gallery is complete and checked across all 11 views. Physical-device and performance acceptance remain open. Published to habitgame.app after the user explicitly instructed “okay push to live” following disclosure of the open performance/phone checks.
+
+## Verified release
+
+Release commit `918799c2` deployed successfully through GitHub Pages [run 34767872141](https://github.com/Multiproject-EJ/LifeGoalAPP.com/actions/runs/34767872141). The hosted HTML, main module and Island renderer return HTTP200; compiled markers verify the refined operator crown, insulated reservoir, new tree family and Moonwell modal. See `qa/release-20260913/`. Publication is user-authorized despite recorded validation limits; physical-device acceptance remains open.
 
 ## Subsequent Frostwell and forest refinement
 
@@ -36,7 +40,7 @@ The final isolated High profile (`qa/final-profile-high-v002/profile.json`) has 
 
 The original baseline measured 2,373 peak calls / 180,870 triangles, 51.7 FPS, p95 33.4 ms and 15.8% slow frames. The final scene uses about 87% fewer peak calls and 57% fewer peak triangles, while measured timing has regressed. Development phone-viewport captures and deterministic production-component fixtures are not authenticated end-to-end gameplay or physical-phone acceptance. Independent reviews approve the bounded visual/state composition; live-motion smoothness has not been independently accepted.
 
-Physical target-phone Auto/High validation remains required. No publishing, native installation, merge or release approval is claimed. The unrelated Island 015 direct palace construction fixture remains unverified due to its pre-existing early fallback-cache problem; no Island 015 regression pass is inferred from this work.
+Physical target-phone Auto/High validation remains required. Production publication was subsequently authorized by the user and verified above. No native installation or physical-device acceptance is claimed. The unrelated Island 015 direct palace construction fixture remains unverified due to its pre-existing early fallback-cache problem; no Island 015 regression pass is inferred from this work.
 
 ## Evidence scope
 

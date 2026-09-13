@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "release-authorized-pending-deployment",
+  "status": "deployed-user-authorized-performance-exception",
   "subject": "Island 003 Frostmoon Haven V2",
   "branch": "codex/island-003-v2-20260912",
   "baseSha": "e8db4af0541e356951380477d7d17d0dc5c04019",
@@ -52,7 +52,7 @@
     "root": "integration, manifests, serialized implementation",
     "qualityLord": "independent bounded read-only review after representative slice"
   },
-  "next": "Review the completed local V1/V2 gallery. Before release, resolve unwaived performance budgets and validate target-phone Auto/High and live motion.",
+  "next": "Follow up on physical-phone Auto/High, frame timing and draw-call targets; do not represent the release exception as a performance pass.",
   "expandedScope": [
     "Full Frostwell entry/spin/drill/camera/celebration upgrade",
     "Moonwell L3\u2192tile pickup\u2192Boil water mission",
@@ -85,7 +85,9 @@
     "frostwellKeyframes": "qa/frostwell-keyframes-v002/capture.json",
     "finalDelivery": "qa/FINAL-DELIVERY-CHECKS.json",
     "finalProfile": "qa/final-profile-high-v002/profile.json",
-    "latestComparison": "frostwell-forest-refinement/before-after.html"
+    "latestComparison": "frostwell-forest-refinement/before-after.html",
+    "deployment": "qa/release-20260913/deployment.json",
+    "hostedVerification": "qa/release-20260913/live-verification.json"
   },
   "latestRefinement": "frostwell-forest-refinement/STATUS.md"
 }

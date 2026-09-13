@@ -21,3 +21,7 @@ The first refinement overview used about 111k triangles. The corrected overview 
 ## Final local profile
 
 The isolated 30-second High run has stable source hashes and no page errors: 50.2 FPS, p95 33.4 ms, 18.7% slow frames, 311 peak calls and 87966 peak triangles. This remains a local diagnostic, not physical-phone acceptance. The 175-call ceiling, p95 ≤29ms and slow-frame ≤15% targets remain unmet; no release waiver is claimed.
+
+## Production publication
+
+The user subsequently instructed “okay push to live.” This refinement and the complete Island003 V2 shipped in commit `918799c2` through successful GitHub Pages run34767872141. Hosted compiled assets were verified. See `../qa/release-20260913/deployment.json` and `live-verification.json`. This publication exception does not turn open performance or physical-phone checks into passes.
