@@ -11,7 +11,7 @@ Scope: Frostfire Archive interior-first construction, shared standard constructi
 - Archive focused checks: funded mesh geometry/transforms retained across levels, hollow room, table-book contact, interior stages, roof/crest/stack stage 5.
 - Independent Archive macro and furnished phone reviews: each minimum 0.85. See the versioned `.img2threejs/island-003-v2/frostfire-interior/` reviews.
 - `shared-continuity-v009/capture.json`: four successful source-stable standard phone cases, Island 003 Boss/Wisdom, Island 001 Hatchery, Island 002 Habit reduced motion. Settled finale width ratios all 1.000. The run later failed on Island 015; the run as a whole is incomplete.
-- `shared-continuity-v010/capture.json`: Island 003 desktop ratio 1.000, plus phone objective reachability, untruncated labels, non-overlapping footer and scroll-to-footer checks at 390×844, 360×640 and 844×390. Use `*-scrolled.png` as settled phone evidence. The initial landscape screenshot captured the opening frame before content painted; it is excluded from visual acceptance.
+- `shared-continuity-v010/capture.json`: Island 003 desktop-hosted portrait preview ratio 1.000, plus phone objective reachability, untruncated labels, non-overlapping footer and scroll-to-footer checks at 390×844, 360×640 and 844×390. Use `*-scrolled.png` as settled phone evidence. The initial landscape screenshot captured the opening frame before content painted; it is excluded from visual acceptance.
 
 ## Preserved failures and limits
 
