@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-13",
+  "userInstruction": "okay push to live",
+  "scope": "Entire reviewed Island003 V2, final Frostwell/forest refinement, shared build-modal and mission-counter improvements.",
+  "reviewedCommit": "f463f2747f72811c8a9300716ce96d7128c2c8da",
+  "integratedCommit": "81455281e8207314b254a957f83f9ae7c8546462",
+  "preservedMain": "4a0a0c7d3f1c08c993df1d3e702d4d03afdf93c1",
+  "integration": "Read-only merge-tree and changed-path comparison verified exactly four non-overlapping upstream preview files and no conflicts. Initial automatic merge rejection resolved after these checks; approved retry merged normally.",
+  "deployment": "Push main triggers .github/workflows/deploy.yml to GitHub Pages at https://habitgame.app/",
+  "releaseException": "User explicitly instructed publication after disclosure of open performance and physical-phone validation. This is production authority for this reviewed version, not a claim that those gates passed.",
+  "performance": {
+    "averageFps": 50.2,
+    "p95Ms": 33.4,
+    "slowFramesPercent": 18.7,
+    "peakDrawCalls": 311,
+    "physicalTargetPhoneValidated": false,
+    "allTargetsPassed": false
+  },
+  "validationAlreadyComplete": [
+    "Full 2095 Island Run suite before final render-only refinements",
+    "Final five Frostwell/Frostmoon behavior checks and all three tree quality tiers",
+    "Final eleven-view and three facility-survey independent review, minimum0.85",
+    "All15 shared building transitions and mission-phone layouts",
+    "Final TypeScript and comparison-page checks"
+  ],
+  "releaseChecks": "Final combined production prebuild/type/build and audio check; then hosted bundle verification."
+}

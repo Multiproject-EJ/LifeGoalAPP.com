@@ -1,0 +1,29 @@
+{
+  "status": "pass",
+  "productionBuild": "Same ordered prebuild and build commands as package.json, invoked through bundled Node because npm executable is absent locally. GitHub CI will run npm run build normally.",
+  "prebuildExitCode": 0,
+  "typescriptBuildExitCode": 0,
+  "viteBuildExitCode": 0,
+  "audioCheckExitCode": 0,
+  "existingWarnings": [
+    "Large production chunks",
+    "Existing shared placeholder audio mappings"
+  ],
+  "assets": [
+    {
+      "name": "Island5ThreePilot-CLSPit45.js",
+      "bytes": 2569488,
+      "sha256": "3b68b95fef59ec3fe101938c321c5480db3182a0926ba948d90d9fa1751829cc"
+    },
+    {
+      "name": "main-CrSRK98p.js",
+      "bytes": 5743287,
+      "sha256": "921040e3b636510d9677d992f02dc1f4dcee2f6fcb8077ba68738ac53447c31a"
+    }
+  ],
+  "featureMarkers": [
+    "FROSTWELL_INSULATED_OPERATOR_CROWN",
+    "ISLAND_3_LAYERED_ALPINE_SNOW_TREE",
+    "moonwell-thermal-modal"
+  ]
+}

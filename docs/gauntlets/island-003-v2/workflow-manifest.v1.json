@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "implemented-local-candidate-release-gates-open",
+  "status": "release-authorized-pending-deployment",
   "subject": "Island 003 Frostmoon Haven V2",
   "branch": "codex/island-003-v2-20260912",
   "baseSha": "e8db4af0541e356951380477d7d17d0dc5c04019",
@@ -18,7 +18,11 @@
     "maximumP95Ms": 29,
     "maximumSlowFramesPercent": 15,
     "physicalTargetPhoneRequired": true,
-    "waiver": null,
+    "waiver": {
+      "authority": "User instruction: okay push to live, after explicit disclosure",
+      "scope": "Deployment exception only; unmet targets and unverified physical devices remain recorded",
+      "record": "qa/release-20260913/authorization.json"
+    },
     "localProfileAccepted": false,
     "latestObserved": {
       "averageFps": 42.1,
@@ -40,9 +44,9 @@
   "authority": {
     "conceptAndDiscovery": true,
     "broadImplementation": true,
-    "publish": false,
-    "merge": false,
-    "releaseWaiver": false
+    "publish": true,
+    "merge": true,
+    "releaseWaiver": true
   },
   "roles": {
     "root": "integration, manifests, serialized implementation",
