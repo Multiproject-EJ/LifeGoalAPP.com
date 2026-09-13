@@ -1,0 +1,8 @@
+{
+  "family": "same coupled Frostwell/forest refinement",
+  "correction": 1,
+  "hypothesis": "Reduce evenly repeated snow-chevron edges and vary branch height while reducing bough triangles; fit the operator crown above the section and replace the lower hut with a wide open-front processing room, preserving all lift/floor/net sockets.",
+  "controls": "Same island camera/footprints/landmarks/board/material palette/gameplay. Only Frostwell inspection camera fit adapts to its new crown.",
+  "expectedDelta": "Forest worst .81 to at least .91 where possible, no critical regression >.05; Frostwell focus .74 to at least .85; all required views >=.85. Fewer triangles than first refinement.",
+  "authority": "User reopened Frostwell and forest. Lower processing room is included in Frostwell; no new mission behavior."
+}

@@ -1,0 +1,83 @@
+{
+  "authority": "User explicitly requests improved Frostwell exterior and more interesting, higher-quality island trees. Reopens only these two parts of the approved V2.",
+  "baselineCommit": "1104c110",
+  "baselineImages": {
+    "overview": {
+      "path": "../runtime-v2-final-v003/overview.png",
+      "sha256": "7d785f3a621b138e327a58bcc6872cdab09dc2bd0adef5758e9bfaf2c5e5cf68"
+    },
+    "frostwell": {
+      "path": "../runtime-v2-final-v003/frostwell.png",
+      "sha256": "d63a6c3c46141135ae8b5c2249b53c4879737df16d56fc9f3056114208e85508"
+    },
+    "left": {
+      "path": "../runtime-v2-final-v003/left.png",
+      "sha256": "168e6681c6ee9f0d27b5ce66018ca5d9f89b5cc24200e61b7b99be284803f014"
+    },
+    "right": {
+      "path": "../runtime-v2-final-v003/right.png",
+      "sha256": "5ea6d74a8e690784fd803dc53e917dfde8b09b2598696060aae9dd3b4ae0a391"
+    },
+    "survey": {
+      "path": "../runtime-v2-final-v003/survey.png",
+      "sha256": "93f1ce3d7d5a0096af51e9983e94c0207de064eaa9c3181c7ca39e8aec364fce"
+    },
+    "night": {
+      "path": "../runtime-v2-final-v003/night.png",
+      "sha256": "73b9d4a7e4fd4d1e0baa601b4facc257a8ece5a9e36d73a489570bc27dbee74c"
+    }
+  },
+  "frozen": "Keep, four landmarks, world terrain/cameras, mission state and animation sockets, board topology, rendering budgets",
+  "groups": [
+    {
+      "id": "forest",
+      "parts": [
+        "trunk silhouette",
+        "bough volumes",
+        "snow load",
+        "species variation",
+        "shared static/wind tree integration"
+      ],
+      "allowlist": [
+        "Island3SnowTreeGeometry.ts",
+        "Island3FrozenWorldThreeModel.ts",
+        "Island3FrostmoonThreeWorld.ts"
+      ],
+      "cues": [
+        "open layered branch silhouette",
+        "uneven supported snow",
+        "bounded grove height and footprint",
+        "no stacked cones",
+        "same root for wind"
+      ]
+    },
+    {
+      "id": "frostwell-exterior",
+      "parts": [
+        "drill gantry",
+        "operator crown",
+        "workshop mass",
+        "insulated reservoir crown",
+        "service access"
+      ],
+      "allowlist": [
+        "FrostwellIceworksThreeModel.ts"
+      ],
+      "cues": [
+        "recognizable ice drilling plant from overview",
+        "connected load bearing frame",
+        "enclosed winter workshop",
+        "preserve operating/retracted visibility and moving sockets"
+      ]
+    }
+  ],
+  "workflow": {
+    "builder": "root, serialized",
+    "independentReviewer": "read-only Quality Lord",
+    "minimumEachView": 0.85,
+    "perFamily": "initial plus one bounded correction",
+    "maxFamilies": 2,
+    "status": "implemented-local-visual-review-pass-performance-open"
+  },
+  "inference": "Exterior details and botanical variation are authored interpretations of user direction, not exact new goal pixels."
+}

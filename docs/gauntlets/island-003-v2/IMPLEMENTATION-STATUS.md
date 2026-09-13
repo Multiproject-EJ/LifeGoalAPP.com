@@ -2,6 +2,10 @@
 
 2026-09-13 · Branch `codex/island-003-v2-20260912`. The approved entire-island implementation is authored. The actual before-and-after gallery is complete and checked across all 11 views. Physical-device and performance acceptance remain open. Nothing has been published or merged.
 
+## Subsequent Frostwell and forest refinement
+
+The user requested a more visibly changed Iceworks and richer trees after reviewing V2. See [the latest before/after](frostwell-forest-refinement/before-after.html) and [refinement status](frostwell-forest-refinement/STATUS.md). The first complete V2 evidence below remains historical; the later refinement has its own checks and profile.
+
 ## Implemented
 
 - **Whole frozen world:** dominant layered Aurora Keep with supported rings/turrets, continuous snow-covered shelf over deep blue ice, completely frozen ocean, pressure ridges, distant snow-covered crags, branched firs and low juniper/berry/grass banks. Removed the legacy coastal plates and lagoon that covered the new ice. Freight vehicles use the frozen sea height and a grounded ramp.

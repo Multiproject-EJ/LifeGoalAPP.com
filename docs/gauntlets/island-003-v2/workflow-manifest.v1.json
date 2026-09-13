@@ -80,6 +80,8 @@
     "restorationFocus": "qa/restorations-focus-v004/capture.json",
     "frostwellKeyframes": "qa/frostwell-keyframes-v002/capture.json",
     "finalDelivery": "qa/FINAL-DELIVERY-CHECKS.json",
-    "finalProfile": "qa/final-profile-high-v002/profile.json"
-  }
+    "finalProfile": "qa/final-profile-high-v002/profile.json",
+    "latestComparison": "frostwell-forest-refinement/before-after.html"
+  },
+  "latestRefinement": "frostwell-forest-refinement/STATUS.md"
 }

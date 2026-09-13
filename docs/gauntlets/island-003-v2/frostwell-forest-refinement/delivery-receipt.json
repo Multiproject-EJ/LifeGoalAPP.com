@@ -1,0 +1,42 @@
+{
+  "status": "implemented-local-visual-review-pass",
+  "sourceHashes": {
+    "FrostwellIceworksThreeModel.ts": "0ed228188c2d9eb153bd694c9653f23950b5fab0c503194f2835a9c8a07c9e4e",
+    "Island3SnowTreeGeometry.ts": "734787c0c66c0b5f16ab1b911b6e62b59da0ec05f2bb15c1675d5634690350f5",
+    "Island3FrozenWorldThreeModel.ts": "1430eb9e5a4a6e93702c0428b9b453fb96c1dec91025b0319d12775dc739fea7",
+    "Island3FrostmoonThreeWorld.ts": "073eebbb4c5c8046e7e489505ff991f0ee7ccfdc8762e219f257671de9a99385"
+  },
+  "validation": {
+    "typescript": {
+      "exitCode": 0,
+      "command": "tsc --noEmit --incremental --tsBuildInfoFile /tmp/island003-v2-delivery.tsbuildinfo",
+      "output": ""
+    },
+    "existingFrostwellAndFrostmoonTests": 5,
+    "treeQualityTiers": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "modelChecks": "model-checks-v002.json",
+    "comparisonChecks": "gallery-check.json",
+    "fullIslandViews": 11,
+    "facilitySurveys": 3,
+    "minimumIndependentVisualScore": 0.85
+  },
+  "authority": "User-requested Frostwell/forest refinement after original V2 review",
+  "scope": "Presentation geometry only. No gameplay, board, landmark geometry, or canonical state changes.",
+  "performanceAccepted": false,
+  "physicalPhoneAccepted": false,
+  "published": false,
+  "profile": {
+    "path": "profile-high-v002/profile.json",
+    "averageFps": 50.2,
+    "p95FrameMs": 33.4,
+    "slowFramePercent": 18.7,
+    "maxDrawCalls": 311,
+    "maxTriangles": 87966,
+    "sourceStable": true,
+    "errors": []
+  }
+}

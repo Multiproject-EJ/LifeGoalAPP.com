@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createIsland3SnowTree } from './Island3SnowTreeGeometry';
 import type { Island3FrostmoonMaterials } from './Island3FrostmoonThreeWorld';
 import type { Island3DQuality } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
@@ -176,25 +177,9 @@ export function createIsland3FrozenWorld(materials: Island3FrostmoonMaterials, q
     const h = (z > 2 ? 1.05 : 1.65) + i % 4 * .19;
     positions.push([x,z,h]);
   }
-  const branchGeo = new THREE.ConeGeometry(1, 1, 5, 1);
-  const trunkGeo = new THREE.CylinderGeometry(.04, .08, 1, 6);
   for (const [index, [x,z,h]] of positions.entries()) {
-    const tree = new THREE.Group(); tree.name = 'ISLAND_3_V2_BRANCHED_SNOW_FIR'; tree.position.set(x,.37,z);
-    const trunk = new THREE.Mesh(trunkGeo, materials.timberDark); trunk.scale.y = h; trunk.position.y = h / 2; tree.add(trunk);
-    for (let tier = 0; tier < 4; tier++) {
-      const width = h * (.34 - tier * .063);
-      for (let branch = 0; branch < 5; branch++) {
-        const a = branch / 5 * Math.PI * 2 + tier * .62 + index;
-        const bough = new THREE.Mesh(branchGeo, materials.pineDark);
-        bough.position.set(Math.cos(a)*width*.47, h*(.25+tier*.19), Math.sin(a)*width*.47);
-        bough.scale.set(width*.62,h*.24,width*.36); bough.rotation.y=-a; bough.rotation.z=Math.sin(a)*.22;
-        const snow = new THREE.Mesh(branchGeo, materials.snow);
-        snow.position.copy(bough.position); snow.position.y+=h*.048;
-        snow.scale.copy(bough.scale).multiplyScalar(.9); snow.rotation.copy(bough.rotation);
-        tree.add(bough,snow);
-      }
-    }
-    const tip = new THREE.Mesh(branchGeo, materials.snow);tip.scale.set(h*.1,h*.3,h*.1);tip.position.y=h*.95;tree.add(tip);
+    const tree = createIsland3SnowTree(materials, quality, h, index * .71);
+    tree.position.set(x, .37, z);
     planting.add(tree);
   }
   // Low banks provide plant variety without filling the route or obscuring

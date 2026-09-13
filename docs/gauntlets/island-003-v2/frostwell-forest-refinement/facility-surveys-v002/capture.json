@@ -1,0 +1,47 @@
+{
+  "scope": "Local development phone viewport; surface/deep facility side and rear geometry sanity, no physical-device acceptance.",
+  "sourceStart": {
+    "FrostwellIceworksThreeModel.ts": "0ed228188c2d9eb153bd694c9653f23950b5fab0c503194f2835a9c8a07c9e4e",
+    "Island3SnowTreeGeometry.ts": "734787c0c66c0b5f16ab1b911b6e62b59da0ec05f2bb15c1675d5634690350f5",
+    "Island3FrozenWorldThreeModel.ts": "1430eb9e5a4a6e93702c0428b9b453fb96c1dec91025b0319d12775dc739fea7",
+    "Island3FrostmoonThreeWorld.ts": "073eebbb4c5c8046e7e489505ff991f0ee7ccfdc8762e219f257671de9a99385",
+    "Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787"
+  },
+  "records": [
+    {
+      "view": "left",
+      "file": "left.png",
+      "sha256": "914edc99fabb3f133116525b7e58dd9982a13eec3de69bafc8856856ca411c67",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    }
+  ],
+  "errors": [
+    "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\n    at /Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/scripts/capture-island003-frostwell-surveys.cjs:11:121"
+  ],
+  "sourceEnd": {
+    "FrostwellIceworksThreeModel.ts": "0ed228188c2d9eb153bd694c9653f23950b5fab0c503194f2835a9c8a07c9e4e",
+    "Island3SnowTreeGeometry.ts": "734787c0c66c0b5f16ab1b911b6e62b59da0ec05f2bb15c1675d5634690350f5",
+    "Island3FrozenWorldThreeModel.ts": "1430eb9e5a4a6e93702c0428b9b453fb96c1dec91025b0319d12775dc739fea7",
+    "Island3FrostmoonThreeWorld.ts": "073eebbb4c5c8046e7e489505ff991f0ee7ccfdc8762e219f257671de9a99385",
+    "Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787"
+  },
+  "sourceStable": true
+}

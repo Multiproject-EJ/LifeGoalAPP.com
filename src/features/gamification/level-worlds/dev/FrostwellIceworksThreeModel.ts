@@ -277,14 +277,37 @@ export function createFrostwellIceworks(
   const tower = new THREE.Group();
   tower.name = 'FROSTWELL_A_FRAME_DRILL_TOWER';
   [[-0.48, -0.42], [0.48, -0.42], [-0.48, 0.42], [0.48, 0.42]].forEach(([x, z]) => {
-    tower.add(tubeBetween(new THREE.Vector3(x, 0.16, z), new THREE.Vector3(x * 0.28, 2.75, z * 0.28), 0.055, steel, 7));
+    tower.add(tubeBetween(new THREE.Vector3(x, 0.16, z), new THREE.Vector3(x * 0.28, 2.75, z * 0.28), 0.085, steel, 7));
   });
   for (let y = 0.65; y < 2.6; y += 0.48) {
     tower.add(tubeBetween(new THREE.Vector3(-0.42 + y * 0.06, y, -0.37 + y * 0.04), new THREE.Vector3(0.42 - y * 0.06, y, -0.37 + y * 0.04), 0.035, copper, 6));
   }
-  const crownBeam = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.15, 0.58), steelLight);
-  crownBeam.position.y = 2.72;
-  tower.add(crownBeam);
+  // Four braced faces and a weatherproof operator crown give the rig a
+  // load-bearing industrial silhouette, including the reverse survey.
+  for (let face = 0; face < 4; face++) {
+    const panel = new THREE.Group(); panel.rotation.y = face * Math.PI / 2;
+    for (let tier = 0; tier < 3; tier++) {
+      const y = .32 + tier * .73, nextY = y + .73;
+      const half = .48 * (1 - y / 3.8), upper = .48 * (1 - nextY / 3.8);
+      panel.add(tubeBetween(new THREE.Vector3(-half, y, half), new THREE.Vector3(upper, nextY, upper), .038, copper, 5));
+      panel.add(tubeBetween(new THREE.Vector3(half, y, half), new THREE.Vector3(-upper, nextY, upper), .038, steelLight, 5));
+    }
+    tower.add(panel);
+  }
+  const crownBeam = new THREE.Mesh(new THREE.BoxGeometry(1.02, .18, .84), steelLight);
+  crownBeam.position.y = 2.66; tower.add(crownBeam);
+  const operatorCab = new THREE.Mesh(new THREE.BoxGeometry(.84, .43, .64), steel);
+  operatorCab.name = 'FROSTWELL_INSULATED_OPERATOR_CROWN'; operatorCab.position.y = 2.92; tower.add(operatorCab);
+  for (const side of [-1, 1]) {
+    const glazing = new THREE.Mesh(new THREE.BoxGeometry(.58, .22, .035), frostMaterials.windowGlow);
+    glazing.position.set(0, 2.94, side * .331); tower.add(glazing);
+    const mullion = new THREE.Mesh(new THREE.BoxGeometry(.05, .25, .055), copper);
+    mullion.position.copy(glazing.position); tower.add(mullion);
+  }
+  const cabRoof = new THREE.Mesh(new THREE.BoxGeometry(1.02, .13, .82), copper);
+  cabRoof.position.y = 3.18; tower.add(cabRoof);
+  const cabSnow = new THREE.Mesh(new THREE.BoxGeometry(.83, .075, .70), frostMaterials.snow);
+  cabSnow.position.set(-.055, 3.275, .015); tower.add(cabSnow);
   drillSite.add(tower);
 
   const drillPivot = new THREE.Group();
@@ -301,7 +324,7 @@ export function createFrostwellIceworks(
   const winchWheel = new THREE.Mesh(new THREE.TorusGeometry(0.31, 0.065, 8, segments), copper);
   winchWheel.rotation.y = Math.PI / 2;
   winch.add(winchWheel);
-  winch.position.set(0.5, 2.28, 0.06);
+  winch.position.set(0.59, 2.52, 0.06);
   drillSite.add(winch);
 
   const progressLights: THREE.Mesh[] = [];
@@ -566,7 +589,7 @@ export function createFrostwellIceworks(
   sideCameraSocket.name = 'FROSTWELL_CUTAWAY_SIDE_CAMERA_SOCKET';
   // A shallow three-quarter side view keeps the section readable while proving
   // that the layers, shaft, bore, and water lens have real extrusion depth.
-  sideCameraSocket.position.set(3.2, -1.45, 15.0);
+  sideCameraSocket.position.set(3.2, -1.20, 16.4);
   cutawayRoot.add(sideCameraSocket);
 
   // Completed-state industrial section. The fishery itself sits beside the
@@ -578,21 +601,41 @@ export function createFrostwellIceworks(
   const deepFloor = new THREE.Mesh(new THREE.BoxGeometry(3.72, 0.12, 1.02), steel);
   deepFloor.name = 'FROSTWELL_DEEP_FISHERY_FLOOR';
   deepFloor.position.set(0, -5.48, 0.5);
-  const deepHallShell = new THREE.Mesh(new THREE.BoxGeometry(1.28, 0.72, 0.72), frostMaterials.timberDark);
+  const deepHallShell = new THREE.Group();
   deepHallShell.name = 'FROSTWELL_DEEP_FISHERY_HALL_SHELL';
-  deepHallShell.position.set(-0.66, -5.04, 0.48);
-  const deepHallRoof = new THREE.Mesh(new THREE.ConeGeometry(0.86, 0.38, 4), copper);
-  deepHallRoof.name = 'FROSTWELL_DEEP_FISHERY_COPPER_ROOF';
-  deepHallRoof.rotation.y = Math.PI / 4;
-  deepHallRoof.scale.z = 0.46;
-  deepHallRoof.position.set(-0.66, -4.48, 0.48);
-  const deepHallWindow = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.28, 0.035), frostMaterials.windowGlow);
-  deepHallWindow.name = 'FROSTWELL_DEEP_FISHERY_WARM_WINDOW';
-  deepHallWindow.position.set(-0.5, -4.98, 0.855);
-  const deepHallDoor = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.56, 0.045), steelLight);
-  deepHallDoor.name = 'FROSTWELL_DEEP_FISHERY_LIFT_LOBBY_DOOR';
-  deepHallDoor.position.set(-1.05, -5.11, 0.86);
-  deepFishery.add(deepFloor, deepHallShell, deepHallRoof, deepHallWindow, deepHallDoor);
+  // An open-front processing room makes the reward at the bottom visible:
+  // warm sorting benches, catch, structural posts and a separate lift lobby.
+  const hallBack=new THREE.Mesh(new THREE.BoxGeometry(1.94,.87,.075),steel);
+  hallBack.position.set(-.28,-4.98,.10);deepHallShell.add(hallBack);
+  for(const x of [-1.25,.69]) {
+    const side=new THREE.Mesh(new THREE.BoxGeometry(.075,.87,.80),steel);
+    side.position.set(x,-4.98,.46);deepHallShell.add(side);
+  }
+  for(const x of [-1.23,-.59,.05,.68]) {
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.07,.9,.08),copper);
+    post.position.set(x,-4.98,.86);deepHallShell.add(post);
+  }
+  const deepRoofSection=new THREE.Shape();
+  deepRoofSection.moveTo(-1.36,-4.54);deepRoofSection.lineTo(-1.02,-4.20);deepRoofSection.lineTo(.45,-4.20);deepRoofSection.lineTo(.79,-4.54);
+  deepRoofSection.lineTo(.70,-4.54);deepRoofSection.lineTo(.40,-4.28);deepRoofSection.lineTo(-.98,-4.28);deepRoofSection.lineTo(-1.27,-4.54);deepRoofSection.closePath();
+  const deepRoofGeo=new THREE.ExtrudeGeometry(deepRoofSection,{depth:.97,bevelEnabled:false});deepRoofGeo.translate(0,0,.005);
+  const deepHallRoof=new THREE.Mesh(deepRoofGeo,copper);deepHallRoof.name='FROSTWELL_DEEP_FISHERY_COPPER_ROOF';
+  const deepHallWindow=new THREE.Mesh(new THREE.BoxGeometry(1.50,.36,.025),frostMaterials.windowGlow);
+  deepHallWindow.name='FROSTWELL_DEEP_FISHERY_WARM_WINDOW';deepHallWindow.position.set(-.20,-4.81,.151);
+  for(const x of [-.71,-.20,.31]) {
+    const mullion=new THREE.Mesh(new THREE.BoxGeometry(.055,.39,.04),steelLight);mullion.position.set(x,-4.81,.172);deepHallShell.add(mullion);
+  }
+  const bench=new THREE.Mesh(new THREE.BoxGeometry(1.42,.08,.35),steelLight);bench.position.set(-.18,-5.06,.62);deepHallShell.add(bench);
+  for(const x of [-.72,.37]) {
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(.075,.36,.27),steel);leg.position.set(x,-5.26,.61);deepHallShell.add(leg);
+  }
+  for(let i=0;i<3;i++) {
+    const fish=createFish(fishMaterial);fish.position.set(-.66+i*.43,-4.985,.66);fish.rotation.y=.18-i*.20;deepHallShell.add(fish);
+  }
+  const deepHallDoor=new THREE.Mesh(new THREE.BoxGeometry(.24,.58,.055),steelLight);
+  deepHallDoor.name='FROSTWELL_DEEP_FISHERY_LIFT_LOBBY_DOOR';deepHallDoor.position.set(-1.25,-5.11,.46);deepHallDoor.rotation.y=Math.PI/2;
+  const canopyBeam=new THREE.Mesh(new THREE.BoxGeometry(2.04,.085,.12),steelLight);canopyBeam.position.set(-.28,-4.55,.88);deepHallShell.add(canopyBeam);
+  deepFishery.add(deepFloor,deepHallShell,deepHallRoof,deepHallWindow,deepHallDoor);
 
   const liftTopY = -0.42;
   const liftBottomY = -5.03;
@@ -709,22 +752,41 @@ export function createFrostwellIceworks(
   const fishery = new THREE.Group();
   fishery.name = 'FROSTWELL_SURFACE_LIFT_HEADHOUSE';
   fishery.position.set(0.55, 0.48, -0.62);
-  const shed = new THREE.Mesh(new THREE.BoxGeometry(1.28, 0.9, 0.94), frostMaterials.timberDark);
-  shed.name = 'FROSTWELL_SURFACE_LIFT_HEADHOUSE_SHELL';
-  shed.position.y = 0.46;
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.97, 0.58, 4), copper);
-  roof.name = 'FROSTWELL_FISHERY_ROOF';
-  roof.rotation.y = Math.PI / 4;
-  roof.scale.z = 0.72;
-  roof.position.y = 1.12;
-  const warmWindow = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.32, 0.025), frostMaterials.windowGlow);
-  warmWindow.name = 'FROSTWELL_WARM_PRACTICAL_SYSTEM';
-  warmWindow.position.set(0.22, 0.57, 0.452);
-  const fisherySign = new THREE.Mesh(new THREE.CircleGeometry(0.18, 10), signal);
-  fisherySign.name = 'FROSTWELL_FISHERY_BEACON';
-  fisherySign.rotation.y = Math.PI / 2;
-  fisherySign.position.set(0.655, 0.73, 0.04);
-  fishery.add(shed, roof, warmWindow, fisherySign);
+  const shed = new THREE.Mesh(new THREE.BoxGeometry(1.28, 1.14, .94), steel);
+  shed.name = 'FROSTWELL_SURFACE_LIFT_HEADHOUSE_SHELL'; shed.position.y = .57;
+  // A continuous folded copper roof replaces the generic pyramid cap.
+  const roofSection = new THREE.Shape();
+  roofSection.moveTo(-.76, 1.08); roofSection.lineTo(-.46, 1.58); roofSection.lineTo(0, 1.78);
+  roofSection.lineTo(.46, 1.58); roofSection.lineTo(.76, 1.08);
+  roofSection.lineTo(.67, 1.08); roofSection.lineTo(.40, 1.50); roofSection.lineTo(0, 1.68);
+  roofSection.lineTo(-.40, 1.50); roofSection.lineTo(-.67, 1.08); roofSection.closePath();
+  const roofGeometry = new THREE.ExtrudeGeometry(roofSection, {depth:1.13, bevelEnabled:false, curveSegments:1});
+  roofGeometry.translate(0, 0, -.565);
+  const roof = new THREE.Mesh(roofGeometry, copper); roof.name = 'FROSTWELL_FISHERY_ROOF';
+  const gableShape = new THREE.Shape(); gableShape.moveTo(-.63,1.1);gableShape.lineTo(-.40,1.5);gableShape.lineTo(0,1.68);gableShape.lineTo(.40,1.5);gableShape.lineTo(.63,1.1);gableShape.closePath();
+  const gableGeometry = new THREE.ExtrudeGeometry(gableShape,{depth:.07,bevelEnabled:false});
+  for(const side of [-1,1]) {
+    const gable = new THREE.Mesh(gableGeometry, frostMaterials.timberDark);gable.position.z=side<0?-.47:.40;fishery.add(gable);
+    for(const x of [-.48,.48]) {
+      const post=new THREE.Mesh(new THREE.BoxGeometry(.10,1.18,.1),frostMaterials.timber);
+      post.position.set(x,.59,side*.49);fishery.add(post);
+    }
+    for(const x of [-.33,0,.33]) {
+      const window=new THREE.Mesh(new THREE.BoxGeometry(.23,.31,.035),frostMaterials.windowGlow);
+      window.position.set(x,.78,side*.482);fishery.add(window);
+    }
+    const sill=new THREE.Mesh(new THREE.BoxGeometry(1.15,.07,.09),copper);sill.position.set(0,.585,side*.51);fishery.add(sill);
+  }
+  const warmWindow = new THREE.Mesh(new THREE.BoxGeometry(.028,.36,.42), frostMaterials.windowGlow);
+  warmWindow.name='FROSTWELL_WARM_PRACTICAL_SYSTEM';warmWindow.position.set(.655,.78,0);
+  const loadingDoor=new THREE.Mesh(new THREE.BoxGeometry(.03,.48,.28),frostMaterials.timberDark);
+  loadingDoor.position.set(.659,.25,0);fishery.add(loadingDoor);
+  const fisherySign = new THREE.Mesh(new THREE.CircleGeometry(.16, 10), signal);
+  fisherySign.name='FROSTWELL_FISHERY_BEACON';fisherySign.rotation.y=Math.PI/2;fisherySign.position.set(.662,1.04,0);
+  const flue = new THREE.Mesh(new THREE.CylinderGeometry(.115,.14,.72,8),steelLight);
+  flue.position.set(-.36,1.72,-.26);fishery.add(flue);
+  const flueCowl=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.10,8),copper);flueCowl.position.set(-.36,2.1,-.26);fishery.add(flueCowl);
+  fishery.add(shed,roof,warmWindow,fisherySign);
   operating.add(fishery);
 
   const tankRoot = new THREE.Group();
@@ -735,8 +797,24 @@ export function createFrostwellIceworks(
   const tankWater = new THREE.Mesh(new THREE.CylinderGeometry(0.49, 0.49, 0.62, segments), waterFlow);
   tankWater.name = 'FROSTWELL_RESERVOIR_WATER_COLUMN';
   tankWater.position.y = 0.43;
-  const tankTop = new THREE.Mesh(new THREE.ConeGeometry(0.61, 0.42, segments), copper);
-  tankTop.position.y = 1.73;
+  const tankTop = new THREE.Mesh(new THREE.SphereGeometry(.62, segments, 6, 0, Math.PI*2, 0, Math.PI/2), copper);
+  tankTop.scale.y=.46; tankTop.position.y=1.53;
+  const tankSnow=new THREE.Mesh(new THREE.SphereGeometry(.57,segments,5,0,Math.PI*2,0,Math.PI/2),frostMaterials.snow);
+  tankSnow.scale.y=.28;tankSnow.position.set(-.025,1.68,.015);tankRoot.add(tankSnow);
+  const jacket=new THREE.Mesh(new THREE.CylinderGeometry(.565,.62,1.34,segments,1,true,Math.PI*.20,Math.PI*.86),steel);
+  jacket.name='FROSTWELL_INSULATED_RESERVOIR_JACKET';jacket.position.y=.78;tankRoot.add(jacket);
+  for(let i=0;i<6;i++) {
+    const a=i/6*Math.PI*2;
+    const rib=tubeBetween(new THREE.Vector3(Math.cos(a)*.615,.17,Math.sin(a)*.615),new THREE.Vector3(Math.cos(a)*.565,1.49,Math.sin(a)*.565),.035,steelLight,5);tankRoot.add(rib);
+  }
+  const accessRing=new THREE.Mesh(new THREE.TorusGeometry(.67,.055,5,segments),steelLight);
+  accessRing.rotation.x=Math.PI/2;accessRing.position.y=1.38;tankRoot.add(accessRing);
+  const guardRing=new THREE.Mesh(new THREE.TorusGeometry(.67,.022,5,segments),copper);
+  guardRing.rotation.x=Math.PI/2;guardRing.position.y=1.68;tankRoot.add(guardRing);
+  for(let i=0;i<8;i++) {
+    const a=i/8*Math.PI*2;
+    tankRoot.add(tubeBetween(new THREE.Vector3(Math.cos(a)*.67,1.38,Math.sin(a)*.67),new THREE.Vector3(Math.cos(a)*.67,1.68,Math.sin(a)*.67),.018,steel,5));
+  }
   const tankGauge = new THREE.Mesh(new THREE.BoxGeometry(0.11, 1.02, 0.09), waterFlow);
   tankGauge.name = 'FROSTWELL_RESERVOIR_LEVEL_GAUGE';
   tankGauge.position.set(0.57, 0.82, 0.04);
@@ -958,11 +1036,11 @@ export function createFrostwellIceworks(
       if (!cutawayRoot.visible) return null;
       root.updateMatrixWorld(true);
       const reviewPosition = presentation.cutawayEvidenceView === 'left'
-        ? new THREE.Vector3(-4.6, -1.2, 14.4)
+        ? new THREE.Vector3(-4.6, -1.05, 16.0)
         : presentation.cutawayEvidenceView === 'right'
-          ? new THREE.Vector3(5, -1.35, 14.4)
+          ? new THREE.Vector3(5, -1.10, 16.0)
           : presentation.cutawayEvidenceView === 'rear'
-            ? new THREE.Vector3(-2.4, -1, -14.2)
+            ? new THREE.Vector3(-2.4, -.9, -16.1)
             : null;
       // Follow the cutter from a close three-quarter side view during live
       // descent, then pull back to the full working fishery. Review sockets stay fixed.
@@ -975,7 +1053,7 @@ export function createFrostwellIceworks(
           : following
             ? cutawayRoot.localToWorld(new THREE.Vector3(2.7, cutterY + 1.35, 9.1))
             : sideCameraSocket.getWorldPosition(new THREE.Vector3()),
-        target: cutawayRoot.localToWorld(new THREE.Vector3(0, following ? cutterY : -1.45, 0.12)),
+        target: cutawayRoot.localToWorld(new THREE.Vector3(0, following ? cutterY : -1.20, 0.12)),
       };
     },
     animate: (elapsed) => {

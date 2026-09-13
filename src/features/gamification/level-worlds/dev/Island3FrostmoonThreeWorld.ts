@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createIsland3SnowTree } from './Island3SnowTreeGeometry';
 import type {
   Island3DQuality,
   Island3DQualityProfile,
@@ -2312,22 +2313,10 @@ function addSnowShelf(root: THREE.Group, x: number, z: number, radius: number, m
 }
 
 function addSnowPine(root: THREE.Group, x: number, z: number, scale: number, materials: Island3FrostmoonMaterials, quality: Island3DQuality, phase: number) {
-  const group = new THREE.Group();
+  const group = createIsland3SnowTree(materials, quality, 1.9 * scale, phase);
   group.name = 'ISLAND_3_SNOW_PINE';
   group.position.set(x, 0.36, z);
   group.userData.phase = phase;
-  const trunk = cylinder(0.045 * scale, 0.08 * scale, 0.9 * scale, materials.timberDark, 6);
-  trunk.position.y = 0.45 * scale;
-  group.add(trunk);
-  const layers = quality === 'low' ? 3 : 4;
-  for (let index = 0; index < layers; index += 1) {
-    const radius = (0.42 - index * 0.065) * scale;
-    const foliage = new THREE.Mesh(new THREE.ConeGeometry(radius, 0.62 * scale, quality === 'high' ? 10 : 7), index % 2 ? materials.pine : materials.pineDark);
-    foliage.position.y = (0.62 + index * 0.32) * scale;
-    const snow = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.03, 0.28 * scale, quality === 'high' ? 10 : 7), materials.snow);
-    snow.position.y = (0.78 + index * 0.32) * scale;
-    group.add(foliage, snow);
-  }
   root.add(group);
   return group;
 }

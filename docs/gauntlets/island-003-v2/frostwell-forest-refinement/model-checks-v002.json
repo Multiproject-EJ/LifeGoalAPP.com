@@ -1,0 +1,139 @@
+{
+  "status": "pass",
+  "checks": [
+    "sequences Frostmoon from day through a short blizzard into cozy night without aurora",
+    "gives every Frostmoon landmark a distinct occupational palette while keeping all roof metal warm copper",
+    "casts restrained warm hearth spill onto Frostmoon snow at night",
+    "keeps Frostwell Iceworks north in the ocean, route-clear, clickable, and state-driven",
+    "adds the approved Frostmoon seafood loading yard and wheel-ski freighter outside the playable route"
+  ],
+  "qualities": [
+    {
+      "quality": "low",
+      "samples": [
+        {
+          "species": "silver-spruce",
+          "triangles": 784,
+          "size": [
+            1.2262068244236535,
+            2.0118984148695445,
+            0.9595258878859481
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 784,
+          "size": [
+            1.3671742210690603,
+            2.0118984148695445,
+            1.295016422976277
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 784,
+          "size": [
+            1.242413789669763,
+            2.0140937331387274,
+            1.1952673329121062
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 784,
+          "size": [
+            1.3649646743900141,
+            2.0441154943947915,
+            1.2889204593276182
+          ]
+        }
+      ],
+      "compactedWorldMeshes": 23
+    },
+    {
+      "quality": "medium",
+      "samples": [
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.330039700301189,
+            2.0118984148695445,
+            1.2059575105610594
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.37527236590693,
+            2.0259371274746165,
+            1.1666748930085746
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.4161660990847693,
+            2.042400732629611,
+            1.1570840585374937
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.317250165503336,
+            2.0118984148695445,
+            1.3005993373557603
+          ]
+        }
+      ],
+      "compactedWorldMeshes": 23
+    },
+    {
+      "quality": "high",
+      "samples": [
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.330039700301189,
+            2.0118984148695445,
+            1.2059575105610594
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.37527236590693,
+            2.0259371274746165,
+            1.1666748930085746
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.4161660990847693,
+            2.042400732629611,
+            1.1570840585374937
+          ]
+        },
+        {
+          "species": "silver-spruce",
+          "triangles": 1264,
+          "size": [
+            1.317250165503336,
+            2.0118984148695445,
+            1.3005993373557603
+          ]
+        }
+      ],
+      "compactedWorldMeshes": 23
+    }
+  ],
+  "note": "Structural, animation-state and cost checks; visual quality is reviewed separately."
+}
