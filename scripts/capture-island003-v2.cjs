@@ -7,7 +7,7 @@ const repository = path.resolve(__dirname, '..');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const git = args => execFileSync('git', args, { cwd: repository, encoding: 'utf8' }).trim();
 function sourceSnapshot() {
-  const files = git(['ls-files', '--', 'src/features/gamification/level-worlds/dev', 'src/features/gamification/level-worlds/services/islandRun3DWorldRouting.ts']).split('\n').filter(Boolean).sort();
+  const files = git(['ls-files', '--cached', '--others', '--exclude-standard', '--', 'src/features/gamification/level-worlds/dev', 'src/features/gamification/level-worlds/services/islandRun3DWorldRouting.ts']).split('\n').filter(Boolean).sort();
   const sources = Object.fromEntries(files.map(file => {
     const absolute = path.join(repository, file);
     return [file, fs.existsSync(absolute) ? sha256(fs.readFileSync(absolute)) : null];
@@ -55,27 +55,33 @@ if (requestedFocus && !['boss', 'hatchery', 'habit', 'wisdom', 'event', 'frostwe
   try {
     browser = await chromium.launch(launchOptions);
     const page = await browser.newPage({ viewport, deviceScaleFactor: dpr });
+    let loadedAmbience = null;
     page.on('pageerror', error => { failures.push(String(error)); console.error('PAGEERROR', String(error)); });
     for (const [name, view] of cases) {
       requireStableSources(sourceStart, `before ${name}`);
-      await page.goto(name === 'night' ? baseUrl.replace('Ambience=day', 'Ambience=night') : baseUrl, { waitUntil: 'domcontentloaded' });
-      try { await page.getByRole('button', { name: 'Hide overlays for evidence', exact: true }).waitFor({ timeout: 15000 }); }
-      catch {
-        await page.reload({ waitUntil: 'domcontentloaded' });
-        await page.getByRole('button', { name: 'Hide overlays for evidence', exact: true }).waitFor({ timeout: 180000 });
+      const ambience = name === 'night' ? 'night' : 'day';
+      const sceneReused = process.argv.includes('--reuse-scene') && loadedAmbience === ambience;
+      if (!sceneReused) {
+        await page.goto(ambience === 'night' ? baseUrl.replace('Ambience=day', 'Ambience=night') : baseUrl, { waitUntil: 'domcontentloaded', timeout: 180000 });
+        try { await page.getByRole('button', { name: 'Hide overlays for evidence', exact: true }).waitFor({ timeout: 15000 }); }
+        catch {
+          await page.reload({ waitUntil: 'domcontentloaded' });
+          await page.getByRole('button', { name: 'Hide overlays for evidence', exact: true }).waitFor({ timeout: 180000 });
+        }
+        await page.locator('.island-5-three-pilot__topline select').selectOption('high');
+        loadedAmbience = ambience;
       }
-      await page.locator('.island-5-three-pilot__topline select').selectOption('high');
-      if (['boss', 'hatchery', 'habit', 'wisdom', 'event', 'frostwell'].includes(view)) await page.getByLabel('Focus a landmark').selectOption(view);
-      else if (view) await page.getByRole('button', { name: view, exact: true }).click();
+      if (['boss', 'hatchery', 'habit', 'wisdom', 'event', 'frostwell'].includes(view)) await page.getByLabel('Focus a landmark').selectOption(view, { force: sceneReused });
+      else if (view) await page.getByRole('button', { name: view, exact: true, includeHidden: true }).dispatchEvent('click');
       await page.waitForTimeout(2500);
       const metrics = await page.getByLabel('3D renderer performance').innerText();
-      await page.getByRole('button', { name: 'Hide overlays for evidence', exact: true }).click();
+      await page.getByRole('button', { name: 'Hide overlays for evidence', exact: true, includeHidden: true }).dispatchEvent('click');
       await page.waitForTimeout(200);
       const file = `${name}.png`;
       await page.screenshot({ path: path.join(folder, file) });
       const sourceAfter = sourceSnapshot();
       const changes = sourceChanges(sourceStart, sourceAfter);
-      records.push({ name, file, metrics, viewport, dpr, url: page.url(), quality: 'high',
+      records.push({ name, file, metrics, viewport, dpr, url: page.url(), quality: 'high', sceneReused,
         camera: { kind: view ? (['boss', 'hatchery', 'habit', 'wisdom', 'event', 'frostwell'].includes(view) ? 'landmark-focus' : 'preset') : 'default-overview', selected: view },
         canvasDataset: await page.locator('canvas').first().evaluate(canvas => ({ ...canvas.dataset })),
         imageSha256: sha256(fs.readFileSync(path.join(folder, file))),

@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "overview",
+    "sourcePath": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+    "width": 1024,
+    "height": 1536,
+    "foregroundCoverage": 0.7487,
+    "largestComponentFraction": 1.0,
+    "pHash": 17051178908058711433,
+    "duplicateOfHash": null
+  }
+}

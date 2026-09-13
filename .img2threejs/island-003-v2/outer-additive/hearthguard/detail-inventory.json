@@ -1,0 +1,123 @@
+{
+  "reusedFrom": ".img2threejs/island-003-frostmoon-upgrade/hearthguard-yard-l3/detail-inventory.json",
+  "scope": "Full approved goal re-inspected, no new detail systems.",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+    "details": [
+      {
+        "id": "gate-feather-veins",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "feather-crown"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "gate-copper-footplates",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "front-gate"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "fence-post-caps",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "perimeter-system"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "rope-lashings",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "perimeter-system"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "climbing-ring-ropes",
+        "kind": "linework",
+        "mapsTo": {
+          "ref": "climbing-frame"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "shield-rims-and-bosses",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "shield-target-system"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "roof-copper-courses",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "recovery-hut"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "roof-rivets",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "recovery-hut"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "brazier-fire",
+        "kind": "emissive",
+        "mapsTo": {
+          "ref": "recovery-hearth"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "lantern-cages",
+        "kind": "linework",
+        "mapsTo": {
+          "ref": "banner-and-lanterns"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "rear-wood-and-barrel-storage",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "rear-service-dressing"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "windward-snow-caps",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "snow"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "stone-block-joints",
+        "kind": "bevel",
+        "mapsTo": {
+          "ref": "court-surface"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "banner-training-sigil",
+        "kind": "linework",
+        "mapsTo": {
+          "ref": "banner-and-lanterns"
+        },
+        "realization": "unreported"
+      }
+    ]
+  }
+}

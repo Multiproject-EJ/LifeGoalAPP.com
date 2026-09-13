@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "multi-view",
+    "sourcePath": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-moonwell-observatory-l3-goal-v001.png",
+    "width": 1402,
+    "height": 1122,
+    "foregroundCoverage": 0.5057,
+    "largestComponentFraction": 0.6899,
+    "pHash": 18357497645287900866,
+    "duplicateOfHash": null
+  }
+}

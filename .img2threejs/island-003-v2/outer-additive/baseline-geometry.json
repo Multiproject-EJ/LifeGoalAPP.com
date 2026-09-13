@@ -1,0 +1,20 @@
+{
+  "snowfeather-high": {
+    "l3VertexHash": "b489b54458b57baaef24dfe53b2275cf5b21e419374036f6636f52c5f4d8b675"
+  },
+  "snowfeather-medium": {
+    "l3VertexHash": "b508bb9aedeb9c8910bb28ff5dcf575588b76cb8718cd3bebc268d0fd20765cf"
+  },
+  "snowfeather-low": {
+    "l3VertexHash": "645d9db0332f6eded2236bcfb2072ca0247eae6b31886a3f60f42c4f5b918043"
+  },
+  "hearthguard-high": {
+    "l3VertexHash": "4d8feaffaabb30f971e07d54ebfe8497bcbb9d980d59fd6113c0316c9571ef3d"
+  },
+  "hearthguard-medium": {
+    "l3VertexHash": "84f58b37f2735898c26956bb65eceb26076fbd1c271e88821d07d571a3e51ef4"
+  },
+  "hearthguard-low": {
+    "l3VertexHash": "958c93fb83f5919e2bf82f65b5eb31e7c72168bbc5298a51fc65a74824b3201d"
+  }
+}

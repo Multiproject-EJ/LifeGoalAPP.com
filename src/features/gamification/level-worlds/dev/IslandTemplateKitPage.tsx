@@ -1,3 +1,8 @@
+import type { Island5CameraPresetId } from './island5ThreePilotContract';
+import { IslandFrostwellMissionModal } from '../components/IslandFrostwellMissionModal';
+import { IslandMoonwellThermalModal } from '../components/IslandMoonwellThermalModal';
+import { useFrostwellMissionSequence } from '../hooks/useFrostwellMissionSequence';
+import '../LevelWorlds.css';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
@@ -97,6 +102,9 @@ function readInitialPreviewState() {
     firebridgeMissionStage,
     firebridgeReplay: params.get('firebridgeReplay') === '1',
     firebridgeEscape: params.get('firebridgeEscape') === '1',
+    frostwellMissionV2: params.get('frostwellMissionV2') === '1',
+    moonwellReplay: params.get('moonwellReplay') === '1',
+    moonwellThaw: params.has('moonwellThaw') ? Math.max(0, Math.min(1, Number(params.get('moonwellThaw')) || 0)) : undefined,
     frostwellDepth,
     frostwellCutawayPreview,
     frostwellCutawayLoop,
@@ -242,7 +250,22 @@ export default function IslandTemplateKitPage() {
   const updateFirebridgeController = useCallback((state: LavaSkiffControllerState) => {
     setFirebridgeEscape((current) => ({ ...current, ...state }));
   }, []);
-  const [previewFocusPreset, setPreviewFocusPreset] = useState<typeof initialState.focusPreset>(null);
+  const [previewFocusPreset, setPreviewFocusPreset] = useState<Island5CameraPresetId | null>(null);
+  // Deterministic presentation fixtures use the production UI and timeline.
+  // These controls never call gameplay actions or write player saves.
+  const [frostwellModal, setFrostwellModal] = useState(initialState.frostwellMissionV2);
+  const [frostwellFixtureDepth, setFrostwellFixtureDepth] = useState(initialState.frostwellDepth);
+  const [frostwellFixtureBuilt, setFrostwellFixtureBuilt] = useState(initialState.frostwellBuilt);
+  const [frostwellFixtureSpin, setFrostwellFixtureSpin] = useState(0);
+  const [frostwellFixtureSequence, setFrostwellFixtureSequence] = useState(0);
+  const frostwellSequence = useFrostwellMissionSequence(() => setFrostwellFixtureSequence(value => value + 1));
+  const closeFrostwellFixture = useCallback(() => { frostwellSequence.settle(); setFrostwellModal(false); }, [frostwellSequence.settle]);
+  const [moonwellModal, setMoonwellModal] = useState(initialState.moonwellReplay);
+  const [moonwellHot, setMoonwellHot] = useState(false);
+  const [moonwellRunning, setMoonwellRunning] = useState(false);
+  const [moonwellSequence, setMoonwellSequence] = useState(0);
+  const closeMoonwellFixture = useCallback(() => setMoonwellModal(false), []);
+
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
   // Developer-only presentation controls; never persist or purchase progress.
@@ -313,6 +336,23 @@ export default function IslandTemplateKitPage() {
 
   return (
     <main className="island-kit-page">
+      <IslandFrostwellMissionModal open={frostwellModal} phase={frostwellSequence.phase}
+        meters={frostwellSequence.held?.meters ?? frostwellFixtureDepth} built={frostwellSequence.held?.built ?? frostwellFixtureBuilt}
+        spins={Math.max(0, 2 - frostwellFixtureSpin)} rotation={frostwellFixtureSpin * 1800 + (frostwellFixtureSpin ? 22.5 : 0)}
+        result={frostwellFixtureSpin ? Math.min(75, 500 - initialState.frostwellDepth) : null}
+        onClose={closeFrostwellFixture} onOverview={() => { closeFrostwellFixture(); setPreviewFocusPreset('overview'); }}
+        onSpin={() => {
+          const before = frostwellFixtureDepth; const after = Math.min(500, before + 75);
+          const token = frostwellSequence.prepare(before, frostwellFixtureBuilt);
+          setFrostwellFixtureDepth(after); setFrostwellFixtureBuilt(after === 500);
+          setFrostwellFixtureSpin(value => value + 1); setPreviewFocusPreset('frostwell');
+          frostwellSequence.play(token, { metersBefore: before, metersAfter: after, commissioned: after === 500 });
+        }} />
+      <IslandMoonwellThermalModal open={moonwellModal} busy={false} onClose={closeMoonwellFixture} onBoil={() => {
+        setMoonwellModal(false); setMoonwellHot(true); setMoonwellRunning(true); setMoonwellSequence(value => value + 1); setPreviewFocusPreset('event');
+      }} />
+      {initialState.frostwellMissionV2 && !frostwellModal ? <button className="moonwell-thermal-launch" onClick={() => setFrostwellModal(true)}>Open Frostwell fixture</button> : null}
+      {initialState.moonwellReplay && moonwellRunning ? <button className="moonwell-thermal-launch" onClick={() => setMoonwellRunning(false)}>Finish thaw</button> : null}
       <header className="island-kit-header">
         <div>
           <p className="island-kit-eyebrow">DEV ONLY · {ISLAND_KIT_VERSION}</p>
@@ -458,14 +498,17 @@ export default function IslandTemplateKitPage() {
                 : previewFocusPreset}
               constructionPresentation={constructionPresentation}
               signatureMissionPresentation={{
-                metersDrilled: initialState.frostwellDepth,
-                built: initialState.frostwellBuilt,
-                constructionSequence: 0,
+                metersDrilled: frostwellSequence.held?.meters ?? frostwellFixtureDepth,
+                built: frostwellSequence.held?.built ?? frostwellFixtureBuilt,
+                constructionSequence: frostwellFixtureSequence,
+                drillingActive: frostwellSequence.phase === 'drilling',
                 cutawayPreview: initialState.frostwellCutawayPreview,
                 cutawayPreviewLoop: initialState.frostwellCutawayLoop,
                 cutawayPreviewTimeSeconds: initialState.frostwellCutawayTimeSeconds,
                 cutawayEvidenceView: initialState.frostwellCutawayView,
               }}
+              moonwellThermalPresentation={{ heated: moonwellHot, running: moonwellRunning, sequence: moonwellSequence, previewProgress: initialState.moonwellThaw }}
+              onMoonwellThermalComplete={() => setMoonwellRunning(false)}
               sunkenSandsTreasurePresentation={{
                 revealProgress: initialState.treasureRolls / SUNKEN_SANDS_TREASURE_ROLL_TARGET,
                 ready: initialState.treasureRolls >= SUNKEN_SANDS_TREASURE_ROLL_TARGET,

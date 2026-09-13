@@ -1,0 +1,23 @@
+{
+  "action": "one-bounded-correction",
+  "reviewer": "/root/build_modal_review",
+  "scope": "Early-level contact and additive preservation",
+  "viewScores": [
+    0.7,
+    0.7,
+    0.78,
+    0.75,
+    0.86,
+    0.86,
+    0.75,
+    0.78,
+    0.7
+  ],
+  "blocking": [
+    "Timber foundation rails intersect egg crowns",
+    "Spot patches detach beyond ellipsoid"
+  ],
+  "correction": "Same rails retracted and egg spots seated on ellipsoid at all levels; only this exact L3 baseline exception is authorized. Parent authorized contact correction after review.",
+  "phoneScore": 0.58,
+  "phoneOwner": "Root camera correction separately"
+}

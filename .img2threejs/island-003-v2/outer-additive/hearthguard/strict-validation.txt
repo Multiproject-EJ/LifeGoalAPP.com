@@ -1,0 +1,11 @@
+PASS
+warning: component 'court-surface' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'front-gate' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'feather-crown' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'perimeter-system' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'climbing-frame' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'shield-target-system' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'recovery-hut' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'recovery-hearth' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'banner-and-lanterns' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'rear-service-dressing' is missing actionProfile; future animation/destruction may require refactor

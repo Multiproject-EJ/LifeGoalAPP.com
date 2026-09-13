@@ -1,0 +1,56 @@
+{
+  "referenceAreaFraction": 0.29004375,
+  "angles": [
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-1.png",
+      "areaFraction": 0.280378125,
+      "ratio": 0.9666752860559829,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-2.png",
+      "areaFraction": 0.2838640625,
+      "ratio": 0.9786939470338527,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-3.png",
+      "areaFraction": 0.30373125,
+      "ratio": 1.0471911565065615,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-4.png",
+      "areaFraction": 0.298915625,
+      "ratio": 1.0305880578361024,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-5.png",
+      "areaFraction": 0.2865390625,
+      "ratio": 0.9879166936022583,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-6.png",
+      "areaFraction": 0.2730375,
+      "ratio": 0.9413666041760941,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-7.png",
+      "areaFraction": 0.28191875,
+      "ratio": 0.9719869847221324,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/moonwell-thermal/macro-v001/clay-8.png",
+      "areaFraction": 0.3030203125,
+      "ratio": 1.0447400176697481,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "deterministic; zero token; a flat-plane-faking-a-volume collapses in silhouette area when orbited"
+}

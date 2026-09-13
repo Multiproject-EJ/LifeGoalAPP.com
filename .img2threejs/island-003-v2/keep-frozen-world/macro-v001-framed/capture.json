@@ -1,0 +1,196 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "file": "clay-0.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-1.png",
+      "angle": 0.6981317007977318,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-2.png",
+      "angle": 1.3962634015954636,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-3.png",
+      "angle": 2.0943951023931953,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-4.png",
+      "angle": 2.792526803190927,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-5.png",
+      "angle": 3.490658503988659,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-6.png",
+      "angle": 4.1887902047863905,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-7.png",
+      "angle": 4.886921905584122,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "clay-8.png",
+      "angle": 5.585053606381854,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 4582
+    },
+    {
+      "file": "wire.png",
+      "angle": 0.5,
+      "level": 3,
+      "mode": "wire",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 158,
+      "triangles": 0
+    },
+    {
+      "file": "beauty.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "beauty",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 325,
+      "triangles": 9254
+    },
+    {
+      "file": "L1.png",
+      "angle": 0,
+      "level": 1,
+      "mode": "beauty",
+      "meshes": 27,
+      "bounds": [
+        4.798654460906982,
+        3.479999998569489,
+        4.847999954223632
+      ],
+      "calls": 27,
+      "triangles": 1302
+    },
+    {
+      "file": "L3.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "beauty",
+      "meshes": 158,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ],
+      "calls": 325,
+      "triangles": 9254
+    }
+  ],
+  "sourceStart": {
+    "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts": "55e35f9565b1cd40dbf61b3172e7ca8d1f189eb7c3c4ab85729cbcf587d2b097",
+    "src/features/gamification/level-worlds/dev/Island3FrozenWorldThreeModel.ts": "f364fec00b8e8be1c29aa6b605fc2a8064213ca1f2f88755c0cae058c7c73128"
+  },
+  "sourceEnd": {
+    "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts": "55e35f9565b1cd40dbf61b3172e7ca8d1f189eb7c3c4ab85729cbcf587d2b097",
+    "src/features/gamification/level-worlds/dev/Island3FrozenWorldThreeModel.ts": "f364fec00b8e8be1c29aa6b605fc2a8064213ca1f2f88755c0cae058c7c73128"
+  },
+  "sourceStable": true
+}

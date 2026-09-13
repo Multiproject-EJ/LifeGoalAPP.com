@@ -1,0 +1,238 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "file": "clay-0.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-1.png",
+      "angle": 0.6981317007977318,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-2.png",
+      "angle": 1.3962634015954636,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-3.png",
+      "angle": 2.0943951023931953,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-4.png",
+      "angle": 2.792526803190927,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-5.png",
+      "angle": 3.490658503988659,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-6.png",
+      "angle": 4.1887902047863905,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-7.png",
+      "angle": 4.886921905584122,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "clay-8.png",
+      "angle": 5.585053606381854,
+      "level": 3,
+      "mode": "clay",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 6400
+    },
+    {
+      "file": "wire.png",
+      "angle": 0.5,
+      "level": 3,
+      "mode": "wire",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 97,
+      "triangles": 0
+    },
+    {
+      "file": "beauty.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "beauty",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 195,
+      "triangles": 12920
+    },
+    {
+      "file": "L1.png",
+      "angle": 0,
+      "level": 1,
+      "mode": "beauty",
+      "meshes": 31,
+      "bounds": [
+        3.6362079238891605,
+        0.8624000073432926,
+        3.673599967956543
+      ],
+      "calls": 30,
+      "triangles": 1328
+    },
+    {
+      "file": "L2.png",
+      "angle": 0,
+      "level": 2,
+      "mode": "beauty",
+      "meshes": 52,
+      "bounds": [
+        3.6362079238891605,
+        2.5286728186607363,
+        3.673599967956543
+      ],
+      "calls": 103,
+      "triangles": 5136
+    },
+    {
+      "file": "L3.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "beauty",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 195,
+      "triangles": 12920
+    },
+    {
+      "file": "half.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "half",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 197,
+      "triangles": 13096
+    },
+    {
+      "file": "hot.png",
+      "angle": 0,
+      "level": 3,
+      "mode": "hot",
+      "meshes": 106,
+      "bounds": [
+        3.6362079238891605,
+        2.867199997997284,
+        3.673599967956543
+      ],
+      "calls": 191,
+      "triangles": 12980
+    }
+  ],
+  "sourceStart": {
+    "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts": "c98a020bb917fd2dfa3e03a64495878be13d407212bbc2592b5e98bd1e2392d7",
+    "src/features/gamification/level-worlds/dev/Island3MoonwellThermalPresentation.ts": "a742e92f243cee9fbfae82704b27f8524f92d5342d5f770281101c84aab8bf38"
+  },
+  "sourceEnd": {
+    "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts": "c98a020bb917fd2dfa3e03a64495878be13d407212bbc2592b5e98bd1e2392d7",
+    "src/features/gamification/level-worlds/dev/Island3MoonwellThermalPresentation.ts": "a742e92f243cee9fbfae82704b27f8524f92d5342d5f770281101c84aab8bf38"
+  },
+  "sourceStable": true
+}

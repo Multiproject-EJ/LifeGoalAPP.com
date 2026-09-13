@@ -1,0 +1,135 @@
+{
+  "sourceStart": {
+    "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+    "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96",
+    "Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66"
+  },
+  "scope": "Actual development phone presentation, not physical device or authenticated gameplay",
+  "errors": [
+    "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Finish thaw', exact: true })\u001b[22m\n\n    at /Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/scripts/capture-island003-v2-restorations.cjs:8:332"
+  ],
+  "records": [
+    {
+      "name": "moonwell-cold",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "moonwell-half",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.500",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "moonwell-hot",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "1.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "moonwell-launch",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "moonwell-live-melt",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "1.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    }
+  ],
+  "sourceEnd": {
+    "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+    "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96",
+    "Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66"
+  },
+  "sourceStable": true
+}

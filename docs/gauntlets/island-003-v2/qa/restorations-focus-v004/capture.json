@@ -1,0 +1,162 @@
+{
+  "scope": "Corrected closeups only. Paused Playwright clock holds live Moonwell at mid-thaw for composition; previous live-motion and responsive checks remain separately recorded.",
+  "sourceStart": {
+    "Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+    "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+    "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+  },
+  "records": [
+    {
+      "name": "moonwell-launch",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "sha256": "f1427bd5b3e3ea77d732bca02b017d937bb029653965d0830e1ee935995010c0"
+    },
+    {
+      "name": "moonwell-live-melt",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.458",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "sha256": "131b14da49723f3055e01fcaa047d1cfc85a051a8f30a750a6accfab1c96e263"
+    },
+    {
+      "name": "moonwell-interrupted-hot",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "1.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "sha256": "46802679492c9785e8ff1d75ef548932c6b9706a082d0f8225d92bb899a582fa"
+    },
+    {
+      "name": "archive-closed",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "faded",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "sha256": "ef3d757c2083d75e056f5d7e9eb239e536d6719460b1faf65f20d93479780b3a"
+    },
+    {
+      "name": "archive-open",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "faded",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "true",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "sha256": "b47d1ca14011d3e959465912e0f16d6e66e05b301bb4321887a658401c078057"
+    },
+    {
+      "name": "archive-reclosed",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "faded",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "sha256": "f5716d9a8b513aa1c5f137d5ad5b1e79e2f963eef63a8018e5a1ebdd6c2950cf"
+    }
+  ],
+  "errors": [],
+  "archiveRestored": true,
+  "sourceEnd": {
+    "Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+    "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+    "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+  },
+  "sourceStable": true
+}

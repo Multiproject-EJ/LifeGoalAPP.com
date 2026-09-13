@@ -1,0 +1,18 @@
+{
+  "action": "approve",
+  "reviewer": "/root/build_modal_review",
+  "scope": "Isolated additive/contact only",
+  "viewScores": [
+    0.87,
+    0.87,
+    0.86,
+    0.86,
+    0.86,
+    0.86,
+    0.86,
+    0.86,
+    0.87
+  ],
+  "phoneScore": 0.65,
+  "phoneOwner": "Root camera correction separately, no integrated acceptance yet"
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "proposed-awaiting-approval",
+  "status": "all-parts-implemented-local-release-gates-open",
   "count": 15,
   "rootOwner": "root",
   "geometryWriters": "serialized",
@@ -31,7 +31,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "shore-water",
@@ -56,7 +56,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "horizon",
@@ -79,7 +79,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "winter-planting",
@@ -104,7 +104,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "snowfeather",
@@ -129,7 +129,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "hearthguard",
@@ -154,7 +154,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "moonwell",
@@ -179,7 +179,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "frostfire",
@@ -204,7 +204,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "aurora-keep",
@@ -229,7 +229,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "frostwell-trade",
@@ -254,7 +254,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "ambience",
@@ -280,7 +280,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "construction",
@@ -309,7 +309,7 @@
       "confidence": "medium; approved landmark refs, inferred terrain",
       "sockets": "existing authored plot root; terrain owns ground collar",
       "motion": "presentation-only where applicable",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "frostwell-experience",
@@ -331,7 +331,7 @@
       "confidence": "proposal with canonical-code investigation",
       "sockets": "existing canonical services and scene presentation contracts",
       "motion": "presentation-only; service owns state",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "moonwell-thermal-mission",
@@ -353,7 +353,7 @@
       "confidence": "proposal with canonical-code investigation",
       "sockets": "existing canonical services and scene presentation contracts",
       "motion": "presentation-only; service owns state",
-      "status": "proposed"
+      "status": "implemented-local"
     },
     {
       "id": "mission-phone-readout",
@@ -373,7 +373,7 @@
       "confidence": "proposal with canonical-code investigation",
       "sockets": "existing canonical services and scene presentation contracts",
       "motion": "presentation-only; service owns state",
-      "status": "proposed"
+      "status": "implemented-local"
     }
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "status": "capture-failed-before-render",
+  "error": "page.goto net::ERR_CONNECTION_REFUSED localhost:53303; independent curl confirmed no server",
+  "geometryRevision": "macro-v001",
+  "countsAsVisualReview": false
+}

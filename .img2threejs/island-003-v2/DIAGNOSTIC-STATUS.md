@@ -1,0 +1,3 @@
+# Deterministic diagnostic status
+
+The Moonwell composite-reference Tier1 run completed and is preserved. Its multi-angle check also completed. The later outer-landmark full-resolution composite-reference run was explicitly terminated after several minutes to release CPU for final acceptance captures; no successful result is claimed for that run. Setup/build/capture/review-contract checklist steps are recorded, subsequent generic stages remain pending where no result exists. Scoped independent Gauntlet reviews for Keep macro, Moonwell contacts/thermal roles, Archive inspection and both outer additive slices are saved separately and do not assert completion of the generic img2threejs pipeline.

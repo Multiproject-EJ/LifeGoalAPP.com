@@ -1,0 +1,51 @@
+{
+  "continuity": [
+    {
+      "transition": "L1-L2",
+      "missing": []
+    },
+    {
+      "transition": "L2-L3",
+      "missing": []
+    }
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "meshes": 27,
+      "bounds": [
+        4.798654460906982,
+        3.479999998569489,
+        4.847999954223632
+      ]
+    },
+    {
+      "level": 2,
+      "meshes": 120,
+      "bounds": [
+        4.798654460906982,
+        4.326000000894069,
+        4.847999954223632
+      ]
+    },
+    {
+      "level": 3,
+      "meshes": 208,
+      "bounds": [
+        4.798654460906982,
+        5.406000000894069,
+        4.847999954223632
+      ]
+    }
+  ],
+  "frozenWorld": {
+    "meshes": 22,
+    "triangles": 25813,
+    "firCount": 22,
+    "shrubBankCount": 11,
+    "horizonCragCount": 8,
+    "rampWidth": 3.8,
+    "rampGroundedRayChecks": 19
+  },
+  "filteredMipmappedMaterials": true
+}

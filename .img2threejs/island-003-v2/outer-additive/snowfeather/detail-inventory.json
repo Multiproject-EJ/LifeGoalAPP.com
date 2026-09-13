@@ -1,0 +1,107 @@
+{
+  "reusedFrom": ".img2threejs/island-003-frostmoon-upgrade/snowfeather-roost-l3/detail-inventory.json",
+  "scope": "Full approved goal re-inspected, no new detail systems.",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+    "details": [
+      {
+        "id": "flared-roof-course",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "flared-feather-courses"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "chimney-cap-bands",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "stacked-cap"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "feather-crown-plates",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "layered-barbs"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "incubation-heater-band",
+        "kind": "emissive",
+        "mapsTo": {
+          "ref": "heater-apertures"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "copper-hammering",
+        "kind": "gloss",
+        "mapsTo": {
+          "ref": "hammered-relief"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "side-window-mullions",
+        "kind": "linework",
+        "mapsTo": {
+          "ref": "diamond-mullions"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "entry-stone-steps",
+        "kind": "bevel",
+        "mapsTo": {
+          "ref": "stone-treads"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "nest-weave",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "woven-nests"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "rear-service-door",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "service-door"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "snow-cap-breakup",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "windward-cap-breakup"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "egg-shell-spots",
+        "kind": "stain",
+        "mapsTo": {
+          "ref": "spot-clusters"
+        },
+        "realization": "unreported"
+      },
+      {
+        "id": "timber-brackets-and-rivets",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "brackets-and-rivets"
+        },
+        "realization": "unreported"
+      }
+    ]
+  }
+}

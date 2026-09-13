@@ -23,7 +23,7 @@ export function createIsland1AnimatedBatches(scene: THREE.Scene) {
 }
 
 /** Shared rigid-surface renderer; callers explicitly own their selected families. */
-export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: readonly string[], rootName: string, partsPerBatch = PARTS_PER_BATCH) {
+export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: readonly string[], rootName: string, partsPerBatch = PARTS_PER_BATCH, accept?: (mesh: THREE.Mesh) => boolean) {
   const root = new THREE.Group();
   root.name = rootName;
   const groups = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>[]>();
@@ -35,6 +35,7 @@ export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: re
     if (!(object instanceof THREE.Mesh) || object instanceof THREE.InstancedMesh
       || object instanceof THREE.SkinnedMesh || selected.has(object)
       || !(object.material instanceof THREE.MeshStandardMaterial)
+      || (accept && !accept(object))
       || object.material.transparent || object.geometry.morphAttributes.position
       || !object.geometry.attributes.position || object.geometry.drawRange.count !== Infinity) return;
     const attributes = Object.keys(object.geometry.attributes).sort();
@@ -136,8 +137,8 @@ export function createIslandRigidSurfaceBatches(scene: THREE.Scene, families: re
   scene.add(root);
   const inverseRoot = new THREE.Matrix4();
   const eye = new THREE.Vector3(), localEye = new THREE.Vector3(), inverseSource = new THREE.Matrix4();
-  const sync = (camera?: THREE.Camera) => {
-    scene.updateMatrixWorld(true);
+  const sync = (camera?: THREE.Camera, worldMatricesCurrent = false) => {
+    if (!worldMatricesCurrent) scene.updateMatrixWorld(true);
     inverseRoot.copy(root.matrixWorld).invert();
     camera?.getWorldPosition(eye);
     for (const batch of batches) {

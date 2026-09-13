@@ -1,0 +1,90 @@
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 0.3534,
+    "aspectRatioDelta": 0.1202,
+    "scaleDelta": 0.3913,
+    "bilateralSymmetryError": 0.0851,
+    "colorDelta": {
+      "checked": 16,
+      "maxDeltaE": 48.39,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 15.42
+        },
+        {
+          "componentId": null,
+          "deltaE": 15.42
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.57
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.91
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.57
+        },
+        {
+          "componentId": null,
+          "deltaE": 3.13
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.15
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.15
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.15
+        },
+        {
+          "componentId": null,
+          "deltaE": 29.92
+        },
+        {
+          "componentId": null,
+          "deltaE": 29.92
+        },
+        {
+          "componentId": null,
+          "deltaE": 48.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 3.13
+        },
+        {
+          "componentId": null,
+          "deltaE": 3.13
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.15
+        },
+        {
+          "componentId": null,
+          "deltaE": 10.87
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [
+    "silhouette IoU 0.353 is below threshold 0.85",
+    "aspect-ratio delta 0.120 exceeds threshold 0.05",
+    "scale delta 0.391 exceeds threshold 0.08",
+    "blockout requires --map-stripped-render evidence"
+  ],
+  "maskWarnings": [],
+  "renderHash": "7de404e7f1e98c74",
+  "passId": "blockout"
+}
+STATUS pass=blockout completed=0 blocked=none next=diagnose_render.py

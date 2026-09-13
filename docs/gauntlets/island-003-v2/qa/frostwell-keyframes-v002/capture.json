@@ -1,0 +1,127 @@
+{
+  "scope": "Production UI/model in deterministic dev fixture. Playwright clock freezes each phase for accurate keyframes; live motion evidence is recorded separately.",
+  "sourceStart": {
+    "components/IslandFrostwellMissionModal.tsx": "624909b1646792c088a58ea46feea8261044b700f0e9f418cdcc58ecbe60d674",
+    "hooks/useFrostwellMissionSequence.ts": "b29e4006f4c40e249b2d2ee8a666796445408fbeeaea750b2da3b4b1eef741fc",
+    "LevelWorlds.css": "f47b5df75f9dbbc1168f3a5a97685160826c99f3b0629dade4f252c7cf7730c4",
+    "dev/Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "dev/IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+    "dev/FrostwellIceworksThreeModel.ts": "4b52db3e2df9ba6ac1f61f7b26db41eb7139fa5d1c6eb7d6e02bed6f8367ccee",
+    "dev/Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "dev/Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "dev/FrostmoonSeafoodTradeThreeModel.ts": "a3e66c1fc9203fc2877b2bfe76bc7d525424a782ab5549a4e7efe613bcbd06c8",
+    "dev/Island1AnimatedBatches.ts": "c896c7407c8199b8f65a5403008550bcac4b7d91b92a84a96c8dd08c86a49a04"
+  },
+  "records": [
+    {
+      "name": "01-launch",
+      "heading": "What lies 500 metres below?",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "bdef8bb428f1f914fe7ae3289f07fa5c3dd0d15f504b0707f7edcce50649549b"
+    },
+    {
+      "name": "03-descent",
+      "heading": "Into the blue",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "faded",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "2d137339699ac3fe26af026302e935bea4a90895c0bd7714a85b8da48a385048"
+    },
+    {
+      "name": "04-startup",
+      "heading": "The iceworks awaken",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "faded",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "29950e898e6d24edfd49e6b4a27295475c65465bd88b2e318ec0bd77a8526355"
+    },
+    {
+      "name": "05-complete",
+      "heading": "Life beneath the ice",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "faded",
+        "cameraAuthoring": "false",
+        "moonwellThawProgress": "0.000",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      },
+      "imageSha256": "965ab3379f980c2b03b4bd2032d3277fbcf69de1b127636319c32e6c5633d1ec"
+    }
+  ],
+  "errors": [],
+  "sourceEnd": {
+    "components/IslandFrostwellMissionModal.tsx": "624909b1646792c088a58ea46feea8261044b700f0e9f418cdcc58ecbe60d674",
+    "hooks/useFrostwellMissionSequence.ts": "b29e4006f4c40e249b2d2ee8a666796445408fbeeaea750b2da3b4b1eef741fc",
+    "LevelWorlds.css": "f47b5df75f9dbbc1168f3a5a97685160826c99f3b0629dade4f252c7cf7730c4",
+    "dev/Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "dev/IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+    "dev/FrostwellIceworksThreeModel.ts": "4b52db3e2df9ba6ac1f61f7b26db41eb7139fa5d1c6eb7d6e02bed6f8367ccee",
+    "dev/Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "dev/Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "dev/FrostmoonSeafoodTradeThreeModel.ts": "a3e66c1fc9203fc2877b2bfe76bc7d525424a782ab5549a4e7efe613bcbd06c8",
+    "dev/Island1AnimatedBatches.ts": "c896c7407c8199b8f65a5403008550bcac4b7d91b92a84a96c8dd08c86a49a04"
+  },
+  "sourceStable": true
+}

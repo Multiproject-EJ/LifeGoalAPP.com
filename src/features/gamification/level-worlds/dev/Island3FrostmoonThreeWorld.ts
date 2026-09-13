@@ -14,6 +14,8 @@ import {
   createFrostwellIceworks,
   type FrostwellIceworksPresentation,
 } from './FrostwellIceworksThreeModel';
+import { compactFrostfireArchiveForInspection } from './Island3FrostfireInspectionGeometry';
+import { createIsland3FrozenWorld } from './Island3FrozenWorldThreeModel';
 import { createFrostmoonSeafoodTrade } from './FrostmoonSeafoodTradeThreeModel';
 
 export const ISLAND_3_FROSTMOON_WORLD_NAME = 'Frostmoon Haven';
@@ -168,13 +170,13 @@ function createPatternTexture(size: number, pattern: 'snow' | 'stone' | 'wood' |
       } else if (pattern === 'stone') {
         const course = Math.floor(y / 15);
         const mortar = y % 15 < 2 || (x + (course % 2) * 16) % 32 < 2;
-        value = mortar ? 132 : 210 + Math.round(noise * 0.26);
+        value = mortar ? 169 : 224 + Math.round(noise * 0.10);
       } else if (pattern === 'wood') {
         const grain = (x + Math.round(Math.sin(y * 0.15) * 5)) % 18 < 2;
-        value = grain ? 112 : 202 + Math.round(noise * 0.36);
+        value = grain ? 153 : 218 + Math.round(noise * 0.12);
       } else {
         const diagonal = (x + y) % 21 < 2 || (x - y + size * 3) % 21 < 2;
-        value = diagonal ? 150 : 222 + Math.round(noise * 0.18);
+        value = diagonal ? 185 : 232 + Math.round(noise * 0.08);
       }
       data[offset] = value;
       data[offset + 1] = value;
@@ -186,7 +188,11 @@ function createPatternTexture(size: number, pattern: 'snow' | 'stone' | 'wood' |
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(pattern === 'wood' ? 3 : 4, pattern === 'wood' ? 2 : 4);
+  texture.repeat.set(pattern === 'wood' ? 1.8 : 1.4, pattern === 'wood' ? 1.2 : 1.4);
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = 4;
   texture.needsUpdate = true;
   return texture;
 }
@@ -482,8 +488,8 @@ function addSnowfeatherNestBay(
   materials: Island3FrostmoonMaterials,
 ) {
   const bay = createSnowfeatherPart(`ISLAND_3_SNOWFEATHER_HEATED_NEST_BAY_${side < 0 ? 'LEFT' : 'RIGHT'}`);
-  bay.position.set(side * (level === 1 ? 0.62 : 0.82), 0, level === 1 ? 0.04 : 0.62);
-  const plinth = box(level === 1 ? 0.74 : 0.8, 0.22, level === 1 ? 0.7 : 0.76, materials.frostRockDark);
+  bay.position.set(side * 0.82, 0, 0.62);
+  const plinth = box(0.8, 0.22, 0.76, materials.frostRockDark);
   plinth.position.y = 0.47;
   bay.add(plinth);
   const ringCount = quality === 'low' ? 3 : level === 1 ? 4 : 6;
@@ -497,17 +503,24 @@ function addSnowfeatherNestBay(
     ring.position.y = 0.62 + index * 0.018;
     bay.add(ring);
   }
-  const egg = new THREE.Mesh(new THREE.SphereGeometry(level === 1 ? 0.19 : 0.24, segmentsFor(quality), quality === 'low' ? 7 : 11), materials.egg);
+  const egg = new THREE.Mesh(new THREE.SphereGeometry(0.24, segmentsFor(quality), quality === 'low' ? 7 : 11), materials.egg);
   egg.name = `ISLAND_3_SNOWFEATHER_EGG_${side < 0 ? 'LEFT' : 'RIGHT'}`;
   egg.scale.y = 1.42;
-  egg.position.y = level === 1 ? 0.78 : 0.86;
+  egg.position.y = 0.86;
   bay.add(egg);
   const spotCount = quality === 'high' ? 5 : quality === 'medium' ? 3 : 2;
   for (let index = 0; index < spotCount; index += 1) {
     const angle = index / spotCount * Math.PI * 2 + side * 0.35;
     const spot = new THREE.Mesh(new THREE.SphereGeometry(0.035 + index % 2 * 0.012, 6, 4), materials.eggSpot);
     spot.scale.z = 0.2;
-    spot.position.set(Math.cos(angle) * 0.17, egg.position.y + (index % 3 - 1) * 0.08, Math.sin(angle) * 0.19 + 0.17);
+    const offsetY = (index % 3 - 1) * 0.08;
+    const radiusY = .24 * 1.42;
+    const ringRadius = .24 * Math.sqrt(1 - (offsetY / radiusY) ** 2);
+    const surface = new THREE.Vector3(Math.cos(angle) * ringRadius, offsetY, Math.sin(angle) * ringRadius);
+    const normal = new THREE.Vector3(surface.x / (.24 ** 2), surface.y / (radiusY ** 2), surface.z / (.24 ** 2)).normalize();
+    spot.position.copy(surface).addScaledVector(normal, .001);
+    spot.position.y += egg.position.y;
+    spot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
     bay.add(spot);
   }
   if (level === 3) {
@@ -573,11 +586,11 @@ function addSnowfeatherCrown(group: THREE.Group, quality: Island3DQuality, mater
 function addSnowfeatherEntrance(group: THREE.Group, level: 2 | 3, materials: Island3FrostmoonMaterials) {
   const entrance = createSnowfeatherPart('ISLAND_3_SNOWFEATHER_WIDE_ENTRY');
   const frontZ = 0.69;
-  const door = box(level === 3 ? 0.5 : 0.42, 0.82, 0.09, materials.timberDark);
+  const door = box(0.5, 0.82, 0.09, materials.timberDark);
   door.position.set(0, 0.93, frontZ);
-  const glow = box(level === 3 ? 0.34 : 0.28, 0.64, 0.095, materials.windowGlow);
+  const glow = box(0.34, 0.64, 0.095, materials.windowGlow);
   glow.position.set(0, 0.94, frontZ + 0.012);
-  const arch = new THREE.Mesh(new THREE.TorusGeometry(level === 3 ? 0.37 : 0.31, 0.055, 6, qualityArcSegments(level)), materials.brass);
+  const arch = new THREE.Mesh(new THREE.TorusGeometry(0.37, 0.055, 6, 24), materials.brass);
   arch.scale.y = 1.16;
   arch.position.set(0, 1.05, frontZ + 0.04);
   entrance.add(door, glow, arch);
@@ -587,12 +600,8 @@ function addSnowfeatherEntrance(group: THREE.Group, level: 2 | 3, materials: Isl
     step.position.set(0, 0.43 - index * 0.06, 0.76 + index * 0.15);
     entrance.add(step);
   }
-  [-1, 1].forEach((side) => addLantern(entrance, side * 0.42, 0.98, frontZ + 0.08, materials, level === 3 ? 0.72 : 0.58));
+  [-1, 1].forEach((side) => addLantern(entrance, side * 0.42, 0.98, frontZ + 0.08, materials, 0.72));
   group.add(entrance);
-}
-
-function qualityArcSegments(level: 2 | 3) {
-  return level === 3 ? 24 : 16;
 }
 
 function createSnowfeatherRoost(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island3FrostmoonMaterials) {
@@ -604,26 +613,27 @@ function createSnowfeatherRoost(level: 1 | 2 | 3, quality: Island3DQuality, mate
     representativeSlice: 'snowfeather-roost-l3-v002',
     parts: ['foundation', 'lodge-shell', 'roof-shell', 'entrance', 'incubation-bays', 'feather-crown', 'chimney', 'rear-service'],
   };
-  const foundation = createFrostfirePart('ISLAND_3_FROSTFIRE_CIRCULAR_FROST_STONE_FOUNDATION');
+  const foundation = createSnowfeatherPart('ISLAND_3_SNOWFEATHER_CIRCULAR_FROST_STONE_FOUNDATION');
   addFoundation(foundation, 1.42, materials, quality);
   group.add(foundation);
 
   const foundationFrame = createSnowfeatherPart('ISLAND_3_SNOWFEATHER_FOUNDATION_FRAME');
   [-1, 1].forEach((side) => {
-    const sideBeam = box(0.12, level === 1 ? 0.5 : 0.72, 1.54, materials.timberDark);
-    sideBeam.position.set(side * 0.92, level === 1 ? 0.68 : 0.8, -0.02);
+    // Rear foundation rails stop before the funded front incubation bays.
+    const sideBeam = box(0.12, 0.72, 0.92, materials.timberDark);
+    sideBeam.position.set(side * 0.92, 0.8, -0.33);
     foundationFrame.add(sideBeam);
   });
-  const rearBeam = box(1.92, level === 1 ? 0.18 : 0.28, 0.14, materials.timberDark);
-  rearBeam.position.set(0, level === 1 ? 0.49 : 0.56, -0.72);
+  const rearBeam = box(1.92, 0.28, 0.14, materials.timberDark);
+  rearBeam.position.set(0, 0.56, -0.72);
   foundationFrame.add(rearBeam);
   group.add(foundationFrame);
 
   if (level === 1) {
     addSnowfeatherNestBay(group, -1, level, quality, materials);
     addSnowfeatherNestBay(group, 1, level, quality, materials);
-    const threshold = box(0.66, 0.12, 0.34, materials.frostRockDark);
-    threshold.position.set(0, 0.45, 0.74);
+    const threshold = box(0.72, 0.1, 0.22, materials.frostRockDark);
+    threshold.position.set(0, 0.43, 0.76);
     group.add(threshold);
     return group;
   }
@@ -637,7 +647,7 @@ function createSnowfeatherRoost(level: 1 | 2 | 3, quality: Island3DQuality, mate
   group.add(lodge);
 
   const roof = createSnowfeatherPart('ISLAND_3_SNOWFEATHER_FLARED_COPPER_ROOF');
-  addGableRoof(roof, 2.08, level === 3 ? 0.78 : 0.68, 1.58, 1.52, materials, quality, false);
+  addGableRoof(roof, 2.08, 0.78, 1.58, 1.52, materials, quality, false);
   [-1, 1].forEach((side) => {
     const flaredEave = box(0.46, 0.075, 1.7, materials.indigoLight);
     flaredEave.position.set(side * 0.94, 1.69, 0);
@@ -649,7 +659,7 @@ function createSnowfeatherRoost(level: 1 | 2 | 3, quality: Island3DQuality, mate
     const progress = (index + 1) / (courseCount + 1);
     [-1, 1].forEach((side) => {
       const course = box(0.64, 0.035, 1.62, index % 2 ? materials.indigo : materials.indigoLight);
-      course.position.set(side * (0.18 + progress * 0.55), 1.62 + (1 - progress) * (level === 3 ? 0.58 : 0.5), 0);
+      course.position.set(side * (0.18 + progress * 0.55), 1.62 + (1 - progress) * 0.58, 0);
       course.rotation.z = side * -0.59;
       roof.add(course);
     });
@@ -725,7 +735,7 @@ function addHearthguardGate(
 ) {
   const gate = createHearthguardPart('ISLAND_3_HEARTHGUARD_FRONT_GATE');
   const frontZ = 1.17;
-  const postHeight = level === 1 ? 0.78 : level === 2 ? 1.08 : 1.3;
+  const postHeight = 1.3;
   [-1, 1].forEach((side) => {
     const foot = box(0.26, 0.2, 0.3, materials.frostRockDark);
     foot.position.set(side * 0.48, 0.52, frontZ);
@@ -740,7 +750,7 @@ function addHearthguardGate(
   if (level >= 2) {
     [-1, 1].forEach((side) => {
       const lintel = box(0.68, 0.13, 0.19, materials.timberDark);
-      lintel.position.set(side * 0.25, level === 3 ? 1.78 : 1.46, frontZ);
+      lintel.position.set(side * 0.25, 1.78, frontZ);
       lintel.rotation.z = side * -0.38;
       gate.add(lintel);
     });
@@ -794,23 +804,25 @@ function addHearthguardPerimeter(
   materials: Island3FrostmoonMaterials,
 ) {
   const perimeter = createHearthguardPart('ISLAND_3_HEARTHGUARD_PERIMETER_SYSTEM');
-  const postCount = level === 1 ? 6 : level === 2 ? 10 : quality === 'low' ? 10 : 14;
+  // Fixed final slots keep every funded post in place as the fence fills in.
+  const postCount = quality === 'low' ? 10 : 14;
   const positions: Array<THREE.Vector3 | null> = [];
   for (let index = 0; index < postCount; index += 1) {
     const angle = index / postCount * Math.PI * 2;
     const x = Math.cos(angle) * 1.42;
     const z = Math.sin(angle) * 1.17;
     const gateGap = z > 0.84 && Math.abs(x) < 0.68;
-    if (gateGap) {
+    const fundedSlot = level === 3 || index % 2 === 0 || (level === 2 && index % 4 === 1);
+    if (gateGap || !fundedSlot) {
       positions.push(null);
       continue;
     }
     const point = new THREE.Vector3(x, 0.78, z);
     positions.push(point);
-    const post = box(0.12, level === 3 ? 0.66 : 0.52, 0.12, materials.timberDark);
+    const post = box(0.12, 0.66, 0.12, materials.timberDark);
     post.position.copy(point);
     const cap = cylinder(0.075, 0.09, 0.08, materials.indigoLight, 8);
-    cap.position.set(x, point.y + (level === 3 ? 0.36 : 0.29), z);
+    cap.position.set(x, point.y + 0.36, z);
     const snow = cylinder(0.07, 0.1, 0.06, materials.snow, 8);
     snow.position.set(x, cap.position.y + 0.065, z);
     perimeter.add(post, cap, snow);
@@ -821,10 +833,10 @@ function addHearthguardPerimeter(
       if (!start || !end) return;
       addHearthguardBeam(
         perimeter,
-        start.clone().setY(level === 3 ? 0.83 : 0.78),
-        end.clone().setY(level === 3 ? 0.83 : 0.78),
-        level === 3 ? 0.035 : 0.03,
-        level === 3 ? materials.timber : materials.timberDark,
+        start.clone().setY(0.83),
+        end.clone().setY(0.83),
+        0.035,
+        materials.timber,
         'ISLAND_3_HEARTHGUARD_FENCE_RAIL',
       );
     });
@@ -841,12 +853,12 @@ function addHearthguardClimbingFrame(
   const rig = createHearthguardPart('ISLAND_3_HEARTHGUARD_CLIMBING_FRAME');
   const centerX = -0.82;
   const centerZ = -0.58;
-  const width = level === 3 ? 0.66 : 0.52;
-  const depth = level === 3 ? 0.4 : 0.28;
-  const height = level === 3 ? 1.24 : 1.08;
+  const width = 0.66;
+  const depth = 0.4;
+  const height = 1.24;
   const corners: Array<[number, number]> = level === 3
     ? [[-1, -1], [-1, 1], [1, -1], [1, 1]]
-    : [[-1, 0], [1, 0]];
+    : [[-1, 1], [1, 1]];
   corners.forEach(([sx, sz]) => {
     const x = centerX + sx * width / 2;
     const z = centerZ + sz * depth / 2;
@@ -884,16 +896,16 @@ function addHearthguardShieldTargets(
   materials: Island3FrostmoonMaterials,
 ) {
   const targets = createHearthguardPart('ISLAND_3_HEARTHGUARD_SHIELD_TARGET_SYSTEM');
-  const targetXs = level === 1 ? [-0.72] : level === 2 ? [-0.94, -0.58] : [-1, -0.62];
+  const targetXs = level === 1 ? [-1] : [-1, -0.62];
   targetXs.forEach((x, index) => {
     const z = -0.02 + index * 0.12;
     const foot = cylinder(0.13, 0.17, 0.12, materials.frostRockDark, 8);
     foot.position.set(x, 0.51, z);
-    const post = cylinder(0.065, 0.08, level === 1 ? 0.62 : 0.78, materials.timberDark, 7);
-    post.position.set(x, level === 1 ? 0.79 : 0.87, z);
+    const post = cylinder(0.065, 0.08, 0.78, materials.timberDark, 7);
+    post.position.set(x, 0.87, z);
     const shield = cylinder(0.25, 0.25, 0.08, index % 2 ? materials.indigo : materials.timber, quality === 'low' ? 10 : 16);
     shield.name = `ISLAND_3_HEARTHGUARD_TARGET_${index + 1}`;
-    shield.position.set(x, level === 1 ? 0.98 : 1.08, z + 0.03);
+    shield.position.set(x, 1.08, z + 0.03);
     shield.rotation.x = Math.PI / 2;
     const rim = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.035, 5, quality === 'high' ? 20 : 13), materials.brass);
     rim.position.set(x, shield.position.y, z + 0.08);
@@ -914,9 +926,9 @@ function addHearthguardRecoveryHut(
   const hut = createHearthguardPart('ISLAND_3_HEARTHGUARD_RECOVERY_HUT');
   const centerX = 0.82;
   const centerZ = -0.64;
-  const width = level === 3 ? 0.9 : 0.72;
-  const depth = level === 3 ? 0.72 : 0.58;
-  const postHeight = level === 3 ? 0.92 : 0.68;
+  const width = 0.9;
+  const depth = 0.72;
+  const postHeight = 0.92;
   const rearWall = box(width * 0.86, postHeight * 0.82, 0.12, materials.timberDark);
   rearWall.position.set(centerX, 0.62 + postHeight * 0.42, centerZ - depth / 2);
   hut.add(rearWall);
@@ -929,7 +941,7 @@ function addHearthguardRecoveryHut(
   });
   const roofRoot = createHearthguardPart('ISLAND_3_HEARTHGUARD_RECOVERY_HUT_ROOF');
   roofRoot.position.set(centerX, 0, centerZ);
-  addGableRoof(roofRoot, width * 1.28, level === 3 ? 0.48 : 0.38, depth * 1.32, 0.55 + postHeight, materials, quality);
+  addGableRoof(roofRoot, width * 1.28, 0.48, depth * 1.32, 0.55 + postHeight, materials, quality);
   [-1, 1].forEach((side) => {
     const snowStrip = box(width * 0.4, 0.055, depth * 0.96, materials.snow);
     snowStrip.position.set(side * width * 0.23, 0.7 + postHeight, 0);
@@ -981,11 +993,11 @@ function createHearthguardYard(level: 1 | 2 | 3, quality: Island3DQuality, mater
   };
   addFoundation(group, 1.45, materials, quality);
   const court = createHearthguardPart('ISLAND_3_HEARTHGUARD_OPEN_COURT');
-  const courtSurface = cylinder(1.32, 1.39, 0.09, level === 1 ? materials.frostRock : materials.snowShadow, quality === 'low' ? 12 : 20);
+  const courtSurface = cylinder(1.32, 1.39, 0.09, materials.snowShadow, quality === 'low' ? 12 : 20);
   courtSurface.scale.z = 0.86;
   courtSurface.position.y = 0.49;
   court.add(courtSurface);
-  const openCourtInset = cylinder(level === 3 ? 1.08 : 0.94, level === 3 ? 1.12 : 0.98, 0.045, materials.snow, quality === 'low' ? 12 : 20);
+  const openCourtInset = cylinder(1.08, 1.12, 0.045, materials.snow, quality === 'low' ? 12 : 20);
   openCourtInset.scale.z = 0.82;
   openCourtInset.position.y = 0.555;
   court.add(openCourtInset);
@@ -1026,7 +1038,8 @@ function addMoonwellArch(
   const tangent = new THREE.Vector3(-direction.z, 0, direction.x);
   const start = direction.clone().multiplyScalar(-1.08).setY(0.53);
   const end = direction.clone().multiplyScalar(1.08).setY(0.53);
-  const curve = new THREE.QuadraticBezierCurve3(start, new THREE.Vector3(0, height, 0), end);
+  const curve = new THREE.QuadraticBezierCurve3(start, new THREE.Vector3(0, 2 * height - 0.53, 0), end);
+  if (!cladInCopper) {
   const rib = new THREE.Mesh(
     new THREE.TubeGeometry(curve, quality === 'high' ? 24 : 16, 0.09, quality === 'low' ? 5 : 7, false),
     materials.timberDark,
@@ -1039,10 +1052,11 @@ function addMoonwellArch(
     foot.rotation.y = -angle;
     parent.add(foot);
   });
-  if (!cladInCopper) return;
+  return;
+  }
   const copperCurve = new THREE.QuadraticBezierCurve3(
     start.clone().addScaledVector(tangent, 0.055).setY(0.55),
-    new THREE.Vector3(0, height + 0.025, 0).addScaledVector(tangent, 0.055),
+    new THREE.Vector3(0, 2 * (height + 0.025) - 0.55, 0).addScaledVector(tangent, 0.055),
     end.clone().addScaledVector(tangent, 0.055).setY(0.55),
   );
   const cladding = new THREE.Mesh(
@@ -1066,7 +1080,7 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
   group.userData.sculptRuntime = {
     clickable: true,
     explodable: true,
-    representativeSlice: 'moonwell-basin-rib-armillary-axis-v001',
+    representativeSlice: 'moonwell-additive-frozen-thermal-v002',
     parts: ['circular-foundation', 'moonwell-basin', 'ice-water-and-moon-disc', 'front-stair-and-entry', 'entry-lantern-system', 'radial-timber-frame', 'copper-rib-cladding', 'crown-hub-and-finial', 'armillary-primary-rings', 'armillary-axis-and-counterweights', 'brass-telescope-and-tripod', 'rear-chart-cabinet', 'rear-service-door', 'service-vent-and-tools'],
   };
 
@@ -1092,17 +1106,58 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
   copperRim.name = 'ISLAND_3_MOONWELL_BASIN_COPPER_RIM';
   copperRim.position.y = 0.655;
   copperRim.rotation.x = Math.PI / 2;
+  copperRim.material = materials.indigoLight.clone();
+  copperRim.material.emissive.setHex(0xff8d37);
+  copperRim.material.emissiveIntensity = 0;
+  copperRim.userData.moonwellThermalRole = 'heater';
   basin.add(basinBase, basinCurb, copperRim);
   group.add(basin);
 
   const water = createMoonwellPart('ISLAND_3_MOONWELL_ICE_WATER_AND_MOON_DISC');
-  const iceWater = cylinder(0.63, 0.63, 0.035, materials.ice, segmentsFor(quality));
+  const liquidMaterial = new THREE.MeshPhysicalMaterial({ color: 0x6793aa, roughness: .24, metalness: .08 });
+  const iceWater = cylinder(.63, .63, .035, liquidMaterial, segmentsFor(quality));
   iceWater.name = 'ISLAND_3_MOONWELL_ICE_WATER';
-  iceWater.position.y = 0.65;
-  const moonDisc = cylinder(level === 1 ? 0.23 : 0.3, level === 1 ? 0.23 : 0.3, 0.018, materials.ice, segmentsFor(quality));
+  iceWater.position.y = .65;
+  iceWater.userData.moonwellThermalRole = 'water';
+  iceWater.visible = false;
+  water.add(iceWater);
+  const iceMaterial = new THREE.MeshStandardMaterial({ color: 0xdcecf2, roughness: .76 });
+  // Overlapping opaque sectors fully seal the basin at rest. Each owns a local
+  // pivot so thaw can reveal water between retreating pieces, without gameplay.
+  for (let index = 0; index < 6; index++) {
+    const angle = index / 6 * Math.PI * 2;
+    const geometry = new THREE.CylinderGeometry(.635, .635, .045, quality === 'low' ? 3 : 6, 1, false, angle, Math.PI / 3 + .006);
+    const pivot = new THREE.Vector3(Math.sin(angle + Math.PI / 6) * .22, 0, Math.cos(angle + Math.PI / 6) * .22);
+    geometry.translate(-pivot.x, 0, -pivot.z);
+    const ice = new THREE.Mesh(geometry, iceMaterial);
+    ice.name = `ISLAND_3_MOONWELL_FROZEN_SECTOR_${index + 1}`;
+    ice.position.set(pivot.x, .683, pivot.z);
+    ice.userData.moonwellThermalRole = 'ice';
+    water.add(ice);
+  }
+  const moonDisc = cylinder(.3, .3, .018, materials.snow, segmentsFor(quality));
   moonDisc.name = 'ISLAND_3_MOONWELL_MOON_DISC';
-  moonDisc.position.set(0.05, 0.675, -0.04);
-  water.add(iceWater, moonDisc);
+  moonDisc.position.set(.05, .714, -.04);
+  moonDisc.userData.moonwellThermalRole = 'ice';
+  water.add(moonDisc);
+  if (level === 3) {
+    const bubbleMaterial = new THREE.MeshPhysicalMaterial({ color: 0xb5fff0, roughness: .15, transparent: true, opacity: .4, depthWrite: false });
+    const steamMaterial = new THREE.MeshBasicMaterial({ color: 0xebf7f8, transparent: true, opacity: .15, depthWrite: false });
+    for (let index = 0; index < 5; index++) {
+      const angle = index * 2.39996;
+      const bubble = new THREE.Mesh(new THREE.SphereGeometry(.024 + index % 2 * .009, 6, 4), bubbleMaterial);
+      bubble.name = `ISLAND_3_MOONWELL_THERMAL_BUBBLE_${index + 1}`;
+      bubble.position.set(Math.cos(angle) * (.16 + index % 3 * .1), .681, Math.sin(angle) * .34);
+      bubble.userData.moonwellThermalRole = 'bubble'; bubble.visible = false; water.add(bubble);
+    }
+    for (let index = 0; index < 3; index++) {
+      const steam = new THREE.Mesh(new THREE.SphereGeometry(.07 + index * .012, 7, 5), steamMaterial);
+      steam.name = `ISLAND_3_MOONWELL_THERMAL_STEAM_${index + 1}`;
+      steam.position.set((index - 1) * .2, .72, index % 2 ? -.14 : .12);
+      steam.scale.set(1.2, .65, 1);
+      steam.userData.moonwellThermalRole = 'steam'; steam.visible = false; water.add(steam);
+    }
+  }
   group.add(water);
 
   const entry = createMoonwellPart('ISLAND_3_MOONWELL_FRONT_STAIR_AND_ENTRY');
@@ -1124,17 +1179,13 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
 
   if (level >= 2) {
     const frame = createMoonwellPart('ISLAND_3_MOONWELL_RADIAL_TIMBER_FRAME');
-    const ribAngles = level === 2 ? [0, Math.PI / 2] : [0, Math.PI / 3, Math.PI * 2 / 3];
-    ribAngles.forEach((angle) => addMoonwellArch(frame, angle, level === 3 ? 2.18 : 1.82, quality, materials, false));
+    const ribAngles = level === 2 ? [0, Math.PI / 3] : [0, Math.PI / 3, Math.PI * 2 / 3];
+    ribAngles.forEach((angle) => addMoonwellArch(frame, angle, 2.18, quality, materials, false));
     group.add(frame);
 
     if (level === 3) {
       const cladding = createMoonwellPart('ISLAND_3_MOONWELL_COPPER_RIB_CLADDING');
       ribAngles.forEach((angle) => addMoonwellArch(cladding, angle, 2.18, quality, materials, true));
-      cladding.children.filter((child) => child.name !== 'ISLAND_3_MOONWELL_COPPER_RIB_PLATE').forEach((child) => {
-        if (child instanceof THREE.Mesh && child.material === materials.timberDark) child.visible = false;
-        if (child instanceof THREE.Mesh && child.material === materials.frostRockDark) child.visible = false;
-      });
       group.add(cladding);
     }
 
@@ -1155,11 +1206,11 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
     group.add(telescope);
 
     const chart = createMoonwellPart('ISLAND_3_MOONWELL_REAR_CHART_CABINET');
-    const cabinet = box(0.58, level === 3 ? 0.58 : 0.48, 0.2, materials.timberDark);
-    cabinet.position.set(0.72, level === 3 ? 0.74 : 0.69, -1.02);
-    const chartPanel = box(0.43, level === 3 ? 0.34 : 0.28, 0.035, materials.paper);
+    const cabinet = box(0.58, 0.58, 0.2, materials.timberDark);
+    cabinet.position.set(0.72, 0.74, -1.02);
+    const chartPanel = box(0.43, 0.34, 0.035, materials.paper);
     chartPanel.name = 'ISLAND_3_MOONWELL_CHART_PANEL';
-    chartPanel.position.set(0.72, level === 3 ? 0.76 : 0.71, -0.91);
+    chartPanel.position.set(0.72, 0.76, -0.91);
     chart.add(cabinet, chartPanel);
     const spokeCount = quality === 'low' ? 4 : 6;
     for (let index = 0; index < spokeCount; index += 1) {
@@ -1206,6 +1257,8 @@ function createMoonwellObservatory(level: 1 | 2 | 3, quality: Island3DQuality, m
       collar.position.copy(point);
       axis.add(collar);
     });
+    addHearthguardBeam(axis, axisStart, new THREE.Vector3(0, .71, 0), .035, materials.brass, 'ISLAND_3_MOONWELL_LOWER_BEARING_SUPPORT');
+    addHearthguardBeam(axis, axisEnd, new THREE.Vector3(0, 2.13, 0), .035, materials.brass, 'ISLAND_3_MOONWELL_CROWN_BEARING_SUPPORT');
     group.add(axis);
 
     const lanterns = createMoonwellPart('ISLAND_3_MOONWELL_ENTRY_LANTERN_SYSTEM');
@@ -1385,6 +1438,7 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
         const timber = box(width, 0.7, 0.1, materials.timberDark);
         timber.position.set(x, 1.05, 0);
         timber.userData.constructionStage = isFinalEnclosure ? 5 : 2;
+        timber.userData.archiveInspectionHide = isFinalEnclosure;
         wall.add(timber);
       }
     });
@@ -1392,6 +1446,7 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
       const band = box(wallWidth, 0.075, 0.135, materials.indigoLight);
       band.position.y = shellTopY - 0.04;
       band.userData.constructionStage = isFinalEnclosure ? 5 : 2;
+      band.userData.archiveInspectionHide = isFinalEnclosure;
       wall.add(band);
     }
     shell.add(wall);
@@ -1546,12 +1601,14 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
   entry.add(doorFrame);
   if (level === 3) {
     door.userData.constructionStage = 5;
+    door.userData.archiveInspectionHide = true;
     entry.add(door);
   }
   if (level === 3) [-1, 1].forEach((side) => {
     const hinge = box(0.17, 0.045, 0.13, materials.brass);
     hinge.position.set(side * 0.14, 0.69 + (side + 1) * 0.08, shellRadius + 0.11);
     hinge.userData.constructionStage = 5;
+    hinge.userData.archiveInspectionHide = true;
     entry.add(hinge);
   });
   if (level >= 2) [-1, 1].forEach((side) => addLantern(entry, side * 0.38, 0.92, shellRadius + 0.14, materials, 0.72));
@@ -1745,6 +1802,7 @@ function createFrostfireArchive(level: 1 | 2 | 3, quality: Island3DQuality, mate
   [roof, roofFinish, stack, group.getObjectByName('ISLAND_3_FROSTFIRE_OPEN_BOOK_CREST')].forEach((part) => {
     if (!part) return;
     part.userData.frostfireCutaway = 'roof';
+    part.userData.archiveInspectionHide = true;
     part.traverse((child) => { if (child instanceof THREE.Mesh) child.userData.constructionStage = 5; });
   });
   return group;
@@ -1793,7 +1851,7 @@ function addAuroraKeepTower(
 ) {
   const part = createAuroraKeepPart(name);
   const radius = 0.4 * scale;
-  const height = 1.12 * scale;
+  const height = 1.78 * scale;
   const tower = cylinder(radius * 0.94, radius, height, materials.frostRockDark, segmentsFor(quality));
   tower.position.set(x, baseY + height / 2, z);
   const foot = cylinder(radius * 1.08, radius * 1.12, 0.12 * scale, materials.frostRock, segmentsFor(quality));
@@ -1823,6 +1881,61 @@ function addAuroraKeepTower(
   finial.position.set(x, baseY + height + 0.66 * scale, z);
   roofPart.add(roof, snowCap, finial);
   group.add(roofPart);
+}
+
+/** Pitched copper planes over a real timber/plaster gable end. Keeping the
+ * front infill separate avoids the old solid copper triangular cap. */
+function addAuroraKeepPitchedRoof(
+  group: THREE.Group, width: number, height: number, depth: number, y: number,
+  materials: Island3FrostmoonMaterials,
+) {
+  const infill = new THREE.Mesh(createGableGeometry(width * .91, height * .94, depth * .92), materials.paper);
+  infill.position.y = y;
+  group.add(infill);
+  const angle = Math.atan2(height, width / 2);
+  const slope = Math.hypot(width / 2, height);
+  for (const side of [-1, 1]) {
+    const plane = box(slope + .08, .075, depth + .1, materials.indigoLight);
+    plane.position.set(side * width / 4, y + height / 2 + .04, 0);
+    plane.rotation.z = -side * angle;
+    // Discontinuous snow shoulders leave broad readable copper between drifts.
+    for (let patch = 0; patch < 3; patch += 1) {
+      const alongSlope = .24 + (patch % 2) * .20;
+      const drift = new THREE.Shape();
+      drift.moveTo(-.48, -.25);
+      drift.bezierCurveTo(-.50, -.48, -.16, -.51, .02, -.43);
+      drift.bezierCurveTo(.21, -.51, .47, -.29, .43, -.05);
+      drift.bezierCurveTo(.53, .17, .24, .22, .19, .43);
+      drift.bezierCurveTo(-.04, .50, -.13, .27, -.33, .34);
+      drift.bezierCurveTo(-.46, .25, -.36, -.06, -.48, -.25);
+      const geometry = new THREE.ExtrudeGeometry(drift, {depth:.026,bevelEnabled:false,curveSegments:3,steps:1});
+      geometry.rotateX(-Math.PI/2);
+      geometry.scale(slope*(.30+(patch%2)*.10),1,depth*(.32+(patch%2)*.05));
+      const snow = new THREE.Mesh(geometry, materials.snow);
+      snow.position.set(side * width * alongSlope / 2, y + height * (1 - alongSlope) + .065, (patch - 1) * depth * .34);
+      snow.rotation.z = -side * angle;
+      group.add(snow);
+    }
+    const fascia = box(slope + .08, .11, .10, materials.timberDark);
+    fascia.position.set(side * width / 4, y + height / 2 + .01, depth / 2 + .075);
+    fascia.rotation.z = -side * angle;
+    group.add(plane, fascia);
+  }
+  const ridge = box(.1, .12, depth + .22, materials.brass);
+  ridge.position.y = y + height + .065;
+  const kingPost = box(.12, height, .10, materials.timberDark);
+  kingPost.position.set(0, y + height / 2, depth / 2 + .025);
+  group.add(ridge, kingPost);
+  // Supported gable trusses articulate the approved roof envelope on both ends.
+  for (const frontBack of [-1, 1]) {
+    const z = frontBack * (depth / 2 + .027);
+    const tie = box(width * .91, .08, .085, materials.timberDark);
+    tie.position.set(0, y + .07, z);
+    group.add(tie);
+    for (const side of [-1, 1]) {
+      addHearthguardBeam(group, new THREE.Vector3(side * width * .38, y + .1, z), new THREE.Vector3(0, y + height * .78, z), .034, materials.timberDark);
+    }
+  }
 }
 
 function addAuroraKeepRoofRibs(
@@ -1902,55 +2015,65 @@ function createAuroraKeep(level: 1 | 2 | 3, quality: Island3DQuality, materials:
   group.add(foundation);
 
   const hall = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_CENTRAL_GREAT_HALL_SHELL');
-  const upperHeight = level === 1 ? 0.76 : level === 2 ? 0.94 : 1.08;
-  const stoneHall = box(1.78, 0.58, 1.18, materials.frostRockDark);
-  stoneHall.position.y = 0.7;
-  const plasterHall = box(1.62, upperHeight, 1.08, materials.paper);
-  plasterHall.position.y = 0.99 + upperHeight / 2;
-  hall.add(stoneHall, plasterHall);
-  [-1, 1].forEach((side) => {
-    const post = box(0.15, upperHeight + 0.68, 1.18, materials.timberDark);
-    post.position.set(side * 0.76, 0.74 + upperHeight / 2, 0);
-    hall.add(post);
-  });
-  const sill = box(1.68, 0.13, 1.16, materials.timberDark);
-  sill.position.y = 1.03;
-  const topBeam = box(1.82, 0.14, 1.17, materials.timberDark);
-  topBeam.position.y = 0.99 + upperHeight - 0.05;
-  hall.add(sill, topBeam);
-  if (level === 3) {
-    const rearTrussA = box(1.04, 0.085, 0.075, materials.timberDark);
-    rearTrussA.position.set(0, 1.48, -0.575);
-    rearTrussA.rotation.z = 0.48;
-    const rearTrussB = rearTrussA.clone();
-    rearTrussB.rotation.z = -0.48;
-    const rearCentrePost = box(0.11, 0.72, 0.075, materials.timberDark);
-    rearCentrePost.position.set(0, 1.45, -0.58);
-    hall.add(rearTrussA, rearTrussB, rearCentrePost);
-    addWindow(hall, -0.36, 1.38, -0.59, Math.PI, materials, 0.52);
-    addWindow(hall, 0.36, 1.38, -0.59, Math.PI, materials, 0.52);
+  // Stable funded lower course; later floors add vertically without rescaling it.
+  const stoneHall = box(1.82, 1.14, 1.4, materials.frostRockDark);
+  stoneHall.position.y = 0.96;
+  hall.add(stoneHall);
+  const sill = box(1.9, 0.13, 1.46, materials.timberDark);
+  sill.position.y = 1.51;
+  hall.add(sill);
+  if (level >= 2) {
+    const upper = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_UPPER_HALL_PERMANENT_STOREY');
+    const plasterHall = box(1.7, 1.48, 1.32, materials.paper);
+    plasterHall.position.y = 2.22;
+    upper.add(plasterHall);
+    [-1, 1].forEach((side) => {
+      const post = box(0.15, 1.55, 1.42, materials.timberDark);
+      post.position.set(side * 0.79, 2.23, 0);
+      upper.add(post);
+      const rearWindow = new THREE.Group();
+      addWindow(rearWindow, side * .4, 2.16, -.71, Math.PI, materials, .65);
+      upper.add(rearWindow);
+    });
+    const topBeam = box(1.92, .14, 1.44, materials.timberDark);
+    topBeam.position.y = 2.93;
+    const centrePost = box(.11,1.48,.085,materials.timberDark);
+    centrePost.position.set(0,2.22,-.71);
+    upper.add(topBeam,centrePost);
+    for (const side of [-1, 1]) {
+      for (const z of [-.35, .24]) {
+        addWindow(upper, side * .868, 2.27, z, side * Math.PI / 2, materials, .67);
+        const sill = box(.10, .075, .40, materials.timberDark);
+        sill.position.set(side * .87, 2.01, z);
+        upper.add(sill);
+      }
+      addHearthguardBeam(upper, new THREE.Vector3(side * .88, 1.60, -.57), new THREE.Vector3(side * .88, 1.96, .08), .038, materials.timberDark);
+      addHearthguardBeam(upper, new THREE.Vector3(side * .65, 2.57, -.72), new THREE.Vector3(side * .1, 2.88, -.72), .035, materials.timberDark);
+    }
+    hall.add(upper);
   }
   group.add(hall);
-
-  const roof = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_MAIN_SNOW_COPPER_GABLE_ROOF');
-  const roofBaseY = 0.99 + upperHeight - 0.02;
-  const roofHeight = level === 1 ? 0.7 : level === 2 ? 0.82 : 0.94;
-  addGableRoof(roof, 2.14, roofHeight, 1.46, roofBaseY, materials, quality);
-  if (level >= 2) addAuroraKeepRoofRibs(roof, 2.14, roofHeight, 1.46, roofBaseY, materials, quality);
-  group.add(roof);
+  const roofBaseY = 2.94;
+  const roofHeight = 1.04;
+  if (level === 3) {
+    const roof = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_MAIN_SNOW_COPPER_GABLE_ROOF');
+    addAuroraKeepPitchedRoof(roof, 2.14, roofHeight, 1.7, roofBaseY, materials);
+    addAuroraKeepRoofRibs(roof, 2.14, roofHeight, 1.7, roofBaseY, materials, quality);
+    group.add(roof);
+  }
 
   const gatehouse = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_FRONT_GATEHOUSE_AND_HEAVY_DOOR');
-  const gateWall = box(level === 1 ? 0.74 : 0.84, 0.7, 0.62, materials.frostRockDark);
+  const gateWall = box(0.84, 0.7, 0.62, materials.frostRockDark);
   gateWall.position.set(0, 0.77, 0.84);
-  const door = box(level === 1 ? 0.38 : 0.44, 0.62, 0.08, materials.timberDark);
+  const door = box(0.44, 0.62, 0.08, materials.timberDark);
   door.name = 'ISLAND_3_AURORA_KEEP_HEAVY_MAIN_DOOR';
   door.position.set(0, 0.73, 1.185);
-  const doorBand = box(level === 1 ? 0.42 : 0.48, 0.07, 0.09, materials.brass);
+  const doorBand = box(0.48, 0.07, 0.09, materials.brass);
   doorBand.position.set(0, 0.74, 1.195);
   gatehouse.add(gateWall, door, doorBand);
   const gatehouseRoof = new THREE.Group();
   gatehouseRoof.position.z = 0.84;
-  addGableRoof(gatehouseRoof, level === 1 ? 0.86 : 0.98, 0.42, 0.72, 1.08, materials, quality);
+  addGableRoof(gatehouseRoof, 0.98, 0.42, 0.72, 1.08, materials, quality);
   gatehouse.add(gatehouseRoof);
   [-1, 1].forEach((side) => addLantern(gatehouse, side * 0.36, 0.88, 1.2, materials, 0.64));
   group.add(gatehouse);
@@ -1965,26 +2088,30 @@ function createAuroraKeep(level: 1 | 2 | 3, quality: Island3DQuality, materials:
   if (level >= 2) {
     const gallery = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_UPPER_WATCH_GALLERY_AND_WINDOW_GRID');
     const galleryFloor = box(1.55, 0.12, 0.42, materials.timberDark);
-    galleryFloor.position.set(0, 1.32, 0.73);
+    galleryFloor.position.set(0, 1.64, 0.84);
     gallery.add(galleryFloor);
     for (let index = -2; index <= 2; index += 1) {
       const x = index * 0.27;
-      const pane = box(0.2, 0.34, 0.06, materials.windowGlow);
-      pane.position.set(x, 1.58, 0.765);
-      const mullion = box(0.045, 0.45, 0.08, materials.timberDark);
-      mullion.position.set(x - 0.125, 1.57, 0.775);
+      const pane = box(0.2, 0.54, 0.06, materials.windowGlow);
+      pane.position.set(x, 2.04, 0.88);
+      const mullion = box(0.045, 0.68, 0.08, materials.timberDark);
+      mullion.position.set(x - 0.125, 2.02, 0.89);
       gallery.add(pane, mullion);
     }
     const galleryTop = box(1.58, 0.1, 0.12, materials.timberDark);
-    galleryTop.position.set(0, 1.82, 0.77);
+    galleryTop.position.set(0, 2.38, 0.89);
     gallery.add(galleryTop);
     [-1, 1].forEach((side) => {
       const brace = box(0.09, 0.5, 0.09, materials.timberDark);
-      brace.position.set(side * 0.64, 1.28, 0.77);
+      brace.position.set(side * 0.64, 1.49, 0.86);
       brace.rotation.z = side * 0.42;
       gallery.add(brace);
     });
     group.add(gallery);
+    const galleryRoof = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_INTERMEDIATE_GALLERY_GABLE');
+    galleryRoof.position.z = .79;
+    addAuroraKeepPitchedRoof(galleryRoof, 1.88, .70, .94, 2.38, materials);
+    group.add(galleryRoof);
   }
 
   const towerBaseY = 0.4;
@@ -1994,7 +2121,7 @@ function createAuroraKeep(level: 1 | 2 | 3, quality: Island3DQuality, materials:
     -1.03,
     0.54,
     towerBaseY,
-    level === 1 ? 0.86 : 1,
+    1,
     materials,
     quality,
     level === 3,
@@ -2019,15 +2146,15 @@ function createAuroraKeep(level: 1 | 2 | 3, quality: Island3DQuality, materials:
         ? 'ISLAND_3_AURORA_KEEP_LEFT_RESIDENTIAL_WING'
         : 'ISLAND_3_AURORA_KEEP_RIGHT_RESIDENTIAL_WING');
       wing.position.set(side * 1.36, 0, -0.2);
-      const wingWall = box(0.86, level === 3 ? 0.86 : 0.72, 1.02, materials.paper);
+      const wingWall = box(0.86, 0.94, 1.02, materials.paper);
       wingWall.position.y = 0.79;
       wing.add(wingWall);
       [-1, 1].forEach((postSide) => {
-        const post = box(0.1, level === 3 ? 0.94 : 0.8, 1.06, materials.timberDark);
+        const post = box(0.1, 1.02, 1.06, materials.timberDark);
         post.position.set(postSide * 0.38, 0.79, 0);
         wing.add(post);
       });
-      addGableRoof(wing, 1.05, level === 3 ? 0.52 : 0.44, 1.18, level === 3 ? 1.18 : 1.08, materials, quality);
+      addGableRoof(wing, 1.05, 0.52, 1.18, 1.26, materials, quality);
       addWindow(wing, 0, 0.82, 0.53, 0, materials, 0.62);
       if (level === 3) addWindow(wing, side * 0.44, 0.82, 0, side * Math.PI / 2, materials, 0.5);
       group.add(wing);
@@ -2098,13 +2225,14 @@ function createAuroraKeep(level: 1 | 2 | 3, quality: Island3DQuality, materials:
 
   if (level >= 2) {
     const rings = createAuroraKeepPart('ISLAND_3_AURORA_KEEP_RIDGE_RING_BEACON_SYSTEM');
-    addAuroraKeepSignalRing(rings, 'ISLAND_3_AURORA_KEEP_SIGNAL_RING_1', roofBaseY + roofHeight + 0.33, -0.34, 1, materials, quality);
+    addAuroraKeepSignalRing(rings, 'ISLAND_3_AURORA_KEEP_SIGNAL_RING_1', 3.38, 1.0, 1, materials, quality);
     if (level === 3) {
-      addAuroraKeepSignalRing(rings, 'ISLAND_3_AURORA_KEEP_SIGNAL_RING_2', roofBaseY + roofHeight + 0.26, 0.42, 0.82, materials, quality);
+      addAuroraKeepSignalRing(rings, 'ISLAND_3_AURORA_KEEP_SIGNAL_RING_2', roofBaseY + roofHeight + 0.3, -0.22, 1, materials, quality);
     }
     group.add(rings);
   }
 
+  group.userData.representativeSlice = 'keep-dominant-additive-macro-v002';
   return group;
 }
 
@@ -2149,11 +2277,13 @@ export function buildIsland3FrostmoonLandmark(
         includeTemporaryRig: true,
       });
     }
-    // Aurora Keep remains a named explodable hierarchy. The other landmarks
-    // keep their compact material batches for phone draw-call control unless
-    // construction preview needs their authored parts intact.
-    if (!options.constructionPreview && definition.id !== 'boss') {
-      compactStaticGeometry(building, `ISLAND3_FROSTMOON_${definition.id.toUpperCase()}_L${resolved}`);
+    // Construction keeps every named funded part; ordinary static board models
+    // use material batches. Pilot can still fade the Keep's cloned materials.
+    if (!options.constructionPreview && definition.id === 'wisdom') {
+      compactFrostfireArchiveForInspection(building);
+    } else if (!options.constructionPreview) {
+      compactStaticGeometry(building, `ISLAND3_FROSTMOON_${definition.id.toUpperCase()}_L${resolved}`,
+        (mesh) => !mesh.userData.moonwellThermalRole);
     }
     root.add(building);
   }
@@ -2331,8 +2461,11 @@ export function createIsland3FrostmoonLivingAmbience(
   const warmMetalMaterials = [materials.brass, ...landmarkPalettes.map((palette) => palette.brass)];
   const oceanMaterial = ocean.material as THREE.MeshPhysicalMaterial;
   oceanMaterial.color.setHex(0x87cfe6);
-  oceanMaterial.roughness = 0.2;
-  oceanMaterial.opacity = 0.88;
+  oceanMaterial.roughness = 0.94;
+  oceanMaterial.transparent = false;
+  oceanMaterial.transmission = 0;
+  ocean.position.y = -2.9;
+  oceanMaterial.opacity = 1;
 
   const previewPhaseParam = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('island3Ambience')
@@ -2408,31 +2541,8 @@ export function createIsland3FrostmoonLivingAmbience(
   const seafoodTrade = createFrostmoonSeafoodTrade(quality, materials);
   root.add(seafoodTrade.root);
 
-  addSnowShelf(root, 0, 0, 6.1, materials, quality, 0.2);
+  root.add(createIsland3FrozenWorld(materials, quality));
   const satellites: Array<[number, number]> = [[-4.36, -3.9], [4.36, -3.9], [-4.36, 3.9], [4.36, 3.9]];
-  satellites.forEach(([x, z], index) => addSnowShelf(root, x, z, 2.42, materials, quality, index + 0.8));
-
-  const iceChannels: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshPhysicalMaterial>[] = [];
-  for (let index = 0; index < 8; index += 1) {
-    const angle = index / 8 * Math.PI * 2 + 0.16;
-    const channel = new THREE.Mesh(new THREE.PlaneGeometry(0.24 + index % 3 * 0.07, 2.4 + index % 2 * 0.5), materials.ice);
-    channel.name = 'ISLAND_3_FROZEN_CASCADE';
-    channel.position.set(Math.cos(angle) * 5.96, -0.52, Math.sin(angle) * 5.34);
-    channel.rotation.y = -angle + Math.PI / 2;
-    channel.userData.phase = index * 0.73;
-    root.add(channel);
-    iceChannels.push(channel);
-  }
-
-  const pines: THREE.Group[] = [];
-  const pineCount = Math.round(30 * detail);
-  for (let index = 0; index < pineCount; index += 1) {
-    const angle = index / pineCount * Math.PI * 2 + 0.19;
-    const protectedAngles = [-2.41, -0.73, 2.41, 0.73];
-    if (protectedAngles.some((entry) => Math.abs(Math.atan2(Math.sin(angle - entry), Math.cos(angle - entry))) < 0.27)) continue;
-    const radius = 5.0 + index % 4 * 0.25;
-    pines.push(addSnowPine(root, Math.cos(angle) * radius, Math.sin(angle) * radius, 0.72 + index % 4 * 0.09, materials, quality, index * 0.7));
-  }
 
   const pathLanternCount = quality === 'high' ? 14 : quality === 'medium' ? 9 : 5;
   for (let index = 0; index < pathLanternCount; index += 1) {
@@ -2547,51 +2657,9 @@ export function createIsland3FrostmoonLivingAmbience(
     return spill;
   });
 
-  const distantCount = quality === 'high' ? 7 : quality === 'medium' ? 5 : 3;
-  for (let index = 0; index < distantCount; index += 1) {
-    const angle = index / distantCount * Math.PI * 2 + 0.48;
-    const radius = 23 + index % 3 * 3.5;
-    const cluster = new THREE.Group();
-    const archetype = index % 3;
-    cluster.name = `ISLAND_3_DISTANT_ALPINE_RIDGE_${archetype + 1}`;
-    cluster.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-    cluster.rotation.y = -angle + index * 0.17;
-    const peakHeight = 4.25 + archetype * 0.52 + index % 2 * 0.24;
-    const peakRadius = 2.25 + archetype * 0.24;
-    const mountain = new THREE.Mesh(new THREE.ConeGeometry(peakRadius, peakHeight, 7 + archetype), materials.frostRockDark);
-    mountain.position.y = 0.52;
-    mountain.rotation.z = (archetype - 1) * 0.07;
-    mountain.scale.set(1 + archetype * 0.08, 1, 0.62 + archetype * 0.08);
-    const snow = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.54, peakHeight * 0.4, 7 + archetype), materials.snowShadow);
-    snow.position.y = 0.52 + peakHeight * 0.3;
-    snow.rotation.z = mountain.rotation.z;
-    snow.scale.set(mountain.scale.x * 1.01, 1, mountain.scale.z * 1.01);
-    cluster.add(mountain, snow);
-    const foothill = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(peakRadius * 0.86, 0),
-      archetype === 1 ? materials.frostRock : materials.frostRockDark,
-    );
-    foothill.name = 'ISLAND_3_DISTANT_ALPINE_FOOTHILL';
-    foothill.position.set(archetype === 2 ? -1.25 : 1.15, -0.42, 0.36);
-    foothill.scale.set(1.52, 0.58 + archetype * 0.05, 0.72);
-    foothill.rotation.set(0.08, 0.22 + archetype * 0.17, -0.04);
-    cluster.add(foothill);
-    if (quality !== 'low') {
-      [-1, 1].forEach((side) => {
-        const shoulderHeight = peakHeight * (0.52 + (side > 0 ? 0.08 : 0));
-        const shoulder = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.56, shoulderHeight, 7), materials.frostRock);
-        shoulder.position.set(side * peakRadius * 0.72, -0.26, 0.25 + archetype * 0.12);
-        shoulder.rotation.z = side * (0.04 + archetype * 0.015);
-        shoulder.scale.set(side < 0 ? 0.94 : 1.08, 1, 0.58 + archetype * 0.05);
-        const shoulderSnow = new THREE.Mesh(new THREE.ConeGeometry(peakRadius * 0.32, shoulderHeight * 0.4, 7), materials.snowShadow);
-        shoulderSnow.position.set(side * peakRadius * 0.72, shoulderHeight * 0.15 - 0.1, 0.25 + archetype * 0.12);
-        shoulderSnow.rotation.z = shoulder.rotation.z;
-        shoulderSnow.scale.set(shoulder.scale.x, 1, shoulder.scale.z * 1.01);
-        cluster.add(shoulder, shoulderSnow);
-      });
-    }
-    root.add(cluster);
-  }
+  // The previous near-field alpine cones included a large brick-textured
+  // foothill that read as a floating castle. The frozen sea now supplies the
+  // grounded depth cues; distant crags will be authored against that horizon.
 
   markShadows(root, quality !== 'low');
   scene.add(root);
@@ -2712,11 +2780,6 @@ export function createIsland3FrostmoonLivingAmbience(
         const life = (elapsed * 0.11 + index * 0.1) % 1.2;
         puff.material.opacity = (0.04 + ambience.hearth * 0.34) * (1 - life / 1.2);
       });
-      pines.forEach((pine) => {
-        pine.rotation.z = Math.sin(elapsed * (0.35 + ambience.blizzard * 0.9) + pine.userData.phase)
-          * (0.008 + ambience.blizzard * 0.038);
-      });
-      iceChannels.forEach((channel, index) => { channel.material.opacity = 0.7 + Math.sin(elapsed * 0.8 + channel.userData.phase + index) * 0.06; });
       frozenPools.forEach((pool, index) => {
         if (!Array.isArray(pool.material)) {
           pool.material.opacity = 0.7 + Math.sin(elapsed * 0.62 + pool.userData.phase + index) * 0.055;

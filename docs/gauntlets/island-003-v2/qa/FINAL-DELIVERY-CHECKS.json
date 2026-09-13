@@ -1,0 +1,54 @@
+{
+  "status": "implemented-and-verified-local-candidate-release-gates-open",
+  "date": "2026-09-13",
+  "fullIslandRunTests": {
+    "passed": 2095,
+    "failed": 0,
+    "note": "Full service suite before final render-only cleanup; focused integration checks passed after shared matrix update."
+  },
+  "focusedFinalChecks": [
+    "PASS Frostwell sanitizer migrates the 50m draft and auto-commissions existing 500m saves",
+    "PASS Moonwell exact roll landing persists heat while preserving normal tile resolution and dice cost",
+    "PASS Island 003 landing on a drill tile grants one Frostwell spin even with a high multiplier",
+    "PASS Island 003 ordinary landing does not passively advance Frostwell",
+    "PASS Frostwell repeated updates, close drill POV and reduced-motion settle",
+    "PASS Frostwell batch lamp exclusion and cinematic visibility restoration",
+    "PASS shared-frame batching preserves motion with one world traversal",
+    "PASS Moonwell frozen, gradual melt, interruption and material cleanup"
+  ],
+  "typescript": {
+    "command": "tsc --noEmit --incremental --tsBuildInfoFile /tmp/island003-v2-delivery.tsbuildinfo",
+    "exitCode": 0,
+    "diagnostics": ""
+  },
+  "productionBuild": {
+    "command": "vite build --outDir /tmp/island003-v2-delivery-build",
+    "exitCode": 0,
+    "warnings": "Existing chunk-size and dynamic/static import warnings retained."
+  },
+  "all15Builds": "all-fifteen-builds-final-v002/capture.json",
+  "gallery": "comparison-check.json",
+  "worldVisualMinimum": 0.85,
+  "correctedRestorationMinimum": 0.86,
+  "finalSourceHashes": {
+    "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "83655c2ea1afa882dda4c07e72b3a441fa05c5816607b3a104f4a80a24e9d787",
+    "src/features/gamification/level-worlds/dev/Island1AnimatedBatches.ts": "c896c7407c8199b8f65a5403008550bcac4b7d91b92a84a96c8dd08c86a49a04"
+  },
+  "physicalDeviceAccepted": false,
+  "published": false,
+  "merged": false,
+  "motionAcceptance": "Phase/state readability approved; independent live recording playback and physical-target-phone timing remain open.",
+  "finalProfile": {
+    "evidence": "final-profile-high-v002/profile.json",
+    "sourceStable": true,
+    "errors": [],
+    "averageFps": 42.1,
+    "p95FrameMs": 34,
+    "slowFramePercent": 38.2,
+    "maxDrawCalls": 307,
+    "maxTriangles": 77251,
+    "severeJankCount": 18,
+    "accepted": false,
+    "note": "No timing improvement demonstrated by final shared-matrix run. All timing thresholds and draw-call ceiling remain unmet. Desktop development measurement is not physical-device acceptance."
+  }
+}

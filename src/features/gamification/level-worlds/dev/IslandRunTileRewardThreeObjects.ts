@@ -63,6 +63,7 @@ export type IslandRunTileRewardObjectKind =
   | 'traffic_beacon'
   | 'first_light_dynamite'
   | 'frostwell_drill'
+  | 'moonwell_heat'
   | 'rootheart_power_component'
   | 'cactus_canyon_dynamite'
   | 'great_honeyfall_nectar'
@@ -75,6 +76,7 @@ export function resolveIslandRunTileRewardObjectKind(
 ): IslandRunTileRewardObjectKind | null {
   if (entry.signatureMissionKind === 'first_light_dynamite') return 'first_light_dynamite';
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
+  if (entry.signatureMissionKind === 'moonwell_heat') return 'moonwell_heat';
   if (entry.signatureMissionKind === 'rootheart_power_component') return 'rootheart_power_component';
   if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
   if (entry.signatureMissionKind === 'great_honeyfall_nectar') return 'great_honeyfall_nectar';
@@ -502,6 +504,20 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
     return cache;
   }
   if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
+  if (kind === 'moonwell_heat') {
+    const root = new THREE.Group();
+    root.name = 'ISLAND_3_MOONWELL_HEAT_SYMBOL';
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.045, 5, 16), materials.gold);
+    ring.scale.y = 0.36; ring.position.y = -0.18; root.add(ring);
+    for (const x of [-0.15, 0, 0.15]) {
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(x, -0.12, 0), new THREE.Vector3(x - 0.035, 0, 0),
+        new THREE.Vector3(x + 0.035, 0.13, 0), new THREE.Vector3(x, 0.27, 0),
+      ]);
+      root.add(new THREE.Mesh(new THREE.TubeGeometry(curve, quality === 'low' ? 6 : 10, 0.027, 5, false), materials.amber));
+    }
+    return root;
+  }
   if (kind === 'rootheart_power_component') return createRootheartPowerComponent(materials, quality);
   if (kind === 'cactus_canyon_dynamite') {
     return createCactusCanyonDynamiteCache(materials, quality, entry.signatureMissionAmount ?? 1);

@@ -1,0 +1,44 @@
+{
+  "passId": "blockout",
+  "action": "continue",
+  "scope": "Macro only; not completed landmark/full-island quality",
+  "reviewer": "independent /root/build_modal_review",
+  "score": 0.85,
+  "viewScores": [
+    0.88,
+    0.87,
+    0.85,
+    0.85,
+    0.86,
+    0.86,
+    0.85,
+    0.85,
+    0.87
+  ],
+  "assemblyScores": {
+    "overview": 0.87,
+    "keep": 0.88,
+    "left": 0.86,
+    "right": 0.86
+  },
+  "gainFromWorst": 0.13,
+  "family": 1,
+  "correctionConsumed": 1,
+  "sourceStable": true,
+  "browserErrors": [],
+  "summary": "Intermediate gable produces clear descending roof sequence; two supported rings separately readable. Contacts, height, footprint, turrets and rear masses hold. Sea/shelf and fir silhouette retained; funded vertices unchanged both upgrades.",
+  "remainingGates": [
+    "meso trusses/windows/rear facade",
+    "broken snow with visible copper",
+    "stratified ice rather than broad dark belt",
+    "frozen ocean and boat consistency",
+    "day/night/low/reduced motion",
+    "actual performance"
+  ],
+  "evidence": [
+    "macro-v002/capture.json",
+    "assembly-v002/capture.json",
+    "geometry-check.json",
+    "concept-assembly-comparison-v002.jpg"
+  ]
+}

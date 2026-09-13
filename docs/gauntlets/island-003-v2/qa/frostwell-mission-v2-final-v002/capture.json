@@ -1,0 +1,58 @@
+{
+  "sourceStart": {
+    "components/IslandFrostwellMissionModal.tsx": "624909b1646792c088a58ea46feea8261044b700f0e9f418cdcc58ecbe60d674",
+    "hooks/useFrostwellMissionSequence.ts": "b29e4006f4c40e249b2d2ee8a666796445408fbeeaea750b2da3b4b1eef741fc",
+    "LevelWorlds.css": "f47b5df75f9dbbc1168f3a5a97685160826c99f3b0629dade4f252c7cf7730c4",
+    "dev/Island5ThreePilot.tsx": "97c349eadfacd098683c4fa44a575202531d7e5ce2cac0d328223f7e351d7dae",
+    "dev/IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+    "dev/FrostwellIceworksThreeModel.ts": "4b52db3e2df9ba6ac1f61f7b26db41eb7139fa5d1c6eb7d6e02bed6f8367ccee",
+    "dev/Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "dev/Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "dev/FrostmoonSeafoodTradeThreeModel.ts": "a3e66c1fc9203fc2877b2bfe76bc7d525424a782ab5549a4e7efe613bcbd06c8",
+    "dev/Island1AnimatedBatches.ts": "75e7dc30fc0c314bd2ab682b5ca1c3c70e533eea9ba5750ad0ec77b56225d219"
+  },
+  "scope": "Production presentation components in deterministic dev fixture, desktop-hosted phone viewport. Not a canonical-playthrough or physical-device benchmark.",
+  "errors": [],
+  "records": [
+    {
+      "width": 360,
+      "height": 640,
+      "layout": {
+        "left": 18,
+        "top": 49.390625,
+        "right": 342,
+        "bottom": 590.609375,
+        "overflow": "hidden",
+        "parent": "BODY"
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "layout": {
+        "left": 207,
+        "top": 18,
+        "right": 637,
+        "bottom": 372,
+        "overflow": "hidden",
+        "parent": "BODY"
+      }
+    }
+  ],
+  "reopenComplete": true,
+  "escapeCloses": true,
+  "reducedSettled": true,
+  "sourceEnd": {
+    "components/IslandFrostwellMissionModal.tsx": "624909b1646792c088a58ea46feea8261044b700f0e9f418cdcc58ecbe60d674",
+    "hooks/useFrostwellMissionSequence.ts": "b29e4006f4c40e249b2d2ee8a666796445408fbeeaea750b2da3b4b1eef741fc",
+    "LevelWorlds.css": "f47b5df75f9dbbc1168f3a5a97685160826c99f3b0629dade4f252c7cf7730c4",
+    "dev/Island5ThreePilot.tsx": "97c349eadfacd098683c4fa44a575202531d7e5ce2cac0d328223f7e351d7dae",
+    "dev/IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+    "dev/FrostwellIceworksThreeModel.ts": "4b52db3e2df9ba6ac1f61f7b26db41eb7139fa5d1c6eb7d6e02bed6f8367ccee",
+    "dev/Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "dev/Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "dev/FrostmoonSeafoodTradeThreeModel.ts": "a3e66c1fc9203fc2877b2bfe76bc7d525424a782ab5549a4e7efe613bcbd06c8",
+    "dev/Island1AnimatedBatches.ts": "75e7dc30fc0c314bd2ab682b5ca1c3c70e533eea9ba5750ad0ec77b56225d219"
+  },
+  "sourceStable": true
+}

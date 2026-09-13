@@ -1,0 +1,3657 @@
+{
+  "targetName": "Aurora Keep and Deep Frozen World V2",
+  "targetId": "island-003-v2-keep-frozen-world",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "Actual runtime locked camera is approval authority; concept camera not reproduced. Nine-angle neutral naked Keep plus whole assembled phone views."
+  },
+  "suitability": "pass",
+  "scores": {},
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "dominant winter civic keep and contiguous deep-frozen environment",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "architectural",
+        "hard-surface",
+        "bilateral",
+        "stepped-gable"
+      ],
+      "structureKind": [
+        "compound-object",
+        "layered-shell",
+        "paired-modules",
+        "service-assembly"
+      ],
+      "motionPotential": [
+        "static-landmark",
+        "hinged-door",
+        "effect-emitter",
+        "rotating-signal-rings"
+      ],
+      "materialFamilies": [
+        "frost-stone",
+        "dark-timber",
+        "cream-plaster",
+        "aged-copper",
+        "brass",
+        "snow",
+        "emissive-glass"
+      ],
+      "notes": "Approved five-view goal sheet shows a tall civic great hall, two dominant round guard towers, protected gatehouse, inhabited wings, warm copper roofs, upper watch gallery, paired ridge rings and a functional rear service face."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 2
+      },
+      "estimatedCounts": {
+        "macroComponents": 23,
+        "mesoComponents": 10,
+        "microFeatureGroups": 12,
+        "materialLayers": 7,
+        "repetitionSystems": 8
+      },
+      "reasoning": [
+        "The identity depends on the relative hierarchy of a tall central hall, paired guard towers, projecting gatehouse, stepped side wings and authored rear service mass.",
+        "Stone, dark timber, cream infill, weathered copper, brass, snow and amber emissive surfaces require independent responses rather than a shared brown material.",
+        "The keep must remain explodable and clickable with stable door, window, smoke, ring-rotation and future fish-shipment sockets while adding no gameplay authority.",
+        "Central Keep is much taller and more voluminous than outer landmarks, with a continuous high great hall, paired round front turrets and copper gables.",
+        "The concept has continuous white frozen sea and pale-blue thick ice strata; no exposed dark ocean or loose floating floes.",
+        "Snow-covered terrain connects every landmark and encloses a coherent ridge beyond route.",
+        "Snow fir banks use varied tall silhouettes with visible horizontal branch lobes."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Identity details are mapped to named runtime components or material overrides.",
+      "details": [
+        {
+          "id": "copper-roof-plate-seams",
+          "kind": "seam",
+          "mapsTo": {
+            "ref": "copper-roof-seams"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "broken-snow-eaves",
+          "kind": "ridge",
+          "mapsTo": {
+            "ref": "broken-snow-edges"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "tower-stone-courses",
+          "kind": "linework",
+          "mapsTo": {
+            "ref": "tower-stone-joints"
+          },
+          "realization": "raised geometry"
+        },
+        {
+          "id": "gallery-window-muntins",
+          "kind": "ridge",
+          "mapsTo": {
+            "ref": "gallery-muntins"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "heavy-gable-truss",
+          "kind": "ridge",
+          "mapsTo": {
+            "ref": "gable-truss-system"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "gate-door-hardware",
+          "kind": "fastener",
+          "mapsTo": {
+            "ref": "gate-door-hardware"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "ridge-ring-brackets",
+          "kind": "fastener",
+          "mapsTo": {
+            "ref": "ridge-ring-supports"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "warm-window-glow",
+          "kind": "emissive",
+          "mapsTo": {
+            "ref": "window-emissive"
+          },
+          "realization": "emissive material and optional local lights"
+        },
+        {
+          "id": "copper-worn-edges",
+          "kind": "gloss",
+          "mapsTo": {
+            "ref": "copper-edge-wear"
+          },
+          "realization": "material override"
+        },
+        {
+          "id": "timber-grain-wear",
+          "kind": "scratch",
+          "mapsTo": {
+            "ref": "timber-grain-wear"
+          },
+          "realization": "procedural material response"
+        },
+        {
+          "id": "sparse-eave-icicles",
+          "kind": "ridge",
+          "mapsTo": {
+            "ref": "sparse-icicles"
+          },
+          "realization": "geometry"
+        },
+        {
+          "id": "rear-shipment-crate-straps",
+          "kind": "fastener",
+          "mapsTo": {
+            "ref": "crate-brass-straps"
+          },
+          "realization": "repeated geometry"
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+    "resolvedUnknowns": [
+      "Exact V2 rear ice perimeter and subsurface depth are inferred from user many-metres-deep requirement; geometry shows 2.8 world-unit ice cliff atop frozen sea.",
+      "Only actual runtime 36-tile route and current camera are authoritative, not approximate concept route.",
+      "Keep central hall vertical construction grows through funded courses; footprint remains original.",
+      "Planting in representative slice uses shared low-poly branch modules; final juniper/rowan details follow macro approval."
+    ]
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "Central Keep is much taller and more voluminous than outer landmarks, with a continuous high great hall, paired round front turrets and copper gables.",
+      "The concept has continuous white frozen sea and pale-blue thick ice strata; no exposed dark ocean or loose floating floes.",
+      "Snow-covered terrain connects every landmark and encloses a coherent ridge beyond route.",
+      "Snow fir banks use varied tall silhouettes with visible horizontal branch lobes.",
+      "Prior Keep identity includes two brass ridge rings, front gallery, lower side wings and rear service entrance.",
+      "Worst required macro view >=0.85; all 36 route tiles remain in locked overview frame, no tall foreground planting obscures interaction corridor.",
+      "Static terrain/pressure-ridge/vegetation roots batch separately from animated mission props; no added unbounded mesh repetition."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 15,
+      "mesoComponents": 7,
+      "microFeatureGroups": 12,
+      "materialLayers": 7,
+      "repetitionSystems": 6,
+      "reviewViewpoints": 9
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      },
+      {
+        "id": "civic-keep-hierarchy",
+        "name": "Central hall, paired towers, gatehouse and stepped wings",
+        "required": true,
+        "qualityCriteria": [
+          "The central hall dominates without erasing the two front towers.",
+          "The gatehouse remains visibly lower than the gallery and all major masses overlap their foundation sockets."
+        ],
+        "evidenceRefs": [
+          "five-view-turnaround"
+        ],
+        "failureModes": [
+          "reads as a generic lodge",
+          "reads as six repeated turrets",
+          "flat or empty side and rear elevations"
+        ]
+      },
+      {
+        "id": "warm-copper-roof-network",
+        "name": "Warm copper roofs with neutral snow and construction seams",
+        "required": true,
+        "qualityCriteria": [
+          "Copper remains brown-orange beneath snow.",
+          "Every roof has a visible wall collar, ridge or eave construction line."
+        ],
+        "evidenceRefs": [
+          "five-view-turnaround",
+          "night-proof"
+        ],
+        "failureModes": [
+          "blue roof metal",
+          "snow hides the complete roof",
+          "floating roof shells"
+        ]
+      },
+      {
+        "id": "ridge-ring-identity",
+        "name": "Paired engineered brass ridge rings",
+        "required": true,
+        "qualityCriteria": [
+          "Two supported rings survive the gameplay camera.",
+          "Any movement remains slow and mechanical with warm nodes only."
+        ],
+        "evidenceRefs": [
+          "five-view-turnaround"
+        ],
+        "failureModes": [
+          "single faceted jewel",
+          "purple magic",
+          "northern-light effect",
+          "unsupported floating rings"
+        ]
+      },
+      {
+        "id": "continuous-frozen-world",
+        "name": "Continuous deep frozen ocean",
+        "required": true,
+        "qualityCriteria": [
+          "Opaque frozen sea with many-metres-thick stratified shelf, no open-water gaps or floating floes."
+        ],
+        "evidenceRefs": [
+          "frozen-ocean-v002"
+        ],
+        "failureModes": [
+          "disconnected floaters",
+          "route occlusion",
+          "expensive repeated draw calls"
+        ]
+      },
+      {
+        "id": "economical-planting",
+        "name": "Branched snow fir banks",
+        "required": true,
+        "qualityCriteria": [
+          "Varied branch silhouettes in coherent banks outside route and plots; shared/merged geometry."
+        ],
+        "evidenceRefs": [
+          "frozen-ocean-v002"
+        ],
+        "failureModes": [
+          "disconnected floaters",
+          "route occlusion",
+          "expensive repeated draw calls"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "central-hall to guard-tower height and width delta",
+      "gatehouse projection and upper-gallery negative-space delta",
+      "side-wing and rear-service volume delta",
+      "warm-copper to snow coverage and roughness delta",
+      "paired ridge-ring scale and support delta",
+      "front/rear authored-detail and attachment delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.85,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "front-left-40",
+      "left-80",
+      "rear-left-120",
+      "rear-160",
+      "rear-right-200",
+      "right-240",
+      "front-right-280",
+      "high-320"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.85,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.85,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "keep-dominance",
+      "name": "Dominant continuous great hall",
+      "tier": "critical",
+      "threshold": 0.85,
+      "componentRefs": [
+        "central-great-hall-shell"
+      ],
+      "passIds": [
+        "blockout"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002",
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "turret-roof-identity",
+      "name": "Paired turrets, copper gables and two rings",
+      "tier": "critical",
+      "threshold": 0.85,
+      "componentRefs": [
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "ridge-ring-beacon-system"
+      ],
+      "passIds": [
+        "blockout"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002",
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "ice-continuity",
+      "name": "Deep continuous frozen ocean",
+      "tier": "critical",
+      "threshold": 0.85,
+      "componentRefs": [
+        "continuous-ice-ocean",
+        "connected-terrain-shelf"
+      ],
+      "passIds": [
+        "blockout"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002",
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "planting-hierarchy",
+      "name": "Economical coherent snow fir banks",
+      "tier": "critical",
+      "threshold": 0.85,
+      "componentRefs": [
+        "snow-fir-bank"
+      ],
+      "passIds": [
+        "blockout"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002",
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "route-clearance",
+      "name": "Fixed route visibility and plot clearance",
+      "tier": "critical",
+      "threshold": 0.85,
+      "componentRefs": [
+        "root"
+      ],
+      "passIds": [
+        "blockout"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002",
+        "five-view-turnaround"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "blockout",
+    "completedPasses": [],
+    "lastCompletedPass": "",
+    "blockedReason": "Generic full-image Tier1 is framing-incompatible; no full pipeline completion claimed. Independent Gauntlet macro approved only; meso/material/runtime remain.",
+    "nextRequiredEvidence": [
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "stylized-runtime-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "Exact V2 rear ice perimeter and subsurface depth are inferred from user many-metres-deep requirement; geometry shows 2.8 world-unit ice cliff atop frozen sea.",
+    "Only actual runtime 36-tile route and current camera are authoritative, not approximate concept route.",
+    "Keep central hall vertical construction grows through funded courses; footprint remains original.",
+    "Planting in representative slice uses shared low-poly branch modules; final juniper/rowan details follow macro approval.",
+    "Correction1: L2 funds supported gallery gable and its visible ring; L3 mainroof and secondring complete descending roof hierarchy. Reposition ring1 forward above intermediate roof; preserve its exact L2 funded geometry in L3."
+  ],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "",
+    "aspectRatios": [],
+    "symmetry": "",
+    "dominantCurves": [],
+    "negativeSpaces": [],
+    "landmarks": []
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [
+        "Central Keep is much taller and more voluminous than outer landmarks, with a continuous high great hall, paired round front turrets and copper gables.",
+        "The concept has continuous white frozen sea and pale-blue thick ice strata; no exposed dark ocean or loose floating floes.",
+        "Snow-covered terrain connects every landmark and encloses a coherent ridge beyond route.",
+        "Snow fir banks use varied tall silhouettes with visible horizontal branch lobes.",
+        "Prior Keep identity includes two brass ridge rings, front gallery, lower side wings and rear service entrance."
+      ],
+      "confidence": 0.98
+    },
+    {
+      "id": "five-view-turnaround",
+      "view": "turnaround",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [
+        "Front, side, rear and three-quarter construction hierarchy"
+      ],
+      "confidence": 0.98
+    },
+    {
+      "id": "frozen-ocean-v002",
+      "view": "overview",
+      "imageRegion": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "units": "normalized"
+      },
+      "observations": [
+        "Central Keep is much taller and more voluminous than outer landmarks, with a continuous high great hall, paired round front turrets and copper gables.",
+        "The concept has continuous white frozen sea and pale-blue thick ice strata; no exposed dark ocean or loose floating floes.",
+        "Snow-covered terrain connects every landmark and encloses a coherent ridge beyond route.",
+        "Snow fir banks use varied tall silhouettes with visible horizontal branch lobes.",
+        "Prior Keep identity includes two brass ridge rings, front gallery, lower side wings and rear service entrance."
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "root",
+      "name": "Aurora Keep L3",
+      "level": "macro",
+      "role": "static-root",
+      "importance": 1.0,
+      "confidence": 0.98,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "units": "relative",
+        "confidence": 0.5
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "frost-stone"
+        }
+      },
+      "material": "frost-stone",
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "details": [],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(120,130,141,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.96
+      },
+      "fidelityTier": "blockout"
+    },
+    {
+      "id": "raised-frost-stone-foundation",
+      "name": "Raised frost-stone foundation",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "root-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "frost-stone",
+      "dimensions": {
+        "width": 3.72,
+        "height": 0.42,
+        "depth": 3.72,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "foundation-stone-courses"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "raised-frost-stone-foundation",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "central-great-hall-shell",
+      "name": "Central stone and timber great hall",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "dark-timber",
+      "dimensions": {
+        "width": 1.82,
+        "height": 2.52,
+        "depth": 1.4,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "gable-truss-system",
+        "timber-grain-wear"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "dark-timber"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "central-great-hall-shell",
+          "debrisMaterial": "dark-timber"
+        }
+      }
+    },
+    {
+      "id": "main-snow-copper-gable-roof",
+      "name": "Main snow-capped copper gable roof",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "A separately owned roof shell follows explicit wall collars, exposes its warm copper surface beneath snow and preserves a stable runtime pivot.",
+      "parent": "central-great-hall-shell",
+      "attachment": {
+        "parentSocket": "central-great-hall-shell-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "raw-copper",
+      "dimensions": {
+        "width": 2.14,
+        "height": 1.04,
+        "depth": 1.7,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "copper-roof-seams",
+        "copper-edge-wear"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "raw-copper"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "main-snow-copper-gable-roof",
+          "debrisMaterial": "raw-copper"
+        }
+      }
+    },
+    {
+      "id": "front-gatehouse-and-heavy-door",
+      "name": "Protected front gatehouse and heavy door",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "dark-timber",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "gate-door-hardware"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "dark-timber"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "front-gatehouse-and-heavy-door",
+          "debrisMaterial": "dark-timber"
+        }
+      }
+    },
+    {
+      "id": "upper-watch-gallery-and-window-grid",
+      "name": "Upper watch gallery and warm window grid",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "central-great-hall-shell",
+      "attachment": {
+        "parentSocket": "central-great-hall-shell-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "dark-timber",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "gallery-muntins"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "dark-timber"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "upper-watch-gallery-and-window-grid",
+          "debrisMaterial": "dark-timber"
+        }
+      }
+    },
+    {
+      "id": "left-round-guard-tower",
+      "name": "Left round guard tower",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "frost-stone",
+      "dimensions": {
+        "width": 0.8,
+        "height": 1.78,
+        "depth": 0.8,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "tower-stone-joints"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "left-round-guard-tower",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "right-round-guard-tower",
+      "name": "Right round guard tower",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "frost-stone",
+      "dimensions": {
+        "width": 0.8,
+        "height": 1.78,
+        "depth": 0.8,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "tower-stone-joints"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "right-round-guard-tower",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "left-side-residential-wing",
+      "name": "Left residential wing",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "cream-plaster",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "wing-window-bays"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "cream-plaster"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "left-side-residential-wing",
+          "debrisMaterial": "cream-plaster"
+        }
+      }
+    },
+    {
+      "id": "right-side-residential-wing",
+      "name": "Right residential wing",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "cream-plaster",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "wing-window-bays"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "cream-plaster"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "right-side-residential-wing",
+          "debrisMaterial": "cream-plaster"
+        }
+      }
+    },
+    {
+      "id": "rear-service-wing-and-yard-door",
+      "name": "Rear service wing and loading door",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.86,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "cream-plaster",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "rear-loading-door"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "cream-plaster"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "rear-service-wing-and-yard-door",
+          "debrisMaterial": "cream-plaster"
+        }
+      }
+    },
+    {
+      "id": "copper-conical-tower-roofs",
+      "name": "Paired copper conical tower roofs",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "A separately owned roof shell follows explicit wall collars, exposes its warm copper surface beneath snow and preserves a stable runtime pivot.",
+      "parent": "raised-frost-stone-foundation",
+      "attachment": {
+        "parentSocket": "raised-frost-stone-foundation-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "raw-copper",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "broken-snow-edges"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "raw-copper"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "copper-conical-tower-roofs",
+          "debrisMaterial": "raw-copper"
+        }
+      }
+    },
+    {
+      "id": "ridge-ring-beacon-system",
+      "name": "Paired engineered brass ridge rings",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "main-snow-copper-gable-roof",
+      "attachment": {
+        "parentSocket": "main-snow-copper-gable-roof-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "brass",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "ridge-ring-supports"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "brass"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "slow-rotating-signal",
+        "destruction": {
+          "fractureGroup": "ridge-ring-beacon-system",
+          "debrisMaterial": "brass"
+        }
+      }
+    },
+    {
+      "id": "chimneys-caps-and-smoke-sockets",
+      "name": "Chimneys, caps and smoke sockets",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "central-great-hall-shell",
+      "attachment": {
+        "parentSocket": "central-great-hall-shell-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "frost-stone",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "capped-flues"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "chimneys-caps-and-smoke-sockets",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "dark-timber-buttress-and-trim-system",
+      "name": "Dark timber buttress and trim system",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "central-great-hall-shell",
+      "attachment": {
+        "parentSocket": "central-great-hall-shell-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "dark-timber",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "heavy-timber-braces"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "dark-timber"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "dark-timber-buttress-and-trim-system",
+          "debrisMaterial": "dark-timber"
+        }
+      }
+    },
+    {
+      "id": "warm-window-and-lantern-system",
+      "name": "Warm window and lantern system",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "central-great-hall-shell",
+      "attachment": {
+        "parentSocket": "central-great-hall-shell-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "amber-glow",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "window-emissive"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "amber-glow"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "warm-window-and-lantern-system",
+          "debrisMaterial": "amber-glow"
+        }
+      }
+    },
+    {
+      "id": "snow-load-icicle-and-roof-seam-system",
+      "name": "Snow load, icicles and roof seams",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "main-snow-copper-gable-roof",
+      "attachment": {
+        "parentSocket": "main-snow-copper-gable-roof-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "snow",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "sparse-icicles",
+        "broken-snow-edges"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "snow"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "snow-load-icicle-and-roof-seam-system",
+          "debrisMaterial": "snow"
+        }
+      }
+    },
+    {
+      "id": "rear-crates-firewood-tools-and-guard-rack",
+      "name": "Rear crates, firewood, tools and guard rack",
+      "level": "meso",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.86,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "rear-service-wing-and-yard-door",
+      "attachment": {
+        "parentSocket": "rear-service-wing-and-yard-door-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "dark-timber",
+      "dimensions": {
+        "width": 3.12,
+        "height": 0.42,
+        "depth": 3.12,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.25,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "crate-brass-straps",
+        "split-log-stack",
+        "guard-rack"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "dark-timber"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "rear-crates-firewood-tools-and-guard-rack",
+          "debrisMaterial": "dark-timber"
+        }
+      }
+    },
+    {
+      "id": "continuous-ice-ocean",
+      "name": "Continuous solid frozen sea",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "root-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "frost-stone",
+      "dimensions": {
+        "width": 140,
+        "height": 3,
+        "depth": 140,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "raised-frost-stone-foundation",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "connected-terrain-shelf",
+      "name": "Connected snow and thick blue ice shelf",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "root-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "frost-stone",
+      "dimensions": {
+        "width": 13.8,
+        "height": 2.8,
+        "depth": 12.8,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "frost-stone"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "raised-frost-stone-foundation",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "pressure-ridge-banks",
+      "name": "Grounded ice pressure ridges",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "instanced-cluster",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "root-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "snow",
+      "dimensions": {
+        "width": 14,
+        "height": 1,
+        "depth": 14,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "snow"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "raised-frost-stone-foundation",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "snow-fir-bank",
+      "name": "Economical branched snow fir banks",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "instanced-cluster",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately owned rigid architectural assembly with visible contacts, construction seams and a stable runtime pivot.",
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "root-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.1,
+          0
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "dark-timber",
+      "dimensions": {
+        "width": 14,
+        "height": 2.8,
+        "depth": 14,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "dark-timber"
+      ],
+      "evidenceRefs": [
+        "frozen-ocean-v002"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "raised-frost-stone-foundation",
+          "debrisMaterial": "frost-stone"
+        }
+      }
+    },
+    {
+      "id": "intermediate-gallery-gable",
+      "name": "Supported intermediate front gallery gable",
+      "level": "macro",
+      "role": "foundation",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "A separately owned roof shell follows explicit wall collars, exposes its warm copper surface beneath snow and preserves a stable runtime pivot.",
+      "parent": "upper-watch-gallery-and-window-grid",
+      "attachment": {
+        "parentSocket": "gallery-top-beam",
+        "localStart": [
+          0,
+          2.36,
+          0.79
+        ],
+        "localEnd": [
+          0,
+          3.08,
+          0.79
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.01
+      },
+      "material": "raw-copper",
+      "dimensions": {
+        "width": 1.88,
+        "height": 0.7,
+        "depth": 0.94,
+        "units": "world"
+      },
+      "transform": {
+        "position": [
+          0,
+          2.38,
+          0.79
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "localFeatures": [
+        "copper-roof-seams",
+        "copper-edge-wear"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(61,69,79,1)",
+        "secondaryAlbedo": "rgba(234,244,255,1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.97
+      },
+      "materialLayers": [
+        "raw-copper"
+      ],
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ],
+      "actionProfile": {
+        "animationRole": "static-part",
+        "destruction": {
+          "fractureGroup": "main-snow-copper-gable-roof",
+          "debrisMaterial": "raw-copper"
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "frost-stone",
+      "name": "Charcoal frost stone",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#78828D",
+      "color": "#78828D",
+      "albedo": {
+        "dominant": "#78828D",
+        "secondary": [
+          "#3D454F",
+          "#EAF4FF"
+        ],
+        "samplingNotes": "Use image-observed local color zones, not a single averaged color."
+      },
+      "colorVariation": {
+        "palette": [
+          "#78828D",
+          "#3D454F",
+          "#EAF4FF"
+        ],
+        "pattern": "mottled",
+        "amplitude": 0.15,
+        "heightCorrelation": 0.3
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12.0,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56.0,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.75,
+        "variation": 0.15,
+        "map": "independent-procedural-field",
+        "localResponse": "higher roughness in cavities, lower roughness on worn edges"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "derived-from-independent-height-field",
+        "strength": 0.35,
+        "scale": 24.0,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.25,
+        "contactShadowBias": 0.35,
+        "notes": "Darken creases, seams, intersections, and recessed local features."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "snow-joint-cavities",
+          "componentRefs": [
+            "circular-foundation"
+          ],
+          "roughness": 0.96,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "stone-joint-snow",
+          "componentRefs": [
+            "circular-foundation"
+          ],
+          "roughness": 0.98,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "tower-stone-joints",
+          "componentRefs": [
+            "left-round-guard-tower",
+            "right-round-guard-tower",
+            "raised-frost-stone-foundation"
+          ],
+          "roughness": 0.96,
+          "evidenceRefs": [
+            "five-view-turnaround"
+          ]
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Existing procedural Frostmoon stone response; the approved sheet supplies palette and construction placement rather than extractable neutral-light PBR."
+    },
+    {
+      "id": "dark-timber",
+      "name": "Dark structural timber",
+      "qualityTier": "utility",
+      "type": "standard",
+      "baseColor": "#2F211D",
+      "roughness": 0.9,
+      "localOverrides": [
+        {
+          "id": "longitudinal-grain",
+          "componentRefs": [
+            "radial-timber-frame",
+            "rear-chart-cabinet",
+            "rear-service-door"
+          ],
+          "roughness": 0.78,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "longitudinal-timber-grain",
+          "componentRefs": [
+            "octagonal-stone-and-timber-shell",
+            "dark-timber-buttress-system"
+          ],
+          "roughness": 0.88,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "timber-grain-wear",
+          "componentRefs": [
+            "central-great-hall-shell",
+            "dark-timber-buttress-and-trim-system"
+          ],
+          "roughness": 0.9,
+          "evidenceRefs": [
+            "five-view-turnaround"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "raw-copper",
+      "name": "Weathered raw copper",
+      "qualityTier": "utility",
+      "type": "physical",
+      "baseColor": "#A9532D",
+      "roughness": 0.42,
+      "metalness": 0.72,
+      "localOverrides": [
+        {
+          "id": "rib-edge-wear",
+          "componentRefs": [
+            "copper-rib-cladding"
+          ],
+          "roughness": 0.3,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "copper-worn-edges",
+          "componentRefs": [
+            "radial-copper-roof",
+            "open-book-crest"
+          ],
+          "roughness": 0.28,
+          "clearcoat": 0.18,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "copper-edge-wear",
+          "componentRefs": [
+            "main-snow-copper-gable-roof",
+            "copper-conical-tower-roofs"
+          ],
+          "roughness": 0.3,
+          "clearcoat": 0.16,
+          "evidenceRefs": [
+            "five-view-turnaround"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brass",
+      "name": "Warm instrument brass",
+      "qualityTier": "utility",
+      "type": "standard",
+      "baseColor": "#CC9648",
+      "roughness": 0.36,
+      "metalness": 0.66,
+      "localOverrides": [
+        {
+          "id": "lens-collar-highlights",
+          "componentRefs": [
+            "brass-telescope-and-tripod",
+            "armillary-axis-and-counterweights"
+          ],
+          "roughness": 0.24,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "ridge-ring-supports",
+          "componentRefs": [
+            "ridge-ring-beacon-system"
+          ],
+          "roughness": 0.34,
+          "evidenceRefs": [
+            "five-view-turnaround"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cream-plaster",
+      "name": "Warm cream plaster infill",
+      "qualityTier": "utility",
+      "type": "physical",
+      "baseColor": "#D7C9AE",
+      "roughness": 0.86,
+      "metalness": 0.0,
+      "localOverrides": [
+        {
+          "id": "moon-disc-glow",
+          "componentRefs": [
+            "ice-water-and-moon-disc"
+          ],
+          "roughness": 0.08,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "color": "#D7C9AE",
+      "albedo": {
+        "dominant": "#D7C9AE",
+        "secondary": [
+          "#BFAF91",
+          "#E5DAC5"
+        ]
+      }
+    },
+    {
+      "id": "amber-glow",
+      "name": "Cozy amber lantern glass",
+      "qualityTier": "utility",
+      "type": "standard",
+      "baseColor": "#FFBE58",
+      "roughness": 0.2,
+      "localOverrides": [
+        {
+          "id": "amber-night-core",
+          "componentRefs": [
+            "entry-lantern-system"
+          ],
+          "roughness": 0.12,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "furnace-emissive",
+          "componentRefs": [
+            "rear-furnace-and-flue"
+          ],
+          "emissive": "#FF9C43",
+          "emissiveIntensity": 1.6,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "window-emissive",
+          "componentRefs": [
+            "upper-watch-gallery-and-window-grid",
+            "warm-window-and-lantern-system"
+          ],
+          "emissive": "#FFB84F",
+          "emissiveIntensity": 1.55,
+          "evidenceRefs": [
+            "night-proof"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snow",
+      "name": "Wind-settled snow",
+      "qualityTier": "utility",
+      "type": "standard",
+      "baseColor": "#EAF4FF",
+      "roughness": 0.82,
+      "localOverrides": [
+        {
+          "id": "windward-snow-lip",
+          "componentRefs": [
+            "snow-seams-and-fasteners"
+          ],
+          "roughness": 0.9,
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ]
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "paired-guard-towers",
+      "name": "Paired grounded round guard towers",
+      "componentRefs": [
+        "left-round-guard-tower",
+        "right-round-guard-tower"
+      ],
+      "geometry": {
+        "primitive": "cylinder-and-course-bands"
+      },
+      "instances": "two mirrored front shoulder sockets",
+      "buildsGeometry": true,
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "paired-tower-roofs",
+      "name": "Paired copper conical tower roofs",
+      "componentRefs": [
+        "copper-conical-tower-roofs"
+      ],
+      "geometry": {
+        "primitive": "cone-and-snow-shell"
+      },
+      "instances": "two tower roof collars",
+      "buildsGeometry": true,
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "gallery-window-grid",
+      "name": "Upper amber gallery window grid",
+      "componentRefs": [
+        "upper-watch-gallery-and-window-grid",
+        "warm-window-and-lantern-system"
+      ],
+      "geometry": {
+        "primitive": "box-and-muntin"
+      },
+      "instances": "phone-scale horizontal window rhythm",
+      "buildsGeometry": true,
+      "evidenceRefs": [
+        "five-view-turnaround",
+        "night-proof"
+      ]
+    },
+    {
+      "id": "paired-residential-wings",
+      "name": "Paired stepped residential wings",
+      "componentRefs": [
+        "left-side-residential-wing",
+        "right-side-residential-wing"
+      ],
+      "geometry": {
+        "primitive": "timber-frame-and-gable"
+      },
+      "instances": "two mirrored side sockets",
+      "buildsGeometry": true,
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "paired-ridge-rings",
+      "name": "Paired engineered ridge rings",
+      "componentRefs": [
+        "ridge-ring-beacon-system"
+      ],
+      "geometry": {
+        "primitive": "torus-and-support-cradle"
+      },
+      "instances": "two longitudinal ridge sockets",
+      "buildsGeometry": true,
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ]
+    },
+    {
+      "id": "distributed-roof-detail",
+      "name": "Roof seams, snow breaks and sparse icicles",
+      "componentRefs": [
+        "snow-load-icicle-and-roof-seam-system",
+        "main-snow-copper-gable-roof",
+        "copper-conical-tower-roofs"
+      ],
+      "geometry": {
+        "primitive": "beam-cone-and-snow-cap"
+      },
+      "instances": "quality-scaled deterministic roof-edge distribution",
+      "buildsGeometry": true,
+      "evidenceRefs": [
+        "five-view-turnaround"
+      ]
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root",
+        "raised-frost-stone-foundation",
+        "central-great-hall-shell",
+        "main-snow-copper-gable-roof",
+        "front-gatehouse-and-heavy-door",
+        "upper-watch-gallery-and-window-grid",
+        "left-round-guard-tower",
+        "right-round-guard-tower",
+        "left-side-residential-wing",
+        "right-side-residential-wing",
+        "rear-service-wing-and-yard-door",
+        "copper-conical-tower-roofs",
+        "ridge-ring-beacon-system",
+        "chimneys-caps-and-smoke-sockets",
+        "dark-timber-buttress-and-trim-system",
+        "warm-window-and-lantern-system",
+        "snow-load-icicle-and-roof-seam-system",
+        "rear-crates-firewood-tools-and-guard-rack",
+        "continuous-ice-ocean",
+        "connected-terrain-shelf",
+        "pressure-ridge-banks",
+        "snow-fir-bank",
+        "intermediate-gallery-gable"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [],
+  "reviewHistory": [
+    {
+      "passId": "blockout",
+      "action": "refine-code",
+      "reviewer": "independent /root/build_modal_review",
+      "score": 0.72,
+      "layerScores": {
+        "silhouetteProportion": 0.72,
+        "componentStructure": 0.8,
+        "formDetail": 0.8,
+        "materialSurface": 0.86,
+        "lightingCamera": 0.85
+      },
+      "summary": "One bounded correction: supported intermediate gallery gable + separately readable second ring. Preserve hall height/footprint/turrets, side/rear volumes and frozen-world silhouette. Sea/shelf .86 and firbanks .88. No detail expansion.",
+      "viewScores": [
+        0.72,
+        0.76,
+        0.8,
+        0.81,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.76
+      ],
+      "assemblyScores": {
+        "overview": 0.76,
+        "keep": 0.72,
+        "left": 0.79,
+        "right": 0.79
+      },
+      "evidence": [
+        "macro-v001-framed/capture.json",
+        "assembly-v001/capture.json",
+        "concept-assembly-comparison.jpg"
+      ],
+      "family": 1,
+      "correction": 1
+    },
+    {
+      "passId": "blockout",
+      "action": "continue",
+      "scope": "Macro only; not completed landmark/full-island quality",
+      "reviewer": "independent /root/build_modal_review",
+      "score": 0.85,
+      "viewScores": [
+        0.88,
+        0.87,
+        0.85,
+        0.85,
+        0.86,
+        0.86,
+        0.85,
+        0.85,
+        0.87
+      ],
+      "assemblyScores": {
+        "overview": 0.87,
+        "keep": 0.88,
+        "left": 0.86,
+        "right": 0.86
+      },
+      "gainFromWorst": 0.13,
+      "family": 1,
+      "correctionConsumed": 1,
+      "sourceStable": true,
+      "browserErrors": [],
+      "summary": "Intermediate gable produces clear descending roof sequence; two supported rings separately readable. Contacts, height, footprint, turrets and rear masses hold. Sea/shelf and fir silhouette retained; funded vertices unchanged both upgrades.",
+      "remainingGates": [
+        "meso trusses/windows/rear facade",
+        "broken snow with visible copper",
+        "stratified ice rather than broad dark belt",
+        "frozen ocean and boat consistency",
+        "day/night/low/reduced motion",
+        "actual performance"
+      ],
+      "evidence": [
+        "macro-v002/capture.json",
+        "assembly-v002/capture.json",
+        "geometry-check.json",
+        "concept-assembly-comparison-v002.jpg"
+      ]
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "reference-fidelity",
+    "targetTriangles": 90000,
+    "maxDrawCalls": 140,
+    "textureSize": 2048,
+    "fpsTarget": 30,
+    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers.",
+    "representativeScope": "Static semantic roots; measure whole-world draw calls before expansion. Full high target <=175 calls / <=180000 triangles; parent integrates batching."
+  },
+  "lightingFromPhoto": [
+    {
+      "role": "key light",
+      "intent": "Existing Frostmoon daylight directional key reveals the stepped keep mass and warm copper without clipping snow."
+    },
+    {
+      "role": "fill and environment light",
+      "intent": "Cool arctic hemisphere fill preserves charcoal stone, cream plaster and rear-service detail through day, blizzard, dusk and night."
+    },
+    {
+      "role": "local emissive light",
+      "intent": "Amber windows, gate lanterns and fireplace/chimney cues create restrained cozy night focal light without aurora."
+    },
+    {
+      "role": "exposure and tone mapping",
+      "intent": "Use the existing phase-safe filmic exposure so aged copper remains warm brown-orange and never shifts blue."
+    },
+    {
+      "role": "contact shadow and background",
+      "intent": "Soft contact shadows ground towers, gatehouse, wings, rear crates, logs and tools on the existing snowy boss plinth."
+    }
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Aurora Keep and Deep Frozen World V2 continuous frozen sea thick ice shelf architectural hierarchy grand hall paired turrets instanced snow fir trees",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.measurement-source-text",
+        "file_path": "grimoire/intake/image_analysis.md",
+        "heading": "Layer 2 \u2014 Overall form & silhouette",
+        "key_path": null,
+        "score": 6.34027552625,
+        "snippets": [
+          "Record proportions relative to a named reference dimension and keep observations separate from inference."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 2 \u2014 Overall form & silhouette",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "The Rule",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/intake/image_analysis.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.component-hierarchy",
+        "file_path": "grimoire/intake/image_analysis.md",
+        "heading": "Layer 3 \u2014 Macro \u2192 meso \u2192 micro decomposition",
+        "key_path": null,
+        "score": 5.289680864552,
+        "snippets": [
+          "Decompose an object into macro independent major parts, meso sub-assemblies, and micro feature groups in a parent-child hierarchy."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 3 \u2014 Macro \u2192 meso \u2192 micro decomposition",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/intake/image_analysis.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.runtime-hierarchy",
+        "file_path": "grimoire/readiness/action_rigging.md",
+        "heading": "Hierarchy Pattern",
+        "key_path": null,
+        "score": 5.113336045697,
+        "snippets": [
+          "An action-ready model uses a root, component pivot groups, visual meshes, sockets, collider metadata or proxies, and destruction-group metadata."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/readiness/action_rigging.md",
+            "heading": "Hierarchy Pattern",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/readiness/action_rigging.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      }
+    ]
+  },
+  "tier1Results": [],
+  "scopedMacroApproval": {
+    "passId": "blockout",
+    "action": "continue",
+    "scope": "Macro only; not completed landmark/full-island quality",
+    "reviewer": "independent /root/build_modal_review",
+    "score": 0.85,
+    "viewScores": [
+      0.88,
+      0.87,
+      0.85,
+      0.85,
+      0.86,
+      0.86,
+      0.85,
+      0.85,
+      0.87
+    ],
+    "assemblyScores": {
+      "overview": 0.87,
+      "keep": 0.88,
+      "left": 0.86,
+      "right": 0.86
+    },
+    "gainFromWorst": 0.13,
+    "family": 1,
+    "correctionConsumed": 1,
+    "sourceStable": true,
+    "browserErrors": [],
+    "summary": "Intermediate gable produces clear descending roof sequence; two supported rings separately readable. Contacts, height, footprint, turrets and rear masses hold. Sea/shelf and fir silhouette retained; funded vertices unchanged both upgrades.",
+    "remainingGates": [
+      "meso trusses/windows/rear facade",
+      "broken snow with visible copper",
+      "stratified ice rather than broad dark belt",
+      "frozen ocean and boat consistency",
+      "day/night/low/reduced motion",
+      "actual performance"
+    ],
+    "evidence": [
+      "macro-v002/capture.json",
+      "assembly-v002/capture.json",
+      "geometry-check.json",
+      "concept-assembly-comparison-v002.jpg"
+    ]
+  }
+}

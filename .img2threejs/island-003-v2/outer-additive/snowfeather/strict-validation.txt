@@ -1,0 +1,12 @@
+PASS
+warning: component 'root' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'lodge-shell' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'roof-shell' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'entrance' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'incubation-bays' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'feather-crown' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'chimney' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'timber-frame' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'rear-service' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'window-system' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'snow-cap' is missing actionProfile; future animation/destruction may require refactor

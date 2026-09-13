@@ -1,0 +1,23 @@
+{
+  "scope": "Bounded early-level additive repair preserving approved final L3 vertex geometry, identity and footprint. No new detail or gameplay writes.",
+  "source": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-hearthguard-yard-l3-goal-v002.png",
+  "sha256": "7bae7ccdf1225f7e9f179be72553b87016354ff264d4040b3b96d8a2c6ddcf0a",
+  "observed": [
+    "Open training yard, timber perimeter, feather gate, shield targets, climbing frame and rear recovery hearth hut.",
+    "Approved L3 court stays open and every final post and service object retains its location."
+  ],
+  "inferred": [
+    "Use a fixed final perimeter slot array with additive selected slots; never redistribute posts.",
+    "Use final gate, target and recovery hut dimensions from first appearance; front climbing posts retained when rear posts are added."
+  ],
+  "suitability": {
+    "verdict": "pass",
+    "reason": "Approved final multi-view goal re-inspected; existing authoritative L3 runtime retained. Early construction allocation follows explicit additive contract."
+  },
+  "reuse": {
+    "analysis": ".img2threejs/island-003-frostmoon-upgrade/hearthguard-yard-l3/image-analysis.md",
+    "materials": ".img2threejs/island-003-frostmoon-upgrade/hearthguard-yard-l3/material-evidence.md",
+    "detailInventory": ".img2threejs/island-003-frostmoon-upgrade/hearthguard-yard-l3/detail-inventory.json"
+  },
+  "projection": "No projection required; approved procedural material definitions retained."
+}

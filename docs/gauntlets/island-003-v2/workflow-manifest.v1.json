@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "approved-direction-implementation-in-progress",
+  "status": "implemented-local-candidate-release-gates-open",
   "subject": "Island 003 Frostmoon Haven V2",
   "branch": "codex/island-003-v2-20260912",
   "baseSha": "e8db4af0541e356951380477d7d17d0dc5c04019",
@@ -18,7 +18,15 @@
     "maximumP95Ms": 29,
     "maximumSlowFramesPercent": 15,
     "physicalTargetPhoneRequired": true,
-    "waiver": null
+    "waiver": null,
+    "localProfileAccepted": false,
+    "latestObserved": {
+      "averageFps": 42.1,
+      "p95FrameMs": 34,
+      "slowFramePercent": 38.2,
+      "maxDrawCalls": 307,
+      "maxTriangles": 77251
+    }
   },
   "delivery": {
     "classification": "new-base-revision",
@@ -40,17 +48,38 @@
     "root": "integration, manifests, serialized implementation",
     "qualityLord": "independent bounded read-only review after representative slice"
   },
-  "next": "Continue the dominant Keep and deeply frozen world representative slice, then Frostwell and Moonwell; retain physical-device and performance gates.",
+  "next": "Review the completed local V1/V2 gallery. Before release, resolve unwaived performance budgets and validate target-phone Auto/High and live motion.",
   "expandedScope": [
     "Full Frostwell entry/spin/drill/camera/celebration upgrade",
-    "Proposed Moonwell L3\u2192tile pickup\u2192Boil water mission",
+    "Moonwell L3\u2192tile pickup\u2192Boil water mission",
     "Shared mission-phone counter investigation/correction",
     "Frostfire Archive interior-first construction, final L3 roof",
     "Shared closer building-modal POV and bounded completion pulse"
   ],
   "completedLocalRefinements": [
-    "Frostfire Archive furnished construction interior and final L3 roof",
-    "Shared standard construction framing and bounded commissioning pulse",
-    "Mission-phone separate build and activity counts"
-  ]
+    "Entire frozen world, dominant Keep, terrain and planting, grounded freight route",
+    "Five coherent landmark families, funded geometry continuity and corrected contacts",
+    "Frostfire Archive furnished interior-first construction and reversible L3 inspection",
+    "Moonwell canonical L3 heat pickup and optional persistent thermal restoration",
+    "Frostwell launch, spin, cutter-following descent, startup and celebration",
+    "Shared construction framing and restrained commissioning pulse; all15 transitions checked",
+    "Mission-phone separate build and activity counts; three responsive layouts checked"
+  ],
+  "evidence": {
+    "fullServiceTests": {
+      "passed": 2095,
+      "failed": 0
+    },
+    "all15Builds": "qa/all-fifteen-builds-final-v002/capture.json",
+    "finalCodeChecks": "qa/final-code-checks.json",
+    "payload": "qa/PAYLOAD-COMPARISON.json",
+    "comparison": "before-after-v2.html",
+    "comparisonChecks": "qa/comparison-check.json",
+    "world": "runtime-v2-final-v003/capture.json",
+    "independentWorldReview": "qa/FINAL-WORLD-INDEPENDENT-REVIEW.md",
+    "restorationFocus": "qa/restorations-focus-v004/capture.json",
+    "frostwellKeyframes": "qa/frostwell-keyframes-v002/capture.json",
+    "finalDelivery": "qa/FINAL-DELIVERY-CHECKS.json",
+    "finalProfile": "qa/final-profile-high-v002/profile.json"
+  }
 }

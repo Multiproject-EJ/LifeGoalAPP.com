@@ -1,0 +1,113 @@
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 0.1837,
+    "aspectRatioDelta": 0.2921,
+    "scaleDelta": 0.4243,
+    "bilateralSymmetryError": 0.0874,
+    "colorDelta": {
+      "checked": 22,
+      "maxDeltaE": 31.35,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        },
+        {
+          "componentId": null,
+          "deltaE": 31.35
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [
+    "silhouette IoU 0.184 is below threshold 0.85",
+    "aspect-ratio delta 0.292 exceeds threshold 0.05",
+    "scale delta 0.424 exceeds threshold 0.08"
+  ],
+  "maskWarnings": [],
+  "renderHash": "070f8301ac6ae0b3",
+  "passId": "blockout",
+  "mapStrippedRender": ".img2threejs/island-003-v2/keep-frozen-world/macro-v001-framed/clay-0.png"
+}

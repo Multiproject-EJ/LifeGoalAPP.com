@@ -10,6 +10,9 @@ export interface FrostwellIceworksPresentation {
   built: boolean;
   constructionSequence: number;
   constructionPreviewLoop?: boolean;
+  /** Live presentation only; never a second gameplay depth authority. */
+  drillingActive?: boolean;
+  reducedMotion?: boolean;
   /** Dev evidence only: keep the side section visible at 0m. */
   cutawayPreview?: boolean;
   /** Dev evidence only: repeat the final 450m-to-500m drilling beat. */
@@ -920,17 +923,17 @@ export function createFrostwellIceworks(
     cutawayRoot.visible = next.built
       ? inspectionActive
       : progress > 0 || next.cutawayPreview === true;
-    if (justCommissioned) {
+    if (justCommissioned && !next.reducedMotion) {
       transitionFromProgress = cutawayProgress;
       transitionStartedAt = lastElapsed;
-      breakthroughStartedAt = lastElapsed + 1.8;
-    } else if (!hasPresentation || next.built || progress <= previousTargetProgress) {
+      breakthroughStartedAt = lastElapsed + 4.2;
+    } else if (!hasPresentation || next.reducedMotion || (next.built && progress >= 1) || progress < previousTargetProgress) {
       transitionStartedAt = null;
       applyCutawayProgress(progress);
-    } else {
+    } else if (progress > previousTargetProgress) {
       transitionFromProgress = cutawayProgress;
       transitionStartedAt = lastElapsed;
-      if (progress >= 1 && previousTargetProgress < 1) breakthroughStartedAt = lastElapsed + 1.8;
+      if (progress >= 1 && previousTargetProgress < 1) breakthroughStartedAt = lastElapsed + 4.2;
     }
     hasPresentation = true;
     if (next.constructionSequence > lastSequence) burstStartedAt = lastElapsed;
@@ -961,11 +964,18 @@ export function createFrostwellIceworks(
           : presentation.cutawayEvidenceView === 'rear'
             ? new THREE.Vector3(-2.4, -1, -14.2)
             : null;
+      // Follow the cutter from a close three-quarter side view during live
+      // descent, then pull back to the full working fishery. Review sockets stay fixed.
+      const following = !presentation.cutawayEvidenceView && !presentation.reducedMotion
+        && (presentation.drillingActive || transitionStartedAt !== null);
+      const cutterY = 0.1 - cutawayProgress * 4.88 - 0.5;
       return {
         position: reviewPosition
           ? cutawayRoot.localToWorld(reviewPosition)
-          : sideCameraSocket.getWorldPosition(new THREE.Vector3()),
-        target: cutawayRoot.localToWorld(new THREE.Vector3(0, -1.45, 0.12)),
+          : following
+            ? cutawayRoot.localToWorld(new THREE.Vector3(2.7, cutterY + 1.35, 9.1))
+            : sideCameraSocket.getWorldPosition(new THREE.Vector3()),
+        target: cutawayRoot.localToWorld(new THREE.Vector3(0, following ? cutterY : -1.45, 0.12)),
       };
     },
     animate: (elapsed) => {
@@ -984,15 +994,12 @@ export function createFrostwellIceworks(
         const easedDescentT = descentT * descentT * (3 - 2 * descentT);
         applyCutawayProgress(THREE.MathUtils.lerp(0.9, 1, easedDescentT));
       } else if (transitionStartedAt !== null) {
-        const transitionT = THREE.MathUtils.clamp((elapsed - transitionStartedAt) / 1.8, 0, 1);
+        const transitionT = THREE.MathUtils.clamp((elapsed - transitionStartedAt) / 4.2, 0, 1);
         const easedT = transitionT * transitionT * (3 - 2 * transitionT);
         applyCutawayProgress(THREE.MathUtils.lerp(transitionFromProgress, targetCutawayProgress, easedT));
         if (transitionT >= 1) transitionStartedAt = null;
       }
-      const drilling = transitionStartedAt !== null || (!presentation.built && (cutawayPreviewCycle !== null
-        ? cutawayPreviewCycle < 2.6
-        : targetCutawayProgress > 0.001
-          && (targetCutawayProgress < 1 || cutawayProgress < targetCutawayProgress - 0.001)));
+      const drilling = !presentation.reducedMotion && (transitionStartedAt !== null || (cutawayPreviewCycle !== null && cutawayPreviewCycle < 2.6) || presentation.drillingActive === true);
       if (drilling) {
         drillPivot.rotation.y = motionElapsed * 3.6;
         drillPivot.position.y = -cutawayProgress * 0.42 + Math.sin(motionElapsed * 8) * 0.0018;

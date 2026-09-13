@@ -76,6 +76,9 @@ import { getIslandRunBossReward } from '../islandRunBossReward';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 import { findIslandRunReservedTileCollisions } from '../islandRunTileReservations';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
+import { collectMoonwellHeatForLanding, getMoonwellHeatTileIndex, getMoonwellThermalKey, resolveMoonwellThermalProgress } from '../islandRunMoonwellThermal';
+import { activateMoonwellThermal } from '../islandRunMoonwellThermalAction';
+import { getIslandRunReservedTileIndices } from '../islandRunTileReservations';
 
 const USER_ID = 'signature-mission-test-user';
 const makeSession = () => ({ access_token: 'token', refresh_token: 'refresh', expires_in: 3600, token_type: 'bearer', user: { id: USER_ID, user_metadata: {} } }) as unknown as import('@supabase/supabase-js').Session;
@@ -297,6 +300,76 @@ async function seedGreatHoneyfall(options: {
 }
 
 export const islandRunSignatureMissionTests: TestCase[] = [
+  {
+    name: 'Moonwell heat appears only after L3 and exact landing collects once on a reserved-safe tile',
+    run: () => {
+      for (const tileCount of [12, 36, 40, 72]) {
+        const index = getMoonwellHeatTileIndex(tileCount);
+        if (index === null) throw new Error('supported profiles have a free heat tile');
+        assert(!getIslandRunReservedTileIndices(tileCount).has(index), 'heat avoids doors and controls');
+        assert(![8, 17, 27].includes(index), 'heat avoids Frostwell stations');
+      }
+      const options = { ledger: {}, islandNumber: 3, cycleIndex: 0, buildLevel: 3, tileCount: 36, tileIndex: getMoonwellHeatTileIndex(36)!, nowMs: 10 };
+      assertEqual(collectMoonwellHeatForLanding({ ...options, buildLevel: 2 }).collected, false, 'L2 cannot collect');
+      assertEqual(collectMoonwellHeatForLanding({ ...options, islandNumber: 2 }).collected, false, 'other islands cannot collect');
+      assertEqual(collectMoonwellHeatForLanding({ ...options, tileIndex: 0 }).collected, false, 'passing alone is insufficient');
+      const first = collectMoonwellHeatForLanding(options);
+      assertEqual(first.collected, true, 'exact L3 landing collects');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', signatureMissionKind: 'moonwell_heat' }), 'moonwell_heat', 'new pickup uses the warm heat glyph');
+      assertEqual(collectMoonwellHeatForLanding({ ...options, ledger: first.ledger }).collected, false, 'repeat landing is inert');
+      assertEqual(resolveMoonwellThermalProgress(first.ledger, 1).heatCollectedAtMs, null, 'cycles stay separate');
+      assertEqual(resolveFrostwellIceworksProgress({ ledger: first.ledger, cycleIndex: 0 }).metersDrilled, 0, 'collection never advances Frostwell');
+    },
+  },
+  {
+    name: 'Moonwell restore survives serialization and stale merge independently of Frostwell',
+    run: () => {
+      const key = getMoonwellThermalKey(0);
+      const ready = { missionId: 'moonwell-thermal' as const, version: 1 as const, heatCollectedAtMs: 10, heatedAtMs: null, updatedAtMs: 90 };
+      const hot = { ...ready, heatedAtMs: 20, updatedAtMs: 20 };
+      const result = sanitizeIslandRunSignatureMissionProgress(JSON.parse(JSON.stringify({ [key]: hot })));
+      assertEqual(resolveMoonwellThermalProgress(result, 0).heatedAtMs, 20, 'JSON save roundtrip retains hot state');
+      assertEqual(resolveMoonwellThermalProgress(mergeIslandRunSignatureMissionProgress(result, { [key]: ready }), 0).heatedAtMs, 20, 'newer cold record cannot roll back restoration');
+      assertEqual(resolveMoonwellThermalProgress({}, 0).heatedAtMs, null, 'old save starts frozen');
+    },
+  },
+  {
+    name: 'Moonwell activation rejects uncollected heat and another island without mutation',
+    run: async () => {
+      await seedFrostwell({ meters: 100 });
+      const session = makeSession(); const base = readIslandRunGameStateRecord(session);
+      const l3 = { ...base, stopBuildStateByIndex: base.stopBuildStateByIndex.map((entry, index) => index === 2 ? { ...entry, buildLevel: 3 } : entry) };
+      await writeIslandRunGameStateRecord({ session, client: null, record: l3 }); refreshIslandRunStateFromLocal(session);
+      const version = readIslandRunGameStateRecord(session).runtimeVersion;
+      assertEqual((await activateMoonwellThermal({ session, client: null })).status, 'heat_not_collected', 'L3 alone cannot boil');
+      assertEqual(readIslandRunGameStateRecord(session).runtimeVersion, version, 'rejection does not commit');
+      await writeIslandRunGameStateRecord({ session, client: null, record: { ...l3, currentIslandNumber: 2 } }); refreshIslandRunStateFromLocal(session);
+      assertEqual((await activateMoonwellThermal({ session, client: null })).status, 'wrong_island', 'other islands cannot activate');
+    },
+  },
+  {
+    name: 'Moonwell activation commits once under concurrent clicks without spending or changing island completion',
+    run: async () => {
+      await seedFrostwell({ meters: 250, essence: 555 });
+      const session = makeSession();
+      assertEqual((await activateMoonwellThermal({ session, client: null })).status, 'building_incomplete', 'unfinished building blocks heat');
+      const base = readIslandRunGameStateRecord(session);
+      const ready = collectMoonwellHeatForLanding({ ledger: base.signatureMissionProgressByIsland, cycleIndex: 0, islandNumber: 3, buildLevel: 3, tileCount: 36, tileIndex: getMoonwellHeatTileIndex(36)!, nowMs: 10 });
+      const seeded = { ...base, stopBuildStateByIndex: base.stopBuildStateByIndex.map((entry, index) => index === 2 ? { ...entry, buildLevel: 3 } : entry), signatureMissionProgressByIsland: ready.ledger };
+      await writeIslandRunGameStateRecord({ session, client: null, record: seeded });
+      refreshIslandRunStateFromLocal(session);
+      const before = readIslandRunGameStateRecord(session);
+      const results = await Promise.all([activateMoonwellThermal({ session, client: null }), activateMoonwellThermal({ session, client: null })]);
+      assertEqual(results.filter(result => result.status === 'ok').length, 1, 'one activation wins the mutex');
+      assertEqual(results.filter(result => result.status === 'already_heated').length, 1, 'duplicate activation is inert');
+      const after = readIslandRunGameStateRecord(session);
+      assertEqual(after.runtimeVersion, before.runtimeVersion + 1, 'one state commit');
+      assertEqual(after.essence, before.essence, 'no extra currency or reward');
+      assertEqual(JSON.stringify(after.stopStatesByIndex), JSON.stringify(before.stopStatesByIndex), 'Mystery completion unchanged');
+      assertEqual(JSON.stringify(after.signatureMissionProgressByIsland['0:3']), JSON.stringify(before.signatureMissionProgressByIsland['0:3']), 'Frostwell ledger unchanged');
+      assert(resolveMoonwellThermalProgress(after.signatureMissionProgressByIsland, 0).heatedAtMs !== null, 'restoration is persisted before presentation');
+    },
+  },
   {
     name: 'Celestial Great Re-Docking advances once per roll and locks platforms at 5, 10, 15, and 20',
     run: () => {

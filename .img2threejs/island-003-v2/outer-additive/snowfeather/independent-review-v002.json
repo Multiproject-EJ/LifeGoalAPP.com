@@ -1,0 +1,21 @@
+{
+  "action": "approve",
+  "scope": "Bounded nest contact correction only",
+  "reviewer": "/root/build_modal_review",
+  "scores": [
+    0.88,
+    0.87,
+    0.86,
+    0.86,
+    0.88,
+    0.88,
+    0.86,
+    0.86,
+    0.87
+  ],
+  "worst": 0.86,
+  "gain": 0.16,
+  "correctionsConsumed": 1,
+  "evidence": "macro-v002",
+  "authorityRecord": "docs/gauntlets/island-003-v2/qa/OUTER-ADDITIVE-INDEPENDENT-REVIEW.md"
+}

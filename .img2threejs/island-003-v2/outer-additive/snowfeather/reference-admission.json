@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "multi-view",
+    "sourcePath": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-snowfeather-roost-l3-goal-v002.png",
+    "width": 1610,
+    "height": 977,
+    "foregroundCoverage": 0.483,
+    "largestComponentFraction": 0.6071,
+    "pHash": 18338924738903329988,
+    "duplicateOfHash": null
+  }
+}

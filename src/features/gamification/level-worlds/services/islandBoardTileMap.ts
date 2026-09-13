@@ -15,6 +15,7 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
 import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
+import { getMoonwellHeatTileIndex } from './islandRunMoonwellThermal';
 import {
   getCactusCanyonDynamiteQuantityForTile,
   getGreatHoneyfallNectarQuantityForTile,
@@ -40,7 +41,7 @@ export type IslandTileMapEntry = {
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
   /** Presentation marker for a canonical island-specific mission landing. */
-  signatureMissionKind?: 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod' | StagedRestorationPickupKind;
+  signatureMissionKind?: 'moonwell_heat' | 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod' | StagedRestorationPickupKind;
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
 };
@@ -319,6 +320,9 @@ export function generateTileMap(
   }
 
   return tiles.map((entry) => {
+    if (islandNumber === 3 && entry.index === getMoonwellHeatTileIndex(tileCount)) {
+      return { ...entry, signatureMissionKind: 'moonwell_heat' };
+    }
     const stagedRestorationPickup = getStagedRestorationPickupForTile(islandNumber, entry.index, tileCount);
     if (stagedRestorationPickup) {
       return {

@@ -1,3 +1,4 @@
+import { getMoonwellHeatTileIndex, resolveMoonwellThermalProgress } from '../islandRunMoonwellThermal';
 import {
   __resetIslandRunRollActionMutexesForTests,
   executeIslandRunRollAction,
@@ -422,6 +423,26 @@ export const islandRunRollActionTests: TestCase[] = [
       }));
       assertEqual(regrownLanding.livingTicketPickup?.applied, 1, 'fully regrown bud becomes collectible again');
       assertEqual(readIslandRunGameStateRecord(makeSession()).minigameTicketsByEvent.rootheart_festival, 4, 'regrown pickup composes with the existing event wallet');
+    },
+  },
+  {
+    name: 'Moonwell exact roll landing persists heat while preserving normal tile resolution and dice cost',
+    run: async () => {
+      resetEnvironment();
+      const heatIndex = getMoonwellHeatTileIndex(36)!;
+      const base = readIslandRunGameStateRecord(makeSession());
+      seedState({ currentIslandNumber: 3, cycleIndex: 0, dicePool: 30, tokenIndex: heatIndex - 2,
+        stopBuildStateByIndex: base.stopBuildStateByIndex.map((entry, index) => index === 2 ? { ...entry, buildLevel: 3 } : entry),
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }));
+      assertEqual(result.status, 'ok', 'normal roll resolves');
+      assertEqual(result.moonwellHeatCollected, true, 'exact landing exposes optional heat');
+      const after = readIslandRunGameStateRecord(makeSession());
+      assertEqual(after.dicePool, 29, 'only normal roll cost');
+      assertEqual(after.tokenIndex, heatIndex, 'normal movement retained');
+      assert(resolveMoonwellThermalProgress(after.signatureMissionProgressByIsland, 0).heatCollectedAtMs !== null, 'pickup persisted');
+      assertEqual(resolveMoonwellThermalProgress(after.signatureMissionProgressByIsland, 0).heatedAtMs, null, 'landing never auto-boils');
+      assertEqual(result.frostwellSpinGranted, false, 'separate Frostwell mission untouched');
     },
   },
   {

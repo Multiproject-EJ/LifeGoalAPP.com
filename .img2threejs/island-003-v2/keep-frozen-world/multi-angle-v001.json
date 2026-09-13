@@ -1,0 +1,32 @@
+{
+  "referenceAreaFraction": 0.1835234375,
+  "angles": [
+    {
+      "path": ".img2threejs/island-003-v2/keep-frozen-world/macro-v001-framed/clay-2.png",
+      "areaFraction": 0.190465625,
+      "ratio": 1.037827252990507,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/keep-frozen-world/macro-v001-framed/clay-4.png",
+      "areaFraction": 0.300940625,
+      "ratio": 1.6397939636456516,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/keep-frozen-world/macro-v001-framed/clay-6.png",
+      "areaFraction": 0.2796546875,
+      "ratio": 1.5238091183857647,
+      "degenerate": false
+    },
+    {
+      "path": ".img2threejs/island-003-v2/keep-frozen-world/macro-v001-framed/clay-8.png",
+      "areaFraction": 0.239053125,
+      "ratio": 1.302575454429356,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "deterministic; zero token; a flat-plane-faking-a-volume collapses in silhouette area when orbited"
+}

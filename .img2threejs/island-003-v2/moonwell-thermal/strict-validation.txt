@@ -1,0 +1,16 @@
+PASS
+warning: component 'circular-foundation' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'moonwell-basin' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'ice-water-and-moon-disc' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'front-stair-and-entry' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'radial-timber-frame' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'copper-rib-cladding' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'armillary-primary-rings' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'crown-hub-and-finial' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'armillary-axis-and-counterweights' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'brass-telescope-and-tripod' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'entry-lantern-system' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'rear-chart-cabinet' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'rear-service-door' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'service-vent-and-tools' is missing actionProfile; future animation/destruction may require refactor
+warning: component 'snow-seams-and-fasteners' is missing actionProfile; future animation/destruction may require refactor

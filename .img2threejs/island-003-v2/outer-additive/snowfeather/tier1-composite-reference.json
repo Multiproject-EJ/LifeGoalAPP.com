@@ -1,0 +1,70 @@
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 0.4413,
+    "aspectRatioDelta": 0.2178,
+    "scaleDelta": 0.3417,
+    "bilateralSymmetryError": 0.0668,
+    "colorDelta": {
+      "checked": 11,
+      "maxDeltaE": 57.48,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 16.85
+        },
+        {
+          "componentId": null,
+          "deltaE": 12.57
+        },
+        {
+          "componentId": null,
+          "deltaE": 23.76
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.05
+        },
+        {
+          "componentId": null,
+          "deltaE": 23.76
+        },
+        {
+          "componentId": null,
+          "deltaE": 26.83
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.85
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.05
+        },
+        {
+          "componentId": null,
+          "deltaE": 11.88
+        },
+        {
+          "componentId": null,
+          "deltaE": 57.48
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.06
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [
+    "silhouette IoU 0.441 is below threshold 0.85",
+    "aspect-ratio delta 0.218 exceeds threshold 0.05",
+    "scale delta 0.342 exceeds threshold 0.08",
+    "blockout requires --map-stripped-render evidence"
+  ],
+  "maskWarnings": [],
+  "renderHash": "b8787495a1b73e45",
+  "passId": "blockout"
+}
+STATUS pass=blockout completed=0 blocked=none next=diagnose_render.py

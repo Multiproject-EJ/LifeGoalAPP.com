@@ -1,0 +1,61 @@
+{
+  "status": "pass",
+  "views": [
+    "Whole island",
+    "Aurora Keep",
+    "Snowfeather Roost",
+    "Hearthguard Yard",
+    "Frostfire Archive",
+    "Moonwell Observatory",
+    "Left orbit",
+    "Right orbit",
+    "High survey",
+    "Night",
+    "Frostwell Iceworks"
+  ],
+  "images": [
+    {
+      "src": "baseline-v002/overview.png",
+      "width": 780
+    },
+    {
+      "src": "runtime-v2-final-v003/overview.png",
+      "width": 780
+    },
+    {
+      "src": "qa/frostwell-keyframes-v002/01-launch.png",
+      "width": 780
+    },
+    {
+      "src": "qa/frostwell-keyframes-v002/03-descent.png",
+      "width": 780
+    },
+    {
+      "src": "qa/frostwell-keyframes-v002/05-complete.png",
+      "width": 780
+    },
+    {
+      "src": "qa/restorations-final-v003/moonwell-cold.png",
+      "width": 780
+    },
+    {
+      "src": "qa/restorations-final-v003/moonwell-half.png",
+      "width": 780
+    },
+    {
+      "src": "qa/restorations-final-v003/moonwell-hot.png",
+      "width": 780
+    },
+    {
+      "src": "qa/restorations-focus-v004/archive-closed.png",
+      "width": 780
+    },
+    {
+      "src": "qa/restorations-focus-v004/archive-open.png",
+      "width": 780
+    }
+  ],
+  "errors": [],
+  "mobileWidth": 390,
+  "noHorizontalOverflow": true
+}

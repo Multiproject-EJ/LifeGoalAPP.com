@@ -1,0 +1,24 @@
+STATE status=active step=image-analysis pass=none loop=0/2 total=0/2
+next command: Read grimoire/intake/image_analysis.md and analyze docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-moonwell-observatory-l3-goal-v001.png
+pending mandatory steps:
+- image-analysis
+- reference-suitability
+- reference-admission
+- local-spec-search
+- pre-spec-assessment
+- detail-inventory
+- projection-route
+- spec-authoring
+- material-evidence
+- material-spec-wiring
+- strict-validation
+- build-current-pass
+- render-capture
+- review-contract-read
+- tier1-diagnostics
+- multi-angle-review
+- pass-gate-check
+- ai-review-recorded
+- pipeline-sync
+- part-coverage
+- action-ready

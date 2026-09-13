@@ -1,0 +1,33 @@
+const {chromium}=require('/Users/ejmac/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const fs=require('node:fs'); const path=require('node:path'); const crypto=require('node:crypto'); const assert=require('node:assert/strict');
+const files=['components/IslandFrostwellMissionModal.tsx','hooks/useFrostwellMissionSequence.ts','LevelWorlds.css',...['Island5ThreePilot.tsx','IslandTemplateKitPage.tsx','FrostwellIceworksThreeModel.ts','Island3FrostmoonThreeWorld.ts','Island3FrozenWorldThreeModel.ts','FrostmoonSeafoodTradeThreeModel.ts','Island1AnimatedBatches.ts'].map(name=>'dev/'+name)];
+const snapshot=()=>Object.fromEntries(files.map(file=>[file,crypto.createHash('sha256').update(fs.readFileSync('src/features/gamification/level-worlds/'+file)).digest('hex')]));
+const out=process.argv[2]; if(!out||fs.existsSync(out))throw Error('Supply a fresh evidence folder'); fs.mkdirSync(out,{recursive:true});
+(async()=>{const report={sourceStart:snapshot(),scope:'Production presentation components in deterministic dev fixture, desktop-hosted phone viewport. Not a canonical-playthrough or physical-device benchmark.',errors:[],records:[]};let b;
+try{b=await chromium.launch({headless:true,executablePath:'/Users/ejmac/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'});
+const c=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,recordVideo:{dir:path.join(out,'video'),size:{width:390,height:844}}}); const p=await c.newPage(); p.on('pageerror',e=>report.errors.push(String(e)));
+await p.goto('http://127.0.0.1:53303/dev/island-template-kit?island=3&mode=3d&level=3&frostwellDepth=470&frostwellMissionV2=1&focus=frostwell&island3Ambience=day&island3dEvidence=1',{waitUntil:'domcontentloaded',timeout:180000});
+await p.locator('.frostwell-v2__hub').waitFor({timeout:180000});
+await p.waitForTimeout(1500); await p.screenshot({path:path.join(out,'01-launch.png')});
+await p.locator('.frostwell-v2__hub').click(); await p.waitForTimeout(900); await p.screenshot({path:path.join(out,'02-spin.png')});
+await p.getByRole('heading',{name:'Into the blue',exact:true}).waitFor(); await p.waitForTimeout(1200); await p.screenshot({path:path.join(out,'03-descent.png')});
+await p.getByRole('heading',{name:'The iceworks awaken',exact:true}).waitFor(); await p.waitForTimeout(1700); await p.screenshot({path:path.join(out,'04-startup.png')});
+await p.getByRole('heading',{name:'Life beneath the ice',exact:true}).waitFor(); await p.screenshot({path:path.join(out,'05-complete.png')});
+await p.getByRole('button',{name:'Explore the iceworks',exact:true}).click(); await p.waitForTimeout(1000); await p.screenshot({path:path.join(out,'06-inspect.png')});
+await p.getByRole('button',{name:'Open Frostwell fixture',exact:true}).click(); report.reopenComplete=await p.getByRole('heading',{name:'Life beneath the ice',exact:true}).isVisible();
+await p.keyboard.press('Escape'); report.escapeCloses=await p.locator('.frostwell-v2-overlay').count()===0;
+await p.emulateMedia({reducedMotion:'reduce'});
+await p.goto('http://127.0.0.1:53303/dev/island-template-kit?island=3&mode=3d&level=3&frostwellDepth=470&frostwellMissionV2=1&focus=frostwell&island3dEvidence=1',{waitUntil:'domcontentloaded',timeout:180000});await p.locator('.frostwell-v2__hub').waitFor({timeout:180000});await p.locator('.frostwell-v2__hub').click();await p.getByRole('heading',{name:'Life beneath the ice',exact:true}).waitFor();await p.screenshot({path:path.join(out,'07-reduced.png')});
+report.reducedSettled=true;
+for(const [width,height] of [[360,640],[844,390]]){
+ await p.setViewportSize({width,height});
+ await p.goto('http://127.0.0.1:53303/dev/island-template-kit?island=3&mode=3d&level=3&frostwellDepth=470&frostwellMissionV2=1&island3dEvidence=1',{waitUntil:'domcontentloaded',timeout:180000});
+ await p.locator('.frostwell-v2__hub').waitFor({timeout:180000});
+ const layout=await p.locator('.frostwell-v2').evaluate(el=>{const r=el.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,overflow:getComputedStyle(document.body).overflow,parent:el.parentElement.parentElement.tagName}});
+ assert(layout.left>=0&&layout.top>=0&&layout.right<=width&&layout.bottom<=height,'Modal inside viewport');assert.equal(layout.overflow,'hidden');assert.equal(layout.parent,'BODY');
+ await p.getByRole('button',{name:'Keep exploring',exact:true}).scrollIntoViewIfNeeded();
+ await p.screenshot({path:path.join(out,`08-layout-${width}x${height}.png`)});
+ report.records.push({width,height,layout});
+}
+await c.close();
+}catch(e){report.errors.push(e.stack||String(e));}finally{if(b)await b.close();report.sourceEnd=snapshot();report.sourceStable=JSON.stringify(report.sourceStart)===JSON.stringify(report.sourceEnd);fs.writeFileSync(path.join(out,'capture.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));if(report.errors.length||!report.sourceStable)process.exitCode=1;}})();

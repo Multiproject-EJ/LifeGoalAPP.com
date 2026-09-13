@@ -1,0 +1,211 @@
+{
+  "sourceImage": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+  "zonesDir": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 10,
+    "details": [
+      {
+        "id": "zone-r0c0",
+        "kind": "structural-form",
+        "description": "continuous frozen sea and distant ice ridges",
+        "region": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "continuous-ice-ocean"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r0c0.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r0c1",
+        "kind": "structural-form",
+        "description": "paired supported brass roof rings",
+        "region": {
+          "x": 0.3333,
+          "y": 0.0,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "ridge-ring-beacon-system"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r0c1.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r0c2",
+        "kind": "structural-form",
+        "description": "grounded offshore timber pier; existing mission preserved",
+        "region": {
+          "x": 0.6667,
+          "y": 0.0,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "root"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r0c2.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r1c0",
+        "kind": "structural-form",
+        "description": "snow fir branch lobes and asymmetric snow loads",
+        "region": {
+          "x": 0.0,
+          "y": 0.3333,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "snow-fir-bank"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r1c0.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r1c1",
+        "kind": "structural-form",
+        "description": "dominant continuous hall, warm central gallery and paired turrets",
+        "region": {
+          "x": 0.3333,
+          "y": 0.3333,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "central-great-hall-shell"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r1c1.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r1c2",
+        "kind": "structural-form",
+        "description": "dark rock cap over thick vertical blue ice",
+        "region": {
+          "x": 0.6667,
+          "y": 0.3333,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "connected-terrain-shelf"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r1c2.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r2c0",
+        "kind": "structural-form",
+        "description": "connected cracked sea surface and pressure ridges",
+        "region": {
+          "x": 0.0,
+          "y": 0.6667,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "pressure-ridge-banks"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r2c0.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r2c1",
+        "kind": "structural-form",
+        "description": "ice sheet continuous below deep shelf, no water gaps",
+        "region": {
+          "x": 0.3333,
+          "y": 0.6667,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "continuous-ice-ocean"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r2c1.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "zone-r2c2",
+        "kind": "structural-form",
+        "description": "thick ice continuation at outer plot with grounded trees",
+        "region": {
+          "x": 0.6667,
+          "y": 0.6667,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "connected-terrain-shelf"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r2c2.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "gatehouse-crimson-banner",
+        "kind": "color-boundary",
+        "description": "Crimson flanking banners contrast central pale plaster and dark timber",
+        "region": {
+          "x": 0.3333,
+          "y": 0.3333,
+          "width": 0.3333,
+          "height": 0.3333,
+          "units": "normalized"
+        },
+        "scale": "meso",
+        "affects": "silhouette and scene hierarchy",
+        "mapsTo": {
+          "type": "component",
+          "ref": "front-gatehouse-and-heavy-door"
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-v2/keep-frozen-world/detail-crops/zone-r1c1.png",
+        "confidence": 0.93
+      }
+    ]
+  },
+  "authoringInstruction": "Open each zone crop under zonesDir and replace every detail stub's kind, description, scale, affects, mapsTo, and confidence with what is actually observed. Add more detail entries per zone if a single zone contains multiple distinct marks; do not leave stubs unfilled or unlinked (mapsTo must reference a real component.localFeatures or material.localOverrides entry)."
+}

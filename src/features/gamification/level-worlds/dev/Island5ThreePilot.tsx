@@ -128,6 +128,7 @@ import {
   ISLAND_3_FROSTMOON_WORLD_NAME,
 } from './Island3FrostmoonThreeWorld';
 import type { FrostwellIceworksPresentation } from './FrostwellIceworksThreeModel';
+import { createMoonwellThermalAnimator, type MoonwellThermalPresentation } from './Island3MoonwellThermalPresentation';
 import {
   buildIsland6MoonveilLandmark,
   createIsland6MoonveilLivingAmbience,
@@ -378,6 +379,9 @@ interface Island5ThreePilotProps {
   onTokenLand?: (tileIndex: number, origin?: { viewportX: number; viewportY: number }) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
+  moonwellThermalPresentation?: MoonwellThermalPresentation;
+  onMoonwellThermalPhaseChange?: (phase: string) => void;
+  onMoonwellThermalComplete?: () => void;
   celestialRedockingPresentation?: Island2CelestialRedockingPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
   sunkenSandsTreasurePresentation?: Island12SunkenSandsTreasurePresentation;
@@ -3401,7 +3405,7 @@ function disposeScene(scene: THREE.Scene) {
   textures.forEach((texture) => texture.dispose());
 }
 
-function collectIslandThreeScenePerformanceInventory(scene: THREE.Scene) {
+function collectIslandThreeScenePerformanceInventory(scene: THREE.Object3D) {
   type Totals = {
     renderables: number;
     triangles: number;
@@ -3433,6 +3437,7 @@ function collectIslandThreeScenePerformanceInventory(scene: THREE.Scene) {
         || node instanceof THREE.InstancedMesh
         || node instanceof THREE.Points
         || node instanceof THREE.LineSegments)) return;
+      if (!node.geometry.attributes.position?.count) return;
       const materials = Array.isArray(node.material) ? node.material : [node.material];
       const geometryGroups = 'groups' in node.geometry && node.geometry.groups.length > 0
         ? node.geometry.groups.length
@@ -3502,6 +3507,9 @@ export default function Island5ThreePilot({
   onTokenLand,
   onLandmarkClick,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
+  moonwellThermalPresentation = { heated: false, running: false, sequence: 0 },
+  onMoonwellThermalPhaseChange,
+  onMoonwellThermalComplete,
   celestialRedockingPresentation = { completedRolls: 20, targetRolls: 20, dockedPlatformCount: 4 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
   sunkenSandsTreasurePresentation = { revealProgress: 1, ready: true, claimed: false },
@@ -3632,6 +3640,9 @@ export default function Island5ThreePilot({
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
   const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(null);
   const sustainedQualityMissesRef = useRef(0);
+  const [archiveInteriorOpen, setArchiveInteriorOpen] = useState(() => import.meta.env.DEV && new URLSearchParams(window.location.search).get('archiveInterior') === '1');
+  const archiveInteriorOpenRef = useRef(archiveInteriorOpen);
+  archiveInteriorOpenRef.current = archiveInteriorOpen;
   const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>(() => (
     isIsland19BoardFocusEvidenceEnabled
       ? 'survey'
@@ -3707,6 +3718,12 @@ export default function Island5ThreePilot({
   const onLandmarkClickRef = useRef(onLandmarkClick);
   const signatureMissionPresentationRef = useRef(signatureMissionPresentation);
   signatureMissionPresentationRef.current = signatureMissionPresentation;
+  const moonwellThermalPresentationRef = useRef(moonwellThermalPresentation);
+  moonwellThermalPresentationRef.current = moonwellThermalPresentation;
+  const moonwellThermalPhaseChangeRef = useRef(onMoonwellThermalPhaseChange);
+  moonwellThermalPhaseChangeRef.current = onMoonwellThermalPhaseChange;
+  const moonwellThermalCompleteRef = useRef(onMoonwellThermalComplete);
+  moonwellThermalCompleteRef.current = onMoonwellThermalComplete;
   const celestialRedockingPresentationRef = useRef(celestialRedockingPresentation);
   celestialRedockingPresentationRef.current = celestialRedockingPresentation;
   const rootheartPowerworksPresentationRef = useRef(rootheartPowerworksPresentation);
@@ -3769,12 +3786,15 @@ export default function Island5ThreePilot({
     if (qualityProfile.id === 'high') setRuntimeQualityCap('medium');
     else if (qualityProfile.id === 'medium') setRuntimeQualityCap('low');
   }, [metrics.fps, profilerStatus, qualityOverride, qualityProfile.id, qualitySelection]);
-  const resolvedTileMap = useMemo<readonly IslandTileMapEntry[]>(() => (
-    tileMap ?? applyLandmarkDoorTiles(
+  const resolvedTileMap = useMemo<readonly IslandTileMapEntry[]>(() => {
+    if (tileMap) return tileMap;
+    const previewTiles = applyLandmarkDoorTiles(
       generateTileMap(islandNumber, getIslandRarity(islandNumber), `island-${islandNumber}`, 2),
       { expandedActiveStopId: 'hatchery' },
-    )
-  ), [islandNumber, tileMap]);
+    );
+    return previewTiles.map(entry => entry.signatureMissionKind === 'moonwell_heat' && (landmarkBuildLevels?.event ?? buildLevel) < 3
+      ? { ...entry, signatureMissionKind: undefined, signatureMissionId: undefined } : entry);
+  }, [islandNumber, tileMap, landmarkBuildLevels?.event, buildLevel]);
   const tileRewardMapKey = useMemo(
     () => resolvedTileMap
       .map((entry) => `${entry.index}:${entry.tileType}:${entry.doorStopId ?? ''}:${entry.isActiveDoorCluster ? 1 : 0}:${entry.signatureMissionKind ?? ''}`)
@@ -4983,9 +5003,9 @@ export default function Island5ThreePilot({
 
     const assemblySurfaceCutawayRoots: THREE.Object3D[] = [];
 
-    // Island 007 owns a dedicated seabed/root system. Do not construct and then
-    // hide the generic coastal plates, bridges and lagoon underneath it.
-    if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier) {
+    // Dedicated worlds own their continuous terrain. Frostmoon's deep ice
+    // shelf replaces the old coastal plates, bridges and decorative lagoon.
+    if (!isFrostmoonHaven && !isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier) {
       const firstLightMainDepth = 3.4;
       const island = isAssemblyCraterFirstLight && island1Materials
         ? createIsland1AssemblyCraterTerrain(qualityProfile.id, {
@@ -5116,7 +5136,7 @@ export default function Island5ThreePilot({
       : null;
     firstLightAssemblyCrater?.updateAssemblyCrater(firstLightAssemblyCraterPresentationRef.current, true);
     if (isFrostmoonHaven) {
-      livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
+      livingAmbience.updateSignatureMission?.({ ...signatureMissionPresentationRef.current, reducedMotion: isReducedMotion });
     }
     if (isCelestialSkyKingdom) {
       livingAmbience.updateRedocking?.(celestialRedockingPresentationRef.current, true);
@@ -5450,7 +5470,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
+    const useInstancedRouteTiles = isFrostmoonHaven || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
     const instancedTileCounts = Array(isAssemblyCraterFirstLight ? 6 : 3).fill(0) as number[];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -5479,6 +5499,7 @@ export default function Island5ThreePilot({
                 ? `ISLAND_20_TILE_SURFACE_BATCH_${materialIndex + 1}`
                 : isCoasterCarnival
                   ? `ISLAND_19_TILE_SURFACE_BATCH_${materialIndex + 1}`
+              : isFrostmoonHaven ? `ISLAND_3_TILE_SURFACE_BATCH_${materialIndex + 1}`
               : `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
           if (isAbyssalPearlKingdom && materialIndex === 0) {
             mesh.userData.sculptRuntime = {
@@ -5622,7 +5643,7 @@ export default function Island5ThreePilot({
       tileMap: resolvedTileMap,
       tileTransforms,
       quality: qualityProfile.id,
-      compactCollectibles: isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
+      compactCollectibles: isFrostmoonHaven || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
       staticBatchNonMissionRewards: isLavaLabyrinth,
       signatureMissionOnly: isCoasterCarnival,
     });
@@ -5877,6 +5898,14 @@ export default function Island5ThreePilot({
       (isCrystalGlacier ? island15FallbackRoot : scene).add(hitTarget);
       clickableLandmarks.push(hitTarget);
     }
+    const moonwellRoot = isFrostmoonHaven ? landmarkRootsById.get('event') : null;
+    const archiveInspectionParts: THREE.Object3D[] = [];
+    if (isFrostmoonHaven) landmarkRootsById.get('wisdom')?.traverse(node => {
+      if (node.userData.archiveInspectionHide === true) archiveInspectionParts.push(node);
+    });
+    const moonwellThermalAnimator = moonwellRoot ? createMoonwellThermalAnimator(moonwellRoot) : null;
+    let moonwellThermalLastPhase = '';
+    let moonwellThermalCompletedSequence = -1;
     // The live construction crew shares this renderer and reads the real
     // landmark bounds. It is intentionally absent from clickableLandmarks.
     const constructionFamily = createRobotFamilyModel({ quality: 'low', showAddonRack: false });
@@ -7244,6 +7273,11 @@ export default function Island5ThreePilot({
         position: readonly [number, number, number];
         target: readonly [number, number, number];
       }>> = {
+        // All outer landmarks face the central route. Approach from that side
+        // so perimeter firs do not cover their entrances or working interiors.
+        hatchery: { position: [0.86, 6.68, 2.04], target: [-4.36, 1.3, -3.9] },
+        habit: { position: [-0.86, 6.78, 2.04], target: [4.36, 1.4, -3.9] },
+        event: { position: [0.61, 6.18, 1.14], target: [4.36, 1, 3.9] },
         // Frostfire's public stair, book crest and reading alcove face the
         // centre promenade. Approach from that quadrant so the wisdom preset
         // inspects the authored front rather than defaulting to the furnace rear.
@@ -8456,13 +8490,42 @@ export default function Island5ThreePilot({
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointerup', handlePointerUp);
 
+    if (isFrostmoonHaven) {
+      // At phone scale the authored alpha, clearcoat and highlights carry glass
+      // and frost. Avoid a second full-world transmission render for tiny panes.
+      scene.traverse(object => {
+        if (!(object instanceof THREE.Mesh)) return;
+        const surfaces = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of surfaces) {
+          if (material instanceof THREE.MeshPhysicalMaterial) material.transmission = 0;
+          if (material.transparent) material.forceSinglePass = true;
+        }
+        if (surfaces.every(material => material.transparent)) object.castShadow = false;
+      });
+    }
     const island1AnimatedBatches = isAssemblyCraterFirstLight ? createIsland1AnimatedBatches(scene)
       : isCelestialSkyKingdom ? createIslandRigidSurfaceBatches(scene, [
         'ISLAND_2_CELESTIAL_LIVING_AMBIENCE',
         ...['BOSS', 'HATCHERY', 'HABIT', 'WISDOM', 'EVENT'].map(id => `ISLAND_2_CELESTIAL_${id}_ROOT`),
         'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS',
         'ISLAND_5_CARETAKER_BOARD_LOD',
-      ], 'ISLAND_002_ANIMATED_SURFACE_BATCHES', 32) : null;
+      ], 'ISLAND_002_ANIMATED_SURFACE_BATCHES', 32)
+      : isFrostmoonHaven ? createIslandRigidSurfaceBatches(scene, [
+        'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS', 'ISLAND_5_CARETAKER_BOARD_LOD',
+        'ISLAND_3_FROSTMOON_LIVING_AMBIENCE',
+      ], 'ISLAND_003_BOARD_SURFACE_BATCHES', 32, mesh => {
+        for (let node: THREE.Object3D | null = mesh; node; node = node.parent) {
+          if (node.name === 'ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT') return false;
+        }
+        return true;
+      }) : null;
+    // Mission surfaces stay under the mission root so the cinematic's scene
+    // mask cannot hide them. Material-swapping lamps remain ordinary meshes.
+    const frostwellBatchOwner = isFrostmoonHaven ? scene.getObjectByName('ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT') : null;
+    const frostwellRigidBatches = frostwellBatchOwner ? createIslandRigidSurfaceBatches(scene,
+      [frostwellBatchOwner.name], 'ISLAND_003_FROSTWELL_SURFACE_BATCHES', 32,
+      mesh => !mesh.name.startsWith('FROSTWELL_PROGRESS_LIGHT_')) : null;
+    if (frostwellRigidBatches) frostwellBatchOwner?.add(frostwellRigidBatches.root);
     const celestialPlantBatches = isCelestialSkyKingdom ? createCelestialPlantRuntimeBatches(scene) : null;
     let appliedConstructionCameraKey = '';
     let appliedIsland15ConstructionRevealKey = '';
@@ -8899,10 +8962,10 @@ export default function Island5ThreePilot({
         canvas.dataset.assemblyConstructionPhase = assembly.active ? 'building' : assembly.completed ? 'complete' : 'excavating';
         canvas.dataset.assemblyConstructionProgress = assembly.progress.toFixed(3);
       }
+      if (isFrostmoonHaven) {
+        livingAmbience.updateSignatureMission?.({ ...signatureMissionPresentationRef.current, reducedMotion: isReducedMotion });
+      }
       if (!isReducedMotion) {
-        if (isFrostmoonHaven) {
-          livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
-        }
         if (isFishermansVillage) {
           livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
           const fishing = fishermansFishingPresentationRef.current.fishingInteraction;
@@ -8972,9 +9035,26 @@ export default function Island5ThreePilot({
         }
       }
 
-      // Close construction views must not be obscured by roaming wildlife.
+      if (moonwellThermalAnimator) {
+        const thermal = moonwellThermalPresentationRef.current;
+        const frame = moonwellThermalAnimator.update(thermal, elapsed, isReducedMotion);
+        canvas.dataset.moonwellThawProgress = frame.progress.toFixed(3);
+        if (frame.phase !== moonwellThermalLastPhase) {
+          moonwellThermalLastPhase = frame.phase;
+          if (thermal.running) moonwellThermalPhaseChangeRef.current?.(frame.phase);
+        }
+        if (thermal.running && frame.progress >= 1 && thermal.sequence !== moonwellThermalCompletedSequence) {
+          moonwellThermalCompletedSequence = thermal.sequence;
+          moonwellThermalCompleteRef.current?.();
+        }
+      }
+      // Close construction and restoration views must not be obscured by wildlife.
       // Preserve the frozen ambience visibility as well when reduced motion is on.
-      if (constructionPresentationRef.current?.active) {
+      const focusedFrostmoonRestoration = isFrostmoonHaven && (
+        (activeInspectionPreset === 'wisdom' && archiveInteriorOpenRef.current)
+        || activeInspectionPreset === 'event'
+      );
+      if (constructionPresentationRef.current?.active || focusedFrostmoonRestoration) {
         constructionWildlife.forEach((animal) => {
           if (!constructionWildlifeVisibility.has(animal)) constructionWildlifeVisibility.set(animal, animal.visible);
           animal.visible = false;
@@ -9747,6 +9827,20 @@ export default function Island5ThreePilot({
           canvas.dataset.island19WonderRideReducedMotion = String(isReducedMotion);
         }
       }
+      const archiveCutaway = isFrostmoonHaven && activeInspectionPreset === 'wisdom'
+        && archiveInteriorOpenRef.current && (landmarkBuildLevelsRef.current?.wisdom ?? buildLevelRef.current) >= 3
+        && !constructionPresentationRef.current?.active;
+      archiveInspectionParts.forEach(node => { node.visible = !archiveCutaway; });
+      if (isFrostmoonHaven) canvas.dataset.archiveInteriorOpen = String(archiveCutaway);
+      const thermalPresentation = moonwellThermalPresentationRef.current;
+      if (isFrostmoonHaven && activeInspectionPreset === 'event' && !transition
+        && !constructionPresentationRef.current?.active
+        && (thermalPresentation.running || thermalPresentation.previewProgress !== undefined)) {
+        const target = new THREE.Vector3(4.36, 1, 3.9);
+        const position = new THREE.Vector3(.61, 6.18, 1.14);
+        const ease = isReducedMotion || thermalPresentation.previewProgress !== undefined ? 1 : 1 - Math.exp(-Math.max(.001, frameDeltaSeconds) * 2.2);
+        camera.position.lerp(position, ease); controls.target.lerp(target, ease); camera.lookAt(controls.target);
+      }
       const signatureMissionCameraPose = isFrostmoonHaven && activeInspectionPreset === 'frostwell'
         ? livingAmbience.getSignatureMissionCameraPose?.()
         : null;
@@ -9910,7 +10004,7 @@ export default function Island5ThreePilot({
         if (shouldFadeBoss !== isBossOcclusionFadeApplied) {
           isBossOcclusionFadeApplied = shouldFadeBoss;
           canvas.dataset.centralLandmarkOcclusion = shouldFadeBoss ? 'faded' : 'opaque';
-          const targetOpacity = shouldFadeBoss ? (isJungleExpedition ? 0 : 0.16) : 1;
+          const targetOpacity = shouldFadeBoss ? (isJungleExpedition || isFrostmoonHaven ? 0 : 0.16) : 1;
           bossRoot.traverse((object) => {
             if (!(object instanceof THREE.Mesh)) return;
             const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
@@ -9930,10 +10024,18 @@ export default function Island5ThreePilot({
           });
         }
       }
-      island1AnimatedBatches?.sync(camera);
+      // Both Frostmoon batches consume the same completed animation frame.
+      // Share its scene traversal instead of repeating it in both batches
+      // and again in the renderer. Other worlds retain their existing path.
+      if (isFrostmoonHaven) scene.updateMatrixWorld(true);
+      island1AnimatedBatches?.sync(camera, isFrostmoonHaven);
+      frostwellRigidBatches?.sync(camera, isFrostmoonHaven);
       celestialPlantBatches?.sync(true);
       if (livingAmbience.consumeShadowUpdate?.() && sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
-      renderer.render(scene, camera);
+      const automaticWorldMatrices = scene.matrixWorldAutoUpdate;
+      if (isFrostmoonHaven) scene.matrixWorldAutoUpdate = false;
+      try { renderer.render(scene, camera); }
+      finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
         const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
           | { root?: THREE.Object3D }
@@ -10114,6 +10216,10 @@ export default function Island5ThreePilot({
       frameCount += 1;
       const metricElapsedMs = now - metricStartedAt;
       if (metricElapsedMs >= 750) {
+        if (import.meta.env.DEV && isFrostmoonHaven && new URLSearchParams(window.location.search).get('island3ProfileDetails') === '1') {
+          canvas.dataset.island3SceneInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
+          canvas.dataset.island3AmbienceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(livingAmbience.root));
+        }
         const size = renderer.getSize(new THREE.Vector2());
         setMetrics({
           fps: Math.round((frameCount * 1000) / metricElapsedMs),
@@ -10138,6 +10244,7 @@ export default function Island5ThreePilot({
         setProfilerNotice('Profile cancelled because the 3D scene changed.');
       }
       window.cancelAnimationFrame(animationFrame);
+      moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', handlePointerDown);
@@ -10155,6 +10262,7 @@ export default function Island5ThreePilot({
       timer.dispose();
       celestialPlantBatches?.dispose();
       island1AnimatedBatches?.dispose();
+      frostwellRigidBatches?.dispose();
       if (encounterCaretaker) {
         scene.remove(encounterCaretaker.root);
         encounterCaretaker.dispose();
@@ -10503,7 +10611,11 @@ export default function Island5ThreePilot({
       ) : null}
       {!useIsland15ProductPresentation ? (
         <>
-          <div className="island-5-three-pilot__topline">
+          {isFrostmoonHaven && activePreset === 'wisdom' && (landmarkBuildLevels?.wisdom ?? buildLevel) >= 3 && !constructionPresentation?.active ? (
+        <button type="button" className="island-3-archive-inspect-toggle" aria-pressed={archiveInteriorOpen}
+          onClick={() => setArchiveInteriorOpen(value => !value)}>{archiveInteriorOpen ? 'Close roof' : 'Look inside'}</button>
+      ) : null}
+      <div className="island-5-three-pilot__topline">
             <div>
               <span>ACTUAL 3D PILOT</span>
               <strong>{worldName} · Island {String(islandNumber).padStart(3, '0')}</strong>

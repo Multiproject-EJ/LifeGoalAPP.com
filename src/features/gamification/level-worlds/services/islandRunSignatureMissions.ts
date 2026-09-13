@@ -1,5 +1,6 @@
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import { resolveCollisionFreeTileIndices } from './islandRunTileReservations';
+import { mergeMoonwellThermalProgress, sanitizeMoonwellThermalProgress, type MoonwellThermalProgress } from './islandRunMoonwellThermal';
 
 export const FROSTWELL_ISLAND_NUMBER = 3;
 export const FROSTWELL_DEPTH_METERS = 500;
@@ -323,6 +324,7 @@ export interface StagedRestorationMissionProgress {
 }
 
 export type IslandRunSignatureMissionProgress =
+  | MoonwellThermalProgress
   | CelestialRedockingProgress
   | FrostwellIceworksProgress
   | RootheartPowerworksProgress
@@ -373,6 +375,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'moonwell-thermal' && /^\d+:3:moonwell$/.test(key)) {
+      result[key] = sanitizeMoonwellThermalProgress(record);
+      return;
+    }
     const stagedDescriptor = getStagedRestorationMissionDescriptorById(record.missionId ?? record.mission_id);
     if (stagedDescriptor) {
       const claimedRaw = record.claimedPickupTileIndices ?? record.claimed_pickup_tile_indices;
@@ -1529,6 +1535,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'moonwell-thermal' && b.missionId === 'moonwell-thermal') {
+      merged[key] = mergeMoonwellThermalProgress(a, b);
+      return;
+    }
     const stagedA = getStagedRestorationMissionDescriptorById(a.missionId);
     const stagedB = getStagedRestorationMissionDescriptorById(b.missionId);
     if (stagedA || stagedB) {

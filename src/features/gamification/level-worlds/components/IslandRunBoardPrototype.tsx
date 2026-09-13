@@ -1,3 +1,5 @@
+import { IslandFrostwellMissionModal } from './IslandFrostwellMissionModal';
+import { useFrostwellMissionSequence } from '../hooks/useFrostwellMissionSequence';
 import { lockFullscreenPageScroll, lockPageScroll } from '../../../../utils/scrollLock';
 import { triggerImpactHaptic } from '../../../../utils/completionHaptics';
 /**
@@ -48,6 +50,9 @@ import {
   type MissionObjectiveAction,
 } from './IslandMissionBriefingModal';
 import { IslandBoardSymbolLegendModal } from './IslandBoardSymbolLegendModal';
+import { IslandMoonwellThermalModal } from './IslandMoonwellThermalModal';
+import { activateMoonwellThermal } from '../services/islandRunMoonwellThermalAction';
+import { isMoonwellHeatAvailable, resolveMoonwellThermalProgress } from '../services/islandRunMoonwellThermal';
 import { ConfettiBurst } from './ConfettiBurst';
 import {
   IslandMoneyCelebration,
@@ -2049,10 +2054,17 @@ export function IslandRunBoardPrototype({
     return window.localStorage.getItem(`island_run_landmark_coachmark_seen_${session.user.id}`) !== '1';
   });
   const [showFrostwellMission, setShowFrostwellMission] = useState(false);
+  const [showMoonwellThermal, setShowMoonwellThermal] = useState(false);
+  const [isActivatingMoonwell, setIsActivatingMoonwell] = useState(false);
+  const [moonwellThawActive, setMoonwellThawActive] = useState(false);
+  const [moonwellThawSequence, setMoonwellThawSequence] = useState(0);
+  const [moonwellThawPhase, setMoonwellThawPhase] = useState('Melting the deep ice');
   const [isSpinningFrostwell, setIsSpinningFrostwell] = useState(false);
   const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
   const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
   const [frostwellConstructionSequence, setFrostwellConstructionSequence] = useState(0);
+  const frostwellSequence = useFrostwellMissionSequence(() => setFrostwellConstructionSequence(value => value + 1));
+  const frostwellActionPendingRef = useRef(false);
   const [showFirstLightAssemblyCrater, setShowFirstLightAssemblyCrater] = useState(false);
   const [isDetonatingFirstLightAssembly, setIsDetonatingFirstLightAssembly] = useState(false);
   const [firstLightAssemblyConstructionSequence, setFirstLightAssemblyConstructionSequence] = useState(0);
@@ -2816,12 +2828,14 @@ export function IslandRunBoardPrototype({
     setShowFrostwellMission(true);
   }, []);
   const closeFrostwellMission = useCallback(() => {
+    frostwellSequence.settle();
+    setIsSpinningFrostwell(false);
     setShowFrostwellMission(false);
     // Deliberately keep the special Frostwell inspection camera active. The
     // modal is the minigame tray; closing it is how the player gets an
     // unobstructed 3D look at the rig. The board magnifier remains the explicit
     // route back to overview.
-  }, []);
+  }, [frostwellSequence.settle]);
   const openFirstLightAssemblyCrater = useCallback(() => {
     setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
     setShowFirstLightAssemblyCrater(true);
@@ -3228,6 +3242,7 @@ export function IslandRunBoardPrototype({
     showMissionPhoneBriefing ||
     Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
+    showMoonwellThermal || moonwellThawActive ||
     showFirstLightAssemblyCrater ||
     showCactusCanyonSpiral ||
     showRootheartPowerworks ||
@@ -3329,11 +3344,46 @@ export function IslandRunBoardPrototype({
     () => resolvePendingTreasurePathResume({ record: runtimeState }),
     [runtimeState],
   );
+  const moonwellThermalProgress = useMemo(() => resolveMoonwellThermalProgress(
+    __storeState.signatureMissionProgressByIsland, __storeState.cycleIndex,
+  ), [__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex]);
+  const moonwellHeatAvailable = isMoonwellHeatAvailable({
+    islandNumber: __storeState.currentIslandNumber,
+    buildLevel: __storeState.stopBuildStateByIndex[2]?.buildLevel ?? 0,
+    progress: moonwellThermalProgress,
+  });
+  const moonwellHeatReady = islandNumber === 3 && __storeState.currentIslandNumber === 3
+    && moonwellThermalProgress.heatCollectedAtMs !== null && moonwellThermalProgress.heatedAtMs === null;
+  const closeMoonwellThermal = useCallback(() => setShowMoonwellThermal(false), []);
+  const handleBoilMoonwell = useCallback(async () => {
+    if (isActivatingMoonwell) return;
+    setIsActivatingMoonwell(true);
+    try {
+      const result = await activateMoonwellThermal({ session, client });
+      if (result.status === 'ok') {
+        const live = getIslandRunStateSnapshot(session);
+        if (live.currentIslandNumber !== 3 || live.cycleIndex !== __storeState.cycleIndex) return;
+        setShowMoonwellThermal(false);
+        setBuildCameraFocusRequest({ preset: 'event', transition: 'standard' });
+        setMoonwellThawSequence(value => value + 1);
+        setMoonwellThawActive(true);
+        setMoonwellThawPhase('Melting the deep ice');
+      } else if (result.status === 'already_heated') setShowMoonwellThermal(false);
+    } catch {
+      setLandingText('The heat valve paused. Your saved Moonwell progress is safe.');
+    } finally { setIsActivatingMoonwell(false); }
+  }, [client, isActivatingMoonwell, session, __storeState.cycleIndex]);
+  useEffect(() => {
+    setShowMoonwellThermal(false);
+    setMoonwellThawActive(false);
+    setShowFrostwellMission(false);
+    frostwellSequence.settle();
+  }, [islandNumber, __storeState.cycleIndex, frostwellSequence.settle]);
   const frostwellProgress = useMemo(() => resolveFrostwellIceworksProgress({
-    ledger: runtimeState.signatureMissionProgressByIsland,
-    cycleIndex: runtimeState.cycleIndex,
+    ledger: __storeState.signatureMissionProgressByIsland,
+    cycleIndex: __storeState.cycleIndex,
     islandNumber: 3,
-  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  }), [__storeState.cycleIndex, __storeState.signatureMissionProgressByIsland]);
   const celestialRedockingProgress = useMemo(() => resolveCelestialRedockingProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -3346,10 +3396,10 @@ export function IslandRunBoardPrototype({
   const frostwellPreviewActive = isIslandVisualPreview && islandVisualIslandNumber === 3;
   const frostwellPresentationMeters = frostwellPreviewActive
     ? frostwellMissionState === 'drilling' ? 235 : FROSTWELL_DEPTH_METERS
-    : frostwellProgress.metersDrilled;
+    : frostwellSequence.held?.meters ?? frostwellProgress.metersDrilled;
   const frostwellPresentationBuilt = frostwellPreviewActive
     ? frostwellMissionState === 'operating' || frostwellMissionState === 'constructing'
-    : frostwellBuilt;
+    : frostwellSequence.held?.built ?? frostwellBuilt;
   const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
     ? 1
     : getFrostwellAvailableSpins(frostwellProgress);
@@ -5889,6 +5939,9 @@ export function IslandRunBoardPrototype({
         allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
         expandedActiveStopId: expandedActiveLandmarkDoorStopId,
       });
+      if (islandNumber === 3 && !moonwellHeatAvailable) {
+        return applied.map(entry => entry.signatureMissionKind === 'moonwell_heat' ? { ...entry, signatureMissionKind: undefined } : entry);
+      }
       if (islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted) {
         return applied.map((entry) => entry.signatureMissionKind === 'heatshield_plate'
           ? { ...entry, signatureMissionKind: undefined }
@@ -5899,7 +5952,7 @@ export function IslandRunBoardPrototype({
         ? { ...entry, signatureMissionKind: undefined }
         : entry);
     },
-    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, islandNumber, lavaLabyrinthEscapeMissionStarted, tileMap],
+    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, islandNumber, lavaLabyrinthEscapeMissionStarted, moonwellHeatAvailable, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(__storeState.bonusTileChargeByIsland, islandNumber);
   // Show the optimistic mid-hop charge while a roll is animating so the lights
@@ -8475,6 +8528,9 @@ export function IslandRunBoardPrototype({
           setLandingText('🍯 Royal nectar secured! Pour it into the palace reservoir and watch the pressure rise.');
           resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
           openGreatHoneyfallMission();
+        } else if (rollResult.moonwellHeatCollected) {
+          setLandingText('♨ Heat secured! Your Moonwell is ready. Tap Boil water to begin the thaw.');
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex, { suppressLandingText: true, suppressTechPickup: true });
         } else if (rollResult.frostwellSpinGranted) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -13683,38 +13739,39 @@ export function IslandRunBoardPrototype({
   }, [fishermansFishingProgress.pendingCatch, fishingPhase, handleReleaseFishermansCatch, showFishermansFishing]);
 
   const handleSpinFrostwell = useCallback(async () => {
-    if (isSpinningFrostwell) return;
+    if (frostwellActionPendingRef.current || !['ready', 'complete'].includes(frostwellSequence.phase)) return;
+    frostwellActionPendingRef.current = true;
     setIsSpinningFrostwell(true);
     setFrostwellLastSpinMeters(null);
+    const token = frostwellSequence.prepare(frostwellProgress.metersDrilled, frostwellBuilt);
     try {
       const result = await spinFrostwellDrillWheel({ session, client });
+      if (!frostwellSequence.isCurrent(token)) return;
       if (result.status !== 'ok') {
+        frostwellSequence.settle();
         if (result.status === 'no_spins') setLandingText('Land on one of the three blue drill tiles to earn a Frostwell spin.');
         return;
       }
       const segmentIndex = Math.max(0, FROSTWELL_SPIN_METERS.indexOf(result.wheelMeters as typeof FROSTWELL_SPIN_METERS[number]));
-      const segmentAngle = segmentIndex * (360 / FROSTWELL_SPIN_METERS.length) + (180 / FROSTWELL_SPIN_METERS.length);
-      setFrostwellWheelRotation((rotation) => {
-        const currentAngle = ((rotation % 360) + 360) % 360;
-        const correction = ((360 - segmentAngle - currentAngle) + 360) % 360;
-        return rotation + 1_800 + correction;
-      });
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 1_350));
-      refreshIslandRunStateFromLocal(session);
-      const fresh = getIslandRunStateSnapshot(session);
-      runtimeStateRef.current = fresh;
-      setRuntimeStateWithTrace('spin_frostwell_drill_wheel', fresh);
+      const segmentAngle = segmentIndex * 45 + 22.5;
+      setFrostwellWheelRotation(rotation => rotation + 1800 + ((360 - segmentAngle - rotation % 360) + 360) % 360);
       setFrostwellLastSpinMeters(result.meters);
-      if (result.commissioned) setFrostwellConstructionSequence((value) => value + 1);
+      frostwellSequence.play(token, result);
       setLandingText(result.commissioned
-        ? '🐟 Breakthrough! Frostwell is online — fishing, lifts, sorting and seafood trade have started.'
-        : `⛏ Frostwell auger drilled ${result.meters}m deeper.`);
-      playIslandRunSound(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_bar_claim_burst' : 'stop_land');
-      triggerIslandRunHaptic(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_claim' : 'stop_land');
+        ? 'Breakthrough! Frostwell is online — fishing, lifts, sorting and seafood trade have started.'
+        : `Frostwell auger drilled ${result.meters}m deeper.`);
+      playIslandRunSound(result.commissioned ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(result.commissioned ? 'reward_claim' : 'stop_land');
+    } catch {
+      if (frostwellSequence.isCurrent(token)) {
+        frostwellSequence.settle();
+        setLandingText('The drill paused. Reopen Frostwell to see your saved progress.');
+      }
     } finally {
+      frostwellActionPendingRef.current = false;
       setIsSpinningFrostwell(false);
     }
-  }, [client, isSpinningFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+  }, [client, frostwellSequence, frostwellProgress.metersDrilled, frostwellBuilt, playIslandRunSound, session, triggerIslandRunHaptic]);
 
   const handleDetonateFirstLightAssembly = useCallback(async () => {
     if (isDetonatingFirstLightAssembly) return;
@@ -15672,17 +15729,21 @@ export function IslandRunBoardPrototype({
                   handleLandmarkOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
                 signatureMissionPresentation={{
-                  metersDrilled: isIslandVisualPreview && islandArtPreviewNumber === 3
-                    ? frostwellPresentationMeters
-                    : frostwellProgress.metersDrilled,
-                  built: isIslandVisualPreview && islandArtPreviewNumber === 3
-                    ? frostwellPresentationBuilt
-                    : frostwellBuilt,
+                  metersDrilled: frostwellPresentationMeters,
+                  drillingActive: frostwellSequence.phase === 'drilling',
+                  built: frostwellPresentationBuilt,
                   constructionSequence: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing'
                     ? 1
                     : frostwellConstructionSequence,
                   constructionPreviewLoop: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing',
                 }}
+                moonwellThermalPresentation={{
+                  heated: moonwellThermalProgress.heatedAtMs !== null && !isActivatingMoonwell,
+                  running: moonwellThawActive,
+                  sequence: moonwellThawSequence,
+                }}
+                onMoonwellThermalPhaseChange={setMoonwellThawPhase}
+                onMoonwellThermalComplete={() => { setMoonwellThawActive(false); setLandingText('♨ Moonwell restored. Warm water now bubbles beneath the winter sky.'); }}
                 celestialRedockingPresentation={{
                   completedRolls: isIslandVisualPreview && islandArtPreviewNumber === 2
                     ? CELESTIAL_REDOCKING_ROLL_TARGET
@@ -20341,104 +20402,13 @@ export function IslandRunBoardPrototype({
         </div>
       ), document.body) : null}
 
-      {showFrostwellMission && typeof document !== 'undefined' ? createPortal((
-        <div
-          className="island-run-signature-mission-overlay frostwell-mission-modal__backdrop"
-          role="presentation"
-          onClick={closeFrostwellMission}
-        >
-          <section
-            className="frostwell-mission-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="frostwell-mission-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="frostwell-mission-modal__close"
-              onClick={closeFrostwellMission}
-              aria-label="Close Frostwell Iceworks mission"
-            >
-              ×
-            </button>
-            <header className="frostwell-mission-modal__header">
-              <p className="frostwell-mission-modal__eyebrow">Island 003 signature mission</p>
-              <h2 id="frostwell-mission-title">🧊 Frostwell Iceworks</h2>
-              <p className="frostwell-mission-modal__lede">
-                Land on a blue drill tile, then spin to bore toward fresh water.
-              </p>
-            </header>
-            <div className="frostwell-mission-modal__machine">
-              <div
-                className={`frostwell-mission-modal__shaft${isSpinningFrostwell ? ' frostwell-mission-modal__shaft--drilling' : ''}`}
-                aria-label={`${frostwellPresentationMeters} of ${FROSTWELL_DEPTH_METERS} metres drilled`}
-              >
-                <div className="frostwell-mission-modal__ice-cap"><span /></div>
-                <div className="frostwell-mission-modal__bore">
-                  <span className="frostwell-mission-modal__drill-string" style={{ height: `${12 + (frostwellPresentationMeters / FROSTWELL_DEPTH_METERS) * 72}%` }} />
-                  <span className="frostwell-mission-modal__auger" style={{ top: `${8 + (frostwellPresentationMeters / FROSTWELL_DEPTH_METERS) * 72}%` }}>▼</span>
-                  <span className="frostwell-mission-modal__chips" aria-hidden="true">✦ · ✦</span>
-                  <span className="frostwell-mission-modal__waterline">fresh water · 500m</span>
-                </div>
-                <div className="frostwell-mission-modal__depth-readout">
-                  <strong>{frostwellPresentationMeters}m</strong>
-                  <span>of {FROSTWELL_DEPTH_METERS}m</span>
-                </div>
-              </div>
-              <div className="frostwell-mission-modal__wheel-panel">
-                <span className="frostwell-mission-modal__wheel-pointer" aria-hidden="true">▼</span>
-                <div
-                  className={`frostwell-mission-modal__wheel${isSpinningFrostwell ? ' frostwell-mission-modal__wheel--spinning' : ''}`}
-                  style={{ transform: `rotate(${frostwellWheelRotation}deg)` }}
-                  aria-label="Drilling distance wheel"
-                >
-                  {FROSTWELL_SPIN_METERS.map((meters, index) => (
-                    <span key={meters} style={{ transform: `rotate(${index * 45 + 22.5}deg) translateY(-73px) rotate(-${index * 45 + 22.5}deg)` }}>{meters}</span>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className="frostwell-mission-modal__wheel-hub"
-                  disabled={isSpinningFrostwell || frostwellAvailableSpins < 1 || frostwellPresentationBuilt || frostwellPresentationMeters >= FROSTWELL_DEPTH_METERS}
-                  onClick={() => void handleSpinFrostwell()}
-                  aria-label={frostwellAvailableSpins > 0 ? 'Spin the Frostwell drill wheel' : 'No Frostwell spins ready'}
-                >
-                  {isSpinningFrostwell ? 'DRILLING' : frostwellAvailableSpins > 0 ? 'SPIN' : 'LOCKED'}
-                  <small>{frostwellAvailableSpins} ready</small>
-                </button>
-                {frostwellLastSpinMeters !== null ? <em>+{frostwellLastSpinMeters}m drilled!</em> : null}
-              </div>
-            </div>
-            <div className="frostwell-mission-modal__depth-track"><span style={{ width: `${Math.min(100, frostwellPresentationMeters / FROSTWELL_DEPTH_METERS * 100)}%` }} /></div>
-            {frostwellPresentationBuilt ? (
-              <div className="frostwell-mission-modal__status frostwell-mission-modal__status--online">
-                <strong>🐟 Iceworks online</strong>
-                <span>Nets now return with fish while fresh water flows through the insulated pipes into the reservoir.</span>
-              </div>
-            ) : frostwellPresentationMeters < FROSTWELL_DEPTH_METERS ? (
-              <div className="frostwell-mission-modal__status">
-                <strong>Drilling in progress</strong>
-                <span>The three ⛏ tiles each grant one wheel spin. Every spin drives the animated offshore auger 15–75 metres deeper.</span>
-              </div>
-            ) : (
-              <div className="frostwell-mission-modal__status frostwell-mission-modal__status--ready">
-                <strong>Breakthrough! Automatic commissioning started</strong>
-                <span>The fishery, reservoir, conveyor nets and pipeworks are coming online without another payment or action.</span>
-              </div>
-            )}
-            <div className="frostwell-mission-modal__actions">
-              <button
-                type="button"
-                className="island-stop-modal__btn"
-                onClick={closeFrostwellMission}
-              >
-                {frostwellPresentationBuilt ? 'Return to island' : 'Keep exploring'}
-              </button>
-            </div>
-          </section>
-        </div>
-      ), document.body) : null}
+      {moonwellHeatReady && !showBuildPanel && !isRolling && !showMoonwellThermal ? <button className="moonwell-thermal-launch" onClick={() => setShowMoonwellThermal(true)}>♨ Boil water</button> : null}
+      <IslandMoonwellThermalModal open={showMoonwellThermal} busy={isActivatingMoonwell} onClose={closeMoonwellThermal} onBoil={() => { void handleBoilMoonwell(); }} />
+      {moonwellThawActive && typeof document !== 'undefined' ? createPortal(<div className="moonwell-thaw-hud" role="status"><span>♨ {moonwellThawPhase}</span><button onClick={() => setMoonwellThawActive(false)}>Finish now</button></div>, document.body) : null}
+      <IslandFrostwellMissionModal open={showFrostwellMission} phase={frostwellSequence.phase}
+        meters={frostwellPresentationMeters} built={frostwellPresentationBuilt} spins={frostwellAvailableSpins}
+        rotation={frostwellWheelRotation} result={frostwellLastSpinMeters} onSpin={() => { void handleSpinFrostwell(); }}
+        onClose={closeFrostwellMission} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
 
       {showFirstLightAssemblyCrater && typeof document !== 'undefined' ? createPortal((
         <div

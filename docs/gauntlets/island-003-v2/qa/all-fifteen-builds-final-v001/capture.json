@@ -1,0 +1,3382 @@
+{
+  "status": "incomplete",
+  "failure": "AssertionError [ERR_ASSERTION]: 3-wisdom-L3-390 immediate reopen must frame new target",
+  "records": [
+    {
+      "name": "3-boss-L1-390",
+      "states": {
+        "working": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        "review": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        "celebration": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        "reopen": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "wisdom",
+            "position": [
+              -1.22,
+              3.88,
+              -1.356
+            ],
+            "target": [
+              -4.354,
+              0.463,
+              3.894
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.0112,
+            "previewFloorY": 0.0112,
+            "verticalError": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              6.975,
+              11.25
+            ],
+            "target": [
+              0,
+              0.85,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.695,
+              -0.286
+            ],
+            "projectedMax": [
+              0.695,
+              0.342
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        }
+      ],
+      "finaleWidthRatio": 1,
+      "sourceHashes": {
+        "Island5ThreePilot.tsx": "e4b5a977320694e1f2357af340d25baa28a7b93784184f5ff633dac95cd48823",
+        "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+        "IslandConstructionCommissioningFx.ts": "4027da8cac93fb733ca40bcd1232a90cb10a9da705be2b6a45618088cb5510d2",
+        "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+        "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+        "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+        "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+      }
+    },
+    {
+      "name": "3-boss-L2-390",
+      "states": {
+        "working": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        "review": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        "celebration": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        "reopen": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "wisdom",
+            "position": [
+              -1.22,
+              3.882,
+              -1.356
+            ],
+            "target": [
+              -4.354,
+              0.465,
+              3.894
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.0112,
+            "previewFloorY": 0.0112,
+            "verticalError": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.252,
+              11.25
+            ],
+            "target": [
+              0,
+              1.127,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.704,
+              -0.317
+            ],
+            "projectedMax": [
+              0.704,
+              0.391
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.0206,
+            "previewFloorY": 0.0206,
+            "verticalError": 0
+          }
+        }
+      ],
+      "finaleWidthRatio": 1,
+      "sourceHashes": {
+        "Island5ThreePilot.tsx": "e4b5a977320694e1f2357af340d25baa28a7b93784184f5ff633dac95cd48823",
+        "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+        "IslandConstructionCommissioningFx.ts": "4027da8cac93fb733ca40bcd1232a90cb10a9da705be2b6a45618088cb5510d2",
+        "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+        "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+        "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+        "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+      }
+    },
+    {
+      "name": "3-boss-L3-390",
+      "states": {
+        "working": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        "review": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        "celebration": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        "reopen": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "wisdom",
+            "position": [
+              -1.22,
+              4.158,
+              -1.356
+            ],
+            "target": [
+              -4.354,
+              0.742,
+              3.894
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.073,
+              -0.382
+            ],
+            "projectedMax": [
+              1.239,
+              0.576
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.0112,
+            "previewFloorY": 0.0112,
+            "verticalError": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              0,
+              7.529,
+              11.25
+            ],
+            "target": [
+              0,
+              1.404,
+              0
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.714,
+              -0.364
+            ],
+            "projectedMax": [
+              0.714,
+              0.456
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.022,
+            "previewFloorY": 0.022,
+            "verticalError": 0
+          }
+        }
+      ],
+      "finaleWidthRatio": 1,
+      "sourceHashes": {
+        "Island5ThreePilot.tsx": "e4b5a977320694e1f2357af340d25baa28a7b93784184f5ff633dac95cd48823",
+        "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+        "IslandConstructionCommissioningFx.ts": "4027da8cac93fb733ca40bcd1232a90cb10a9da705be2b6a45618088cb5510d2",
+        "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+        "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+        "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+        "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+      }
+    },
+    {
+      "name": "3-wisdom-L1-390",
+      "states": {
+        "working": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        "review": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        "celebration": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        "reopen": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "wisdom",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.227,
+              3.829,
+              -1.35
+            ],
+            "target": [
+              -4.36,
+              0.412,
+              3.9
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -0.932,
+              -0.284
+            ],
+            "projectedMax": [
+              1.199,
+              0.435
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": -0.04,
+            "previewFloorY": -0.04,
+            "verticalError": 0
+          }
+        }
+      ],
+      "finaleWidthRatio": 1,
+      "sourceHashes": {
+        "Island5ThreePilot.tsx": "e4b5a977320694e1f2357af340d25baa28a7b93784184f5ff633dac95cd48823",
+        "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+        "IslandConstructionCommissioningFx.ts": "4027da8cac93fb733ca40bcd1232a90cb10a9da705be2b6a45618088cb5510d2",
+        "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+        "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+        "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+        "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+      }
+    },
+    {
+      "name": "3-wisdom-L2-390",
+      "states": {
+        "working": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        "review": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        "celebration": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        "reopen": {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "wisdom",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "finish",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        },
+        {
+          "pose": {
+            "islandNumber": 3,
+            "preset": "overview",
+            "position": [
+              -1.221,
+              3.88,
+              -1.355
+            ],
+            "target": [
+              -4.354,
+              0.464,
+              3.895
+            ],
+            "fov": 42,
+            "zoom": 1,
+            "aspect": 0.462,
+            "signatureMissionSocketActive": false,
+            "signatureMissionMetersDrilled": 0
+          },
+          "model": {
+            "sourceVisible": false,
+            "previewVisible": true,
+            "stageY": 0,
+            "stageScale": [
+              1,
+              1,
+              1
+            ],
+            "projectedMin": [
+              -1.041,
+              -0.294
+            ],
+            "projectedMax": [
+              1.199,
+              0.437
+            ]
+          },
+          "pulse": 1,
+          "framing": "centred-1.20",
+          "phase": "reveal",
+          "ground": {
+            "sourceFloorY": 0.01,
+            "previewFloorY": 0.01,
+            "verticalError": 0
+          }
+        }
+      ],
+      "finaleWidthRatio": 1,
+      "sourceHashes": {
+        "Island5ThreePilot.tsx": "e4b5a977320694e1f2357af340d25baa28a7b93784184f5ff633dac95cd48823",
+        "IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+        "IslandConstructionCommissioningFx.ts": "4027da8cac93fb733ca40bcd1232a90cb10a9da705be2b6a45618088cb5510d2",
+        "Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+        "Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+        "Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9",
+        "Island3MoonwellThermalPresentation.ts": "e81eb4d1402bea5e95f5a7b0b74a6a775b1999299734d805b9730ec6c8b22e96"
+      }
+    }
+  ],
+  "errors": []
+}

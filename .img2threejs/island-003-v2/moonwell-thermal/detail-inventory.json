@@ -1,0 +1,130 @@
+{
+  "reusedFrom": ".img2threejs/island-003-frostmoon-upgrade/moonwell-observatory-l3/detail-inventory.json",
+  "scope": "Existing approved architecture details unchanged; re-inspected full goal three survey views",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+    "details": [
+      {
+        "id": "rib-plate-seams",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "rib-plate-seams"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "copper-edge-wear",
+        "kind": "gloss",
+        "mapsTo": {
+          "ref": "rib-edge-wear"
+        },
+        "realization": "material override"
+      },
+      {
+        "id": "timber-beam-wear",
+        "kind": "scratch",
+        "mapsTo": {
+          "ref": "longitudinal-grain"
+        },
+        "realization": "procedural texture"
+      },
+      {
+        "id": "snow-filled-joints",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "snow-filled-stone-joints"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "basin-copper-rim",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "copper-rim"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "moon-disc",
+        "kind": "emissive",
+        "mapsTo": {
+          "ref": "moon-disc"
+        },
+        "realization": "geometry and material"
+      },
+      {
+        "id": "armillary-ring-spacing",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "gimbal-spacing"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "axis-counterweights",
+        "kind": "fastener",
+        "mapsTo": {
+          "ref": "counterweights"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "telescope-lens-hinge",
+        "kind": "gloss",
+        "mapsTo": {
+          "ref": "lens-and-hinge"
+        },
+        "realization": "geometry and material"
+      },
+      {
+        "id": "amber-lantern-glass",
+        "kind": "emissive",
+        "mapsTo": {
+          "ref": "amber-glass"
+        },
+        "realization": "geometry and material"
+      },
+      {
+        "id": "stair-cheek-plates",
+        "kind": "ridge",
+        "mapsTo": {
+          "ref": "copper-cheeks"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "rear-door-brace",
+        "kind": "seam",
+        "mapsTo": {
+          "ref": "cross-brace-latch"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "chart-panel-relief",
+        "kind": "linework",
+        "mapsTo": {
+          "ref": "chart-panel"
+        },
+        "realization": "geometry"
+      },
+      {
+        "id": "vent-and-tool-shelf",
+        "kind": "contour",
+        "mapsTo": {
+          "ref": "vent-and-shelf"
+        },
+        "realization": "geometry"
+      }
+    ]
+  },
+  "newPresentationSystems": [
+    "opaque-frozen-sector-cover",
+    "separate-warm-water",
+    "heater-rim",
+    "bounded-bubble-system",
+    "bounded-steam-system"
+  ]
+}

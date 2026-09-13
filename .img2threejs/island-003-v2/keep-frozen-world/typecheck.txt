@@ -1,0 +1,6 @@
+src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx(15726,17): error TS2322: Type '{ islandNumber: number; worldSourceNumber: IslandRunAuthored3DWorldSource; buildLevel: 0 | 1 | 2 | 3; landmarkBuildLevels: { hatchery: 0 | 1 | 2 | 3; habit: 0 | ... 2 more ... | 3; event: 0 | ... 2 more ... | 3; wisdom: 0 | ... 2 more ... | 3; boss: 0 | ... 2 more ... | 3; } | undefined; ... 34 more ...; onCaretaker...' is not assignable to type 'IntrinsicAttributes & Island5ThreePilotProps'.
+  Property 'moonwellThermalPresentation' does not exist on type 'IntrinsicAttributes & Island5ThreePilotProps'.
+src/features/gamification/level-worlds/services/__tests__/islandRunSignatureMissions.test.ts(309,64): error TS2345: Argument of type 'number | null' is not assignable to parameter of type 'number'.
+  Type 'null' is not assignable to type 'number'.
+src/features/gamification/level-worlds/services/__tests__/islandRunSignatureMissions.test.ts(310,38): error TS2345: Argument of type 'number | null' is not assignable to parameter of type 'number'.
+  Type 'null' is not assignable to type 'number'.

@@ -64,6 +64,7 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
 import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
+import { collectMoonwellHeatForLanding } from './islandRunMoonwellThermal';
 import {
   __resetIslandRunActionMutexesForTests,
   withIslandRunActionLock,
@@ -251,6 +252,8 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
+  /** A one-time thermal pickup; the underlying tile reward is unchanged. */
+  moonwellHeatCollected?: boolean;
   /** One finite Island 001 Assembly Crater stick collected by this route. */
   firstLightAssemblyDynamiteCollected?: number;
   /** Whether the Assembly cache was on the final tile or reached during movement. */
@@ -484,15 +487,21 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: firstLightAssemblyLanding.ledger, granted: false };
+  const moonwellLanding = ordinaryTileGameplayActive
+    ? collectMoonwellHeatForLanding({ ledger: frostwellLanding.ledger,
+        islandNumber: state.currentIslandNumber, cycleIndex: state.cycleIndex,
+        buildLevel: state.stopBuildStateByIndex[2]?.buildLevel ?? 0,
+        tileCount: boardProfile.tileCount, tileIndex: newTokenIndex, nowMs })
+    : { ledger: frostwellLanding.ledger, collected: false };
   const rootheartLanding = ordinaryTileGameplayActive
     ? collectRootheartPowerComponentForLanding({
-        ledger: frostwellLanding.ledger,
+        ledger: moonwellLanding.ledger,
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,
         tileIndex: newTokenIndex,
         nowMs,
       })
-    : { ledger: frostwellLanding.ledger, collectedComponentId: null };
+    : { ledger: moonwellLanding.ledger, collectedComponentId: null };
   const rootheartPowerworksUnlocked = rootheartLanding.collectedComponentId !== null
     && isRootheartPowerworksCollectionComplete(resolveRootheartPowerworksProgress({
       ledger: rootheartLanding.ledger,
@@ -648,6 +657,7 @@ async function performRollAction(options: {
     ordinaryTileGameplayActive,
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
+    moonwellHeatCollected: moonwellLanding.collected,
     firstLightAssemblyDynamiteCollected: firstLightAssemblyLanding.dynamiteCollected,
     firstLightAssemblyDynamiteCollectionKind: firstLightAssemblyLanding.collectionKind,
     cactusCanyonDynamiteCollected: cactusCanyonLanding.dynamiteCollected,

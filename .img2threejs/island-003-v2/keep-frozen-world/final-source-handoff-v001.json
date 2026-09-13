@@ -1,0 +1,8 @@
+{
+  "status": "runtime-frozen-for-parent-final-acceptance",
+  "sources": {
+    "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts": "7eb94170eb1860be5d5e3cc23e59bdc091f4cc83969fcbbba933b17d75f4f8f5",
+    "src/features/gamification/level-worlds/dev/Island3FrozenWorldThreeModel.ts": "18c6b2b341891405876a3def0423911e62bcfc5cd29fd3d74490e988875a6737",
+    "src/features/gamification/level-worlds/dev/Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "continuity": [
+    {
+      "transition": "L1-L2",
+      "missing": []
+    },
+    {
+      "transition": "L2-L3",
+      "missing": []
+    }
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "meshes": 31,
+      "bounds": [
+        3.636207923889161,
+        0.8624000073432926,
+        3.6735999679565436
+      ]
+    },
+    {
+      "level": 2,
+      "meshes": 52,
+      "bounds": [
+        3.636207923889161,
+        2.5286728186607363,
+        3.6735999679565436
+      ]
+    },
+    {
+      "level": 3,
+      "meshes": 106,
+      "bounds": [
+        3.636207923889161,
+        2.867199997997284,
+        3.6735999679565436
+      ]
+    }
+  ],
+  "normalMeshCount": 29,
+  "thermalRoleCounts": {
+    "ice": 7,
+    "water": 1,
+    "heater": 1,
+    "bubble": 5,
+    "steam": 3
+  },
+  "coldOpaque": true,
+  "heatedLiquid": true,
+  "reducedMotion": true
+}

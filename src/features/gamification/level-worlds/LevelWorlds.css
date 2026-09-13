@@ -26899,3 +26899,45 @@
   .creature-arena-hud__top { width: min(720px, 92vw); margin-inline: auto; }
   .creature-arena-hud__command-deck { width: min(560px, 86vw); margin: 0 auto max(calc(env(safe-area-inset-bottom) + 12px), 18px); border: 1px solid rgba(255, 224, 132, .28); border-radius: 24px; }
 }
+
+/* Optional Moonwell restoration: viewport modal, separate from landmark objectives. */
+.moonwell-thermal-launch { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(180px + env(safe-area-inset-bottom)); z-index: 1700; padding: 10px 16px; border: 1px solid #f0c780; border-radius: 24px; background: #173941; color: #ffe2b0; font-weight: 800; box-shadow: 0 5px 22px #041c2b66; }
+.moonwell-thermal-modal { position: fixed; inset: 0; z-index: 23000; display: grid; place-items: center; padding: 20px; background: #041721ae; backdrop-filter: blur(6px); }
+.moonwell-thermal-modal section { position: relative; box-sizing: border-box; width: min(420px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 30px 25px 22px; border-radius: 24px; border: 1px solid #a8d2d3; background: radial-gradient(ellipse at top, #325964, #112d3a 70%); color: #effafb; text-align: center; box-shadow: 0 22px 80px #001a2d; }
+.moonwell-thermal-modal__close { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; color: #c7e4e6; font-size: 30px; }
+.moonwell-thermal-modal__sigil { display: block; font-size: 74px; color: #ffc67b; text-shadow: 0 0 28px #fd9c5377; }
+.moonwell-thermal-modal small { display: block; color: #dcbf8c; font: 700 10px/1.5 system-ui; letter-spacing: .13em; }
+.moonwell-thermal-modal h2 { color: #f0fafa; font: 750 28px/1.15 system-ui; margin: 14px 0; }
+.moonwell-thermal-modal p { color: #c2dce0; font: 15px/1.6 system-ui; margin-bottom: 24px; }
+.moonwell-thermal-modal__boil { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid #ffda9b; background: linear-gradient(#f2c983, #d7a35b); color: #253136; font: 800 16px system-ui; box-shadow: 0 3px 0 #946936; }
+.moonwell-thermal-modal__later { margin-top: 12px; padding: 10px; border: 0; background: transparent; color: #c5dadd; font: 13px system-ui; }
+.moonwell-thaw-hud { position: fixed; left: 50%; bottom: calc(110px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 23000; box-sizing: border-box; width: min(360px, calc(100vw - 32px)); padding: 15px 18px; display: flex; align-items: center; gap: 14px; border: 1px solid #dfc38c; border-radius: 18px; background: #112d3aed; color: #f9e6bd; font: 700 14px/1.3 system-ui; box-shadow: 0 9px 32px #001b3b66; }
+.moonwell-thaw-hud button { margin-left: auto; padding: 8px; flex-shrink: 0; background: transparent; border: 0; color: #b9d9de; font: 12px system-ui; }
+
+/* Frostwell V2: launch tray folds away during the actual 3D descent. */
+.frostwell-v2-overlay{position:fixed;inset:0;z-index:23000;display:grid;place-items:center;padding:18px;background:rgba(3,15,28,.78);backdrop-filter:blur(9px)}
+.frostwell-v2{position:relative;width:min(430px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:30px 25px 18px;border:1px solid #7fe5ec66;border-radius:28px;background:radial-gradient(ellipse at 50% 26%,#204d69,#0a2337 64%);color:#ecfcff;text-align:center;box-shadow:0 24px 80px #00101dc0;outline:none}
+.frostwell-v2__close{position:absolute;right:12px;top:9px;width:36px;height:36px;border:0;background:transparent;color:#b2d6e7;font-size:27px;cursor:pointer}
+.frostwell-v2__eyebrow{font-size:9px;letter-spacing:1.6px;font-weight:800;color:#8fcedd;padding:4px 12px 10px}
+.frostwell-v2 h2{font-size:28px;line-height:1.07;letter-spacing:-.7px;margin:0 8px 12px;color:#f1fcff}
+.frostwell-v2 p{font-size:13px;line-height:1.5;color:#aed0df;margin:0 auto 13px;max-width:340px}
+.frostwell-v2__wheel-wrap{position:relative;width:236px;height:250px;margin:4px auto 0}
+.frostwell-v2__wheel{position:absolute;top:12px;left:4px;width:228px;height:228px;border-radius:50%;border:6px solid #94dce8;box-shadow:0 0 0 4px #16364c,0 0 30px #39d7e52c,inset 0 0 22px #031a34;background:repeating-conic-gradient(#23627a 0deg 44deg,#94dce8 44deg 45deg,#16435e 45deg 89deg,#94dce8 89deg 90deg);transition:transform 1.8s cubic-bezier(.12,.72,.13,1)}
+.frostwell-v2__wheel>span{position:absolute;left:calc(50% - 15px);top:calc(50% - 11px);width:30px;font-size:17px;font-weight:900;color:white;text-shadow:0 1px 3px #082236}
+.frostwell-v2__wheel small{font-size:8px;padding-left:1px;color:#a8dbe7}
+.frostwell-v2__pointer{position:absolute;top:1px;left:104px;z-index:2;color:#ffd384;font-size:29px;filter:drop-shadow(0 2px 3px #052138)}
+.frostwell-v2__hub{position:absolute;left:75px;top:87px;width:86px;height:86px;border-radius:50%;background:linear-gradient(#ffe0a4,#d79b49);border:4px solid #123f58;color:#173d50;font-size:15px;font-weight:950;box-shadow:0 5px 12px #041f36;cursor:pointer}
+.frostwell-v2__hub small{display:block;font-size:10px;margin-top:4px;font-weight:700}
+.frostwell-v2__hub:disabled{cursor:default;filter:saturate(.6)}
+.frostwell-v2__depth{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;margin:2px 0 10px}
+.frostwell-v2__depth strong{font-size:25px;white-space:nowrap}.frostwell-v2__depth strong small{font-size:12px;color:#96c6d8;font-weight:500}.frostwell-v2__depth>span{font-size:10px;color:#80dedf;text-align:right}
+.frostwell-v2__track{height:7px;border-radius:8px;background:#051b2c;overflow:hidden;margin-bottom:13px}.frostwell-v2__track i{display:block;height:100%;background:linear-gradient(90deg,#44a7c5,#a8ffec);border-radius:inherit;transition:width 4s ease-in-out}
+.frostwell-v2 p.frostwell-v2__hint{font-size:10px;color:#8db5c9;margin-bottom:4px}.frostwell-v2__text{padding:12px;border:0;background:none;color:#c1e1e9;font-size:12px;cursor:pointer}
+.frostwell-v2__primary{display:block;width:100%;padding:15px;border-radius:14px;border:1px solid #ffe7b3;background:linear-gradient(130deg,#ffdf9f,#d49b4e);color:#173549;font-weight:900;font-size:14px;cursor:pointer}
+.frostwell-v2__seal{height:140px;display:flex;align-items:center;justify-content:center;gap:21px;color:#f2c87f;font-size:28px}.frostwell-v2__seal>span{width:112px;height:112px;display:flex;flex-direction:column;justify-content:center;border:1px solid #e8c87b;border-radius:50%;box-shadow:0 0 40px #f4c87422,inset 0 0 20px #f4c87415;font-size:39px;font-weight:900}.frostwell-v2__seal small{font-size:9px;letter-spacing:2px}
+.frostwell-v2__systems{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;color:#a7edd3;font-size:10px;margin:18px 0 24px}
+.frostwell-v2-overlay.is-cinematic{background:none;backdrop-filter:none;align-items:end;padding-bottom:max(22px,env(safe-area-inset-bottom));pointer-events:none}.is-cinematic .frostwell-v2{pointer-events:auto;padding:20px 22px 8px;background:linear-gradient(#092537ed,#061c2ff5);max-width:410px}.is-cinematic h2{font-size:23px;margin-bottom:8px}.is-cinematic .frostwell-v2__eyebrow{font-size:8px}.is-cinematic p{font-size:11px;margin-bottom:10px}
+.frostwell-v2__cinematic-meter{display:flex;align-items:center;gap:12px;font-size:9px;letter-spacing:.6px;color:#a4e9e8}.frostwell-v2__cinematic-meter>span:first-child{font-size:23px;font-weight:900;letter-spacing:-.4px}.frostwell-v2__cinematic-meter i{height:1px;background:#70ccda55;flex:1}
+@media(max-height:650px){.frostwell-v2{padding:20px 20px 10px}.frostwell-v2 h2{font-size:23px}.frostwell-v2__wheel-wrap{transform:scale(.83);margin:-18px auto -23px}.frostwell-v2__eyebrow{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.frostwell-v2__wheel,.frostwell-v2__track i{transition:none}}
+.island-3-archive-inspect-toggle{position:absolute;top:64px;right:14px;z-index:9;border:1px solid #e7ba73aa;border-radius:999px;background:#142f3ee8;color:#ffdfae;padding:10px 16px;font-size:12px;font-weight:800;box-shadow:0 4px 16px #07182255;cursor:pointer}

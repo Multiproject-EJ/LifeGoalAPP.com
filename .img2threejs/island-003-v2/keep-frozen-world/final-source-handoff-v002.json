@@ -1,0 +1,19 @@
+{
+  "status": "runtime-frozen-after-one-bounded-world-finish-correction",
+  "sources": {
+    "src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts": "5fe0cacbb2dbc2ddd9144d83cca11331636d22babc5a0d1caff0593f8c243575",
+    "src/features/gamification/level-worlds/dev/Island3FrozenWorldThreeModel.ts": "c36547e52bcc65f0f2c80bc344e71b0d088bcd807a36e50656baa849c85d86d3",
+    "src/features/gamification/level-worlds/dev/Island3FrostfireInspectionGeometry.ts": "69bdfe1e5cb2c15d3dc96f69a01dd8c3efafdfb23afb5ff50c9270f59c7136b9"
+  },
+  "correction": {
+    "priorEvidence": "docs/gauntlets/island-003-v2/runtime-v2-final-v001",
+    "failedDimensions": [
+      "Crag triangle fan with detached flat summit snow disks",
+      "Repeated rectangular roof snow plates"
+    ],
+    "scope": "Connected irregular ridge heightfields and continuous sloped snow shoulders; curved thin roof drifts; same Keep dimensions/rings",
+    "count": 1,
+    "noAdditionalCorrectionAuthorized": true
+  },
+  "geometryCheck": "geometry-check.json"
+}

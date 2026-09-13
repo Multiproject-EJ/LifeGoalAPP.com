@@ -1,0 +1,38 @@
+{
+  "passId": "blockout",
+  "action": "refine-code",
+  "reviewer": "independent /root/build_modal_review",
+  "score": 0.72,
+  "layerScores": {
+    "silhouetteProportion": 0.72,
+    "componentStructure": 0.8,
+    "formDetail": 0.8,
+    "materialSurface": 0.86,
+    "lightingCamera": 0.85
+  },
+  "summary": "One bounded correction: supported intermediate gallery gable + separately readable second ring. Preserve hall height/footprint/turrets, side/rear volumes and frozen-world silhouette. Sea/shelf .86 and firbanks .88. No detail expansion.",
+  "viewScores": [
+    0.72,
+    0.76,
+    0.8,
+    0.81,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.76
+  ],
+  "assemblyScores": {
+    "overview": 0.76,
+    "keep": 0.72,
+    "left": 0.79,
+    "right": 0.79
+  },
+  "evidence": [
+    "macro-v001-framed/capture.json",
+    "assembly-v001/capture.json",
+    "concept-assembly-comparison.jpg"
+  ],
+  "family": 1,
+  "correction": 1
+}

@@ -1,0 +1,599 @@
+{
+  "scope": "Emitted Vite assets from previous local build versus final build. QA images/videos and reference packets are development evidence, not production assets. No new production raster assets. Existing shared dependencies retained.",
+  "before": {
+    "source": "previous local production build log, before this entire-island implementation turn",
+    "files": [
+      {
+        "file": "MinigameHudStrip-CsGib9NE.css",
+        "minifiedKB": 2.18,
+        "gzipKB": 0.81
+      },
+      {
+        "file": "SignalPathMinigame-Cr2UpGX_.css",
+        "minifiedKB": 2.77,
+        "gzipKB": 1.04
+      },
+      {
+        "file": "ShooterBlitz-BLnpw5n8.css",
+        "minifiedKB": 2.84,
+        "gzipKB": 1.02
+      },
+      {
+        "file": "Island5ThreePilot-CJE36te5.css",
+        "minifiedKB": 2.97,
+        "gzipKB": 1.13
+      },
+      {
+        "file": "ConcordCategoriesMinigame-DbYSufwQ.css",
+        "minifiedKB": 3.04,
+        "gzipKB": 1.14
+      },
+      {
+        "file": "TwinSigilsMinigame-D0W2o_NY.css",
+        "minifiedKB": 3.44,
+        "gzipKB": 1.16
+      },
+      {
+        "file": "LexiconRelayMinigame-mHWLi74_.css",
+        "minifiedKB": 3.73,
+        "gzipKB": 1.26
+      },
+      {
+        "file": "ExpeditionShipGarageShowcase-Dh2Hwq4o.css",
+        "minifiedKB": 5.12,
+        "gzipKB": 1.6
+      },
+      {
+        "file": "ExpeditionShipGarageQualitySelector-D-9aIr1D.css",
+        "minifiedKB": 5.14,
+        "gzipKB": 1.63
+      },
+      {
+        "file": "VisionQuestIslandRunAdapter-CvGaF705.css",
+        "minifiedKB": 5.64,
+        "gzipKB": 1.43
+      },
+      {
+        "file": "BossRhythmMinigame-C30AKzNL.css",
+        "minifiedKB": 5.65,
+        "gzipKB": 1.67
+      },
+      {
+        "file": "ExpeditionShipGarageEntrance-CiXScj1J.css",
+        "minifiedKB": 5.93,
+        "gzipKB": 1.81
+      },
+      {
+        "file": "ArenaPuzzleFrame-oHtjEBzL.css",
+        "minifiedKB": 8.05,
+        "gzipKB": 2.39
+      },
+      {
+        "file": "CompanionFeastMinigame-ArMUGh_x.css",
+        "minifiedKB": 8.27,
+        "gzipKB": 2.23
+      },
+      {
+        "file": "MomentumMatrixMinigame-C2to4aW0.css",
+        "minifiedKB": 14.13,
+        "gzipKB": 3.66
+      },
+      {
+        "file": "VaultIslandCollectionModal-nYKI9ilG.css",
+        "minifiedKB": 18.38,
+        "gzipKB": 4.23
+      },
+      {
+        "file": "IslandWorkshopMinigame-vQkVINCw.css",
+        "minifiedKB": 21.76,
+        "gzipKB": 4.87
+      },
+      {
+        "file": "FortuneEngineMinigame-DMv5i9iI.css",
+        "minifiedKB": 22.17,
+        "gzipKB": 5.34
+      },
+      {
+        "file": "SpaceExcavatorMinigame-CB9FLJJ2.css",
+        "minifiedKB": 30.46,
+        "gzipKB": 5.87
+      },
+      {
+        "file": "VaultCasinoLab-C8esJjg6.css",
+        "minifiedKB": 35.9,
+        "gzipKB": 8.51
+      },
+      {
+        "file": "SkyboundExpeditionMinigame-BgWZ0wfZ.css",
+        "minifiedKB": 39.32,
+        "gzipKB": 8.47
+      },
+      {
+        "file": "JourneyDiscArenaMinigame-CC4aLIVv.css",
+        "minifiedKB": 60.26,
+        "gzipKB": 11.22
+      },
+      {
+        "file": "index-bG7O5CZr.css",
+        "minifiedKB": 993.04,
+        "gzipKB": 162.97
+      },
+      {
+        "file": "main-BjzHwE_7.css",
+        "minifiedKB": 1705.94,
+        "gzipKB": 315.52
+      },
+      {
+        "file": "web-BBODHEcy.js",
+        "minifiedKB": 0.41,
+        "gzipKB": 0.27
+      },
+      {
+        "file": "web-BWNizDj6.js",
+        "minifiedKB": 0.87,
+        "gzipKB": 0.42
+      },
+      {
+        "file": "web-PkExD-H4.js",
+        "minifiedKB": 0.97,
+        "gzipKB": 0.49
+      },
+      {
+        "file": "RoundedBoxGeometry-Bbp8vKo7.js",
+        "minifiedKB": 1.71,
+        "gzipKB": 0.8
+      },
+      {
+        "file": "RoomEnvironment-BZSDJh8G.js",
+        "minifiedKB": 2.06,
+        "gzipKB": 0.88
+      },
+      {
+        "file": "ExpeditionShipGarageEntrance-B929jrg4.js",
+        "minifiedKB": 2.45,
+        "gzipKB": 0.87
+      },
+      {
+        "file": "MinigameFxOverlay-CPgYod4S.js",
+        "minifiedKB": 2.53,
+        "gzipKB": 1.23
+      },
+      {
+        "file": "MinigameHudStrip-FW46yghp.js",
+        "minifiedKB": 2.86,
+        "gzipKB": 1.21
+      },
+      {
+        "file": "ExpeditionShipGarageShowcase-CVEg5TOn.js",
+        "minifiedKB": 4.25,
+        "gzipKB": 1.53
+      },
+      {
+        "file": "LexiconRelayMinigame-Dxdm-PUv.js",
+        "minifiedKB": 4.64,
+        "gzipKB": 1.99
+      },
+      {
+        "file": "ConcordCategoriesMinigame-CfJ7KyLy.js",
+        "minifiedKB": 4.73,
+        "gzipKB": 1.91
+      },
+      {
+        "file": "TwinSigilsMinigame-BdY3YxvO.js",
+        "minifiedKB": 5.09,
+        "gzipKB": 2.06
+      },
+      {
+        "file": "SignalPathMinigame-BNHrN4oq.js",
+        "minifiedKB": 5.86,
+        "gzipKB": 2.45
+      },
+      {
+        "file": "BufferGeometryUtils-Cbv-85nE.js",
+        "minifiedKB": 6.27,
+        "gzipKB": 2.04
+      },
+      {
+        "file": "minigameCanvasKit-DoU2NL-J.js",
+        "minifiedKB": 6.87,
+        "gzipKB": 2.75
+      },
+      {
+        "file": "ShooterBlitz-Da3U5UUn.js",
+        "minifiedKB": 9.55,
+        "gzipKB": 3.23
+      },
+      {
+        "file": "MomentumMatrixMinigame-BJoGM4Ea.js",
+        "minifiedKB": 10.47,
+        "gzipKB": 3.81
+      },
+      {
+        "file": "VisionQuestIslandRunAdapter-DcxBEPG_.js",
+        "minifiedKB": 12.92,
+        "gzipKB": 4.23
+      },
+      {
+        "file": "ArenaPuzzleFrame-D1zv2juo.js",
+        "minifiedKB": 13.32,
+        "gzipKB": 5.17
+      },
+      {
+        "file": "index-BEPR6WX_.js",
+        "minifiedKB": 13.92,
+        "gzipKB": 5.32
+      },
+      {
+        "file": "CompanionFeastMinigame-BZsy4LjE.js",
+        "minifiedKB": 18.46,
+        "gzipKB": 6.06
+      },
+      {
+        "file": "SpaceExcavatorMinigame-YaY867NS.js",
+        "minifiedKB": 25.02,
+        "gzipKB": 7.4
+      },
+      {
+        "file": "BossRhythmMinigame-CkvG3A50.js",
+        "minifiedKB": 25.3,
+        "gzipKB": 8.6
+      },
+      {
+        "file": "VaultCasinoLab-wnmlpuR4.js",
+        "minifiedKB": 26.64,
+        "gzipKB": 9.12
+      },
+      {
+        "file": "IslandWorkshopMinigame-Ct29mvDK.js",
+        "minifiedKB": 36.94,
+        "gzipKB": 11.48
+      },
+      {
+        "file": "FortuneEngineMinigame-CwrvDYAq.js",
+        "minifiedKB": 41.12,
+        "gzipKB": 12.92
+      },
+      {
+        "file": "GLTFLoader-DionpPCD.js",
+        "minifiedKB": 63.58,
+        "gzipKB": 17.47
+      },
+      {
+        "file": "JourneyDiscArenaMinigame-DhAVJ_Ao.js",
+        "minifiedKB": 72.1,
+        "gzipKB": 21.71
+      },
+      {
+        "file": "ExpeditionShipGarageQualitySelector-DEpDIrVk.js",
+        "minifiedKB": 96.41,
+        "gzipKB": 31.19
+      },
+      {
+        "file": "CompassBookThreeShell-BqhQPT08.js",
+        "minifiedKB": 103.5,
+        "gzipKB": 31.98
+      },
+      {
+        "file": "SkyboundExpeditionMinigame-DaH-wtZC.js",
+        "minifiedKB": 103.89,
+        "gzipKB": 35.07
+      },
+      {
+        "file": "VaultIslandCollectionModal-Dzl2FqNE.js",
+        "minifiedKB": 216.7,
+        "gzipKB": 63.69
+      },
+      {
+        "file": "Island5ThreePilot-CipjpAZk.js",
+        "minifiedKB": 2551.98,
+        "gzipKB": 710.17
+      },
+      {
+        "file": "main-hff4P8fF.js",
+        "minifiedKB": 5723.88,
+        "gzipKB": 1549.52
+      }
+    ],
+    "totalMinifiedKB": 12223.4,
+    "totalGzipKB": 3110.02
+  },
+  "after": {
+    "source": "Final delivery production build /tmp/island003-delivery-build.log",
+    "files": [
+      {
+        "file": "MinigameHudStrip-CsGib9NE.css",
+        "minifiedKB": 2.18,
+        "gzipKB": 0.81
+      },
+      {
+        "file": "SignalPathMinigame-Cr2UpGX_.css",
+        "minifiedKB": 2.77,
+        "gzipKB": 1.04
+      },
+      {
+        "file": "ShooterBlitz-BLnpw5n8.css",
+        "minifiedKB": 2.84,
+        "gzipKB": 1.02
+      },
+      {
+        "file": "Island5ThreePilot-CJE36te5.css",
+        "minifiedKB": 2.97,
+        "gzipKB": 1.13
+      },
+      {
+        "file": "ConcordCategoriesMinigame-DbYSufwQ.css",
+        "minifiedKB": 3.04,
+        "gzipKB": 1.14
+      },
+      {
+        "file": "TwinSigilsMinigame-D0W2o_NY.css",
+        "minifiedKB": 3.44,
+        "gzipKB": 1.16
+      },
+      {
+        "file": "LexiconRelayMinigame-mHWLi74_.css",
+        "minifiedKB": 3.73,
+        "gzipKB": 1.26
+      },
+      {
+        "file": "ExpeditionShipGarageShowcase-Dh2Hwq4o.css",
+        "minifiedKB": 5.12,
+        "gzipKB": 1.6
+      },
+      {
+        "file": "ExpeditionShipGarageQualitySelector-D-9aIr1D.css",
+        "minifiedKB": 5.14,
+        "gzipKB": 1.63
+      },
+      {
+        "file": "VisionQuestIslandRunAdapter-CvGaF705.css",
+        "minifiedKB": 5.64,
+        "gzipKB": 1.43
+      },
+      {
+        "file": "BossRhythmMinigame-C30AKzNL.css",
+        "minifiedKB": 5.65,
+        "gzipKB": 1.67
+      },
+      {
+        "file": "ExpeditionShipGarageEntrance-CiXScj1J.css",
+        "minifiedKB": 5.93,
+        "gzipKB": 1.81
+      },
+      {
+        "file": "ArenaPuzzleFrame-oHtjEBzL.css",
+        "minifiedKB": 8.05,
+        "gzipKB": 2.39
+      },
+      {
+        "file": "CompanionFeastMinigame-ArMUGh_x.css",
+        "minifiedKB": 8.27,
+        "gzipKB": 2.23
+      },
+      {
+        "file": "MomentumMatrixMinigame-C2to4aW0.css",
+        "minifiedKB": 14.13,
+        "gzipKB": 3.66
+      },
+      {
+        "file": "VaultIslandCollectionModal-nYKI9ilG.css",
+        "minifiedKB": 18.38,
+        "gzipKB": 4.23
+      },
+      {
+        "file": "IslandWorkshopMinigame-vQkVINCw.css",
+        "minifiedKB": 21.76,
+        "gzipKB": 4.87
+      },
+      {
+        "file": "FortuneEngineMinigame-DMv5i9iI.css",
+        "minifiedKB": 22.17,
+        "gzipKB": 5.34
+      },
+      {
+        "file": "SpaceExcavatorMinigame-CB9FLJJ2.css",
+        "minifiedKB": 30.46,
+        "gzipKB": 5.87
+      },
+      {
+        "file": "VaultCasinoLab-C8esJjg6.css",
+        "minifiedKB": 35.9,
+        "gzipKB": 8.51
+      },
+      {
+        "file": "SkyboundExpeditionMinigame-BgWZ0wfZ.css",
+        "minifiedKB": 39.32,
+        "gzipKB": 8.47
+      },
+      {
+        "file": "JourneyDiscArenaMinigame-CC4aLIVv.css",
+        "minifiedKB": 60.26,
+        "gzipKB": 11.22
+      },
+      {
+        "file": "index-bG7O5CZr.css",
+        "minifiedKB": 993.04,
+        "gzipKB": 162.97
+      },
+      {
+        "file": "main-DScleBLf.css",
+        "minifiedKB": 1713.26,
+        "gzipKB": 317.26
+      },
+      {
+        "file": "web-BYkc05fx.js",
+        "minifiedKB": 0.41,
+        "gzipKB": 0.27
+      },
+      {
+        "file": "web-CeIVtjMh.js",
+        "minifiedKB": 0.87,
+        "gzipKB": 0.42
+      },
+      {
+        "file": "web-DqJZ-99Y.js",
+        "minifiedKB": 0.97,
+        "gzipKB": 0.49
+      },
+      {
+        "file": "RoundedBoxGeometry-DxFdyxUH.js",
+        "minifiedKB": 1.71,
+        "gzipKB": 0.81
+      },
+      {
+        "file": "RoomEnvironment-EimRUYkM.js",
+        "minifiedKB": 2.06,
+        "gzipKB": 0.88
+      },
+      {
+        "file": "ExpeditionShipGarageEntrance-BlO_1GDe.js",
+        "minifiedKB": 2.45,
+        "gzipKB": 0.87
+      },
+      {
+        "file": "MinigameFxOverlay-BKjYPKRj.js",
+        "minifiedKB": 2.53,
+        "gzipKB": 1.23
+      },
+      {
+        "file": "MinigameHudStrip-DzqwUp1q.js",
+        "minifiedKB": 2.86,
+        "gzipKB": 1.22
+      },
+      {
+        "file": "ExpeditionShipGarageShowcase-Bit1t_ZS.js",
+        "minifiedKB": 4.25,
+        "gzipKB": 1.53
+      },
+      {
+        "file": "LexiconRelayMinigame-CGdQpj4H.js",
+        "minifiedKB": 4.64,
+        "gzipKB": 1.99
+      },
+      {
+        "file": "ConcordCategoriesMinigame-QY4Y2YZ9.js",
+        "minifiedKB": 4.73,
+        "gzipKB": 1.91
+      },
+      {
+        "file": "TwinSigilsMinigame-B8r-YVqM.js",
+        "minifiedKB": 5.09,
+        "gzipKB": 2.06
+      },
+      {
+        "file": "SignalPathMinigame-HkLCqjZ9.js",
+        "minifiedKB": 5.86,
+        "gzipKB": 2.45
+      },
+      {
+        "file": "BufferGeometryUtils-CmD3WaFb.js",
+        "minifiedKB": 6.27,
+        "gzipKB": 2.04
+      },
+      {
+        "file": "minigameCanvasKit-DoU2NL-J.js",
+        "minifiedKB": 6.87,
+        "gzipKB": 2.75
+      },
+      {
+        "file": "ShooterBlitz-DtX1oCYg.js",
+        "minifiedKB": 9.55,
+        "gzipKB": 3.23
+      },
+      {
+        "file": "MomentumMatrixMinigame-DIRtgzpX.js",
+        "minifiedKB": 10.47,
+        "gzipKB": 3.82
+      },
+      {
+        "file": "VisionQuestIslandRunAdapter-CksnN_UY.js",
+        "minifiedKB": 12.92,
+        "gzipKB": 4.23
+      },
+      {
+        "file": "ArenaPuzzleFrame-fgFdaqsE.js",
+        "minifiedKB": 13.32,
+        "gzipKB": 5.17
+      },
+      {
+        "file": "index-BGL7RabY.js",
+        "minifiedKB": 13.92,
+        "gzipKB": 5.32
+      },
+      {
+        "file": "CompanionFeastMinigame-B_crWT5O.js",
+        "minifiedKB": 18.46,
+        "gzipKB": 6.06
+      },
+      {
+        "file": "SpaceExcavatorMinigame-BilzResv.js",
+        "minifiedKB": 25.02,
+        "gzipKB": 7.41
+      },
+      {
+        "file": "BossRhythmMinigame-C-LiY4_a.js",
+        "minifiedKB": 25.3,
+        "gzipKB": 8.6
+      },
+      {
+        "file": "VaultCasinoLab-sbgNI095.js",
+        "minifiedKB": 26.64,
+        "gzipKB": 9.12
+      },
+      {
+        "file": "IslandWorkshopMinigame-CxdJF2LP.js",
+        "minifiedKB": 36.94,
+        "gzipKB": 11.48
+      },
+      {
+        "file": "FortuneEngineMinigame-BG5_DGUN.js",
+        "minifiedKB": 41.12,
+        "gzipKB": 12.92
+      },
+      {
+        "file": "GLTFLoader-rmbYUmDD.js",
+        "minifiedKB": 63.58,
+        "gzipKB": 17.47
+      },
+      {
+        "file": "JourneyDiscArenaMinigame-BLSNHqZ_.js",
+        "minifiedKB": 72.1,
+        "gzipKB": 21.71
+      },
+      {
+        "file": "ExpeditionShipGarageQualitySelector-0ZkNyiJi.js",
+        "minifiedKB": 96.41,
+        "gzipKB": 31.2
+      },
+      {
+        "file": "CompassBookThreeShell-B1Cq9hzZ.js",
+        "minifiedKB": 103.5,
+        "gzipKB": 31.98
+      },
+      {
+        "file": "SkyboundExpeditionMinigame-DF06KI5v.js",
+        "minifiedKB": 103.89,
+        "gzipKB": 35.07
+      },
+      {
+        "file": "VaultIslandCollectionModal-BxpiVJMN.js",
+        "minifiedKB": 216.7,
+        "gzipKB": 63.69
+      },
+      {
+        "file": "Island5ThreePilot-voXEo9f7.js",
+        "minifiedKB": 2564.88,
+        "gzipKB": 715.42
+      },
+      {
+        "file": "main-DZV54FyH.js",
+        "minifiedKB": 5732.1,
+        "gzipKB": 1552.88
+      }
+    ],
+    "totalMinifiedKB": 12251.84,
+    "totalGzipKB": 3120.42
+  },
+  "deltaMinifiedKB": 28.44000000000051,
+  "deltaGzipKB": 10.400000000000091
+}

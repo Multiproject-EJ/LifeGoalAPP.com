@@ -1,0 +1,11 @@
+# Mission V2 implementation, September 13
+
+Implemented local candidate; see ../IMPLEMENTATION-STATUS.md for final evidence and open release gates.
+
+Moonwell uses a separate `cycle:3:moonwell` entry in the canonical signature JSON ledger. L3 enables a collision-safe tile; exact landing collects once and retains normal tile resolution. A mutex action commits heat before the visual sequence, without currency, rewards, or changes to Mystery/clear requirements. JSON round-trip, stale merge, old-save, concurrent activation and real roll integration checks pass. Authored cold/half/hot basin and corrected focus views pass independent bounded visual review.
+
+Frostwell now uses the production launch/completion component and an interruptible presentation-only timeline: 1.8-second spin, 4.2-second close cutter descent, 5.5-second startup after final breakthrough. The canonical action commits first. Closing cancels the UI timeline and settles from the canonical store; reopening cannot replay a spend. Reduced motion settles immediately. Repeated per-frame presentation updates previously cancelled descent; the model now retains the transition when target depth is unchanged.
+
+`frostwell-mission-v2-v001` contains actual desktop-hosted phone screenshots and a recording from the deterministic developer fixture using these production components. Launch, spin, descent, startup, completion, inspect and reduced-motion captures have no page errors. Completion reopened correctly; Escape closed the dialog. Independent still review found the launch, cutter framing, startup and finish readable. This is not an authenticated full gameplay run or physical-device benchmark.
+
+Rigid renderer batching excludes changing-material progress lamps and initially transparent surfaces. Frostwell batches remain under the mission root, preserving cinematic masking. Broader board batching excludes the Frostwell subtree. Thermal meshes remain independently controlled. The full 2,095-test suite and focused integration/geometry checks pass. Final independent state/readability review passes; performance and physical-device acceptance remain open. Frozen phase-accurate stills in frostwell-keyframes-v002 supersede drifting phase filenames in the live capture; restorations-focus-v004 closes the wildlife obstruction.

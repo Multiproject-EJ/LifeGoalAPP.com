@@ -1,0 +1,10 @@
+STATE status=active step=tier1-diagnostics pass=blockout loop=0/1 total=0/2
+next command: python3 forge/stage4_review/diagnose_render.py --reference docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png --render <shot> --spec .img2threejs/island-003-v2/keep-frozen-world/object-sculpt-spec.json --pass-id blockout --in-place
+pending mandatory steps:
+- tier1-diagnostics
+- multi-angle-review
+- pass-gate-check
+- ai-review-recorded
+- pipeline-sync
+- part-coverage
+- action-ready

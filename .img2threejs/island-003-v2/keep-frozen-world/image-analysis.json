@@ -1,0 +1,52 @@
+{
+  "scope": "Representative macro slice: Aurora Keep, continuous deep frozen ocean and terrain, economical planting. Other landmarks and Archive unchanged. No material/detail completion claimed.",
+  "referenceHierarchy": [
+    {
+      "path": "docs/gauntlets/island-003-v2/concepts/02-frostmoon-frozen-ocean-goal.png",
+      "sha256": "2b44fa140ff878f39a43d57c518d070401195bbdfa4d09048781da254ba0e206",
+      "authority": "user-approved V002 hierarchy and frozen-world direction"
+    },
+    {
+      "path": "docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-turnarounds/003-aurora-keep-turnaround-v001.png",
+      "sha256": "4d5e9ea7750ea13a223b7909960b4b707e41ec0451cf4e0e64dd49ece578d065",
+      "authority": "approved prior Keep identity; new hierarchy supersedes former height"
+    },
+    {
+      "path": "docs/gauntlets/island-003-v2/baseline-v002/overview.png",
+      "sha256": "1339673b7ecbddd638f566c9db705a5ca7f41988dc9332a0a2e690952598d4c8",
+      "authority": "actual locked camera/route before implementation"
+    }
+  ],
+  "observed": [
+    "Central Keep is much taller and more voluminous than outer landmarks, with a continuous high great hall, paired round front turrets and copper gables.",
+    "The concept has continuous white frozen sea and pale-blue thick ice strata; no exposed dark ocean or loose floating floes.",
+    "Snow-covered terrain connects every landmark and encloses a coherent ridge beyond route.",
+    "Snow fir banks use varied tall silhouettes with visible horizontal branch lobes.",
+    "Prior Keep identity includes two brass ridge rings, front gallery, lower side wings and rear service entrance."
+  ],
+  "inferred": [
+    "Exact V2 rear ice perimeter and subsurface depth are inferred from user many-metres-deep requirement; geometry shows 2.8 world-unit ice cliff atop frozen sea.",
+    "Only actual runtime 36-tile route and current camera are authoritative, not approximate concept route.",
+    "Keep central hall vertical construction grows through funded courses; footprint remains original.",
+    "Planting in representative slice uses shared low-poly branch modules; final juniper/rowan details follow macro approval."
+  ],
+  "suitability": {
+    "verdict": "conditional",
+    "reason": "Concept is sufficient for composition and ice hierarchy, prior five-view sheet for architecture. Exact scene pixel registration is not valid because concept route differs; actual fixed POV and silhouette review govern, with full-image Tier1 diagnostics retained but not misrepresented."
+  },
+  "projection": {
+    "required": false,
+    "reason": "Procedural 360-degree architecture, frozen terrain and vegetation. No photo-projection or baked shading; neutral clay macro geometry first."
+  },
+  "materialEvidence": {
+    "deferred": true,
+    "reason": "Representative naked macro only; inherited approved palette used in assembly. No new PBR claim or extracted maps. Material evidence and wiring are deferred until macro approval."
+  },
+  "familyBudget": {
+    "family": "continuous-tall-hall-and-solid-ice-v001",
+    "maxFamilies": 2,
+    "blockoutsPerFamily": 1,
+    "correctionsPerFamily": 1,
+    "maxIndependentReviews": 4
+  }
+}

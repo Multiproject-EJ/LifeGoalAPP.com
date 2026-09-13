@@ -1,0 +1,27 @@
+{
+  "action": "approve",
+  "scope": "Thermal/contact macro only; not full material/landmark finish",
+  "reviewer": "/root/build_modal_review",
+  "minimum": 0.85,
+  "nakedScores": [
+    0.87,
+    0.87,
+    0.86,
+    0.86,
+    0.85,
+    0.85,
+    0.86,
+    0.86,
+    0.86
+  ],
+  "thermalScores": {
+    "cold": 0.9,
+    "half": 0.85,
+    "hot": 0.86
+  },
+  "remaining": [
+    "Strengthen intermediate ice distinction during lookdev",
+    "Capture final pulled-back front POV",
+    "Full copper, snow, stone, window and basin material finish"
+  ]
+}

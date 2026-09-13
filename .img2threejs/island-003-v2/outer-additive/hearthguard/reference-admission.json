@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "multi-view",
+    "sourcePath": "/Users/ejmac/.codex/worktrees/7db2/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-003-frostmoon-upgrade/secondary-inferred/landmark-goals/003-hearthguard-yard-l3-goal-v002.png",
+    "width": 1642,
+    "height": 958,
+    "foregroundCoverage": 0.419,
+    "largestComponentFraction": 0.7361,
+    "pHash": 13730056910349597760,
+    "duplicateOfHash": null
+  }
+}

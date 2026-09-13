@@ -2005,18 +2005,18 @@ export const island5ThreePilotContractTests: TestCase[] = [
       runtime.animate(10.9);
       const midwayY = augerBit?.position.y ?? startY;
       assert(midwayY < startY && midwayY > 0.1 - 0.9 * 4.88, 'the auger should visibly descend between the committed start and target depths');
-      runtime.animate(11.8);
+      runtime.animate(14.2);
       assert(Math.abs((augerBit?.position.y ?? 0) - (0.1 - 0.9 * 4.88)) < 0.001, 'the eased drill presentation must land exactly on committed 450m progress');
       const preCommissionY = augerBit?.position.y ?? 0;
       runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
       assert(Boolean(operating?.visible), 'automatic commissioning must reveal the operating fishery immediately');
       assertEqual(augerBit?.position.y, preCommissionY, 'automatic commissioning must preserve the final eased drill descent instead of jumping the auger');
-      runtime.animate(12.7);
+      runtime.animate(16.3);
       assert(
         (augerBit?.position.y ?? 0) < preCommissionY && (augerBit?.position.y ?? 0) > 0.1 - 4.88,
         'the commissioned final spin must still animate visibly from 450m toward the water layer',
       );
-      runtime.animate(14.1);
+      runtime.animate(18.9);
       const automaticBreakthroughSystem = runtime.root.getObjectByName('FROSTWELL_BREAKTHROUGH_BURST_SYSTEM');
       assert(
         automaticBreakthroughSystem?.children.some((child) => ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity > 0),
@@ -2087,7 +2087,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
         'Island 003 visual QA must retain the real 3D hit-to-modal path',
       );
       assert(boardSource.includes('Deliberately keep the special Frostwell inspection camera active'), 'closing the tray must leave the rig available for unobstructed 3D inspection');
-      assert(boardSource.includes('frostwell-mission-modal__wheel-hub') && boardSource.includes('spinFrostwellDrillWheel'), 'the lower half-wheel hub must route through canonical wheel authority');
+      assert(boardSource.includes('IslandFrostwellMissionModal') && boardSource.includes('onSpin={() => { void handleSpinFrostwell(); }}') && boardSource.includes('await spinFrostwellDrillWheel({ session, client })'), 'the Frostwell wheel component must route through canonical wheel authority');
       assert(boardSource.includes("params.get('frostwellMissionState')") && boardSource.includes("frostwellMissionState === 'constructing'"), 'development proof mode must cover the construction POOF without creating gameplay state');
       assert(
         templateKitSource.includes("params.get('frostwellDepth')")
@@ -2447,14 +2447,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
-        'Islands 007, 012, 013, 014, 018, runtime 016 and non-Circuit-G Island 019 should use the proven per-material instanced route path',
+        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
+        'Islands 003, 007, 012, 013, 014, 018, runtime 016 and non-Circuit-G Island 019 should use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];'), 'Circuit G must substitute its own one-to-one canonical mesh route instead of layering a second board');
       assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
       assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
-      assert(pilotSource.includes('compactCollectibles: isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
+      assert(pilotSource.includes('compactCollectibles: isFrostmoonHaven || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
       assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
       assert(pilotSource.includes('canvas.dataset.island12ScenePerformanceInventory'), 'the full Island 012 scene must expose read-only renderer-family evidence');
       assert(rewardSource.includes('root.userData.sculptRuntime = {'), 'reward objects must keep explicit presentation-only runtime metadata');

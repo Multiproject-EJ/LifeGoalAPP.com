@@ -27,6 +27,8 @@ export interface FrostmoonSeafoodTradeRuntime {
   animate: (elapsed: number, blizzardStrength?: number) => void;
 }
 
+export const FROSTMOON_FROZEN_SEA_SURFACE_Y = -2.75;
+
 const FROSTMOON_FREIGHT_DOCK_ROTATION = -0.08;
 const FROSTMOON_FREIGHT_DEPARTURE_HEADING = 2.38;
 const FROSTMOON_FREIGHT_DEPARTURE_DELAY_SECONDS = 2.4;
@@ -1008,7 +1010,7 @@ export function createFrostmoonSeafoodTrade(
         );
         freight.cart.position.set(
           FROSTMOON_FREIGHT_CART_POSITION.x + departureX * departureTravel,
-          FROSTMOON_FREIGHT_CART_POSITION.y + Math.sin(departureTravel * Math.PI) * 0.08,
+          THREE.MathUtils.lerp(FROSTMOON_FREIGHT_CART_POSITION.y, FROSTMOON_FROZEN_SEA_SURFACE_Y, THREE.MathUtils.smoothstep(departureTravel, 0.04, 0.32)),
           FROSTMOON_FREIGHT_CART_POSITION.z
             + departureZ * departureTravel
             + Math.sin(departureTravel * Math.PI) * 1.45,
@@ -1038,7 +1040,8 @@ export function createFrostmoonSeafoodTrade(
         if (!active) return;
         const progress = THREE.MathUtils.smoothstep(windowSeconds / activeSeconds, 0, 1);
         rig.root.position.lerpVectors(rig.start, rig.end, progress);
-        rig.root.position.y += Math.sin(elapsed * 1.2 + index) * 0.035;
+        // The runners stay in contact with the continuous frozen ocean.
+        rig.root.position.y = FROSTMOON_FROZEN_SEA_SURFACE_Y - 0.005 * rig.root.scale.y;
         rig.root.rotation.y = Math.atan2(-(rig.end.z - rig.start.z), rig.end.x - rig.start.x);
         rig.sailPivot.rotation.z = Math.sin(elapsed * 0.82 + index * 1.7) * (0.035 + gust * 0.5);
       });
