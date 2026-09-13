@@ -39,7 +39,8 @@ export function createAssemblyVault(floorY:number) {
         const top=bottomAnchor+(ASSEMBLY_ROOF_HAUNCH_Y-bottomAnchor)*(j+1)/12;
         const doorway=portals.some(p=>Math.abs(Math.atan2(Math.sin(m-p),Math.cos(m-p)))<.055)
           && bottom>=ASSEMBLY_UPPER_CONCOURSE_Y-.12 && top<=ASSEMBLY_UPPER_CONCOURSE_Y+.97;
-        if(doorway)continue;
+        const marinaDoor = Math.abs(Math.atan2(Math.sin(m),Math.cos(m))) < .18 && top > -3.95 && bottom < -.65;
+        if(doorway || marinaDoor)continue;
         const p=wallPoint(a,bottom),q=wallPoint(b,bottom),r=wallPoint(b,top),t=wallPoint(a,top),shade=.25+.018*Math.sin(i*1.7+j*2.2);
         [p,q,r,p,r,t].forEach(v=>{wallPositions.push(v.x,v.y,v.z);wallColors.push(shade,shade*.89,shade*.70);});
       }

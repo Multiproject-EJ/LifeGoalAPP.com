@@ -14,7 +14,7 @@ import {
   getEffectiveCompletedStops,
   isIslandStopEffectivelyCompleted,
 } from './islandRunStopCompletion';
-import { isIslandRunFinishedForDepartureV2 } from './islandRunContractV2StopResolver';
+import { resolveIslandRunCompletion } from './islandRunCompletion';
 import { generateIslandStopPlan } from './islandRunStops';
 import { getStopTicketCost, getStopTicketsPaidForIsland, isStopTicketPaid, STOP_COUNT } from './islandRunStopTickets';
 import { areAllEggSlotsTerminalForIsland, getUnresolvedEggSlotsForIsland } from './islandRunEggMania';
@@ -159,11 +159,7 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
     islandEggSlotUsed: isEggSlotUsed(record),
   });
 
-  if (isIslandRunFinishedForDepartureV2({
-    stopBuildStateByIndex: record.stopBuildStateByIndex,
-    hatcheryEggResolved: isEggSlotUsed(record),
-    bossDefeated: record.bossTrialResolvedIslandNumber === islandNumber,
-  })) {
+  if (resolveIslandRunCompletion(record).complete) {
     return {
       action: 'claim_island_clear',
       urgency: 'critical',

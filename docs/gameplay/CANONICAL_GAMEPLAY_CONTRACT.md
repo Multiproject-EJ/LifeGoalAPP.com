@@ -535,7 +535,11 @@ An island is complete **only** when ALL of the following are satisfied:
 2. The Hatchery egg has been **collected or sold** (not just set — the egg must fully resolve).
 3. All 5 **buildings** are at **Level 3** (fully built via the Build Panel).
 
-When all three conditions are met, the Build Panel shows a **"🎉 Claim Island Clear!"** button. The player must tap it to trigger island travel (no auto-travel).
+When all requirements are met, show **Island 100% complete** and automatically open the island-clear celebration/departure sequence once active modals, rolls and mission presentations have settled (updated by user request, 2026-09-13). The player can then claim the displayed rewards and choose Travel; Keep playing and the Finish Island recovery CTA remain available. No automatic account/signup acceptance or bypass of guest/demo/Treasure Path gates is permitted.
+
+Construction and activities must be displayed separately: **Build Landmarks** counts funded Level-3 buildings, not completed activities. The current-island completion checklist uses `resolveIslandRunCompletion` for all required construction, activities, terminal Hatchery eggs and mandatory finales; incomplete progress must never round to 100%.
+
+Island 001 replaces the Boss slot with the completed Assembly: four outer L3 landmarks, their four activities, resolved eggs, ten Assembly charges and the signed peacekeeping mandate are required. Legacy pre-Assembly saves with the activated Concord retain their five-stop completion route. Island 020 additionally requires the Iron Skiff extraction after its ordinary Level-3 clear. Other signature missions remain optional to ordinary departure.
 
 Additional rules:
 - Island progression is **not** time-based.

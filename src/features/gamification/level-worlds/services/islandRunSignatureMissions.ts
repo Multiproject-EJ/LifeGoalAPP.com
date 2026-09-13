@@ -279,6 +279,8 @@ export interface FirstLightAssemblyCraterProgress {
   startedAtMs: number | null;
   completedAtMs: number | null;
   updatedAtMs: number;
+  /** Narrative appointment; does not award currency or replace stop completion. */
+  mandateSignedAtMs?: number | null;
 }
 
 export interface GreatHoneyfallProgress {
@@ -508,6 +510,7 @@ export function sanitizeIslandRunSignatureMissionProgress(
       const completedAtRaw = record.completedAtMs ?? record.completed_at_ms;
       const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
       const lastSectorRaw = record.lastDetonatedSector ?? record.last_detonated_sector;
+      const mandateRaw = record.mandateSignedAtMs ?? record.mandate_signed_at_ms;
       result[key] = {
         missionId: 'first-light-assembly-crater',
         version: 2,
@@ -516,6 +519,8 @@ export function sanitizeIslandRunSignatureMissionProgress(
         lastDetonatedSector: typeof lastSectorRaw === 'number' && Number.isFinite(lastSectorRaw)
           ? Math.max(0, Math.min(FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET - 1, Math.floor(lastSectorRaw)))
           : null,
+        mandateSignedAtMs: chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET && typeof mandateRaw === 'number' && Number.isFinite(mandateRaw) && mandateRaw >= 0
+          ? mandateRaw : null,
         startedAtMs: typeof startedAtRaw === 'number' && Number.isFinite(startedAtRaw)
           ? Math.max(0, startedAtRaw)
           : claimedDynamiteTileIndices.length > 0 ? 0 : null,
@@ -1650,6 +1655,10 @@ export function mergeIslandRunSignatureMissionProgress(
         claimedDynamiteTileIndices,
         chargesDetonated,
         lastDetonatedSector: latest.lastDetonatedSector,
+        mandateSignedAtMs: chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+          ? a.mandateSignedAtMs == null ? b.mandateSignedAtMs ?? null
+            : b.mandateSignedAtMs == null ? a.mandateSignedAtMs : Math.min(a.mandateSignedAtMs, b.mandateSignedAtMs)
+          : null,
         startedAtMs: a.startedAtMs === null
           ? b.startedAtMs
           : b.startedAtMs === null ? a.startedAtMs : Math.min(a.startedAtMs, b.startedAtMs),

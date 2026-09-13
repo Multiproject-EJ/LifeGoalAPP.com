@@ -52,6 +52,7 @@ import {
   activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
   detonateFirstLightAssemblyCharge,
+  signFirstLightAssemblyMandate,
   fundRootheartPowerworksStage,
   releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
@@ -371,6 +372,30 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
+    name: 'Assembly mandate requires construction, persists once and grants no economy reward',
+    run: async () => {
+      await seedFirstLightAssembly();
+      assertEqual((await signFirstLightAssemblyMandate({session:makeSession(),client:null})).status,'assembly_incomplete','no early appointment');
+      await seedFirstLightAssembly({claimedTileIndices:[...FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES],chargesDetonated:10,completedAtMs:1});
+      const before=readIslandRunGameStateRecord(makeSession());
+      const results=await Promise.all([signFirstLightAssemblyMandate({session:makeSession(),client:null}),signFirstLightAssemblyMandate({session:makeSession(),client:null})]);
+      assertEqual(results.filter(r=>r.status==='ok').length,1,'one canonical commit');
+      assertEqual(results.filter(r=>r.status==='already_signed').length,1,'duplicate is idempotent');
+      const after=readIslandRunGameStateRecord(makeSession());
+      const progress=resolveFirstLightAssemblyCraterProgress({ledger:after.signatureMissionProgressByIsland,cycleIndex:0});
+      assert(progress.mandateSignedAtMs!=null,'signature survives storage read');
+      assertEqual(after.dicePool,before.dicePool,'no dice payout');
+      assertEqual(after.essence,before.essence,'no essence payout');
+      const unsigned={...progress,mandateSignedAtMs:null,updatedAtMs:progress.updatedAtMs+1};
+      const key=getIslandRunSignatureMissionKey(0,1);
+      const merged=mergeIslandRunSignatureMissionProgress({[key]:progress},{[key]:unsigned});
+      assertEqual(resolveFirstLightAssemblyCraterProgress({ledger:merged,cycleIndex:0}).mandateSignedAtMs,progress.mandateSignedAtMs,'stale unsigned device cannot erase signature');
+      assertEqual(resolveFirstLightAssemblyCraterProgress({ledger:merged,cycleIndex:1}).mandateSignedAtMs ?? null,null,'new cycle has its own appointment');
+      await seedFrostwell();
+      assertEqual((await signFirstLightAssemblyMandate({session:makeSession(),client:null})).status,'wrong_island','not signable elsewhere');
+    },
+  },
+  {
     name: 'Celestial Great Re-Docking advances once per roll and locks platforms at 5, 10, 15, and 20',
     run: () => {
       let ledger = {};
@@ -575,7 +600,8 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(boardSource.includes("setQueuedSignatureMissionPresentation('first_light_assembly')"), 'a Concord pickup queues a simultaneous Assembly pickup instead of dropping its presentation');
       assert(boardSource.includes('if (!queuedSignatureMissionPresentation || doesModalOwnAttention) return undefined;'), 'queued mission presentation waits for the current popup to close');
       assert(boardSource.includes('openQueuedSignatureMissionPresentation(mission)'), 'closing the first popup releases the queued mission panel');
-      assert(boardSource.includes("showIslandClearCelebrationFromAnywhere('island_001_assembly_and_landmarks_complete')"), 'completed mission and landmarks auto-open island clear');
+      assert(boardSource.includes("showIslandClearCelebrationFromAnywhere('island_100_percent_complete')")
+        && boardSource.includes('shouldAutoPresentIslandCompletion'), 'genuinely completed islands auto-open the shared clear/travel sequence');
       assert(boardSource.includes('resolveIslandMissionTrackerPresentation'), 'board delegates phone progress to the canonical read model');
       assert(!boardSource.includes('standardMissionCompletionPercent'), 'board no longer owns generic phone progress arithmetic');
       assert(trackerSource.includes("objective('Use Dynamite'"), 'phone read model reports the short dynamite objective');

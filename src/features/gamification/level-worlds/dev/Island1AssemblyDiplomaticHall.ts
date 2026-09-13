@@ -4,6 +4,18 @@ import { ISLAND_5_LANDMARKS } from './island5ThreePilotContract';
 import type { Island1WorldMaterials } from './Island1ThreeWorld';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 
+/** The crowd and furniture share these exact sockets; delegates never occupy aisles. */
+export function getAssemblyDelegateSeatSockets(floorY: number) {
+  const counts = [18, 24, 30, 36, 42, 48, 54], radii = [1.56, 2.35, 3.18, 4.04, 4.9, 5.73, 6.55];
+  const entrances = ISLAND_5_LANDMARKS.filter(d => d.id !== 'boss').map(d => Math.atan2(d.position[0], d.position[2]));
+  return counts.flatMap((count, row) => Array.from({ length: count }, (_, n) => {
+    const angle = -2.22 + 4.44 * (n + .5) / count, radius = radii[row];
+    const arrivalAisle = row === 6 && entrances.some(entry => Math.abs(Math.atan2(Math.sin(angle-entry), Math.cos(angle-entry))) < .1);
+    const aisle = (Math.abs(Math.sin(angle)*radius) < .70+row*.025 && Math.cos(angle)>0) || arrivalAisle || n===Math.floor(count/3) || n===Math.floor(count*2/3);
+    return aisle ? null : { row, angle, radius, floorY: floorY + .28 + row*.4, position: new THREE.Vector3(Math.sin(angle)*radius, floorY+.28+row*.4, Math.cos(angle)*radius) };
+  }).filter((seat): seat is NonNullable<typeof seat> => seat !== null));
+}
+
 /** Presentation-only furnishings and construction crew; no mission state ownership. */
 export function createAssemblyDiplomaticHall(materials: Island1WorldMaterials, floorY: number) {
   const root = new THREE.Group();

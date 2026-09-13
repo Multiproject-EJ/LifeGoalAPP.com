@@ -533,12 +533,14 @@ import {
   claimSunkenSandsFirstTreasure,
   blastCactusCanyonSpiralSection,
   detonateFirstLightAssemblyCharge,
+  signFirstLightAssemblyMandate,
   fundRootheartPowerworksStage,
   releaseFishermansVillageCatch,
   reelFishermansVillageCatch,
   spinFrostwellDrillWheel,
   startLavaLabyrinthEscapeMission,
 } from '../services/islandRunSignatureMissionAction';
+import { showAssemblyMandate } from '../dev/Island1AssemblyMandate';
 import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   CELESTIAL_REDOCKING_PLATFORM_COUNT,
@@ -580,6 +582,7 @@ import {
   type IslandMissionBriefingTrigger,
 } from '../services/islandRunMissionBriefing';
 import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
+import { resolveIslandRunCompletion, shouldAutoPresentIslandCompletion } from '../services/islandRunCompletion';
 import { resetCurrentIslandMissionForDev } from '../services/islandRunMissionResetAction';
 import { resolveIslandRunLivingTicketStatus } from '../services/islandRunLivingTicket';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
@@ -643,8 +646,6 @@ import {
 import {
   resolveIslandRunContractV2Stops,
   resolveIslandRunFullClearForProgression,
-  isIslandRunFullyClearedV2,
-  isIslandRunFinishedForDepartureV2,
 } from '../services/islandRunContractV2StopResolver';
 import { resolveIslandRunBestNextAction } from '../services/islandRunBestNextActionAdvisor';
 import {
@@ -2121,6 +2122,24 @@ export function IslandRunBoardPrototype({
   // each shim commits through the store, and C1-specific paths (roll,
   // reward-bar, minigame) use dedicated action functions.
   const { state: __storeState } = useIslandRunState(session, client);
+  const assemblyMandateRef = useRef<ReturnType<typeof showAssemblyMandate> | null>(null);
+  const [assemblyMandateOpen, setAssemblyMandateOpen] = useState(false);
+  useEffect(() => () => assemblyMandateRef.current?.close(), [__storeState.currentIslandNumber, __storeState.cycleIndex, session.user.id]);
+  const openAssemblyMandate = useCallback(() => {
+    if (assemblyMandateRef.current) return;
+    setAssemblyMandateOpen(true);
+    const progress = resolveFirstLightAssemblyCraterProgress({
+      ledger: __storeState.signatureMissionProgressByIsland, cycleIndex: __storeState.cycleIndex, islandNumber: 1,
+    });
+    assemblyMandateRef.current = showAssemblyMandate({
+      signed: progress.mandateSignedAtMs != null,
+      onSign: async () => {
+        const result = await signFirstLightAssemblyMandate({ session, client });
+        if (result.status !== 'ok' && result.status !== 'already_signed') throw new Error(result.status);
+      },
+      onClose: () => { assemblyMandateRef.current = null; setAssemblyMandateOpen(false); },
+    });
+  }, [__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex, session, client]);
   const dicePool = __storeState.dicePool;
   const tokenIndex = __storeState.tokenIndex;
   const {
@@ -3411,10 +3430,6 @@ export function IslandRunBoardPrototype({
   const firstLightAssemblyNextBatch = getFirstLightAssemblyNextBatch(firstLightAssemblyProgress.chargesDetonated);
   const firstLightAssemblyAvailableDynamite = getFirstLightAssemblyAvailableDynamite(firstLightAssemblyProgress);
   const firstLightAssemblyCompleted = firstLightAssemblyProgress.completedAtMs !== null;
-  const firstLightOuterLandmarksAtMax = runtimeState.stopBuildStateByIndex
-    .slice(0, 4)
-    .filter((buildState) => Boolean(buildState && buildState.buildLevel >= MAX_BUILD_LEVEL))
-    .length;
   const stagedRestorationDescriptor = useMemo(
     () => getStagedRestorationMissionDescriptor(islandNumber),
     [islandNumber],
@@ -3451,12 +3466,12 @@ export function IslandRunBoardPrototype({
     : null;
   const currentMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
     islandNumber,
-    state: runtimeState,
-  }), [islandNumber, runtimeState]);
+    state: __storeState,
+  }), [islandNumber, __storeState]);
   const displayedMissionTracker = useMemo(() => resolveIslandMissionTrackerPresentation({
     islandNumber: activeMissionBriefing?.islandNumber ?? islandNumber,
-    state: runtimeState,
-  }), [activeMissionBriefing?.islandNumber, islandNumber, runtimeState]);
+    state: __storeState,
+  }), [activeMissionBriefing?.islandNumber, islandNumber, __storeState]);
   const missionPhoneObjectiveActions = useMemo<readonly MissionObjectiveAction[]>(() => (
     currentMissionTracker.objectives.map((objective, objectiveIndex) => {
       if (objective.label.toLowerCase().includes('build landmarks')) return 'launch';
@@ -7114,30 +7129,19 @@ export function IslandRunBoardPrototype({
   const contractV2BuildPanelStopState = showContractV2BuildPanel
     ? (islandProgressReadState.stopStatesByIndex[contractV2OpenedStopIndex] ?? null)
     : null;
-  const isIslandOneConcordActive = islandNumber !== 1 || getIslandTechnologyAccess(runtimeState, 'the-concord').active;
+  const canonicalIslandCompletion = resolveIslandRunCompletion(__storeState);
   const legacyIsCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
-  const isIslandOneFinaleSatisfied = islandNumber !== 1
-    || isIslandOneConcordActive
-    || firstLightAssemblyCompleted;
   const isCurrentIslandFullyCleared = (ISLAND_RUN_CONTRACT_V2_ENABLED
-    ? isIslandRunFullyClearedV2({
-        stopStatesByIndex: islandProgressReadState.stopStatesByIndex,
-        stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
-        hatcheryEggResolved: islandEggSlotUsed,
-      })
-    : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
+    ? canonicalIslandCompletion.baseComplete
+    : legacyIsCurrentIslandFullyCleared);
   const isBaseIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
-    ? isIslandRunFinishedForDepartureV2({
-        stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
-        hatcheryEggResolved: islandEggSlotUsed,
-        bossDefeated: islandProgressReadState.bossTrialResolvedIslandNumber === islandNumber,
-      })
-    : legacyIsCurrentIslandFullyCleared) && isIslandOneFinaleSatisfied;
+    ? canonicalIslandCompletion.complete
+    : legacyIsCurrentIslandFullyCleared);
   const isLavaLabyrinthFinaleComplete = islandNumber !== 20
     || isLavaLabyrinthEscapeMissionComplete(stagedRestorationProgress);
   const isCurrentIslandFinishedForDeparture = isBaseIslandFinishedForDeparture
     && isLavaLabyrinthFinaleComplete;
-  const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
+  const islandClearVisitKey = canonicalIslandCompletion.visitKey;
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
       if (islandNumber === 1 && stopIndex === 4) return 0;
@@ -7325,6 +7329,11 @@ export function IslandRunBoardPrototype({
   );
 
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
+    const latestCompletion = resolveIslandRunCompletion(getIslandRunStateSnapshot(session));
+    if (source !== 'dev_clear_island' && (!latestCompletion.complete || latestCompletion.visitKey !== islandClearVisitKey)) {
+      setLandingText(`Island ${latestCompletion.percent}% complete — ${latestCompletion.nextRequirement?.label ?? 'finish the remaining requirements'}.`);
+      return;
+    }
     const latestAssembly = resolveFirstLightAssemblyCraterProgress({
       ledger: runtimeStateRef.current.signatureMissionProgressByIsland,
       cycleIndex: runtimeStateRef.current.cycleIndex,
@@ -7379,7 +7388,7 @@ export function IslandRunBoardPrototype({
       });
     }
     setShowIslandClearCelebration(true);
-  }, [islandClearStats, islandClearVisitKey, islandNumber, session.user.id, showIslandClearCelebration]);
+  }, [islandClearStats, islandClearVisitKey, islandNumber, session, showIslandClearCelebration]);
 
   useEffect(() => {
     if (
@@ -11180,7 +11189,7 @@ export function IslandRunBoardPrototype({
     setLandingText(message);
     setMarketInteracted(true);
   };
-  const performIslandTravel = async (nextIsland: number, options?: { startTimer?: boolean }) => {
+  const performIslandTravel = async (nextIsland: number, options?: { startTimer?: boolean; completedVisitKey?: string }) => {
     if (isTravellingRef.current) return;
     if (isAnimatingRollRef.current) {
       // P1-21: avoid resetting token/island state while a hop animation is
@@ -11209,6 +11218,7 @@ export function IslandRunBoardPrototype({
         getIslandDurationMs,
         islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
         triggerSource: 'perform_island_travel',
+        completedVisitKey: options?.completedVisitKey,
       }),
     );
 
@@ -11391,6 +11401,13 @@ export function IslandRunBoardPrototype({
   const handleTravelFromCelebration = async () => {
     const stats = islandClearStats;
     if (!stats) return;
+    if (isIslandClearCelebrationDeparting || isTravellingRef.current) return;
+    const completion = resolveIslandRunCompletion(getIslandRunStateSnapshot(session));
+    if (!completion.complete || completion.visitKey !== islandClearVisitKey) {
+      setShowIslandClearCelebration(false);
+      setLandingText(`Island ${completion.percent}% complete — ${completion.nextRequirement?.label ?? 'return to the current island'}.`);
+      return;
+    }
     if (isAnimatingRollRef.current) {
       setLandingText('Please wait for the current roll animation to finish before traveling.');
       return;
@@ -11452,12 +11469,14 @@ export function IslandRunBoardPrototype({
       setShowTravelOverlay(true);
       window.setTimeout(() => {
         setShowTravelOverlay(false);
-        void performIslandTravel(nextIsland, { startTimer: true }).then(() => {
+        void performIslandTravel(nextIsland, { startTimer: true, completedVisitKey: completion.visitKey }).then(() => {
           const resolvedNextIsland = nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
           setActiveStoryEpisode({
             kind: 'island_travel_arrival',
             manifestPath: resolveIslandTravelArrivalManifestPath(resolvedNextIsland),
           });
+        }).catch(() => {
+          setLandingText('Departure could not finish. Your progress is safe — tap Finish Island to try again.');
         });
       }, 1400);
     }, 760);
@@ -11786,22 +11805,11 @@ export function IslandRunBoardPrototype({
         triggerIslandRunHaptic('boss_island_clear');
 
         // Check if island is NOW fully cleared (boss was the last objective, builds may already be done).
-        const nowFullyCleared = isIslandRunFullyClearedV2({
-          stopStatesByIndex: nextStopStatesByIndex,
-          stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
-          hatcheryEggResolved: islandEggSlotUsed,
-        }) && (
-          islandNumber !== 1
-          || getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active
-          || resolveFirstLightAssemblyCraterProgress({
-            ledger: runtimeStateRef.current.signatureMissionProgressByIsland,
-            cycleIndex: runtimeStateRef.current.cycleIndex,
-            islandNumber: 1,
-          }).completedAtMs !== null
-        );
+        const latestCompletion = resolveIslandRunCompletion(getIslandRunStateSnapshot(session));
+        const nowFullyCleared = latestCompletion.complete;
 
         if (!nowFullyCleared) {
-          setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
+          setLandingText(`👾 Boss defeated! Island ${latestCompletion.percent}% — ${latestCompletion.nextRequirement?.label ?? 'finish the remaining requirements'}.`);
           setActiveStopId(null); // dismiss UI modal; no gameplay write
         } else {
           setActiveStopId(null); // dismiss boss modal UI before celebration overlay opens
@@ -13424,6 +13432,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
+    assemblyMandateOpen ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
       activeLaunchedMinigameId ||
@@ -13552,23 +13561,23 @@ export function IslandRunBoardPrototype({
     queuedSignatureMissionPresentation,
   ]);
   useEffect(() => {
-    if (
-      islandNumber !== 1
-      || !firstLightAssemblyCompleted
-      || firstLightOuterLandmarksAtMax < 4
-      || !isCurrentIslandFullyCleared
-      || doesModalOwnAttention
-      || islandClearCelebrationShownForVisitRef.current === islandClearVisitKey
-    ) return undefined;
+    if (!shouldAutoPresentIslandCompletion({
+      complete: isCurrentIslandFinishedForDeparture,
+      visitKey: islandClearVisitKey,
+      shownVisitKey: islandClearCelebrationShownForVisitRef.current,
+      busy: doesModalOwnAttention || isRolling || pendingHopSequence !== null || isRewardBarClaiming
+        || Boolean(queuedSignatureMissionPresentation) || Boolean(pendingMissionBriefing) || Boolean(activeStoryEpisode),
+      isPreview: isIslandVisualPreview,
+    })) return undefined;
     const timer = window.setTimeout(() => {
-      showIslandClearCelebrationFromAnywhere('island_001_assembly_and_landmarks_complete');
+      showIslandClearCelebrationFromAnywhere('island_100_percent_complete');
     }, 520);
     return () => window.clearTimeout(timer);
   }, [
     doesModalOwnAttention,
-    firstLightAssemblyCompleted,
-    firstLightOuterLandmarksAtMax,
-    isCurrentIslandFullyCleared,
+    isCurrentIslandFinishedForDeparture,
+    isRolling, pendingHopSequence, isRewardBarClaiming, isIslandVisualPreview,
+    queuedSignatureMissionPresentation, pendingMissionBriefing, activeStoryEpisode,
     islandClearVisitKey,
     islandNumber,
     showIslandClearCelebrationFromAnywhere,
@@ -15814,6 +15823,7 @@ export function IslandRunBoardPrototype({
                 } : undefined}
                 island20SkiffNavigation={lavaSkiffNavigation}
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
+                onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 fishermansFishingPresentation={{
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === 16
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
@@ -19755,12 +19765,15 @@ export function IslandRunBoardPrototype({
           ? displayedMissionTracker.briefing
           : null}
         progress={displayedMissionTracker.objectives}
+        islandCompletion={displayedMissionTracker.islandCompletion}
         overallProgressPercent={displayedMissionTracker.overallProgressPercent}
         objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
-        primaryActionLabel={showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.label : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+        primaryActionLabel={showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
+          ? firstLightAssemblyProgress.mandateSignedAtMs != null ? 'View sealed mandate' : 'Sign the peacekeeping mandate'
+          : showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.label : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
             ? 'Solve the Level-3 Labyrinth first'
             : stagedRestorationDescriptor.islandNumber === 20
@@ -19812,7 +19825,9 @@ export function IslandRunBoardPrototype({
         milestoneCount={showMissionPhoneBriefing && stagedRestorationDescriptor
           ? stagedRestorationDescriptor.stageCount
           : showMissionPhoneBriefing && islandNumber === 14 ? GREAT_HONEYFALL_MAX_STAGE : 0}
-        onPrimaryAction={showMissionPhoneBriefing && stagedRestorationDescriptor
+        onPrimaryAction={showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
+          ? () => { setShowMissionPhoneBriefing(false); openAssemblyMandate(); }
+          : showMissionPhoneBriefing && stagedRestorationDescriptor
           ? () => void handleActivateStagedRestoration()
           : showMissionPhoneBriefing && islandNumber === 14
           ? () => void handleActivateGreatHoneyfall()
@@ -20491,6 +20506,7 @@ export function IslandRunBoardPrototype({
               <button type="button" className="island-stop-modal__btn" onClick={closeFirstLightAssemblyCrater}>
                 {firstLightAssemblyCompleted ? 'View the chamber' : 'Keep exploring'}
               </button>
+              {firstLightAssemblyCompleted ? <button type="button" className="island-stop-modal__btn" onClick={() => { closeFirstLightAssemblyCrater(); openAssemblyMandate(); }}>Peacekeeping mandate</button> : null}
             </div>
           </section>
         </div>

@@ -165,6 +165,7 @@ import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.tes
 import { islandRunSignatureMissionTests } from './islandRunSignatureMissions.test';
 import { islandRunCompassBookReceiptTests } from './islandRunCompassBookReceipt.test';
 import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
+import { islandRunCompletionTests } from './islandRunCompletion.test';
 import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
 import { islandRunConcordHubEntryTests } from './islandRunConcordHubEntry.test';
 import { islandRunConcordRollProtectionTests } from './islandRunConcordRollProtection.test';
@@ -407,6 +408,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunSignatureMissions', tests: islandRunSignatureMissionTests },
   { label: 'islandRunCompassBookReceipt', tests: islandRunCompassBookReceiptTests },
   { label: 'islandRunMissionTracker', tests: islandRunMissionTrackerTests },
+  { label: 'islandRunCompletion', tests: islandRunCompletionTests },
   { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
   { label: 'islandRunConcordHubEntry', tests: islandRunConcordHubEntryTests },
   { label: 'islandRunConcordRollProtection', tests: islandRunConcordRollProtectionTests },

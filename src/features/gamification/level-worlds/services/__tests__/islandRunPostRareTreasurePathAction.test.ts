@@ -676,7 +676,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         'Island clear CTA should route eligible milestone islands through Treasure Path before travel',
       );
       assert(
-        /performIslandTravel\(nextIsland, \{ startTimer: true \}\)/.test(boardSource),
+        /performIslandTravel\(nextIsland, \{ startTimer: true, completedVisitKey: completion.visitKey \}\)/.test(boardSource),
         'Island clear CTA should preserve normal travel for non-milestone islands',
       );
       assert(

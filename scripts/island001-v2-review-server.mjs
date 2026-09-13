@@ -9,10 +9,12 @@ const server = await createServer({ server: { host: '127.0.0.1', port: 53282, st
       const chunks=[]; let bytes=0;
       for await (const chunk of req) { bytes+=chunk.length; if(bytes>20000000) throw new Error('Capture too large'); chunks.push(chunk); }
       const { name, png, metadata } = JSON.parse(Buffer.concat(chunks).toString());
-      if (!/^[a-z0-9-]+\.png$/.test(name) || !png.startsWith('data:image/png;base64,')) throw new Error('Invalid capture');
+      const image = /^[a-z0-9-]+\.png$/.test(name) && png.startsWith('data:image/png;base64,');
+      const video = /^[a-z0-9-]+\.webm$/.test(name) && /^data:video\/webm(?:;[^,]*)?;base64,/.test(png);
+      if (!image && !video) throw new Error('Invalid capture');
       await mkdir(output,{recursive:true});
       await writeFile(resolve(output,name),Buffer.from(png.split(',')[1],'base64'),{flag:'wx'});
-      await writeFile(resolve(output,name.replace('.png','.json')),JSON.stringify(metadata,null,2),{flag:'wx'});
+      await writeFile(resolve(output,name.replace(/\.(png|webm)$/,'.json')),JSON.stringify(metadata,null,2),{flag:'wx'});
       res.end(JSON.stringify({saved:name}));
     } catch(error) {res.statusCode=400;res.end(String(error));}
   });

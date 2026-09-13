@@ -6,6 +6,11 @@ import { createAssemblyHeroCoast } from './Island1AssemblyCoast';
 import { createAssemblyLandmarkAccess } from './Island1AssemblyAccess';
 import { createAssemblyVault } from './Island1AssemblyVault';
 import { createAssemblyDiplomaticHall } from './Island1AssemblyDiplomaticHall';
+import {
+  createIsland1AssemblyMarina,
+  ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS,
+  type Island1MarinaPresentation,
+} from './Island1AssemblyMarina';
 import { FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET } from '../services/islandRunSignatureMissions';
 import type { Island3DQuality, Island5LandmarkDefinition } from './island5ThreePilotContract';
 import {
@@ -39,8 +44,12 @@ export interface Island1AssemblyCraterRuntime {
   animate: (elapsed: number) => void;
   updateAssemblyCrater: (presentation: Island1AssemblyCraterPresentation, immediate?: boolean) => void;
   setInspectionCutaway: (active: boolean) => void;
+  setMarinaProgress: (progress: number) => void;
+  replayMarina: () => void;
+  endMarinaMeeting: () => void;
   getBlastPresentation: () => Island1AssemblyBlastPresentation;
   getConstructionPresentation: () => Island1AssemblyConstructionPresentation;
+  getMarinaPresentation: () => Island1MarinaPresentation;
 }
 
 export interface Island1AssemblyBlastPresentation {
@@ -479,6 +488,8 @@ export function createIsland1AssemblyCraterRuntime(
   root.add(diplomaticHall.root);
   const landmarkAccess = createAssemblyLandmarkAccess(materials, chamberFloorY);
   root.add(landmarkAccess.root);
+  const marina = createIsland1AssemblyMarina(quality, materials);
+  root.add(marina.root);
 
   const aisleGeometry = new THREE.BoxGeometry(0.15, 0.055, aisleLength);
   const radialAisles = new THREE.InstancedMesh(
@@ -671,6 +682,10 @@ export function createIsland1AssemblyCraterRuntime(
   let assemblyBuildQueued = false;
   let assemblyBuildProgress = 0;
   let lastAppliedAssemblyBuildProgress = Number.NEGATIVE_INFINITY;
+  let marinaStartedAt = Number.NEGATIVE_INFINITY;
+  let marinaBuildQueued = false;
+  let marinaProgress = 0;
+  let marinaManualProgress: number | null = null;
   let excavationVisualProgress = 0;
   let excavationAnimationFromProgress = 0;
   let excavationAnimationToProgress = 0;
@@ -886,6 +901,12 @@ export function createIsland1AssemblyCraterRuntime(
       assemblyBuildStartedAt = blastQueued
         ? Number.NEGATIVE_INFINITY
         : Math.max(lastAnimationElapsed, blastStartedAt + ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS);
+      marinaProgress = 0;
+      marinaManualProgress = null;
+      marinaBuildQueued = blastQueued;
+      marinaStartedAt = blastQueued
+        ? Number.NEGATIVE_INFINITY
+        : assemblyBuildStartedAt + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS;
     }
     if (immediate) {
       [blastRubble, blastDust, blastSparks, blastShockwave, pressureWave, blastFlash, blastCore, waterImpacts, ...internalBlastFlashes]
@@ -896,6 +917,10 @@ export function createIsland1AssemblyCraterRuntime(
       assemblyBuildQueued = false;
       assemblyBuildStartedAt = Number.NEGATIVE_INFINITY;
       assemblyBuildProgress = currentPresentation.completed ? 1 : 0;
+      marinaBuildQueued = false;
+      marinaStartedAt = Number.NEGATIVE_INFINITY;
+      marinaManualProgress = currentPresentation.completed ? 1 : 0;
+      marinaProgress = currentPresentation.completed ? 1 : 0;
       excavationVisualProgress = nextExcavationTarget;
       excavationAnimationFromProgress = nextExcavationTarget;
       excavationAnimationToProgress = nextExcavationTarget;
@@ -916,12 +941,19 @@ export function createIsland1AssemblyCraterRuntime(
       assemblyBuildQueued = false;
       assemblyBuildStartedAt = Number.NEGATIVE_INFINITY;
       assemblyBuildProgress = 0;
+      marinaBuildQueued = false;
+      marinaStartedAt = Number.NEGATIVE_INFINITY;
+      marinaManualProgress = 0;
+      marinaProgress = 0;
     }
     lastConstructionSequence = immediate ? sequence : Math.max(lastConstructionSequence, sequence);
     updateInstances();
     vault.update(assemblyBuildProgress);
     diplomaticHall.update(assemblyBuildProgress, 0);
     landmarkAccess.update(assemblyBuildProgress, 0);
+    marina.update(marinaProgress, 0);
+    const admission=marina.getPresentation();
+    heroCoast.animate(0,admission.waterfallFlow,admission.waterfallDraining);
   };
 
   const animate = (elapsed: number) => {
@@ -933,6 +965,11 @@ export function createIsland1AssemblyCraterRuntime(
     if (assemblyBuildQueued) {
       assemblyBuildQueued = false;
       assemblyBuildStartedAt = elapsed + ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS;
+      marinaBuildQueued = true;
+    }
+    if (marinaBuildQueued && Number.isFinite(assemblyBuildStartedAt)) {
+      marinaBuildQueued = false;
+      marinaStartedAt = assemblyBuildStartedAt + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS;
     }
     if (currentPresentation.completed && Number.isFinite(assemblyBuildStartedAt)) {
       const nextBuildProgress = THREE.MathUtils.clamp(
@@ -944,6 +981,13 @@ export function createIsland1AssemblyCraterRuntime(
         assemblyBuildProgress = nextBuildProgress;
         updateInstances();
       }
+    }
+    if (currentPresentation.completed && marinaManualProgress === null && Number.isFinite(marinaStartedAt)) {
+      marinaProgress = THREE.MathUtils.clamp(
+        (elapsed - marinaStartedAt) / ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS,
+        0,
+        1,
+      );
     }
     materials.warmGlow.emissiveIntensity = 1.02 + Math.sin(elapsed * 1.8) * 0.18;
     speakingLight.rotation.y = elapsed * 0.45;
@@ -1143,10 +1187,12 @@ export function createIsland1AssemblyCraterRuntime(
         impactPosition: blastPresentation.impactPosition,
       };
     }
-    if (heroCoast.root.visible) heroCoast.animate(elapsed);
     vault.update(assemblyBuildProgress);
     diplomaticHall.update(assemblyBuildProgress, elapsed);
     landmarkAccess.update(assemblyBuildProgress, elapsed);
+    marina.update(marinaManualProgress ?? marinaProgress, elapsed);
+    const admission=marina.getPresentation();
+    heroCoast.animate(elapsed,admission.waterfallFlow,admission.waterfallDraining);
   };
 
   updateAssemblyCrater(currentPresentation, true);
@@ -1155,6 +1201,22 @@ export function createIsland1AssemblyCraterRuntime(
     root,
     animate,
     updateAssemblyCrater,
+    setMarinaProgress: (progress) => {
+      marinaManualProgress = THREE.MathUtils.clamp(progress, 0, 1);
+      marinaProgress = marinaManualProgress;
+      marina.update(marinaProgress, lastAnimationElapsed);
+      const admission=marina.getPresentation();
+      heroCoast.animate(lastAnimationElapsed,admission.waterfallFlow,admission.waterfallDraining);
+    },
+    replayMarina: () => {
+      marinaManualProgress = null;
+      marinaProgress = 0;
+      marinaBuildQueued = false;
+      marinaStartedAt = lastAnimationElapsed;
+      marina.update(0, lastAnimationElapsed);
+      heroCoast.animate(lastAnimationElapsed,1,true);
+    },
+    endMarinaMeeting: () => marina.endMeeting(lastAnimationElapsed),
     setInspectionCutaway: (active) => {
       inspectionCutawayContext.visible = active;
       vault.setCutaway(active);
@@ -1166,5 +1228,6 @@ export function createIsland1AssemblyCraterRuntime(
       progress: assemblyBuildProgress,
       completed: currentPresentation.completed && assemblyBuildProgress >= 1,
     }),
+    getMarinaPresentation: marina.getPresentation,
   };
 }

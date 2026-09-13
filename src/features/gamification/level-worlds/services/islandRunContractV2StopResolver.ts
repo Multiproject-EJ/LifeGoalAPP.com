@@ -102,6 +102,8 @@ export function isIslandRunFullyClearedV2(options: {
 }
 
 
+/** @deprecated Legacy narrow gate. Production departure uses resolveIslandRunCompletion
+ * so unfinished objectives and island-specific finales cannot be skipped. */
 export function isIslandRunFinishedForDepartureV2(options: {
   stopBuildStateByIndex: Array<IslandRunContractV2BuildState | null | undefined>;
   hatcheryEggResolved: boolean;

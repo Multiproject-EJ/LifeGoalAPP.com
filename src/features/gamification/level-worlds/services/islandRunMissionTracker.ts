@@ -1,6 +1,7 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
+import { resolveIslandRunCompletion, type IslandRunCompletionState } from './islandRunCompletion';
 import {
   getIslandMissionBriefingPresentation,
   type IslandMissionBriefingPresentation,
@@ -50,6 +51,7 @@ export interface IslandMissionTrackerPresentation {
   overallProgressPercent: number;
   complete: boolean;
   usesLiveSignatureProgress: boolean;
+  islandCompletion: ReturnType<typeof resolveIslandRunCompletion> | null;
 }
 
 type MissionTrackerState = Pick<
@@ -61,7 +63,7 @@ type MissionTrackerState = Pick<
   | 'signatureMissionProgressByIsland'
   | 'stopStatesByIndex'
   | 'stopBuildStateByIndex'
->;
+> & Pick<IslandRunCompletionState, 'completedStopsByIsland' | 'technologyUnlocksById'>;
 
 const completeLabel = 'Complete';
 
@@ -386,5 +388,6 @@ export function resolveIslandMissionTrackerPresentation(options: {
     overallProgressPercent: getOverallPercent(objectives),
     complete: objectives.every(isObjectiveComplete),
     usesLiveSignatureProgress,
+    islandCompletion: state.currentIslandNumber === islandNumber ? resolveIslandRunCompletion(state) : null,
   };
 }

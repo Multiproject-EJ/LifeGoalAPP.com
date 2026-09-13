@@ -341,6 +341,32 @@ export type DetonateFirstLightAssemblyChargeResult =
     }
   | { status: 'wrong_island' | 'no_dynamite' | 'already_complete' };
 
+/** A single idempotent appointment, on the existing cycle-scoped mission ledger. */
+export function signFirstLightAssemblyMandate(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<{ status: 'ok' | 'already_signed' | 'wrong_island' | 'assembly_incomplete' }> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const progress = resolveFirstLightAssemblyCraterProgress({
+      ledger: state.signatureMissionProgressByIsland, cycleIndex: state.cycleIndex, islandNumber: state.currentIslandNumber,
+    });
+    if (progress.completedAtMs === null || progress.chargesDetonated < FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET) return { status: 'assembly_incomplete' };
+    if (progress.mandateSignedAtMs != null) return { status: 'already_signed' };
+    const nowMs = Date.now(), key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    await commitIslandRunState({
+      session: options.session, client: options.client,
+      record: { ...state, runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: { ...state.signatureMissionProgressByIsland,
+          [key]: { ...progress, mandateSignedAtMs: nowMs, updatedAtMs: nowMs },
+        },
+      },
+    });
+    return { status: 'ok' };
+  });
+}
+
 export function detonateFirstLightAssemblyCharge(options: {
   session: Session;
   client: SupabaseClient | null;

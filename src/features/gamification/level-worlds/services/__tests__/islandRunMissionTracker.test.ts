@@ -258,7 +258,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
     },
   },
   {
-    name: 'First Light tracker reads Assembly progress and counts only genuinely restored outer landmarks',
+    name: 'First Light tracker counts construction separately from unresolved Hatchery activities',
     run: () => {
       const key = getIslandRunSignatureMissionKey(0, 1);
       const stops = restoredStops(4);
@@ -296,6 +296,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
       assertEqual(unresolvedEgg.objectives[1].value, 4, 'a ready egg does not erase a completed building');
       assertEqual(unresolvedEgg.objectives[2].value, 3, 'Hatchery activity waits for its egg to be collected or sold');
       assertEqual(unresolvedEgg.complete, false, 'unfinished activities still prevent mission completion');
+      assertEqual(unresolvedEgg.islandCompletion?.complete, false, 'Unresolved egg still prevents island completion');
     },
   },
   {

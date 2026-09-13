@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './Island19WonderRide.css';
+import {createAssemblySeaGeometry} from './Island1V2Terrain';
 import { createWonderRideCameraFilter } from './island19WonderRideCamera';
 import * as THREE from 'three';
 import { resolveIsland18CompassCeremonyCamera } from './island18CompassCeremonyCamera';
@@ -395,6 +396,7 @@ interface Island5ThreePilotProps {
     fishingInteraction?: Island22FishingInteractionPresentation;
   };
   onSignatureMissionClick?: () => void;
+  onAssemblyMeetingComplete?: () => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -3533,6 +3535,7 @@ export default function Island5ThreePilot({
     },
   },
   onSignatureMissionClick,
+  onAssemblyMeetingComplete,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3745,6 +3748,8 @@ export default function Island5ThreePilot({
   const fishermansFishingPresentationRef = useRef(fishermansFishingPresentation);
   fishermansFishingPresentationRef.current = fishermansFishingPresentation;
   const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
+  const onAssemblyMeetingCompleteRef = useRef(onAssemblyMeetingComplete);
+  onAssemblyMeetingCompleteRef.current = onAssemblyMeetingComplete;
   const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
   const onCaretakerClickRef = useRef(onCaretakerClick);
   const interactionPausedRef = useRef(interactionPaused);
@@ -4980,8 +4985,7 @@ export default function Island5ThreePilot({
       clearcoatRoughness: 0.25,
     });
     const waterGeometry = isAssemblyCraterFirstLight
-      ? new THREE.RingGeometry(
-        ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS + 0.07,
+      ? createAssemblySeaGeometry(
         60,
         isFirstLightKingdom ? 120 : 68,
         Math.max(1, Math.floor(qualityProfile.oceanGridSegments / 2)),
@@ -6792,6 +6796,8 @@ export default function Island5ThreePilot({
       nextStepAt: number;
     } | null = null;
     let wasAssemblyConstructionActive = false;
+    let wasMarinaArrivalActive = false;
+    let marinaInspectionActive = false;
     let automaticAssemblyTourStarted = false;
     let activeTrainRide: {
       startedAt: number;
@@ -7130,6 +7136,14 @@ export default function Island5ThreePilot({
         island15PalaceExitActive = false;
         controls.enabled = true;
         setIsland15PalaceEntryPhase('idle');
+      }
+      if (marinaInspectionActive) {
+        marinaInspectionActive = false;
+        camera.fov = 42;
+        camera.updateProjectionMatrix();
+        controls.minDistance = 5.4;
+        controls.minPolarAngle = THREE.MathUtils.degToRad(28);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(69);
       }
       const basePreset = getIsland5CameraPreset(id);
       const firstLightFocusOverrides: Partial<Record<Island5CameraPresetId, {
@@ -8606,6 +8620,7 @@ export default function Island5ThreePilot({
       let cactusCanyonBlastCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       let jungleBuildupCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
       let jungleZenithCameraPose: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+      let marinaArrivalCameraPose: { position: THREE.Vector3; target: THREE.Vector3; fov: number } | null = null;
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
       livingAmbience.updateView?.(camera.position, controls.target, isReducedMotion);
@@ -8622,6 +8637,7 @@ export default function Island5ThreePilot({
           firstLightAssemblyCrater.updateAssemblyCrater(assemblyPresentation, isReducedMotion);
           if (!assemblyPresentation.completed) {
             wasAssemblyConstructionActive = false;
+            wasMarinaArrivalActive = false;
             automaticAssemblyTourStarted = false;
           }
           tileRewardObjects.setFirstLightClaimedDynamiteTiles(
@@ -8959,8 +8975,14 @@ export default function Island5ThreePilot({
       }
       if (isAssemblyCraterFirstLight && firstLightAssemblyCrater) {
         const assembly = firstLightAssemblyCrater.getConstructionPresentation();
+        const marina = firstLightAssemblyCrater.getMarinaPresentation();
         canvas.dataset.assemblyConstructionPhase = assembly.active ? 'building' : assembly.completed ? 'complete' : 'excavating';
         canvas.dataset.assemblyConstructionProgress = assembly.progress.toFixed(3);
+        canvas.dataset.assemblyMarinaPhase = marina.phase;
+        canvas.dataset.assemblyMarinaProgress = marina.progress.toFixed(3);
+        canvas.dataset.assemblyMarinaBerths = String(marina.berthCount);
+        canvas.dataset.assemblyMarinaDesignFamilies = String(marina.designFamilyCount);
+        canvas.dataset.assemblyMarinaFleetMix = `${marina.spacecraftCount}-spacecraft:${marina.yachtCount}-yachts`;
       }
       if (isFrostmoonHaven) {
         livingAmbience.updateSignatureMission?.({ ...signatureMissionPresentationRef.current, reducedMotion: isReducedMotion });
@@ -8980,20 +9002,48 @@ export default function Island5ThreePilot({
         firstLightAssemblyCrater?.animate(elapsed);
         if (isAssemblyCraterFirstLight && firstLightAssemblyCrater) {
           const assemblyConstruction = firstLightAssemblyCrater.getConstructionPresentation();
+          const marina = firstLightAssemblyCrater.getMarinaPresentation();
           if (assemblyConstruction.active && !wasAssemblyConstructionActive) {
             wasAssemblyConstructionActive = true;
             idleOverviewAt = null;
             applyPreset('boss', 0.55);
           }
+          if (marina.active && !activeTour && !activeProfiler) {
+            if (!wasMarinaArrivalActive) {
+              setBoardActorsVisibleForPreset('manual');
+              marinaInspectionActive = true;
+              controls.minDistance = .5;
+              controls.minPolarAngle = 0;
+              controls.maxPolarAngle = Math.PI;
+            }
+            wasMarinaArrivalActive = true;
+            idleOverviewAt = null;
+            controls.enabled = false;
+            marinaArrivalCameraPose = {
+              position: new THREE.Vector3(...marina.cameraPosition),
+              target: new THREE.Vector3(...marina.cameraTarget),
+              fov: marina.cameraFov,
+            };
+            firstLightAssemblyCrater.setInspectionCutaway(false);
+          }
           if (
             wasAssemblyConstructionActive
-            && assemblyConstruction.completed
+            && wasMarinaArrivalActive
+            && marina.completed
             && !automaticAssemblyTourStarted
             && !activeTour
             && !activeProfiler
           ) {
             automaticAssemblyTourStarted = true;
-            startAssemblyTour();
+            wasMarinaArrivalActive = false;
+            onAssemblyMeetingCompleteRef.current?.();
+            firstLightAssemblyCrater.endMarinaMeeting();
+            // The arrival film now finishes at the podium. Hold that view so
+            // the audience can be inspected instead of launching a second tour.
+            firstLightAssemblyCrater.setInspectionCutaway(false);
+            controls.enabled = true;
+            controls.update();
+            idleOverviewAt = null;
           }
         }
         tileRewardObjects.animate(elapsed, tokenIndexRef.current);
@@ -9675,6 +9725,16 @@ export default function Island5ThreePilot({
         transition = null;
         camera.position.copy(jungleZenithCameraPose.position);
         controls.target.copy(jungleZenithCameraPose.target);
+        camera.lookAt(controls.target);
+      }
+      if (marinaArrivalCameraPose) {
+        transition = null;
+        if (camera instanceof THREE.PerspectiveCamera) {
+          camera.fov = marinaArrivalCameraPose.fov;
+          camera.updateProjectionMatrix();
+        }
+        camera.position.copy(marinaArrivalCameraPose.position);
+        controls.target.copy(marinaArrivalCameraPose.target);
         camera.lookAt(controls.target);
       }
       if (activeTrainRide && activeTokenMotion) finishTrainRide(false);

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
+import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
 
 export type MissionObjectiveAction = 'launch' | 'details';
 
@@ -11,6 +12,7 @@ export interface IslandMissionBriefingModalProps {
   presentation: IslandMissionBriefingPresentation | null;
   progress?: readonly IslandMissionTrackerObjective[];
   overallProgressPercent?: number;
+  islandCompletion?: ReturnType<typeof resolveIslandRunCompletion> | null;
   objectiveActions?: readonly MissionObjectiveAction[];
   objectiveDetails?: readonly string[];
   acknowledgeLabel?: string;
@@ -70,6 +72,7 @@ export function IslandMissionBriefingModal({
   presentation,
   progress = [],
   overallProgressPercent,
+  islandCompletion,
   objectiveActions = [],
   objectiveDetails = [],
   acknowledgeLabel = 'Accept field order',
@@ -225,7 +228,7 @@ export function IslandMissionBriefingModal({
           aria-hidden="true"
         />
 
-        <div className="island-mission-tracker__phone-screen">
+        <div className="island-mission-tracker__phone-screen" style={islandCompletion ? { overflowY: 'auto' } : undefined}>
           <button
             ref={acknowledgeRef}
             type="button"
@@ -360,6 +363,18 @@ export function IslandMissionBriefingModal({
               <i style={{ width: `${overallPercent}%` }} />
             </span>
           </footer>
+          {islandCompletion ? (
+            <details style={{ fontSize: 11, lineHeight: 1.5, marginTop: 8, maxHeight: 135, overflowY: 'auto', flexShrink: 0 }}>
+              <summary aria-label={`Island completion ${islandCompletion.percent}%`} style={{ cursor: 'pointer' }}>
+                Island {islandCompletion.percent}% · {islandCompletion.complete ? 'Ready to travel' : 'View remaining requirements'}
+              </summary>
+              <ul style={{ paddingLeft: 16, margin: '6px 0' }}>
+                {islandCompletion.requirements.map(item => (
+                  <li key={item.id}>{item.complete ? '✓' : '○'} {item.label} · {item.value}/{item.target}</li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
         </div>
       </section>
     </div>,

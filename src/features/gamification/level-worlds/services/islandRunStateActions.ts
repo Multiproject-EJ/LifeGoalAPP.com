@@ -40,6 +40,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { resolveIslandRunCompletion } from './islandRunCompletion';
 import type {
   CompanionFeastProgressEntry,
   CreatureCollectionRuntimeEntry,
@@ -5129,6 +5130,9 @@ export interface TravelToNextIslandOptions {
   /** The raw requested island number. May exceed {@link ISLAND_RUN_MAX_ISLAND};
    *  the action wraps it to `[1, 120]` and bumps `cycleIndex` on wrap. */
   nextIsland: number;
+  /** Normal completion travel must still refer to this fully completed visit.
+   * Omitted only for explicit debug/resume routes with their own eligibility. */
+  completedVisitKey?: string;
   /** When true (the normal case) the per-island timer starts immediately; when
    *  false the timer is left pending (`islandStartedAtMs/Expires = 0`) so the
    *  UI can start it on an explicit "Begin" tap. Matches the legacy
@@ -5279,6 +5283,13 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
   } = options;
 
   const current = getIslandRunStateSnapshot(session);
+  if (options.completedVisitKey !== undefined) {
+    const completion = resolveIslandRunCompletion(current);
+    if (!completion.complete || completion.visitKey !== options.completedVisitKey
+      || nextIsland !== current.currentIslandNumber + 1) {
+      throw new Error('Island completion changed before departure. Return to the current island and try again.');
+    }
+  }
   const travelState = resolveIslandRunTravelState({
     current,
     nextIsland,

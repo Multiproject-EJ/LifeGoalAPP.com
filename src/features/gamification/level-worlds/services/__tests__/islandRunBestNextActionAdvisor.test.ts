@@ -30,6 +30,8 @@ function makeRecord(overrides: Partial<IslandRunGameStateRecord> = {}): IslandRu
   return {
     ...base,
     firstSessionTutorialState: 'complete',
+    // These legacy five-stop fixtures predate the Assembly replacement.
+    technologyUnlocksById: { 'the-concord': { active: true, builtAtMs: 1 } },
     dicePool: 0,
     completedStopsByIsland: { [ISLAND_KEY]: ['hatchery'] },
     stopStatesByIndex: base.stopStatesByIndex.map((stopState, index) => ({
@@ -95,7 +97,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
   },
 
   {
-    name: 'claim island clear uses narrow departure gate and does not require optional objective mirrors',
+    name: 'claim island clear does not bypass genuinely unfinished landmark activities',
     run: () => {
       const record = makeRecord({
         completedStopsByIsland: { [ISLAND_KEY]: ['hatchery'] },
@@ -120,14 +122,14 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         },
       });
 
-      expectAction(record, 'claim_island_clear');
+      assert(resolveAction(record)?.action !== 'claim_island_clear', 'Boss marker and construction cannot invent objective completion');
     },
   },
   {
     name: 'claim island clear waits for boss defeat even when landmarks and egg are done',
     run: () => {
       const record = makeRecord({
-        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
+        stopStatesByIndex: Array.from({ length: 5 }, (_, i) => ({ objectiveComplete: i < 4, buildComplete: true })),
         stopBuildStateByIndex: Array.from({ length: 5 }, () => ({
           requiredEssence: 100,
           spentEssence: 100,

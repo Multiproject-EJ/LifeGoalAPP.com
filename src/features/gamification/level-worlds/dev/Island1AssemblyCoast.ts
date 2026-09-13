@@ -14,7 +14,7 @@ export function createAssemblyHeroCoast(quality: Island3DQuality, materials: Isl
   const path = new THREE.CatmullRomCurve3([
     new THREE.Vector3(0, 0.29, 6.3), new THREE.Vector3(0, 0.2, 6.65),
     new THREE.Vector3(0.05, -0.4, 7.05), new THREE.Vector3(-0.06, -1.25, 7.27),
-    new THREE.Vector3(0, seaY + 0.06, 7.55),
+    new THREE.Vector3(0, -2.5, 7.42), new THREE.Vector3(0,-3.57,7.26),
   ]);
   const channelPoints=Array.from({length:25},(_,i)=>{const t=i/24;return new THREE.Vector3(Math.sin(t*Math.PI)*.12,.285-t*.012,4.34+t*1.98);});
   const channelVertices:number[]=[],channelIndices:number[]=[];
@@ -36,7 +36,7 @@ export function createAssemblyHeroCoast(quality: Island3DQuality, materials: Isl
   const vertices: number[] = [], indices: number[] = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments, p = path.getPoint(t);
-    const width = 0.65 + t * 0.17 + Math.sin(t * Math.PI * 3) * 0.035;
+    const width = 1.12 + t * 0.06 + Math.sin(t * Math.PI * 3) * 0.035;
     vertices.push(p.x - width, p.y, p.z, p.x + width, p.y + 0.025 * Math.sin(t * 9), p.z);
     if (i < segments) { const a = i * 2; indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   }
@@ -57,7 +57,7 @@ export function createAssemblyHeroCoast(quality: Island3DQuality, materials: Isl
   for (let i = 0; i < rocks.count; i++) {
     const side = i % 2 === 0 ? -1 : 1, row = Math.floor(i / 2), t = row / 8;
     const point = path.getPoint(t);
-    dummy.position.set(side * (0.91 + Math.sin(row * 2.1) * 0.09), point.y - 0.18, point.z - 0.08);
+    dummy.position.set(side * (1.55 + Math.sin(row * 2.1) * 0.09), point.y - 0.18, point.z - 0.08);
     dummy.rotation.set(row * 0.3, row * 1.7, side * 0.2);
     dummy.scale.set(0.35 + row % 3 * 0.07, 0.25 + row % 2 * 0.14, 0.38);
     dummy.updateMatrix(); rocks.setMatrixAt(i, dummy.matrix);
@@ -77,12 +77,32 @@ export function createAssemblyHeroCoast(quality: Island3DQuality, materials: Isl
   const rings = new THREE.InstancedMesh(ringGeometry, ringFoam, 4);
   rings.name = 'HERO_CASCADE_SEA_IMPACT_RINGS'; rings.frustumCulled = false; root.add(rings);
   const tangent = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-  function animate(elapsed: number) {
+  let previousFlow=-1,previousDraining=false;
+  function animate(elapsed: number, rawFlow=1, draining=false) {
     // A newly mounted Three Timer can report a slightly negative first frame.
     // Curve sampling requires [0, 1], including immediately after remount.
     elapsed = Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0;
+    const flow=THREE.MathUtils.clamp(Number.isFinite(rawFlow)?rawFlow:1,0,1);
+    const active=flow>.001;
+    root.userData.waterfallFlow=flow;
+    [curtain,streaks,spray,rings].forEach(mesh=>mesh.visible=active);
+    // Turn-off drains from the lip down; restart grows a falling sheet from the lip.
+    // The source pool and upstream spring remain, rather than vanishing the whole coast.
+    if(flow!==previousFlow||draining!==previousDraining){
+      const attr=geometry.getAttribute('position');
+      for(let i=0;i<=segments;i++){
+        const t=(draining?1-flow:0)+i/segments*flow,p=path.getPoint(t);
+        const width=1.12+t*.06+Math.sin(t*Math.PI*3)*.035;
+        attr.setXYZ(i*2,p.x-width,p.y,p.z);
+        attr.setXYZ(i*2+1,p.x+width,p.y+.025*Math.sin(t*9),p.z);
+      }
+      attr.needsUpdate=true;geometry.computeVertexNormals();
+      previousFlow=flow;previousDraining=draining;
+    }
+    foam.opacity=.72*flow;ringFoam.opacity=.24*flow;
+    if(!active)return;
     for (let i = 0; i < streakCount; i++) {
-      const t = (elapsed * 0.48 + i * 0.618034) % 1;
+      const t = (draining?1-flow:0)+((elapsed * 0.48 + i * 0.618034) % 1)*flow;
       const p = path.getPoint(t); tangent.copy(path.getTangent(t));
       dummy.position.copy(p); dummy.position.x += Math.sin(i * 2.39) * (0.51 + t * 0.14); dummy.position.z += 0.03;
       dummy.quaternion.setFromUnitVectors(up, tangent);

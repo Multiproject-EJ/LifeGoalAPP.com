@@ -3,6 +3,16 @@ import { ISLAND_5_LANDMARKS, type Island3DQuality } from './island5ThreePilotCon
 
 const plots = ISLAND_5_LANDMARKS.filter(p => p.id !== 'boss');
 const TAU = Math.PI * 2;
+/** XY sea with a dry stair notch; callers rotate -90 degrees about X. */
+export function createAssemblySeaGeometry(outerRadius=72,segments=160,rows=8){
+  const geometry=new THREE.RingGeometry(7.02,outerRadius,segments,rows),p=geometry.getAttribute('position');
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i),y=p.getY(i),r=Math.hypot(x,y),a=Math.abs(Math.atan2(x,-y));
+    const inner=a<.16?8.75:7.02,newRadius=inner+(outerRadius-inner)*(r-7.02)/(outerRadius-7.02);
+    p.setXY(i,x*newRadius/r,y*newRadius/r);
+  }
+  p.needsUpdate=true;return geometry;
+}
 /** A continuous coastline fitted around the unchanged landmark plots. */
 export function island001CoastRadius(a: number) {
   let r = 6.12 + .14 * Math.sin(a * 5 + .8) + .10 * Math.sin(a * 9);
@@ -47,6 +57,9 @@ export function createIsland001V2Terrain(quality: Island3DQuality, cutaway = fal
     const a=i/segments*TAU,b=(i+1)/segments*TAU;
     if(cutaway && Math.cos((a+b)/2)>.03) continue;
     for(let j=0;j<layers.length-1;j++) {
+      // Actual doorway geometry. The crown/board above it remains unchanged.
+      const doorAngle=Math.abs(Math.atan2(Math.sin((a+b)/2),Math.cos((a+b)/2)));
+      if(doorAngle<.165 && layers[j]<=-.60 && layers[j+1]>=-3.90)continue;
       const p=cliffPoint(a,j),q=cliffPoint(b,j),r=cliffPoint(b,j+1),s=cliffPoint(a,j+1);
       const variation=.90+.065*Math.sin(i*2.71+j*1.4)+.035*Math.sin(i*.63);
       const shade=[.72*variation,.67*variation,.55*variation];
@@ -131,7 +144,8 @@ export function createIsland001V2Terrain(quality: Island3DQuality, cutaway = fal
   for(let i=0;i<shoreCount;i++) {
     const a=i/shoreCount*TAU,host=cliffPoint(a,11),r=Math.hypot(host[0],host[2])+.14+(i%3)*.18;
     dummy.position.set(Math.sin(a)*r,-2.5+(i%5)*.07,Math.cos(a)*r);dummy.rotation.set(.2*i,a,.15*i);dummy.scale.set(.20+(i%3)*.1,.28+(i%4)*.14,.22+(i%2)*.13);
-    if(cutaway&&dummy.position.z>0)dummy.scale.setScalar(0);dummy.updateMatrix();shore.setMatrixAt(i,dummy.matrix);
+    if((cutaway&&dummy.position.z>0)||(Math.abs(dummy.position.x)<1.4&&dummy.position.z>6.5))dummy.scale.setScalar(0);
+    dummy.updateMatrix();shore.setMatrixAt(i,dummy.matrix);
   }root.add(shore);
   return root;
 }
