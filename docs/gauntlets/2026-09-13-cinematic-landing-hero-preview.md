@@ -25,6 +25,8 @@ clouds that carry the visitor into the next explanatory section.
 - The preview includes a visible `Old website` link back to `/`.
 - Motion is decorative only, pauses offscreen, and honors reduced motion.
 - No autoplay audio and no new gameplay writes.
+- Character art must remain visible when the preview is opened directly from a
+  local `file://` URL; no canvas or same-origin dependency is allowed.
 
 ## Scope
 
@@ -52,10 +54,11 @@ Deferred:
 
 ## Asset and performance budget
 
-- Preview artwork may use the current ~3.2 MB combined concept plates.
+- Preview artwork may use the current ~4 MB combined concept plates.
 - Production promotion requires optimized WebP/AVIF or authored motion assets,
   measured LCP, and an explicit mobile fallback.
-- Animations use opacity and transforms after one local chroma-key canvas pass.
+- Animations use opacity and transforms over a preprocessed RGBA character
+  plate, avoiding runtime chroma-key and canvas security restrictions.
 
 ## Rollback
 
@@ -67,4 +70,3 @@ rollback does not require data, DNS, auth, or application-state changes.
 - Stop before replacing `/` or expanding beyond hero + neighbor without a new
   visual approval.
 - Stop if the latest main branch no longer fast-forwards cleanly.
-

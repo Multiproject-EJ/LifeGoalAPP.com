@@ -265,7 +265,10 @@
       }
       .actor { opacity: 0; filter: brightness(.04); }
       .actor-motion { transform-origin: 50% 82%; }
-      .actor img { display: block; object-fit: contain; }
+      .actor img {
+        display: block;
+        object-fit: contain;
+      }
 
       .actor--compass { z-index: 12; clip-path: polygon(39% 6%, 61% 6%, 61% 35%, 39% 35%); transform: translateY(36px); }
       .actor--green { z-index: 6; clip-path: polygon(4% 23%, 31% 23%, 31% 78%, 4% 78%); }
@@ -739,14 +742,14 @@
         <div class="hero-stage" aria-label="The Caretaker, three wizards and three builders awaken above the HabitGame islands">
           <img class="world-plate" src="assets/hero-world-background.png" alt="" aria-hidden="true" />
           <div class="cast-layer" aria-hidden="true">
-            <div class="actor actor--compass"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--green"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--burgundy"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--silver"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--caretaker"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--bot-left"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--bot-round"><div class="actor-motion"><img data-cast alt="" /></div></div>
-            <div class="actor actor--bot-small"><div class="actor-motion"><img data-cast alt="" /></div></div>
+            <div class="actor actor--compass"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--green"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--burgundy"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--silver"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--caretaker"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--bot-left"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--bot-round"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
+            <div class="actor actor--bot-small"><div class="actor-motion"><img data-cast src="assets/hero-cast-transparent-v2.png" alt="" /></div></div>
           </div>
         </div>
 
@@ -796,42 +799,12 @@
         const shell = document.getElementById('hero-shell');
         const replay = document.getElementById('replay');
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const castTargets = Array.from(document.querySelectorAll('[data-cast]'));
+        const castSource = document.querySelector('[data-cast]');
         const howSection = document.getElementById('how-life-moves');
         let introTimer = 0;
         let raf = 0;
 
         if (!reduceMotion) root.classList.add('motion-ready');
-
-        function makeCastLayer(source) {
-          const canvas = document.createElement('canvas');
-          canvas.width = source.naturalWidth;
-          canvas.height = source.naturalHeight;
-          const context = canvas.getContext('2d', { willReadFrequently: true });
-          context.drawImage(source, 0, 0);
-          const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-          const pixels = frame.data;
-
-          for (let index = 0; index < pixels.length; index += 4) {
-            const red = pixels[index];
-            const green = pixels[index + 1];
-            const blue = pixels[index + 2];
-            const distance = Math.sqrt(
-              ((255 - red) * (255 - red)) +
-              (green * green) +
-              ((255 - blue) * (255 - blue))
-            );
-
-            if (distance < 72) {
-              pixels[index + 3] = 0;
-            } else if (distance < 128) {
-              pixels[index + 3] = Math.round(255 * ((distance - 72) / 56));
-            }
-          }
-
-          context.putImageData(frame, 0, 0);
-          return canvas.toDataURL('image/png');
-        }
 
         function completeIntro() {
           window.clearTimeout(introTimer);
@@ -856,16 +829,17 @@
           introTimer = window.setTimeout(completeIntro, 3600);
         }
 
-        const source = new Image();
-        source.decoding = 'async';
-        source.src = 'assets/hero-cast-magenta.png';
-        source.addEventListener('load', () => {
-          const castUrl = makeCastLayer(source);
-          castTargets.forEach((target) => { target.src = castUrl; });
+        function startScene() {
           playIntro(false);
-        }, { once: true });
+        }
 
-        source.addEventListener('error', () => {
+        if (castSource.complete && castSource.naturalWidth > 0) {
+          startScene();
+        } else {
+          castSource.addEventListener('load', startScene, { once: true });
+        }
+
+        castSource.addEventListener('error', () => {
           root.classList.add('skip-intro');
         }, { once: true });
 
