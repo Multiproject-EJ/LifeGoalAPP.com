@@ -2447,14 +2447,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
-        'Islands 003, 007, 012, 013, 014, 018, runtime 016 and non-Circuit-G Island 019 should use the proven per-material instanced route path',
+        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
+        'Island 004 and the established authored worlds use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];'), 'Circuit G must substitute its own one-to-one canonical mesh route instead of layering a second board');
       assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
       assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
-      assert(pilotSource.includes('compactCollectibles: isFrostmoonHaven || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
+      assert(pilotSource.includes('compactCollectibles: isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
       assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
       assert(pilotSource.includes('canvas.dataset.island12ScenePerformanceInventory'), 'the full Island 012 scene must expose read-only renderer-family evidence');
       assert(rewardSource.includes('root.userData.sculptRuntime = {'), 'reward objects must keep explicit presentation-only runtime metadata');
@@ -3110,7 +3110,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('new OrbitControls'), 'pilot should provide touch and pointer orbit controls');
       assert(pilotSource.includes('controls.enableRotate = true') && pilotSource.includes('controls.enableZoom = true'), 'the actual-3D Island 020 world must support touch orbit and zoom from every evidence angle');
       assert(!pilotSource.includes("isLavaLabyrinth && id !== 'overview'"), 'programmatic Island 020 focus requests must not collapse back to a camera-locked plate view');
-      assert(pilotSource.includes('(isCelestialSkyKingdom || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)') && pilotSource.includes('applyEvidenceOrbitRef.current(degrees)'), 'Island 020 must expose the complete eight-angle evidence orbit');
+      assert(pilotSource.includes('(isCelestialSkyKingdom || isDriftwoodIsle || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)') && pilotSource.includes('applyEvidenceOrbitRef.current(degrees)'), 'Island 004 and the existing authored worlds expose the complete eight-angle evidence orbit');
       assert(pilotSource.includes('material.polygonOffsetUnits = -4'), 'Cactus Canyon tiles need a deterministic depth bias so camera motion cannot reveal z-fighting');
       assert(pilotSource.includes('tappedAt - lastTrainTapAt <= 430'), 'Cactus Canyon must support a deliberate mouse double-click and mobile double-tap on the moving train');
       assert(pilotSource.includes("const ISLAND_13_TRAIN_RIDE_PHASE_MS = 15_000"), 'each train ride viewpoint must hold for the requested fifteen seconds');

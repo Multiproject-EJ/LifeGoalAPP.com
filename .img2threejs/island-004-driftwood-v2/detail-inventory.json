@@ -1,0 +1,171 @@
+{
+  "sourceImage": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-004-driftwood-v2/approved-direction/004-same-island-multicolor-v2.png",
+  "zonesDir": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "details": [
+      {
+        "id": "sky-and-sea",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 1.0,
+          "height": 0.35,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/sky-and-sea.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "hatchery",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.0,
+          "y": 0.28,
+          "width": 0.34,
+          "height": 0.35,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/hatchery.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "citadel",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.28,
+          "y": 0.25,
+          "width": 0.44,
+          "height": 0.48,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/citadel.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "habit",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.67,
+          "y": 0.28,
+          "width": 0.33,
+          "height": 0.35,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/habit.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "archive",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.0,
+          "y": 0.55,
+          "width": 0.34,
+          "height": 0.28,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/archive.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "event-arena",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.66,
+          "y": 0.55,
+          "width": 0.34,
+          "height": 0.28,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/event-arena.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "board-and-gardens",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.2,
+          "y": 0.48,
+          "width": 0.6,
+          "height": 0.38,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/board-and-gardens.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "shore",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.0,
+          "y": 0.76,
+          "width": 1.0,
+          "height": 0.24,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "/Users/ejmac/.codex/worktrees/0094/Mini Project - iOS and Adroid capcitor/.img2threejs/island-004-driftwood-v2/detail-inventory/shore.png",
+        "confidence": 0.0
+      }
+    ]
+  },
+  "authoringInstruction": "Open each zone crop under zonesDir and replace every detail stub's kind, description, scale, affects, mapsTo, and confidence with what is actually observed. Add more detail entries per zone if a single zone contains multiple distinct marks; do not leave stubs unfilled or unlinked (mapsTo must reference a real component.localFeatures or material.localOverrides entry)."
+}

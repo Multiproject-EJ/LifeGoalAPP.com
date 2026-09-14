@@ -1,0 +1,303 @@
+{
+  "targetName": "Island 004 same-island multicolor V2",
+  "sourceImage": "docs/visual-references/island-004-driftwood-v2/approved-direction/004-same-island-multicolor-v2.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "five-landmark coastal palace island",
+      "primaryDomain": "object",
+      "formLanguage": ["rounded cream masonry", "purple central crown dome", "coral radial nursery", "teal domed hall", "terracotta tiered archive", "open arena bowl"],
+      "structureKind": ["continuous lobed rock shelf", "five independent interactive architectural assemblies", "36-tile protected route"],
+      "motionPotential": ["roof-last construction", "three causeway restoration spans", "20 percent lantern pulse", "boats and sea"],
+      "materialFamilies": ["limestone", "gold metal", "glazed colored roofs", "timber", "green planting", "water"],
+      "notes": "The selected image defines visible identity and color. Existing runtime defines route and anchors. Rear faces and interiors are inferred functional continuations, not claimed exact source reconstruction."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 4,
+        "componentCount": 5,
+        "hierarchyDepth": 4,
+        "repetitionDensity": 4,
+        "materialLayerCount": 4,
+        "localDetailDensity": 4,
+        "occlusionRisk": 4,
+        "actionReadinessNeed": 5
+      },
+      "estimatedCounts": {
+        "macroComponents": 7,
+        "mesoComponents": 15,
+        "microFeatureGroups": 12,
+        "materialLayers": 8,
+        "repetitionSystems": 5
+      },
+      "reasoning": [
+        "Five visually distinct buildings surround a dominant central castle; roof curves and paired towers define identity.",
+        "Interior construction requires genuine separated walls, floors, furniture and removable late roofs; merged exterior boxes cannot satisfy this.",
+        "Mobile performance requires semantic-part material batching, not a single fused island."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Complex architecture with multiple roof families, radial ribs, open arcades, gardens and staged interaction."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {"id":"crown-ribs","description":"Gold meridian ribs over purple crown dome","mapsTo":"citadel.localFeatures.crown-ribs"},
+        {"id":"four-turrets","description":"Four cream towers with purple taper roofs","mapsTo":"citadel.localFeatures.four-turrets"},
+        {"id":"arched-portal","description":"Open gold-framed ceremonial portal and stair","mapsTo":"citadel.localFeatures.arched-portal"},
+        {"id":"balustrade","description":"Cream balcony posts and gold handrail","mapsTo":"citadel.localFeatures.balustrade"},
+        {"id":"coral-ribs","description":"Coral nursery dome with golden ribs","mapsTo":"hatchery.localFeatures.coral-ribs"},
+        {"id":"nest-eggs","description":"Readable nursery cradles inside the open drum","mapsTo":"hatchery.localFeatures.nest-eggs"},
+        {"id":"teal-dome","description":"Large teal ribbed dome and pearl finial","mapsTo":"habit.localFeatures.teal-dome"},
+        {"id":"hall-interior","description":"Training stations under a roof-last hall","mapsTo":"habit.localFeatures.hall-interior"},
+        {"id":"tiered-roof","description":"Terracotta hip roof with gold ridge and book crest","mapsTo":"wisdom.localFeatures.tiered-roof"},
+        {"id":"reading-room","description":"Separate bookshelves, tables and benches inside walls","mapsTo":"wisdom.localFeatures.reading-room"},
+        {"id":"open-bowl","description":"Arena tiered seating with open playing floor","mapsTo":"event.localFeatures.open-bowl"},
+        {"id":"arena-flags","description":"Teal coral pennants and gold posts","mapsTo":"event.localFeatures.arena-flags"},
+        {"id":"mixed-garden","description":"Palms, cypress, shrubs and flower beds off the route","mapsTo":"terrain.localFeatures.mixed-garden"},
+        {"id":"rock-strata","description":"Layered irregular rock coast and foam fringe","mapsTo":"terrain.localFeatures.rock-strata"}
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "docs/visual-references/island-004-driftwood-v2/approved-direction/004-same-island-multicolor-v2.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 3,
+      "mesoComponents": 8,
+      "microFeatureGroups": 5,
+      "materialLayers": 3,
+      "repetitionSystems": 1,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Island 004 same-island multicolor V2 five landmark mobile island existing geometry",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.shader-mapping-reconstruction-metadata-schema",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[15]",
+        "score": 2.439172579366,
+        "snippets": [
+          "A structured metadata envelope (identity, extraction provenance, geometry stats, texture-slot mapping, rights) accompanying each reconstructed asset to drive and audit the pipeline. Một gói metadata có cấu trúc (định danh, nguồn gốc trích xuất, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[15]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-csg-boolean-operations-for-sub-mesh-composition",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[3]",
+        "score": 2.397794093926,
+        "snippets": [
+          "Constructive solid geometry (union/subtract/intersect) for combining or cutting weapon/knife sub-meshes procedurally instead of hand-modeling every variant. Hình học rắn cấu trúc (hợp/trừ/giao) để kết hợp hoặc cắt các sub-mesh vũ khí/dao theo ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[3]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.description-honest-uncertainty-single-image-limits-convention",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[6]",
+        "score": 2.03736085196,
+        "snippets": [
+          "... should be flagged explicitly rather than filled with a guessed value; This is a hard constraint against hallucinated geometry/material detail feeding into the reconstruction Dấu hiệu nhận diện: Bất kỳ thuộc tính nào của bề mặt không thấy ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[6]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}

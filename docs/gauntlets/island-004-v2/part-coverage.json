@@ -1,0 +1,154 @@
+{
+  "model": "island-004-driftwood-v2",
+  "specifiedComponents": 14,
+  "builtParts": 25,
+  "errors": 6,
+  "warnings": 1,
+  "result": "fail",
+  "findings": [
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "ocean",
+      "detail": "specified component 'ocean' has no matching part in the built model"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "citadel-towers",
+      "detail": "specified component 'citadel-towers' has no matching part in the built model, and its parent 'citadel' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "event-bowl",
+      "detail": "specified component 'event-bowl' has no matching part in the built model, and its parent 'event' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "event-flags",
+      "detail": "specified component 'event-flags' has no matching part in the built model, and its parent 'event' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "gardens",
+      "detail": "specified component 'gardens' has no matching part in the built model, and its parent 'terrain' is missing too"
+    },
+    {
+      "check": "component-missing",
+      "severity": "error",
+      "subject": "shore",
+      "detail": "specified component 'shore' has no matching part in the built model, and its parent 'terrain' is missing too"
+    },
+    {
+      "check": "unnamed-meshes",
+      "severity": "warning",
+      "subject": "5 mesh(es)",
+      "detail": "meshes belonging to no named part: they cannot be selected, and each one explodes on its own instead of riding the part it decorates"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "citadel",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "citadel-interior",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "citadel-unassigned",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "event",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "event-roof",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "event-shell",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "event-unassigned",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "habit",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "habit-shell",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "habit-unassigned",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "hatchery",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "hatchery-shell",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "hatchery-unassigned",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "wisdom",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "wisdom-cutaway_facade",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "wisdom-shell",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "wisdom-unassigned",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    }
+  ]
+}

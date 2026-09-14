@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "elevated-three-quarter-front",
+    "sourcePath": "docs/visual-references/island-004-driftwood-v2/approved-direction/004-same-island-multicolor-v2.png",
+    "width": 844,
+    "height": 1863,
+    "foregroundCoverage": 0.9518,
+    "largestComponentFraction": 1.0,
+    "pHash": 15899198403073391016,
+    "duplicateOfHash": null
+  },
+  "authorityBoundary": "Admitted for palette, hierarchy and detail density only. Actual baseline controls topology and all hidden views."
+}

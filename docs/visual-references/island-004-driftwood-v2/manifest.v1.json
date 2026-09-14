@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "subject": "Island 004 same-island V2",
+  "authority": "actual-runtime-first",
+  "selectedDirection": {
+    "path": "approved-direction/004-same-island-multicolor-v2.png",
+    "sha256": "5911c413313606c9844f898ee85e61d87d741ed4b5c296d0b7c53ea9f1abf04c",
+    "classification": "secondary-inferred-selected-color-direction"
+  },
+  "alternateDirection": {
+    "path": "approved-direction/004-same-island-purple-v2.png",
+    "sha256": "aefb9a39c8176c63c00e65c9a4e20f9e7178cd2cc39684084c07cee7b31e8940",
+    "classification": "secondary-inferred-alternate"
+  },
+  "rejectedExploration": {
+    "path": "secondary-inferred/004-driftwood-v2-concept-v001.png",
+    "sha256": "428619c9a32c2009d4b4fbae98a3cd988603d4c972a872acc51c3ab66d7a32ed",
+    "reason": "User judged it a new island rather than an upgrade of the existing purple Island 004."
+  },
+  "baseline": {
+    "path": "../../gauntlets/island-004-v2/baseline-v007/overview.png",
+    "sha256": "de5bd8f89835d9ca4860e067e1af878cefe45f458ea0eab72b4ceff432202e79"
+  }
+}

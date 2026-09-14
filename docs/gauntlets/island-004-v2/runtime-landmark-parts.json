@@ -1,0 +1,322 @@
+{
+  "model": "island-004-driftwood-v2",
+  "scope": "Actual high-quality L3 landmark factory roots only. Terrain/ocean/ambience are not exported by this factory; this is not a complete scene assembly certificate.",
+  "parts": [
+    {
+      "name": "citadel",
+      "kind": "part",
+      "module": "boss",
+      "actualRootName": "",
+      "triangles": 18496
+    },
+    {
+      "name": "citadel-unassigned",
+      "kind": "part",
+      "module": "boss",
+      "actualPartId": "boss-unassigned",
+      "triangles": 136,
+      "meshNames": [
+        "",
+        "CROWN_CITADEL_VOICE_PRISM"
+      ]
+    },
+    {
+      "name": "citadel-shell",
+      "kind": "part",
+      "module": "boss",
+      "actualPartId": "boss-shell",
+      "triangles": 15756,
+      "meshNames": [
+        "ISLAND_4_BOSS_SHELL_BATCH_0",
+        "ISLAND_4_BOSS_SHELL_BATCH_1",
+        "ISLAND_4_BOSS_SHELL_BATCH_2",
+        "ISLAND_4_BOSS_SHELL_BATCH_3",
+        "ISLAND_4_BOSS_SHELL_BATCH_4",
+        "ISLAND_4_BOSS_SHELL_BATCH_5",
+        "ISLAND_4_BOSS_SHELL_BATCH_6",
+        "ISLAND_4_BOSS_SHELL_BATCH_7",
+        "ISLAND_4_BOSS_SHELL_BATCH_8",
+        "ISLAND_4_BOSS_SHELL_BATCH_9",
+        "ISLAND_4_BOSS_SHELL_BATCH_10",
+        "ISLAND_4_BOSS_SHELL_BATCH_11",
+        "ISLAND_4_BOSS_SHELL_BATCH_12",
+        "ISLAND_4_BOSS_SHELL_BATCH_13",
+        "ISLAND_4_BOSS_SHELL_BATCH_14",
+        "ISLAND_4_BOSS_SHELL_BATCH_15",
+        "ISLAND_4_BOSS_SHELL_BATCH_16",
+        "ISLAND_4_BOSS_SHELL_BATCH_17"
+      ]
+    },
+    {
+      "name": "citadel-roof",
+      "kind": "part",
+      "module": "boss",
+      "actualPartId": "boss-roof",
+      "triangles": 2568,
+      "meshNames": [
+        "ISLAND_4_BOSS_ROOF_BATCH_0",
+        "ISLAND_4_BOSS_ROOF_BATCH_1",
+        "ISLAND_4_BOSS_ROOF_BATCH_2",
+        "ISLAND_4_BOSS_ROOF_BATCH_3"
+      ]
+    },
+    {
+      "name": "citadel-interior",
+      "kind": "part",
+      "module": "boss",
+      "actualPartId": "boss-interior",
+      "triangles": 36,
+      "meshNames": [
+        "ISLAND_4_BOSS_INTERIOR_BATCH_0",
+        "ISLAND_4_BOSS_INTERIOR_BATCH_1"
+      ]
+    },
+    {
+      "name": "hatchery",
+      "kind": "part",
+      "module": "hatchery",
+      "actualRootName": "",
+      "triangles": 25030
+    },
+    {
+      "name": "hatchery-unassigned",
+      "kind": "part",
+      "module": "hatchery",
+      "actualPartId": "hatchery-unassigned",
+      "triangles": 128,
+      "meshNames": [
+        ""
+      ]
+    },
+    {
+      "name": "hatchery-shell",
+      "kind": "part",
+      "module": "hatchery",
+      "actualPartId": "hatchery-shell",
+      "triangles": 22544,
+      "meshNames": [
+        "ISLAND_4_HATCHERY_SHELL_BATCH_0",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_1",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_2",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_3",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_4",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_5",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_6",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_7",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_8",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_9",
+        "ISLAND_4_HATCHERY_SHELL_BATCH_10"
+      ]
+    },
+    {
+      "name": "hatchery-roof",
+      "kind": "part",
+      "module": "hatchery",
+      "actualPartId": "hatchery-roof",
+      "triangles": 1110,
+      "meshNames": [
+        "ISLAND_4_HATCHERY_ROOF_BATCH_0"
+      ]
+    },
+    {
+      "name": "hatchery-interior",
+      "kind": "part",
+      "module": "hatchery",
+      "actualPartId": "hatchery-interior",
+      "triangles": 1248,
+      "meshNames": [
+        "ISLAND_4_HATCHERY_INTERIOR_BATCH_0",
+        "ISLAND_4_HATCHERY_INTERIOR_BATCH_1",
+        "ISLAND_4_HATCHERY_INTERIOR_BATCH_2"
+      ]
+    },
+    {
+      "name": "habit",
+      "kind": "part",
+      "module": "habit",
+      "actualRootName": "",
+      "triangles": 31442
+    },
+    {
+      "name": "habit-unassigned",
+      "kind": "part",
+      "module": "habit",
+      "actualPartId": "habit-unassigned",
+      "triangles": 128,
+      "meshNames": [
+        ""
+      ]
+    },
+    {
+      "name": "habit-shell",
+      "kind": "part",
+      "module": "habit",
+      "actualPartId": "habit-shell",
+      "triangles": 28086,
+      "meshNames": [
+        "ISLAND_4_HABIT_SHELL_BATCH_0",
+        "ISLAND_4_HABIT_SHELL_BATCH_1",
+        "ISLAND_4_HABIT_SHELL_BATCH_2",
+        "ISLAND_4_HABIT_SHELL_BATCH_3",
+        "ISLAND_4_HABIT_SHELL_BATCH_4",
+        "ISLAND_4_HABIT_SHELL_BATCH_5",
+        "ISLAND_4_HABIT_SHELL_BATCH_6",
+        "ISLAND_4_HABIT_SHELL_BATCH_7",
+        "ISLAND_4_HABIT_SHELL_BATCH_8"
+      ]
+    },
+    {
+      "name": "habit-roof",
+      "kind": "part",
+      "module": "habit",
+      "actualPartId": "habit-roof",
+      "triangles": 3108,
+      "meshNames": [
+        "ISLAND_4_HABIT_ROOF_BATCH_0"
+      ]
+    },
+    {
+      "name": "habit-interior",
+      "kind": "part",
+      "module": "habit",
+      "actualPartId": "habit-interior",
+      "triangles": 120,
+      "meshNames": [
+        "ISLAND_4_HABIT_INTERIOR_BATCH_0",
+        "ISLAND_4_HABIT_INTERIOR_BATCH_1"
+      ]
+    },
+    {
+      "name": "wisdom",
+      "kind": "part",
+      "module": "wisdom",
+      "actualRootName": "",
+      "triangles": 10980
+    },
+    {
+      "name": "wisdom-unassigned",
+      "kind": "part",
+      "module": "wisdom",
+      "actualPartId": "wisdom-unassigned",
+      "triangles": 128,
+      "meshNames": [
+        ""
+      ]
+    },
+    {
+      "name": "wisdom-shell",
+      "kind": "part",
+      "module": "wisdom",
+      "actualPartId": "wisdom-shell",
+      "triangles": 6756,
+      "meshNames": [
+        "ISLAND_4_WISDOM_SHELL_BATCH_0",
+        "ISLAND_4_WISDOM_SHELL_BATCH_1",
+        "ISLAND_4_WISDOM_SHELL_BATCH_2",
+        "ISLAND_4_WISDOM_SHELL_BATCH_3",
+        "ISLAND_4_WISDOM_SHELL_BATCH_4",
+        "ISLAND_4_WISDOM_SHELL_BATCH_5",
+        "ISLAND_4_WISDOM_SHELL_BATCH_6"
+      ]
+    },
+    {
+      "name": "wisdom-cutaway_facade",
+      "kind": "part",
+      "module": "wisdom",
+      "actualPartId": "wisdom-cutaway_facade",
+      "triangles": 2952,
+      "meshNames": [
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_0",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_1",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_2",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_3",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_4",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_5",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_6",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_7",
+        "ISLAND_4_WISDOM_CUTAWAY_FACADE_BATCH_8"
+      ]
+    },
+    {
+      "name": "wisdom-roof",
+      "kind": "part",
+      "module": "wisdom",
+      "actualPartId": "wisdom-roof",
+      "triangles": 628,
+      "meshNames": [
+        "ISLAND_4_WISDOM_ROOF_BATCH_0",
+        "ISLAND_4_WISDOM_ROOF_BATCH_1",
+        "ISLAND_4_WISDOM_ROOF_BATCH_2",
+        "ISLAND_4_WISDOM_ROOF_BATCH_3",
+        "ISLAND_4_WISDOM_ROOF_BATCH_4"
+      ]
+    },
+    {
+      "name": "wisdom-interior",
+      "kind": "part",
+      "module": "wisdom",
+      "actualPartId": "wisdom-interior",
+      "triangles": 516,
+      "meshNames": [
+        "ISLAND_4_WISDOM_INTERIOR_BATCH_0",
+        "ISLAND_4_WISDOM_INTERIOR_BATCH_1",
+        "ISLAND_4_WISDOM_INTERIOR_BATCH_2",
+        "ISLAND_4_WISDOM_INTERIOR_BATCH_3",
+        "ISLAND_4_WISDOM_INTERIOR_BATCH_4",
+        "ISLAND_4_WISDOM_INTERIOR_BATCH_5"
+      ]
+    },
+    {
+      "name": "event",
+      "kind": "part",
+      "module": "event",
+      "actualRootName": "",
+      "triangles": 12410
+    },
+    {
+      "name": "event-unassigned",
+      "kind": "part",
+      "module": "event",
+      "actualPartId": "event-unassigned",
+      "triangles": 128,
+      "meshNames": [
+        ""
+      ]
+    },
+    {
+      "name": "event-shell",
+      "kind": "part",
+      "module": "event",
+      "actualPartId": "event-shell",
+      "triangles": 9218,
+      "meshNames": [
+        "ISLAND_4_EVENT_SHELL_BATCH_0",
+        "ISLAND_4_EVENT_SHELL_BATCH_1",
+        "ISLAND_4_EVENT_SHELL_BATCH_2",
+        "ISLAND_4_EVENT_SHELL_BATCH_3",
+        "ISLAND_4_EVENT_SHELL_BATCH_4",
+        "ISLAND_4_EVENT_SHELL_BATCH_5",
+        "ISLAND_4_EVENT_SHELL_BATCH_6",
+        "ISLAND_4_EVENT_SHELL_BATCH_7",
+        "ISLAND_4_EVENT_SHELL_BATCH_8",
+        "ISLAND_4_EVENT_SHELL_BATCH_9",
+        "ISLAND_4_EVENT_SHELL_BATCH_10",
+        "ISLAND_4_EVENT_SHELL_BATCH_11",
+        "ISLAND_4_EVENT_SHELL_BATCH_12"
+      ]
+    },
+    {
+      "name": "event-roof",
+      "kind": "part",
+      "module": "event",
+      "actualPartId": "event-roof",
+      "triangles": 3064,
+      "meshNames": [
+        "ISLAND_4_EVENT_ROOF_BATCH_0",
+        "ISLAND_4_EVENT_ROOF_BATCH_1"
+      ]
+    }
+  ],
+  "unnamedMeshes": 5,
+  "integralMeshes": 99
+}

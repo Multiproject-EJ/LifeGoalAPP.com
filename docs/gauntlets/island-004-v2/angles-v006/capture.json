@@ -1,0 +1,409 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-09-14T03:43:43.272Z",
+  "status": "captured-unreviewed",
+  "scope": "Actual Island 004 browser runtime at desktop-hosted phone viewport; not physical-device evidence.",
+  "finalVisualAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "browserViewport": {
+    "width": 1440,
+    "height": 1080
+  },
+  "dpr": 2,
+  "quality": "high",
+  "reducedMotion": false,
+  "mission": false,
+  "sourceStart": {
+    "branch": "codex/island-004-v2-20260914",
+    "head": "da642f12f1ab6cefd3254c91716ff62913387720",
+    "sources": {
+      "scripts/capture-island004-v2-local.mjs": "a7dcfee568954b24e533ba1d245b1956e2c7f5f3f409f83b63e39cdf17cb8fec",
+      "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx": "c39033a750dd1a496d10d22f650d6aec2d37179de74d7e2c1db8a4f5c799cb51",
+      "src/features/gamification/level-worlds/dev/CrownCitadelThreeModel.ts": "cb88b20531f665e23e2f5ba151f931c2aa113d543eeae056b601368020cfc2f9",
+      "src/features/gamification/level-worlds/dev/Island4DriftwoodThreeWorld.ts": "668fedb78405551eb61bad25a620a6630236691304f29f7fa21cb2decfa330e6",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "81dee5df15b4e8bc8250273ef8e9d28316280e695ece8b151d4a158399aec1e7",
+      "src/features/gamification/level-worlds/dev/IslandStagedRestorationThreePresentation.ts": "c3dc22d956c34b7704679086521003cd2fe05a9e9bda46b0346ff6b07eb377b3",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "9a6ed4e00cb2c6a6d23649b7950c5d7a019ff044b48af9bde17f3ca468793547",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "5768367c371ec03c77a406e34fb8a09cc13bfc488af973822f5ed3e28dee12be",
+      "src/features/gamification/level-worlds/services/islandRunMissionBriefing.ts": "118600aa6a75acece8051e38b9b6c9399833cd4cffb5f68518c53c34bd0a813a",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts": "8937bfa72a605c547aa920e070a679858b34adb67e5c8b64cf340276da320ba7",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts": "a0b04a24a92ebf9e8907e975bdb1b9993613120dd0b5bf66ee378c525505e465"
+    },
+    "sourceSetSha256": "bbc0470c22e041ad6cb1bfc6bee7a1a82facd11674e543d2f4f145d1c0db91f4"
+  },
+  "captures": [
+    {
+      "name": "angle-0",
+      "control": "0",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=0&island3dEvidenceDistanceScale=1",
+      "file": "angle-0.png",
+      "sha256": "b53756bc4121025bb231b582a4e80bbc2d0fccc1a19ab26ca5e14090ef39a4c4",
+      "metrics": "60 FPS\n170 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-45",
+      "control": "45",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=45&island3dEvidenceDistanceScale=1",
+      "file": "angle-45.png",
+      "sha256": "4c2cb64668f1414f173e6d226da78e4c2aefb90dcf2dfbd7f31df56a2b9eb1e6",
+      "metrics": "60 FPS\n167 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "45",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-90",
+      "control": "90",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=90&island3dEvidenceDistanceScale=1",
+      "file": "angle-90.png",
+      "sha256": "f5c61eda3c994b9a1753b7ff19a42dd04b9747c1ee451ec4e366596ad9aef2a1",
+      "metrics": "60 FPS\n167 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "90",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-135",
+      "control": "135",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=135&island3dEvidenceDistanceScale=1",
+      "file": "angle-135.png",
+      "sha256": "4870095eef43c08f6d6c63d88c00612ff3881988f7f18f53b01903c26d2346ed",
+      "metrics": "60 FPS\n164 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "135",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-180",
+      "control": "180",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=180&island3dEvidenceDistanceScale=1",
+      "file": "angle-180.png",
+      "sha256": "191e2232963d6885b6393b7dc6dfa89a2aa1c2f9bf9efe3812f0f9cf6ebabd03",
+      "metrics": "60 FPS\n170 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "180",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-225",
+      "control": "225",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=225&island3dEvidenceDistanceScale=1",
+      "file": "angle-225.png",
+      "sha256": "041b897a80c8c3ac99689141675411705f8f078134ce7e170a8182d7b1c42fa2",
+      "metrics": "60 FPS\n167 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "225",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-270",
+      "control": "270",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=270&island3dEvidenceDistanceScale=1",
+      "file": "angle-270.png",
+      "sha256": "a42a098742dcb574032919ddb25191e1cde6da05fcf3d4e803e61f2dd9666303",
+      "metrics": "60 FPS\n165 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "270",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "angle-315",
+      "control": "315",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=315&island3dEvidenceDistanceScale=1",
+      "file": "angle-315.png",
+      "sha256": "358d21a8a0d0a55365e0af26a97b9e8c82c195fe0dac4e1156dfb16701564910",
+      "metrics": "60 FPS\n170 calls\n118k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "315",
+        "evidenceDistanceScale": "1",
+        "stagedRestorationStage": "0",
+        "stagedRestorationIsland": "4",
+        "archiveInteriorOpen": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=0&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=45&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=90&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=135&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=180&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=225&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=270&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceAzimuth=315&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "errors": [],
+  "browser": {
+    "engine": "Chromium",
+    "version": "149.0.7827.55",
+    "headless": true
+  },
+  "canvasViewport": {
+    "width": 376,
+    "height": 830,
+    "pixelWidth": 752,
+    "pixelHeight": 1660
+  },
+  "sourceEnd": {
+    "branch": "codex/island-004-v2-20260914",
+    "head": "da642f12f1ab6cefd3254c91716ff62913387720",
+    "sources": {
+      "scripts/capture-island004-v2-local.mjs": "a7dcfee568954b24e533ba1d245b1956e2c7f5f3f409f83b63e39cdf17cb8fec",
+      "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx": "c39033a750dd1a496d10d22f650d6aec2d37179de74d7e2c1db8a4f5c799cb51",
+      "src/features/gamification/level-worlds/dev/CrownCitadelThreeModel.ts": "cb88b20531f665e23e2f5ba151f931c2aa113d543eeae056b601368020cfc2f9",
+      "src/features/gamification/level-worlds/dev/Island4DriftwoodThreeWorld.ts": "668fedb78405551eb61bad25a620a6630236691304f29f7fa21cb2decfa330e6",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "81dee5df15b4e8bc8250273ef8e9d28316280e695ece8b151d4a158399aec1e7",
+      "src/features/gamification/level-worlds/dev/IslandStagedRestorationThreePresentation.ts": "c3dc22d956c34b7704679086521003cd2fe05a9e9bda46b0346ff6b07eb377b3",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "9a6ed4e00cb2c6a6d23649b7950c5d7a019ff044b48af9bde17f3ca468793547",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "5768367c371ec03c77a406e34fb8a09cc13bfc488af973822f5ed3e28dee12be",
+      "src/features/gamification/level-worlds/services/islandRunMissionBriefing.ts": "118600aa6a75acece8051e38b9b6c9399833cd4cffb5f68518c53c34bd0a813a",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts": "8937bfa72a605c547aa920e070a679858b34adb67e5c8b64cf340276da320ba7",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts": "a0b04a24a92ebf9e8907e975bdb1b9993613120dd0b5bf66ee378c525505e465"
+    },
+    "sourceSetSha256": "bbc0470c22e041ad6cb1bfc6bee7a1a82facd11674e543d2f4f145d1c0db91f4"
+  },
+  "changedDuringCapture": false,
+  "finishedAt": "2026-09-14T03:44:51.344Z"
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "status": "admitted",
+  "source": "actual local browser runtime at base SHA da642f12f1ab6cefd3254c91716ff62913387720",
+  "capture": "baseline-v007/capture.json",
+  "viewCount": 9,
+  "overviewSha256": "de5bd8f89835d9ca4860e067e1af878cefe45f458ea0eab72b4ceff432202e79",
+  "salvage": ["five-landmark topology", "central five-tower Citadel silhouette", "four satellite silhouettes", "36-tile route", "existing event-arena interaction", "three-span mission contract"],
+  "retire": ["purple on nearly every roof", "generic sparse vegetation", "flat/simple material hierarchy", "excessive full-world draw calls", "weak landmark-specific detailing"],
+  "rejectedCaptures": ["baseline-v001", "baseline-v002", "baseline-v003", "baseline-v004", "baseline-v005", "baseline-v006"],
+  "rejectionReason": "Browser launch failures, mislabeled query framing, incomplete runs, or canvas-intercepted controls."
+}
