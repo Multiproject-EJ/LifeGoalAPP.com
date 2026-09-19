@@ -228,9 +228,12 @@ unchanged wallets/eggs/tickets and reload assertions. Its welcome and completed
 screenshots were visually inspected and are readable and centered. The overall
 run then failed when a queued legacy narrative intercepted the separate mission
 phone click. Do not call the overall v003 report green. The welcome-only runner
-now leaves that separate mission test to its normal mode; v004 is running in
-session71273 with log `/tmp/welcome-ui-v004.log`. Retrieve its report before
-claiming a clean run. No mobile001/003 or fresh first-session acceptance is claimed.
+now leaves that separate mission test to its normal mode. The corrected
+`welcome-ui-v004` completed successfully (session71273 exit0, `PASS new-2`),
+covering the 3D tap, free check-in, unchanged wallets/eggs/tickets, persisted
+completion after reload and no automatic next activity or ticket. Its clean
+report/evidence is retained separately from the failed overall v003 run.
+No mobile001/003 or fresh first-session acceptance is claimed.
 The observed old Luma Isle story after new002 check-in is explicit evidence that
 full narrative/content routing still needs integration before enrollment.
 Full-project `tsc -b --pretty false` is running in session25687 with output at
@@ -241,6 +244,9 @@ Full first-session tutorial wording/replay, all egg inventory grant paths,
 dedicated event-service guards, cohort hydration/enrollment, full content/3D
 routing and the existing art/performance release gates remain open. This is a
 local progression checkpoint, not a production deployment or completed island.
+
+Implementation checkpoint: local commit `91b64221`. No push, merge, cohort
+activation or remote-save change was made. Preserve the separate dirty artwork.
 
 Egg-source audit: Welcome Pack starter cards and the first-session Creature Pack
 grant creatures directly, not eggs; the welcome resource bundle grants dice,
