@@ -5,7 +5,7 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot, subscribeIslandRunState } from './islandRunStateStore';
 import { recordEventMinigameCompletion } from './islandRunEventEngine';
 import { ISLAND_RUN_ECONOMY_SOURCES, recordIslandRunDiceInflow } from './islandRunEconomyTelemetry';
-import { upgradeMinerForge, MINER_FORGE_UNLOCKS, discardMinerTool, openMinerGift, claimWaitingMinerGift, arrangeMinerTools, buyMinerTool, createCrystalMinersProgress, getCrystalMinersCareer, settleMinerDig, simulateMinerDig,
+import { mergeMinerToolGroup, MINER_GROUP_MERGE_LEVEL, upgradeMinerForge, MINER_FORGE_UNLOCKS, discardMinerTool, openMinerGift, claimWaitingMinerGift, arrangeMinerTools, buyMinerTool, createCrystalMinersProgress, getCrystalMinersCareer, settleMinerDig, simulateMinerDig,
   MINER_EVENT_MILESTONES, MINER_LEVEL_COUNT, sanitizeCrystalMinersProgressByEvent, resolveMinerMilestoneReward, type MinerEventTrack, type CrystalMinersProgress, type MinerCommand, type MinerSimulation } from './crystalMinersGame';
 
 const EMPTY_PROGRESS = createCrystalMinersProgress();
@@ -46,6 +46,11 @@ export function applyCrystalMinersAction(options: {
     let rewardState = null;
     let milestoneReward: typeof MINER_EVENT_MILESTONES[number] | undefined;
     switch (options.command.kind) {
+      case 'merge_group':
+        if(progress.level<MINER_GROUP_MERGE_LEVEL)return reject('group_merge_locked');
+        nextProgress=mergeMinerToolGroup(progress,options.command.tier);
+        if(!nextProgress)return reject('no_merge_pairs');
+        break;
       case 'claim': {
         const target = options.command.milestone;
         milestoneReward = MINER_EVENT_MILESTONES.find(m => m.levels === target);
@@ -83,7 +88,7 @@ export function applyCrystalMinersAction(options: {
         playSpend=spendEventGamePlay('crystal_miners',tickets,progress.dropTickets);
         if (!playSpend) return reject('insufficient_tickets');
         simulation = simulateMinerDig(progress);
-        nextProgress = {...settleMinerDig(progress, simulation), dropTickets:playSpend.savedPlays};
+        nextProgress = {...settleMinerDig(progress, simulation), dropTickets:playSpend.savedPlays+simulation.ticketDrops};
         if (simulation.broken > 0) rewardState = recordEventMinigameCompletion({ state: current, minigameId: 'crystal_miners', nowMs });
         nextProgress.lastReceipt!.rewardProgress = Math.max(0, (rewardState?.rewardBarProgress ?? current.rewardBarProgress) - current.rewardBarProgress);
         break;

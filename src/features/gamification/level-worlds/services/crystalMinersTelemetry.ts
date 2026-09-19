@@ -3,9 +3,9 @@ import { recordTelemetryEvent } from '../../../../services/telemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { getMinerReadiness, minerBuyTier, minerChestsRequired, type CrystalMinersProgress, type MinerCommand, type MinerSimulation } from './crystalMinersGame';
 
-export const CRYSTAL_MINERS_BALANCE_VERSION = '2026-09-19.2';
+export const CRYSTAL_MINERS_BALANCE_VERSION = '2026-09-19.3';
 export type MinerTelemetryRecord = { stage: string; dedupeKey: string; metadata: Record<string, string | number | boolean | number[]> };
-export type MinerObservation = 'opened' | 'closed' | 'result_shown' | 'prepared_again' | 'resources_earn' | 'resources_tickets' | 'resources_shop';
+export type MinerObservation = 'opened' | 'closed' | 'result_shown' | 'prepared_again' | 'resources_earn' | 'resources_tickets' | 'resources_shop' | 'tail_accelerated';
 export interface MinerObserver {
   observe(stage: MinerObservation): void;
   accepted(command: MinerCommand, before: CrystalMinersProgress, after: CrystalMinersProgress, simulation: MinerSimulation | undefined, durationMs: number, syncPending: boolean): void;
@@ -49,11 +49,12 @@ export function createMinerObserver(options: {
         prep[`prep_${command.kind}`]=(prep[`prep_${command.kind}`]??0)+1;
         prep.prep_ore_spent=(prep.prep_ore_spent??0)+Math.max(0,before.ore-after.ore);
         if(command.kind==='open'){const key=`gift_tier_${after.tools[command.slot]}`;prep[key]=(prep[key]??0)+1;if(before.superGiftSlots.includes(command.slot))prep.super_gifts_opened=(prep.super_gifts_opened??0)+1;}
+        if(command.kind==='merge_group')prep.prep_merge=(prep.prep_merge??0)+Math.floor(before.tools.filter(t=>t===command.tier).length/2);
         if(command.kind==='move'&&before.tools[command.from]===before.tools[command.to])prep.prep_merge=(prep.prep_merge??0)+1;
       }
       if(simulation){
         const readiness=getMinerReadiness(before);
-        emit('attempt',{...prep,ticket_cost:1,ticket_unit:'drop',drops_per_event_ticket:EVENT_GAME_PLAYS_PER_TICKET.crystal_miners,event_tickets_spent:before.dropTickets>0?0:1,saved_drop_tickets:after.dropTickets,level:before.level,next_level:after.level,attempt_id:`${options.eventId}:${after.revision}`,outcome:simulation.cleared?'cleared':'retry',level_kind:before.level%10===0?'boss_rewards':minerChestsRequired(before.level)===2?'hard_approach':'normal',buy_tier:minerBuyTier(before.level),highest_tier:Math.max(0,...before.tools),tool_count:before.tools.filter(t=>t>0).length,lane_power:readiness.lanePower,ready_lanes:readiness.readyLanes,chests_required:minerChestsRequired(before.level),chests_reached:simulation.blocks.filter(b=>b.kind==='treasure'&&b.hp===0).length,new_chests:simulation.treasures,blocks_broken:simulation.broken,ore_gained:simulation.ore,gifts_gained:simulation.gifts,score:simulation.score,depth:simulation.depth,ore_before:before.ore,forge_before:before.forgeLevel,guardian_hp_remaining:simulation.blocks.find(b=>b.kind==='boss')?.hp??0,action_ms:Math.max(0,durationMs),simulation_ms:(simulation.frames[simulation.frames.length-1]?.step??0)/60*1000,sync_pending:syncPending,milestones_claimed:after.eventTrack.claimedMilestones.filter(n=>!before.eventTrack.claimedMilestones.includes(n))},`cm:attempt:${options.eventId}:${after.revision}`);
+        emit('attempt',{...prep,ticket_cost:1,ticket_unit:'drop',drops_per_event_ticket:EVENT_GAME_PLAYS_PER_TICKET.crystal_miners,event_tickets_spent:before.dropTickets>0?0:1,saved_drop_tickets:after.dropTickets,level:before.level,next_level:after.level,attempt_id:`${options.eventId}:${after.revision}`,outcome:simulation.cleared?'cleared':'retry',level_kind:before.level%10===0?'boss_rewards':minerChestsRequired(before.level)===2?'hard_approach':'normal',buy_tier:minerBuyTier(before.level),highest_tier:Math.max(0,...before.tools),tool_count:before.tools.filter(t=>t>0).length,lane_power:readiness.lanePower,ready_lanes:readiness.readyLanes,chests_required:minerChestsRequired(before.level),chests_reached:simulation.blocks.filter(b=>b.kind==='treasure'&&b.hp===0).length,new_chests:simulation.treasures,blocks_broken:simulation.broken,ore_gained:simulation.ore,gifts_gained:simulation.gifts,drop_tickets_gained:simulation.ticketDrops,spawned_tools:simulation.spawnedTools,score:simulation.score,depth:simulation.depth,ore_before:before.ore,forge_before:before.forgeLevel,guardian_hp_remaining:simulation.blocks.find(b=>b.kind==='boss')?.hp??0,action_ms:Math.max(0,durationMs),simulation_ms:(simulation.frames[simulation.frames.length-1]?.step??0)/60*1000,sync_pending:syncPending,milestones_claimed:after.eventTrack.claimedMilestones.filter(n=>!before.eventTrack.claimedMilestones.includes(n))},`cm:attempt:${options.eventId}:${after.revision}`);
         prep={};
         try{if(options.context().tickets<1)emit('ticket_pause',{source:'after_drop'});}catch{/* Diagnostics cannot interrupt a committed drop. */}
       } else if(command.kind==='upgrade'||command.kind==='claim')emit(command.kind,{ore_spent:before.ore-after.ore,sync_pending:syncPending},`cm:${command.kind}:${options.eventId}:${after.revision}`);

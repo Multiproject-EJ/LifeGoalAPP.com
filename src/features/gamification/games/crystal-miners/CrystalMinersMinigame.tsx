@@ -1,13 +1,14 @@
+import { MinerBlockImpact } from './CrystalMinersEffects';
 import { EVENT_GAME_PLAYS_PER_TICKET } from '../../level-worlds/services/eventGameTicketEconomy';
 import { SafeErrorBoundary } from '../../../../components/SafeErrorBoundary';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
 import type { CrystalMinersBridge } from '../../level-worlds/services/islandRunCrystalMinersActions';
-import { minerBlockY, getMinerReadiness, minerForgeCost, MINER_FORGE_UNLOCKS, MINER_MAX_TIER, MINER_CHEST_REWARDS, minerChestsRequired, MINER_LEVEL_COUNT, minerRecommendedTier, minerBuyTier, isMinerBossCavern, MINER_TIER_COLORS, MINER_TIER_NAMES, MINER_ROWS, MINER_HEIGHT, MINER_LEAGUES, MINER_EVENT_MILESTONES, getMinerLeague, isMinerRewardCavern, MINER_BLOCK_TOP, MINER_BLOCK_HEIGHT, minerBuyCost, minerToolPower,
+import { MINER_GROUP_MERGE_LEVEL, minerBlockY, getMinerReadiness, minerForgeCost, MINER_FORGE_UNLOCKS, MINER_MAX_TIER, MINER_CHEST_REWARDS, minerChestsRequired, MINER_LEVEL_COUNT, minerRecommendedTier, minerBuyTier, isMinerBossCavern, MINER_TIER_COLORS, MINER_TIER_NAMES, MINER_ROWS, MINER_HEIGHT, MINER_LEAGUES, MINER_EVENT_MILESTONES, getMinerLeague, isMinerRewardCavern, MINER_BLOCK_TOP, MINER_BLOCK_HEIGHT, minerBuyCost, minerToolPower,
   type MinerFrame, type MinerCommand, type MinerBlock, type MinerSimulation } from '../../level-worlds/services/crystalMinersGame';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
-import { createMinerReplayCamera } from '../../level-worlds/services/crystalMinersReplay';
+import { createMinerReplayTiming, minerReplayFrameAt, createMinerReplayCamera } from '../../level-worlds/services/crystalMinersReplay';
 import './crystalMiners.css';
 
 export function MinerToolArt({ tier, className = '' }: { tier: number; className?: string }) {
@@ -40,6 +41,7 @@ function TreasureChest({ opened = false }: { opened?: boolean }) {
 }
 
 const PALETTES: Record<MinerBlock['kind'], [string, string, string]> = {
+  ticket:['#bd9452','#fff0a7','#6b502b'], spawner:['#6855a8','#d0b7ff','#342655'], balloon:['#b968a2','#ffb0eb','#76385c'], ember:['#9e4a35','#ffbd67','#542a29'],
   deflector: ['#7371ba', '#b8b8ff', '#3d4179'],
   boss: ['#637b85', '#a2bcc0', '#344f60'],
   ice: ['#6ac8df', '#b3f9ff', '#3588b4'], brick: ['#b76c4b', '#e8a26a', '#75432e'], iron: ['#586577', '#9aa5b2', '#303b4c'], tnt: ['#b55049', '#f2a071', '#753d3e'], gift: ['#7761a7', '#be9fe7', '#473966'],
@@ -102,7 +104,7 @@ function MineScene({ blocks, frame, digging, survey = 'top', camera, level }: { 
         <path d="M0 5 6 0h52v23l-6 5H0z" fill={edge} stroke="#102530" strokeWidth="1.5"/>
         <path d="m0 5 6-5h52l-6 5z" fill={top}/><path d="M0 5h52v23H0z" fill={face}/>
         <path d="m52 5 6-5v23l-6 5z" fill={edge}/>
-        {block.kind === 'deflector' ? <><path d={block.id % 5 === 4 ? 'M43 16H12m0 0 9-7m-9 7 9 7' : 'M10 16h31m0 0-9-7m9 7-9 7'} stroke="#f1e5ff" strokeWidth="4" fill="none"/><circle cx="26" cy="16" r="12" stroke="#e0d3ff" opacity=".3" fill="none"/></> : block.kind === 'ice' ? <><path d="m8 8 5 9 5-8 3 12 7-9 8 9 7-10" fill="none" stroke="#caffff" strokeWidth="2" opacity=".7"/><path d="M2 8h47" stroke="white" opacity=".4"/></>
+        {block.kind==='ticket'?<><rect x="10" y="7" width="32" height="18" rx="5" fill="#fff0b0"/><path d="M20 7v18" stroke="#886631" strokeDasharray="2 2"/><text x="32" y="21" textAnchor="middle" fontSize="12" fill="#624728" fontWeight="900">+1</text></>:block.kind==='spawner'?<><circle className="cm-spawner-core" cx="26" cy="16" r="10" fill="#c4a4fa"/><path d="M18 16h16m-8-8v16" stroke="#fff4f8" strokeWidth="3"/></>:block.kind==='balloon'?<><ellipse cx="26" cy="12" rx="13" ry="11" fill="#f4aee0"/><path d="m24 21 2 4 3-4m-3 3v5" stroke="#ffdaf2"/><ellipse cx="21" cy="8" rx="3" ry="4" fill="white" opacity=".6"/></>:block.kind==='ember'?<path className="cm-ember-core" d="M26 26C5 18 17 6 24 2c-2 10 8 9 7-1C47 17 36 26 26 26Z" fill="#ffbe63"/>:block.kind === 'deflector' ? <><path d={block.id % 5 === 4 ? 'M43 16H12m0 0 9-7m-9 7 9 7' : 'M10 16h31m0 0-9-7m9 7-9 7'} stroke="#f1e5ff" strokeWidth="4" fill="none"/><circle cx="26" cy="16" r="12" stroke="#e0d3ff" opacity=".3" fill="none"/></> : block.kind === 'ice' ? <><path d="m8 8 5 9 5-8 3 12 7-9 8 9 7-10" fill="none" stroke="#caffff" strokeWidth="2" opacity=".7"/><path d="M2 8h47" stroke="white" opacity=".4"/></>
           : block.kind === 'brick' ? <path d="M0 15h52M18 5v10m19 0v13" stroke="#663e30" strokeWidth="2"/>
           : block.kind === 'iron' ? <><path d="M8 10h36v13H8z" fill="none" stroke="#a8b9c5" opacity=".6"/>{[9,44].map(x=><g key={x}><circle cx={x} cy="10" r="2" fill="#c6d6d7"/><circle cx={x} cy="22" r="2" fill="#c6d6d7"/></g>)}</>
           : block.kind === 'tnt' ? <><path d="M9 7v18m34-18v18" stroke="#ebba89" strokeWidth="3"/><text x="26" y="21" textAnchor="middle" fontSize="12" fill="#fff4d2" fontWeight="900">TNT</text></>
@@ -114,16 +116,7 @@ function MineScene({ blocks, frame, digging, survey = 'top', camera, level }: { 
         {block.maxHp > 2 && (block.kind === 'stone' || block.kind === 'iron') && <text x="27" y="22" fill="#d6e6df" textAnchor="middle" fontSize="9" fontWeight="700">{block.hp}</text>}
       </g>;
     })}
-    {frame?.hits.map((hit, i) => <g key={`${hit.step}-${i}`} transform={`translate(${hit.x},${hit.y})`} fill={hit.kind === 'crystal' ? '#a6ffe0' : '#ffe1a0'}>
-      {hit.kind === 'tnt' && <><circle r="60" fill="#ffb655" opacity=".2"/><circle r="38" fill="#fff6ba" opacity=".6"/><circle r="49" fill="none" stroke="#ffca82" strokeWidth="3"/></>}
-      {hit.broken && <circle className="cm-impact-ring" r={hit.kind === 'boss' ? 65 : 19} fill="none" stroke={hit.kind === 'deflector' ? '#d7c4ff' : '#fff3b8'} strokeWidth="2"/>}
-      <path d="m0-17 3 11 12-3-9 8 6 10-12-5-9 9 3-12-11-4 12-2z" opacity=".85"/>
-      {hit.broken && <><rect x="-20" y="-13" width="5" height="5" transform="rotate(25)"/><rect x="19" y="-8" width="4" height="4" transform="rotate(-20)"/></>}
-      {hit.broken && ['gift','treasure','crystal','ore','boss'].includes(hit.kind) && <g className="cm-prize-burst">
-        {[-1,0,1].map((direction)=><g key={direction} transform={`translate(${direction*22},${-18-Math.abs(direction)*9})`}><circle r="7" fill="#edca79" stroke="#fff2bd"/><path d="m0-4 3 4-3 4-3-4z" fill="#9a7433"/></g>)}
-        <text y="-47" textAnchor="middle" fontSize="12" fontWeight="800" fill="#fff1ad" stroke="#172e36" strokeWidth="3" paintOrder="stroke">{hit.kind === 'boss' ? 'GUARDIAN DOWN · +120 ◆' : hit.kind === 'gift' ? '+ GIFT' : hit.kind === 'treasure' ? `+${MINER_CHEST_REWARDS[hit.blockId % 5].label}` : hit.kind === 'crystal' ? '+14 ◆' : '+8 ◆'}</text>
-      </g>}
-    </g>)}
+    {frame?.hits.slice(-24).map(hit=><MinerBlockImpact key={`${hit.step}-${hit.blockId}`} hit={hit}/>)}
     {frame?.bodies.filter(b=>b.active).map(body => <g key={body.id} transform={`translate(${body.x},${body.y}) rotate(${body.angle*180/Math.PI})`}>
       {body.vy > 120 && <path d="M0-13v-26m-5 17v-10m10 13v-18" stroke={MINER_TIER_COLORS[body.tier-1]} strokeWidth="2" opacity=".35"/>}
       <circle r="14" fill={MINER_TIER_COLORS[body.tier-1]} opacity=".12"/><svg x="-14" y="-18" width="28" height="36" viewBox="0 0 64 70"><MinerToolArt tier={body.tier}/></svg>
@@ -139,6 +132,12 @@ type MinerResourceDestination = 'earn' | 'tickets' | 'shop';
 function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersEnabled = false }: { bridge: CrystalMinersBridge; requestResources?: (destination: MinerResourceDestination)=>void; ticketOffersEnabled?: boolean; onComplete: IslandRunMinigameProps['onComplete'] }) {
   const progress = useSyncExternalStore(bridge.subscribe, bridge.getProgress, bridge.getProgress);
   const eventTrack = useSyncExternalStore(bridge.subscribe, bridge.getEventTrack, bridge.getEventTrack);
+  const [mobileView,setMobileView]=useState<'workshop'|'mine'>('workshop');
+  const [ticketFlights,setTicketFlights]=useState<Array<{id:string;x:number;y:number;dx:number;dy:number}>>([]);
+  const [revealedTickets,setRevealedTickets]=useState(0);
+  const ticketCounter=useRef<HTMLDivElement>(null);
+  const flownTickets=useRef(new Set<string>());
+  const flightTimers=useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const [survey, setSurvey] = useState<'top' | 'all' | 'bottom' | 'guardian'>('top');
   const [claimNotice, setClaimNotice] = useState('');
   const dice = useSyncExternalStore(bridge.subscribe, bridge.getDice, bridge.getDice);
@@ -150,6 +149,8 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
   const [message, setMessage] = useState('Open your gifts, then match two tools to forge a stronger one.');
   const [help, setHelp] = useState(false);
   const [leagueOpen, setLeagueOpen] = useState(false);
+  const [groupFx,setGroupFx]=useState<number[]>([]);
+  const tapSequence=useRef({slot:-1,count:0,at:0});
   const [slotFx, setSlotFx] = useState<number | null>(null);
   const [dragPoint, setDragPoint] = useState<{x:number;y:number;tier:number} | null>(null);
   const [muted, setMuted] = useState(false);
@@ -170,8 +171,10 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
   const receipt = progress.lastReceipt;
   const expired = expiresAt <= clock;
   const replayCamera = useMemo(()=>replay ? createMinerReplayCamera(replay.frames) : [],[replay]);
+  const replayTiming=useMemo(()=>replay?createMinerReplayTiming(replay.frames):null,[replay]);
+  const replayTicketHits=useMemo(()=>replay?.frames.flatMap(f=>f.hits).filter(h=>h.broken&&h.kind==='ticket')??[],[replay]);
   const sourceFrame = replay?.frames[Math.min(frameIndex, replay.frames.length - 1)] ?? null;
-  const frame = sourceFrame && replay ? { ...sourceFrame, hits: replay.frames.slice(Math.max(0, frameIndex-3),frameIndex+1).flatMap(f=>f.hits) } : null;
+  const frame = sourceFrame && replay ? { ...sourceFrame, hits: replay.frames.slice(Math.max(0, frameIndex-18),frameIndex+1).flatMap(f=>f.hits) } : null;
   const visibleClears = eventTrack.levelsCleared - (replay && receipt?.cleared ? 1 : 0);
   const visibleClaims = eventTrack.claimedMilestones.filter(level=>!replay || level<=visibleClears);
   const nextPrize = MINER_EVENT_MILESTONES.find(m => !visibleClaims.includes(m.levels));
@@ -199,7 +202,7 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
     const overflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
     root.current?.focus();
     const timer = window.setInterval(()=>setClock(Date.now()), 1000);
-    return () => { mounted.current = false; clearTimeout(slotFxTimer.current); clearInterval(timer); document.body.style.overflow = overflow; before?.focus(); };
+    return () => { mounted.current = false; clearTimeout(slotFxTimer.current); flightTimers.current.forEach(clearTimeout); clearInterval(timer); document.body.style.overflow = overflow; before?.focus(); };
   }, []);
   useEffect(() => {
     const shell = root.current?.querySelector<HTMLElement>('.cm-shell');
@@ -211,12 +214,15 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
     if (!replay) return;
     root.current?.scrollTo({top:0,behavior:'instant' as ScrollBehavior});
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const duration = reduced ? 300 : Math.min(26000, Math.max(5000, replay.frames[replay.frames.length - 1].step / 60 * 650));
+    const timing=createMinerReplayTiming(replay.frames);
+    const duration=reduced?300:timing.duration;
+    let tailReported=false;
     const started = performance.now(); let raf = 0;
     const tick = (now: number) => {
       const ratio = Math.min(1, (now-started)/duration);
-      const index = Math.min(replay.frames.length-1, Math.floor(ratio*replay.frames.length));
+      const index = Math.min(replay.frames.length-1, reduced?Math.floor(ratio*replay.frames.length):minerReplayFrameAt(timing.times,now-started));
       setFrameIndex(index);
+      if(!tailReported&&timing.fastFrom>=0&&index>=timing.fastFrom){tailReported=true;bridge.observe('tail_accelerated');}
       const hits = replay.frames[index]?.hits ?? [];
       if (hits.length && now-soundAt.current > 140 && !mutedRef.current) {
         soundAt.current=now; playIslandRunSound(hits.some(h=>h.kind === 'tnt') ? 'sticker_complete' : hits.some(h=>h.broken && ['gift','treasure','crystal','ore'].includes(h.kind)) ? 'reward_bar_cascade' : 'token_move');
@@ -227,22 +233,35 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
   }, [replay]);
 
+  useEffect(()=>{
+    if(!sourceFrame||!replay)return;
+    const found=replayTicketHits.filter(h=>h.step<=sourceFrame.step);
+    for(const hit of found){const id=`${hit.step}:${hit.blockId}`;if(flownTickets.current.has(id))continue;flownTickets.current.add(id);setRevealedTickets(n=>n+1);
+      const svg=root.current?.querySelector<SVGSVGElement>('.cm-mine');const matrix=svg?.getScreenCTM();const target=ticketCounter.current?.getBoundingClientRect();
+      if(!matrix||!target)continue;const point=new DOMPoint(hit.x,hit.y).matrixTransform(matrix);const bounds=svg!.getBoundingClientRect();point.x=Math.max(bounds.left+20,Math.min(bounds.right-20,point.x));point.y=Math.max(bounds.top+35,Math.min(bounds.bottom-25,point.y));
+      setTicketFlights(items=>[...items.slice(-4),{id,x:point.x,y:point.y,dx:target.x+target.width/2-point.x,dy:target.y+target.height/2-point.y}]);
+      flightTimers.current.push(setTimeout(()=>{if(mounted.current)setTicketFlights(items=>items.filter(item=>item.id!==id));},1200));
+    }
+  },[frameIndex,replay]);
+
   const act = async (command: MinerCommand) => {
     if (lock.current || replay || expired) return;
     lock.current = true; setBusy(true); setMessage('');
+    if(command.kind==='merge_group')setGroupFx(progress.tools.flatMap((tier,index)=>tier===command.tier?[index]:[]));
     try {
       const result = await bridge.act(command, progress.revision);
       if (!mounted.current) return;
       if(result.syncPending!==undefined)setSyncPending(result.syncPending);
       if (!result.ok) {
-        const messages: Record<string,string> = { forge_max: 'Your forge is fully upgraded.', forge_locked: 'Reach the next forge unlock cavern first.', last_tool: 'Keep your last tool so you can continue mining.', invalid_tool: 'Select an opened tool to discard.', invalid_save: 'Your saved mine needs to reload before another action.', open_gifts_first: 'Open a wrapped gift before dropping your tools.', insufficient_tickets: 'Earn another event ticket by filling your island reward bar.',
+        setGroupFx([]);
+        const messages: Record<string,string> = { group_merge_locked:'Group merge unlocks at cavern 25.', no_merge_pairs:'This tier needs at least two matching tools.', forge_max: 'Your forge is fully upgraded.', forge_locked: 'Reach the next forge unlock cavern first.', last_tool: 'Keep your last tool so you can continue mining.', invalid_tool: 'Select an opened tool to discard.', invalid_save: 'Your saved mine needs to reload before another action.', open_gifts_first: 'Open a wrapped gift before dropping your tools.', insufficient_tickets: 'Earn another event ticket by filling your island reward bar.',
           insufficient_ore: 'Mine more ore to buy a tool.', deck_full: 'Your tool rack is full. Merge a matching pair to make room.',
           invalid_move: 'These tools cannot merge. Choose a different slot.', stale_action: 'Your mine updated. Try that move again.', event_expired: 'This event has ended. Return to the island for the next event.', milestone_locked: 'Finish more caverns to unlock this reward.', already_claimed: 'This reward is already in your inventory.', campaign_complete: 'All 40 caverns are complete! Claim your remaining prizes above.' };
         setMessage(messages[result.failureReason ?? ''] ?? 'The mine could not update. Please try again.'); return;
       }
       setSelected(null);
       const fxIndex = command.kind === 'open' ? command.slot : command.kind === 'move' ? command.to : command.kind === 'buy' || command.kind === 'gift' ? progress.tools.indexOf(0) : null;
-      setSlotFx(fxIndex); clearTimeout(slotFxTimer.current); slotFxTimer.current=setTimeout(()=>{if(mounted.current)setSlotFx(null);},650);
+      setSlotFx(fxIndex); clearTimeout(slotFxTimer.current); slotFxTimer.current=setTimeout(()=>{if(mounted.current){setSlotFx(null);setGroupFx([]);}},650);
       if (!muted) playIslandRunSound(command.kind === 'dig' ? 'minigame_open' : 'token_move');
       triggerIslandRunHaptic('roll');
       if (result.rewardLabel) { setClaimNotice(`${result.rewardLabel} collected!`); setMessage(`${result.rewardLabel} collected!`); if (!muted) playIslandRunSound('reward_bar_claim_burst'); return; }
@@ -250,9 +269,9 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
         const revealedTier=bridge.getProgress().tools[command.slot];
         if((progress.superGiftSlots??[]).includes(command.slot)||revealedTier>=minerBuyTier(progress.level)+3)setClaimNotice(`${(progress.superGiftSlots??[]).includes(command.slot)?'Super gift':'Lucky gift'}: tier ${revealedTier} ${MINER_TIER_NAMES[revealedTier-1]}!`);
       }
-      if (result.simulation) { setClaimNotice(''); setSurvey('top'); setFrameIndex(0); setReplay(result.simulation); setResultVisible(false); }
-      else setMessage(command.kind === 'upgrade' ? 'Forge upgraded! Every tool can now take two more impacts per drop.' : command.kind === 'trash' ? 'Tool removed. Your other tools and upgrades are saved.' : command.kind === 'open' ? `Gift opened: tier ${bridge.getProgress().tools[command.slot]}! Match it to upgrade.` : command.kind === 'gift' ? 'Gift added to the rack.' : command.kind === 'buy' ? `New tier ${minerBuyTier(progress.level)} tool added. Match it to level up.` : 'Tools ready. Each tool stays in its lane unless it hits a violet arrow.');
-    } catch(error) { bridge.reportError(error,'ui_action'); if (mounted.current) setMessage('The connection was interrupted. Check your saved mine before trying again.'); }
+      if (result.simulation) { flownTickets.current.clear();flightTimers.current.forEach(clearTimeout);flightTimers.current=[];setRevealedTickets(0);setTicketFlights([]);setMobileView('mine');setClaimNotice(''); setSurvey('top'); setFrameIndex(0); setReplay(result.simulation); setResultVisible(false); }
+      else setMessage(command.kind === 'merge_group' ? `Merged ${Math.floor(progress.tools.filter(t=>t===command.tier).length/2)} pairs of tier ${command.tier}. Any odd tool stays in place.` : command.kind === 'upgrade' ? 'Forge upgraded! Every tool can now take two more impacts per drop.' : command.kind === 'trash' ? 'Tool removed. Your other tools and upgrades are saved.' : command.kind === 'open' ? `Gift opened: tier ${bridge.getProgress().tools[command.slot]}! Match it to upgrade.` : command.kind === 'gift' ? 'Gift added to the rack.' : command.kind === 'buy' ? `New tier ${minerBuyTier(progress.level)} tool added. Match it to level up.` : 'Tools ready. Each tool stays in its lane unless it hits a violet arrow.');
+    } catch(error) { setGroupFx([]);bridge.reportError(error,'ui_action'); if (mounted.current) setMessage('The connection was interrupted. Check your saved mine before trying again.'); }
     finally { lock.current = false; if (mounted.current) setBusy(false); }
   };
   const inspectMine = (view: 'top' | 'all' | 'bottom' | 'guardian') => {
@@ -261,13 +280,17 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
   };
   const replenish = (destination: MinerResourceDestination) => {
     bridge.observe(`resources_${destination}`); if (requestResources) { close(); requestResources(destination); } else setMessage('Local playtest: return to the preview hub to refill tickets. Live purchases are available only in the island game.'); };
-  const choose = (index: number) => {
-    if (suppressClick.current) { suppressClick.current = false; return; }
+  const choose = (index: number, clickDetail=0) => {
+    if (suppressClick.current) { suppressClick.current = false; tapSequence.current={slot:-1,count:0,at:0}; return; }
+    const now=performance.now();const taps=tapSequence.current;
+    tapSequence.current={slot:index,count:taps.slot===index&&now-taps.at<450?taps.count+1:1,at:now};
+    if((tapSequence.current.count>=3||clickDetail>=3)&&progress.level>=MINER_GROUP_MERGE_LEVEL&&progress.tools[index]>0){tapSequence.current={slot:-1,count:0,at:0};void act({kind:'merge_group',tier:progress.tools[index]});return;}
     if (progress.tools[index] < 0) { void act({kind:'open',slot:index}); return; }
     if (selected === null) { if (progress.tools[index] > 0) { setSelected(index); setMessage(''); } }
     else if (selected === index) setSelected(null);
     else void act({ kind: 'move', from: selected, to: index });
   };
+  const renderDrop=(extraClass:string)=><button type="button" className={`cm-drop ${extraClass}`} disabled={busy || Boolean(replay) || tickets < 1 || expired || campaignComplete} onClick={()=>void act({kind:'dig'})}><span>{busy ? 'Preparing…' : replay ? 'Mining the depths…' : expired ? 'Event complete' : campaignComplete ? 'All 40 levels complete!' : 'Drop & mine'}<small>{tickets < 1 ? 'Earn tickets from your island reward bar' : '1 drop ticket per dig'}</small></span><span aria-hidden="true">↓</span></button>;
   return <div ref={root} tabIndex={-1} className={`cm-overlay${replay ? ' cm-is-running' : ''}`} role="dialog" aria-modal="true" aria-labelledby="cm-title"
     onKeyDown={e=>{
       if (e.key === 'Escape') { if (help) setHelp(false); else if (leagueOpen) setLeagueOpen(false); else if (selected !== null) setSelected(null); else close(); }
@@ -278,14 +301,14 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
         else if (!e.shiftKey && document.activeElement === buttons[buttons.length - 1]) { e.preventDefault(); buttons[0].focus(); }
       }
     }}>
-    <div className="cm-ambient" aria-hidden="true"/>
+    <div className="cm-ambient" aria-hidden="true"/>{ticketFlights.map(flight=><div key={flight.id} className="cm-ticket-flight" aria-hidden="true" style={{left:flight.x,top:flight.y,'--fly-x':`${flight.dx}px`,'--fly-y':`${flight.dy}px`} as CSSProperties}>▰ +1 DROP</div>)}
     <div className="cm-shell" aria-hidden={help || leagueOpen || resultVisible || undefined}>
       <header className="cm-header">
         <button type="button" className="cm-icon-button" onClick={close} aria-label="Save and return to island">‹</button>
         <div><p className="cm-eyebrow">HABITGAME · EVENT ARENA</p><h1 id="cm-title">Crystal <em>Miners</em></h1></div>
-        <div className="cm-header-actions"><button type="button" className="cm-icon-button" onClick={()=>setMuted(!muted)} aria-label={muted ? 'Enable game sounds' : 'Mute game sounds'} aria-pressed={muted}>{muted ? '♪̸' : '♪'}</button><button type="button" className="cm-icon-button" onClick={()=>setHelp(!help)} aria-label="How to play Crystal Miners">?</button></div>
+        <div ref={ticketCounter} className={`cm-pocket${ticketFlights.length?' is-collecting':''}`} aria-label="Mining resources"><span>◆ {visibleOre}</span><strong>▰ {Math.max(0,tickets-(replay?Math.max(0,replay.ticketDrops-revealedTickets):0))}</strong><small>drops</small></div><div className="cm-header-actions"><button type="button" className="cm-icon-button" onClick={()=>setMuted(!muted)} aria-label={muted ? 'Enable game sounds' : 'Mute game sounds'} aria-pressed={muted}>{muted ? '♪̸' : '♪'}</button><button type="button" className="cm-icon-button" onClick={()=>setHelp(!help)} aria-label="How to play Crystal Miners">?</button></div>
       </header>
-      <div className="cm-status"><span><i/> {expired ? 'EVENT ENDED' : `LIVE EVENT · ${eventTime}`}</span><span>{syncPending?'Saved on this device · cloud sync pending':'Permanent workshop · autosaved'}</span></div>
+      <div className="cm-status"><span><i/> {expired ? 'EVENT ENDED' : `LIVE EVENT · ${eventTime}`}</span><span className={syncPending?'cm-save-status is-pending':'cm-save-status'}>{syncPending?'Saved on this device · cloud sync pending':'Permanent workshop · autosaved'}</span></div>
       <section className="cm-event-track" aria-label="Cavern completion rewards">
         <div className="cm-track-heading"><div><p className="cm-eyebrow">THE 40-CAVERN JOURNEY</p><strong>{claimablePrize ? 'Your reward is ready!' : nextPrize ? `Next: ${nextPrize.label}` : 'Grand vault complete · all rewards collected'}</strong></div><span>{visibleClears} / 40 cleared</span></div>
         <div className="cm-event-progress" role="progressbar" aria-label="Forty-cavern journey progress" aria-valuenow={visibleClears} aria-valuemin={0} aria-valuemax={40}><i style={{width:`${Math.min(100,visibleClears/40*100)}%`}}/></div>
@@ -297,17 +320,19 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
         {claimNotice && <p className={`cm-claim-notice${claimNotice.startsWith('Mystery gift') ? ' cm-mystery-reveal' : ''}`} role="status">{claimNotice.startsWith('Mystery gift') && <span aria-hidden="true">🎁 ✦ </span>}{claimNotice}</p>}
       </section>
       <button type="button" className="cm-league-strip" disabled={Boolean(replay)} onClick={()=>setLeagueOpen(true)}><span className="cm-league-medal" style={{color:league.color}}>♜</span><span><strong>{league.name} League</strong><small>{visibleScore.toLocaleString()} expedition points</small></span><span className="cm-league-track"><i style={{width:`${league.next ? Math.min(100,(visibleScore-league.threshold)/(league.next.threshold-league.threshold)*100) : 100}%`}}/></span><span>›</span></button>
-      <div className="cm-game-layout">
+      <nav className="cm-mobile-nav" aria-label="Mining view"><button type="button" aria-pressed={mobileView==='workshop'} disabled={Boolean(replay)} onClick={()=>setMobileView('workshop')}>Workshop</button><button type="button" aria-pressed={mobileView==='mine'} onClick={()=>setMobileView('mine')}>Mine · cavern {visibleLevel}</button></nav>
+      <div className="cm-game-layout" data-mobile-view={replay?'mine':mobileView}>
         <section className="cm-workshop">
           <div className="cm-section-heading"><div><p className="cm-eyebrow">PREPARE YOUR EXPEDITION</p><h2>The tool workshop</h2></div><span className="cm-level">TIER {highestTier}</span></div>
+          <p className="cm-group-help">{progress.level>=MINER_GROUP_MERGE_LEVEL?'Group merge unlocked · triple-tap a tool to merge every pair of its tier.':'Group merge unlocks at cavern 25.'}</p>
           <div className="cm-resource-row"><div><span className="cm-ore-icon">◆</span><strong>{visibleOre.toLocaleString()}</strong><small>ore</small></div><div><span>▰</span><strong>{tickets}</strong><small>drop tickets · {EVENT_GAME_PLAYS_PER_TICKET.crystal_miners} per event ticket</small></div></div>
           <div className={`cm-tool-rack${replay ? ' is-mining' : ''}`} aria-label="Tool rack. Select a tool, then a matching tool to merge, or an empty slot to move.">
             {progress.tools.map((tier,index)=><button type="button" data-miner-slot={index} key={index}
-              className={`cm-slot${selected !== null && selected !== index && tier > 0 && tier < MINER_MAX_TIER && progress.tools[selected] === tier ? ' is-match' : ''} ${tier ? 'has-tool' : ''} ${selected === index ? 'is-selected' : ''} ${slotFx === index ? 'cm-forge-pop' : ''}`}
+              className={`cm-slot${selected !== null && selected !== index && tier > 0 && tier < MINER_MAX_TIER && progress.tools[selected] === tier ? ' is-match' : ''} ${tier ? 'has-tool' : ''} ${selected === index ? 'is-selected' : ''} ${slotFx === index ? 'cm-forge-pop' : ''}${groupFx.includes(index)?' cm-group-glow':''}`}
               style={{'--tool-color': MINER_TIER_COLORS[tier-1] ?? '#264652'} as CSSProperties}
               aria-label={`Slot ${index+1}${tier < 0 ? (progress.superGiftSlots??[]).includes(index) ? ', wrapped super gift' : ', wrapped gift' : tier ? `, tier ${tier} ${MINER_TIER_NAMES[tier-1]}` : ', empty'}${selected !== null && selected !== index && tier > 0 && tier < MINER_MAX_TIER && progress.tools[selected] === tier ? ', merge match' : ''}`} aria-pressed={selected === index}
               disabled={busy || Boolean(replay) || expired}
-              onClick={()=>choose(index)}
+              onClick={e=>choose(index,e.detail)}
               onPointerDown={e=>{ if (tier <= 0 || busy || replay) return; drag.current = {from:index,x:e.clientX,y:e.clientY}; e.currentTarget.setPointerCapture(e.pointerId); }}
               onPointerMove={e=>{const start=drag.current;if(start && Math.hypot(e.clientX-start.x,e.clientY-start.y)>8)setDragPoint({x:e.clientX,y:e.clientY,tier:progress.tools[start.from]});}}
               onPointerUp={e=>{
@@ -322,6 +347,7 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
               {tier < 0 ? <svg className={`cm-gift${(progress.superGiftSlots??[]).includes(index) ? ' cm-super-gift' : ''}`} viewBox="0 0 50 50" aria-hidden="true">{(progress.superGiftSlots??[]).includes(index) && <path d="m25 0 5 10 12-2-7 10 7 10-12-2-5 10-5-10-12 2 7-10-7-10 12 2z" fill="#fff0a4" opacity=".65"/>}<path d="M7 19h36v26H7z" fill="#d4a764" stroke="#efce91"/><path d="M4 16h42v10H4z" fill="#ecd197"/><path d="M22 16h7v29h-7z" fill="#9b73bb"/><path d="M25 16Q6-3 12 12q4 5 13 4Q45-3 39 12q-4 5-14 4" fill="none" stroke="#c6a0e6" strokeWidth="4"/></svg> : tier > 0 ? <><MinerToolArt tier={tier}/><b>{tier}</b></> : <span className="cm-empty">+</span>}
             </button>)}
           </div>
+          {progress.level>=MINER_GROUP_MERGE_LEVEL && <button type="button" className="cm-group-merge" disabled={busy||Boolean(replay)||expired||selected===null||progress.tools[selected]<=0||progress.tools[selected]>=MINER_MAX_TIER||progress.tools.filter(t=>selected!==null&&t===progress.tools[selected]).length<2} onClick={()=>{if(selected!==null)void act({kind:'merge_group',tier:progress.tools[selected]});}}>{selected===null?'Select a tier to group merge':`Merge all tier ${progress.tools[selected]} pairs`}</button>}
           <div className="cm-rack-caption"><span>{toolCount}/25 tools</span><span>POWER <strong>{progress.tools.reduce((n,t)=>n+(t > 0 ? minerToolPower(t):0),0)}</strong></span></div>
           <button type="button" className="cm-buy" disabled={busy || Boolean(replay) || expired || progress.ore < minerBuyCost(progress) || toolCount === 25} onClick={()=>void act({kind:'buy'})}><MinerToolArt tier={minerBuyTier(progress.level)}/><span>Buy a tier {minerBuyTier(progress.level)} tool<small>Merge matching tiers to upgrade</small></span><strong>◆ {minerBuyCost(progress)}</strong></button>
           <button type="button" className="cm-forge-upgrade" disabled={busy || Boolean(replay) || expired || forgeLevel >= 5 || progress.level < MINER_FORGE_UNLOCKS[forgeLevel] || progress.ore < minerForgeCost({...progress,forgeLevel})} onClick={()=>void act({kind:'upgrade'})}><span>Upgrade the forge · {forgeLevel}/5<small>{forgeLevel >= 5 ? '+10 impacts per tool · fully upgraded' : progress.level < MINER_FORGE_UNLOCKS[forgeLevel] ? `Next upgrade unlocks at cavern ${MINER_FORGE_UNLOCKS[forgeLevel]}` : '+2 impacts per tool · permanent on every island'}</small></span><strong>{forgeLevel >= 5 ? 'MAX' : `◆ ${minerForgeCost({...progress,forgeLevel})}`}</strong></button>
@@ -336,19 +362,20 @@ function CrystalMinersGame({ bridge, onComplete, requestResources, ticketOffersE
           {!replay && !campaignComplete && <div className="cm-readiness"><strong>{readiness.stage === 'boss' ? 'Guardian readiness' : readiness.stage === 'approach' ? 'Hard approach readiness' : 'Fleet readiness'}</strong><span>{readiness.readyLanes} paths at target · {readiness.neededLanes} needed · aim for {readiness.targetPower} power per path</span><small>{readiness.readyLanes < readiness.neededLanes ? 'Merge, reposition or upgrade before spending a ticket. Damage stays saved between digs.' : 'Suggested power reached. Forge upgrades, remaining terrain and placement still affect how far you get.'}</small></div>}
           {!replay && <div className="cm-survey" aria-label="Inspect the mine"><button type="button" aria-pressed={survey === 'top'} onClick={()=>inspectMine('top')}>Drop zone</button>{isMinerBossCavern(visibleLevel) && <button type="button" aria-pressed={survey === 'guardian'} onClick={()=>inspectMine('guardian')}>Guardian</button>}<button type="button" aria-pressed={survey === 'all'} onClick={()=>inspectMine('all')}>Full shaft</button><button type="button" aria-pressed={survey === 'bottom'} onClick={()=>inspectMine('bottom')}>Bottom treasure ↓</button></div>}
           <div className="cm-mine-frame"><MineScene level={visibleLevel} blocks={frame?.blocks ?? progress.blocks} frame={frame} digging={Boolean(replay)} survey={survey} camera={replayCamera[frameIndex]}/>
-            {replay && <div className="cm-dig-label"><i/> MINING… <button type="button" onClick={()=>{setReplay(null);setResultVisible(true);}}>Skip animation</button></div>}
+            {replay && <div className="cm-dig-label"><i/> {replayTiming && replayTiming.fastFrom>=0 && frameIndex>=replayTiming.fastFrom?'Finishing falls · 2.25×':'MINING…'} <button type="button" onClick={()=>{bridge.observe('result_shown');setReplay(null);setResultVisible(true);}}>Skip animation</button></div>}
           </div>
           <div className="cm-treasure-goal"><div className="cm-goal-chests">{(frame?.blocks ?? progress.blocks).filter(b=>b.kind === 'treasure').map((chest,i)=><div key={chest.id} style={{'--chest-color':MINER_CHEST_REWARDS[i].color} as CSSProperties} aria-label={`Path ${i+1} chest: ${chest.hp === 0 ? 'opened' : MINER_CHEST_REWARDS[i].label}`}><TreasureChest opened={chest.hp === 0}/><small>{chest.hp === 0 ? 'Opened' : MINER_CHEST_REWARDS[i].label}</small></div>)}</div><p><strong>{clearedTreasures} chests reached · {requiredChests} needed</strong><small>{requiredChests === 2 ? 'Hard approach: reach two different finish-line chests.' : 'Any finish-line chest clears the level. Extra paths bring extra rewards.'}</small></p></div>
           {!replay && tickets <= 3 && !expired && !campaignComplete && <div className="cm-supply-pause"><strong>{tickets === 0 ? 'Your next expedition is waiting' : `${tickets} ${tickets === 1 ? 'drop' : 'drops'} remaining`}</strong><p>{tickets === 0 ? 'Your tools, upgrades and cavern damage are safe. Earn event tickets through island play and reward-bar claims. Each event ticket funds three drops.' : `Guardian at cavern ${readiness.nextBoss}. Each drop costs one ticket; prepare your fleet before entering.`}</p>{dice <= 0 && <p>Out of dice? Complete habits or use the island’s normal dice recovery. The Supply Dock has dice offers.</p>}<div><button type="button" onClick={()=>replenish('earn')}>Earn on the island</button>{ticketOffersEnabled && <button type="button" onClick={()=>replenish('tickets')}>View ticket offers</button>}{requestResources && <button type="button" onClick={()=>replenish('shop')}>Dice & supplies</button>}</div></div>}
-          <button type="button" className="cm-drop" disabled={busy || Boolean(replay) || tickets < 1 || expired || campaignComplete} onClick={()=>void act({kind:'dig'})}><span>{busy ? 'Preparing…' : replay ? 'Mining the depths…' : expired ? 'Event complete' : campaignComplete ? 'All 40 levels complete!' : 'Drop & mine'}<small>{tickets < 1 ? 'Earn tickets from your island reward bar' : '1 drop ticket per dig'}</small></span><span aria-hidden="true">↓</span></button>
+          {renderDrop('cm-desktop-drop')}
         </section>
       </div>
+      {renderDrop('cm-mobile-drop')}{!replay&&tickets<1&&<button type="button" className="cm-mobile-earn" onClick={()=>replenish('earn')}>Earn tickets on the island</button>}
       <footer className="cm-footer"><span>◆ {progress.totalOre.toLocaleString()} ore recovered</span><span>▣ {progress.totalTreasures} treasures</span><span>{progress.digs} digs</span></footer>
     </div>
     {dragPoint && <div className="cm-drag-ghost" style={{left:dragPoint.x,top:dragPoint.y}}><MinerToolArt tier={dragPoint.tier}/></div>}
     {leagueOpen && <div className="cm-sheet-backdrop"><section className="cm-sheet cm-league-sheet"><p className="cm-eyebrow">YOUR LIFETIME EXPEDITION RECORD</p><h2>The Mining League</h2><p>Break blocks, discover gifts and reach deeper to earn points. Climb through five personal leagues across your island journey.</p><div className="cm-league-score">{progress.totalScore.toLocaleString()}<small>total points · best drop {progress.bestScore.toLocaleString()}</small></div><div className="cm-league-ladder">{[...MINER_LEAGUES].reverse().map(rank=><div key={rank.name} className={rank.name === league.name ? 'is-current':''}><span style={{color:rank.color}}>♜</span><strong>{rank.name}</strong><small>{rank.threshold.toLocaleString()} pts</small>{rank.name === league.name && <b>YOU</b>}</div>)}</div><button type="button" className="cm-drop" onClick={()=>setLeagueOpen(false)}>Back to the mine</button></section></div>}
-    {help && <div className="cm-sheet-backdrop"><section className="cm-sheet" aria-labelledby="cm-help-title"><p className="cm-eyebrow">YOUR FIELD GUIDE</p><h2 id="cm-help-title">A little planning.<br/>A deeper discovery.</h2><ol><li><strong>Open gifts and forge tools.</strong> Tap wrapped gifts to reveal their numbered tool. Drag unwanted tools to the trash can; your last item is protected. Drag two of the same tier together. You can also tap one, then its match.</li><li><strong>Choose your columns.</strong> Move tools to empty slots or swap them. Tools stay in their chosen column. Rare violet arrow blocks redirect them into the neighboring lane.</li><li><strong>Drop into the mine.</strong> One drop ticket sends your whole rack mining. Ice breaks easily, iron resists, and TNT blasts nearby blocks. Stronger tools hit harder and last longer.</li><li><strong>Build your next expedition.</strong> Spend recovered ore on tools or permanent forge upgrades. Forge upgrades add two impacts to every tool, with five ranks unlocked at caverns 1, 5, 10, 20 and 30. Damage and upgrades are saved. Reach one of the five finish-line chests to pass a normal level; the two levels before each boss require two different chests; the top journey track shows the next rewards, banked automatically when you finish. Uncover gifts to expand your tool rack. Levels 10, 20, 30 and 40 have a guardian guarding a generous reward section: spread tools across all five columns to collect the prizes. Your 40-level journey and claimed rewards stay saved across islands. Later caverns need stronger tools; the shop and recovered gifts also improve as you descend.</li></ol><p>Successful digs add to your active event’s reward bar. Each event ticket earned on the island funds {EVENT_GAME_PLAYS_PER_TICKET.crystal_miners} drops. Unused funded drops stay saved with your workshop. Your tools always return.</p><p>Normal gifts: 70% buying tier, 23% one–two tiers higher, 3% lower (down to tier 1), 3.5% three–four higher, 0.5% five–ten higher. Around 5% of recovered boxes are super gifts: 10% buying tier, 40% one–two higher, 35% three–four higher, 15% five–ten higher. Tier 20 is the ceiling. Each opening is saved once.</p><button type="button" className="cm-drop" onClick={()=>setHelp(false)}>Ready to explore</button></section></div>}
-    {resultVisible && receipt && <div className="cm-sheet-backdrop"><section className="cm-sheet cm-results" aria-labelledby="cm-result-title"><div className="cm-result-gem">{promotion ? '♜' : receipt.gifts ? '✧' : '◆'}</div><p className="cm-eyebrow">EXPEDITION {receipt.dig} COMPLETE</p><h2 id="cm-result-title">{promotion ? `${league.name} League!` : receipt.cleared ? 'All the way down.' : receipt.treasures ? 'Treasure unearthed.' : 'A little deeper.'}</h2><div className="cm-score-award">+{receipt.score.toLocaleString()}<small>expedition points{promotion ? ' · league promoted!' : ''}</small></div><div className="cm-result-depth"><i style={{width:`${receipt.depth/MINER_ROWS*100}%`}}/></div><p>{receipt.depth}/{MINER_ROWS} m reached{receipt.gifts > 0 ? ` · ${receipt.gifts} gifts recovered` : ''}</p><p className="cm-result-objective">{receipt.cleared ? campaignComplete ? 'The grand vault is yours! All 40 caverns complete.' : 'Cavern complete! +1 level on your 40-level journey.' : `${clearedTreasures}/${requiredChests} required chests reached. ${Math.max(0,requiredChests-clearedTreasures)} more to pass this level.`}</p><div className="cm-result-stats"><div><strong>+{receipt.ore}</strong><span>ore recovered</span></div><div><strong>{receipt.broken}</strong><span>blocks broken</span></div><div><strong>{receipt.treasures}</strong><span>treasures</span></div></div><p className="cm-reward-note">{receipt.rewardProgress > 0 ? `+${receipt.rewardProgress} progress added to your event reward bar` : 'Your mine is saved. Merge stronger tools for your next dig.'}</p>{(receipt.milestoneRewards??[]).length>0 && <div className="cm-auto-prizes"><strong>Journey rewards added</strong>{receipt.milestoneRewards.map(label=><p key={label}>✦ {label}</p>)}</div>}{claimNotice && <p className={`cm-claim-notice${claimNotice.startsWith('Mystery gift') ? ' cm-mystery-reveal' : ''}`} role="status">{claimNotice.startsWith('Mystery gift') && <span aria-hidden="true">🎁 ✦ </span>}{claimNotice}</p>}{tickets<1 && !campaignComplete && !expired && <div className="cm-supply-pause"><strong>Your mine is saved. Earn another ticket to continue.</strong><div><button type="button" onClick={()=>replenish('earn')}>Earn on the island</button>{ticketOffersEnabled && <button type="button" onClick={()=>replenish('tickets')}>View ticket offers</button>}{requestResources && <button type="button" onClick={()=>replenish('shop')}>Dice & supplies</button>}</div></div>}<button type="button" className="cm-drop" disabled={busy} onClick={()=>{if(campaignComplete)close();else {bridge.observe('prepared_again');setResultVisible(false);setSelected(null);setMessage('Prepare your next drop: arrange tools, merge matches or upgrade your forge.');root.current?.scrollTo({top:0,behavior:'instant' as ScrollBehavior});}}}>{campaignComplete ? 'Journey complete · return to island' : receipt.cleared ? `Continue · prepare cavern ${progress.level}` : 'Try again · prepare your tools'} <span>↗</span></button><button type="button" className="cm-text-button" onClick={close}>Save & return to island</button></section></div>}
+    {help && <div className="cm-sheet-backdrop"><section className="cm-sheet" aria-labelledby="cm-help-title"><p className="cm-eyebrow">YOUR FIELD GUIDE</p><h2 id="cm-help-title">A little planning.<br/>A deeper discovery.</h2><ol><li><strong>Open gifts and forge tools.</strong> Tap wrapped gifts to reveal their numbered tool. Drag unwanted tools to the trash can; your last item is protected. Drag two of the same tier together. You can also tap one, then its match.</li><li><strong>Special blocks.</strong> Balloons pop into gifts. Violet spawners release a temporary bonus pick in their lane. Gold ticket blocks add one saved drop. Metal needs repeated hits; ice shatters, stone crumbles and ember blocks burn away.</li><li><strong>Choose your columns.</strong> Move tools to empty slots or swap them. Tools stay in their chosen column. Rare violet arrow blocks redirect them into the neighboring lane.</li><li><strong>Drop into the mine.</strong> One drop ticket sends your whole rack mining. Ice breaks easily, iron resists, and TNT blasts nearby blocks. Stronger tools hit harder and last longer.</li><li><strong>Build your next expedition.</strong> Spend recovered ore on tools or permanent forge upgrades. Forge upgrades add two impacts to every tool, with five ranks unlocked at caverns 1, 5, 10, 20 and 30. Damage and upgrades are saved. Reach one of the five finish-line chests to pass a normal level; the two levels before each boss require two different chests; the top journey track shows the next rewards, banked automatically when you finish. Uncover gifts to expand your tool rack. Levels 10, 20, 30 and 40 have a guardian guarding a generous reward section: spread tools across all five columns to collect the prizes. Your 40-level journey and claimed rewards stay saved across islands. Later caverns need stronger tools; the shop and recovered gifts also improve as you descend.</li></ol><p>Successful digs add to your active event’s reward bar. Each event ticket earned on the island funds {EVENT_GAME_PLAYS_PER_TICKET.crystal_miners} drops. Unused funded drops stay saved with your workshop. Your tools always return.</p><p>Normal gifts: 70% buying tier, 23% one–two tiers higher, 3% lower (down to tier 1), 3.5% three–four higher, 0.5% five–ten higher. Around 5% of recovered boxes are super gifts: 10% buying tier, 40% one–two higher, 35% three–four higher, 15% five–ten higher. Tier 20 is the ceiling. Each opening is saved once.</p><button type="button" className="cm-drop" onClick={()=>setHelp(false)}>Ready to explore</button></section></div>}
+    {resultVisible && receipt && <div className="cm-sheet-backdrop"><section className="cm-sheet cm-results" aria-labelledby="cm-result-title"><div className="cm-result-gem">{promotion ? '♜' : receipt.gifts ? '✧' : '◆'}</div><p className="cm-eyebrow">EXPEDITION {receipt.dig} COMPLETE</p><h2 id="cm-result-title">{promotion ? `${league.name} League!` : receipt.cleared ? 'All the way down.' : receipt.treasures ? 'Treasure unearthed.' : 'A little deeper.'}</h2><div className="cm-score-award">+{receipt.score.toLocaleString()}<small>expedition points{promotion ? ' · league promoted!' : ''}</small></div><div className="cm-result-depth"><i style={{width:`${receipt.depth/MINER_ROWS*100}%`}}/></div><p>{receipt.depth}/{MINER_ROWS} m reached{receipt.gifts > 0 ? ` · ${receipt.gifts} gifts recovered` : ''}</p><p className="cm-result-objective">{receipt.cleared ? campaignComplete ? 'The grand vault is yours! All 40 caverns complete.' : 'Cavern complete! +1 level on your 40-level journey.' : `${clearedTreasures}/${requiredChests} required chests reached. ${Math.max(0,requiredChests-clearedTreasures)} more to pass this level.`}</p><div className="cm-result-stats"><div><strong>+{receipt.ore}</strong><span>ore recovered</span></div><div><strong>{receipt.broken}</strong><span>blocks broken</span></div><div><strong>{receipt.treasures}</strong><span>treasures</span></div></div>{receipt.ticketDrops>0&&<p className="cm-ticket-award">▰ +{receipt.ticketDrops} drop ticket added!</p>}<p className="cm-reward-note">{receipt.rewardProgress > 0 ? `+${receipt.rewardProgress} progress added to your event reward bar` : 'Your mine is saved. Merge stronger tools for your next dig.'}</p>{(receipt.milestoneRewards??[]).length>0 && <div className="cm-auto-prizes"><strong>Journey rewards added</strong>{receipt.milestoneRewards.map(label=><p key={label}>✦ {label}</p>)}</div>}{claimNotice && <p className={`cm-claim-notice${claimNotice.startsWith('Mystery gift') ? ' cm-mystery-reveal' : ''}`} role="status">{claimNotice.startsWith('Mystery gift') && <span aria-hidden="true">🎁 ✦ </span>}{claimNotice}</p>}{tickets<1 && !campaignComplete && !expired && <div className="cm-supply-pause"><strong>Your mine is saved. Earn another ticket to continue.</strong><div><button type="button" onClick={()=>replenish('earn')}>Earn on the island</button>{ticketOffersEnabled && <button type="button" onClick={()=>replenish('tickets')}>View ticket offers</button>}{requestResources && <button type="button" onClick={()=>replenish('shop')}>Dice & supplies</button>}</div></div>}<button type="button" className="cm-drop" disabled={busy} onClick={()=>{if(campaignComplete)close();else {bridge.observe('prepared_again');setMobileView('workshop');setResultVisible(false);setSelected(null);setMessage('Prepare your next drop: arrange tools, merge matches or upgrade your forge.');root.current?.scrollTo({top:0,behavior:'instant' as ScrollBehavior});}}}>{campaignComplete ? 'Journey complete · return to island' : receipt.cleared ? `Continue · prepare cavern ${progress.level}` : 'Try again · prepare your tools'} <span>↗</span></button><button type="button" className="cm-text-button" onClick={close}>Save & return to island</button></section></div>}
   </div>;
 }
 

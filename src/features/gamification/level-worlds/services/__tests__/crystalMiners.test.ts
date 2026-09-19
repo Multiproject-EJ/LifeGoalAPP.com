@@ -1,3 +1,5 @@
+import { mergeMinerToolGroup } from '../crystalMinersGame';
+import { createMinerReplayTiming, minerReplayFrameAt } from '../crystalMinersReplay';
 import { eventGamePlaysAvailable, eventGamePackPlays, spendEventGamePlay } from '../eventGameTicketEconomy';
 import { createMinerObserver, minerErrorDetails, type MinerTelemetryRecord } from '../crystalMinersTelemetry';
 import { summarizeMinerTelemetry } from '../../../../../services/crystalMinersAnalytics';
@@ -27,6 +29,45 @@ async function seed(tickets=3) {
 }
 const action = (command: Parameters<typeof applyCrystalMinersAction>[0]['command'], expectedRevision=0, nowMs=500) => applyCrystalMinersAction({session,client:null,eventId,command,expectedRevision,nowMs});
 export const crystalMinersTests: TestCase[] = [
+  {name:'rare ticket blocks award one exact saved drop once in the atomic dig',run:async()=>{
+    await seed();const before=getIslandRunStateSnapshot(session);const p={...createCrystalMinersProgress(),level:6,blocks:createMinerBlocks(6).map(b=>({...b,hp:b.kind==='ticket'?1:0})),tools:Array(25).fill(5)};
+    assertEqual(p.blocks.filter(b=>b.kind==='ticket').length,1,'one rare ticket block');
+    await writeIslandRunGameStateRecord({session,client:null,record:{...before,crystalMinersProgressByEvent:{[eventId]:p}}});refreshIslandRunStateFromLocal(session);
+    const results=await Promise.all([action({kind:'dig'}),action({kind:'dig'})]);const result=results.find(r=>r.ok)!;assertEqual(result.simulation?.ticketDrops,1,'one earned drop');
+    const saved=getCrystalMinersCareer(getIslandRunStateSnapshot(session).crystalMinersProgressByEvent)!;assertEqual(saved.dropTickets,3,'two funded remainder plus one reward, no triple conversion');
+    __resetIslandRunStateStoreForTests();refreshIslandRunStateFromLocal(session);assertEqual(getCrystalMinersCareer(getIslandRunStateSnapshot(session).crystalMinersProgressByEvent)!.dropTickets,3,'reload preserves without regrant');
+  }},
+  {name:'spawners add bounded temporary picks in their own lane without changing the saved rack',run:()=>{
+    const p={...createCrystalMinersProgress(),level:4,tools:Array(25).fill(5),blocks:createMinerBlocks(4).map(b=>({...b,hp:b.kind==='spawner'?1:0}))};const simulation=simulateMinerDig(p);
+    assertEqual(simulation.spawnedTools,1,'one bonus pick');assert(simulation.frames.every(f=>f.bodies.length<=30),'bounded simulation size');
+    const spawned=simulation.frames.flatMap(f=>f.bodies).filter(b=>b.id>=25);assert(spawned.length>0,'spawn is visible in replay');assert(spawned.every(b=>b.lane===4),'spawn stays in its source lane');assertDeepEqual(settleMinerDig(p,simulation).tools,p.tools,'temporary pick is not a permanent free tool');
+  }},
+
+  {name:'group merge unlocks at 25, performs one pass and preserves odd tools, gifts and resources',run:()=>{
+    const p={...createCrystalMinersProgress(),level:25,tools:[7,7,7,7,7,8,8,-1,...Array(17).fill(0)]};
+    assertEqual(mergeMinerToolGroup({...p,level:24},7),null,'locked before cavern 25');
+    const merged=mergeMinerToolGroup(p,7)!;
+    assertDeepEqual(merged.tools.slice(0,8),[0,8,0,8,7,8,8,-1],'pairs merge once with untouched odd remainder and other tier');
+    assertEqual(merged.ore,p.ore,'free merge');assertEqual(merged.dropTickets,p.dropTickets,'no play spend');assertEqual(p.tools[0],7,'input immutable');
+    assertEqual(mergeMinerToolGroup(p,20),null,'max tier cannot exceed ceiling');assertEqual(mergeMinerToolGroup(p,6),null,'no pair rejected');
+  }},
+  {name:'group merge is revision-locked, saved and cannot repeat on duplicate commands',run:async()=>{
+    await seed();const before=getIslandRunStateSnapshot(session);const p={...createCrystalMinersProgress(),level:25,blocks:createMinerBlocks(25),tools:[7,7,7,7,7,...Array(20).fill(0)]};
+    assertEqual((await action({kind:'merge_group',tier:1})).failureReason,'group_merge_locked','canonical unlock enforced');
+    await writeIslandRunGameStateRecord({session,client:null,record:{...before,crystalMinersProgressByEvent:{[eventId]:p}}});refreshIslandRunStateFromLocal(session);
+    const results=await Promise.all([action({kind:'merge_group',tier:7}),action({kind:'merge_group',tier:7})]);assertEqual(results.filter(r=>r.ok).length,1,'one action');
+    __resetIslandRunStateStoreForTests();refreshIslandRunStateFromLocal(session);const saved=getIslandRunStateSnapshot(session);
+    assertDeepEqual(saved.crystalMinersProgressByEvent[eventId].tools.slice(0,5),[0,8,0,8,7],'odd leftover and upgrades survive reload');assertEqual(saved.minigameTicketsByEvent[eventId],3,'no ticket spend');
+  }},
+  {name:'replay speeds only a long tail after the last reachable chest and keeps its reveal',run:()=>{
+    const make=(chests:number[])=>Array.from({length:301},(_,i)=>({step:i*6,bodies:[],blocks:[],hits:chests.includes(i)?[{blockId:135,x:0,y:1000,broken:true,kind:'treasure' as const,step:i*6}]:[]}));
+    const failed=createMinerReplayTiming(make([]));assertEqual(failed.fastFrom,-1,'no chest means no spoiler acceleration');
+    const one=createMinerReplayTiming(make([100]));assert(one.fastFrom>100,'reveal stays normal speed');assert(one.times[one.fastFrom]-one.times[100]>=650,'chest reveal held');assert(one.duration<failed.duration,'long dead tail shortened');
+    const more=createMinerReplayTiming(make([100,240]));assert(more.fastFrom>240,'do not accelerate while another tool will reach a chest');
+    assertEqual(createMinerReplayTiming(make([295])).fastFrom,-1,'short tail left alone');
+    for(let i=0;i<one.times.length;i++){assertEqual(minerReplayFrameAt(one.times,one.times[i]),i,'every frame remains on the timeline');if(i>0)assert(one.times[i]>one.times[i-1],'ordered frames');}
+  }},
+
   {name:'game-specific funding quantities apply equally to earned and purchased event tickets',run:()=>{
     assertEqual(eventGamePlaysAvailable('crystal_miners',2),6,'two earned tickets fund six drops');
     assertEqual(eventGamePackPlays('crystal_miners',10),30,'ten-ticket paid pack funds thirty drops');
@@ -189,7 +230,7 @@ export const crystalMinersTests: TestCase[] = [
     const old={...createCrystalMinersProgress(),version:1,level:6,ore:999,tools:Array(25).fill(4),blocks:createMinerBlocks(6,1),eventTrack:{levelsCleared:0,claimedMilestones:[]}};
     old.blocks[135].hp=0;
     const migrated=sanitizeCrystalMinersProgressByEvent({old}).old;
-    assertEqual(migrated.version,6,'new campaign version');assertEqual(migrated.ore,999,'investment retained');assertDeepEqual(migrated.tools,old.tools,'upgrades retained');assertEqual(migrated.blocks[135].hp,0,'opened chest retained');assertEqual(migrated.eventTrack.levelsCleared,5,'prior levels recognized');
+    assertEqual(migrated.version,7,'new campaign version');assertEqual(migrated.ore,999,'investment retained');assertDeepEqual(migrated.tools,old.tools,'upgrades retained');assertEqual(migrated.blocks[135].hp,0,'opened chest retained');assertEqual(migrated.eventTrack.levelsCleared,5,'prior levels recognized');
     assertDeepEqual(sanitizeCrystalMinersProgressByEvent({old:migrated}).old,migrated,'migration stable after reload');
   }},
   {name:'normal finish needs one chest; the two hard approaches need two; all paths have distinct prizes',run:()=>{
@@ -244,7 +285,7 @@ export const crystalMinersTests: TestCase[] = [
     await seed();const current=getIslandRunStateSnapshot(session);const p={...createCrystalMinersProgress(),version:3,tools:Array(25).fill(5),blocks:createMinerBlocks(1,3)};
     await writeIslandRunGameStateRecord({session,client:null,record:{...current,crystalMinersProgressByEvent:{[eventId]:p as unknown as ReturnType<typeof createCrystalMinersProgress>}}});refreshIslandRunStateFromLocal(session);
     assert((await action({kind:'dig'})).ok,'old workshop accepts new drop');__resetIslandRunStateStoreForTests();refreshIslandRunStateFromLocal(session);
-    const saved=getIslandRunStateSnapshot(session).crystalMinersProgressByEvent[eventId];assertEqual(saved.version,6,'current schema saved');assert(saved.tools.every(t=>t===5),'fleet retained after reload');
+    const saved=getIslandRunStateSnapshot(session).crystalMinersProgressByEvent[eventId];assertEqual(saved.version,7,'current schema saved');assert(saved.tools.every(t=>t===5),'fleet retained after reload');
     const transitional={...saved,version:3};assertDeepEqual(sanitizeCrystalMinersProgressByEvent({transitional}).transitional,saved,'exact current terrain accepted during schema transition');
   }},
   {name:'trash removes only the chosen tool without refunds and protects the last item',run:async()=>{
