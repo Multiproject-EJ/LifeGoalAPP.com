@@ -1,20 +1,33 @@
-import { MINER_HEIGHT, type MinerBody, type MinerFrame } from './crystalMinersGame';
+import { MINER_HEIGHT, type MinerBody, type MinerFrame, type MinerHit } from './crystalMinersGame';
 
 /** Follow the deepest live tool every frame, including overtakes. Completed
  * tools cannot pin the camera below survivors still making their descent. */
-export function createMinerReplayCamera(frames: MinerFrame[]): Array<{ y: number; toolId: number | null; returning: boolean }> {
+export function createMinerReplayCamera(frames: MinerFrame[],height=MINER_HEIGHT): Array<{ y: number; toolId: number | null; returning: boolean }> {
   let y = 0;
   return frames.map(frame => {
     const survivors = frame.bodies.filter(body => body.active);
     const focus = survivors.reduce<MinerBody | undefined>((leader,body)=>!leader || body.y > leader.y ? body : leader,undefined);
     const toolId = focus?.id ?? null;
-    const target = focus ? Math.max(0,Math.min(MINER_HEIGHT-386,focus.y-210)) : y;
+    const target = focus ? Math.max(0,Math.min(height-386,focus.y-210)) : y;
     const returning = target < y - 60;
     y += (target-y)*.19;
     // Smooth following must never let a fast leader leave the lower frame.
-    if (focus) y = Math.max(y, Math.min(MINER_HEIGHT-386, focus.y-300));
+    if (focus) y = Math.max(y, Math.min(height-386, focus.y-300));
     return { y, toolId, returning };
   });
+}
+
+export interface MinerVisualEvent { hit:MinerHit; at:number; duration:number; priority:number }
+/** Build once per replay. A time-based window survives dropped rendering frames;
+ * reward effects cannot be crowded out by a shower of ordinary nonbreaking hits. */
+export function createMinerVisualEvents(frames:MinerFrame[],times:number[]):MinerVisualEvent[] {
+  return frames.flatMap((frame,i)=>Array.from(new Map(frame.hits.map(hit=>[`${hit.step}-${hit.blockId}`,hit])).values()).map(hit=>({hit,at:times[i]??0,duration:hit.broken?700:220,
+    priority:hit.broken&&['ticket','gift','balloon','spawner','charger','key','gate','boss','treasure'].includes(hit.kind)?3:hit.broken?2:1})));
+}
+export function minerVisibleEffects(events:MinerVisualEvent[],elapsed:number,cameraY:number,limit=32):MinerHit[] {
+  return events.filter(e=>e.at<=elapsed&&elapsed-e.at<e.duration&&e.hit.y>=cameraY-70&&e.hit.y<=cameraY+456)
+    .sort((a,b)=>b.priority-a.priority||b.at-a.at).slice(0,Math.max(0,Math.min(32,limit)))
+    .sort((a,b)=>a.at-b.at).map(e=>e.hit);
 }
 
 /** Presentation only: preserve suspense until the final chest that can be reached

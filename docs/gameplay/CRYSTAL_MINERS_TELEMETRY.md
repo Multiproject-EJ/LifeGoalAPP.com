@@ -37,3 +37,14 @@ Balance version 2026-09-19.3 adds rare exact drop-ticket rewards and bounded tem
 Balance version `2026-09-19.4` adds `boss_shots` and `boss_tools_destroyed` to attempts, covering actual canonical weapon hits rather than animation counts. Guardian shots select a lane without consulting occupancy or tickets; equipment investment is never deleted by a shot. Late-stone rebound pacing is now independent of tool tier.
 
 Balance version `2026-09-19.5` identifies the tougher terrain/endurance tuning and six-theme focused presentation. Theme is deterministic from level (six-level rotation), so analysis can group without extra per-frame events. Result telemetry is emitted after the new-chest celebration; rewards remain atomically settled before playback. Admin/dev inspection is presentation-only and does not bypass canonical actions.
+
+
+## Authored progression — balance 2026-09-19.6
+
+New boards use save/layout 10, eight encounter recipes, short sparse onboarding and denser late caverns. Existing layouts 1–9 are admitted unchanged until cleared, including exact HP, opened chests and terrain geometry. Layout definitions are save validators: future HP/layout tuning must introduce a new layout version rather than invalidating an active board. A rollback must retain the schema-10 reader; older clients cannot safely read new saves.
+
+Each attempt additionally records `layout_version`, `course_recipe`, `course_height`, `remaining_blocks`, `lane_capacity`, `lane_resistance`, `charges_collected`, `impacts_restored`, `keys_collected` and `gates_opened`. Capacity is a conservative guidance estimate, not a win prediction: cannon attacks, deflection, bonus tools, impact rounding and key timing can change the result. Compare outcomes by layout/balance version, level and equipment before changing the fixed curve. Never condition difficulty or gift rolls on a player's wallet or checkout behavior.
+
+`node scripts/audit-crystal-miners-balance.mjs` runs nine deterministic headless campaigns: no purchases/forge, up to two purchases per drop plus affordable forge, and up to eight plus forge; three gift seeds each. All policies open gifts and merge. This measures progression and resource flow, not human enjoyment or conversion. Canonical action campaigns in `scripts/test-crystal-miners.mjs` separately test actual ticket spending, all 40 transitions, persistence and exact milestone wallets. The suite also gates positive merge value at every tier, late weak-rack failures, invested clears, bounded effects/replays and legacy save admission.
+
+The admin panel defaults to the latest observed balance version, provides an explicit version selector and a new-layout-only filter, and shows preparation ore per drop and zero-ore drops. This prevents the old easy boards from being averaged into the new curve. These are observational proxies; they do not establish that spending causes enjoyment.
