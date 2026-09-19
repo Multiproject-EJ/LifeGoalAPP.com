@@ -238,8 +238,8 @@ function BuildModalV2HoldButton({
     >
       <span className="bm2-hold-build__icon" aria-hidden="true">⚒️</span>
       <span className="bm2-hold-build__copy">
-        <strong>{isActive ? 'Rapid build · full sequence' : 'Hold for rapid build'}</strong>
-        <small>{isActive ? 'Every part animation is playing' : `${nextTapEssenceCost} Money per build beat`}</small>
+        <strong>{isActive ? 'Building… release to stop' : 'Hold to build'}</strong>
+        <small>{`${nextTapEssenceCost} Money per step`}</small>
       </span>
       <span className="bm2-hold-build__sequence" aria-hidden="true">
         {Array.from({ length: 5 }, (_, index) => <i key={index} />)}
@@ -286,7 +286,7 @@ export function BuildModalV2({
 
   const statusLine = active
     ? `${active.spentEssence}/${active.requiredEssence} Money funded`
-    : '15 of 15 complete';
+    : 'Construction complete';
 
   return createPortal(
     <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}${!fastBuildMode && (levelReview || isComplete) ? ' bm2-build-mode--celebrating' : ''}`} role="presentation">
@@ -387,9 +387,9 @@ export function BuildModalV2({
                   className={`bm2-fast-build bm2-fast-build--${quote.mode}`}
                   disabled={isBuildHoldActive || isBuildInteractionLocked || isBuildModalHatcheryGuidanceActive}
                   onClick={() => onFastBuild?.(quote)}>
-                  <span aria-hidden="true">{quote.mode === 'island' ? '🔥🔥🔥' : '🔥'}</span>
+                  <span className="bm2-fast-build__icon" aria-hidden="true">{quote.mode === 'island' ? '🔥🔥🔥' : '🔥'}</span>
                   <strong>{quote.mode === 'island' ? 'Build all landmarks' : 'Finish landmark'}</strong>
-                  <ShopItemCostLine cost={quote.cost} balance={essenceAvailable} currencyIcon="💰" currencyName="Money" /><small>+{quote.levels} 🎲</small>
+                  <span className="bm2-fast-build__cost"><ShopItemCostLine cost={quote.cost} balance={essenceAvailable} currencyIcon="💰" currencyName="Money" /></span><small>+{quote.levels} 🎲</small>
                 </button>)}
               </div>
               <details className="bm2-build-info"><summary aria-label="Building help and individual parts">? Build options</summary>

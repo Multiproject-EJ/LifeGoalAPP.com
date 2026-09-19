@@ -1922,7 +1922,6 @@ export function IslandRunBoardPrototype({
         || requestedFrostwellMissionState === 'operating'
         ? requestedFrostwellMissionState
         : 'operating',
-      isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
       isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
       journeyDiscArenaInvitationPreview: import.meta.env.DEV && params.get('journeyDiscArenaInvitationPreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
@@ -1946,7 +1945,6 @@ export function IslandRunBoardPrototype({
     islandVisualBuildLevel,
     islandVisualBossState,
     frostwellMissionState,
-    isIsland5ThreePreviewRequested,
     isArenaBattlePreviewRequested,
     journeyDiscArenaInvitationPreview,
     isCaretakerThreeEncounterPreviewRequested,
@@ -2503,11 +2501,9 @@ export function IslandRunBoardPrototype({
   const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
   const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
-  // Authored 3D islands are the production runtime. The legacy 2D board remains
-  // available only to the explicit visual-production preview surface; it must
-  // never replace a live 3D island after a renderer restart or build beat.
-  const shouldRenderIsland5Three = canUseIsland5Three
-    && (!isIslandVisualPreview || isIsland5ThreePreviewRequested);
+  // Preview and gameplay share the authored 3D renderer. A missing URL flag
+  // must never send construction testing back to the retired 2D presentation.
+  const shouldRenderIsland5Three = canUseIsland5Three;
   // Legacy scene-space mission cards could be occluded by the top and reward
   // bars. Persistent mission access now lives in the shared reward-bar rail.
   const shouldRenderLegacySignatureMissionPills = false;
@@ -15832,7 +15828,7 @@ export function IslandRunBoardPrototype({
                 islandNumber={islandArtPreviewNumber}
                 worldSourceNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
-                landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
+                landmarkBuildLevels={island5ThreeBuildLevels}
                 presentation="embedded"
                 qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
                 tileMap={landmarkDoorTileMap}

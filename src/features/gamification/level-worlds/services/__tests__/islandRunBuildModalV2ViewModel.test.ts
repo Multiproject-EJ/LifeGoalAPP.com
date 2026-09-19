@@ -208,7 +208,7 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(modalSource.includes('bm2-dock__topline') && modalSource.includes('bm2-dock__funding'), 'the active build summary should keep level, identity, and funding information in compact rows');
       assert(cssSource.includes('.bm2-level-complete__scene-fx') && cssSource.includes('bm2-level-scene-shine'), 'level completion should add a board-wide shine and sparkle pass');
       assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 2.1s linear both'), 'auto-dismiss celebration should visualize the accelerated full choreography window');
-      assert(modalSource.includes('bm2-build-mode--rapid') && modalSource.includes('Every part animation is playing'), 'hold mode should visibly communicate that its full animation sequence is running');
+      assert(modalSource.includes('bm2-build-mode--rapid') && modalSource.includes('Building… release to stop'), 'hold mode should visibly communicate ongoing building and how to stop it');
     },
   },
 ];

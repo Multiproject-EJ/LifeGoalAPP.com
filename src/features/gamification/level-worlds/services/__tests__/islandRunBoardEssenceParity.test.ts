@@ -357,7 +357,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;') ||
             buildModalV2Source.includes('const isDisabled = isComplete || !part.canAfford || disabledByTutorial || disabledByAnimation || isBuildHoldActive;')
           ) &&
-          buildModalV2Source.includes('Hold for rapid build'),
+          buildModalV2Source.includes('onStartBuildHold(activeStopIndex)') && buildModalV2Source.includes('isDisabled={isBuildInteractionLocked || !canBuildActive}'),
         'Build choices and hold control should expose true affordability/interaction disabled states.',
       );
       assert(
