@@ -2,6 +2,7 @@ import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { OPENING_GAMES_TEAM_ROLL_TARGET, resolveOpeningGamesCeremony } from './islandRunOpeningGames';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveIslandRunCompletion, type IslandRunCompletionState } from './islandRunCompletion';
 import {
   getIslandMissionBriefingPresentation,
@@ -100,7 +101,8 @@ function resolveLandmarkProgress(options: {
 }) {
   const isCurrentIsland = options.state.currentIslandNumber === options.islandNumber;
   const eggResolved = isCurrentIsland
-    && areAllEggSlotsTerminalForIsland(options.state.perIslandEggs, options.islandNumber);
+    && (resolveIslandRunFeatureAccess(options.state).welcomeCheckIn
+      || areAllEggSlotsTerminalForIsland(options.state.perIslandEggs, options.islandNumber));
   let objectivesComplete = 0;
   let buildsComplete = 0;
   let fullyRestored = 0;

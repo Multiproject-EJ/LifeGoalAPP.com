@@ -57,7 +57,7 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   };
   add('builds', 'Build landmarks to Level 3', buildsComplete, landmarkCount);
   add('objectives', 'Complete landmark activities', objectivesComplete, landmarkCount);
-  add('egg', 'Collect or sell all Hatchery eggs', eggResolved ? 1 : 0);
+  if (!access.welcomeCheckIn) add('egg', 'Collect or sell all Hatchery eggs', eggResolved ? 1 : 0);
   if (islandNumber === 1) {
     if (legacyConcord) add('concord', 'Activate the Concord', 1);
     else add('assembly', 'Complete the Assembly', assembly.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET);

@@ -2,7 +2,8 @@
 
 Status: implementation authorized; cohort-aware gating, approved Vault
 prerequisite and playable ceremony UI implemented locally.
-New-campaign enrolment, full egg flow, ordinary-event release gates and release
+The early free welcome activity is implemented locally. New-campaign enrolment,
+full egg flow, ordinary-event release gates and release
 remain incomplete. This is not the finished 3D opening show.
 
 ## Implementation checkpoint
@@ -39,9 +40,10 @@ evidence; v002 supersedes its ceremony screenshot. These routes do not provide
 the Daily Momentum callback, so they are not browser evidence for wheel launch.
 No physical-device or deployment pass is claimed.
 
-Not yet wired: new-cohort enrolment, replacement early Hatchery objectives,
+At the initial foundation checkpoint, not yet wired: new-cohort enrolment, replacement early Hatchery objectives,
 first-egg service guards, custom biome traffic-light geometry and its
-introduction tutorial. The egg selector remains preparatory, not enforcement.
+introduction tutorial. The egg selector was then preparatory, not enforcement.
+The later checkpoints below supersede that early welcome/placement status.
 No current live or unmarked new record is silently enrolled.
 
 ### Approved Vault prerequisite — implemented
@@ -185,12 +187,60 @@ passed with zero browser errors. Its three-row mission phone screenshot was
 visually inspected and remains within the mobile viewport. This is HUD/mission
 regression evidence, not a new full ceremony or device-performance acceptance.
 
-Pending product choice sent via the user-input tool: use the first landmark on
+Previously pending product choice sent via the user-input tool: use the first landmark on
 Islands001–003 as a free welcome/arrival check-in, then introduce its Hatchery
 egg activity on004? This is a real explicit activity, not fabricated objective
 credit from building alone. No replacement activity or removal of the old egg
 departure dependency has been implemented without that choice. Therefore the
-new cohort must remain disabled.
+new cohort must remain disabled. The subsequent "continue" approved the free
+welcome check-in. The implementation checkpoint below supersedes this pending
+choice and the earlier statement that no replacement exists.
+
+### Approved welcome activity — current continuation
+
+New001–003 now use an explicit free Welcome Venue check-in at internal stop0.
+Its dedicated mutex-protected canonical action validates the exact island/cycle
+visit, persists objective/ledger completion once and invokes the existing stop
+resolver. It grants no wallet payout, egg, building progress or next-stop ticket.
+Repeated/concurrent taps are inert, as are stale-visit and legacy/004 calls.
+Travel resets the next activity normally. Enrollment is still disabled.
+
+The canonical departure checklist omits the egg requirement only for these
+early new-cohort islands. All real activities, construction and special missions
+remain required. Island004 and legacy saves still require their eggs. The mission
+phone counts the welcome activity without waiting for an unavailable egg.
+The portal-based, scroll-locked welcome dialog reads the canonical store, shows
+persisted completion after reopening/reload and keeps a separate entry for
+previously earned eggs. Orbit labels/icons, advisor text, Hatchery door copy and
+Egg Mania eligibility reflect the early activity. Egg-specific landmark whispers
+are suppressed on this early welcome surface. No artwork is changed by this slice.
+
+Final focused run passed403 cases, including the existing advisor suite and a
+no-egg mission-phone assertion; architecture guard passed with zero new
+violations and three existing allowlisted warnings. The final service log is
+`/tmp/welcome-checkin-verified-tests.log`. `welcome-ui-v001` failed before the
+board loaded, with an empty-body screenshot and no uncaught app error.
+`welcome-ui-v002` reached the 3D board, but the runner incorrectly looked for
+its hidden 2D orbit button. Neither is accepted mobile evidence. The corrected
+runner taps the rear-left venue observed in the v002 screenshot for new002.
+`welcome-ui-v003` passed its actual 3D tap, viewport portal/scroll-lock, check-in,
+unchanged wallets/eggs/tickets and reload assertions. Its welcome and completed
+screenshots were visually inspected and are readable and centered. The overall
+run then failed when a queued legacy narrative intercepted the separate mission
+phone click. Do not call the overall v003 report green. The welcome-only runner
+now leaves that separate mission test to its normal mode; v004 is running in
+session71273 with log `/tmp/welcome-ui-v004.log`. Retrieve its report before
+claiming a clean run. No mobile001/003 or fresh first-session acceptance is claimed.
+The observed old Luma Isle story after new002 check-in is explicit evidence that
+full narrative/content routing still needs integration before enrollment.
+Full-project `tsc -b --pretty false` is running in session25687 with output at
+`/tmp/welcome-checkin-types.log`; no successful exit has been retrieved. The
+older session44751 was unavailable on resume, and its empty log alone cannot
+establish a successful exit. Do not claim either as a fresh typecheck pass.
+Full first-session tutorial wording/replay, all egg inventory grant paths,
+dedicated event-service guards, cohort hydration/enrollment, full content/3D
+routing and the existing art/performance release gates remain open. This is a
+local progression checkpoint, not a production deployment or completed island.
 
 Egg-source audit: Welcome Pack starter cards and the first-session Creature Pack
 grant creatures directly, not eggs; the welcome resource bundle grants dice,

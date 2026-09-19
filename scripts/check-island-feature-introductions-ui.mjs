@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const out = path.resolve(process.argv[2] || '');
 const playCeremony = process.argv.includes('--play-ceremony');
+const checkWelcome = process.argv.includes('--welcome-check-in');
 assert.ok(process.argv[2] && !existsSync(out), 'Supply a new evidence directory');
 const origin = process.env.ISLAND004_CAPTURE_ORIGIN || 'http://127.0.0.1:5176';
 assert.ok(['127.0.0.1', 'localhost'].includes(new URL(origin).hostname), 'Loopback only');
@@ -14,6 +15,7 @@ mkdirSync(out, { recursive: true });
 const report = { status: 'running', scope: playCeremony ? 'offline real-board ceremony preparation, reveal, cancel/resume, actual guided game and ticket grant; not physical-device acceptance' : 'offline real-board puzzle HUD and mission identity; not ceremony, wheel callback or physical-device acceptance', cases: [], errors: [], externalRequestsBlocked: 0 };
 const browser = await chromium.launch({ headless: true,
   executablePath: '/Users/ejmac/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' });
+if (checkWelcome) report.scope = 'offline real-board welcome check-in, next ticket, reload and legacy/004 Hatchery preservation; not first-session or physical-device acceptance';
 try {
   for (const fixture of [
     { island: 1, gradual: true, puzzle: false },
@@ -69,7 +71,60 @@ try {
       assert.equal(puzzleCount, fixture.puzzle ? 1 : 0, `${name}: puzzle launcher eligibility`);
       assert.equal(await page.getByRole('dialog', { name: 'Traffic light bonus coin flip', exact: true }).count(), 0, 'no unsolicited traffic modal');
       await page.screenshot({ path: path.join(out, `${name}-board.png`) });
-      if (fixture.mission) {
+      if (checkWelcome) {
+        const read = () => page.evaluate(async () => {
+          const { createDemoSession } = await import('/src/services/demoSession.ts');
+          const { readIslandRunGameStateRecord } = await import('/src/features/gamification/level-worlds/services/islandRunGameStateStore.ts');
+          const state = readIslandRunGameStateRecord(createDemoSession());
+          return { stops:state.stopStatesByIndex, eggs:state.perIslandEggs, essence:state.essence, dice:state.dicePool, tickets:state.stopTicketsPaidByIsland };
+        });
+        if (fixture.gradual && fixture.island < 4) {
+          const welcome = page.getByRole('dialog', {name:'Welcome venue',exact:true});
+          const openWelcome = async () => {
+            if (!await welcome.isVisible()) {
+              const orbitButton=page.getByRole('button',{name:/^Welcome Venue —/});
+              if (await orbitButton.isVisible()) await orbitButton.click();
+              else if (fixture.island===2) {
+                // Observed in welcome-ui-v002/new-2-failure.png: 3D mode
+                // hides the 2D orbit buttons. Tap the actual rear-left venue.
+                await page.mouse.click(65,340);
+              } else throw Error('No verified 3D welcome target for this fixture');
+            }
+            await welcome.waitFor({state:'visible'});
+          };
+          await openWelcome();
+          const before=await read();
+          assert.equal(before.stops[0].objectiveComplete,false,'building did not complete check-in');
+          assert.equal(await welcome.getByText(/set.*egg/i).count(),0,'no early egg prompt');
+          const layout=await welcome.evaluate(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,w:innerWidth,h:innerHeight,portal:el.parentElement.parentElement===document.body,locked:[getComputedStyle(document.body).overflow,getComputedStyle(document.documentElement).overflow].includes('hidden')};});
+          assert.ok(layout.portal && layout.locked && layout.x>=0 && layout.y>=0 && layout.right<=layout.w+1 && layout.bottom<=layout.h+1,'centered viewport portal and scroll lock');
+          await page.screenshot({path:path.join(out,`${name}-welcome.png`)});
+          await welcome.getByRole('button',{name:'Check in · Free',exact:true}).click();
+          await welcome.getByRole('heading',{name:'You’re checked in!',exact:true}).waitFor({state:'visible'});
+          const after=await read();
+          assert.equal(after.stops[0].objectiveComplete,true,'check-in saved');
+          for(const key of ['eggs','essence','dice','tickets']) assert.deepEqual(after[key],before[key],`${key} unchanged`);
+          await page.screenshot({path:path.join(out,`${name}-checked-in.png`)});
+          await welcome.getByRole('button',{name:'Continue exploring',exact:true}).click();
+          await page.reload();
+          await page.locator('canvas[aria-label^="Interactive 3D"]').first().waitFor({state:'visible',timeout:180000});
+          await openWelcome();
+          await welcome.getByRole('heading',{name:'You’re checked in!',exact:true}).waitFor({state:'visible'});
+          assert.equal(await welcome.getByRole('button',{name:'Check in · Free',exact:true}).count(),0,'no replay award');
+          assert.deepEqual((await read()).eggs,before.eggs,'reload creates no egg');
+          await welcome.getByRole('button',{name:'Continue exploring',exact:true}).click();
+          const final=await read();
+          assert.equal(final.stops[1].objectiveComplete,false,'next activity is not auto-completed');
+          assert.deepEqual(final.tickets,before.tickets,'next ticket not prepaid');
+        } else {
+          assert.equal(await page.getByRole('button',{name:/^Welcome Venue —/}).count(),0,'legacy/004 keeps Hatchery');
+          assert.equal(await page.getByRole('dialog',{name:'Welcome venue',exact:true}).count(),0,'not replaced with early activity');
+        }
+      }
+      // The welcome run owns check-in/reload evidence. A queued narrative can
+      // legitimately claim attention after closing it; mission-phone coverage
+      // is exercised separately without clicking through that story overlay.
+      if (fixture.mission && !checkWelcome) {
         await page.getByRole('button', { name: new RegExp(`^Open Island ${String(fixture.island).padStart(3, '0')} mission tracker`) }).click();
         const dialog = page.getByRole('dialog').filter({ hasText: fixture.mission });
         await dialog.waitFor({ state: 'visible' });

@@ -96,6 +96,7 @@ import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
 import { OpeningGamesCeremonyModal } from './OpeningGamesCeremonyModal';
+import { IslandRunWelcomeCheckInModal } from './IslandRunWelcomeCheckInModal';
 import {
   getTrafficLightCharge,
   resolveTrafficLightCoinFlipReward,
@@ -5368,9 +5369,14 @@ export function IslandRunBoardPrototype({
   // the celebration can never persist across an island change.
 
   const islandStopPlan = useMemo(
-    () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }),
-    [islandNumber],
+    () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }).map(stop =>
+      featureAccess.welcomeCheckIn && stop.stopId === 'hatchery'
+        ? { ...stop, title: '⚑ Welcome Venue', description: 'Check in with your island hosts, then explore and build. Your welcome activity is free.' }
+        : stop),
+    [islandNumber, featureAccess.welcomeCheckIn],
   );
+  const [showEarlyOwnedEggs, setShowEarlyOwnedEggs] = useState(false);
+  useEffect(() => { setShowEarlyOwnedEggs(false); }, [activeStopId, islandNumber]);
 
   // B1-3: dayIndex computed from island start time
   const dayIndex = useMemo(
@@ -5881,7 +5887,7 @@ export function IslandRunBoardPrototype({
     cycleIndex,
     perIslandEggs: islandProgressReadState.perIslandEggs,
   }), [cycleIndex, islandNumber, islandProgressReadState.perIslandEggs, session.user.id]);
-  const isEggManiaActive = eggManiaState.active;
+  const isEggManiaActive = featureAccess.eggs && eggManiaState.active;
   const isEggManiaUnused = isEggManiaActive && !eggManiaState.consumed;
   const effectiveCompletedStops = useMemo(
     () => getEffectiveCompletedStops({
@@ -5982,7 +5988,7 @@ export function IslandRunBoardPrototype({
         let status: StopProgressState = resolverStatus ?? 'locked';
         // Hatchery (index 0): show yellow 'partial' when egg is set but not yet collected/sold.
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
-        if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
+        if (index === 0 && status === 'completed' && !islandEggSlotUsed && !featureAccess.welcomeCheckIn) {
           status = 'partial';
         } else if (status === 'completed') {
           const buildState = islandProgressReadState.stopBuildStateByIndex[index];
@@ -6016,7 +6022,7 @@ export function IslandRunBoardPrototype({
     }
 
     return map;
-  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan]);
+  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan, featureAccess.welcomeCheckIn]);
 
   const landmarkDiscoveryStates = useMemo(
     () => islandStopPlan.map((stop) => (
@@ -6178,7 +6184,9 @@ export function IslandRunBoardPrototype({
         // island). A deliberate 3D landmark/tray tap still opens it normally.
         setRequiredDoorStopId(null);
         requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking');
-        setLandingText('🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
+        setLandingText(featureAccess.welcomeCheckIn
+          ? '⚑ Welcome Venue reached. Tap the landmark to check in for free.'
+          : '🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
         return;
       }
       setRequiredDoorStopId(doorStopId);
@@ -6841,7 +6849,7 @@ export function IslandRunBoardPrototype({
         focusX: focusPosition.x,
         focusY: focusPosition.y,
         state,
-        icon: getStopIcon(stop),
+        icon: featureAccess.welcomeCheckIn && stop.stopId === 'hatchery' ? '⚑' : getStopIcon(stop),
         labelOffsetY,
         labelOffsetX: 0,
         hideLabel: false,
@@ -6909,6 +6917,7 @@ export function IslandRunBoardPrototype({
     completedStops,
     islandStopPlan,
     islandArtManifest,
+    featureAccess.welcomeCheckIn,
     stopStateMap,
     ticketRequirementByStopId,
     ticketsPaidForCurrentIsland,
@@ -14255,7 +14264,7 @@ export function IslandRunBoardPrototype({
     : concordFirstContactPreviewDialogue;
 
   const landmarkWhispers = useLandmarkWhispers({
-    activeStopId,
+    activeStopId: featureAccess.welcomeCheckIn && activeStopId === 'hatchery' ? null : activeStopId,
     hasHydratedRuntimeState,
     isNarrativeSurfaceBlocked: Boolean(
       isNarrativeSurfaceBlocked ||
@@ -16614,6 +16623,11 @@ export function IslandRunBoardPrototype({
         storyReaderOpen: showStoryReader,
         firstRunCelebrationOpen: showFirstRunCelebration,
       }) && activeStop && (() => {
+        if (activeStop.stopId === 'hatchery' && featureAccess.welcomeCheckIn && !showEarlyOwnedEggs) {
+          return <IslandRunWelcomeCheckInModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
+            onClose={() => setActiveStopId(null)}
+            onReviewEggs={hatcheryPendingEggCount > 0 ? () => setShowEarlyOwnedEggs(true) : undefined} />;
+        }
         const openedStopIndex = islandStopPlan.findIndex((s) => s.stopId === activeStop.stopId);
         const openedStopState = stopStateMap.get(activeStop.stopId) ?? 'active';
         const openedStopIsLocked = openedStopState === 'locked';

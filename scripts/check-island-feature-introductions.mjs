@@ -14,6 +14,7 @@ try {
     ['islandRunOpeningGames', 'islandRunOpeningGamesTests'],
     ['islandRunOpeningGamesAction', 'islandRunOpeningGamesActionTests'],
     ['islandRunEarlyProgression', 'islandRunEarlyProgressionTests'],
+    ['islandRunBestNextActionAdvisor', 'islandRunBestNextActionAdvisorTests'],
     ['islandRunCompletion', 'islandRunCompletionTests'],
     ['islandRunTileRewardAction', 'islandRunTileRewardActionTests'],
     ['islandRunStateActions', 'islandRunStateActionsTests'],

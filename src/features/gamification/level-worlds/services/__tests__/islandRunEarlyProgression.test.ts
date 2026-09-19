@@ -6,6 +6,10 @@ import { applyEggPlacement, applyEggPlacementBatch, resolveReadyEggTerminalTrans
 import { createOpeningGamesCampaignLedger } from '../islandRunSignatureMissions';
 import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
 import { resolveIslandRunCompletion } from '../islandRunCompletion';
+import { completeIslandRunWelcomeCheckIn } from '../islandRunWelcomeCheckInAction';
+import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
+import { resolveIslandRunBestNextAction } from '../islandRunBestNextActionAdvisor';
+import { resolveIslandMissionTrackerPresentation } from '../islandRunMissionTracker';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const session = { user: { id:'early-progression-test', user_metadata:{} } } as Session;
@@ -37,6 +41,50 @@ const travel = (island:number) => travelToNextIsland({session,client:null,nextIs
   startTimer:true,nowMs:1000,getIslandDurationMs:()=>0,islandRunContractV2Enabled:true});
 
 export const islandRunEarlyProgressionTests: TestCase[] = [
+  {name:'early welcome check-in is explicit, free, durable and concurrent-safe; next landmark still needs its ticket',async run(){
+    for(const island of [1,2,3]) {
+      const before=await seed({currentIslandNumber:island, firstSessionTutorialState:'complete',
+        stopStatesByIndex:Array.from({length:5},()=>({objectiveComplete:false,buildComplete:false})),
+        completedStopsByIsland:{},stopTicketsPaidByIsland:{}});
+      assertEqual(resolveIslandRunBestNextAction({record:before,nowMs:100})?.ctaLabel,'Check in · Free','advisor introduces welcome, not eggs');
+      assertEqual(before.stopStatesByIndex[0].objectiveComplete,false,'not auto-completed');
+      const results=await Promise.all([0,1,2].map(()=>completeIslandRunWelcomeCheckIn({session,client:null,visitKey:`0:${island}`})));
+      assertEqual(results.filter(result=>result.status==='completed').length,1,'one canonical transition');
+      const after=getIslandRunStateSnapshot(session);
+      assertEqual(after.runtimeVersion,before.runtimeVersion+1,'duplicate taps are inert');
+      assert(after.stopStatesByIndex[0].objectiveComplete,'real check-in completes first activity');
+      assertEqual(after.stopStatesByIndex[0].buildComplete,false,'does not finish construction');
+      assertEqual(after.activeStopType,'habit','shared resolver advances progression');
+      assertEqual(resolveIslandRunContractV2Stops({stopStatesByIndex:after.stopStatesByIndex,stopTicketsPaidByIsland:after.stopTicketsPaidByIsland,islandNumber:island}).statusesByIndex[1],'ticket_required','no free ticket');
+      for(const key of ['dicePool','essence','islandShards','perIslandEggs','minigameTicketsByEvent','stopBuildStateByIndex'] as const) {
+        assertEqual(JSON.stringify(after[key]),JSON.stringify(before[key]),`${key} unchanged`);
+      }
+      assert(readIslandRunGameStateRecord(session).stopStatesByIndex[0].objectiveComplete,'persisted for reload');
+      assertEqual((await completeIslandRunWelcomeCheckIn({session,client:null,visitKey:`0:${island}`})).status,'already-complete','replay does not grant again');
+      assert(!resolveIslandRunCompletion(after).requirements.some(item=>item.id==='egg'),'no unavailable egg dependency');
+      assert(!resolveIslandRunCompletion(after).complete,'other activities and builds remain required');
+    }
+  }},
+  {name:'welcome rejects legacy, Island004 and stale island or cycle callbacks without mutation',async run(){
+    for(const overrides of [{currentIslandNumber:4},{signatureMissionProgressByIsland:{}},{currentIslandNumber:3},{cycleIndex:1}]) {
+      const before=await seed(overrides);
+      assertEqual((await completeIslandRunWelcomeCheckIn({session,client:null,visitKey:'0:2'})).status,'ineligible','not this early visit');
+      assertEqual(getIslandRunStateSnapshot(session),before,'rejection writes nothing');
+    }
+  }},
+  {name:'new Island003 can depart without eggs after genuine activities and builds; travel resets welcome',async run(){
+    const before=await completeBase(3);
+    const noEggs={...before,perIslandEggs:{}};
+    resetIslandRunStateSnapshot(session,noEggs);
+    assert(resolveIslandRunCompletion(noEggs).complete,'no egg softlock');
+    const tracker=resolveIslandMissionTrackerPresentation({islandNumber:3,state:noEggs});
+    assertEqual(tracker.objectives.find(item=>item.label==='Complete Landmarks')?.value,5,'mission phone counts check-in without an egg');
+    assert(!resolveIslandRunCompletion({...noEggs,signatureMissionProgressByIsland:{}}).complete,'legacy still needs egg');
+    assert(!resolveIslandRunCompletion({...noEggs,stopStatesByIndex:noEggs.stopStatesByIndex.map((entry,index)=>index===0?{...entry,objectiveComplete:false}:entry)}).complete,'construction cannot substitute for check-in');
+    assertEqual((await travel(3)).resolvedIsland,4,'actual egg-free travel succeeds');
+    assert(!getIslandRunStateSnapshot(session).stopStatesByIndex[0].objectiveComplete,'next island activity resets');
+    assert(resolveIslandRunCompletion(getIslandRunStateSnapshot(session)).requirements.some(item=>item.id==='egg'),'first egg required on004');
+  }},
   {name:'new Islands001–003 reject single and batch eggs without granting stop completion',async run(){
     for(const island of [1,2,3]) {
       const before=await seed({currentIslandNumber:island});
@@ -76,7 +124,8 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
     assertEqual(result.record,before,'phantom reward refused');
   }},
   {name:'Island002 cannot clear or travel before inaugural participation, even with every old requirement complete',async run(){
-    const before=await completeBase(2);
+    const before={...await completeBase(2),perIslandEggs:{}};
+    resetIslandRunStateSnapshot(session,before);
     assertEqual(resolveIslandRunCompletion(before).nextRequirement?.id,'opening_ceremony','ceremony is mandatory');
     assert(resolveIslandRunCompletion(before).percent<100,'not falsely complete');
     let rejected=false; try {await travel(2);} catch {rejected=true;}

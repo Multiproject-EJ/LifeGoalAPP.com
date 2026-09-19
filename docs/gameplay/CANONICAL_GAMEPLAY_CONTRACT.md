@@ -554,10 +554,13 @@ number or save age. Enrollment remains disabled until the integration gates in
 `docs/gauntlets/2026-09-19-gradual-island-feature-introductions.md` pass. Unmarked
 and legacy saves retain the rules above and all earned inventory/unlocks.
 
-- New Hatchery egg placement is unavailable on Islands001–003. Island004
-  introduces eggs. The early welcome-venue activity and removal of its obsolete
-  egg-clear dependency must be integrated before this cohort can be enabled;
-  do not auto-complete activities to conceal a missing replacement.
+- On Islands001–003 the first landmark is a **Welcome Venue** with an explicit,
+  free arrival check-in. It retains internal stop ID `hatchery`, completes only
+  that activity and opens normal next-stop ticket eligibility. It grants no
+  currency, egg, construction credit or prepaid ticket. Building alone never
+  completes check-in. These islands do not require a resolved egg to depart.
+  New egg placement is unavailable until Island004, which introduces the
+  Hatchery activity and restores the terminal-egg departure requirement.
 - New Island002 requires the opening ceremony **and completed participation in
   its free inaugural game** before island clear/departure. Canceling the game,
   finishing construction, or lighting the beacon alone does not satisfy this.
@@ -571,7 +574,7 @@ and legacy saves retain the rules above and all earned inventory/unlocks.
 
 The ceremony and Re-Docking requirements are explicit exceptions to the
 otherwise optional signature-mission rule. Egg reward inventory/other grant
-sources and early welcome-venue UI remain separately tracked release gates.
+sources and full first-session onboarding remain separately tracked release gates.
 
 ---
 

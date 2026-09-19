@@ -15,6 +15,7 @@ import {
   isIslandStopEffectivelyCompleted,
 } from './islandRunStopCompletion';
 import { resolveIslandRunCompletion } from './islandRunCompletion';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { generateIslandStopPlan } from './islandRunStops';
 import { getStopTicketCost, getStopTicketsPaidForIsland, isStopTicketPaid, STOP_COUNT } from './islandRunStopTickets';
 import { areAllEggSlotsTerminalForIsland, getUnresolvedEggSlotsForIsland } from './islandRunEggMania';
@@ -191,8 +192,10 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
     return {
       action: 'set_egg_hatchery',
       urgency: 'high',
-      ctaLabel: 'Set egg',
-      reason: 'Set an egg in the Hatchery to unlock island progression.',
+      ctaLabel: resolveIslandRunFeatureAccess(record).welcomeCheckIn ? 'Check in · Free' : 'Set egg',
+      reason: resolveIslandRunFeatureAccess(record).welcomeCheckIn
+        ? 'Check in at the Welcome Venue to open the next landmark.'
+        : 'Set an egg in the Hatchery to unlock island progression.',
       meta: { stopId: 'hatchery', stopIndex: 0 },
     };
   }
