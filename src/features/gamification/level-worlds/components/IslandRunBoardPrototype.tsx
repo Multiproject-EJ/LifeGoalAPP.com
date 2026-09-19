@@ -1,3 +1,5 @@
+import { eventGamePackPlays, EVENT_GAME_PLAYS_PER_TICKET } from '../services/eventGameTicketEconomy';
+import { createCrystalMinersBridge } from '../services/islandRunCrystalMinersActions';
 import { IslandFrostwellMissionModal } from './IslandFrostwellMissionModal';
 import { useFrostwellMissionSequence } from '../hooks/useFrostwellMissionSequence';
 import { lockFullscreenPageScroll, lockPageScroll } from '../../../../utils/scrollLock';
@@ -10821,6 +10823,37 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchArenaGame = (gameId: ArenaGameId) => {
+    if (gameId === 'crystal_miners') {
+      const miningEvent = effectiveActiveTimedEvent ?? activeTimedEvent;
+      if (!miningEvent || !isCanonicalEventId(miningEvent.eventType)) {
+        setLandingText('Crystal Miners opens during an active Arena event.');
+        return;
+      }
+      if (!canOpenIslandRunOverlayWhileRollingState({ isRolling, isAnimatingRoll: isAnimatingRollRef.current, isRollSyncPending: isRollSyncPendingRef.current })) {
+        stopAutoRoll();
+        setLandingText('Finish this roll, then enter the crystal mine.');
+        return;
+      }
+      const pace = resolveArenaSessionPace(arenaPreferences, gameId);
+      if (!pace) { setShowArenaPreferences(true); return; }
+      registerAllMinigameManifests();
+      setActiveLaunchedMinigameId(gameId);
+      setActiveLaunchedMinigameSource('timed_event');
+      const miningBridge=createCrystalMinersBridge({session,client,eventId:miningEvent.eventId});
+      setActiveLaunchedMinigameConfig({
+        source: 'timed_event', mode: 'crystal_miners', arenaTimerManagedByGame: true,
+        bridge: miningBridge,
+        onError: (error:Error)=>miningBridge.reportError(error,'load'),
+        ticketOffersEnabled: isIslandRunFeatureEnabled('minigameTicketPurchasesReady') && !isDemoSession(session),
+        requestResources: (destination: 'earn' | 'tickets' | 'shop') => {
+          if (destination === 'tickets') openRewardDetailsModal();
+          else if (destination === 'shop') openShopPanel();
+          else setLandingText('Your mine is saved. Earn event tickets from island play and reward-bar claims, then return to Crystal Miners.');
+        },
+      });
+      playIslandRunSound('minigame_open');
+      return;
+    }
     if (gameId === 'momentum_matrix') {
       handleLaunchMomentumMatrix();
       return;
@@ -17989,6 +18022,7 @@ export function IslandRunBoardPrototype({
             ) : null}
 
             <div className="island-event-modal__tile-info">
+              <p className="island-stop-modal__copy">Each event ticket funds {EVENT_GAME_PLAYS_PER_TICKET.crystal_miners} Crystal Miners drops. Converted drops stay in your workshop.</p>
               <p className="island-event-modal__tile-info-title">Tiles that fill this bar</p>
               <div className="island-event-modal__tile-list">
                 <span>🎁 Chest <b>+2</b></span>
@@ -18010,7 +18044,7 @@ export function IslandRunBoardPrototype({
                   onClick={() => void handleStartMinigameTicketCheckout('active_event_panel')}
                   disabled={isStartingMinigameTicketCheckout}
                 >
-                  {isStartingMinigameTicketCheckout ? 'Starting ticket checkout…' : 'Buy Tickets'}
+                  {isStartingMinigameTicketCheckout ? 'Starting ticket checkout…' : `Buy 10 event tickets · ${eventGamePackPlays('crystal_miners',10)} Miners drops`}
                 </button>
               )}
               {canClaimRewardBar && (

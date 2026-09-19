@@ -30,6 +30,9 @@ interface IslandRunArenaChoiceProps {
 }
 
 function ArenaChoiceMiniature({ game }: { game: ArenaGameDefinition }) {
+  if (game.id === 'crystal_miners') {
+    return <img src="/assets/event-games/crystal-miners/cover.svg" alt="" style={{height:94,width:'100%',objectFit:'contain'}}/>;
+  }
   if (game.id === 'lucky_spin') {
     return <span className="arena-choice__miniature arena-choice__miniature--wheel" aria-hidden="true"><i /><i /><b>✦</b></span>;
   }
@@ -71,8 +74,8 @@ function ArenaChoiceCard(props: {
       className="arena-choice__card"
       style={{ '--arena-choice-accent': props.game.accent } as CSSProperties}
       onClick={props.onChoose}
-      disabled={props.tickets < 1}
-      aria-label={`Play ${props.game.displayName}. ${props.game.familyLabel}. ${props.game.id === 'journey_disc_arena' ? 'Choose one to four event-ticket weapon discs.' : 'Costs one event ticket.'}`}
+      disabled={props.tickets < 1 && props.game.id !== 'crystal_miners'}
+      aria-label={`Play ${props.game.displayName}. ${props.game.familyLabel}. ${props.game.id === 'crystal_miners' ? 'Open your saved workshop for free. One event ticket per drop.' : props.game.id === 'journey_disc_arena' ? 'Choose one to four event-ticket weapon discs.' : 'Costs one event ticket.'}`}
     >
       <span className="arena-choice__glow" aria-hidden="true" />
       <span className="arena-choice__icon" aria-hidden="true">{props.game.icon}</span>
@@ -81,7 +84,7 @@ function ArenaChoiceCard(props: {
       <strong>{props.game.displayName}</strong>
       <ArenaChoiceMiniature game={props.game} />
       <p>{props.game.description}</p>
-      <span className="arena-choice__cost"><i>Play</i> · {props.game.id === 'journey_disc_arena' ? '1–4 ◉' : '1 🎟️'}</span>
+      <span className="arena-choice__cost"><i>{props.game.id === 'crystal_miners' ? 'Open workshop' : 'Play'}</i> · {props.game.id === 'crystal_miners' ? '1 🎟️ per drop' : props.game.id === 'journey_disc_arena' ? '1–4 ◉' : '1 🎟️'}</span>
     </button>
   );
 }

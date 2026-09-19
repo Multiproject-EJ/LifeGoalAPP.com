@@ -684,6 +684,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       journeyDiscArenaProgressByEvent: current.journeyDiscArenaProgressByEvent,
       journeyDiscArmory: current.journeyDiscArmory,
       momentumMatrixProgressByEvent: current.momentumMatrixProgressByEvent,
+      crystalMinersProgressByEvent: current.crystalMinersProgressByEvent,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

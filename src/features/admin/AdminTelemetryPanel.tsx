@@ -1,3 +1,4 @@
+import { CrystalMinersTelemetryPanel } from './CrystalMinersTelemetryPanel';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -178,6 +179,8 @@ export function AdminTelemetryPanel({ session }: Props) {
       </div>
 
       {error ? <p className="account-panel__hint">Could not load telemetry: {error}</p> : null}
+
+      <CrystalMinersTelemetryPanel lookbackDays={lookback}/>
 
       {insights ? (
         <>

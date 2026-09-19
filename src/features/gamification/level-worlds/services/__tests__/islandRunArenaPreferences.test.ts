@@ -41,21 +41,23 @@ export const islandRunArenaPreferencesTests: TestCase[] = [
   {
     name: 'only 25% of canonical Arena games can be disabled',
     run: () => {
-      assert(getArenaDisabledLimit() === 2, 'expected two disabled slots');
+      assert(getArenaDisabledLimit() === 3, 'expected three disabled slots for twelve games');
       const first = toggleArenaEvent(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'lucky_spin');
       assert(first.changed, 'first pause should succeed');
       const second = toggleArenaEvent(first.preferences, 'feeding_frenzy');
       assert(second.changed, 'second pause should succeed');
       const third = toggleArenaEvent(second.preferences, 'signal_path');
-      assert(!third.changed, 'third pause should be refused');
-      assert(Boolean(third.reason), 'refusal should explain the cap');
+      assert(third.changed, 'third pause should succeed');
+      const fourth = toggleArenaEvent(third.preferences, 'crystal_miners');
+      assert(!fourth.changed, 'fourth pause should be refused');
+      assert(Boolean(fourth.reason), 'refusal should explain the cap');
     },
   },
   {
     name: 'ranking produces full, middle-fast, and flash pacing',
     run: () => {
       const rows = getArenaPreferenceRows(DEFAULT_ARENA_MINIGAME_PREFERENCES);
-      assert(rows.map((row) => row.pace).join(',') === 'full,full,fast,fast,fast,fast,fast,fast,fast,flash,flash', 'unexpected pace tiers');
+      assert(rows.map((row) => row.pace).join(',') === 'full,full,full,fast,fast,fast,fast,fast,fast,flash,flash,flash', 'unexpected pace tiers');
       assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'twin_sigils') === 'flash', 'last game should flash');
     },
   },

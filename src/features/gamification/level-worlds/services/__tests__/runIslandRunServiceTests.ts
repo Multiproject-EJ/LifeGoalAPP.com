@@ -1,3 +1,4 @@
+import { crystalMinersTests } from './crystalMiners.test';
 import { creatureCatalogTests } from './creatureCatalog.test';
 import { creatureCollectionServiceTests } from './creatureCollectionService.test';
 import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryService.test';
@@ -258,6 +259,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'fortuneEngineEconomyModel', tests: fortuneEngineEconomyModelTests },
   { label: 'fortuneEngineStateActions', tests: fortuneEngineStateActionsTests },
   { label: 'islandWorkshopGame', tests: islandWorkshopGameTests },
+  { label: 'crystalMiners', tests: crystalMinersTests },
   { label: 'momentumMatrixGame', tests: momentumMatrixGameTests },
   { label: 'skyboundExpeditionFlight', tests: skyboundExpeditionFlightTests },
   { label: 'skyboundPilotAcademy', tests: skyboundPilotAcademyTests },

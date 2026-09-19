@@ -482,6 +482,8 @@ record. Such a track is not a second global reward bar: it cannot own another
 clock or wallet, and every claim must route through canonical action services
 into the existing Island Run wallets.
 
+Crystal Miners is an Arena exhibition using the current event ticket bucket and reward bar. Opening, gifts, ore purchases and tool arrangement cost no tickets; each accepted whole-rack drop costs one. Its complete mining career (tools, merged upgrades, ore, waiting gifts, cavern terrain and personal league) persists across island travel and event rotation. Event-keyed checkpoints retain spend evidence; the highest career revision supplies the workshop on every visit. A drop settles its ticket, mining result and normal event reward progress atomically before visual playback. Its forty-cavern journey and once-only milestone claims also persist across rotations. Five finish-line chests offer distinct ore/gift rewards; normal levels need one reached chest, levels ending in 8 or 9 need two. Every tenth level has a full-width guardian followed by a generous reward fall. Milestones automatically pay the existing dice/Essence wallets or active-event ticket bucket in the successful dig commit. The result offers Continue or Try again; both always return to workshop preparation. Only a separate explicit Drop action starts another expedition. Mined ore funds level-gated forge upgrades and tool purchases. Tools stay in their lanes except at marked rare deflectors. The playback camera follows the deepest active tool each frame, immediately following overtakes and returning upward to surviving tools after a leader finishes. Weighted normal/super gifts roll once when opened, with revealed tools saved immediately and a tier-20 ceiling. Low-ticket prompts route to island earning or the existing gated Stripe ticket and dice surfaces; ticket counts never alter physics or gift odds. Level forty ends the campaign without resetting investments or enabling repeat finale claims. It has no building side mission or separate island wallet.
+
 Journey Disc Arena reward-track points and claims are event-scoped. Its fighter
 rank, weapon levels, and highest Guardian clearance are a permanent owner-scoped
 armory profile carried between eligible exhibition islands.
@@ -674,3 +676,9 @@ the commit coordinator, not by hydration logic.
 
 Breaking any of these rules is considered a regression of P0-2 in
 `docs/gameplay/ISLAND_RUN_OPEN_ISSUES.md`.
+
+### Crystal Miners ticket funding and diagnostics (2026-09-19)
+
+The event grid launches Crystal Miners with its dedicated icon. Its canonical action converts one shared event ticket into three game-specific drops only when the saved drop bank is empty; each drop consumes one, and exact milestone rewards credit the drop bank directly. Earned and server-confirmed purchased tickets obey the same game-specific quantity profile. Conversion and spend commit atomically with terrain, rewards and career revision; event/island changes preserve already-funded drops and upgrades. Existing games retain their current quantities. Preparation costs ore. No UI wallet writes or new checkout eligibility bypasses.
+
+Versioned attempt/lifecycle/error telemetry uses the existing consent-aware pipeline and admin access policies. Per-cavern analysis is a capped sample, not a whole-population conversion claim. See `CRYSTAL_MINERS_TELEMETRY.md`.

@@ -5,6 +5,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   stickerCompletionBonusDice: 'sticker_completion_bonus_dice',
   luckyRollDice: 'lucky_roll_dice',
   spaceExcavatorMilestoneDice: 'space_excavator_milestone_dice',
+  crystalMinersMilestoneDice: 'crystal_miners_milestone_dice',
   companionFeastMilestoneDice: 'companion_feast_milestone_dice',
   fortuneEngineMilestoneDice: 'fortune_engine_milestone_dice',
   fortuneEngineFinaleDice: 'fortune_engine_finale_dice',
