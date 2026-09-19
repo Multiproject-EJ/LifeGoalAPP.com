@@ -46,7 +46,7 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
       const before=await seed({currentIslandNumber:island, firstSessionTutorialState:'complete',
         stopStatesByIndex:Array.from({length:5},()=>({objectiveComplete:false,buildComplete:false})),
         completedStopsByIsland:{},stopTicketsPaidByIsland:{}});
-      assertEqual(resolveIslandRunBestNextAction({record:before,nowMs:100})?.ctaLabel,'Check in · Free','advisor introduces welcome, not eggs');
+      assertEqual(resolveIslandRunBestNextAction({record:before,nowMs:100,playerLevel:1})?.ctaLabel,'Check in · Free','advisor introduces welcome, not eggs');
       assertEqual(before.stopStatesByIndex[0].objectiveComplete,false,'not auto-completed');
       const results=await Promise.all([0,1,2].map(()=>completeIslandRunWelcomeCheckIn({session,client:null,visitKey:`0:${island}`})));
       assertEqual(results.filter(result=>result.status==='completed').length,1,'one canonical transition');

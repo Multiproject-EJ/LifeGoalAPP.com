@@ -8,6 +8,41 @@ remain incomplete. This is not the finished 3D opening show.
 
 ## Implementation checkpoint
 
+### Latest release audit: animated show is not implemented
+
+The user requested continued work and a live push before archiving, and asked
+whether the opening ceremony was built as animation. The current answer is no:
+the canonical preparation/beacon/free-game flow and reward-channel reveal exist,
+but `Island5ThreePilot` has no opening-games animation input or sequence. The
+approved short, skippable in-world ceremony (beacon, lighting, flags/audience,
+restrained offshore fireworks, reduced-motion equivalent) is still to be built.
+Do not describe the mission dialog, its icons or the reward-bar reveal as that
+finished 3D show. A massive floating arena has not been built by this work.
+
+The full island is also not release-approved: planted high-quality phone proof
+is176 calls/~210k triangles versus175/180k, and the continuous coast/gardens and
+royal three-masted ship remain unfinished. Existing palace macro/facade and
+bounded construction/purchase approvals are not whole-island acceptance.
+Preserve approved geometry, failed evidence and the existing budgets.
+
+The welcome-check-in full typecheck returned exit1, reporting only the missing
+`playerLevel` in the new advisor test fixture. That fixture is now corrected to
+level1; fresh typecheck session73830 writes `/tmp/opening-release-types.log`,
+Fresh focused tests session41408 completed with exit0 and403 passes, logged in
+`/tmp/opening-release-tests.log`. Retrieve the typecheck exit before claiming
+acceptance. The previous403 tests/mobile checks
+remain scoped evidence, not a substitute for a successful release build.
+
+Fresh `git fetch origin main` still resolves `dc54bb95`. At `d25a8d31`, this
+branch is five commits behind and six ahead. Integrate the latest main in a
+clean release worktree only after the release contents and gates are satisfied;
+never stage all of this dirty artwork as an incidental gameplay merge.
+The user has authorized a validated live release, not forced deployment of an
+unfinished/disabled experience. Do not archive until the agreed release is
+actually deployed and verified. A smaller palace-only release versus finishing
+the entire approved experience was presented as an explicit scope choice; no
+smaller release is assumed without the user's answer.
+
 The user explicitly requested "proceed, fix, implement and merge to live".
 This authorizes the completed, validated release; it does not waive acceptance
 gates or include unrelated unfinished changes in this dirty worktree.
