@@ -1,7 +1,7 @@
-export const ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS = 500;
-export const ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_250;
-export const ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS = 2_100;
-export const ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS = 600;
+export const ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS = 220;
+export const ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_000;
+export const ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS = 1_800;
+export const ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS = 380;
 
 export type IslandRunBuildHoldCadence = {
   delayMs: number;
@@ -18,20 +18,20 @@ export function resolveIslandRunBuildHoldCadence(completedSteps: number): Island
   const safeSteps = Math.max(0, Math.floor(Number.isFinite(completedSteps) ? completedSteps : 0));
   if (safeSteps >= 3) {
     return {
-      delayMs: 160,
+      delayMs: 140,
       phase: 'maximum',
       feedbackLabel: '🚀 Maximum build speed · full animation running',
     };
   }
   if (safeSteps >= 1) {
     return {
-      delayMs: safeSteps >= 2 ? 230 : 320,
+      delayMs: safeSteps >= 2 ? 160 : 200,
       phase: 'rapid',
       feedbackLabel: '⚡ Rapid build · every part animating',
     };
   }
   return {
-    delayMs: 420,
+    delayMs: 240,
     phase: 'warming',
     feedbackLabel: '⚒️ Rapid build charging…',
   };

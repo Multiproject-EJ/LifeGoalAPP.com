@@ -1,6 +1,7 @@
 export type IslandRunEconomyDirection = 'inflow' | 'outflow' | 'counter';
 
 export const ISLAND_RUN_ECONOMY_SOURCES = {
+  constructionLevelDice: 'construction_level_dice',
   rewardBarDice: 'reward_bar_dice',
   stickerCompletionBonusDice: 'sticker_completion_bonus_dice',
   luckyRollDice: 'lucky_roll_dice',

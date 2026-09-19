@@ -164,10 +164,10 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS <= 1_600, 'manual review access should arrive at least twice as fast as the former 3.2-second dwell');
       assert(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS <= 2_300, 'level review should finish at least twice as fast as the former 4.6-second window');
       const cadence = [0, 1, 2, 3, 4].map(resolveIslandRunBuildHoldCadence);
-      assertEqual(cadence[0].delayMs, 420, 'hold should begin with a readable rapid-build beat');
-      assertEqual(cadence[1].delayMs, 320, 'the first completed part should accelerate the hold');
-      assertEqual(cadence[2].delayMs, 230, 'the second completed part should accelerate again');
-      assertEqual(cadence[3].delayMs, 160, 'the full-sequence hold should settle at maximum speed');
+      assertEqual(cadence[0].delayMs, 240, 'hold should begin with a readable rapid-build beat');
+      assertEqual(cadence[1].delayMs, 200, 'the first completed part should accelerate the hold');
+      assertEqual(cadence[2].delayMs, 160, 'the second completed part should accelerate again');
+      assertEqual(cadence[3].delayMs, 140, 'the full-sequence hold should settle at maximum speed');
       assert(cadence.every((entry, index) => index === 0 || entry.delayMs <= cadence[index - 1].delayMs), 'hold cadence should only accelerate, never stutter slower');
       assert(cadence[4].feedbackLabel.includes('full animation'), 'maximum speed should explicitly promise the preserved full animation');
     },

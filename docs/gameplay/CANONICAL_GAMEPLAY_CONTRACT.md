@@ -294,8 +294,10 @@ Stop rules:
 Each island has **5 buildings**, one per stop. Buildings are **completely decoupled from stop unlock sequencing**:
 - A building can be funded at **any time**, regardless of which stop is currently active.
 - Buildings have **3 levels (L1, L2, L3)**. Each level requires Essence to fund.
-- Tapping a building in the Build Panel spends 10 Essence toward the current level. Holding continues spending.
-- Each visible build beat remains one awaited canonical spend. A tap presents its beat within 500 ms; holding ramps the presentation cadence from 420 ms to 160 ms while preserving every funded part, sound, haptic, robot phase, and level boundary. Rapid hold must never batch, skip, or pre-fund the next building level.
+- Hold is the primary construction input; release, blur, backgrounding or closing stops further queued spending. Each hold step spends up to one fifth of the current tier (minimum nominal 10 Essence), using the existing discount and affordability rules. The additive reveal interpolates smoothly between funded steps.
+- An affordable orange fire action finishes the selected landmark through L3; an affordable blue triple-fire action finishes all remaining construction on the current island. Both display exact remaining costs, revalidate the quote against the current visit/progress/discount, and commit atomically. Island 1's separate Assembly mission and guided first build are excluded. No objective, egg, boss or travel gate is completed by these actions.
+- Each newly funded construction level grants one die in the same canonical commit. Reopening, replaying a quote, or reviewing already completed levels grants nothing. Construction dice are recorded separately in economy diagnostics.
+- Hold steps use a short accelerating cadence; fast modes use a roughly one-second reveal followed by a protected celebration. The full 3D world is retained during an open construction session. Celebration presents a centered title, front-facing modal crew, fireworks and dice flight with reduced-motion alternatives.
 - When a level is fully funded, the building animates and advances to the next level.
 - When **all 3 levels are funded**, the building's `buildComplete` flag is set.
 

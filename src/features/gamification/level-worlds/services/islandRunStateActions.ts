@@ -1,3 +1,4 @@
+import { withIslandRunActionLock } from './islandRunActionMutex';
 /**
  * islandRunStateActions — pure action functions that mutate Island Run
  * gameplay state through the store ({@link islandRunStateStore}).
@@ -4982,6 +4983,10 @@ export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): 
 export async function applyStopBuildSpendBatch(
   options: ApplyStopBuildSpendBatchOptions,
 ): Promise<ApplyStopBuildSpendBatchResult> {
+  return withIslandRunActionLock(options.session.user.id, () => applyStopBuildSpendBatchUnlocked(options));
+}
+
+async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatchOptions): Promise<ApplyStopBuildSpendBatchResult> {
   const {
     session,
     client,
@@ -5041,6 +5046,7 @@ export async function applyStopBuildSpendBatch(
 
   const next: IslandRunGameStateRecord = {
     ...current,
+    dicePool: current.dicePool + Math.max(0, (nextStopBuildStateByIndex[stopIndex]?.buildLevel ?? 0) - (initialBuildState?.buildLevel ?? 0)),
     essence: nextEssence,
     essenceLifetimeSpent: nextEssenceLifetimeSpent,
     stopBuildStateByIndex: nextStopBuildStateByIndex,
@@ -5064,6 +5070,8 @@ export async function applyStopBuildSpendBatch(
     record: next,
     triggerSource: triggerSource ?? 'apply_stop_build_spend_batch',
   });
+  const diceAward = next.dicePool - current.dicePool;
+  if (diceAward > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.constructionLevelDice, amount: diceAward, sessionId: session.user.id, metadata: { mode: 'hold_or_part', island: current.currentIslandNumber } });
   return { record: next, stepsApplied };
 }
 

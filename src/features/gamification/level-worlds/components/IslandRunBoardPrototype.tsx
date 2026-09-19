@@ -1,3 +1,5 @@
+import { quoteIslandRunFastBuild, type FastBuildQuote } from '../services/islandRunFastBuild';
+import { applyIslandRunFastBuild } from '../services/islandRunFastBuildAction';
 import { eventGamePackPlays, EVENT_GAME_PLAYS_PER_TICKET } from '../services/eventGameTicketEconomy';
 import { createCrystalMinersBridge } from '../services/islandRunCrystalMinersActions';
 import { IslandFrostwellMissionModal } from './IslandFrostwellMissionModal';
@@ -839,6 +841,9 @@ const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = ISLAND_RUN_BUILD_LEVEL_AUTO_DISMI
 const BUILD_CAMERA_HANDOFF_DURATION_MS = ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS;
 
 type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
+  diceAward?: number;
+  previousLevel?: number;
+  fastMode?: string;
   reviewId: number;
   stopIndex: number;
   stopId: string;
@@ -3825,9 +3830,13 @@ export function IslandRunBoardPrototype({
   const buildTapQueueRef = useRef<Array<{ stopIndex: number; targetPartNumber: 1 | 2 | 3 | 4 | 5 }>>([]);
   const isBuildTapQueueProcessingRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
+  const buildHoldGenerationRef = useRef(0);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
+  const [fastBuildBurst, setFastBuildBurst] = useState<null | { quote: FastBuildQuote; title: string; stopId: string; previousLevel: number }>(null);
+  const buildSessionGenerationRef = useRef(0);
+  const [buildActionError, setBuildActionError] = useState<string | null>(null);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
   const markBuildChoreographyActive = useCallback((lingerMs = 3_200): void => {
@@ -3851,6 +3860,8 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     if (!showBuildPanel) {
+      buildSessionGenerationRef.current += 1;
+      setFastBuildBurst(null);
       buildTapQueueRef.current = [];
       isBuildSequenceActiveRef.current = false;
       setIsBuildSequenceActive(false);
@@ -3890,6 +3901,7 @@ export function IslandRunBoardPrototype({
   }, [runtimeState]);
 
   useEffect(() => () => {
+    buildSessionGenerationRef.current += 1;
     buildTapQueueRef.current = [];
     holdBuildSpendActiveRef.current = false;
     if (buildBurstTimeoutRef.current !== null) window.clearTimeout(buildBurstTimeoutRef.current);
@@ -7222,7 +7234,9 @@ export function IslandRunBoardPrototype({
       ? {
           title: buildLevelCompletion.title,
           stopId: buildLevelCompletion.stopId,
-          previousLevel: Math.max(0, buildLevelCompletion.level - 1),
+          previousLevel: buildLevelCompletion.previousLevel ?? Math.max(0, buildLevelCompletion.level - 1),
+          diceAward: buildLevelCompletion.diceAward ?? 1,
+          fastMode: buildLevelCompletion.fastMode,
           level: buildLevelCompletion.level,
           presentationSequence: buildLevelCompletion.reviewId,
           isFullyBuilt: buildLevelCompletion.isFullyBuilt,
@@ -7254,17 +7268,27 @@ export function IslandRunBoardPrototype({
     setBuildDiscountExpiresAtMs(null);
   }, [buildDiscountExpiresAtMs, hasRemainingIslandBuilds]);
 
-  const constructionPresentation = useMemo(() => deriveIslandRunConstructionPresentation({
+  const fastBuildQuotes = useMemo(() => {
+    if (!showBuildPanel) return [];
+    const index = buildModalV2ViewModel.activeLandmark?.stopIndex ?? 0;
+    return (['landmark', 'island'] as const).map(mode => quoteIslandRunFastBuild(__storeState, mode, index, activeBuildDiscountRate, buildDiscountExpiresAtMs)).filter((quote): quote is FastBuildQuote => Boolean(quote));
+  }, [showBuildPanel, __storeState, buildModalV2ViewModel.activeLandmark?.stopIndex, activeBuildDiscountRate, buildDiscountExpiresAtMs]);
+  const constructionPresentation = useMemo(() => fastBuildBurst ? {
+    active: true, working: true, cameraLocked: true, phase: 'assemble' as const,
+    progress: 1, sequence: 1000 + buildLevelReviewIdRef.current, sourceLevel: fastBuildBurst.previousLevel,
+    commissioning: false, cloudCover: .5, targetStopId: fastBuildBurst.stopId, targetLevel: 3,
+    completionCelebration: false, reducedMotion: false, fastBuild: true,
+  } : deriveIslandRunConstructionPresentation({
     isOpen: showBuildPanel,
     isBuildHoldActive,
     isBuildBurstActive,
     isCameraLocked: isBuildCameraCooldownActive,
     viewModel: buildModalPresentationViewModel,
     levelReview: buildModalPresentationLevelReview,
-  }), [buildModalPresentationLevelReview, buildModalPresentationViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
+  }), [fastBuildBurst, buildModalPresentationLevelReview, buildModalPresentationViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
 
   const activeBuildCameraStopId = showBuildPanel
-    ? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
+    ? fastBuildBurst?.stopId ?? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
     : null;
   const isBuildCameraHandoffPending = Boolean(
     showBuildPanel
@@ -11600,6 +11624,7 @@ export function IslandRunBoardPrototype({
       const stopEntry = islandStopPlan[stopIndex];
       const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
       const leveledUp = nextBuildState.buildLevel > currentBuildState.buildLevel;
+      if (leveledUp) playIslandRunSound('reward_bar_claim_burst');
       triggerIslandRunHaptic(leveledUp ? 'build_level_complete' : 'build_part');
 
       const completionPresentation = resolveBuildLevelCompletionPresentation({
@@ -11612,6 +11637,7 @@ export function IslandRunBoardPrototype({
         buildLevelReviewIdRef.current += 1;
         const review: ActiveBuildLevelReview = {
           ...completionPresentation,
+          diceAward: Math.max(0, nextBuildState.buildLevel - currentBuildState.buildLevel),
           reviewId: buildLevelReviewIdRef.current,
           stopIndex,
           stopId: stopEntry?.stopId ?? '',
@@ -11636,10 +11662,16 @@ export function IslandRunBoardPrototype({
         setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 💰 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
       }
       return true;
+    } catch (error) {
+      holdBuildSpendActiveRef.current = false;
+      setIsBuildHoldActive(false);
+      setBuildActionError('Building paused. Your saved progress is kept. Please try again.');
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_spend_error', island_number: islandNumber, error_name: error instanceof TypeError ? 'TypeError' : error instanceof RangeError ? 'RangeError' : 'Error' } });
+      return false;
     } finally {
       isBuildSpendInFlightRef.current = false;
     }
-  }, [activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
+  }, [islandNumber, activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
 
   const resolveQueuedBuildPartSteps = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): number => {
     const latestRuntimeState = getIslandRunStateSnapshot(session);
@@ -11660,6 +11692,7 @@ export function IslandRunBoardPrototype({
   // the requested milestone, then reprices it against the latest canonical
   // snapshot before spending so rapid taps cannot overspend stale prices.
   const processBuildTapQueue = useCallback(async (): Promise<void> => {
+    const generation = buildSessionGenerationRef.current;
     isBuildSequenceActiveRef.current = true;
     setIsBuildSequenceActive(true);
     try {
@@ -11675,7 +11708,7 @@ export function IslandRunBoardPrototype({
         // spend lands as its own visible construction beat. This prevents a
         // Part 5 tap from jumping through every robot phase in one frame.
         for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1) {
-          if (buildLevelCompletionRef.current) break;
+          if (buildLevelCompletionRef.current || generation !== buildSessionGenerationRef.current) break;
           markBuildChoreographyActive();
           const spendApplied = await handleSpendEssenceOnBuild(nextTap.stopIndex, 1);
           if (!spendApplied || buildLevelCompletionRef.current) break;
@@ -11707,10 +11740,68 @@ export function IslandRunBoardPrototype({
   }, [isBuildCameraHandoffActive, isBuildCameraHandoffPending, processBuildTapQueue]);
 
   const stopBuildHold = useCallback((): void => {
+    buildHoldGenerationRef.current += 1;
     holdBuildSpendActiveRef.current = false;
     setIsBuildHoldActive(false);
     markBuildChoreographyActive(900);
   }, [markBuildChoreographyActive]);
+
+  useEffect(() => {
+    const cancel = () => { stopBuildHold(); buildTapQueueRef.current = []; buildSessionGenerationRef.current += 1; setFastBuildBurst(null); };
+    const onVisibility = () => { if (document.hidden) cancel(); };
+    window.addEventListener('blur', cancel);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', onVisibility); };
+  }, [stopBuildHold]);
+
+  const handleFastBuild = useCallback(async (quote: FastBuildQuote) => {
+    if (isBuildSpendInFlightRef.current || isBuildSequenceActiveRef.current || holdBuildSpendActiveRef.current || buildLevelCompletionRef.current) return;
+    const generation = buildSessionGenerationRef.current;
+    const before = getIslandRunStateSnapshot(session);
+    const stop = islandStopPlan[quote.stopIndex];
+    isBuildSpendInFlightRef.current = true;
+    isBuildSequenceActiveRef.current = true;
+    setIsBuildSequenceActive(true);
+    setBuildActionError(null);
+    try {
+      const result = await applyIslandRunFastBuild({ session, client, quote });
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_result', mode: quote.mode, island_number: before.currentIslandNumber, levels: quote.levels, cost: quote.cost, outcome: result.reason, dice_awarded: result.diceAward } });
+      if (!result.applied) {
+        setBuildActionError(result.reason === 'insufficient_money' ? 'Need more Money. Roll to earn more.' : 'Your build price changed. Please check the updated cost.');
+        return;
+      }
+      runtimeStateRef.current = result.record;
+      setRuntimeState(result.record);
+      if (generation !== buildSessionGenerationRef.current) return;
+      setFastBuildBurst({ quote, title: stop.title, stopId: stop.stopId, previousLevel: before.stopBuildStateByIndex[quote.stopIndex].buildLevel });
+      markBuildChoreographyActive(1200);
+      playIslandRunSound('build_upgrade');
+      await wait(1000);
+      if (generation !== buildSessionGenerationRef.current) return;
+      setFastBuildBurst(null);
+      const now = Date.now();
+      const review: ActiveBuildLevelReview = {
+        title: quote.mode === 'island' ? 'All landmarks' : stop.title, heading: 'Restored!', body: 'Ready at full strength.',
+        level: 3, previousLevel: before.stopBuildStateByIndex[quote.stopIndex].buildLevel,
+        stopIndex: quote.stopIndex, stopId: stop.stopId, isFullyBuilt: true, diceAward: result.diceAward, fastMode: quote.mode,
+        reviewId: ++buildLevelReviewIdRef.current, minAdvanceAtMs: now + BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
+        autoAdvanceAtMs: now + 2600, isAdvanceReady: false, isAdvanceQueued: false,
+      };
+      buildLevelCompletionRef.current = review;
+      setBuildLevelCompletion(review);
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('build_level_complete');
+    } catch (error) {
+      setFastBuildBurst(null);
+      setBuildActionError('Building could not finish. Your saved progress is kept. Please reopen building.');
+      console.error('[island-run] Fast build failed', error);
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_error', mode: quote.mode, island_number: before.currentIslandNumber, error_name: error instanceof TypeError ? 'TypeError' : error instanceof RangeError ? 'RangeError' : 'Error' } });
+    } finally {
+      isBuildSpendInFlightRef.current = false;
+      isBuildSequenceActiveRef.current = false;
+      setIsBuildSequenceActive(false);
+    }
+  }, [session, client, islandStopPlan, markBuildChoreographyActive, playIslandRunSound]);
 
   const startBuildHold = useCallback((stopIndex: number): void => {
     if (
@@ -11720,14 +11811,18 @@ export function IslandRunBoardPrototype({
       || isBuildCameraHandoffActive
       || isBuildCameraHandoffPending
     ) return;
+    const holdGeneration = ++buildHoldGenerationRef.current;
     holdBuildSpendActiveRef.current = true;
+    setBuildActionError(null);
     setIsBuildHoldActive(true);
     markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
     setBuildHoldFeedbackLabel(resolveIslandRunBuildHoldCadence(0).feedbackLabel);
     void (async () => {
       let holdStepsApplied = 0;
       while (holdBuildSpendActiveRef.current) {
+        if (holdGeneration !== buildHoldGenerationRef.current) return;
         const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);
+        if (holdGeneration !== buildHoldGenerationRef.current) return;
         if (
           !spendApplied
           || buildLevelCompletionRef.current
@@ -18351,6 +18446,11 @@ export function IslandRunBoardPrototype({
           isOpen={showBuildPanel}
           islandNumber={isIslandVisualPreview ? islandArtPreviewNumber : islandNumber}
           essenceAvailable={__storeState.essence}
+          diceAvailable={__storeState.dicePool}
+          fastBuildQuotes={fastBuildQuotes}
+          fastBuildMode={fastBuildBurst?.quote.mode}
+          buildActionError={buildActionError}
+          onFastBuild={handleFastBuild}
           onClose={() => setShowBuildPanel(false)}
           viewModel={buildModalPresentationViewModel}
           isBuildHoldActive={isBuildHoldActive}

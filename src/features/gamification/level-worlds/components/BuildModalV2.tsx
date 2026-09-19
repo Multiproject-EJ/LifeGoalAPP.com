@@ -1,9 +1,32 @@
+import { lazy, Suspense, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { lockPageScroll } from '../../../../utils/scrollLock';
+import { ShopItemCostLine } from './ShopItemCostLine';
+import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
+import type { FastBuildQuote } from '../services/islandRunFastBuild';
+const BuildCelebrationCrew = lazy(() => import('./BuildCelebrationCrew'));
 import type { BuildModalV2ViewModel, BuildModalV2PartViewModel } from '../services/islandRunBuildModalV2ViewModel';
+
+function BuildDiceFlight() {
+  const flightRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const counter = document.querySelector('.bm2-header__dice')?.getBoundingClientRect();
+    if (!counter || !flightRef.current) return;
+    flightRef.current.style.setProperty('--dice-target-x', `${counter.left + counter.width / 2}px`);
+    flightRef.current.style.setProperty('--dice-target-y', `${counter.top + counter.height / 2}px`);
+  }, []);
+  return <span ref={flightRef} className="bm2-dice-flight" aria-hidden="true">🎲</span>;
+}
 
 export interface BuildModalV2Props {
   isOpen: boolean;
   islandNumber: number;
   essenceAvailable: number;
+  diceAvailable?: number;
+  fastBuildQuotes?: FastBuildQuote[];
+  fastBuildMode?: 'landmark' | 'island';
+  buildActionError?: string | null;
+  onFastBuild?: (quote: FastBuildQuote) => void;
   onClose: () => void;
   viewModel: BuildModalV2ViewModel;
   isBuildHoldActive: boolean;
@@ -21,6 +44,8 @@ export interface BuildModalV2Props {
 }
 
 export interface BuildModalV2LevelReview {
+  diceAward?: number;
+  fastMode?: string;
   title: string;
   stopId: string;
   previousLevel: number;
@@ -42,7 +67,7 @@ function BuildModalV2CompleteState({ viewModel }: { viewModel: BuildModalV2ViewM
       />
       <div className="bm2-complete-state__copy">
         <h3>All landmarks restored</h3>
-        <p>15 of 15 construction levels complete · the crew is celebrating</p>
+        <p>Every construction level complete · the crew is celebrating</p>
       </div>
       <div className="bm2-level-rail" aria-label="All landmark levels completed">
         {viewModel.levelRail.map((item) => (
@@ -84,7 +109,7 @@ function BuildModalV2LevelReviewState({
         <span className="bm2-level-review__eyebrow">Construction milestone</span>
         <h3>{review.title} · Level {review.level} complete</h3>
         <p>{review.isFullyBuilt
-          ? 'The island is fully restored. Take in the finished landmark.'
+          ? 'Landmark restored. Ready at full strength.'
           : 'Take in the finished level. The next build opens automatically.'}</p>
         <div className="bm2-level-review__rail" aria-label={`${review.title} completed levels`}>
           {([1, 2, 3] as const).map((level) => (
@@ -196,6 +221,7 @@ function BuildModalV2HoldButton({
       onPointerUp={onStopBuildHold}
       onPointerCancel={onStopBuildHold}
       onLostPointerCapture={onStopBuildHold}
+      onBlur={onStopBuildHold}
       onKeyDown={(event) => {
         if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
           event.preventDefault();
@@ -227,6 +253,7 @@ export function BuildModalV2({
   isOpen,
   islandNumber,
   essenceAvailable,
+  diceAvailable = 0, fastBuildQuotes = [], fastBuildMode, buildActionError, onFastBuild,
   onClose,
   viewModel,
   isBuildHoldActive,
@@ -251,15 +278,29 @@ export function BuildModalV2({
   const discountMinutesLeft = discountExpiresAtMs && discountRate > 0 ? Math.max(1, Math.ceil((discountExpiresAtMs - Date.now()) / 60000)) : 0;
   const hasActiveDiscount = !isComplete && discountPercent > 0 && discountMinutesLeft > 0;
 
+  useEffect(() => {
+    if (!isOpen) return;
+    return lockPageScroll(['body', 'documentElement']);
+  }, [isOpen]);
   if (!isOpen) return null;
 
   const statusLine = active
     ? `${active.spentEssence}/${active.requiredEssence} Money funded`
     : '15 of 15 complete';
 
-  return (
-    <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}`} role="presentation">
+  return createPortal(
+    <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}${!fastBuildMode && (levelReview || isComplete) ? ' bm2-build-mode--celebrating' : ''}`} role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
+        <Suspense fallback={null}><BuildCelebrationCrew active={Boolean(levelReview || isComplete || fastBuildMode)} orbit={Boolean(fastBuildMode)} /></Suspense>
+        {!fastBuildMode && (levelReview || isComplete) && <CelebrationFireworks key={levelReview?.presentationSequence ?? 'complete'} active variant="rapid" backdrop="none" placement="local" />}
+        {!fastBuildMode && (levelReview || isComplete) && <div className="bm2-celebration-title" role="status">
+          <span>{levelReview?.fastMode ? 'POW! Beautifully built.' : 'Beautifully built!'}</span>
+          <h2>{levelReview ? levelReview.title : 'All landmarks restored'}</h2>
+          <p>{levelReview ? `Level ${levelReview.level} complete` : 'Construction complete'}</p>
+          {Boolean(levelReview?.diceAward) && <strong className="bm2-dice-award">🎲 +{levelReview?.diceAward}</strong>}
+        </div>}
+        {Boolean(levelReview?.diceAward) && <BuildDiceFlight key={levelReview?.presentationSequence} />}
+        {fastBuildMode && <div className="bm2-fast-burst" role="status">{fastBuildMode === 'island' ? 'Building every landmark…' : 'Building to Level 3…'}<strong>WHOOSH!</strong></div>}
         <header className="bm2-header">
           <span className="bm2-header__crest" aria-hidden="true">⚒</span>
           <span className="bm2-header__copy">
@@ -270,11 +311,13 @@ export function BuildModalV2({
                 : active ? `${active.title} · Level ${active.targetLevel}` : 'Construction complete'}
             </strong>
           </span>
+          <span className="bm2-header__dice" aria-label={`${diceAvailable} dice`}>🎲 {diceAvailable}</span>
           <span className="bm2-header__essence" aria-label={`${essenceAvailable} Money available`}><span aria-hidden="true">💰</span> {essenceAvailable}</span>
           <button type="button" className="bm2-header__close" onClick={onClose} aria-label="Close build panel">✕</button>
         </header>
 
         <div className="bm2-build-mode__messages" aria-live="polite">
+          {buildActionError && <p role="alert">{buildActionError}</p>}
           {isBuildModalHatcheryGuidanceActive && (
             <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Money.</p>
           )}
@@ -295,7 +338,7 @@ export function BuildModalV2({
         </div>
 
         <div className={`bm2-dock ${isComplete && !levelReview ? 'bm2-dock--complete' : ''}${levelReview ? ' bm2-dock--level-review' : ''}`}>
-          {levelReview ? (
+          {fastBuildMode ? <p className="bm2-fast-status">Your construction is saved. Enjoy the reveal…</p> : levelReview ? (
             <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} />
           ) : isComplete ? (
             <BuildModalV2CompleteState viewModel={viewModel} />
@@ -335,29 +378,33 @@ export function BuildModalV2({
                 activeStopIndex={active.stopIndex}
                 nextTapEssenceCost={active.nextTapEssenceCost}
                 isActive={isBuildHoldActive}
-                isDisabled={isBuildInteractionLocked || !canBuildActive || isBuildModalHatcheryGuidanceActive && active.activePart !== 1}
+                isDisabled={isBuildInteractionLocked || !canBuildActive}
                 onStartBuildHold={onStartBuildHold}
                 onStopBuildHold={onStopBuildHold}
               />
-              <div className="bm2-tray" role="list" aria-label={`${active.title} construction parts`}>
-                {viewModel.parts.map((part) => (
-                  <BuildModalV2PartButton
-                    key={part.partNumber}
-                    part={part}
-                    activeTitle={active.title}
-                    targetLevel={active.targetLevel}
-                    activeStopIndex={active.stopIndex}
-                    disabledByTutorial={isBuildModalHatcheryGuidanceActive && part.partNumber !== active.activePart}
-                    disabledByAnimation={isBuildInteractionLocked}
-                    isBuildHoldActive={isBuildHoldActive}
-                    onBuildPartChoice={onBuildPartChoice}
-                  />
-                ))}
+              <div className="bm2-fast-actions">
+                {fastBuildQuotes.filter(quote => essenceAvailable >= quote.cost).map(quote => <button type="button" key={quote.mode}
+                  className={`bm2-fast-build bm2-fast-build--${quote.mode}`}
+                  disabled={isBuildHoldActive || isBuildInteractionLocked || isBuildModalHatcheryGuidanceActive}
+                  onClick={() => onFastBuild?.(quote)}>
+                  <span aria-hidden="true">{quote.mode === 'island' ? '🔥🔥🔥' : '🔥'}</span>
+                  <strong>{quote.mode === 'island' ? 'Build all landmarks' : 'Finish landmark'}</strong>
+                  <ShopItemCostLine cost={quote.cost} balance={essenceAvailable} currencyIcon="💰" currencyName="Money" /><small>+{quote.levels} 🎲</small>
+                </button>)}
               </div>
+              <details className="bm2-build-info"><summary aria-label="Building help and individual parts">? Build options</summary>
+                <p>Hold to build; release to stop. Each completed level earns 1 die. Fire builds finish the landmark, or all remaining island construction, for the shown total. Activities and adventures remain to play.</p>
+                <div className="bm2-tray" role="list" aria-label={`${active.title} construction parts`}>
+                  {viewModel.parts.map(part => <BuildModalV2PartButton key={part.partNumber} part={part} activeTitle={active.title}
+                    targetLevel={active.targetLevel} activeStopIndex={active.stopIndex}
+                    disabledByTutorial={isBuildModalHatcheryGuidanceActive && part.partNumber !== active.activePart}
+                    disabledByAnimation={isBuildInteractionLocked} isBuildHoldActive={isBuildHoldActive} onBuildPartChoice={onBuildPartChoice} />)}
+                </div>
+              </details>
             </>
           )}
         </div>
       </section>
-    </div>
+    </div>, document.body
   );
 }

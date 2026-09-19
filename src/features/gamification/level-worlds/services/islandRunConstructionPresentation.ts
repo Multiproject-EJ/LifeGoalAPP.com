@@ -16,6 +16,7 @@ export type IslandRunConstructionPhase =
  */
 export type IslandRunConstructionPresentation = {
   active: boolean;
+  fastBuild?: boolean;
   /** Full construction choreography is limited to a hold or recent build tap. */
   working: boolean;
   /** Camera authority outlives the short robot burst so recent work stays framed. */
