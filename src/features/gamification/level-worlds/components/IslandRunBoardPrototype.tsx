@@ -94,6 +94,7 @@ import type { ConcordFragmentPickupReason } from '../services/islandRunConcordRo
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
 import {
   getTrafficLightCharge,
   resolveTrafficLightCoinFlipReward,
@@ -2122,6 +2123,7 @@ export function IslandRunBoardPrototype({
   // each shim commits through the store, and C1-specific paths (roll,
   // reward-bar, minigame) use dedicated action functions.
   const { state: __storeState } = useIslandRunState(session, client);
+  const featureAccess = resolveIslandRunFeatureAccess(__storeState);
   const assemblyMandateRef = useRef<ReturnType<typeof showAssemblyMandate> | null>(null);
   const [assemblyMandateOpen, setAssemblyMandateOpen] = useState(false);
   useEffect(() => () => assemblyMandateRef.current?.close(), [__storeState.currentIslandNumber, __storeState.cycleIndex, session.user.id]);
@@ -2736,7 +2738,7 @@ export function IslandRunBoardPrototype({
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
   const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
-  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id }));
+  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(__storeState.currentIslandNumber, getIslandRarity(__storeState.currentIslandNumber), 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id, signatureMissionProgressByIsland: __storeState.signatureMissionProgressByIsland }));
 
   // C1 store-derived spinTokens (see dicePool/tokenIndex above for pattern notes).
   const spinTokens = __storeState.spinTokens;
@@ -3431,12 +3433,12 @@ export function IslandRunBoardPrototype({
   const firstLightAssemblyAvailableDynamite = getFirstLightAssemblyAvailableDynamite(firstLightAssemblyProgress);
   const firstLightAssemblyCompleted = firstLightAssemblyProgress.completedAtMs !== null;
   const stagedRestorationDescriptor = useMemo(
-    () => getStagedRestorationMissionDescriptor(islandNumber),
-    [islandNumber],
+    () => getStagedRestorationMissionDescriptor(islandNumber, __storeState.signatureMissionProgressByIsland),
+    [islandNumber, __storeState.signatureMissionProgressByIsland],
   );
   const stagedRestorationVisualDescriptor = useMemo(
-    () => getStagedRestorationMissionDescriptor(islandArtPreviewNumber),
-    [islandArtPreviewNumber],
+    () => getStagedRestorationMissionDescriptor(islandArtPreviewNumber, __storeState.signatureMissionProgressByIsland),
+    [islandArtPreviewNumber, __storeState.signatureMissionProgressByIsland],
   );
   const stagedRestorationPreviewStage = useMemo(() => {
     if (!isIslandVisualPreview || !stagedRestorationVisualDescriptor || typeof window === 'undefined') return null;
@@ -5373,8 +5375,11 @@ export function IslandRunBoardPrototype({
   // B1-3: regenerate tileMap whenever islandNumber or dayIndex changes
   useEffect(() => {
     const rarity = getIslandRarity(islandNumber);
-    setTileMap(generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex, { profileId: ACTIVE_BOARD_PROFILE.id }));
-  }, [activeTheme.tileThemeId, islandNumber, dayIndex]);
+    const next = generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex, { profileId: ACTIVE_BOARD_PROFILE.id, signatureMissionProgressByIsland: __storeState.signatureMissionProgressByIsland });
+    // Mission rolls update the ledger without changing feature eligibility.
+    // Keep the scene's tile-map identity stable unless its actual contents change.
+    setTileMap(current => JSON.stringify(current) === JSON.stringify(next) ? current : next);
+  }, [activeTheme.tileThemeId, islandNumber, dayIndex, __storeState.signatureMissionProgressByIsland]);
 
   // B4-4: log dayIndex changes for debug
   useEffect(() => {
@@ -6561,6 +6566,7 @@ export function IslandRunBoardPrototype({
         seed: current.seed,
         stickerFragments: runtimeStateRef.current.stickerProgress.fragments,
         islandNumber: runtimeStateRef.current.currentIslandNumber,
+        signatureMissionProgressByIsland: runtimeStateRef.current.signatureMissionProgressByIsland,
       });
 
       playIslandRunSound('coin_flip');
@@ -7529,7 +7535,7 @@ export function IslandRunBoardPrototype({
     runtimeState,
     nowMs,
   });
-  const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber);
+  const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber, __storeState.signatureMissionProgressByIsland);
   const diplomaticRewardChannelVisible = isDiplomaticRewardChannelVisible({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
@@ -8002,7 +8008,7 @@ export function IslandRunBoardPrototype({
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
     const nowMs = Date.now();
     const chainResult = resolveChainedRewardBarClaims({
-      state: options.state,
+      state: { ...options.state, signatureMissionProgressByIsland: getIslandRunStateSnapshot(session).signatureMissionProgressByIsland },
       nowMs,
       islandNumber,
     });
@@ -8502,7 +8508,7 @@ export function IslandRunBoardPrototype({
             suppressLandingText: true,
             suppressTechPickup: true,
           });
-          const pickupLabel = getStagedRestorationMissionDescriptor(runtimeStateRef.current.currentIslandNumber)?.pickupLabel
+          const pickupLabel = getStagedRestorationMissionDescriptor(runtimeStateRef.current.currentIslandNumber, runtimeStateRef.current.signatureMissionProgressByIsland)?.pickupLabel
             ?? 'Mission object';
           setLandingText(`${rollResult.stagedRestorationPickup.collectionKind === 'route_pass' ? '✨ Secured along the route' : '✨ Collected'}: ${pickupLabel}. Open the mission phone to activate the next transformation.`);
           setShowMissionPhoneBriefing(true);
@@ -15362,7 +15368,7 @@ export function IslandRunBoardPrototype({
                 🧩 {runtimeState.stickerProgress.fragments}/5
               </button>
             ) : null}
-            {onOpenDailySpinWheel ? (
+            {onOpenDailySpinWheel && featureAccess.dailyWheel ? (
               <button
                 type="button"
                 className={`island-run-board__daily-momentum-btn${dailySpinAvailable ? ' island-run-board__daily-momentum-btn--ready' : ' island-run-board__daily-momentum-btn--used'}`}
@@ -15667,7 +15673,7 @@ export function IslandRunBoardPrototype({
             // Light the traffic-light tile the instant the token passes over it
             // (mid-roll), rather than waiting for the landing/commit. Functional
             // update handles the rare big-roll case of passing it twice.
-            if (ordinaryBoardTilesActive && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+            if (ordinaryBoardTilesActive && featureAccess.trafficLight && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
               setTrafficLightVisualCharge((prev) => {
                 const base = prev ?? trafficLightCharge;
                 return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
@@ -15721,7 +15727,7 @@ export function IslandRunBoardPrototype({
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();
-                  if (ordinaryBoardTilesActive && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+                  if (ordinaryBoardTilesActive && featureAccess.trafficLight && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
                     setTrafficLightVisualCharge((prev) => {
                       const base = prev ?? trafficLightCharge;
                       return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
@@ -15844,7 +15850,7 @@ export function IslandRunBoardPrototype({
                     reelPulse: fishingReelPulse,
                   },
                 }}
-                onSignatureMissionClick={getStagedRestorationMissionDescriptor(islandArtPreviewNumber)
+                onSignatureMissionClick={stagedRestorationVisualDescriptor
                   ? isIslandVisualPreview ? undefined : () => setShowMissionPhoneBriefing(true)
                   : islandArtPreviewNumber === 1
                   ? isIslandVisualPreview ? undefined : openFirstLightAssemblyCrater
@@ -17452,7 +17458,7 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {trafficLightCoinFlip && (
+      {trafficLightCoinFlip && featureAccess.trafficLight && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
             {trafficLightCoinFlip.phase !== 'flipping' && trafficLightCoinFlip.phase !== 'opening' && (

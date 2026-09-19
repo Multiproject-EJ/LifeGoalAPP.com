@@ -40,6 +40,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveIslandRunCompletion } from './islandRunCompletion';
 import type {
   CompanionFeastProgressEntry,
@@ -1829,6 +1830,10 @@ export function applyTrafficLightTilePass(options: {
 }): ApplyTrafficLightPassResult {
   const { session, client, islandNumber, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  const access = resolveIslandRunFeatureAccess(current);
+  if (!access.trafficLight || (access.gradual && islandNumber !== current.currentIslandNumber)) {
+    return { record: current, chargeAfter: 0, unlocked: false };
+  }
   const result = applyTrafficLightPass({
     bonusTileChargeByIsland: current.bonusTileChargeByIsland,
     islandNumber,
@@ -1855,6 +1860,7 @@ export function applyTrafficLightCoinFlipReward(options: {
 }): IslandRunGameStateRecord {
   const { session, client, reward, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  if (!resolveIslandRunFeatureAccess(current).trafficLight) return current;
   const stickerFragmentsDelta = Math.max(0, Math.floor(reward.stickerFragments));
   const nextStickerProgress = stickerFragmentsDelta > 0
     ? {

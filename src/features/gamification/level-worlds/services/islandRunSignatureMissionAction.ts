@@ -167,7 +167,7 @@ export function activateStagedRestorationMissionStage(options: {
 }): Promise<ActivateStagedRestorationMissionResult> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const state = getIslandRunStateSnapshot(options.session);
-    const descriptor = getStagedRestorationMissionDescriptor(state.currentIslandNumber);
+    const descriptor = getStagedRestorationMissionDescriptor(state.currentIslandNumber, state.signatureMissionProgressByIsland);
     if (!descriptor) return { status: 'unsupported_island' };
     const progress = resolveStagedRestorationMissionProgress({
       ledger: state.signatureMissionProgressByIsland,

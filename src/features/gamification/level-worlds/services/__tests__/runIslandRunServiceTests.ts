@@ -163,6 +163,8 @@ import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollecti
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.test';
 import { islandRunSignatureMissionTests } from './islandRunSignatureMissions.test';
+import { islandRunOpeningGamesTests } from './islandRunOpeningGames.test';
+import { islandRunFeatureAccessTests } from './islandRunFeatureAccess.test';
 import { islandRunCompassBookReceiptTests } from './islandRunCompassBookReceipt.test';
 import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
 import { islandRunCompletionTests } from './islandRunCompletion.test';
@@ -406,6 +408,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
   { label: 'islandRunTechnologyUnlocks', tests: islandRunTechnologyUnlockTests },
   { label: 'islandRunSignatureMissions', tests: islandRunSignatureMissionTests },
+  { label: 'islandRunOpeningGames', tests: islandRunOpeningGamesTests },
+  { label: 'islandRunFeatureAccess', tests: islandRunFeatureAccessTests },
   { label: 'islandRunCompassBookReceipt', tests: islandRunCompassBookReceiptTests },
   { label: 'islandRunMissionTracker', tests: islandRunMissionTrackerTests },
   { label: 'islandRunCompletion', tests: islandRunCompletionTests },

@@ -1,5 +1,6 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
+import { OPENING_GAMES_TEAM_ROLL_TARGET, resolveOpeningGamesCeremony } from './islandRunOpeningGames';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 import { resolveIslandRunCompletion, type IslandRunCompletionState } from './islandRunCompletion';
 import {
@@ -136,13 +137,32 @@ export function resolveIslandMissionTrackerPresentation(options: {
 }): IslandMissionTrackerPresentation {
   const islandNumber = Math.max(1, Math.floor(options.islandNumber));
   const { state } = options;
-  const briefing = getIslandMissionBriefingPresentation(islandNumber);
+  const briefing = getIslandMissionBriefingPresentation(islandNumber, state.cycleIndex, state.signatureMissionProgressByIsland);
   const landmarkCount = islandNumber === 1 ? 4 : 5;
   const landmarkProgress = resolveLandmarkProgress({ islandNumber, state, landmarkCount });
   let usesLiveSignatureProgress = true;
   let objectives: readonly IslandMissionTrackerObjective[];
 
   switch (briefing.progressKind) {
+    case 'opening_games': {
+      const progress = resolveOpeningGamesCeremony(state.signatureMissionProgressByIsland);
+      const milestones = [progress.venuesPreparedAtMs, progress.teamsWelcomedAtMs, progress.beaconLitAtMs, progress.completedAtMs]
+        .filter(timestamp => timestamp !== null).length;
+      const welcoming = progress.venuesPreparedAtMs !== null && progress.teamsWelcomedAtMs === null;
+      // The authored phone has room for three rows, including the two ordinary
+      // landmark goals. Show the next ceremony step, not six overflowing rows.
+      const label = progress.venuesPreparedAtMs === null ? 'Prepare the Venues'
+        : welcoming ? 'Welcome the Teams'
+        : progress.beaconLitAtMs === null ? 'Light the Beacon'
+        : progress.completedAtMs === null ? 'Play the First Game' : 'Opening Ceremony';
+      objectives = [
+        objective(label, milestones, 4, welcoming
+          ? progress.rollsCompleted >= OPENING_GAMES_TEAM_ROLL_TARGET ? 'Ready' : `${progress.rollsCompleted} / ${OPENING_GAMES_TEAM_ROLL_TARGET}`
+          : `${milestones} / 4`),
+        objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
+      ];
+      break;
+    }
     case 'first_light_assembly': {
       const progress = resolveFirstLightAssemblyCraterProgress({
         ledger: state.signatureMissionProgressByIsland,
@@ -304,7 +324,7 @@ export function resolveIslandMissionTrackerPresentation(options: {
       break;
     }
     case 'staged_restoration': {
-      const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
+      const descriptor = getStagedRestorationMissionDescriptor(islandNumber, state.signatureMissionProgressByIsland);
       const progress = resolveStagedRestorationMissionProgress({
         ledger: state.signatureMissionProgressByIsland,
         cycleIndex: state.cycleIndex,

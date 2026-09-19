@@ -63,6 +63,8 @@ import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
 import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { advanceOpeningGamesForRoll, OPENING_GAMES_CEREMONY_KEY } from './islandRunOpeningGames';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import { collectMoonwellHeatForLanding } from './islandRunMoonwellThermal';
 import {
@@ -457,7 +459,7 @@ async function performRollAction(options: {
   const nextFirstSessionTutorialState = tutorialRollTotal === null
     ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
     : state.firstSessionTutorialState;
-  const trafficLightPass = ordinaryTileGameplayActive && hopSequence.includes(TRAFFIC_LIGHT_TILE_INDEX)
+  const trafficLightPass = ordinaryTileGameplayActive && resolveIslandRunFeatureAccess(state).trafficLight && hopSequence.includes(TRAFFIC_LIGHT_TILE_INDEX)
     ? applyTrafficLightPass({
         bonusTileChargeByIsland: state.bonusTileChargeByIsland,
         islandNumber: state.currentIslandNumber,
@@ -588,6 +590,7 @@ async function performRollAction(options: {
     cycleIndex: state.cycleIndex,
     nowMs,
   });
+  const ceremonyRoll = advanceOpeningGamesForRoll(sunkenSandsTreasureRoll.ledger, state.currentIslandNumber, nowMs);
   const isLivingTicketLanding = ordinaryTileGameplayActive
     && newTokenIndex === getFreeTicketTileIndexForTileCount(boardProfile.tileCount);
   const livingTicketLanding = isLivingTicketLanding
@@ -619,7 +622,9 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
-    signatureMissionProgressByIsland: sunkenSandsTreasureRoll.ledger,
+    signatureMissionProgressByIsland: ceremonyRoll
+      ? { ...sunkenSandsTreasureRoll.ledger, [OPENING_GAMES_CEREMONY_KEY]: ceremonyRoll }
+      : sunkenSandsTreasureRoll.ledger,
     narrativeSeenState: livingTicketLanding.narrativeSeenState,
     minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };

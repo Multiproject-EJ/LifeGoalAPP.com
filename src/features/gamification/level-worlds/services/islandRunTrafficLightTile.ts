@@ -1,4 +1,5 @@
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
+import type { IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 import { getBonusTileCharge } from './islandRunBonusTile';
 import {
   isPuzzleCollectionAvailableForIsland,
@@ -106,6 +107,7 @@ export function resolveTrafficLightCoinFlipReward(input: {
   seed: number;
   stickerFragments: number;
   islandNumber?: number;
+  signatureMissionProgressByIsland?: IslandRunFeatureAccessContext['signatureMissionProgressByIsland'];
 }): TrafficLightCoinFlipReward {
   const side: TrafficLightCoinSide = seededRandom(input.seed) < 0.5 ? 'heads' : 'tails';
 
@@ -117,7 +119,7 @@ export function resolveTrafficLightCoinFlipReward(input: {
     0,
     Math.min(STICKER_FRAGMENTS_PER_STICKER, STICKER_FRAGMENTS_PER_STICKER - Math.max(0, Math.floor(input.stickerFragments))),
   );
-  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? 2)
+  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? 2, input.signatureMissionProgressByIsland)
     && missingFragments > 0
     && seededRandom(input.seed + 7919) < 0.35;
 
