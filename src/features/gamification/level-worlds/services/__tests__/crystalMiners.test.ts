@@ -1,4 +1,5 @@
-import { mergeMinerToolGroup } from '../crystalMinersGame';
+import {MINER_THEMES,getMinerTheme} from '../../../games/crystal-miners/crystalMinersThemes';
+import { isMinerMergePair, mergeMinerToolGroup } from '../crystalMinersGame';
 import { createMinerReplayTiming, minerReplayFrameAt } from '../crystalMinersReplay';
 import { eventGamePlaysAvailable, eventGamePackPlays, spendEventGamePlay } from '../eventGameTicketEconomy';
 import { createMinerObserver, minerErrorDetails, type MinerTelemetryRecord } from '../crystalMinersTelemetry';
@@ -29,6 +30,28 @@ async function seed(tickets=3) {
 }
 const action = (command: Parameters<typeof applyCrystalMinersAction>[0]['command'], expectedRevision=0, nowMs=500) => applyCrystalMinersAction({session,client:null,eventId,command,expectedRevision,nowMs});
 export const crystalMinersTests: TestCase[] = [
+  {name:'merge anticipation identifies only valid pairs without changing the rack',run:()=>{
+    const tools=[7,7,8,0,-1,20,20];const before=[...tools];assert(isMinerMergePair(tools,0,1),'matching tools light up');
+    for(const pair of [[0,0],[0,2],[0,3],[0,4],[5,6],[-1,1],[0,99]])assert(!isMinerMergePair(tools,pair[0],pair[1]),'same slot, swap, empty, gifts, capped or invalid targets never promise a merge');
+    assertDeepEqual(tools,before,'hover never mutates investment');
+  }},
+
+  {name:'six authored cave themes rotate predictably throughout the campaign',run:()=>{
+    assertEqual(new Set(MINER_THEMES.map(t=>t.id)).size,6,'six distinct environments');
+    for(let level=1;level<=40;level++){const theme=getMinerTheme(level);assertEqual(theme,getMinerTheme(level+6),'stable six-cavern rotation');if(level>1)assert(theme.id!==getMinerTheme(level-1).id,'adjacent caverns differ');}
+  }},
+  {name:'new chest rewards remain visible for 1.1 seconds before results',run:()=>{
+    const simulation=simulateMinerDig({...createCrystalMinersProgress(),tools:Array(25).fill(7)});
+    const timing=createMinerReplayTiming(simulation.frames);assert(simulation.treasures>0,'fixture reaches chests');assertEqual(timing.celebrationMs,1100,'readable reward hold');assertEqual(timing.duration-timing.travelDuration,1100,'results wait after final descent');
+    assertEqual(minerReplayFrameAt(timing.times,timing.travelDuration+500),simulation.frames.length-1,'opened chests stay on final frame throughout hold');
+    const failure=simulateMinerDig({...createCrystalMinersProgress(),level:39,blocks:createMinerBlocks(39),tools:[1,...Array(24).fill(0)]});assertEqual(createMinerReplayTiming(failure.frames).celebrationMs,0,'no fake chest celebration on failure');
+  }},
+  {name:'harder terrain migration preserves opened paths, damage ratios and permanent investment',run:()=>{
+    const blocks=createMinerBlocks(28,8);const target=blocks.find(b=>b.hp>1&&b.kind!=='boss')!;target.hp=Math.floor(target.maxHp/2);blocks[135].hp=0;
+    const old={...createCrystalMinersProgress(),version:8,level:28,blocks,tools:[14,...Array(24).fill(0)],forgeLevel:4,ore:987,dropTickets:11};
+    const p=sanitizeCrystalMinersProgressByEvent({career:old}).career;assertEqual(p.version,9,'current schema');assertEqual(p.blocks[135].hp,0,'opened path never resealed');assertEqual(p.blocks[target.id].hp,Math.ceil(p.blocks[target.id].maxHp*target.hp/target.maxHp),'relative damage retained');assertEqual(p.tools[0],14,'tool retained');assertEqual(p.dropTickets,11,'funded plays retained');assertEqual(p.ore,987,'ore retained');assertEqual(p.forgeLevel,4,'forge retained');
+  }},
+
   {name:'late stone difficulty requires equipment without a long rebound wait',run:()=>{
     const run=(tier:number)=>simulateMinerDig({...createCrystalMinersProgress(),level:39,forgeLevel:5,blocks:createMinerBlocks(39),tools:[...Array(10).fill(tier),...Array(15).fill(0)]});
     const weak=run(7),strong=run(11);
@@ -67,7 +90,7 @@ export const crystalMinersTests: TestCase[] = [
     const old={...createCrystalMinersProgress(),version:7,level:39,tools:[12,...Array(24).fill(0)],ore:876,blocks:createMinerBlocks(39,7)};
     const target=createMinerBlocks(39).find(b=>b.kind==='obsidian')!;old.blocks[target.id].hp=0;
     const saved=sanitizeCrystalMinersProgressByEvent({career:old}).career;
-    assertEqual(saved.version,8,'migrated');assertEqual(saved.blocks[target.id].hp,0,'broken stone does not respawn as obsidian');assertEqual(saved.ore,876,'ore retained');assertDeepEqual(saved.tools,old.tools,'tools retained');
+    assertEqual(saved.version,9,'migrated');assertEqual(saved.blocks[target.id].hp,0,'broken stone does not respawn as obsidian');assertEqual(saved.ore,876,'ore retained');assertDeepEqual(saved.tools,old.tools,'tools retained');
   }},
 
   {name:'rare ticket blocks award one exact saved drop once in the atomic dig',run:async()=>{
@@ -271,7 +294,7 @@ export const crystalMinersTests: TestCase[] = [
     const old={...createCrystalMinersProgress(),version:1,level:6,ore:999,tools:Array(25).fill(4),blocks:createMinerBlocks(6,1),eventTrack:{levelsCleared:0,claimedMilestones:[]}};
     old.blocks[135].hp=0;
     const migrated=sanitizeCrystalMinersProgressByEvent({old}).old;
-    assertEqual(migrated.version,8,'new campaign version');assertEqual(migrated.ore,999,'investment retained');assertDeepEqual(migrated.tools,old.tools,'upgrades retained');assertEqual(migrated.blocks[135].hp,0,'opened chest retained');assertEqual(migrated.eventTrack.levelsCleared,5,'prior levels recognized');
+    assertEqual(migrated.version,9,'new campaign version');assertEqual(migrated.ore,999,'investment retained');assertDeepEqual(migrated.tools,old.tools,'upgrades retained');assertEqual(migrated.blocks[135].hp,0,'opened chest retained');assertEqual(migrated.eventTrack.levelsCleared,5,'prior levels recognized');
     assertDeepEqual(sanitizeCrystalMinersProgressByEvent({old:migrated}).old,migrated,'migration stable after reload');
   }},
   {name:'normal finish needs one chest; the two hard approaches need two; all paths have distinct prizes',run:()=>{
@@ -326,7 +349,7 @@ export const crystalMinersTests: TestCase[] = [
     await seed();const current=getIslandRunStateSnapshot(session);const p={...createCrystalMinersProgress(),version:3,tools:Array(25).fill(5),blocks:createMinerBlocks(1,3)};
     await writeIslandRunGameStateRecord({session,client:null,record:{...current,crystalMinersProgressByEvent:{[eventId]:p as unknown as ReturnType<typeof createCrystalMinersProgress>}}});refreshIslandRunStateFromLocal(session);
     assert((await action({kind:'dig'})).ok,'old workshop accepts new drop');__resetIslandRunStateStoreForTests();refreshIslandRunStateFromLocal(session);
-    const saved=getIslandRunStateSnapshot(session).crystalMinersProgressByEvent[eventId];assertEqual(saved.version,8,'current schema saved');assert(saved.tools.every(t=>t===5),'fleet retained after reload');
+    const saved=getIslandRunStateSnapshot(session).crystalMinersProgressByEvent[eventId];assertEqual(saved.version,9,'current schema saved');assert(saved.tools.every(t=>t===5),'fleet retained after reload');
     const transitional={...saved,version:3};assertDeepEqual(sanitizeCrystalMinersProgressByEvent({transitional}).transitional,saved,'exact current terrain accepted during schema transition');
   }},
   {name:'trash removes only the chosen tool without refunds and protects the last item',run:async()=>{
@@ -345,7 +368,7 @@ export const crystalMinersTests: TestCase[] = [
     assertEqual(upgradeMinerForge({...p,ore:minerForgeCost(p)-1}),null,'no ore overdraft');assertEqual(upgradeMinerForge({...p,level:40,forgeLevel:5}),null,'rank cap');
   }},
   {name:'readiness spots critical two-lane approaches without changing outcome or cost',run:()=>{
-    const p={...createCrystalMinersProgress(),level:9,blocks:createMinerBlocks(9),tools:[5,...Array(24).fill(0)]};
+    const p={...createCrystalMinersProgress(),level:9,blocks:createMinerBlocks(9),tools:[6,...Array(24).fill(0)]};
     const hint=getMinerReadiness(p);assertEqual(hint.stage,'approach','critical approach detected');assertEqual(hint.neededLanes,2,'two lanes needed');assertEqual(hint.readyLanes,1,'concentrated fleet lacks second lane');assertEqual(hint.nextBoss,10,'upcoming boss visible');
     const before=JSON.stringify(p);getMinerReadiness(p);assertEqual(JSON.stringify(p),before,'guidance cannot alter physics or costs');
   }},
@@ -399,7 +422,7 @@ export const crystalMinersTests: TestCase[] = [
           if(level%10===0){__resetIslandRunStateStoreForTests();refreshIslandRunStateFromLocal(session);}
         }
         const end=getIslandRunStateSnapshot(session);const career=progress();assertEqual(career.eventTrack.levelsCleared,40,'all forty playable through real actions');assertDeepEqual(clearedLevels,Array.from({length:40},(_,i)=>i+1),'no level skipped');assertDeepEqual(career.eventTrack.claimedMilestones,[1,10,15,20,30,35,40],'all milestones automatically paid once');
-        const prizes=MINER_EVENT_MILESTONES.map(m=>resolveMinerMilestoneReward(m,session.user.id));assertEqual(end.dicePool,start.dicePool+prizes.reduce((n,p)=>n+p.dice,0),'exact final dice wallet');assertEqual(end.essence,start.essence+prizes.reduce((n,p)=>n+p.essence,0),'exact final money wallet');assert(returnsAt.length>0,'natural earning pauses occur');assert(career.forgeLevel>=3,'policy keeps investing in forge');assert(career.digs>40&&career.digs<65,'upgrading policy meets late resistance without an excessive grind');assert((attempts['38']??0)>1||(attempts['39']??0)>1,'fixed hard approaches still demand repeat preparation');
+        const prizes=MINER_EVENT_MILESTONES.map(m=>resolveMinerMilestoneReward(m,session.user.id));assertEqual(end.dicePool,start.dicePool+prizes.reduce((n,p)=>n+p.dice,0),'exact final dice wallet');assertEqual(end.essence,start.essence+prizes.reduce((n,p)=>n+p.essence,0),'exact final money wallet');assert(returnsAt.length>0,'natural earning pauses occur');assert(career.forgeLevel>=3,'policy keeps investing in forge');assert(career.digs>=48&&career.digs<65,'upgrading policy meets meaningful resistance without an excessive grind');assert((attempts['38']??0)>1||(attempts['39']??0)>1,'fixed hard approaches still demand repeat preparation');
         console.log('CANONICAL_CAMPAIGN',JSON.stringify({buysPerDig,drops:career.digs,forgeLevel:career.forgeLevel,ore:career.ore,highestTier:Math.max(...career.tools),returnsAt,attempts,diceReward:end.dicePool-start.dicePool,essenceReward:end.essence-start.essence}));
       } finally {Math.random=originalRandom;}
     }

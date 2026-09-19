@@ -10842,6 +10842,7 @@ export function IslandRunBoardPrototype({
       const miningBridge=createCrystalMinersBridge({session,client,eventId:miningEvent.eventId});
       setActiveLaunchedMinigameConfig({
         source: 'timed_event', mode: 'crystal_miners', arenaTimerManagedByGame: true,
+        inspectEnabled: isAdmin || (import.meta.env.DEV && isDevModeEnabled),
         bridge: miningBridge,
         onError: (error:Error)=>miningBridge.reportError(error,'load'),
         ticketOffersEnabled: isIslandRunFeatureEnabled('minigameTicketPurchasesReady') && !isDemoSession(session),

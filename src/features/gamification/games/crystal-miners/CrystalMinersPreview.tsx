@@ -19,6 +19,6 @@ function CrystalMinersPlayablePreview() {
   if (!ready) return <div className="cm-preview-hub">Opening the mine…</div>;
   return <>
     <main className="cm-preview-hub"><div><p>HABITGAME · LOCAL PLAYTEST</p><h1>Crystal Miners</h1><p>Merge tools, mine the depths and recover treasure. This review uses the same saved-state and reward services as the Event Arena.</p><p>{crystalPreviewBridge.getTickets()} tickets · {crystalPreviewBridge.getProgress().ore} ore · {state.rewardBarProgress} event reward progress · {state.dicePool} dice · {state.essence} Essence</p><button onClick={()=>setOpen(true)}>Enter the mine</button><button onClick={()=>void prepareCrystalMinersPreview(true)}>Refill playtest tickets</button><small>Local preview account only. Your real HabitGame account is untouched. Reload to verify your mine is saved.</small></div></main>
-    {open && <CrystalMinersMinigame islandNumber={1} launchConfig={{bridge:crystalPreviewBridge}} onComplete={()=>setOpen(false)}/>}
+    {open && <CrystalMinersMinigame islandNumber={1} launchConfig={{bridge:crystalPreviewBridge,inspectEnabled:new URLSearchParams(window.location.search).get('inspect')==='1'}} onComplete={()=>setOpen(false)}/>}
   </>;
 }

@@ -3,7 +3,7 @@ import { recordTelemetryEvent } from '../../../../services/telemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { getMinerReadiness, minerBuyTier, minerChestsRequired, type CrystalMinersProgress, type MinerCommand, type MinerSimulation } from './crystalMinersGame';
 
-export const CRYSTAL_MINERS_BALANCE_VERSION = '2026-09-19.4';
+export const CRYSTAL_MINERS_BALANCE_VERSION = '2026-09-19.5';
 export type MinerTelemetryRecord = { stage: string; dedupeKey: string; metadata: Record<string, string | number | boolean | number[]> };
 export type MinerObservation = 'opened' | 'closed' | 'result_shown' | 'prepared_again' | 'resources_earn' | 'resources_tickets' | 'resources_shop' | 'tail_accelerated';
 export interface MinerObserver {

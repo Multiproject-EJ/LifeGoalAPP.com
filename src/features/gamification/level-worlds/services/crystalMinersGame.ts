@@ -37,7 +37,7 @@ export function resolveMinerMilestoneReward(milestone: typeof MINER_EVENT_MILEST
   ][hash % 3];
 }
 export interface CrystalMinersProgress {
-  version: 8; dropTickets: number; forgeLevel: number; revision: number; level: number; ore: number; tools: number[]; blocks: MinerBlock[];
+  version: 9; dropTickets: number; forgeLevel: number; revision: number; level: number; ore: number; tools: number[]; blocks: MinerBlock[];
   digs: number; bought: number; totalOre: number; totalTreasures: number; updatedAtMs: number;
   lastReceipt: MinerReceipt | null; giftsWaiting: number; totalScore: number; bestScore: number;
   eventTrack: MinerEventTrack; superGiftSlots: number[]; superGiftsWaiting: number; giftsGenerated: number;
@@ -78,10 +78,10 @@ export const MINER_CHEST_REWARDS = [
   { ore: 80, gifts: 0, label: '80 ore', color: '#91e5bd' },
   { ore: 100, gifts: 0, label: '100 ore', color: '#ffe697' },
 ] as const;
-export function minerRecommendedTier(level: number): number { return Math.min(9, 1 + Math.floor((level - 1) / 5) + (minerChestsRequired(level) === 2 || isMinerBossCavern(level) ? 1 : 0)); }
+export function minerRecommendedTier(level: number): number { return Math.min(12, 1 + Math.floor((level - 1) / 4) + (minerChestsRequired(level) === 2 || isMinerBossCavern(level) ? 2 : 0)); }
 export function minerBuyTier(level: number): number { return Math.min(6, 1 + Math.floor((level - 1) / 7)); }
 
-export function createMinerBlocks(level: number, layoutVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 = 8): MinerBlock[] {
+export function createMinerBlocks(level: number, layoutVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 = 9): MinerBlock[] {
   const legacy = layoutVersion === 1;
   return Array.from({ length: MINER_COLUMNS * MINER_ROWS }, (_, id) => {
     const row = Math.floor(id / MINER_COLUMNS);
@@ -92,7 +92,7 @@ export function createMinerBlocks(level: number, layoutVersion: 1 | 2 | 3 | 4 | 
     if (legacy ? level > 1 && level % 5 === 1 : isMinerRewardCavern(level)) {
       const treasure = row === MINER_ROWS - 1 && (layoutVersion >= 3 || column % 2 === 0);
       if (layoutVersion >= 3 && row === 8 && column === 2) {
-        const hp = Math.ceil((layoutVersion >= 5 ? 90 : 48) * Math.pow(layoutVersion >= 5 ? 1.16 : 1.13, level - 1));
+        const hp = Math.ceil((layoutVersion >= 9 ? 1.5 + level*.02 : 1) * (layoutVersion >= 5 ? 90 : 48) * Math.pow(layoutVersion >= 5 ? 1.16 : 1.13, level - 1));
         return { id, kind: 'boss', hp, maxHp: hp };
       }
       const prizeRow = row % 4 === 2;
@@ -113,7 +113,7 @@ export function createMinerBlocks(level: number, layoutVersion: 1 | 2 | 3 | 4 | 
       : Math.floor(row / 5) % 3 === 0 ? 'ice'
       : Math.floor(row / 5) % 3 === 1 ? 'brick' : 'stone');
     const hardness = kind === 'boss' ? 20 : kind === 'obsidian' ? 1.6 : kind === 'iron' ? 2.2 : kind === 'ice' ? .65 : kind === 'tnt' || kind === 'gift' ? .4 : 1;
-    const maxHp = layoutVersion >= 3 && (kind === 'treasure' || kind === 'deflector' || kind === 'ticket' || kind === 'spawner' || kind === 'balloon') ? 1 : Math.max(1, Math.ceil((layoutVersion >= 3 && minerChestsRequired(level) === 2 ? layoutVersion >= 5 ? 2.5 : 1.35 : 1) * (1 + row * .17) * Math.pow(legacy || layoutVersion >= 5 ? 1.16 : 1.13, Math.min(level - 1, legacy ? 35 : 39)) * hardness));
+    const maxHp = layoutVersion >= 3 && (kind === 'treasure' || kind === 'deflector' || kind === 'ticket' || kind === 'spawner' || kind === 'balloon') ? 1 : Math.max(1, Math.ceil((layoutVersion >= 3 && minerChestsRequired(level) === 2 ? layoutVersion >= 5 ? 2.5 : 1.35 : 1) * (1 + row * .17) * Math.pow(legacy || layoutVersion >= 5 ? 1.16 : 1.13, Math.min(level - 1, legacy ? 35 : 39)) * hardness * (layoutVersion >= 9 ? 1 + Math.min(minerChestsRequired(level)===2?(level>=38?.55:1.2):2,(level-1)*.1) : 1)));
     const gap = row > 1 && row < MINER_ROWS - 1 && (hash < 11 || (row % 9 === 5 && column === (level + row) % 5));
     // Authored lane shelves alternate impacts with visible stretches of freefall.
     const rhythm = (row + column * 2 + level) % 7;
@@ -123,7 +123,7 @@ export function createMinerBlocks(level: number, layoutVersion: 1 | 2 | 3 | 4 | 
   });
 }
 export function createCrystalMinersProgress(): CrystalMinersProgress {
-  return { version: 8, dropTickets: 0, forgeLevel: 0, revision: 0, level: 1, ore: 42, eventTrack: { levelsCleared: 0, claimedMilestones: [] }, superGiftSlots: [], superGiftsWaiting: 0, giftsGenerated: 5,
+  return { version: 9, dropTickets: 0, forgeLevel: 0, revision: 0, level: 1, ore: 42, eventTrack: { levelsCleared: 0, claimedMilestones: [] }, superGiftSlots: [], superGiftsWaiting: 0, giftsGenerated: 5,
     tools: [-1, -1, -2, -1, -1, 1, 1, 1, 1, 1, ...Array(15).fill(0)],
     blocks: createMinerBlocks(1), digs: 0, bought: 0, totalOre: 0, totalTreasures: 0, updatedAtMs: 0, lastReceipt: null, giftsWaiting: 0, totalScore: 0, bestScore: 0 };
 }
@@ -182,6 +182,9 @@ export function getMinerLeague(score: number) {
   return { ...MINER_LEAGUES[index], index, next: MINER_LEAGUES[index + 1] ?? null };
 }
 /** Empty cells move, equal tiers merge, unlike tiers swap. Invalid commands are inert. */
+export function isMinerMergePair(tools:number[],from:number,to:number):boolean {
+  return Number.isInteger(from) && Number.isInteger(to) && from>=0 && to>=0 && from<tools.length && to<tools.length && from!==to && tools[from]>0 && tools[from]<MINER_MAX_TIER && tools[from]===tools[to];
+}
 export function arrangeMinerTools(progress: CrystalMinersProgress, from: number, to: number): CrystalMinersProgress | null {
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || to < 0 || from >= MINER_SLOTS || to >= MINER_SLOTS || from === to || progress.tools[from] <= 0 || progress.tools[to] < 0) return null;
   const tools = [...progress.tools];
@@ -221,7 +224,7 @@ export function simulateMinerDig(progress: CrystalMinersProgress, captureFrames 
   const bodies: MinerBody[] = progress.tools.flatMap((tier, id) => tier > 0 ? [{
     id, tier, lane: id % MINER_COLUMNS, x: (id % MINER_COLUMNS) * 60 + 30, y: -10 - Math.floor(id / MINER_COLUMNS) * 26,
     vx: 0, vy: 30, angle: id * 0.7,
-    hits: 9 + tier * 5 + progress.forgeLevel * 2, cooldown: 0, active: true,
+    hits: 6 + tier * 3 + progress.forgeLevel * 2, cooldown: 0, active: true,
   }] : []);
   const frames: MinerFrame[] = [];
   const guardian = blocks.find(block => block.kind === 'boss' && block.hp > 0);
@@ -352,11 +355,11 @@ export function sanitizeCrystalMinersProgressByEvent(value: unknown, fallback: R
   for (const [key, raw] of Object.entries(value)) {
     if (!key || key.length > 200 || !raw || typeof raw !== 'object') continue;
     const input = raw as Omit<Partial<CrystalMinersProgress>, 'version'> & { version?: number };
-    if ((input.version !== 1 && input.version !== 2 && input.version !== 3 && input.version !== 4 && input.version !== 5 && input.version !== 6 && input.version !== 7 && input.version !== 8) || !Array.isArray(input.tools) || input.tools.length !== MINER_SLOTS
+    if ((input.version !== 1 && input.version !== 2 && input.version !== 3 && input.version !== 4 && input.version !== 5 && input.version !== 6 && input.version !== 7 && input.version !== 8 && input.version !== 9) || !Array.isArray(input.tools) || input.tools.length !== MINER_SLOTS
       || !input.tools.every(t => Number.isInteger(t) && t >= -MINER_MAX_TIER && t <= MINER_MAX_TIER) || !input.tools.some(t => t !== 0)
       || !Array.isArray(input.blocks) || input.blocks.length !== MINER_ROWS * MINER_COLUMNS) continue;
     const level = Math.max(1, integer(input.level, 1, MINER_LEVEL_COUNT));
-    const expected = createMinerBlocks(level, input.version as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8);
+    const expected = createMinerBlocks(level, input.version as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9);
     const matchesLayout = (layout: MinerBlock[]) => input.blocks!.every((b, i) => b && b.id === i && b.kind === layout[i].kind && b.maxHp === layout[i].maxHp && Number.isInteger(b.hp) && b.hp >= 0 && b.hp <= b.maxHp);
     // A development hot update can finish a dig with new terrain before the
     // old in-memory schema marker refreshes. Still require an exact valid layout.
@@ -364,11 +367,11 @@ export function sanitizeCrystalMinersProgressByEvent(value: unknown, fallback: R
     const receipt = input.lastReceipt;
     const levelsCleared = Math.max(level - 1, integer(input.eventTrack?.levelsCleared, 0, MINER_LEVEL_COUNT));
     const claimedMilestones = Array.from(new Set(Array.isArray(input.eventTrack?.claimedMilestones) ? input.eventTrack.claimedMilestones.filter(n => MINER_EVENT_MILESTONES.some(m => m.levels === n && n <= levelsCleared)) : []));
-    const migratedBlocks = input.version !== 8 ? createMinerBlocks(level).map((b,i)=> {
+    const migratedBlocks = input.version !== 9 ? createMinerBlocks(level).map((b,i)=> {
       const old = input.blocks![i];
       return {...b, hp: b.kind !== old.kind && b.kind !== 'obsidian' ? b.hp : old.hp === 0 ? 0 : Math.ceil(b.maxHp * old.hp / old.maxHp)};
     }) : input.blocks;
-    result[key] = { version: 8, dropTickets: integer(input.dropTickets), forgeLevel: integer(input.forgeLevel, 0, MINER_FORGE_UNLOCKS.length), revision: integer(input.revision), level, ore: integer(input.ore),
+    result[key] = { version: 9, dropTickets: integer(input.dropTickets), forgeLevel: integer(input.forgeLevel, 0, MINER_FORGE_UNLOCKS.length), revision: integer(input.revision), level, ore: integer(input.ore),
       eventTrack: { levelsCleared, claimedMilestones },
       superGiftSlots: Array.from(new Set(Array.isArray(input.superGiftSlots)?input.superGiftSlots.filter(i=>Number.isInteger(i)&&i>=0&&i<MINER_SLOTS&&input.tools![i]<0):[])),
       superGiftsWaiting: Math.min(integer(input.giftsWaiting),integer(input.superGiftsWaiting)), giftsGenerated:integer(input.giftsGenerated,5),

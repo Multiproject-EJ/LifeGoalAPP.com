@@ -20,7 +20,7 @@ export function createMinerReplayCamera(frames: MinerFrame[]): Array<{ y: number
 /** Presentation only: preserve suspense until the final chest that can be reached
  * has opened, give its reveal 700 ms, then compress a long unproductive tail. */
 export function createMinerReplayTiming(frames: MinerFrame[]) {
-  if(frames.length<2)return {times:[0],duration:0,fastFrom:-1};
+  if(frames.length<2)return {times:[0],duration:0,travelDuration:0,celebrationMs:0,fastFrom:-1};
   const baseDuration=Math.min(26000,Math.max(5000,frames[frames.length-1].step/60*650));
   const interval=baseDuration/(frames.length-1);
   let lastChest=-1;
@@ -31,7 +31,9 @@ export function createMinerReplayTiming(frames: MinerFrame[]) {
   for(let i=1;i<frames.length;i++)times.push(times[i-1]+interval/(fastFrom>=0&&i>=fastFrom?2.25:1));
   // Hold a terminal blast so losing the last tool does not hide the weapon hit.
   const finalBlastHold=frames[frames.length-1].bossAttack?.phase==='fire'?600:0;
-  return {times,duration:times[times.length-1]+finalBlastHold,fastFrom};
+  const travelDuration=times[times.length-1]+finalBlastHold;
+  const celebrationMs=lastChest>=0?1100:0;
+  return {times,travelDuration,celebrationMs,duration:travelDuration+celebrationMs,fastFrom};
 }
 export function minerReplayFrameAt(times:number[],elapsedMs:number):number {
   let low=0,high=times.length-1;
