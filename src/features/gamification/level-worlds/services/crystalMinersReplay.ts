@@ -29,7 +29,9 @@ export function createMinerReplayTiming(frames: MinerFrame[]) {
   const fastFrom=lastChest>=0 && (frames.length-1-candidate)*interval>1800 ? candidate : -1;
   const times=[0];
   for(let i=1;i<frames.length;i++)times.push(times[i-1]+interval/(fastFrom>=0&&i>=fastFrom?2.25:1));
-  return {times,duration:times[times.length-1],fastFrom};
+  // Hold a terminal blast so losing the last tool does not hide the weapon hit.
+  const finalBlastHold=frames[frames.length-1].bossAttack?.phase==='fire'?600:0;
+  return {times,duration:times[times.length-1]+finalBlastHold,fastFrom};
 }
 export function minerReplayFrameAt(times:number[],elapsedMs:number):number {
   let low=0,high=times.length-1;

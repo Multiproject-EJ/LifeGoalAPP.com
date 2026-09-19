@@ -29,6 +29,47 @@ async function seed(tickets=3) {
 }
 const action = (command: Parameters<typeof applyCrystalMinersAction>[0]['command'], expectedRevision=0, nowMs=500) => applyCrystalMinersAction({session,client:null,eventId,command,expectedRevision,nowMs});
 export const crystalMinersTests: TestCase[] = [
+  {name:'late stone difficulty requires equipment without a long rebound wait',run:()=>{
+    const run=(tier:number)=>simulateMinerDig({...createCrystalMinersProgress(),level:39,forgeLevel:5,blocks:createMinerBlocks(39),tools:[...Array(10).fill(tier),...Array(15).fill(0)]});
+    const weak=run(7),strong=run(11);
+    assert(!weak.cleared,'weak tools still fail');assert(strong.broken>weak.broken,'investment breaks more obstacles');
+    assert(strong.frames[strong.frames.length-1].step<20*60,'late rack resolves in under twenty simulation seconds');
+    const seam=(tier:number)=>{const blocks=createMinerBlocks(39).map(b=>({...b,hp:0}));blocks[50]={id:50,kind:'stone',hp:999999,maxHp:999999};return simulateMinerDig({...createCrystalMinersProgress(),level:39,tools:[tier,...Array(24).fill(0)],blocks}).frames.flatMap(f=>f.hits).filter(h=>h.blockId===50).slice(0,2);};
+    const a=seam(7),b=seam(14);assertEqual(a[1].step-a[0].step,b[1].step-b[0].step,'stronger tools do not bounce longer');
+  }},
+  {name:'guardian charges, can miss an empty lane, reloads and wipes a later occupied lane',run:()=>{
+    const p={...createCrystalMinersProgress(),level:40,forgeLevel:5,tools:[0,9,...Array(23).fill(0)],blocks:createMinerBlocks(40).map(b=>({...b,hp:b.kind==='boss'?b.hp:0}))};
+    const run=simulateMinerDig(p),attacks=run.frames.flatMap(f=>f.bossAttack?[f.bossAttack]:[]);
+    assert(attacks.some(a=>a.phase==='charge'&&a.lane===4),'first target marked before firing');
+    assert(attacks.some(a=>a.phase==='fire'&&a.shot===0&&a.destroyed===0),'first shot may miss');
+    assert(attacks.some(a=>a.phase==='reload'),'reload exposed');
+    assert(attacks.some(a=>a.phase==='fire'&&a.shot===1&&a.lane===1&&a.destroyed===1),'next charged shot removes target lane');
+    const timing=createMinerReplayTiming(run.frames);assertEqual(timing.duration-timing.times[timing.times.length-1],600,'last-tool blast stays visible before result');
+    assertEqual(run.bossShots,2,'two actual shots');assertEqual(run.bossDestroyed,1,'one temporary falling tool lost');
+    assertDeepEqual(settleMinerDig(p,run).tools,p.tools,'permanent investments survive weapon hit');
+    assertDeepEqual(simulateMinerDig(p,false).blocks,run.blocks,'headless and replay outcomes identical');
+  }},
+  {name:'guardian weapon removes every live tool in its lane and leaves other lanes intact',run:()=>{
+    const p={...createCrystalMinersProgress(),level:40,tools:Array(25).fill(7),blocks:createMinerBlocks(40).map(b=>({...b,hp:b.kind==='boss'?b.hp*100:0}))};
+    const run=simulateMinerDig(p);const f=run.frames.find(f=>f.bossAttack?.phase==='fire')!;
+    assertEqual(f.bossAttack!.destroyed,5,'entire first target lane hit');
+    assert(f.bodies.filter(b=>b.lane===4).every(b=>!b.active),'target lane eliminated');
+    assert(f.bodies.filter(b=>b.lane!==4).some(b=>b.active),'other lanes remain in play');
+  }},
+  {name:'killing the guardian cancels its charge and prevents further shots',run:()=>{
+    const p={...createCrystalMinersProgress(),level:10,tools:Array(25).fill(7),blocks:createMinerBlocks(10)};
+    const run=simulateMinerDig(p);assert(run.cleared,'strong rack defeats guardian');assertEqual(run.bossShots,0,'killed before first shot');
+    assert(run.frames.some(f=>f.bossAttack?.phase==='charge'),'charge actually began');
+    assert(run.frames.filter(f=>f.blocks.find(b=>b.kind==='boss')!.hp===0).every(f=>!f.bossAttack),'no attack after death');
+  }},
+  {name:'rare obsidian arrives in deep caverns and old damage and tools survive migration',run:()=>{
+    assert(!createMinerBlocks(20).some(b=>b.kind==='obsidian'),'not an early material');assert(createMinerBlocks(39).some(b=>b.kind==='obsidian'&&b.hp>0),'late rare seams');
+    const old={...createCrystalMinersProgress(),version:7,level:39,tools:[12,...Array(24).fill(0)],ore:876,blocks:createMinerBlocks(39,7)};
+    const target=createMinerBlocks(39).find(b=>b.kind==='obsidian')!;old.blocks[target.id].hp=0;
+    const saved=sanitizeCrystalMinersProgressByEvent({career:old}).career;
+    assertEqual(saved.version,8,'migrated');assertEqual(saved.blocks[target.id].hp,0,'broken stone does not respawn as obsidian');assertEqual(saved.ore,876,'ore retained');assertDeepEqual(saved.tools,old.tools,'tools retained');
+  }},
+
   {name:'rare ticket blocks award one exact saved drop once in the atomic dig',run:async()=>{
     await seed();const before=getIslandRunStateSnapshot(session);const p={...createCrystalMinersProgress(),level:6,blocks:createMinerBlocks(6).map(b=>({...b,hp:b.kind==='ticket'?1:0})),tools:Array(25).fill(5)};
     assertEqual(p.blocks.filter(b=>b.kind==='ticket').length,1,'one rare ticket block');
@@ -230,7 +271,7 @@ export const crystalMinersTests: TestCase[] = [
     const old={...createCrystalMinersProgress(),version:1,level:6,ore:999,tools:Array(25).fill(4),blocks:createMinerBlocks(6,1),eventTrack:{levelsCleared:0,claimedMilestones:[]}};
     old.blocks[135].hp=0;
     const migrated=sanitizeCrystalMinersProgressByEvent({old}).old;
-    assertEqual(migrated.version,7,'new campaign version');assertEqual(migrated.ore,999,'investment retained');assertDeepEqual(migrated.tools,old.tools,'upgrades retained');assertEqual(migrated.blocks[135].hp,0,'opened chest retained');assertEqual(migrated.eventTrack.levelsCleared,5,'prior levels recognized');
+    assertEqual(migrated.version,8,'new campaign version');assertEqual(migrated.ore,999,'investment retained');assertDeepEqual(migrated.tools,old.tools,'upgrades retained');assertEqual(migrated.blocks[135].hp,0,'opened chest retained');assertEqual(migrated.eventTrack.levelsCleared,5,'prior levels recognized');
     assertDeepEqual(sanitizeCrystalMinersProgressByEvent({old:migrated}).old,migrated,'migration stable after reload');
   }},
   {name:'normal finish needs one chest; the two hard approaches need two; all paths have distinct prizes',run:()=>{
@@ -285,7 +326,7 @@ export const crystalMinersTests: TestCase[] = [
     await seed();const current=getIslandRunStateSnapshot(session);const p={...createCrystalMinersProgress(),version:3,tools:Array(25).fill(5),blocks:createMinerBlocks(1,3)};
     await writeIslandRunGameStateRecord({session,client:null,record:{...current,crystalMinersProgressByEvent:{[eventId]:p as unknown as ReturnType<typeof createCrystalMinersProgress>}}});refreshIslandRunStateFromLocal(session);
     assert((await action({kind:'dig'})).ok,'old workshop accepts new drop');__resetIslandRunStateStoreForTests();refreshIslandRunStateFromLocal(session);
-    const saved=getIslandRunStateSnapshot(session).crystalMinersProgressByEvent[eventId];assertEqual(saved.version,7,'current schema saved');assert(saved.tools.every(t=>t===5),'fleet retained after reload');
+    const saved=getIslandRunStateSnapshot(session).crystalMinersProgressByEvent[eventId];assertEqual(saved.version,8,'current schema saved');assert(saved.tools.every(t=>t===5),'fleet retained after reload');
     const transitional={...saved,version:3};assertDeepEqual(sanitizeCrystalMinersProgressByEvent({transitional}).transitional,saved,'exact current terrain accepted during schema transition');
   }},
   {name:'trash removes only the chosen tool without refunds and protects the last item',run:async()=>{

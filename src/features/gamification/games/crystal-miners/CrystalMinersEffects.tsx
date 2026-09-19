@@ -4,10 +4,10 @@ import type { MinerHit } from '../../level-worlds/services/crystalMinersGame';
 /** Small bounded vector bursts. No particle timers, images or per-frame DOM writes. */
 export function MinerBlockImpact({hit}:{hit:MinerHit}) {
   const dust=['stone','brick','ore'].includes(hit.kind);
-  const ice=hit.kind==='ice'||hit.kind==='crystal';
+  const ice=hit.kind==='ice'||hit.kind==='crystal'||hit.kind==='obsidian';
   const metal=hit.kind==='iron';
   const fire=hit.kind==='ember'||hit.kind==='tnt';
-  const color=ice?'#baf8ff':metal?'#e7f8ff':fire?'#ffb253':hit.kind==='ticket'?'#fff0a7':hit.kind==='spawner'?'#bea6ff':'#c5b292';
+  const color=hit.kind==='obsidian'?'#d3a6ff':ice?'#baf8ff':metal?'#e7f8ff':fire?'#ffb253':hit.kind==='ticket'?'#fff0a7':hit.kind==='spawner'?'#bea6ff':'#c5b292';
   return <g className={`cm-block-impact cm-impact-${hit.kind}`} transform={`translate(${hit.x},${hit.y})`} aria-hidden="true">
     {hit.broken&&<circle className="cm-impact-ring" r={fire?48:24} fill="none" stroke={color} strokeWidth={fire?5:2}/>}
     {metal&&!hit.broken&&<><path className="cm-electric-flash" d="m-24-7 15 2-7 10 17-9-4 13 23-16-6 11 16-8" fill="none" stroke="#d0f4ff" strokeWidth="2.5"/><circle r="12" fill="#fff8ce" opacity=".6"/></>}

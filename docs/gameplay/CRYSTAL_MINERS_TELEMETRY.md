@@ -33,3 +33,5 @@ The existing `minigameTicketPurchasesReady` flag remains false: pack equivalence
 ## Animation and convenience telemetry
 
 Balance version 2026-09-19.3 adds rare exact drop-ticket rewards and bounded temporary picks. Attempts include `drop_tickets_gained` and `spawned_tools`; preparation includes group-merge counts. `tail_accelerated` records replay compression without changing deterministic outcomes. Group merge unlocks at cavern 25 and performs only one pass over the chosen tier. Special reward displays read the committed receipt; flight animations cannot mutate balances. Save format 7 migrates earlier terrain while retaining the career and already-funded drops.
+
+Balance version `2026-09-19.4` adds `boss_shots` and `boss_tools_destroyed` to attempts, covering actual canonical weapon hits rather than animation counts. Guardian shots select a lane without consulting occupancy or tickets; equipment investment is never deleted by a shot. Late-stone rebound pacing is now independent of tool tier.

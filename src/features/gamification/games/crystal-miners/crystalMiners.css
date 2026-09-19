@@ -65,3 +65,7 @@
 @media(prefers-reduced-motion:reduce){.cm-ticket-flight{animation:none;left:50%!important;top:18%!important;transform:translateX(-50%)}.cm-pocket.is-collecting{animation:none}}
 @media(max-width:700px){.cm-workshop{display:flex;flex-direction:column;gap:5px}.cm-workshop>*{flex-shrink:0}.cm-workshop .cm-tool-rack{flex:1;min-height:100px;height:auto}.cm-workshop .cm-rack-caption{min-height:10px}.cm-buy,.cm-forge-upgrade{min-height:34px;padding:5px 8px}.cm-buy svg{height:25px}.cm-group-merge{min-height:27px}.cm-workshop .cm-section-heading{display:none}}
 .cm-ticket-award{color:#fff0aa!important;border:1px solid #f4d786;background:#72563777;border-radius:10px;padding:9px;font-weight:800;animation:cm-wallet-pop .6s ease-out}.cm-save-status.is-pending{display:block!important;color:#f4d397}@media(prefers-reduced-motion:reduce){.cm-ticket-award{animation:none}}
+
+/* Guardian attacks follow the settled simulation, including misses and interruption. */
+.cm-boss.is-charge .cm-cannon-charge{filter:drop-shadow(0 0 8px #ffb2b2);animation:cm-cannon-pulse .3s ease-in-out infinite alternate}.cm-boss.is-fire .cm-boss-cannon{filter:drop-shadow(0 0 13px #fff3bf)}.cm-boss-lane-fire{animation:cm-blast-flash .45s ease-out both}.cm-obsidian-vein{filter:drop-shadow(0 0 3px #b481f1)}
+@keyframes cm-cannon-pulse{to{opacity:.55}}@keyframes cm-blast-flash{from{opacity:1}to{opacity:.4}}@media(prefers-reduced-motion:reduce){.cm-boss.is-charge .cm-cannon-charge,.cm-boss-lane-fire{animation:none}}
