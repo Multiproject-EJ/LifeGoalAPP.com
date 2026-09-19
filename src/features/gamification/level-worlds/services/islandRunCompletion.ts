@@ -3,8 +3,12 @@ import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 import { ISLAND_RUN_CONTRACT_V2_STOP_TYPES } from './islandRunContractV2StopResolver';
 import { getIslandTechnologyAccess } from './islandRunTechnologyUnlocks';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { resolveOpeningGamesCeremony } from './islandRunOpeningGames';
 import {
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+  CELESTIAL_REDOCKING_ROLL_TARGET,
+  resolveCelestialRedockingProgress,
   isLavaLabyrinthEscapeMissionComplete,
   resolveFirstLightAssemblyCraterProgress,
   resolveStagedRestorationMissionProgress,
@@ -16,7 +20,7 @@ export type IslandRunCompletionState = Pick<IslandRunGameStateRecord,
   & Partial<Pick<IslandRunGameStateRecord, 'completedStopsByIsland' | 'technologyUnlocksById'>>;
 
 export interface IslandCompletionRequirement {
-  id: 'builds' | 'objectives' | 'egg' | 'assembly' | 'mandate' | 'concord' | 'extraction';
+  id: 'builds' | 'objectives' | 'egg' | 'assembly' | 'mandate' | 'concord' | 'extraction' | 'opening_ceremony' | 'redocking';
   label: string;
   value: number;
   target: number;
@@ -29,6 +33,7 @@ export interface IslandCompletionRequirement {
  */
 export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   const islandNumber = state.currentIslandNumber;
+  const access = resolveIslandRunFeatureAccess(state);
   const assembly = resolveFirstLightAssemblyCraterProgress({
     ledger: state.signatureMissionProgressByIsland, cycleIndex: state.cycleIndex, islandNumber,
   });
@@ -67,6 +72,17 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
       ledger: state.signatureMissionProgressByIsland, cycleIndex: state.cycleIndex, islandNumber,
     });
     add('extraction', 'Finish the Iron Skiff extraction', isLavaLabyrinthEscapeMissionComplete(escape) ? 1 : 0);
+  }
+  if (access.gradual && islandNumber === 2) {
+    const ceremony = resolveOpeningGamesCeremony(state.signatureMissionProgressByIsland);
+    add('opening_ceremony', 'Host the opening ceremony and play the first game', ceremony.completedAtMs !== null ? 1 : 0);
+  }
+  if (access.gradual && islandNumber === 4) {
+    const redocking = resolveCelestialRedockingProgress({ ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex, islandNumber });
+    const complete = redocking.rollsCompleted >= CELESTIAL_REDOCKING_ROLL_TARGET
+      && typeof redocking.completedAtMs === 'number' && Number.isFinite(redocking.completedAtMs) && redocking.completedAtMs >= 0;
+    add('redocking', 'Complete the Great Re-Docking', complete ? 1 : 0);
   }
   const complete = requirements.every(item => item.complete);
   const fraction = requirements.reduce((sum, item) => sum + Math.min(1, item.value / item.target), 0) / requirements.length;

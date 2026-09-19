@@ -547,6 +547,32 @@ Additional rules:
 - A completed island **cannot** decay (Essence drift is suspended once island is fully cleared).
 - Buildings **reset** to Level 0 on island travel.
 
+### Gradual-introduction cohort (`opening-games-v1`)
+
+This user-approved rollout is explicit and persisted, not inferred from island
+number or save age. Enrollment remains disabled until the integration gates in
+`docs/gauntlets/2026-09-19-gradual-island-feature-introductions.md` pass. Unmarked
+and legacy saves retain the rules above and all earned inventory/unlocks.
+
+- New Hatchery egg placement is unavailable on Islands001–003. Island004
+  introduces eggs. The early welcome-venue activity and removal of its obsolete
+  egg-clear dependency must be integrated before this cohort can be enabled;
+  do not auto-complete activities to conceal a missing replacement.
+- New Island002 requires the opening ceremony **and completed participation in
+  its free inaugural game** before island clear/departure. Canceling the game,
+  finishing construction, or lighting the beacon alone does not satisfy this.
+- New Island004 requires twenty canonical Re-Docking rolls and the committed
+  completion timestamp for the current cycle's Island004 mission. Old Island002
+  progress or a previous-cycle Vault entitlement cannot substitute for it.
+- Canonical travel enforces new-cohort completion even if a caller omits the
+  legacy optional completed-visit key. No skip-ahead travel is introduced.
+- Previously earned eggs remain resolvable; the policy blocks new early egg
+  creation, not ownership. Never delete saved eggs or creatures as migration.
+
+The ceremony and Re-Docking requirements are explicit exceptions to the
+otherwise optional signature-mission rule. Egg reward inventory/other grant
+sources and early welcome-venue UI remain separately tracked release gates.
+
 ---
 
 ## 8) What is explicitly removed from previous system

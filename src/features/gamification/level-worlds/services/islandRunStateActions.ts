@@ -41,6 +41,7 @@
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { canPlaceIslandRunEggs } from './islandRunEggPlacementPolicy';
 import { ensureIslandRunContractV2ActiveTimedEvent } from './islandRunContractV2RewardBar';
 import { resolveIslandRunCompletion } from './islandRunCompletion';
 import type {
@@ -4680,6 +4681,7 @@ export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): 
   } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  if (!canPlaceIslandRunEggs(current, islandNumber, Object.keys(eggEntriesByLedgerKey))) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
     activeEggTier,
@@ -4716,6 +4718,7 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
   } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  if (!canPlaceIslandRunEggs(current, islandNumber, [islandKey])) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
     activeEggTier,
@@ -4862,6 +4865,9 @@ export function resolveReadyEggTerminalTransition(
   const activeEggHatchAtMs = canBackfillBaseActiveEgg
     ? (current.activeEggSetAtMs as number) + (current.activeEggHatchDurationMs as number)
     : 0;
+  if (!resolveIslandRunFeatureAccess(current).eggs && !ledgerEntry && !canBackfillBaseActiveEgg) {
+    return { record: current, changed: false, reason: 'missing_ledger_entry' };
+  }
   const readyCheckMs = Number.isFinite(readyNowMs) ? (readyNowMs as number) : openedAtMs;
   const currentEntry: PerIslandEggEntry | undefined = ledgerEntry ?? (canBackfillBaseActiveEgg
     ? {
@@ -5296,9 +5302,9 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
   } = options;
 
   const current = getIslandRunStateSnapshot(session);
-  if (options.completedVisitKey !== undefined) {
+  if (options.completedVisitKey !== undefined || resolveIslandRunFeatureAccess(current).gradual) {
     const completion = resolveIslandRunCompletion(current);
-    if (!completion.complete || completion.visitKey !== options.completedVisitKey
+    if (!completion.complete || (options.completedVisitKey !== undefined && completion.visitKey !== options.completedVisitKey)
       || nextIsland !== current.currentIslandNumber + 1) {
       throw new Error('Island completion changed before departure. Return to the current island and try again.');
     }

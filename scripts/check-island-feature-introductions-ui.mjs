@@ -61,7 +61,9 @@ try {
         localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
       }, { ...fixture, playCeremony });
       await page.goto(origin + '/dev/island-art-preview?islandRunQa=1&island3dQuality=low&disableDiscoveryFog=1');
-      await page.locator('canvas[aria-label^="Interactive 3D"]').first().waitFor({ state: 'visible' });
+      // Cold Vite module loading can exceed the interaction timeout on this
+      // large preview. Keep the longer allowance limited to initial startup.
+      await page.locator('canvas[aria-label^="Interactive 3D"]').first().waitFor({ state: 'visible', timeout: 180000 });
       await page.waitForTimeout(1500);
       const puzzleCount = await page.getByRole('button', { name: 'Sticker album', exact: true }).count();
       assert.equal(puzzleCount, fixture.puzzle ? 1 : 0, `${name}: puzzle launcher eligibility`);

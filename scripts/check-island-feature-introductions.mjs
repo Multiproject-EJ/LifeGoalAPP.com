@@ -13,6 +13,8 @@ try {
     ['islandRunFeatureAccess', 'islandRunFeatureAccessTests'],
     ['islandRunOpeningGames', 'islandRunOpeningGamesTests'],
     ['islandRunOpeningGamesAction', 'islandRunOpeningGamesActionTests'],
+    ['islandRunEarlyProgression', 'islandRunEarlyProgressionTests'],
+    ['islandRunCompletion', 'islandRunCompletionTests'],
     ['islandRunTileRewardAction', 'islandRunTileRewardActionTests'],
     ['islandRunStateActions', 'islandRunStateActionsTests'],
     ['islandRunContractV2RewardBar', 'islandRunContractV2RewardBarTests'],

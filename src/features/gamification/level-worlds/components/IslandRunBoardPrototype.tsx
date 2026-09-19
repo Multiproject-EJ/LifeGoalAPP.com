@@ -9155,6 +9155,10 @@ export function IslandRunBoardPrototype({
   // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
   const handleSetEgg = async () => {
     if (isSettingEgg) return;
+    if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).eggs) {
+      setLandingText('Your first Hatchery egg is introduced on Island 004.');
+      return;
+    }
     setIsSettingEgg(true);
     // Cross-device guard: another device may already have set this island's
     // egg while this device held a stale snapshot. Egg tier + hatch timer are
@@ -9228,6 +9232,7 @@ export function IslandRunBoardPrototype({
     const nextCompletedStops = activeStopId === 'hatchery'
       ? ensureStopCompleted(completedStops, 'hatchery')
       : completedStops;
+    const placementSnapshot = getIslandRunStateSnapshot(session);
     const nextRecord = eggCount > 1
       ? applyEggPlacementBatch({
           session,
@@ -9252,6 +9257,13 @@ export function IslandRunBoardPrototype({
           triggerSource: 'island_run_set_egg',
         });
 
+    // The canonical action can reject a stale pre-introduction callback. Never
+    // animate an egg, schedule a notification or complete a stop it rejected.
+    if (nextRecord === placementSnapshot || nextRecord.perIslandEggs[primaryEgg.ledgerKey]?.setAtMs !== primaryEgg.setAtMs) {
+      setIsSettingEgg(false);
+      setLandingText('This egg could not be placed. Return to the island and try again.');
+      return;
+    }
     setActiveEgg(nextActiveEgg);
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');

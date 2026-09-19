@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "scope": "offline real-board puzzle HUD and mission identity; not ceremony, wheel callback or physical-device acceptance",
+  "cases": [
+    {
+      "island": 2,
+      "gradual": true,
+      "puzzle": false,
+      "mission": "Host the First Games",
+      "puzzleCount": 0,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "externalRequestsBlocked": 0
+}

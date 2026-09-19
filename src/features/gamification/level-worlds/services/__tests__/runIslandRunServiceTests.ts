@@ -165,6 +165,7 @@ import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.tes
 import { islandRunSignatureMissionTests } from './islandRunSignatureMissions.test';
 import { islandRunOpeningGamesTests } from './islandRunOpeningGames.test';
 import { islandRunOpeningGamesActionTests } from './islandRunOpeningGamesAction.test';
+import { islandRunEarlyProgressionTests } from './islandRunEarlyProgression.test';
 import { islandRunFeatureAccessTests } from './islandRunFeatureAccess.test';
 import { islandRunCompassBookReceiptTests } from './islandRunCompassBookReceipt.test';
 import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
@@ -411,6 +412,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunSignatureMissions', tests: islandRunSignatureMissionTests },
   { label: 'islandRunOpeningGames', tests: islandRunOpeningGamesTests },
   { label: 'islandRunOpeningGamesAction', tests: islandRunOpeningGamesActionTests },
+  { label: 'islandRunEarlyProgression', tests: islandRunEarlyProgressionTests },
   { label: 'islandRunFeatureAccess', tests: islandRunFeatureAccessTests },
   { label: 'islandRunCompassBookReceipt', tests: islandRunCompassBookReceiptTests },
   { label: 'islandRunMissionTracker', tests: islandRunMissionTrackerTests },

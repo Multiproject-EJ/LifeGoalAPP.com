@@ -122,11 +122,10 @@ its preparation, beacon/launcher, guided game and completion screenshots were
 visually reviewed (the narrow launcher uses a readable `FREE` caption).
 Keep rejected evidence. No physical-device or production acceptance is claimed.
 
-Fresh full-project `tsc -b --pretty false` is still running at this checkpoint
-(tool session 65915); no successful result is claimed for this continuation.
-The earlier attempt caught nullable test launch descriptors, now explicitly
-narrowed. Final typecheck/build remains a release gate, including the last
-beacon-clock regression and final presentation edits.
+The ceremony checkpoint's full-project `tsc -b --pretty false` (session 65915)
+completed successfully; the next continuation retrieved exit code zero. The
+earlier nullable test descriptors had been corrected. This result does not
+replace validation of subsequent edits or the final release build.
 
 The mission phone now shows one current ceremony step plus the two existing
 landmark rows, preserving its authored three-row layout. During team arrival,
@@ -153,6 +152,53 @@ is kept separate from unfinished palace artwork. Last fetched main was
 `dc54bb95`; refresh it again before merging. GitHub Pages deploys on pushes to main.
 No merge, push, deployment, remote save mutation or production cohort activation
 has been performed. Preserve unrelated palace work and all rejected evidence.
+
+### Early-island safeguards — next continuation
+
+`canPlaceIslandRunEggs` now guards the single and batch canonical Hatchery
+actions for the explicit new cohort. Islands001–003 cannot place an egg or
+receive objective credit through that callback. Island004 accepts a first
+placement; cross-island arguments, malformed batch keys and attempts to replace
+an already-owned slot are rejected without writing. Early UI-only ready-egg
+fallbacks cannot invent a reward. Existing canonical eggs remain collectable or
+sellable exactly once, and legacy placement behavior is unchanged. The board
+does not animate, schedule a hatch notification or mark a stop complete after
+a rejected placement.
+
+The shared completion selector now adds the new002 ceremony/first-game
+requirement and the new004 current-cycle twenty-roll Re-Docking requirement.
+Ordinary construction/activities/eggs alone cannot bypass those missions.
+New-cohort travel also checks completion when the caller omits the legacy
+optional visit key. Existing unmarked travel behavior is preserved. These
+exceptions are recorded in the canonical gameplay contract.
+
+Focused tests now pass 381 cases, including existing completion coverage across
+all120 islands and actual accepted/rejected new002/new004 travel actions. The
+architecture guard passes with zero new violations (three legacy warnings).
+Fresh full-project typecheck is running in tool session 44751, with output at
+`/tmp/early-island-progression-types.log`; retrieve its result before claiming
+typecheck acceptance. The first mobile regression attempt
+`early-progression-ui-v001` timed out before the canvas loaded with no reported
+app error; it is failed evidence, not a pass. With a startup-only allowance of
+180s (ordinary interaction timeout remains60s), `early-progression-ui-v002`
+passed with zero browser errors. Its three-row mission phone screenshot was
+visually inspected and remains within the mobile viewport. This is HUD/mission
+regression evidence, not a new full ceremony or device-performance acceptance.
+
+Pending product choice sent via the user-input tool: use the first landmark on
+Islands001–003 as a free welcome/arrival check-in, then introduce its Hatchery
+egg activity on004? This is a real explicit activity, not fabricated objective
+credit from building alone. No replacement activity or removal of the old egg
+departure dependency has been implemented without that choice. Therefore the
+new cohort must remain disabled.
+
+Egg-source audit: Welcome Pack starter cards and the first-session Creature Pack
+grant creatures directly, not eggs; the welcome resource bundle grants dice,
+essence and event tickets. Do not conflate those with egg placement or silently
+remove earned cards. Additional egg inventory grant paths exist in Combined
+Journey rewards, Treasure Path/Lucky Roll banking, Creature Arena victory and
+admin/dev grants. Their safe deferred/replacement behavior and matching UI need
+an integration pass before claiming that all early egg sources are gated.
 
 ## Authority and outcome
 
