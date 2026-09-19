@@ -1,17 +1,19 @@
 import { assert, assertEqual, type TestCase } from './testHarness';
-import type { IslandRunGameStateRecord } from '../islandRunGameStateStore';
+import { readIslandRunGameStateRecord, type IslandRunGameStateRecord } from '../islandRunGameStateStore';
+import type { Session } from '@supabase/supabase-js';
 import { getEffectiveIslandNumber, getStopUpgradeCost, initStopBuildStatesForIsland } from '../islandRunContractV2EssenceBuild';
 import { quoteIslandRunFastBuild, resolveIslandRunFastBuild } from '../islandRunFastBuild';
 
 function record(island = 2, level = 0, cycle = 0): IslandRunGameStateRecord {
   const effective = getEffectiveIslandNumber(island, cycle);
-  return { currentIslandNumber: island, cycleIndex: cycle, islandStartedAtMs: 1234,
+  const session = { user: { id: 'fast-build-unit-fixture' } } as unknown as Session;
+  return { ...readIslandRunGameStateRecord(session), currentIslandNumber: island, cycleIndex: cycle, islandStartedAtMs: 1234,
     firstSessionTutorialState: 'complete', essence: 1e12, essenceLifetimeSpent: 3, dicePool: 10, runtimeVersion: 5,
     stopBuildStateByIndex: initStopBuildStatesForIsland(effective).map((build, index) => ({ ...build, buildLevel: level,
       requiredEssence: getStopUpgradeCost({ islandNumber: effective, stopIndex: index, currentBuildLevel: level }) })),
     stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false })),
-    activeStopIndex: 0, islandEggSlotUsed: false, bossTrialResolved: false,
-  } as IslandRunGameStateRecord;
+    activeStopIndex: 0, activeEggTier: 'rare', bossTrialResolvedIslandNumber: null,
+  };
 }
 export const islandRunFastBuildTests: TestCase[] = [
   { name: 'fast building supports every island and all starting levels at the exact remaining price', run: () => {
@@ -29,8 +31,8 @@ export const islandRunFastBuildTests: TestCase[] = [
       assertEqual(result.record.dicePool, 10 + (3 - level) * (island === 1 ? 4 : 5), 'dice per new level');
       assert(result.record.stopStatesByIndex.every(stop => !stop.objectiveComplete), 'activities remain');
       assertEqual(result.record.activeStopIndex, 0, 'no unlock');
-      assertEqual(result.record.islandEggSlotUsed, false, 'egg preserved');
-      assertEqual(result.record.bossTrialResolved, false, 'boss preserved');
+      assertEqual(result.record.activeEggTier, 'rare', 'egg preserved');
+      assertEqual(result.record.bossTrialResolvedIslandNumber, null, 'boss preserved');
       if (island === 1) assertEqual(result.record.stopBuildStateByIndex[4].buildLevel, level, 'Assembly excluded');
       assert(!resolveIslandRunFastBuild(result.record, quote).applied, 'replay cannot award/spend twice');
       assertEqual(before.stopBuildStateByIndex[0].buildLevel, level, 'input unmodified');
