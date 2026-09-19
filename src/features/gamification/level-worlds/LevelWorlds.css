@@ -25022,52 +25022,6 @@
   background: linear-gradient(135deg, rgba(31, 58, 96, .94), rgba(100, 62, 28, .94));
 }
 
-.first-light-assembly-modal {
-  background:
-    radial-gradient(circle at 50% 32%, rgba(80, 154, 214, .2), transparent 34%),
-    linear-gradient(160deg, #162c50, #2e251d 72%);
-}
-
-.first-light-assembly-modal .frostwell-mission-modal__eyebrow { color: #ffd77e; }
-.first-light-assembly-modal .frostwell-mission-modal__lede { color: #e6edf8; }
-
-.first-light-assembly-modal__sector-ring {
-  position: relative;
-  width: 118px;
-  height: 118px;
-  margin: 10px auto 14px;
-  border: 8px solid rgba(216, 231, 242, .2);
-  border-radius: 50%;
-  background: radial-gradient(circle, #d9b65d 0 11%, #264b77 12% 25%, #111b2a 26% 100%);
-  box-shadow: inset 0 0 0 2px rgba(255, 223, 147, .35), 0 12px 30px rgba(5, 10, 20, .42);
-}
-
-.first-light-assembly-modal__sector-ring > i {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 5px;
-  height: 17px;
-  margin: -8px 0 0 -2px;
-  border-radius: 3px;
-  background: #453124;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08);
-  transform-origin: 2px 8px;
-}
-
-.first-light-assembly-modal__sector-ring > i.is-open {
-  background: #76c8ef;
-  box-shadow: 0 0 8px rgba(118, 200, 239, .9);
-}
-
-.first-light-assembly-modal__sector-ring > span {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 1.35rem;
-}
-
 @keyframes cactus-canyon-rail-build {
   from { filter: brightness(1) drop-shadow(0 1px 1px rgba(20, 8, 4, .6)); }
   to { filter: brightness(1.8) drop-shadow(0 0 8px rgba(255, 191, 70, .95)); }

@@ -1,3 +1,4 @@
+import { IslandAssemblyCraterModal } from './IslandAssemblyCraterModal';
 import { quoteIslandRunFastBuild, type FastBuildQuote } from '../services/islandRunFastBuild';
 import { applyIslandRunFastBuild } from '../services/islandRunFastBuildAction';
 import { eventGamePackPlays, EVENT_GAME_PLAYS_PER_TICKET } from '../services/eventGameTicketEconomy';
@@ -209,10 +210,7 @@ import {
   shouldIslandRunBuildPromptBlockControl,
 } from '../services/islandRunFirstSessionTutorialUi';
 import {
-  ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY,
-  ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY,
   isIslandRunFirstRollCoachmarkActive,
-  isIslandRunKeepRollingCoachmarkActive,
 } from '../services/islandRunCoreLoopTutorialUi';
 import {
   commitIslandRunState,
@@ -1754,11 +1752,6 @@ function getStopStateChipLabel(state: StopProgressState): string {
   return 'Open';
 }
 
-function markLandmarkCoachmarkSeen(userId: string) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(`island_run_landmark_coachmark_seen_${userId}`, '1');
-}
-
 function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
   if (state === 'locked') return '🔒';
   if (state === 'ticket_required') return '🎫';
@@ -2055,10 +2048,6 @@ export function IslandRunBoardPrototype({
   const [ticketPromptStopId, setTicketPromptStopId] = useState<string | null>(null);
   const [prepayTicketPromptStopId, setPrepayTicketPromptStopId] = useState<string | null>(null);
   const [lockedStopInfoStopId, setLockedStopInfoStopId] = useState<string | null>(null);
-  const [showLandmarkCoachmark, setShowLandmarkCoachmark] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem(`island_run_landmark_coachmark_seen_${session.user.id}`) !== '1';
-  });
   const [showFrostwellMission, setShowFrostwellMission] = useState(false);
   const [showMoonwellThermal, setShowMoonwellThermal] = useState(false);
   const [isActivatingMoonwell, setIsActivatingMoonwell] = useState(false);
@@ -2072,6 +2061,7 @@ export function IslandRunBoardPrototype({
   const frostwellSequence = useFrostwellMissionSequence(() => setFrostwellConstructionSequence(value => value + 1));
   const frostwellActionPendingRef = useRef(false);
   const [showFirstLightAssemblyCrater, setShowFirstLightAssemblyCrater] = useState(false);
+  const [firstLightAssemblyError, setFirstLightAssemblyError] = useState<string | null>(null);
   const [isDetonatingFirstLightAssembly, setIsDetonatingFirstLightAssembly] = useState(false);
   const [firstLightAssemblyConstructionSequence, setFirstLightAssemblyConstructionSequence] = useState(0);
   const [firstLightAssemblyPendingSector, setFirstLightAssemblyPendingSector] = useState<number | null>(null);
@@ -2158,7 +2148,6 @@ export function IslandRunBoardPrototype({
   const showHatcheryL1Celebration = isIslandRunHatcheryL1CelebrationActive(firstSessionTutorialState);
   const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
   const isFirstRollCoachmarkActive = isIslandRunFirstRollCoachmarkActive(firstSessionTutorialState);
-  const isKeepRollingCoachmarkActive = isIslandRunKeepRollingCoachmarkActive(firstSessionTutorialState);
   useEffect(() => {
     if (isBuildTutorialPromptActive) setIsControllerTucked(false);
   }, [isBuildTutorialPromptActive]);
@@ -2859,6 +2848,7 @@ export function IslandRunBoardPrototype({
     // route back to overview.
   }, [frostwellSequence.settle]);
   const openFirstLightAssemblyCrater = useCallback(() => {
+    setFirstLightAssemblyError(null);
     setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
     setShowFirstLightAssemblyCrater(true);
   }, []);
@@ -6673,13 +6663,6 @@ export function IslandRunBoardPrototype({
       handleOpenTrafficLightReward();
     }, prefersReducedMotion ? 0 : TRAFFIC_LIGHT_REWARD_OPEN_MS);
   }, [handleOpenTrafficLightReward, trafficLightCoinFlip]);
-
-  const dismissLandmarkCoachmark = useCallback(() => {
-    setShowLandmarkCoachmark(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
-    }
-  }, [session.user.id]);
 
   useEffect(() => {
     if (!lockedStopInfoStopId && !ticketPromptStopId && !prepayTicketPromptStopId) return undefined;
@@ -13910,11 +13893,12 @@ export function IslandRunBoardPrototype({
   const handleDetonateFirstLightAssembly = useCallback(async () => {
     if (isDetonatingFirstLightAssembly) return;
     setIsDetonatingFirstLightAssembly(true);
+    setFirstLightAssemblyError(null);
     try {
       const result = await detonateFirstLightAssemblyCharge({ session, client });
       if (result.status !== 'ok') {
         if (result.status === 'no_dynamite') {
-          setLandingText('Collect enough dynamite for the next demolition batch.');
+          setFirstLightAssemblyError('Collect a few more charges on the island first.');
         }
         return;
       }
@@ -13948,6 +13932,9 @@ export function IslandRunBoardPrototype({
           { icon: '🧨', label: 'Controlled blasts', value: '10 / 10' },
         ], 'Mission complete — First Light can convene');
       }
+    } catch (error) {
+      setFirstLightAssemblyError('The fuse did not light. Your saved progress is safe. Try again.');
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'assembly_crater_blast_error', error_name: error instanceof TypeError ? 'TypeError' : 'Error' } });
     } finally {
       setIsDetonatingFirstLightAssembly(false);
     }
@@ -16103,36 +16090,7 @@ export function IslandRunBoardPrototype({
             ) : null}
           </div>
         ) : null}
-        {showLandmarkCoachmark ? (
-          <aside className="island-run-landmark-coachmark" role="note" aria-live="polite">
-            <p>
-              🧭 Landmarks unlock in order. Some need a money ticket.
-            </p>
-            <div className="island-run-landmark-coachmark__actions">
-              <button
-                type="button"
-                className="island-run-landmark-coachmark__dismiss"
-                onClick={() => {
-                  setShowLandmarkCoachmark(false);
-                  markLandmarkCoachmarkSeen(session.user.id);
-                  focusNextAvailableStop();
-                }}
-              >
-                Show next
-              </button>
-              <button
-                type="button"
-                className="island-run-landmark-coachmark__dismiss"
-                onClick={() => {
-                  setShowLandmarkCoachmark(false);
-                  markLandmarkCoachmarkSeen(session.user.id);
-                }}
-              >
-                Got it
-              </button>
-            </div>
-          </aside>
-        ) : null}
+
       </div>
 
       {shouldRenderIsland5Three ? (
@@ -16333,7 +16291,6 @@ export function IslandRunBoardPrototype({
                   className={`island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-build${isBuildTutorialPromptActive ? ' island-run-prototype__footer-nav-btn--build-tutorial-target' : ''}`}
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightUpper)}
                   onClick={openBuildPanelFromFooter}
-                  aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
                 >
                   🔨 Build
                   {hasAffordableBuildStep && !isBuildTutorialPromptActive && (
@@ -16407,47 +16364,6 @@ export function IslandRunBoardPrototype({
           </div>
         </div>
       </div>
-
-      {isBuildTutorialPromptActive && !showBuildPanel && (
-        <div className="island-run-build-tutorial-overlay" role="presentation">
-          <aside
-            id="island-run-build-tutorial-prompt"
-            className="island-run-build-tutorial-overlay__coachmark"
-            role="note"
-            aria-live="polite"
-          >
-            <strong>You earned Essence ✨</strong>
-            <span>Essence builds and upgrades your island. Tap the highlighted Build button to fund your first Hatchery.</span>
-          </aside>
-        </div>
-      )}
-
-      {isFirstRollCoachmarkActive && !showBuildPanel && (
-        <div className="island-run-coreloop-tutorial-overlay" role="presentation">
-          <aside
-            className="island-run-build-tutorial-overlay__coachmark"
-            role="note"
-            aria-live="polite"
-          >
-            <strong>{ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY.title}</strong>
-            <span>{ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY.body}</span>
-          </aside>
-        </div>
-      )}
-
-      {isKeepRollingCoachmarkActive && !showBuildPanel && (
-        <div className="island-run-coreloop-tutorial-overlay" role="presentation">
-          <aside
-            className="island-run-build-tutorial-overlay__coachmark"
-            role="note"
-            aria-live="polite"
-          >
-            <strong>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.title}</strong>
-            <span>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.body}</span>
-          </aside>
-        </div>
-      )}
-
 
       {techCompletionCelebration ? (
         <IslandTechCompletionCelebration
@@ -20556,92 +20472,18 @@ export function IslandRunBoardPrototype({
         rotation={frostwellWheelRotation} result={frostwellLastSpinMeters} onSpin={() => { void handleSpinFrostwell(); }}
         onClose={closeFrostwellMission} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
 
-      {showFirstLightAssemblyCrater && typeof document !== 'undefined' ? createPortal((
-        <div
-          className="island-run-signature-mission-overlay island-stop-modal__backdrop cactus-canyon-spiral-modal__backdrop"
-          role="presentation"
-          onClick={closeFirstLightAssemblyCrater}
-        >
-          <section
-            className="island-stop-modal frostwell-mission-modal first-light-assembly-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="first-light-assembly-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="island-stop-modal__close"
-              aria-label="Close Assembly Crater mission"
-              onClick={closeFirstLightAssemblyCrater}
-            >
-              ×
-            </button>
-            <span className="frostwell-mission-modal__eyebrow">ISLAND 001 · CIVIC EXCAVATION</span>
-            <h2 id="first-light-assembly-title">Assembly Crater</h2>
-            <p className="frostwell-mission-modal__lede">
-              Collect ten charges in three batches: 3 to break the surface, 5 for the great excavation, and 2 to finish the foundations. Then watch the robots build your General Assembly.
-            </p>
-            <div
-              className="first-light-assembly-modal__sector-ring"
-              aria-label={`${firstLightAssemblyProgress.chargesDetonated} of ${FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET} Assembly Crater charges detonated`}
-            >
-              {Array.from({ length: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET }, (_, index) => (
-                <i
-                  key={`assembly-sector-${index}`}
-                  className={index < firstLightAssemblyProgress.chargesDetonated ? 'is-open' : ''}
-                  style={{ transform: `rotate(${index * (360 / FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET)}deg) translateY(-43px)` }}
-                />
-              ))}
-              <span aria-hidden="true">{firstLightAssemblyCompleted ? '🏛️' : '🎙️'}</span>
-            </div>
-            <div className="cactus-canyon-spiral-modal__readout">
-              <span>
-                <strong>{firstLightAssemblyProgress.chargesDetonated}/{FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}</strong>
-                <small>CHARGES USED</small>
-              </span>
-              <span>
-                <strong>🧨 {firstLightAssemblyAvailableDynamite}</strong>
-                <small>CHARGES READY</small>
-              </span>
-            </div>
-            <div className="cactus-canyon-spiral-modal__blast-panel">
-              <div className={`cactus-canyon-spiral-modal__charge${isDetonatingFirstLightAssembly ? ' is-burning' : ''}`} aria-hidden="true">
-                <i /><i /><i />
-                <span className="cactus-canyon-spiral-modal__fuse" />
-                <b>🧨 {firstLightAssemblyAvailableDynamite}</b>
-              </div>
-              <button
-                type="button"
-                className="cactus-canyon-spiral-modal__blast-button"
-                disabled={isDetonatingFirstLightAssembly || firstLightAssemblyAvailableDynamite < firstLightAssemblyNextBatch.cost || firstLightAssemblyCompleted}
-                onClick={() => void handleDetonateFirstLightAssembly()}
-              >
-                {isDetonatingFirstLightAssembly
-                  ? 'FUSE BURNING…'
-                  : firstLightAssemblyCompleted
-                    ? 'ASSEMBLY OPEN'
-                    : firstLightAssemblyAvailableDynamite >= firstLightAssemblyNextBatch.cost
-                      ? `DETONATE ${firstLightAssemblyNextBatch.cost} CHARGES`
-                      : `COLLECT ${firstLightAssemblyNextBatch.cost - firstLightAssemblyAvailableDynamite} MORE`}
-                <small>{firstLightAssemblyNextBatch.label}</small>
-              </button>
-            </div>
-            <div className={`frostwell-mission-modal__status${firstLightAssemblyCompleted ? ' frostwell-mission-modal__status--online' : ''}`}>
-              <strong>{firstLightAssemblyCompleted ? '🏛️ General Assembly open' : 'Excavation in progress'}</strong>
-              <p>{firstLightAssemblyCompleted
-                ? 'Concentric delegate seating now surrounds the central speaker podium. The centre has no boss building.'
-                : 'The shared chamber grows downward and outward toward the inner edge of the circular board while every real tile remains untouched.'}</p>
-            </div>
-            <div className="island-stop-modal__actions">
-              <button type="button" className="island-stop-modal__btn" onClick={closeFirstLightAssemblyCrater}>
-                {firstLightAssemblyCompleted ? 'View the chamber' : 'Keep exploring'}
-              </button>
-              {firstLightAssemblyCompleted ? <button type="button" className="island-stop-modal__btn" onClick={() => { closeFirstLightAssemblyCrater(); openAssemblyMandate(); }}>Peacekeeping mandate</button> : null}
-            </div>
-          </section>
-        </div>
-      ), document.body) : null}
+      <IslandAssemblyCraterModal
+        open={showFirstLightAssemblyCrater}
+        used={firstLightAssemblyProgress.chargesDetonated}
+        available={firstLightAssemblyAvailableDynamite}
+        nextCost={firstLightAssemblyNextBatch.cost}
+        complete={firstLightAssemblyCompleted}
+        busy={isDetonatingFirstLightAssembly}
+        error={firstLightAssemblyError}
+        onClose={closeFirstLightAssemblyCrater}
+        onBlast={() => void handleDetonateFirstLightAssembly()}
+        onEnter={() => { closeFirstLightAssemblyCrater(); openAssemblyMandate(); }}
+      />
 
       {showCactusCanyonSpiral && typeof document !== 'undefined' ? createPortal((
         <div
