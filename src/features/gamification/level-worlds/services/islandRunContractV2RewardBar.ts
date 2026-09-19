@@ -16,7 +16,12 @@ export type IslandRunRewardBarRuntimeSlice = Pick<
   | 'activeTimedEventProgress'
   | 'stickerProgress'
   | 'stickerInventory'
-> & Partial<Pick<IslandRunRuntimeState, 'signatureMissionProgressByIsland'>>;
+> & Partial<Pick<IslandRunRuntimeState, 'signatureMissionProgressByIsland' | 'currentIslandNumber'>>;
+
+function isRewardChannelAvailable(state: IslandRunRewardBarRuntimeSlice, islandNumber = state.currentIslandNumber): boolean {
+  return resolveIslandRunFeatureAccess({ currentIslandNumber: islandNumber ?? 0,
+    signatureMissionProgressByIsland: state.signatureMissionProgressByIsland }).rewardChannel;
+}
 
 export type RewardBarProgressSource =
   | { kind: 'tile'; tileType: string }
@@ -529,6 +534,7 @@ export function applyIslandRunContractV2RewardBarProgress(options: {
   /** Dice multiplier (default 1). Multiplies progress contributed. */
   multiplier?: number;
 }): IslandRunRewardBarRuntimeSlice {
+  if (!isRewardChannelAvailable(options.state)) return options.state;
   const ensured = ensureIslandRunContractV2ActiveTimedEvent({ state: options.state, nowMs: options.nowMs }).state;
   const delta = resolveIslandRunContractV2RewardBarProgressDelta(options.source);
   if (delta.progressDelta < 1) return ensured;
@@ -546,6 +552,7 @@ export function applyIslandRunContractV2RewardBarProgress(options: {
 }
 
 export function canClaimIslandRunContractV2RewardBar(state: IslandRunRewardBarRuntimeSlice): boolean {
+  if (!isRewardChannelAvailable(state)) return false;
   const threshold = resolveEscalatingThreshold(Math.max(0, Math.floor(state.rewardBarEscalationTier)));
   return state.rewardBarProgress >= threshold;
 }
@@ -638,8 +645,9 @@ export function claimIslandRunContractV2RewardBar(options: {
   nowMs: number;
   islandNumber?: number;
 }): { state: IslandRunRewardBarRuntimeSlice; payout: RewardBarClaimPayout | null } {
+  if (!isRewardChannelAvailable(options.state, options.islandNumber)) return { state: options.state, payout: null };
   const ensured = ensureIslandRunContractV2ActiveTimedEvent({ state: options.state, nowMs: options.nowMs }).state;
-  if (!canClaimIslandRunContractV2RewardBar(ensured) || !ensured.activeTimedEvent) {
+  if (!canClaimIslandRunContractV2RewardBar({ ...ensured, currentIslandNumber: options.islandNumber ?? ensured.currentIslandNumber }) || !ensured.activeTimedEvent) {
     return { state: ensured, payout: null };
   }
 
@@ -714,7 +722,7 @@ export function resolveChainedRewardBarClaims(options: {
   const payouts: RewardBarClaimPayout[] = [];
 
   for (let i = 0; i < maxChain; i++) {
-    if (!canClaimIslandRunContractV2RewardBar(current)) break;
+    if (!canClaimIslandRunContractV2RewardBar({ ...current, currentIslandNumber: options.islandNumber ?? current.currentIslandNumber })) break;
     const result = claimIslandRunContractV2RewardBar({
       state: current,
       nowMs: options.nowMs,

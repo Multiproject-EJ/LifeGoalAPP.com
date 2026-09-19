@@ -14,8 +14,9 @@ import './signalPath.css';
 type Phase = 'briefing' | 'playing' | 'results';
 
 export default function SignalPathMinigame({ islandNumber, launchConfig, onComplete }: IslandRunMinigameProps) {
+  const introduction = launchConfig?.openingCeremony === true;
   const puzzleSeed = typeof launchConfig?.arenaPuzzleSeed === 'string' ? launchConfig.arenaPuzzleSeed : `${islandNumber}:signal`;
-  const puzzle = useMemo(() => selectPuzzleForSession(SIGNAL_PATH_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
+  const puzzle = useMemo(() => introduction ? SIGNAL_PATH_PUZZLES[0]! : selectPuzzleForSession(SIGNAL_PATH_PUZZLES, islandNumber, puzzleSeed), [introduction, islandNumber, puzzleSeed]);
   const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(15, Math.floor(launchConfig.arenaSessionSeconds))
     : null;
@@ -82,7 +83,8 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
         title={route.length === SIGNAL_PATH_GRID_SIZE ** 2 ? 'Signal path complete' : 'Route window closed'}
         performance={performance}
         summary={`${route.length} of ${SIGNAL_PATH_GRID_SIZE ** 2} cells connected through ${puzzle.title}.`}
-        detail="A complete route fills every cell and reaches each numbered beacon in order."
+        detail={introduction ? 'You took part in the first games. Your arena events are ready to open, whatever your score.' : 'A complete route fills every cell and reaches each numbered beacon in order.'}
+        continueLabel={introduction ? 'Open the arena games' : undefined}
         onContinue={() => onComplete({ completed: true, arenaPerformance: performance })}
       />
     );
@@ -91,6 +93,7 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
   if (phase === 'briefing') {
     return (
       <ArenaPuzzleFrame
+        introduction={introduction}
         className="signal-path"
         icon="⌁"
         eyebrow="Caretaker route trial"
@@ -101,7 +104,7 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
       >
         <section className="arena-puzzle__brief">
           <strong>One path. Every cell. Beacons in order.</strong>
-          <span>Start at 1, drag or tap through neighbouring cells, and finish at 5 without crossing your route.</span>
+          <span>{introduction ? 'Follow the glowing next cell. This first round is free, and taking part is enough—there is no minimum score.' : 'Start at 1, drag or tap through neighbouring cells, and finish at 5 without crossing your route.'}</span>
         </section>
         <div className="signal-path__preview" aria-hidden="true">
           <span>1</span><i /><i /><span>2</span><i /><i /><span>3</span><i /><span>4</span><i /><span>5</span>
@@ -191,6 +194,7 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
 
   return (
     <ArenaPuzzleFrame
+      introduction={introduction}
       className="signal-path"
       icon="⌁"
       eyebrow="Caretaker route trial"
@@ -224,7 +228,7 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
               role="gridcell"
               key={cell}
               data-signal-cell={cell}
-              className={`${routeIndex >= 0 ? 'is-routed' : ''}${routeIndex === route.length - 1 ? ' is-head' : ''}${hintedCell === cell ? ' is-hinted' : ''}${marker ? ' is-beacon' : ''}`}
+              className={`${routeIndex >= 0 ? 'is-routed' : ''}${routeIndex === route.length - 1 ? ' is-head' : ''}${hintedCell === cell || (introduction && route.every((entry, index) => entry === puzzle.path[index]) && puzzle.path[route.length] === cell) ? ' is-hinted' : ''}${marker ? ' is-beacon' : ''}`}
               onPointerDown={(event) => {
                 event.preventDefault();
                 draggingRef.current = true;

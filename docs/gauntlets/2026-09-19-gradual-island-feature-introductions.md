@@ -1,8 +1,9 @@
 # Gradual Island Run feature introductions
 
 Status: implementation authorized; cohort-aware gating, approved Vault
-prerequisite and canonical ceremony preparation implemented locally.
-New-campaign enrolment, full ceremony/egg flow and release remain incomplete.
+prerequisite and playable ceremony UI implemented locally.
+New-campaign enrolment, full egg flow, ordinary-event release gates and release
+remain incomplete. This is not the finished 3D opening show.
 
 ## Implementation checkpoint
 
@@ -18,7 +19,7 @@ The Island Run Daily Momentum launcher now uses the actual Vault entitlement.
 The same wheel is also exposed by non-Island habit surfaces; those unrelated
 entry points and their earned balances are not changed by this slice.
 
-Validation: `node scripts/check-island-feature-introductions.mjs` passed 181
+Previous foundation checkpoint validation: `node scripts/check-island-feature-introductions.mjs` passed 181
 behavioral cases, including new/legacy saves, actual early-island traffic rolls,
 reward replacement, preview/grant parity, saved inventory retention, canonical
 Re-Docking completion, retired causeway actions and concurrent ceremony actions.
@@ -38,10 +39,9 @@ evidence; v002 supersedes its ceremony screenshot. These routes do not provide
 the Daily Momentum callback, so they are not browser evidence for wheel launch.
 No physical-device or deployment pass is claimed.
 
-Not yet wired: new-cohort enrolment, reward-channel/event reveal, inaugural
-launcher, replacement early Hatchery objectives, first-egg service guards,
-custom biome traffic-light geometry and introduction
-tutorial. The selector's egg/event flags are preparatory, not enforcement.
+Not yet wired: new-cohort enrolment, replacement early Hatchery objectives,
+first-egg service guards, custom biome traffic-light geometry and its
+introduction tutorial. The egg selector remains preparatory, not enforcement.
 No current live or unmarked new record is silently enrolled.
 
 ### Approved Vault prerequisite — implemented
@@ -63,7 +63,7 @@ grant the new entitlement. Mission phones use the new identities without moving
 earned save keys. Full 3D content routing and unlock-reveal sequencing are still
 separate integration work, not claimed by these tests.
 
-### Ceremony preparation — canonical foundation, not yet playable UI
+### Ceremony preparation and inaugural game — playable local checkpoint
 
 `prepareIslandRunOpeningGames` is mutex-protected and reads actual funded
 construction from the canonical store. Its preparation, welcome and beacon
@@ -77,10 +77,56 @@ landmark-first, so all five L1 buildings would still mean step13/15. The two
 essential venues can be ready at step7/15 (`[3,3,1,0,0]`). The twelve-roll arrival
 counter is visible separately; welcoming teams requires its explicit action.
 The inaugural pure settlement accepts a completed round (win or loss), not
-cancellation, and rejects wrong game/attempt IDs and duplicates. The actual
-game-launch/settlement action wiring, starter tickets and reveal animation have
-not been connected; this service foundation must not be described as a
-finished playable ceremony.
+cancellation, and rejects wrong game/attempt IDs and duplicates.
+
+The portal-based ceremony dialog now connects these actions to the mission
+phone. Lighting the beacon closes the dialog and reveals the existing reward
+bar with its reveal animation plus a free first-game launcher. The phone remains
+accessible while that bar is hidden. The ceremony owns focus, locks background
+scrolling and stops auto-roll. Signal Path uses a fixed guided route, free entry
+and a sixty-second participation window; no minimum score is required.
+
+Canonical begin/settle actions persist one attempt, resume after reload, reject
+late/repeated callbacks, allow cancellation without rewards, and atomically
+grant three tickets once to the existing active-event ledger. They ignore any
+reward amount supplied by the game. No separate event or wallet is created.
+The game registry must be populated before opening the launcher; the first
+browser pass caught and fixed that missing integration step.
+
+Reward progress and claims now require beacon eligibility. The canonical tile
+bridge retains cohort/island context, and the state action rejects stale UI
+reward writes while still allowing the shared timed-event clock to initialise
+or rotate. Saved collection balances are not deleted. Generic event ticket
+spending is gated until inaugural completion. Dedicated per-game launch/spend
+actions still need their own audit before enrolment: the generic spender is
+not the sole entry point. Existing ordinary-event production/admin gates stay
+intact. The inaugural launcher bypasses that presentation gate only for the
+free ceremony round, using the canonical active event.
+
+The beacon action also initialises the shared clock when none exists, so its
+launcher does not depend on an earlier UI lifecycle or reward tile. This edge
+case is covered by a canonical action regression.
+
+Current focused regression run: 367 passed, zero failed, including the existing
+tile-reward and state-action suites. The architecture guard reports zero
+violations and three existing allowlisted warnings. Offline browser evidence
+`ceremony-ui-v003` passes actual preparation, reveal, cancellation, same-attempt
+reload/resume, guided game completion, exactly-once tickets and reload safety.
+`progression-ui-v003` passes all five new/legacy HUD/mission cases. Screenshot
+review found and fixed a low-contrast ceremony heading. `ceremony-ui-v004`
+expired normally during automated play under concurrent validation load; the
+test incorrectly assumed every run must solve all twenty-five cells. The
+runner now accepts the intended timed-participation result as well as a solved
+route. Final `ceremony-ui-v006` passed the whole flow with zero browser errors;
+its preparation, beacon/launcher, guided game and completion screenshots were
+visually reviewed (the narrow launcher uses a readable `FREE` caption).
+Keep rejected evidence. No physical-device or production acceptance is claimed.
+
+Fresh full-project `tsc -b --pretty false` is still running at this checkpoint
+(tool session 65915); no successful result is claimed for this continuation.
+The earlier attempt caught nullable test launch descriptors, now explicitly
+narrowed. Final typecheck/build remains a release gate, including the last
+beacon-clock regression and final presentation edits.
 
 The mission phone now shows one current ceremony step plus the two existing
 landmark rows, preserving its authored three-row layout. During team arrival,
@@ -91,13 +137,16 @@ every new ceremony roll.
 
 ### Next integration gate
 
-Keep enrolment disabled until the playable ceremony reveal/game/settlement,
-reward-channel and event-service guards, early Hatchery replacement objectives,
+Keep enrolment disabled until dedicated event-service guards and production
+event availability, early Hatchery replacement objectives,
 egg grant guards, full content routing and onboarding are integrated. Exercise
 mixed/stale cohort hydration as well as normal new-save replay; a label change
 or selector test is not a data-migration acceptance test. The themed 3D signal
 and whole-island performance gates remain independently required. Nothing in
 this continuation clears the unfinished palace/coast/ship release scope.
+Also gate island completion/departure on its new special mission: the old
+Hatchery/stop resolver must not allow a fresh player to leave Island002 without
+the ceremony or block travel on eggs that are intentionally unavailable.
 
 The working branch is `codex/island-004-v2-20260914`; this progression checkpoint
 is kept separate from unfinished palace artwork. Last fetched main was

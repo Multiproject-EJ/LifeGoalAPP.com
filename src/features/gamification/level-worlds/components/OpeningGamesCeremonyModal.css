@@ -1,0 +1,14 @@
+.opening-games-overlay { position: fixed; inset: 0; z-index: 12000; display: grid; place-items: center; padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); background: #07172be0; backdrop-filter: blur(8px); }
+.opening-games-dialog { position: relative; box-sizing: border-box; width: min(100%, 440px); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 32px 24px 24px; border: 1px solid #e9c474; border-radius: 24px; background: linear-gradient(155deg,#153a50,#151e3c); color: #f8f3e8; box-shadow: 0 20px 70px #0009; text-align: center; }
+.opening-games-dialog:not(.opening-games-dialog--playing) h2 { margin: 12px 0; font-size: 26px; line-height: 1.15; color: #f8f3e8; }
+.opening-games-dialog:not(.opening-games-dialog--playing) p { line-height: 1.55; }
+.opening-games-dialog:not(.opening-games-dialog--playing) button { min-height: 44px; border-radius: 14px; padding: 12px 20px; border: 1px solid #e9c474; background: #f2cf83; color: #182039; font-weight: 700; cursor: pointer; }
+.opening-games-dialog button:disabled { opacity: .55; cursor: wait; }
+.opening-games-dialog button:focus-visible { outline: 3px solid #6df5e5; outline-offset: 3px; }
+.opening-games-dialog:not(.opening-games-dialog--playing) .opening-games-close { position: absolute; right: 8px; top: 8px; padding: 4px 14px; background: transparent; color: #fff; border: 0; font-size: 24px; }
+.opening-games-eyebrow { margin-top: 8px; color: #82ebe3; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.opening-games-emblem { color: #f2cf83; font-size: 54px; }
+.opening-games-steps { padding: 14px; margin: 18px 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; text-align: left; font-size: 12px; background: #ffffff09; border-radius: 14px; }
+.opening-games-steps span { color: #83f0d0; }
+.opening-games-dialog--playing { width: min(100%, 620px); height: min(100%, 900px); padding: 0; text-align: initial; }
+.opening-games-dialog--playing .arena-session-shell { min-height: 100%; }

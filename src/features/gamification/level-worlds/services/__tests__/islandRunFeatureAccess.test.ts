@@ -13,9 +13,17 @@ export const islandRunFeatureAccessTests: TestCase[] = [
   {name:'actual reward claim replaces early puzzle payout and preserves existing inventory',run(){
     const initial: IslandRunRewardBarRuntimeSlice={signatureMissionProgressByIsland:fresh(),rewardBarProgress:0,rewardBarThreshold:5,rewardBarClaimCountInEvent:0,rewardBarEscalationTier:0,rewardBarLastClaimAtMs:null,rewardBarBoundEventId:null,rewardBarLadderId:null,activeTimedEvent:null,activeTimedEventProgress:{feedingActions:0,tokensEarned:0,milestonesClaimed:0},stickerProgress:{fragments:2},stickerInventory:{keepsake:1}};
     const ensured=ensureIslandRunContractV2ActiveTimedEvent({state:initial,nowMs:1000}).state;
-    const ready={...ensured,rewardBarClaimCountInEvent:3,rewardBarProgress:1000};
+    const ready={...ensured,rewardBarClaimCountInEvent:3,rewardBarProgress:1000,
+      signatureMissionProgressByIsland:{...fresh(),[OPENING_GAMES_CEREMONY_KEY]:{
+        ...createOpeningGamesCeremonyProgress(),rollsCompleted:12,venuesPreparedAtMs:1,teamsWelcomedAtMs:2,beaconLitAtMs:3,
+      }}};
     for(const island of [1,2,3]){
       const result=claimIslandRunContractV2RewardBar({state:ready,islandNumber:island,nowMs:1100});
+      if(island===1){
+        assertEqual(result.payout,null,'Island001 cannot pay hidden rewards');
+        assertDeepEqual(result.state,ready,'saved progress retained');
+        continue;
+      }
       assert(result.payout,'claim available in isolated payout test');
       assertEqual(result.payout?.rewardKind,island>=3?'sticker_fragments':'essence','actual grant follows policy');
       if(island<3)assertEqual(result.state.stickerProgress.fragments,2,'saved fragments retained, not deleted');

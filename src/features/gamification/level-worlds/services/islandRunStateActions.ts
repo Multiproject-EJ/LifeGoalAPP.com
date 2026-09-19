@@ -41,6 +41,7 @@
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { ensureIslandRunContractV2ActiveTimedEvent } from './islandRunContractV2RewardBar';
 import { resolveIslandRunCompletion } from './islandRunCompletion';
 import type {
   CompanionFeastProgressEntry,
@@ -1964,6 +1965,7 @@ export function applyTimedEventTicketSpend(
   const current = getIslandRunStateSnapshot(session);
   const canonicalEventId = typeof eventId === 'string' ? eventId.trim() : '';
   const requested = Number.isFinite(ticketsToSpend) ? Math.max(0, Math.floor(ticketsToSpend)) : 0;
+  if (!resolveIslandRunFeatureAccess(current).ordinaryEvents) return { record: current, spent: 0 };
   if (!canonicalEventId || requested < 1) return { record: current, spent: 0 };
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[canonicalEventId] ?? 0));
   if (available < requested) return { record: current, spent: 0 };
@@ -4195,8 +4197,13 @@ export interface ApplyRewardBarStateOptions {
  * landing's bar progress could race an auto-claim's bar reset.
  */
 export function applyRewardBarState(options: ApplyRewardBarStateOptions): IslandRunGameStateRecord {
-  const { session, client, nextState, triggerSource } = options;
+  const { session, client, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  // Hidden channels cannot accept progress or claim mutations, including stale
+  // UI callbacks. The shared event clock may still initialise/rotate normally.
+  const nextState = resolveIslandRunFeatureAccess(current).rewardChannel
+    ? options.nextState
+    : ensureIslandRunContractV2ActiveTimedEvent({ state: current, nowMs: Date.now() }).state;
   const next: IslandRunGameStateRecord = {
     ...current,
     rewardBarProgress: nextState.rewardBarProgress,

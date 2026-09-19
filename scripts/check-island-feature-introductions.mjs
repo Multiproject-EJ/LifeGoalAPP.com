@@ -12,6 +12,9 @@ try {
   for (const [file, name] of [
     ['islandRunFeatureAccess', 'islandRunFeatureAccessTests'],
     ['islandRunOpeningGames', 'islandRunOpeningGamesTests'],
+    ['islandRunOpeningGamesAction', 'islandRunOpeningGamesActionTests'],
+    ['islandRunTileRewardAction', 'islandRunTileRewardActionTests'],
+    ['islandRunStateActions', 'islandRunStateActionsTests'],
     ['islandRunContractV2RewardBar', 'islandRunContractV2RewardBarTests'],
     ['islandRunTrafficLightTile', 'islandRunTrafficLightTileTests'],
     ['islandRunVaultCollection', 'islandRunVaultCollectionTests'],
