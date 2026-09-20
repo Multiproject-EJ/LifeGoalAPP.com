@@ -5,7 +5,8 @@ import { readIslandRunGameStateRecord, resetIslandRunRuntimeCommitCoordinatorFor
 import { __resetIslandRunStateStoreForTests, getIslandRunStateSnapshot, refreshIslandRunStateFromLocal } from '../islandRunStateStore';
 import { applyStopBuildSpendBatch, travelToNextIsland } from '../islandRunStateActions';
 import { detonateFirstLightAssemblyCharge, signFirstLightAssemblyMandate } from '../islandRunSignatureMissionAction';
-import { FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES, getIslandRunSignatureMissionKey } from '../islandRunSignatureMissions';
+import { FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES, getIslandRunSignatureMissionKey, getStagedRestorationMissionDescriptor, sanitizeIslandRunSignatureMissionProgress, ROOTHEART_POWER_COMPONENTS } from '../islandRunSignatureMissions';
+import { quoteIslandRunFastBuild, resolveIslandRunFastBuild } from '../islandRunFastBuild';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const session = { user: { id: 'completion-repair-test' } } as Session;
@@ -14,7 +15,7 @@ function reset() {
   __resetIslandRunStateStoreForTests();
   installWindowWithStorage(createMemoryStorage());
 }
-function completeState(islandNumber = 2) {
+function completeState(islandNumber = 11) {
   const state = readIslandRunGameStateRecord(session);
   return { ...state, currentIslandNumber: islandNumber, cycleIndex: 0,
     firstSessionTutorialState: 'complete' as const,
@@ -26,6 +27,87 @@ function completeState(islandNumber = 2) {
   };
 }
 export const islandRunCompletionTests: TestCase[] = [
+  {
+    name: 'each playable mission can finish, but never replaces an unfinished landmark activity',
+    run: () => {
+      reset();
+      const missions: Record<number, Record<string, unknown>> = {
+        2: { missionId: 'celestial-great-redocking', rollsCompleted: 20 },
+        3: { missionId: 'frostwell-iceworks', version: 2, metersDrilled: 500, builtAtMs: 1 },
+        10: { missionId: 'rootheart-powerworks', collectedComponentIds: ROOTHEART_POWER_COMPONENTS.map(x => x.id), buildStage: 3, activatedAtMs: 1 },
+        12: { missionId: 'sunken-sands-first-treasure', rollsCompleted: 20, claimedAtMs: 1 },
+        13: { missionId: 'cactus-canyon-spiral-rail', version: 2, segmentsExcavated: 16, dynamiteEarned: 16, dynamiteSpent: 16 },
+        14: { missionId: 'great-honeyfall-coronation', activatedReservoirs: 4 },
+        16: { missionId: 'fishermans-village-fishing', fishCaughtKg: 100, rodCollectedAtMs: 1 },
+      };
+      for (const island of [4, 6, 7, 8, 9, 18, 19]) {
+        const descriptor = getStagedRestorationMissionDescriptor(island)!;
+        missions[island] = { missionId: descriptor.missionId, activatedStages: descriptor.stageCount,
+          chargesEarned: descriptor.stageCount * descriptor.chargeCostPerStage, completedAtMs: 1 };
+      }
+      for (const [key, mission] of Object.entries(missions)) {
+        const island = Number(key);
+        const state = { ...completeState(island), signatureMissionProgressByIsland: sanitizeIslandRunSignatureMissionProgress({
+          [getIslandRunSignatureMissionKey(0, island)]: { version: 1, ...mission, updatedAtMs: 1 },
+        }) };
+        assert(resolveIslandRunCompletion(state).complete, `Island ${island} is finishable`);
+        for (let index = 0; index < 5; index++) {
+          const unfinished = { ...state, stopStatesByIndex: state.stopStatesByIndex.map((stop, i) => i === index ? { ...stop, objectiveComplete: false } : stop) };
+          const phone = resolveIslandMissionTrackerPresentation({ islandNumber: island, state: unfinished });
+          assertEqual(phone.objectives.find(x => x.label === 'Complete Landmarks')?.value, 4, `Island ${island} missing activity ${index} remains visible`);
+          assert(!phone.complete, `Island ${island} activity ${index} is required`);
+        }
+      }
+    },
+  },
+
+  {
+    name: 'fast construction leaves activities and signature missions unfinished, and guarded travel rejects it',
+    run: async () => {
+      reset();
+      const state = { ...completeState(2), essence: 1e6,
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false })),
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ requiredEssence: 100, spentEssence: 0, buildLevel: 0 })),
+      };
+      const quote = quoteIslandRunFastBuild(state, 'island', 0)!;
+      const result = resolveIslandRunFastBuild(state, quote);
+      assert(result.applied, 'All buildings can be funded');
+      const phone = resolveIslandMissionTrackerPresentation({ islandNumber: 2, state: result.record });
+      assertEqual(phone.objectives.find(x => x.label === 'Build Landmarks')?.value, 5, 'All five buildings register');
+      assertEqual(phone.objectives.find(x => x.label === 'Complete Landmarks')?.value, 0, 'No activity credit from construction');
+      assert(!phone.complete && !phone.islandCompletion?.complete, 'Neither phone nor island says finished');
+      await writeIslandRunGameStateRecord({ session, client: null, record: result.record });
+      refreshIslandRunStateFromLocal(session);
+      let rejected = false;
+      try { await travelToNextIsland({ session, client: null, nextIsland: 3, completedVisitKey: '0:2', startTimer: true, nowMs: 12345, getIslandDurationMs: () => 0, islandRunContractV2Enabled: true }); } catch { rejected = true; }
+      assert(rejected, 'Canonical departure refuses unfinished goals');
+      assertEqual(getIslandRunStateSnapshot(session).currentIslandNumber, 2, 'Player remains on current island');
+    },
+  },
+  {
+    name: 'the last mission automatically enables completion while earlier and previous-cycle progress cannot',
+    run: () => {
+      reset();
+      const state = completeState(2);
+      const key = getIslandRunSignatureMissionKey(0, 2);
+      const almost = { missionId: 'celestial-great-redocking' as const, version: 1 as const, rollsCompleted: 19, completedAtMs: null, updatedAtMs: 1 };
+      const ready = { ...almost, rollsCompleted: 20, completedAtMs: 2 };
+      for (const [ledger, expected] of [
+        [{ [key]: almost }, false],
+        [{ [getIslandRunSignatureMissionKey(1, 2)]: ready }, false],
+        [{ [key]: ready }, true],
+      ] as const) {
+        const record = { ...state, signatureMissionProgressByIsland: ledger };
+        const phone = resolveIslandMissionTrackerPresentation({ islandNumber: 2, state: record });
+        const completion = resolveIslandRunCompletion(record);
+        assertEqual(phone.complete, expected, 'Phone uses actual current-visit goal');
+        assertEqual(completion.complete, expected, 'Departure agrees with phone');
+        assertEqual(phone.overallProgressPercent, completion.percent, 'Phone and island percentage agree');
+        assertEqual(shouldAutoPresentIslandCompletion({ complete: completion.complete, visitKey: completion.visitKey, shownVisitKey: null, busy: false, isPreview: false }), expected, 'Last mission enables auto-celebration');
+      }
+    },
+  },
+
   {
     name: 'last ordinary landmark spend produces 100%, then cycle wrap cannot inherit the completed visit',
     run: async () => {
@@ -66,12 +148,12 @@ export const islandRunCompletionTests: TestCase[] = [
     },
   },
   {
-    name: 'all 120 islands use genuine completion with explicit Assembly and extraction exceptions',
+    name: 'all 120 islands require playable signature missions as well as landmarks and eggs',
     run: () => {
       reset();
       for (let island = 1; island <= 120; island++) {
         const result = resolveIslandRunCompletion(completeState(island));
-        assertEqual(result.complete, island !== 1 && island !== 20, `Island ${island} completion gate`);
+        assertEqual(result.complete, ![1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 14, 16, 18, 19, 20].includes(island), `Island ${island} completion gate`);
         assertEqual(result.percent === 100, result.complete, `Island ${island} has truthful 100%`);
       }
     },
@@ -96,13 +178,16 @@ export const islandRunCompletionTests: TestCase[] = [
     name: 'completion preserves completed-stop ledger credit and rejects partial builds and ready eggs',
     run: () => {
       reset();
-      const state = { ...completeState(), completedStopsByIsland: { '2': ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] },
+      const state = { ...completeState(), completedStopsByIsland: { '11': ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] },
         stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false })),
       };
       assert(resolveIslandRunCompletion(state).complete, 'Persisted objective evidence is not lost to stale mirrors');
+      const phone = resolveIslandMissionTrackerPresentation({ islandNumber: 11, state });
+      assertEqual(phone.objectives.find(x => x.label === 'Complete Landmarks')?.value, 5, 'Phone counts persisted activity evidence too');
+      assert(phone.complete, 'Phone agrees with completion when saved evidence is restored');
       const incomplete = { ...state, stopBuildStateByIndex: state.stopBuildStateByIndex.map((entry, i) => i === 4 ? { ...entry, buildLevel: 2 } : entry) };
       assert(!resolveIslandRunCompletion(incomplete).complete, 'A nearly finished L2 is not L3');
-      assert(!resolveIslandRunCompletion({ ...state, perIslandEggs: { '2': { ...state.perIslandEggs[2], status: 'ready' } } }).complete, 'Ready egg must still be resolved');
+      assert(!resolveIslandRunCompletion({ ...state, perIslandEggs: { '11': { ...state.perIslandEggs[11], status: 'ready' } } }).complete, 'Ready egg must still be resolved');
     },
   },
   {

@@ -3800,11 +3800,17 @@ export default function Island5ThreePilot({
     return previewTiles.map(entry => entry.signatureMissionKind === 'moonwell_heat' && (landmarkBuildLevels?.event ?? buildLevel) < 3
       ? { ...entry, signatureMissionKind: undefined, signatureMissionId: undefined } : entry);
   }, [islandNumber, tileMap, landmarkBuildLevels?.event, buildLevel]);
+  // Door affordability and newly unlocked mission tiles can change during a
+  // spend too. Board input is inert in Build, so defer those presentation-only
+  // changes with the overview instead of tearing down the active renderer.
+  const constructionTileMapRef = useRef(resolvedTileMap);
+  if (!constructionPresentation?.active) constructionTileMapRef.current = resolvedTileMap;
+  const sceneTileMap = constructionTileMapRef.current;
   const tileRewardMapKey = useMemo(
-    () => resolvedTileMap
+    () => sceneTileMap
       .map((entry) => `${entry.index}:${entry.tileType}:${entry.doorStopId ?? ''}:${entry.isActiveDoorCluster ? 1 : 0}:${entry.signatureMissionKind ?? ''}`)
       .join('|'),
-    [resolvedTileMap],
+    [sceneTileMap],
   );
   const landmarkBuildLevelsKey = useMemo(
     () => ISLAND_5_LANDMARKS
@@ -3814,10 +3820,16 @@ export default function Island5ThreePilot({
   );
   // Island 015 build levels mutate semantic GLB groups through the binder.
   // Other worlds still rebuild their authored procedural geometry as before.
-  const sceneBuildLevelDependency = isCrystalGlacier ? 0 : buildLevel;
+  // Keep the WebGL world/camera alive throughout construction. The additive
+  // preview reads live levels through refs; the overview catches up on exit.
+  const constructionSceneLevelsRef = useRef({ buildLevel, key: landmarkBuildLevelsKey });
+  if (!constructionPresentation?.active) {
+    constructionSceneLevelsRef.current = { buildLevel, key: landmarkBuildLevelsKey };
+  }
+  const sceneBuildLevelDependency = isCrystalGlacier ? 0 : constructionSceneLevelsRef.current.buildLevel;
   const sceneLandmarkBuildLevelsDependency = isCrystalGlacier
     ? 'island-015-runtime-levels'
-    : landmarkBuildLevelsKey;
+    : constructionSceneLevelsRef.current.key;
 
   useEffect(() => {
     if (!isCrystalGlacier) return;
@@ -5644,7 +5656,7 @@ export default function Island5ThreePilot({
     // map. They carry no click handlers, wallet logic, or persistence and are
     // intentionally hidden beneath the player piece while its tile is occupied.
     const tileRewardObjects = createIslandRunTileRewardThreeObjects({
-      tileMap: resolvedTileMap,
+      tileMap: sceneTileMap,
       tileTransforms,
       quality: qualityProfile.id,
       compactCollectibles: isFrostmoonHaven || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
@@ -5912,6 +5924,7 @@ export default function Island5ThreePilot({
     let moonwellThermalCompletedSequence = -1;
     // The live construction crew shares this renderer and reads the real
     // landmark bounds. It is intentionally absent from clickableLandmarks.
+    canvas.dataset.constructionRendererGeneration = String(performance.now());
     const constructionFamily = createRobotFamilyModel({ quality: 'low', showAddonRack: false });
     const constructionTheatre = createRobotConstructionTheatre({
       family: constructionFamily,
@@ -6145,8 +6158,15 @@ export default function Island5ThreePilot({
       canvas.dataset.constructionCrewRevealStages = JSON.stringify(constructionLevelDelta.stageCounts);
       canvas.dataset.constructionCrewRevealBatches = String(constructionLevelDelta.revealBatchCount);
     };
+    let presentedConstructionProgress = 0;
+    let targetConstructionProgress = 0;
+    let presentedConstructionKey = '';
     const applyConstructionPreviewProgress = (progress: number, working: boolean) => {
-      constructionLevelDelta?.applyProgress(progress, { working });
+      if (presentedConstructionKey !== constructionPreviewKey) {
+        presentedConstructionKey = constructionPreviewKey;
+        presentedConstructionProgress = Math.min(progress, 0.02);
+      }
+      targetConstructionProgress = progress;
     };
     const updateConstructionFacing = () => {
       if (!constructionAnchor.visible) return;
@@ -6187,7 +6207,7 @@ export default function Island5ThreePilot({
         )
         : null;
       constructionAnchor.visible = isActive;
-      constructionFamily.root.visible = isActive;
+      constructionFamily.root.visible = isActive && !next?.commissioning && !next?.completionCelebration && !next?.fastBuild;
       constructionStageBuilding.visible = isActive;
       constructionTheatre.setPresentation({
         active: isActive,
@@ -9174,6 +9194,9 @@ export default function Island5ThreePilot({
         updateConstructionFacing();
         const constructionReducedMotion = isReducedMotion
           || Boolean(constructionPresentationRef.current?.reducedMotion);
+        presentedConstructionProgress = constructionReducedMotion ? targetConstructionProgress
+          : THREE.MathUtils.damp(presentedConstructionProgress, targetConstructionProgress, activeConstruction?.fastBuild ? 5 : 14, frameDeltaSeconds);
+        constructionLevelDelta?.applyProgress(presentedConstructionProgress, { working: activeConstruction?.working ?? false });
         constructionFamily.update(elapsed, frameDeltaSeconds, constructionReducedMotion);
         constructionTheatre.update(elapsed, frameDeltaSeconds, constructionReducedMotion);
         const commissioningBeat = constructionCommissioningFx.update(elapsed, constructionReducedMotion);
@@ -10395,7 +10418,7 @@ export default function Island5ThreePilot({
       setCameraAuthoringModeRef.current = () => undefined;
       setIsland15PalaceEntryPhase('idle');
     };
-  }, [assemblyAssetsReady, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isCrystalGlacier, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, qualityProfile, rendererRetryVersion, resolvedTileMap, resolvedWorldSourceNumber, sceneBuildLevelDependency, sceneLandmarkBuildLevelsDependency, tileRewardMapKey]);
+  }, [assemblyAssetsReady, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isCrystalGlacier, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, qualityProfile, rendererRetryVersion, sceneTileMap, resolvedWorldSourceNumber, sceneBuildLevelDependency, sceneLandmarkBuildLevelsDependency, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }

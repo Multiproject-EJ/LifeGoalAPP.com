@@ -63,6 +63,7 @@ const COMPASS_BOOK_PROFILER_PATH = '/dev/compass-book-profiler';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
+const CRYSTAL_MINERS_PREVIEW_PATH = '/dev/crystal-miners';
 const MOMENTUM_MATRIX_PREVIEW_PATH = '/dev/momentum-matrix-preview';
 const SKYBOUND_EXPEDITION_PREVIEW_PATH = '/dev/skybound-expedition';
 const JOURNEY_DISC_ARENA_PREVIEW_PATH = '/dev/journey-disc-arena';
@@ -79,6 +80,22 @@ function IslandChampionshipPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/level-worlds/components/IslandChampionshipPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function CrystalMinersPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/games/crystal-miners/CrystalMinersPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -574,6 +591,7 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === CHAMPIONSHIP_PREVIEW_PATH;
+  const isCrystalMinersPreviewRoute = import.meta.env.DEV && typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === CRYSTAL_MINERS_PREVIEW_PATH;
   const isMomentumMatrixPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -662,6 +680,8 @@ function Root() {
   if (isChampionshipPreviewRoute) {
     return <IslandChampionshipPreviewRoute />;
   }
+
+  if (isCrystalMinersPreviewRoute) return <CrystalMinersPreviewRoute />;
 
   if (isMomentumMatrixPreviewRoute) {
     return <MomentumMatrixPreviewRoute />;

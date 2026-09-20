@@ -1,3 +1,8 @@
+import { IslandAssemblyCraterModal } from './IslandAssemblyCraterModal';
+import { quoteIslandRunFastBuild, type FastBuildQuote } from '../services/islandRunFastBuild';
+import { applyIslandRunFastBuild } from '../services/islandRunFastBuildAction';
+import { eventGamePackPlays, EVENT_GAME_PLAYS_PER_TICKET } from '../services/eventGameTicketEconomy';
+import { createCrystalMinersBridge } from '../services/islandRunCrystalMinersActions';
 import { IslandFrostwellMissionModal } from './IslandFrostwellMissionModal';
 import { useFrostwellMissionSequence } from '../hooks/useFrostwellMissionSequence';
 import { lockFullscreenPageScroll, lockPageScroll } from '../../../../utils/scrollLock';
@@ -205,10 +210,7 @@ import {
   shouldIslandRunBuildPromptBlockControl,
 } from '../services/islandRunFirstSessionTutorialUi';
 import {
-  ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY,
-  ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY,
   isIslandRunFirstRollCoachmarkActive,
-  isIslandRunKeepRollingCoachmarkActive,
 } from '../services/islandRunCoreLoopTutorialUi';
 import {
   commitIslandRunState,
@@ -837,6 +839,9 @@ const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = ISLAND_RUN_BUILD_LEVEL_AUTO_DISMI
 const BUILD_CAMERA_HANDOFF_DURATION_MS = ISLAND_RUN_BUILD_CAMERA_HANDOFF_MS;
 
 type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
+  diceAward?: number;
+  previousLevel?: number;
+  fastMode?: string;
   reviewId: number;
   stopIndex: number;
   stopId: string;
@@ -1747,11 +1752,6 @@ function getStopStateChipLabel(state: StopProgressState): string {
   return 'Open';
 }
 
-function markLandmarkCoachmarkSeen(userId: string) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(`island_run_landmark_coachmark_seen_${userId}`, '1');
-}
-
 function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
   if (state === 'locked') return '🔒';
   if (state === 'ticket_required') return '🎫';
@@ -1915,7 +1915,6 @@ export function IslandRunBoardPrototype({
         || requestedFrostwellMissionState === 'operating'
         ? requestedFrostwellMissionState
         : 'operating',
-      isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
       isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
       journeyDiscArenaInvitationPreview: import.meta.env.DEV && params.get('journeyDiscArenaInvitationPreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
@@ -1939,7 +1938,6 @@ export function IslandRunBoardPrototype({
     islandVisualBuildLevel,
     islandVisualBossState,
     frostwellMissionState,
-    isIsland5ThreePreviewRequested,
     isArenaBattlePreviewRequested,
     journeyDiscArenaInvitationPreview,
     isCaretakerThreeEncounterPreviewRequested,
@@ -2050,10 +2048,6 @@ export function IslandRunBoardPrototype({
   const [ticketPromptStopId, setTicketPromptStopId] = useState<string | null>(null);
   const [prepayTicketPromptStopId, setPrepayTicketPromptStopId] = useState<string | null>(null);
   const [lockedStopInfoStopId, setLockedStopInfoStopId] = useState<string | null>(null);
-  const [showLandmarkCoachmark, setShowLandmarkCoachmark] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem(`island_run_landmark_coachmark_seen_${session.user.id}`) !== '1';
-  });
   const [showFrostwellMission, setShowFrostwellMission] = useState(false);
   const [showMoonwellThermal, setShowMoonwellThermal] = useState(false);
   const [isActivatingMoonwell, setIsActivatingMoonwell] = useState(false);
@@ -2067,6 +2061,7 @@ export function IslandRunBoardPrototype({
   const frostwellSequence = useFrostwellMissionSequence(() => setFrostwellConstructionSequence(value => value + 1));
   const frostwellActionPendingRef = useRef(false);
   const [showFirstLightAssemblyCrater, setShowFirstLightAssemblyCrater] = useState(false);
+  const [firstLightAssemblyError, setFirstLightAssemblyError] = useState<string | null>(null);
   const [isDetonatingFirstLightAssembly, setIsDetonatingFirstLightAssembly] = useState(false);
   const [firstLightAssemblyConstructionSequence, setFirstLightAssemblyConstructionSequence] = useState(0);
   const [firstLightAssemblyPendingSector, setFirstLightAssemblyPendingSector] = useState<number | null>(null);
@@ -2153,7 +2148,6 @@ export function IslandRunBoardPrototype({
   const showHatcheryL1Celebration = isIslandRunHatcheryL1CelebrationActive(firstSessionTutorialState);
   const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
   const isFirstRollCoachmarkActive = isIslandRunFirstRollCoachmarkActive(firstSessionTutorialState);
-  const isKeepRollingCoachmarkActive = isIslandRunKeepRollingCoachmarkActive(firstSessionTutorialState);
   useEffect(() => {
     if (isBuildTutorialPromptActive) setIsControllerTucked(false);
   }, [isBuildTutorialPromptActive]);
@@ -2496,11 +2490,9 @@ export function IslandRunBoardPrototype({
   const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
   const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
-  // Authored 3D islands are the production runtime. The legacy 2D board remains
-  // available only to the explicit visual-production preview surface; it must
-  // never replace a live 3D island after a renderer restart or build beat.
-  const shouldRenderIsland5Three = canUseIsland5Three
-    && (!isIslandVisualPreview || isIsland5ThreePreviewRequested);
+  // Preview and gameplay share the authored 3D renderer. A missing URL flag
+  // must never send construction testing back to the retired 2D presentation.
+  const shouldRenderIsland5Three = canUseIsland5Three;
   // Legacy scene-space mission cards could be occluded by the top and reward
   // bars. Persistent mission access now lives in the shared reward-bar rail.
   const shouldRenderLegacySignatureMissionPills = false;
@@ -2856,6 +2848,7 @@ export function IslandRunBoardPrototype({
     // route back to overview.
   }, [frostwellSequence.settle]);
   const openFirstLightAssemblyCrater = useCallback(() => {
+    setFirstLightAssemblyError(null);
     setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
     setShowFirstLightAssemblyCrater(true);
   }, []);
@@ -3823,9 +3816,13 @@ export function IslandRunBoardPrototype({
   const buildTapQueueRef = useRef<Array<{ stopIndex: number; targetPartNumber: 1 | 2 | 3 | 4 | 5 }>>([]);
   const isBuildTapQueueProcessingRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
+  const buildHoldGenerationRef = useRef(0);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
+  const [fastBuildBurst, setFastBuildBurst] = useState<null | { quote: FastBuildQuote; title: string; stopId: string; previousLevel: number }>(null);
+  const buildSessionGenerationRef = useRef(0);
+  const [buildActionError, setBuildActionError] = useState<string | null>(null);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
   const markBuildChoreographyActive = useCallback((lingerMs = 3_200): void => {
@@ -3849,6 +3846,8 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     if (!showBuildPanel) {
+      buildSessionGenerationRef.current += 1;
+      setFastBuildBurst(null);
       buildTapQueueRef.current = [];
       isBuildSequenceActiveRef.current = false;
       setIsBuildSequenceActive(false);
@@ -3888,6 +3887,7 @@ export function IslandRunBoardPrototype({
   }, [runtimeState]);
 
   useEffect(() => () => {
+    buildSessionGenerationRef.current += 1;
     buildTapQueueRef.current = [];
     holdBuildSpendActiveRef.current = false;
     if (buildBurstTimeoutRef.current !== null) window.clearTimeout(buildBurstTimeoutRef.current);
@@ -6664,13 +6664,6 @@ export function IslandRunBoardPrototype({
     }, prefersReducedMotion ? 0 : TRAFFIC_LIGHT_REWARD_OPEN_MS);
   }, [handleOpenTrafficLightReward, trafficLightCoinFlip]);
 
-  const dismissLandmarkCoachmark = useCallback(() => {
-    setShowLandmarkCoachmark(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
-    }
-  }, [session.user.id]);
-
   useEffect(() => {
     if (!lockedStopInfoStopId && !ticketPromptStopId && !prepayTicketPromptStopId) return undefined;
     const unlockPageScroll = lockPageScroll();
@@ -7220,7 +7213,9 @@ export function IslandRunBoardPrototype({
       ? {
           title: buildLevelCompletion.title,
           stopId: buildLevelCompletion.stopId,
-          previousLevel: Math.max(0, buildLevelCompletion.level - 1),
+          previousLevel: buildLevelCompletion.previousLevel ?? Math.max(0, buildLevelCompletion.level - 1),
+          diceAward: buildLevelCompletion.diceAward ?? 1,
+          fastMode: buildLevelCompletion.fastMode,
           level: buildLevelCompletion.level,
           presentationSequence: buildLevelCompletion.reviewId,
           isFullyBuilt: buildLevelCompletion.isFullyBuilt,
@@ -7252,17 +7247,27 @@ export function IslandRunBoardPrototype({
     setBuildDiscountExpiresAtMs(null);
   }, [buildDiscountExpiresAtMs, hasRemainingIslandBuilds]);
 
-  const constructionPresentation = useMemo(() => deriveIslandRunConstructionPresentation({
+  const fastBuildQuotes = useMemo(() => {
+    if (!showBuildPanel) return [];
+    const index = buildModalV2ViewModel.activeLandmark?.stopIndex ?? 0;
+    return (['landmark', 'island'] as const).map(mode => quoteIslandRunFastBuild(__storeState, mode, index, activeBuildDiscountRate, buildDiscountExpiresAtMs)).filter((quote): quote is FastBuildQuote => Boolean(quote));
+  }, [showBuildPanel, __storeState, buildModalV2ViewModel.activeLandmark?.stopIndex, activeBuildDiscountRate, buildDiscountExpiresAtMs]);
+  const constructionPresentation = useMemo(() => fastBuildBurst ? {
+    active: true, working: true, cameraLocked: true, phase: 'assemble' as const,
+    progress: 1, sequence: 1000 + buildLevelReviewIdRef.current, sourceLevel: fastBuildBurst.previousLevel,
+    commissioning: false, cloudCover: .5, targetStopId: fastBuildBurst.stopId, targetLevel: 3,
+    completionCelebration: false, reducedMotion: false, fastBuild: true,
+  } : deriveIslandRunConstructionPresentation({
     isOpen: showBuildPanel,
     isBuildHoldActive,
     isBuildBurstActive,
     isCameraLocked: isBuildCameraCooldownActive,
     viewModel: buildModalPresentationViewModel,
     levelReview: buildModalPresentationLevelReview,
-  }), [buildModalPresentationLevelReview, buildModalPresentationViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
+  }), [fastBuildBurst, buildModalPresentationLevelReview, buildModalPresentationViewModel, isBuildBurstActive, isBuildCameraCooldownActive, isBuildHoldActive, showBuildPanel]);
 
   const activeBuildCameraStopId = showBuildPanel
-    ? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
+    ? fastBuildBurst?.stopId ?? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
     : null;
   const isBuildCameraHandoffPending = Boolean(
     showBuildPanel
@@ -10821,6 +10826,38 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchArenaGame = (gameId: ArenaGameId) => {
+    if (gameId === 'crystal_miners') {
+      const miningEvent = effectiveActiveTimedEvent ?? activeTimedEvent;
+      if (!miningEvent || !isCanonicalEventId(miningEvent.eventType)) {
+        setLandingText('Crystal Miners opens during an active Arena event.');
+        return;
+      }
+      if (!canOpenIslandRunOverlayWhileRollingState({ isRolling, isAnimatingRoll: isAnimatingRollRef.current, isRollSyncPending: isRollSyncPendingRef.current })) {
+        stopAutoRoll();
+        setLandingText('Finish this roll, then enter the crystal mine.');
+        return;
+      }
+      const pace = resolveArenaSessionPace(arenaPreferences, gameId);
+      if (!pace) { setShowArenaPreferences(true); return; }
+      registerAllMinigameManifests();
+      setActiveLaunchedMinigameId(gameId);
+      setActiveLaunchedMinigameSource('timed_event');
+      const miningBridge=createCrystalMinersBridge({session,client,eventId:miningEvent.eventId});
+      setActiveLaunchedMinigameConfig({
+        source: 'timed_event', mode: 'crystal_miners', arenaTimerManagedByGame: true,
+        inspectEnabled: isAdmin || (import.meta.env.DEV && isDevModeEnabled),
+        bridge: miningBridge,
+        onError: (error:Error)=>miningBridge.reportError(error,'load'),
+        ticketOffersEnabled: isIslandRunFeatureEnabled('minigameTicketPurchasesReady') && !isDemoSession(session),
+        requestResources: (destination: 'earn' | 'tickets' | 'shop') => {
+          if (destination === 'tickets') openRewardDetailsModal();
+          else if (destination === 'shop') openShopPanel();
+          else setLandingText('Your mine is saved. Earn event tickets from island play and reward-bar claims, then return to Crystal Miners.');
+        },
+      });
+      playIslandRunSound('minigame_open');
+      return;
+    }
     if (gameId === 'momentum_matrix') {
       handleLaunchMomentumMatrix();
       return;
@@ -11566,6 +11603,7 @@ export function IslandRunBoardPrototype({
       const stopEntry = islandStopPlan[stopIndex];
       const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
       const leveledUp = nextBuildState.buildLevel > currentBuildState.buildLevel;
+      if (leveledUp) playIslandRunSound('reward_bar_claim_burst');
       triggerIslandRunHaptic(leveledUp ? 'build_level_complete' : 'build_part');
 
       const completionPresentation = resolveBuildLevelCompletionPresentation({
@@ -11578,6 +11616,7 @@ export function IslandRunBoardPrototype({
         buildLevelReviewIdRef.current += 1;
         const review: ActiveBuildLevelReview = {
           ...completionPresentation,
+          diceAward: Math.max(0, nextBuildState.buildLevel - currentBuildState.buildLevel),
           reviewId: buildLevelReviewIdRef.current,
           stopIndex,
           stopId: stopEntry?.stopId ?? '',
@@ -11602,10 +11641,16 @@ export function IslandRunBoardPrototype({
         setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 💰 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
       }
       return true;
+    } catch (error) {
+      holdBuildSpendActiveRef.current = false;
+      setIsBuildHoldActive(false);
+      setBuildActionError('Building paused. Your saved progress is kept. Please try again.');
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_spend_error', island_number: islandNumber, error_name: error instanceof TypeError ? 'TypeError' : error instanceof RangeError ? 'RangeError' : 'Error' } });
+      return false;
     } finally {
       isBuildSpendInFlightRef.current = false;
     }
-  }, [activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
+  }, [islandNumber, activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
 
   const resolveQueuedBuildPartSteps = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): number => {
     const latestRuntimeState = getIslandRunStateSnapshot(session);
@@ -11626,6 +11671,7 @@ export function IslandRunBoardPrototype({
   // the requested milestone, then reprices it against the latest canonical
   // snapshot before spending so rapid taps cannot overspend stale prices.
   const processBuildTapQueue = useCallback(async (): Promise<void> => {
+    const generation = buildSessionGenerationRef.current;
     isBuildSequenceActiveRef.current = true;
     setIsBuildSequenceActive(true);
     try {
@@ -11641,7 +11687,7 @@ export function IslandRunBoardPrototype({
         // spend lands as its own visible construction beat. This prevents a
         // Part 5 tap from jumping through every robot phase in one frame.
         for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1) {
-          if (buildLevelCompletionRef.current) break;
+          if (buildLevelCompletionRef.current || generation !== buildSessionGenerationRef.current) break;
           markBuildChoreographyActive();
           const spendApplied = await handleSpendEssenceOnBuild(nextTap.stopIndex, 1);
           if (!spendApplied || buildLevelCompletionRef.current) break;
@@ -11673,10 +11719,68 @@ export function IslandRunBoardPrototype({
   }, [isBuildCameraHandoffActive, isBuildCameraHandoffPending, processBuildTapQueue]);
 
   const stopBuildHold = useCallback((): void => {
+    buildHoldGenerationRef.current += 1;
     holdBuildSpendActiveRef.current = false;
     setIsBuildHoldActive(false);
     markBuildChoreographyActive(900);
   }, [markBuildChoreographyActive]);
+
+  useEffect(() => {
+    const cancel = () => { stopBuildHold(); buildTapQueueRef.current = []; buildSessionGenerationRef.current += 1; setFastBuildBurst(null); };
+    const onVisibility = () => { if (document.hidden) cancel(); };
+    window.addEventListener('blur', cancel);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', onVisibility); };
+  }, [stopBuildHold]);
+
+  const handleFastBuild = useCallback(async (quote: FastBuildQuote) => {
+    if (isBuildSpendInFlightRef.current || isBuildSequenceActiveRef.current || holdBuildSpendActiveRef.current || buildLevelCompletionRef.current) return;
+    const generation = buildSessionGenerationRef.current;
+    const before = getIslandRunStateSnapshot(session);
+    const stop = islandStopPlan[quote.stopIndex];
+    isBuildSpendInFlightRef.current = true;
+    isBuildSequenceActiveRef.current = true;
+    setIsBuildSequenceActive(true);
+    setBuildActionError(null);
+    try {
+      const result = await applyIslandRunFastBuild({ session, client, quote });
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_result', mode: quote.mode, island_number: before.currentIslandNumber, levels: quote.levels, cost: quote.cost, outcome: result.reason, dice_awarded: result.diceAward } });
+      if (!result.applied) {
+        setBuildActionError(result.reason === 'insufficient_money' ? 'Need more Money. Roll to earn more.' : 'Your build price changed. Please check the updated cost.');
+        return;
+      }
+      runtimeStateRef.current = result.record;
+      setRuntimeState(result.record);
+      if (generation !== buildSessionGenerationRef.current) return;
+      setFastBuildBurst({ quote, title: stop.title, stopId: stop.stopId, previousLevel: before.stopBuildStateByIndex[quote.stopIndex].buildLevel });
+      markBuildChoreographyActive(1200);
+      playIslandRunSound('build_upgrade');
+      await wait(1000);
+      if (generation !== buildSessionGenerationRef.current) return;
+      setFastBuildBurst(null);
+      const now = Date.now();
+      const review: ActiveBuildLevelReview = {
+        title: quote.mode === 'island' ? 'All landmarks' : stop.title, heading: 'Restored!', body: 'Ready at full strength.',
+        level: 3, previousLevel: before.stopBuildStateByIndex[quote.stopIndex].buildLevel,
+        stopIndex: quote.stopIndex, stopId: stop.stopId, isFullyBuilt: true, diceAward: result.diceAward, fastMode: quote.mode,
+        reviewId: ++buildLevelReviewIdRef.current, minAdvanceAtMs: now + BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
+        autoAdvanceAtMs: now + 2600, isAdvanceReady: false, isAdvanceQueued: false,
+      };
+      buildLevelCompletionRef.current = review;
+      setBuildLevelCompletion(review);
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('build_level_complete');
+    } catch (error) {
+      setFastBuildBurst(null);
+      setBuildActionError('Building could not finish. Your saved progress is kept. Please reopen building.');
+      console.error('[island-run] Fast build failed', error);
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_error', mode: quote.mode, island_number: before.currentIslandNumber, error_name: error instanceof TypeError ? 'TypeError' : error instanceof RangeError ? 'RangeError' : 'Error' } });
+    } finally {
+      isBuildSpendInFlightRef.current = false;
+      isBuildSequenceActiveRef.current = false;
+      setIsBuildSequenceActive(false);
+    }
+  }, [session, client, islandStopPlan, markBuildChoreographyActive, playIslandRunSound]);
 
   const startBuildHold = useCallback((stopIndex: number): void => {
     if (
@@ -11686,14 +11790,18 @@ export function IslandRunBoardPrototype({
       || isBuildCameraHandoffActive
       || isBuildCameraHandoffPending
     ) return;
+    const holdGeneration = ++buildHoldGenerationRef.current;
     holdBuildSpendActiveRef.current = true;
+    setBuildActionError(null);
     setIsBuildHoldActive(true);
     markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
     setBuildHoldFeedbackLabel(resolveIslandRunBuildHoldCadence(0).feedbackLabel);
     void (async () => {
       let holdStepsApplied = 0;
       while (holdBuildSpendActiveRef.current) {
+        if (holdGeneration !== buildHoldGenerationRef.current) return;
         const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);
+        if (holdGeneration !== buildHoldGenerationRef.current) return;
         if (
           !spendApplied
           || buildLevelCompletionRef.current
@@ -13785,11 +13893,12 @@ export function IslandRunBoardPrototype({
   const handleDetonateFirstLightAssembly = useCallback(async () => {
     if (isDetonatingFirstLightAssembly) return;
     setIsDetonatingFirstLightAssembly(true);
+    setFirstLightAssemblyError(null);
     try {
       const result = await detonateFirstLightAssemblyCharge({ session, client });
       if (result.status !== 'ok') {
         if (result.status === 'no_dynamite') {
-          setLandingText('Collect enough dynamite for the next demolition batch.');
+          setFirstLightAssemblyError('Collect a few more charges on the island first.');
         }
         return;
       }
@@ -13823,6 +13932,9 @@ export function IslandRunBoardPrototype({
           { icon: '🧨', label: 'Controlled blasts', value: '10 / 10' },
         ], 'Mission complete — First Light can convene');
       }
+    } catch (error) {
+      setFirstLightAssemblyError('The fuse did not light. Your saved progress is safe. Try again.');
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'assembly_crater_blast_error', error_name: error instanceof TypeError ? 'TypeError' : 'Error' } });
     } finally {
       setIsDetonatingFirstLightAssembly(false);
     }
@@ -15703,7 +15815,7 @@ export function IslandRunBoardPrototype({
                 islandNumber={islandArtPreviewNumber}
                 worldSourceNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
-                landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
+                landmarkBuildLevels={island5ThreeBuildLevels}
                 presentation="embedded"
                 qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
                 tileMap={landmarkDoorTileMap}
@@ -15978,36 +16090,7 @@ export function IslandRunBoardPrototype({
             ) : null}
           </div>
         ) : null}
-        {showLandmarkCoachmark ? (
-          <aside className="island-run-landmark-coachmark" role="note" aria-live="polite">
-            <p>
-              🧭 Landmarks unlock in order. Some need a money ticket.
-            </p>
-            <div className="island-run-landmark-coachmark__actions">
-              <button
-                type="button"
-                className="island-run-landmark-coachmark__dismiss"
-                onClick={() => {
-                  setShowLandmarkCoachmark(false);
-                  markLandmarkCoachmarkSeen(session.user.id);
-                  focusNextAvailableStop();
-                }}
-              >
-                Show next
-              </button>
-              <button
-                type="button"
-                className="island-run-landmark-coachmark__dismiss"
-                onClick={() => {
-                  setShowLandmarkCoachmark(false);
-                  markLandmarkCoachmarkSeen(session.user.id);
-                }}
-              >
-                Got it
-              </button>
-            </div>
-          </aside>
-        ) : null}
+
       </div>
 
       {shouldRenderIsland5Three ? (
@@ -16208,7 +16291,6 @@ export function IslandRunBoardPrototype({
                   className={`island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-build${isBuildTutorialPromptActive ? ' island-run-prototype__footer-nav-btn--build-tutorial-target' : ''}`}
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightUpper)}
                   onClick={openBuildPanelFromFooter}
-                  aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
                 >
                   🔨 Build
                   {hasAffordableBuildStep && !isBuildTutorialPromptActive && (
@@ -16282,47 +16364,6 @@ export function IslandRunBoardPrototype({
           </div>
         </div>
       </div>
-
-      {isBuildTutorialPromptActive && !showBuildPanel && (
-        <div className="island-run-build-tutorial-overlay" role="presentation">
-          <aside
-            id="island-run-build-tutorial-prompt"
-            className="island-run-build-tutorial-overlay__coachmark"
-            role="note"
-            aria-live="polite"
-          >
-            <strong>You earned Essence ✨</strong>
-            <span>Essence builds and upgrades your island. Tap the highlighted Build button to fund your first Hatchery.</span>
-          </aside>
-        </div>
-      )}
-
-      {isFirstRollCoachmarkActive && !showBuildPanel && (
-        <div className="island-run-coreloop-tutorial-overlay" role="presentation">
-          <aside
-            className="island-run-build-tutorial-overlay__coachmark"
-            role="note"
-            aria-live="polite"
-          >
-            <strong>{ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY.title}</strong>
-            <span>{ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY.body}</span>
-          </aside>
-        </div>
-      )}
-
-      {isKeepRollingCoachmarkActive && !showBuildPanel && (
-        <div className="island-run-coreloop-tutorial-overlay" role="presentation">
-          <aside
-            className="island-run-build-tutorial-overlay__coachmark"
-            role="note"
-            aria-live="polite"
-          >
-            <strong>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.title}</strong>
-            <span>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.body}</span>
-          </aside>
-        </div>
-      )}
-
 
       {techCompletionCelebration ? (
         <IslandTechCompletionCelebration
@@ -17989,6 +18030,7 @@ export function IslandRunBoardPrototype({
             ) : null}
 
             <div className="island-event-modal__tile-info">
+              <p className="island-stop-modal__copy">Each event ticket funds {EVENT_GAME_PLAYS_PER_TICKET.crystal_miners} Crystal Miners drops. Converted drops stay in your workshop.</p>
               <p className="island-event-modal__tile-info-title">Tiles that fill this bar</p>
               <div className="island-event-modal__tile-list">
                 <span>🎁 Chest <b>+2</b></span>
@@ -18010,7 +18052,7 @@ export function IslandRunBoardPrototype({
                   onClick={() => void handleStartMinigameTicketCheckout('active_event_panel')}
                   disabled={isStartingMinigameTicketCheckout}
                 >
-                  {isStartingMinigameTicketCheckout ? 'Starting ticket checkout…' : 'Buy Tickets'}
+                  {isStartingMinigameTicketCheckout ? 'Starting ticket checkout…' : `Buy 10 event tickets · ${eventGamePackPlays('crystal_miners',10)} Miners drops`}
                 </button>
               )}
               {canClaimRewardBar && (
@@ -18316,6 +18358,11 @@ export function IslandRunBoardPrototype({
           isOpen={showBuildPanel}
           islandNumber={isIslandVisualPreview ? islandArtPreviewNumber : islandNumber}
           essenceAvailable={__storeState.essence}
+          diceAvailable={__storeState.dicePool}
+          fastBuildQuotes={fastBuildQuotes}
+          fastBuildMode={fastBuildBurst?.quote.mode}
+          buildActionError={buildActionError}
+          onFastBuild={handleFastBuild}
           onClose={() => setShowBuildPanel(false)}
           viewModel={buildModalPresentationViewModel}
           isBuildHoldActive={isBuildHoldActive}
@@ -20425,92 +20472,18 @@ export function IslandRunBoardPrototype({
         rotation={frostwellWheelRotation} result={frostwellLastSpinMeters} onSpin={() => { void handleSpinFrostwell(); }}
         onClose={closeFrostwellMission} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
 
-      {showFirstLightAssemblyCrater && typeof document !== 'undefined' ? createPortal((
-        <div
-          className="island-run-signature-mission-overlay island-stop-modal__backdrop cactus-canyon-spiral-modal__backdrop"
-          role="presentation"
-          onClick={closeFirstLightAssemblyCrater}
-        >
-          <section
-            className="island-stop-modal frostwell-mission-modal first-light-assembly-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="first-light-assembly-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="island-stop-modal__close"
-              aria-label="Close Assembly Crater mission"
-              onClick={closeFirstLightAssemblyCrater}
-            >
-              ×
-            </button>
-            <span className="frostwell-mission-modal__eyebrow">ISLAND 001 · CIVIC EXCAVATION</span>
-            <h2 id="first-light-assembly-title">Assembly Crater</h2>
-            <p className="frostwell-mission-modal__lede">
-              Collect ten charges in three batches: 3 to break the surface, 5 for the great excavation, and 2 to finish the foundations. Then watch the robots build your General Assembly.
-            </p>
-            <div
-              className="first-light-assembly-modal__sector-ring"
-              aria-label={`${firstLightAssemblyProgress.chargesDetonated} of ${FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET} Assembly Crater charges detonated`}
-            >
-              {Array.from({ length: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET }, (_, index) => (
-                <i
-                  key={`assembly-sector-${index}`}
-                  className={index < firstLightAssemblyProgress.chargesDetonated ? 'is-open' : ''}
-                  style={{ transform: `rotate(${index * (360 / FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET)}deg) translateY(-43px)` }}
-                />
-              ))}
-              <span aria-hidden="true">{firstLightAssemblyCompleted ? '🏛️' : '🎙️'}</span>
-            </div>
-            <div className="cactus-canyon-spiral-modal__readout">
-              <span>
-                <strong>{firstLightAssemblyProgress.chargesDetonated}/{FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}</strong>
-                <small>CHARGES USED</small>
-              </span>
-              <span>
-                <strong>🧨 {firstLightAssemblyAvailableDynamite}</strong>
-                <small>CHARGES READY</small>
-              </span>
-            </div>
-            <div className="cactus-canyon-spiral-modal__blast-panel">
-              <div className={`cactus-canyon-spiral-modal__charge${isDetonatingFirstLightAssembly ? ' is-burning' : ''}`} aria-hidden="true">
-                <i /><i /><i />
-                <span className="cactus-canyon-spiral-modal__fuse" />
-                <b>🧨 {firstLightAssemblyAvailableDynamite}</b>
-              </div>
-              <button
-                type="button"
-                className="cactus-canyon-spiral-modal__blast-button"
-                disabled={isDetonatingFirstLightAssembly || firstLightAssemblyAvailableDynamite < firstLightAssemblyNextBatch.cost || firstLightAssemblyCompleted}
-                onClick={() => void handleDetonateFirstLightAssembly()}
-              >
-                {isDetonatingFirstLightAssembly
-                  ? 'FUSE BURNING…'
-                  : firstLightAssemblyCompleted
-                    ? 'ASSEMBLY OPEN'
-                    : firstLightAssemblyAvailableDynamite >= firstLightAssemblyNextBatch.cost
-                      ? `DETONATE ${firstLightAssemblyNextBatch.cost} CHARGES`
-                      : `COLLECT ${firstLightAssemblyNextBatch.cost - firstLightAssemblyAvailableDynamite} MORE`}
-                <small>{firstLightAssemblyNextBatch.label}</small>
-              </button>
-            </div>
-            <div className={`frostwell-mission-modal__status${firstLightAssemblyCompleted ? ' frostwell-mission-modal__status--online' : ''}`}>
-              <strong>{firstLightAssemblyCompleted ? '🏛️ General Assembly open' : 'Excavation in progress'}</strong>
-              <p>{firstLightAssemblyCompleted
-                ? 'Concentric delegate seating now surrounds the central speaker podium. The centre has no boss building.'
-                : 'The shared chamber grows downward and outward toward the inner edge of the circular board while every real tile remains untouched.'}</p>
-            </div>
-            <div className="island-stop-modal__actions">
-              <button type="button" className="island-stop-modal__btn" onClick={closeFirstLightAssemblyCrater}>
-                {firstLightAssemblyCompleted ? 'View the chamber' : 'Keep exploring'}
-              </button>
-              {firstLightAssemblyCompleted ? <button type="button" className="island-stop-modal__btn" onClick={() => { closeFirstLightAssemblyCrater(); openAssemblyMandate(); }}>Peacekeeping mandate</button> : null}
-            </div>
-          </section>
-        </div>
-      ), document.body) : null}
+      <IslandAssemblyCraterModal
+        open={showFirstLightAssemblyCrater}
+        used={firstLightAssemblyProgress.chargesDetonated}
+        available={firstLightAssemblyAvailableDynamite}
+        nextCost={firstLightAssemblyNextBatch.cost}
+        complete={firstLightAssemblyCompleted}
+        busy={isDetonatingFirstLightAssembly}
+        error={firstLightAssemblyError}
+        onClose={closeFirstLightAssemblyCrater}
+        onBlast={() => void handleDetonateFirstLightAssembly()}
+        onEnter={() => { closeFirstLightAssemblyCrater(); openAssemblyMandate(); }}
+      />
 
       {showCactusCanyonSpiral && typeof document !== 'undefined' ? createPortal((
         <div

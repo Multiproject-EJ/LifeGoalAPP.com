@@ -197,6 +197,8 @@ scaffolding, dust, materials, tool motion and relocation are visible only while
 auto-build is held or during the short presentation tail after a part purchase.
 They disappear when the construction burst ends and after a level is complete.
 
+The September 19 shared building refresh keeps the world renderer alive throughout an open building session; a completed level must not recreate the entire island. Explicit paid fast modes may reveal all remaining levels in one roughly one-second transition. Their completion crew is large, front-facing and owned by the viewport modal, with one title above center and bounded fireworks. All ordinary funding steps remain represented in canonical progress.
+
 Every completed landmark level ends with one shared commissioning beat. Only
 the newly revealed additive geometry compresses slightly, overshoots its final
 scale and settles while one warm light flash and a small sparkle burst radiate

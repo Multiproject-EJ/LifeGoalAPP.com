@@ -50,6 +50,7 @@
     "test:gift-box-opening-animation": "node scripts/check-gift-box-opening-animation.mjs",
     "test:comeback-celebration": "node scripts/run-comeback-celebration-tests.mjs",
     "test:energy-feature-gating": "node scripts/run-energy-feature-gating-tests.mjs",
+    "test:crystal-miners": "node scripts/test-crystal-miners.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
     "test:habit-offer-sort": "node scripts/run-habit-offer-tests.mjs",
     "test:super-habits": "node scripts/run-super-habits-tests.mjs",

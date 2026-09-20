@@ -31,6 +31,7 @@ function LauncherFallback(props: {
 }
 
 interface LauncherErrorBoundaryProps {
+  onError?: (error: Error) => void;
   children: ReactNode;
   onClose: () => void;
   minigameId: string;
@@ -51,6 +52,7 @@ class LauncherErrorBoundary extends React.Component<LauncherErrorBoundaryProps, 
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    try { this.props.onError?.(error); } catch { /* diagnostics cannot break recovery */ }
     console.error('IslandRunMinigameLauncher render failed:', this.props.minigameId, error, errorInfo);
   }
 
@@ -78,6 +80,7 @@ export function IslandRunMinigameLauncher({
   onComplete,
 }: IslandRunMinigameLauncherProps) {
   const entry = getMinigame(minigameId);
+  useEffect(()=>{if(!entry && typeof launchConfig?.onError==='function'){try{(launchConfig.onError as (error:Error)=>void)(new Error('Minigame manifest unavailable'));}catch{/* diagnostics only */}}},[entry,minigameId,launchConfig]);
   const gameManagesArenaTimer = launchConfig?.arenaTimerManagedByGame === true;
   const sessionSeconds = !gameManagesArenaTimer && typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(1, Math.floor(launchConfig.arenaSessionSeconds))
@@ -144,6 +147,7 @@ export function IslandRunMinigameLauncher({
       ) : null}
       <div className="arena-session-shell__game">
         <LauncherErrorBoundary
+        onError={typeof launchConfig?.onError === 'function' ? launchConfig.onError as (error: Error)=>void : undefined}
           minigameId={minigameId}
           onClose={() => completeOnce({ completed: false })}
           key={minigameId}
