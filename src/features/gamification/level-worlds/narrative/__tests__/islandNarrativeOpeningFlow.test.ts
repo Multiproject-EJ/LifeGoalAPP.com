@@ -25,6 +25,10 @@ function assertIncludes(source: string, expected: string, message: string) {
 }
 
 export const islandNarrativeOpeningFlowTests: TestCase[] = [
+  { name: 'legacy side-story popup presentation is disabled on the live board', run: () => {
+    assertIncludes(boardSource, 'const LEGACY_SIDE_STORY_POPUPS_ENABLED = false;', 'Legacy side-story popup policy must remain disabled');
+    assertIncludes(boardSource, 'hasHydratedRuntimeState: LEGACY_SIDE_STORY_POPUPS_ENABLED && hasHydratedRuntimeState', 'Narrative presentation must be gated by the disabled policy');
+  } },
   { name: 'eligibility is canonical Island 1 first cycle only', run: () => { assert(isEligibleForIsland001OpeningFlow(1, 0), 'Island 1 cycle 0 should be eligible'); assert(!isEligibleForIsland001OpeningFlow(2, 0), 'Non-Island-1 should not be eligible'); assert(!isEligibleForIsland001OpeningFlow(1, 1), 'Later cycles should not auto-replay'); } },
   { name: 'user-specific local suppression key is used', run: () => assertEqual(getIslandNarrativeSeenStorageKey('user-1'), 'island_run_narrative_seen_v1_user-1_island_1', 'Expected aggregate key') },
   { name: 'anonymous suppression key fallback is stable', run: () => assertEqual(getIslandNarrativeSeenStorageKey(null), 'island_run_narrative_seen_v1_anonymous_island_1', 'Expected anonymous key') },

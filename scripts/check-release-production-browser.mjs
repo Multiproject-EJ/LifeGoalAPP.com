@@ -49,7 +49,7 @@ try {
     localStorage.setItem(key,JSON.stringify(state));
     localStorage.setItem('island_run_landmark_coachmark_seen_demo-user-0001','1');
   });
-  await page.reload({waitUntil:'domcontentloaded'});
+  await page.goto(origin+'/app',{waitUntil:'domcontentloaded'});
   await enterGuest();
   const canvas=page.locator('canvas[aria-label^="Interactive 3D"]').first();
   await canvas.waitFor({state:'visible'});
