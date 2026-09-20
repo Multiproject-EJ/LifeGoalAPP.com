@@ -7,6 +7,14 @@ export default defineConfig({
   // cache: concurrent dev servers otherwise invalidate each other's chunks.
   cacheDir: '.vite-cache',
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        app: 'index.html',
+        creatureSystemLab: 'creature-system-lab.html',
+      },
+    },
+  },
   server: {
     port: 5173,
     open: true,
