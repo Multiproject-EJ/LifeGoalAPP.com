@@ -4153,7 +4153,7 @@ export const islandRunStateActionsTests: TestCase[] = [
     run: () => {
       resetAll();
       const session = makeSession();
-      seedState({ runtimeVersion: 2 });
+      seedState({ currentIslandNumber: 2, runtimeVersion: 2 });
 
       let notifications = 0;
       const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
@@ -4269,7 +4269,7 @@ export const islandRunStateActionsTests: TestCase[] = [
     run: () => {
       resetAll();
       const session = makeSession();
-      seedState({
+      seedState({ currentIslandNumber: 2,
         runtimeVersion: 10,
         essence: 50,
         essenceLifetimeEarned: 200,

@@ -24,7 +24,7 @@ export const islandRunVaultCollectionTests: TestCase[] = [
         ledger = result.ledger;
         assertEqual(result.becameComplete, roll === 20, 'completion edge occurs once');
         assertEqual(isVaultIslandCollectionUnlocked(ledger), roll >= 20, 'twenty committed rolls unlock');
-        assertEqual(resolveIslandRunFeatureAccess({ currentIslandNumber: 1, signatureMissionProgressByIsland: ledger }).dailyWheel, roll >= 20, 'earned wheel survives return to an earlier island');
+        assertEqual(resolveIslandRunFeatureAccess({ currentIslandNumber: 2, signatureMissionProgressByIsland: ledger }).dailyWheel, roll >= 20, 'earned wheel survives return to an earlier non-beginner island');
       }
       assertEqual(isVaultIslandCollectionUnlocked(JSON.parse(JSON.stringify(ledger))), true, 'reload keeps the earned unlock');
     },

@@ -409,7 +409,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 001 replaces puzzle-piece reward slots with essence',
+    name: 'Island 001 cannot claim reward-bar prizes',
     run: () => {
       assertEqual(resolveNextRewardKind(3, 1), 'essence', 'Expected Island 001 to stay puzzle-free');
       assertEqual(resolveNextRewardKind(3, 2), 'sticker_fragments', 'Expected puzzle collection to begin on Island 002');
@@ -427,8 +427,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
         islandNumber: 1,
       });
 
-      assertEqual(islandOneClaim.payout?.rewardKind, 'essence', 'Expected Island 001 claim payout to be essence');
-      assertEqual(islandOneClaim.payout?.stickerFragments, 0, 'Expected no puzzle pieces from Island 001 reward bar');
+      assertEqual(islandOneClaim.payout, null, 'Island001 reward bar is inactive even with saved progress');
     },
   },
   {

@@ -246,7 +246,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
   {
     name: 'reward bar claimable outranks roll',
     run: () => {
-      expectAction(makeRecord({ rewardBarProgress: 999, dicePool: 5 }), 'claim_reward_bar');
+      expectAction(makeRecord({ currentIslandNumber: 2, rewardBarProgress: 999, dicePool: 5 }), 'claim_reward_bar');
     },
   },
   {

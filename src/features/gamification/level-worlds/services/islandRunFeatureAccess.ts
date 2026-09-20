@@ -17,23 +17,25 @@ export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessCon
   const island = Number.isFinite(context.currentIslandNumber)
     ? Math.floor(context.currentIslandNumber) : 0;
   const validIsland = island >= 1;
+  // Island001 is always the quiet beginner island, including existing saves.
+  const beginnerIsland = island === 1;
   const games = resolveOpeningGamesAccess(ledger, island);
   const ceremony = resolveOpeningGamesCeremony(ledger);
   const vault = isVaultIslandCollectionUnlocked(ledger);
   return {
     gradual,
+    caretakerBoard: validIsland && island >= 8,
     arenaOrientation: gradual && island === 1,
     welcomeCheckIn: gradual && validIsland && island < GRADUAL_EGG_INTRODUCTION_ISLAND,
-    // Legacy reward-channel presentation still owns its original Island001
-    // tutorial gate. This flag is an additional eligibility condition only.
-    rewardChannel: !gradual || (validIsland && island >= 2 && ceremony.beaconLitAtMs !== null),
-    eventLauncher: !gradual || (validIsland && island >= 2 && (games.ordinaryEvents || games.inauguralRound)),
+    // Presentation, progress accumulation and claims share this policy.
+    rewardChannel: !beginnerIsland && (!gradual || (validIsland && island >= 2 && ceremony.beaconLitAtMs !== null)),
+    eventLauncher: !beginnerIsland && (!gradual || (validIsland && island >= 2 && (games.ordinaryEvents || games.inauguralRound))),
     ordinaryEvents: !gradual || (validIsland && island >= 2 && games.ordinaryEvents),
     inauguralRound: gradual && validIsland && games.inauguralRound,
     puzzleCollection: gradual ? island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND : (!Number.isFinite(context.currentIslandNumber) || island >= 2),
-    trafficLight: !gradual || island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND,
+    trafficLight: !beginnerIsland && (!gradual || island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND),
     eggs: !gradual || island >= GRADUAL_EGG_INTRODUCTION_ISLAND,
-    dailyWheel: !gradual || vault,
+    dailyWheel: !beginnerIsland && (!gradual || vault),
     vault,
   } as const;
 }

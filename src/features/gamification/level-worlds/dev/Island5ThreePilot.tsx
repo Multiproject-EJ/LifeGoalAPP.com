@@ -1,3 +1,4 @@
+import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
 import {FIRST_ARRIVAL_WELCOME_TIME,advanceFirstArrivalTime} from '../services/islandRunFirstArrival';
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import {createIsland001FirstArrival} from './Island001FirstArrival';
@@ -5864,6 +5865,7 @@ export default function Island5ThreePilot({
     caretakerHitTarget.position.copy(CARETAKER_BOARD_HOME).add(new THREE.Vector3(0, 0.72, 0));
     caretakerHitTarget.userData.caretakerTarget = true;
 
+    const caretakerBoardAvailable = resolveIslandRunFeatureAccess({ currentIslandNumber: islandNumber }).caretakerBoard && !isLavaLabyrinth;
     const boardCaretaker = createCaretakerMaster({ quality: 'low' });
     boardCaretaker.root.name = 'ISLAND_5_CARETAKER_BOARD_LOD';
     boardCaretaker.root.position.copy(CARETAKER_BOARD_HOME);
@@ -5875,12 +5877,13 @@ export default function Island5ThreePilot({
     boardCaretaker.setAnimation('idle', 0, true);
     boardCaretaker.setEmotion('calm');
     scene.add(caretakerFootplate, caretakerContactShadow, caretakerHitTarget, boardCaretaker.root);
-    if (isLavaLabyrinth) {
+    if (!caretakerBoardAvailable) {
+      caretakerHitTarget.visible = false;
       boardCaretaker.root.visible = false;
       caretakerFootplate.visible = false;
       caretakerContactShadow.visible = false;
     }
-    const clickableCaretaker: THREE.Object3D[] = [caretakerHitTarget, caretakerFootplate, caretakerContactShadow, boardCaretaker.root];
+    const clickableCaretaker: THREE.Object3D[] = caretakerBoardAvailable ? [caretakerHitTarget, caretakerFootplate, caretakerContactShadow, boardCaretaker.root] : [];
     let encounterCaretaker: CaretakerModel | null = null;
     let wasCaretakerEncounterOpen = false;
     let caretakerEncounterStartedAt = 0;
@@ -7039,10 +7042,10 @@ export default function Island5ThreePilot({
       const visible = !isLandmarkInspection;
       playerPiece.root.visible = visible;
       playerPiece.shadow.visible = visible;
-      boardCaretaker.root.visible = visible && !isLavaLabyrinth;
-      caretakerFootplate.visible = visible && !isLavaLabyrinth;
-      caretakerContactShadow.visible = visible && !isLavaLabyrinth;
-      caretakerHitTarget.visible = visible;
+      boardCaretaker.root.visible = visible && caretakerBoardAvailable;
+      caretakerFootplate.visible = visible && caretakerBoardAvailable;
+      caretakerContactShadow.visible = visible && caretakerBoardAvailable;
+      caretakerHitTarget.visible = visible && caretakerBoardAvailable;
       const showAssemblyCutaway = isAssemblyCraterFirstLight && preset === 'boss';
       const showPlayableRoute = preset !== 'powerworks' && !showAssemblyCutaway;
       tileMeshes.forEach((entry) => {
@@ -9570,7 +9573,7 @@ export default function Island5ThreePilot({
         }
       }
 
-      const isCaretakerEncounterOpen = caretakerEncounterOpenRef.current;
+      const isCaretakerEncounterOpen = caretakerBoardAvailable && caretakerEncounterOpenRef.current;
       if (isCaretakerEncounterOpen !== wasCaretakerEncounterOpen) {
         wasCaretakerEncounterOpen = isCaretakerEncounterOpen;
         if (isCaretakerEncounterOpen) {
@@ -9597,7 +9600,7 @@ export default function Island5ThreePilot({
             encounterCaretaker.dispose();
             encounterCaretaker = null;
           }
-          boardCaretaker.root.visible = !isLavaLabyrinth;
+          boardCaretaker.root.visible = caretakerBoardAvailable;
           boardCaretaker.setEmotion('calm');
           boardCaretaker.setAnimation('idle', elapsed, true);
           controls.enabled = true;
@@ -9612,7 +9615,7 @@ export default function Island5ThreePilot({
           encounterCaretaker.setEmotion('curious');
         }
         encounterCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
-      } else {
+      } else if (caretakerBoardAvailable) {
         const wanderCycle = elapsed % 18;
         const isWalking = !isReducedMotion && wanderCycle < 4.4;
         const wanderProgress = Math.min(1, wanderCycle / 4.4);

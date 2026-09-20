@@ -177,12 +177,12 @@ export const islandRunTileRewardActionTests: TestCase[] = [
 
       assertEqual(result.status, 'ok', 'Normal tile reward should succeed');
       assertEqual(result.actualEssenceDelta, 12, 'Non-tutorial player receives requested tile reward');
-      assert(result.rewardBarSlice !== null, 'Non-tutorial tile reward still advances reward bar');
+      assert(result.rewardBarSlice !== null, 'Canonical reward-bar slice remains available');
 
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(persisted.essence, 12, 'Persisted essence reflects normal reward');
       assertEqual(persisted.firstSessionTutorialState, 'not_started', 'Non-tutorial state is unchanged');
-      assert(persisted.rewardBarProgress > 0, 'Persisted reward bar advances normally');
+      assertEqual(persisted.rewardBarProgress, 0, 'Island001 tile money is paid without filling reward bar');
     },
   },
   {
@@ -219,7 +219,7 @@ export const islandRunTileRewardActionTests: TestCase[] = [
         'first_roll_consumed',
         'Non-Island-1 state is not advanced by tutorial reward logic',
       );
-      assert(persisted.rewardBarProgress > 0, 'Persisted reward bar advances normally');
+      assert(persisted.rewardBarProgress > 0, 'Later-island reward bar still advances normally');
     },
   },
   {
@@ -227,6 +227,7 @@ export const islandRunTileRewardActionTests: TestCase[] = [
     run: async () => {
       resetEnvironment();
       seedState({
+        currentIslandNumber: 2,
         runtimeVersion: 0,
         essence: 100,
         essenceLifetimeEarned: 200,
@@ -333,6 +334,7 @@ export const islandRunTileRewardActionTests: TestCase[] = [
     run: async () => {
       resetEnvironment();
       seedState({
+        currentIslandNumber: 2,
         runtimeVersion: 0,
         essence: 100,
         essenceLifetimeEarned: 100,

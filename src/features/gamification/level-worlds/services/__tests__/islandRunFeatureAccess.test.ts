@@ -3,13 +3,29 @@ import { createOpeningGamesCampaignLedger } from '../islandRunSignatureMissions'
 import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
 import { assert, assertEqual, assertDeepEqual, type TestCase } from './testHarness';
 import { generateTileMap } from '../islandBoardTileMap';
-import { resolveNextRewardKind, resolveRewardBarClaimPayoutPreview, ensureIslandRunContractV2ActiveTimedEvent, claimIslandRunContractV2RewardBar, type IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
+import { applyIslandRunContractV2RewardBarProgress, resolveNextRewardKind, resolveRewardBarClaimPayoutPreview, ensureIslandRunContractV2ActiveTimedEvent, claimIslandRunContractV2RewardBar, type IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
 import { resolveTrafficLightCoinFlipReward } from '../islandRunTrafficLightTile';
 
 const fresh = () => createOpeningGamesCampaignLedger();
 const access = (island: number) => resolveIslandRunFeatureAccess({currentIslandNumber:island, signatureMissionProgressByIsland:fresh()});
 
 export const islandRunFeatureAccessTests: TestCase[] = [
+  {name:'caretaker first appears on Island008 for new and existing saves',run(){
+    for(const ledger of [{},fresh()])for(let island=1;island<=9;island++){
+      assertEqual(resolveIslandRunFeatureAccess({currentIslandNumber:island,signatureMissionProgressByIsland:ledger}).caretakerBoard,island>=8,'caretaker introduction boundary');
+    }
+  }},
+  {name:'Island001 suppresses advanced features for every save without deleting unlocks',run(){
+    const earned=fresh();
+    earned['0:4']={missionId:'broken-causeway',version:1,claimedPickupTileIndices:[1,8,11,20,26,35],chargesEarned:6,chargesSpent:6,activatedStages:3,lastActivatedStage:3,completedAtMs:400,updatedAtMs:400};
+    for(const ledger of [{},fresh(),earned]){
+      const before=JSON.stringify(ledger);
+      const a=resolveIslandRunFeatureAccess({currentIslandNumber:1,signatureMissionProgressByIsland:ledger});
+      assert(!a.rewardChannel&&!a.dailyWheel&&!a.trafficLight&&!a.eventLauncher,'beginner island has no advanced activity');
+      assertEqual(JSON.stringify(ledger),before,'earned progress is preserved');
+      assertEqual(generateTileMap(1,'normal','forest',0,{signatureMissionProgressByIsland:ledger}).filter(t=>t.tileType==='traffic_light').length,0,'no signal in actual 3D tile map');
+    }
+  }},
   {name:'actual reward claim replaces early puzzle payout and preserves existing inventory',run(){
     const initial: IslandRunRewardBarRuntimeSlice={signatureMissionProgressByIsland:fresh(),rewardBarProgress:0,rewardBarThreshold:5,rewardBarClaimCountInEvent:0,rewardBarEscalationTier:0,rewardBarLastClaimAtMs:null,rewardBarBoundEventId:null,rewardBarLadderId:null,activeTimedEvent:null,activeTimedEventProgress:{feedingActions:0,tokensEarned:0,milestonesClaimed:0},stickerProgress:{fragments:2},stickerInventory:{keepsake:1}};
     const ensured=ensureIslandRunContractV2ActiveTimedEvent({state:initial,nowMs:1000}).state;
@@ -17,6 +33,13 @@ export const islandRunFeatureAccessTests: TestCase[] = [
       signatureMissionProgressByIsland:{...fresh(),[OPENING_GAMES_CEREMONY_KEY]:{
         ...createOpeningGamesCeremonyProgress(),rollsCompleted:12,venuesPreparedAtMs:1,teamsWelcomedAtMs:2,beaconLitAtMs:3,
       }}};
+    for(const ledger of [{},fresh()]) {
+      const beginner={...ready,currentIslandNumber:1,signatureMissionProgressByIsland:ledger};
+      for(const source of [{kind:'tile',tileType:'currency'},{kind:'creature_feed',treatType:'basic'},{kind:'encounter_resolve'},{kind:'event_minigame_complete',minigameId:'test'}] as const) {
+        assertDeepEqual(applyIslandRunContractV2RewardBarProgress({state:beginner,source,nowMs:1200,multiplier:10}),beginner,'all progress sources frozen on Island001');
+      }
+      assertEqual(claimIslandRunContractV2RewardBar({state:beginner,islandNumber:1,nowMs:1200}).payout,null,'legacy and new saves cannot claim on beginner island');
+    }
     for(const island of [1,2,3]){
       const result=claimIslandRunContractV2RewardBar({state:ready,islandNumber:island,nowMs:1100});
       if(island===1){
@@ -65,10 +88,10 @@ export const islandRunFeatureAccessTests: TestCase[] = [
   {name:'earned Vault access unlocks the wheel and survives a return to an earlier island',run(){
     const ledger=fresh();
     ledger['0:4']={missionId:'broken-causeway',version:1,claimedPickupTileIndices:[1,8,11,20,26,35],chargesEarned:6,chargesSpent:6,activatedStages:3,lastActivatedStage:3,completedAtMs:400,updatedAtMs:400};
-    for(const island of [1,4,5])assert(resolveIslandRunFeatureAccess({currentIslandNumber:island,signatureMissionProgressByIsland:ledger}).dailyWheel,'earned entitlement preserved');
+    for(const island of [4,5])assert(resolveIslandRunFeatureAccess({currentIslandNumber:island,signatureMissionProgressByIsland:ledger}).dailyWheel,'earned entitlement preserved');
   }},
-  {name:'unmarked existing saves retain their feature access',run(){
-    for(const island of [1,2,3,4,120]){
+  {name:'unmarked existing saves retain later-island feature access',run(){
+    for(const island of [2,3,4,120]){
       const a=resolveIslandRunFeatureAccess({currentIslandNumber:island});
       assert(!a.gradual,'unmarked is legacy, not guessed from island');
       assert(a.trafficLight && a.dailyWheel && a.eggs && a.ordinaryEvents,'legacy access preserved');

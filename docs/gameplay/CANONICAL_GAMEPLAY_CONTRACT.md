@@ -297,7 +297,7 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 - Hold is the primary construction input; release, blur, backgrounding or closing stops further queued spending. Each hold step spends up to one fifth of the current tier (minimum nominal 10 Essence), using the existing discount and affordability rules. The additive reveal interpolates smoothly between funded steps.
 - An affordable orange fire action finishes the selected landmark through L3; an affordable blue triple-fire action finishes all remaining construction on the current island. Both display exact remaining costs, revalidate the quote against the current visit/progress/discount, and commit atomically. Island 1's separate Assembly mission and guided first build are excluded. No objective, egg, boss or travel gate is completed by these actions.
 - Each newly funded construction level grants one die in the same canonical commit. Reopening, replaying a quote, or reviewing already completed levels grants nothing. Construction dice are recorded separately in economy diagnostics.
-- Hold steps use a short accelerating cadence; fast modes use a roughly one-second reveal followed by a protected celebration. The full 3D world is retained during an open construction session. Celebration presents a centered title, front-facing modal crew, fireworks and dice flight with reduced-motion alternatives.
+- Hold steps use a short accelerating cadence; fast modes use a roughly one-second reveal followed by a protected celebration. The full 3D world is retained during an open construction session. Celebration presents a centered title, front-facing modal crew and dice flight with reduced-motion alternatives. Fireworks play only for Level3 completion of a building, not Levels1 or2.
 - When a level is fully funded, the building animates and advances to the next level.
 - When **all 3 levels are funded**, the building's `buildComplete` flag is set.
 
@@ -545,6 +545,11 @@ Additional rules:
 - Timer expiration cannot auto-complete or auto-fail island progression.
 - A completed island **cannot** decay (Essence drift is suspended once island is fully cleared).
 - Buildings **reset** to Level 0 on island travel.
+
+### Beginner presentation (all saves)
+
+- Island001 hides the reward bar, daily spin icon, traffic light and event-minigame launcher. Reward-bar progress and claims are disabled there for both new and existing saves. Existing progress and unlocks are preserved for later islands.
+- The blue board caretaker, his shadow, animation and interaction target are absent on Islands001–007. Island008 is his first board introduction. Existing later-island exclusions remain in force.
 
 ### Gradual-introduction cohort (`opening-games-v1`)
 

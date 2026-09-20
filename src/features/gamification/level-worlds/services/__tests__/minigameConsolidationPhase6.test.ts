@@ -36,6 +36,7 @@ function runTimedEventCompletionIntegration(options: {
   const completionApplied = recordEventMinigameCompletion({
     state: {
       ...seeded,
+      currentIslandNumber: 2,
       rewardBarProgress: 10,
       rewardBarThreshold: 12,
     },
@@ -453,7 +454,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         onboardingDisplayNameLoopCompleted: false,
       });
       const next = recordEventMinigameCompletion({
-        state: seeded,
+        state: { ...seeded, currentIslandNumber: 2 },
         minigameId: 'lucky_spin',
         nowMs: 1_000_000,
       });
@@ -474,7 +475,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         onboardingDisplayNameLoopCompleted: false,
       });
       const next = recordEventMinigameCompletion({
-        state: seeded,
+        state: { ...seeded, currentIslandNumber: 2 },
         minigameId: 'space_excavator',
         nowMs: 2_000_000,
         multiplier: 2,
@@ -491,7 +492,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         onboardingDisplayNameLoopCompleted: false,
       });
       const completionApplied = recordEventMinigameCompletion({
-        state: seeded,
+        state: { ...seeded, currentIslandNumber: 2 },
         minigameId: 'lucky_spin',
         nowMs,
         multiplier: 3,

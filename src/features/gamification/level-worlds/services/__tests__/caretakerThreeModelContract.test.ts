@@ -121,8 +121,8 @@ export const caretakerThreeModelContractTests: TestCase[] = [
       assert(pilotSource.includes('ISLAND_5_CARETAKER_HIT_TARGET'), 'the tiny visual actor must retain a separate forgiving phone tap volume');
       assert(!pilotSource.includes('new THREE.WebGLRenderer({ canvas: caretaker'), 'caretaker encounter must not introduce a second renderer');
       assert(
-        boardSource.includes("caretakerEncounterOpen={isIslandInhabitantFlowOpen || activeStopId === 'wisdom'}"),
-        'the canonical inhabitant flow and playable Wisdom encounter must drive the renderer LOD swap',
+        boardSource.includes("caretakerEncounterOpen={featureAccess.caretakerBoard && (isIslandInhabitantFlowOpen || activeStopId === 'wisdom')}"),
+        'the canonical inhabitant flow and playable Wisdom encounter must drive the renderer LOD swap only after caretaker introduction',
       );
       assert(flowSource.includes('threeStage={threeStage}'), 'the existing top-level inhabitant flow must expose the transparent 3D stage');
       assert(!pilotSource.includes('persistIslandRunRuntimeStatePatch'), 'presentation-only caretaker integration must never write gameplay state');

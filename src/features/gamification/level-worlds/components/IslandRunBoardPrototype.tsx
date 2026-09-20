@@ -8517,6 +8517,7 @@ export function IslandRunBoardPrototype({
         // Caretaker chat opens only when the player LANDS on the caretaker's
         // home tile (the caretaker sprite is anchored there on the board).
         const didLandOnCaretakerTile = ordinaryTileGameplayActive
+          && featureAccess.caretakerBoard
           && currentIndex === ISLAND_CARETAKER_TILE_INDEX
           && hasIslandCaretakerConcordContent(runtimeStateRef.current.currentIslandNumber);
         if (didLandOnCaretakerTile) {
@@ -14480,7 +14481,7 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('island_travel');
     triggerIslandRunHaptic('island_travel');
   }, [client, session, storySeenStorageKey]);
-  const shouldShowCaretakerTalkAction = hasCaretakerContent;
+  const shouldShowCaretakerTalkAction = featureAccess.caretakerBoard && hasCaretakerContent;
   const inhabitantCommunicationAccess = useMemo(
     () => getIslandCommunicationAccess(runtimeState, 'inhabitant'),
     [runtimeState],
@@ -16081,7 +16082,7 @@ export function IslandRunBoardPrototype({
                     : islandArtPreviewNumber === 3
                       ? openFrostwellMission
                       : undefined}
-                caretakerEncounterOpen={isIslandInhabitantFlowOpen || activeStopId === 'wisdom'}
+                caretakerEncounterOpen={featureAccess.caretakerBoard && (isIslandInhabitantFlowOpen || activeStopId === 'wisdom')}
                 onCaretakerClick={isIslandVisualPreview ? undefined : () => {
                   if (showBuildPanel) return;
                   openCaretakerFlow('caretaker_board_tap');

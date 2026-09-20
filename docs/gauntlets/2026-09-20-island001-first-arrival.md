@@ -42,3 +42,13 @@ Latest steering: pause after unfolding and camera entry into the ship; fade in t
 - Final TypeScript and Vite production build pass. Island Run service suite:2259 passed,0 failed. Actual scene/arrival/functional-prop checks pass. Architecture guard:0 violations,3 existing allowlisted warnings. Native compile and release/install evidence follow below.
 
 Signed iOS Debug build succeeded after the modal fix; Capacitor assets copied from the final passing web build. Latest origin/main rechecked at3b2a13b3 before publishing.
+
+## Beginner-island follow-up
+
+User correction: Island001 is intentionally quieter for every save. Hide and disable the reward-bar channel (including accumulation/claims), hide the daily-wheel and event-launcher icons, and remove the traffic-light tile/presentation/charging there. Preserve existing saved progress and all later-island rules. Required landmark activities retain their existing progression paths.
+
+Blue board caretaker introduction moves to Island008: no actor, shadow, idle/walk update, encounter LOD, tap target or caretaker landing interception on001–007. Camera-preset visibility restoration uses the same policy.
+
+Build fireworks now play only for Level3, with normal crew and construction presentation retained at Levels1–2. Browser inspection of actual BuildModalV2 confirmed fireworks counts0/0/1 for Levels1/2/3 and crew present in all three.
+
+Regression fixtures for generic reward/event behavior now use Island002 where the reward channel remains available; Island001 tests explicitly retain money tile payouts while freezing reward progress, across both new and legacy save policies.

@@ -24,7 +24,7 @@ async function seed(tickets=3) {
   resetIslandRunRuntimeCommitCoordinatorForTests(); __resetIslandRunStateStoreForTests(); __resetIslandRunActionMutexesForTests();
   installWindowWithStorage(createMemoryStorage());
   const base=readIslandRunGameStateRecord(session);
-  await writeIslandRunGameStateRecord({session,client:null,record:{...base,
+  await writeIslandRunGameStateRecord({session,client:null,record:{...base,currentIslandNumber:2,
     activeTimedEvent:{eventId,eventType:'space_excavator',startedAtMs:100,expiresAtMs:100000,version:1},
     rewardBarBoundEventId:eventId,minigameTicketsByEvent:{[eventId]:tickets}}});
   refreshIslandRunStateFromLocal(session);
