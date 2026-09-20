@@ -1,0 +1,20 @@
+{
+  "status": "validated-for-frozen-partial-release",
+  "runtimeCommit": "652bf0ce3be386776221f19dc42df008af42c8e8",
+  "newCampaignEnrollment": false,
+  "palaceProductionIsland": 4,
+  "typescript": {"exitCode": 0, "integratedThrough": "3708b480", "log": "/tmp/island-release-types-final.log"},
+  "fullIslandRunServices": {"passed": 2247, "failed": 0, "log": "/tmp/island-release-services-final.log"},
+  "finalSideStoryIntegration": {"passed": 46, "failed": 0, "log": "/tmp/island-release-story-final.log"},
+  "focusedProgression": {"passed": 415, "failed": 0},
+  "palaceProductionConstruction": {"passed": 37, "failed": 0},
+  "ceremonyRuntime": {"passed": 11, "failed": 0},
+  "architecture": {"violations": 0, "existingAllowlistedWarnings": 3},
+  "islandArtAssets": {"manifestsChecked": 12, "warnings": 0},
+  "islandArtWiring": "pass",
+  "audioAssets": "pass; existing placeholder warnings",
+  "productionBuild": {"exitCode": 0, "runtimeCommit": "652bf0ce", "log": "/tmp/island-release-build-latest.log", "warnings": ["Existing large-chunk and mixed static/dynamic import advisories"]},
+  "browser": {"status": "pass", "report": "release-production-browser-v008/report.json", "testedBundleThrough": "3708b480", "uncaughtErrors": 0, "scope": "Actual production guest entry and offline local L3 Island004 fixture. Final subsequent main change only disables existing side-story popups; separately regression-tested."},
+  "limits": ["No physical-device acceptance", "No full-island likeness or FPS claim", "Ceremony and gradual campaign are not enrolled for ordinary players", "Visual polish is explicitly deferred by the user"],
+  "deployment": "Verify GitHub Pages run and served entry assets after push; this file alone is not proof of live deployment."
+}

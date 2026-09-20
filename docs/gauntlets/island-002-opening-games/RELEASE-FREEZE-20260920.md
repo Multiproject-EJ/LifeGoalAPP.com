@@ -34,11 +34,16 @@ Release checkout: `/private/tmp/island-release-20260920`, branch
 `1426f994`. Original workspace, local gallery and untracked art packets are
 preserved untouched under the `0094` Codex worktree.
 
+Subsequent main changes are also preserved: standalone creature lab
+`3708b480` and legacy side-story suppression `eb112d6e`. Final runtime
+integration is `652bf0ce`; release evidence follows in a documentation commit.
+
 Main moved mission logic to `islandRunMissionObjectives`. The ceremony case,
 cohort-aware briefing/restoration lookup and egg-free Welcome activity credit
 are retained there; the phone remains main's thin shared-resolver wrapper.
 Canonical completion keeps main's required playable missions and uses the
 specialized ceremony/Re-Docking gates only for explicitly marked saves.
 
-Validation/deployment results are recorded separately after execution. Earlier
+Validation results are recorded in `release-validation-20260920.json`. Earlier
 `local-validation-20260920.json` is checkpoint evidence, not deployment proof.
+GitHub Pages deployment must still be verified independently after pushing.
