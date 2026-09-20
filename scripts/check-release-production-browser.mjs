@@ -17,14 +17,15 @@ const page = await context.newPage();
 const report = {status:'running',scope:'production bundle, disposable guest and offline local palace fixture; not physical-device acceptance',errors:[],cases:[]};
 page.on('pageerror',error=>report.errors.push(error.message));
 page.setDefaultTimeout(60000);
+async function enterGuest() {
+  await page.getByRole('button',{name:/Play as guest/}).click();
+  await page.locator('.guest-free-play-modal__actions .auth-card__primary').click();
+  await page.locator('.guest-free-play-modal__actions .auth-card__primary').filter({hasText:'Begin my voyage'}).click();
+}
 try {
   await page.goto(origin+'/app', {waitUntil:'domcontentloaded',timeout:90000});
-  await page.getByRole('button',{name:/Play as guest/}).click();
-  console.log('Guest sound chooser opened');
-  await page.getByRole('button',{name:'Continue',exact:true,includeHidden:true}).click();
-  await page.getByRole('button',{name:'Begin my voyage',exact:true,includeHidden:true}).click();
+  await enterGuest();
   console.log('Guest voyage started');
-  await page.getByRole('button',{name:'Exit Island Run',exact:true,includeHidden:true}).waitFor({state:'attached'});
   await page.locator('canvas[aria-label^="Interactive 3D"]').first().waitFor({state:'visible'});
   await page.screenshot({path:out+'/guest-island-001.png'});
   report.cases.push('Fresh guest entry mounts the actual 3D Island001');
@@ -49,6 +50,7 @@ try {
     localStorage.setItem('island_run_landmark_coachmark_seen_demo-user-0001','1');
   });
   await page.reload({waitUntil:'domcontentloaded'});
+  await enterGuest();
   const canvas=page.locator('canvas[aria-label^="Interactive 3D"]').first();
   await canvas.waitFor({state:'visible'});
   await page.waitForTimeout(2500);
