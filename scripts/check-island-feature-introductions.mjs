@@ -12,6 +12,7 @@ try {
   for (const [file, name] of [
     ['islandRunFeatureAccess', 'islandRunFeatureAccessTests'],
     ['islandRunOpeningGames', 'islandRunOpeningGamesTests'],
+    ['islandRunOpeningCeremonyPresentation', 'islandRunOpeningCeremonyPresentationTests'],
     ['islandRunOpeningGamesAction', 'islandRunOpeningGamesActionTests'],
     ['islandRunEarlyProgression', 'islandRunEarlyProgressionTests'],
     ['islandRunBestNextActionAdvisor', 'islandRunBestNextActionAdvisorTests'],

@@ -67,6 +67,11 @@ import {
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
 import { createCrownDrifterModel } from './CrownDrifterThreeModel';
+import { createIsland4OpeningPalaceModel } from './Island4OpeningPalaceThreeModel';
+import { createPalaceBalconyPlanting } from './PalaceBalconyPlanting';
+import { createPalaceBalconyGardenAssembly } from './PalaceBalconyGardenAssembly';
+import { createOpeningGamesCeremonyThree } from './OpeningGamesCeremonyThree';
+import { sampleOpeningCeremony, type OpeningCeremonyPlayback } from '../services/islandRunOpeningCeremonyPresentation';
 import { createRobotFamilyModel } from './RobotFamilyThreeModel';
 import { createRobotConstructionTheatre } from './RobotConstructionTheatre';
 import { createIslandConstructionCommissioningFx } from './IslandConstructionCommissioningFx';
@@ -412,6 +417,7 @@ interface Island5ThreePilotProps {
   /** Read-only build-modal choreography. It cannot mutate gameplay state. */
   constructionPresentation?: IslandRunConstructionPresentation | null;
   arenaBattlePresentation?: IslandRunArenaBattlePresentation | null;
+  openingCeremonyPlayback?: OpeningCeremonyPlayback | null;
 }
 
 interface TokenMotionRequest {
@@ -2343,6 +2349,13 @@ export function createPilotMaterials(quality: Island3DQuality, worldSourceNumber
   };
 }
 
+export function compactOpeningPalaceParts(building: THREE.Group) {
+  // Preserve the semantic groups while batching their static, funded surfaces.
+  for (const child of building.children) if (child instanceof THREE.Group) {
+    compactStaticGeometry(child, child.name);
+  }
+}
+
 export function buildLandmark(
   definition: Island5LandmarkDefinition,
   level: BuildLevel,
@@ -2368,8 +2381,13 @@ export function buildLandmark(
 
   if (level > 0) {
     const builtLevel = level as 1 | 2 | 3;
+    // Visual-only replacement for source 004. Campaign ordinal, saved progress
+    // and ceremony eligibility remain owned by the existing gameplay services.
+    const usesOpeningPalace = worldSourceNumber === 4 && definition.id === 'boss';
     const building = definition.id === 'boss'
-      ? createCrownCitadelModel({ level: builtLevel, quality, materials, compact: worldSourceNumber !== 4 && !options.constructionPreview })
+      ? usesOpeningPalace
+        ? createIsland4OpeningPalaceModel({ level: builtLevel, quality, materials })
+        : createCrownCitadelModel({ level: builtLevel, quality, materials, compact: worldSourceNumber !== 4 && !options.constructionPreview })
       : definition.id === 'hatchery'
         ? createHatcheryLandmark(builtLevel, quality, materials)
         : definition.id === 'habit'
@@ -2377,7 +2395,7 @@ export function buildLandmark(
           : definition.id === 'wisdom'
             ? createWisdomLandmark(builtLevel, quality, materials)
             : createEventLandmark(builtLevel, quality, materials);
-    if (definition.id === 'boss') {
+    if (definition.id === 'boss' && !usesOpeningPalace) {
       const scale = options.constructionPreview
         ? CROWN_CITADEL_LEVEL_SCALES[2]
         : CROWN_CITADEL_LEVEL_SCALES[builtLevel];
@@ -2385,8 +2403,25 @@ export function buildLandmark(
     } else {
       building.scale.setScalar(1);
     }
-    if (worldSourceNumber === 4) {
+    if (worldSourceNumber === 4 && !usesOpeningPalace) {
       upgradeIsland4LegacyLandmark(building, definition, level, quality, createIsland4DriftwoodMaterials());
+    }
+    if (usesOpeningPalace && import.meta.env?.DEV && typeof window !== 'undefined') {
+      const plantingMode = new URLSearchParams(window.location.search).get('islandPalacePlanting');
+      if (plantingMode === 'bay' || plantingMode === 'assembly') {
+        const planting = plantingMode === 'assembly'
+          ? createPalaceBalconyGardenAssembly(builtLevel, quality, materials.limestoneBright)
+          : createPalaceBalconyPlanting(quality, materials.limestoneBright);
+        planting.position.y = .24;
+        building.add(planting);
+      }
+      const proofMode = new URLSearchParams(window.location.search).get('islandPalaceProof');
+      if (proofMode === 'clay' || proofMode === 'normals') {
+        const proofMaterial = proofMode === 'normals'
+          ? new THREE.MeshNormalMaterial()
+          : new THREE.MeshStandardMaterial({ color: 0xb8b6b0, roughness: .9 });
+        building.traverse(node => { if (node instanceof THREE.Mesh) node.material = proofMaterial; });
+      }
     }
     if (options.constructionPreview === 'target') {
       applyIslandConstructionAuthoring({
@@ -2397,7 +2432,9 @@ export function buildLandmark(
         includeTemporaryRig: true,
       });
     }
-    if (worldSourceNumber === 4 && !options.constructionPreview) {
+    if (usesOpeningPalace && !options.constructionPreview) {
+      compactOpeningPalaceParts(building);
+    } else if (worldSourceNumber === 4 && !options.constructionPreview) {
       compactIsland4Landmark(building, definition.id);
     } else if (definition.id !== 'boss' && !options.constructionPreview) {
       compactStaticGeometry(building, `ISLAND5_${definition.id.toUpperCase()}`);
@@ -3504,6 +3541,7 @@ function collectIslandThreeScenePerformanceInventory(scene: THREE.Object3D) {
 }
 
 export default function Island5ThreePilot({
+  openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
   buildLevel,
@@ -3752,6 +3790,8 @@ export default function Island5ThreePilot({
   const moonwellThermalCompleteRef = useRef(onMoonwellThermalComplete);
   moonwellThermalCompleteRef.current = onMoonwellThermalComplete;
   const celestialRedockingPresentationRef = useRef(celestialRedockingPresentation);
+  const openingCeremonyPlaybackRef = useRef(openingCeremonyPlayback);
+  openingCeremonyPlaybackRef.current = openingCeremonyPlayback;
   celestialRedockingPresentationRef.current = celestialRedockingPresentation;
   const rootheartPowerworksPresentationRef = useRef(rootheartPowerworksPresentation);
   rootheartPowerworksPresentationRef.current = rootheartPowerworksPresentation;
@@ -6196,6 +6236,10 @@ export default function Island5ThreePilot({
       });
       constructionPreviewBounds.getSize(constructionPreviewSize);
       constructionLevelDelta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+      if (isDriftwoodIsle && landmarkId === 'boss' && currentLevel > 0) {
+        const fundedPalace = current.getObjectByName('OPENING_PALACE');
+        if (fundedPalace instanceof THREE.Group) compactOpeningPalaceParts(fundedPalace);
+      }
       if ((isFirstLightKingdom || isJungleExpedition) && currentLevel > 0 && current instanceof THREE.Group) {
         const worldPrefix = isJungleExpedition ? 'ISLAND18' : 'ISLAND1';
         compactStaticGeometry(current, `${worldPrefix}_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED`);
@@ -8248,6 +8292,11 @@ export default function Island5ThreePilot({
     if (controlledCameraFocusRequestRef.current) {
       applyControlledCameraFocus(controlledCameraFocusRequestRef.current);
     }
+    // DEV microscope crops the original projection, never moves the review camera.
+    const plantingMicroscopeCamera = import.meta.env?.DEV
+      && new URLSearchParams(window.location.search).get('islandPalaceMicroscope') === '1'
+      && new URLSearchParams(window.location.search).get('island3dEvidence') === '1'
+      ? camera.clone() : null;
     if (new URLSearchParams(window.location.search).get('island3dEvidence') === '1') {
       const evidenceParams = new URLSearchParams(window.location.search);
       const evidencePreset = evidenceParams.get('island3dEvidencePreset');
@@ -8618,10 +8667,23 @@ export default function Island5ThreePilot({
     const celestialPlantBatches = isCelestialSkyKingdom ? createCelestialPlantRuntimeBatches(scene) : null;
     let appliedConstructionCameraKey = '';
     let appliedIsland15ConstructionRevealKey = '';
+    const openingCeremonyFx = isDriftwoodIsle ? createOpeningGamesCeremonyThree() : null;
+    if (openingCeremonyFx) {
+      openingCeremonyFx.bindPalace(scene.getObjectByName('OPENING_PALACE'),
+        ISLAND_5_LANDMARKS.find(landmark => landmark.id === 'event')?.position);
+      scene.add(openingCeremonyFx.root);
+    }
     const animate = (now: number) => {
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
       const elapsed = timer.getElapsed();
+      const ceremonyPlayback = openingCeremonyPlaybackRef.current;
+      const ceremonyElapsed = ceremonyPlayback ? Math.max(0, Date.now() - ceremonyPlayback.startedAtMs) : 0;
+      openingCeremonyFx?.update(ceremonyPlayback ? {
+        active: true, elapsedMs: ceremonyElapsed, reducedMotion: ceremonyPlayback.reducedMotion,
+      } : null);
+      if (openingCeremonyFx) canvas.dataset.openingCeremonyPhase = ceremonyPlayback
+        ? sampleOpeningCeremony(ceremonyElapsed, ceremonyPlayback.reducedMotion).phase : 'idle';
       const actualFrameDeltaSeconds = Math.max(0, (now - lastAnimationFrameAt) / 1000);
       const frameDeltaSeconds = Math.min(0.05, actualFrameDeltaSeconds);
       // A tab suspension must not teleport the physical rider several metres.
@@ -10169,7 +10231,26 @@ export default function Island5ThreePilot({
       if (livingAmbience.consumeShadowUpdate?.() && sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
       const automaticWorldMatrices = scene.matrixWorldAutoUpdate;
       if (isFrostmoonHaven) scene.matrixWorldAutoUpdate = false;
-      try { renderer.render(scene, camera); }
+      let renderCamera = camera;
+      if (plantingMicroscopeCamera) {
+        const bay = scene.getObjectByName(new URLSearchParams(window.location.search).get('islandPalaceMicroscopePart') || 'palace-planting-prototype');
+        if (bay) {
+          camera.updateMatrixWorld(true);
+          bay.updateWorldMatrix(true, false);
+          const centre = (Array.isArray(bay.userData.microscopeLocalCenter)
+            ? new THREE.Vector3().fromArray(bay.userData.microscopeLocalCenter).applyMatrix4(bay.matrixWorld)
+            : new THREE.Box3().setFromObject(bay).getCenter(new THREE.Vector3())).project(camera);
+          const width = canvas.clientWidth, height = canvas.clientHeight, fraction = .22;
+          plantingMicroscopeCamera.copy(camera);
+          const x = (centre.x + 1) * .5 * width - width * fraction * .5;
+          const y = (1 - centre.y) * .5 * height - height * fraction * .5;
+          plantingMicroscopeCamera.setViewOffset(width, height, x, y, width * fraction, height * fraction);
+          canvas.dataset.plantingMicroscope = JSON.stringify({ width, height, x, y, fraction,
+            cameraPosition: camera.position.toArray(), cameraQuaternion: camera.quaternion.toArray() });
+          renderCamera = plantingMicroscopeCamera;
+        }
+      }
+      try { renderer.render(scene, renderCamera); }
       finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
         const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
@@ -10406,6 +10487,7 @@ export default function Island5ThreePilot({
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
       livingAmbience.dispose?.();
+      openingCeremonyFx?.dispose();
       const disposedSceneBackground = scene.background;
       if (assemblyEnvironmentTarget) { scene.environment = null; assemblyEnvironmentTarget.dispose(); }
       if (archiveLookdevEnvironmentTarget) {

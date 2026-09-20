@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "scope": "offline real-board ceremony preparation, reveal, cancel/resume, actual guided game and ticket grant; not physical-device acceptance",
+  "cases": [
+    {
+      "island": 2,
+      "gradual": true,
+      "puzzle": false,
+      "mission": "Host the First Games",
+      "puzzleCount": 0,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "externalRequestsBlocked": 0,
+  "ceremony": {
+    "completed": true,
+    "resumedAttempt": true,
+    "cancelledWithoutReward": true,
+    "starterTickets": 3,
+    "unchangedEventId": "feeding_frenzy:1789862077786"
+  }
+}

@@ -496,9 +496,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
         'Crown of Tides landmarks need phase-shaped routes rather than one rotated generic loop',
       );
       assert(
-        crownTidesProfiles.every((profile) => profile?.stageNames.some((name) => /tide|coral|pearl|sail|reef|floodgate|arena|archive/i.test(name))),
-        'Crown of Tides reveal stories must describe the actual maritime construction language',
+        crownTidesProfiles.every((profile) => profile?.stageNames.some((name) => /tide|coral|pearl|sail|reef|palace|arena|archive/i.test(name))),
+        'Crown of Tides reveal stories must describe its maritime landmarks and royal palace',
       );
+      const palaceProfile = resolveIslandLandmarkConstructionProfile(4, 'boss');
+      assert(palaceProfile?.choreography.styleId === 'crown-tides-ornate-palace-commissioning', 'source 004 boss must use palace assembly choreography');
+      assert(!palaceProfile?.stageNames.some((name) => /floodgate|tide pipes|Voice Prism/i.test(name)), 'palace construction must not advertise retired floodgate machinery');
       const sunshoreProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(5, landmark.id)
       ));
@@ -3019,7 +3022,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
       assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
       assert(boardSource.includes("if (stopId === 'mystery') return 'event'"), 'Build camera should resolve Mystery to the authored Concord Arena preset');
-      assert(boardSource.includes('cameraFocusPreset={threeCameraFocusPreset}'), 'the live 3D board must receive Build and ordinary landmark focus requests');
+      assert(/cameraFocusPreset=\{openingCeremonyPlayback && !openingCeremonyPlayback\.reducedMotion[\s\S]*?: threeCameraFocusPreset\}/.test(boardSource), 'the ceremony may temporarily focus the live renderer, but quiet mode and ordinary Build/landmark requests must retain the canonical focus');
       assert(boardSource.includes('if (constructionPresentation.cameraLocked) return;'), 'landmark-to-landmark Build handoff must wait until active/recent construction is quiet');
       assert(boardSource.includes('Math.max(ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS, lingerMs)'), 'the canonical seven-second Build quiet-period constant must own the recent-action camera lock');
       assert(pilotSource.includes('&& !activeConstruction?.cameraLocked'), 'the renderer-level camera reassertion must also remain locked during active/recent construction');
@@ -3128,7 +3131,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes("presentation = 'workbench'"), 'live-shell use must opt into the stripped embedded presentation explicitly');
       assert(boardSource.includes('const Island5ThreeScene = lazy'), 'live shell should not eagerly load the Three.js scene');
       assert(boardSource.includes("params.get('island3dPreview') === '1'"), 'internal QA should expose a deterministic Island 5 preview URL');
-      assert(boardSource.includes('resolveIslandRun3DWorldRoute(islandArtPreviewNumber)'), 'production 3D routing must use the explicit runtime-to-authored-world contract');
+      assert(boardSource.includes('resolveIslandRun3DWorldRoute(island3DContentNumber)')
+        && boardSource.includes('resolveOpeningGamesContentIsland(__storeState.signatureMissionProgressByIsland, islandArtPreviewNumber)')
+        && boardSource.includes('const island3DContentNumber = isIslandVisualPreview ? islandArtPreviewNumber'),
+        'production 3D routing must compose explicit cohort content mapping with the canonical authored-world route; art previews retain their requested source');
       assert(boardSource.includes('const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;'), 'all runtime islands without an assigned authored world must retain the existing fallback');
       assert(boardSource.includes('islandNumber={islandArtPreviewNumber}') && boardSource.includes('worldSourceNumber={island3DWorldNumber ?? 5}'), 'the shared renderer must keep gameplay identity separate from the selected authored world');
       assert(routingSource.includes('runtimeIslandNumber: 2, worldSourceNumber: 2') && routingSource.includes('runtimeIslandNumber: 3, worldSourceNumber: 3'), 'Islands 002 and 003 must route their dedicated Celestial and Frostmoon world packs');

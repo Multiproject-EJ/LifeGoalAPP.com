@@ -2,11 +2,12 @@ import type { Session } from '@supabase/supabase-js';
 import { readIslandRunGameStateRecord, resetIslandRunRuntimeCommitCoordinatorForTests, writeIslandRunGameStateRecord, type IslandRunGameStateRecord } from '../islandRunGameStateStore';
 import { __resetIslandRunStateStoreForTests, getIslandRunStateSnapshot, resetIslandRunStateSnapshot } from '../islandRunStateStore';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
-import { applyEggPlacement, applyEggPlacementBatch, resolveReadyEggTerminalTransition, travelToNextIsland } from '../islandRunStateActions';
+import { applyEggPlacement, applyEggPlacementBatch, claimArenaFirstTicketBoost, resolveReadyEggTerminalTransition, travelToNextIsland } from '../islandRunStateActions';
 import { createOpeningGamesCampaignLedger } from '../islandRunSignatureMissions';
 import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
 import { resolveIslandRunCompletion } from '../islandRunCompletion';
 import { completeIslandRunWelcomeCheckIn } from '../islandRunWelcomeCheckInAction';
+import { completeIslandRunArenaOrientation } from '../islandRunArenaOrientationAction';
 import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
 import { resolveIslandRunBestNextAction } from '../islandRunBestNextActionAdvisor';
 import { resolveIslandMissionTrackerPresentation } from '../islandRunMissionTracker';
@@ -41,6 +42,47 @@ const travel = (island:number) => travelToNextIsland({session,client:null,nextIs
   startTimer:true,nowMs:1000,getIslandDurationMs:()=>0,islandRunContractV2Enabled:true});
 
 export const islandRunEarlyProgressionTests: TestCase[] = [
+  {name:'Island001 orientation requires actual answers and normal access, then completes once without early rewards',async run(){
+    const before = await seed({ currentIslandNumber:1, cycleIndex:0,
+      completedStopsByIsland:{'1':['hatchery','habit']}, stopTicketsPaidByIsland:{'1':[1,2]},
+      stopStatesByIndex:Array.from({length:5},(_,index)=>({objectiveComplete:index<2,buildComplete:false})),
+    });
+    const finish = (answers: string[]) => completeIslandRunArenaOrientation({session,client:null,visitKey:'0:1',answers});
+    for (const answers of [[],['build-landmarks'],['build-landmarks','island-001'],['wrong','island-002']]) {
+      assertEqual((await finish(answers)).status,'incomplete','reading/opening is not completion');
+      assertEqual(getIslandRunStateSnapshot(session),before,'wrong answers do not mutate progress');
+    }
+    const results = await Promise.all([0,1,2].map(()=>finish(['build-landmarks','island-002'])));
+    assertEqual(results.filter(result=>result.status==='completed').length,1,'one transition under concurrent callbacks');
+    const after = getIslandRunStateSnapshot(session);
+    assert(after.stopStatesByIndex[2].objectiveComplete,'orientation completes Mystery');
+    assertEqual(after.activeStopType,'wisdom','normal next landmark');
+    assertEqual(after.runtimeVersion,before.runtimeVersion+1,'one write');
+    assertEqual(resolveIslandRunContractV2Stops({stopStatesByIndex:after.stopStatesByIndex,stopTicketsPaidByIsland:after.stopTicketsPaidByIsland,islandNumber:1}).statusesByIndex[3],'ticket_required','Wisdom ticket is not prepaid');
+    for(const key of ['dicePool','essence','islandShards','perIslandEggs','minigameTicketsByEvent','stopBuildStateByIndex','signatureMissionProgressByIsland'] as const) {
+      assertEqual(JSON.stringify(after[key]),JSON.stringify(before[key]),`${key} unchanged`);
+    }
+    assert(readIslandRunGameStateRecord(session).stopStatesByIndex[2].objectiveComplete,'reload retains orientation');
+  }},
+  {name:'orientation rejects unpaid, locked, legacy, later-island and stale callbacks',async run(){
+    for (const overrides of [{}, {stopTicketsPaidByIsland:{'1':[1,2]}},
+      {completedStopsByIsland:{'1':['hatchery','habit']}},
+      {signatureMissionProgressByIsland:{}}, {currentIslandNumber:2}, {cycleIndex:1}]) {
+      const before=await seed({currentIslandNumber:1,cycleIndex:0,
+        stopStatesByIndex:Array.from({length:5},()=>({objectiveComplete:false,buildComplete:false})),
+        ...overrides});
+      assertEqual((await completeIslandRunArenaOrientation({session,client:null,visitKey:'0:1',answers:['build-landmarks','island-002']})).status,'ineligible','no bypass');
+      assertEqual(getIslandRunStateSnapshot(session),before,'ineligible callback writes nothing');
+    }
+  }},
+  {name:'early arena opening cannot award the legacy ticket boost',async run(){
+    for (const island of [1,2]) {
+      const before=await seed({currentIslandNumber:island,cycleIndex:0});
+      const result=claimArenaFirstTicketBoost({session,client:null,islandNumber:1,cycleIndex:0,stopId:'mystery',activeTimedEventId:'qa-event'});
+      assertEqual(result.status,'ineligible','canonical record gate rejects even forged Island001 args');
+      assertEqual(getIslandRunStateSnapshot(session),before,'no hidden early reward');
+    }
+  }},
   {name:'early welcome check-in is explicit, free, durable and concurrent-safe; next landmark still needs its ticket',async run(){
     for(const island of [1,2,3]) {
       const before=await seed({currentIslandNumber:island, firstSessionTutorialState:'complete',

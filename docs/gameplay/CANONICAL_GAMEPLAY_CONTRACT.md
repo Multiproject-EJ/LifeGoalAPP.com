@@ -564,6 +564,18 @@ and legacy saves retain the rules above and all earned inventory/unlocks.
 - New Island002 requires the opening ceremony **and completed participation in
   its free inaugural game** before island clear/departure. Canceling the game,
   finishing construction, or lighting the beacon alone does not satisfy this.
+- New Island001 replaces the Mystery/Event Arena activity with an explicit
+  two-question host orientation about building and the Island002 opening.
+  Normal previous-stop access and the Mystery ticket remain required. Correct
+  completion records only this activity; it creates no event tickets, eggs,
+  construction credit or prepaid Wisdom ticket. Closing or incorrect answers
+  give no completion credit. Legacy arena activity/boost behavior is preserved
+  for unmarked journeys; the boost is unavailable to the gradual cohort before
+  ordinary events unlock.
+- New Island002's opening presentation is skippable and has a reduced-motion
+  equivalent. Presentation never grants a reward or replaces participation in
+  its free inaugural game, and the canonical saved beacon milestone precedes
+  the animation.
 - New Island004 requires twenty canonical Re-Docking rolls and the committed
   completion timestamp for the current cycle's Island004 mission. Old Island002
   progress or a previous-cycle Vault entitlement cannot substitute for it.

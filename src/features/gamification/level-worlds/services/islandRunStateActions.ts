@@ -1915,6 +1915,9 @@ export function claimArenaFirstTicketBoost(
   const { session, client, islandNumber, cycleIndex, stopId, activeTimedEventId, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const eventId = typeof activeTimedEventId === 'string' ? activeTimedEventId.trim() : '';
+  if (!resolveIslandRunFeatureAccess(current).ordinaryEvents) {
+    return { record: current, status: 'ineligible', granted: 0, eventId: eventId || null };
+  }
   if (!eventId) return { record: current, status: 'no_active_event', granted: 0, eventId: null };
   if (Math.trunc(islandNumber) !== 1 || Math.trunc(cycleIndex) !== 0 || stopId !== 'mystery') {
     return { record: current, status: 'ineligible', granted: 0, eventId };

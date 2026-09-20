@@ -1,0 +1,28 @@
+{
+  "status": "tested-local-checkpoint-not-release",
+  "date": "2026-09-20",
+  "typescript": {"command":"tsc -b --pretty false","exitCode":0,"session":66674},
+  "fullServices": {"command":"node scripts/run-island-run-service-tests.mjs","passed":2165,"failed":0,"exitCode":0,"session":14161},
+  "focusedServices": {"passed":410,"failed":0},
+  "openingShowRuntime": {"passed":11,"drawables":3,"triangleCeiling":500},
+  "architectureGuard": {"violations":0,"existingAllowlistedWarnings":3},
+  "productionBuild": {"command":"vite build --outDir .tmp-opening-show-production-20260920","exitCode":0,"session":19430,"warnings":["Existing large chunks exceed Vite's 500kB advisory threshold."]},
+  "browserEvidence": {
+    "normalGameFlow":"opening-show-ui-v003/report.json",
+    "correctedCeremonyFrames":"opening-show-frames-v003/report.json",
+    "quietMode":"opening-show-quiet-v001/report.json",
+    "orientation":"orientation-ui-v003/report.json"
+  },
+  "visualReviews": {
+    "palaceTessellation":"palace-tessellation-v003/qc-review.v1.json",
+    "ceremonyCorrection":"opening-show-frames-v003/qc-review.v1.json"
+  },
+  "knownLimits": [
+    "No live merge, deployment, new-campaign enrolment or archive.",
+    "Full narrative/content onboarding, remaining egg grants and dedicated event-service gates need integration.",
+    "Continuous coast/gardens, royal ship and ceremony dressing remain unfinished; yacht deferred.",
+    "Planted high-quality world remains above175draws/180ktriangles at176draws/about182k.",
+    "Browser evidence uses offline disposable state, not a real account or physical phone.",
+    "Controlled-Date still frames do not validate continuous motion/performance or exact beacon support contact."
+  ]
+}

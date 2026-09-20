@@ -195,7 +195,7 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
   return (
     <ArenaPuzzleFrame
       introduction={introduction}
-      className="signal-path"
+      className={`signal-path${introduction ? ' signal-path--introduction' : ''}`}
       icon="⌁"
       eyebrow="Caretaker route trial"
       title="Signal Path"

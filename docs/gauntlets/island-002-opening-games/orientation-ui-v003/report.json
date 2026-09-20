@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "scope": "offline real-board Island001 host orientation, incorrect answers, close/reopen and saved completion; not full first-session or physical-device acceptance",
+  "cases": [
+    {
+      "island": 1,
+      "gradual": true,
+      "puzzle": false,
+      "puzzleCount": 0,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "externalRequestsBlocked": 0
+}

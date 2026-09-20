@@ -8,7 +8,37 @@ remain incomplete. This is not the finished 3D opening show.
 
 ## Implementation checkpoint
 
-### Latest release audit: animated show is not implemented
+### 2026-09-20: core animated show now implemented locally
+
+Final local validation passed: TypeScript, 2,165 service tests with zero failures,
+architecture guard and production Vite build. See
+`island-002-opening-games/local-validation-20260920.json`. All live rollout,
+first-session, art and physical-phone gates below remain in force.
+
+Latest checkpoint: Island001's real host orientation replaces its premature
+arena launcher for explicit new-campaign records. Canonical completion requires
+normal access/ticket and both answers, is mutex-protected/idempotent and preserves
+wallets/builds. The old first-arena ticket boost is blocked before ordinary
+events unlock. 410 focused tests pass; `orientation-ui-v003` passes the actual
+3D-tap, wrong-answer, cancel/reload and completed-reload checks. First-session
+narrative adaptation remains open; the browser fixture marks old story beats seen.
+
+The core ceremony/game flow passed normal-motion browser QA in
+`opening-show-ui-v003`. Independent visual review approved the corrected flame
+and fireworks in `opening-show-frames-v003` (worst0.86, one correction used).
+Automatic reward-channel reveal and quiet mode also pass controlled-time
+captures. Three effect draws, under500triangles. No physical-device proof or live
+release is claimed; final TypeScript/full-suite checks are tracked separately.
+
+The latest continuation implements the actual Three.js beacon, palace-window
+lighting and offshore fireworks sequence, viewport captions/Skip, quiet mode,
+and delayed reward-channel reveal. Explicit new-cohort 002/004 visual routing is
+now connected; save enrolment and full narrative mapping are still disabled or
+incomplete. See [current show evidence and limits](island-002-opening-games/OPENING-SHOW-20260920.md).
+The release audit below is retained as history, not a claim that no animation
+code exists after this checkpoint. This is not yet a release-approved island.
+
+### Earlier release audit: animated show was not implemented
 
 The user requested continued work and a live push before archiving, and asked
 whether the opening ceremony was built as animation. The current answer is no:
@@ -41,7 +71,10 @@ The user has authorized a validated live release, not forced deployment of an
 unfinished/disabled experience. Do not archive until the agreed release is
 actually deployed and verified. A smaller palace-only release versus finishing
 the entire approved experience was presented as an explicit scope choice; no
-smaller release is assumed without the user's answer.
+smaller release is assumed without the user's answer. The subsequent user reply
+"ok build proceed" approves continuing the full experience. Do not ask this
+scope question again; finish the animated ceremony and approved island work
+before the validated live release.
 
 The user explicitly requested "proceed, fix, implement and merge to live".
 This authorizes the completed, validated release; it does not waive acceptance

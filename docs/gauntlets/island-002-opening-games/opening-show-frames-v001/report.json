@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "scope": "actual normal renderer at controlled Date.now ceremony beats, real RAF/timers; automatic reveal only, not game flow or physical-device timing",
+  "cases": [
+    {
+      "island": 2,
+      "gradual": true,
+      "puzzle": false,
+      "mission": "Host the First Games",
+      "puzzleCount": 0,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "externalRequestsBlocked": 0,
+  "ceremonyFrames": {
+    "automaticReveal": true,
+    "quietShow": false,
+    "palaceBuilt": true,
+    "controlledDate": true,
+    "grantsNothing": true
+  }
+}

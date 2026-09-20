@@ -22,6 +22,7 @@ export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessCon
   const vault = isVaultIslandCollectionUnlocked(ledger);
   return {
     gradual,
+    arenaOrientation: gradual && island === 1,
     welcomeCheckIn: gradual && validIsland && island < GRADUAL_EGG_INTRODUCTION_ISLAND,
     // Legacy reward-channel presentation still owns its original Island001
     // tutorial gate. This flag is an additional eligibility condition only.

@@ -96,7 +96,11 @@ import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
 import { OpeningGamesCeremonyModal } from './OpeningGamesCeremonyModal';
+import { OpeningGamesShow } from './OpeningGamesShow';
+import { resolveOpeningGamesContentIsland } from '../services/islandRunOpeningGames';
+import type { OpeningCeremonyPlayback } from '../services/islandRunOpeningCeremonyPresentation';
 import { IslandRunWelcomeCheckInModal } from './IslandRunWelcomeCheckInModal';
+import { IslandRunArenaOrientationModal } from './IslandRunArenaOrientationModal';
 import {
   getTrafficLightCharge,
   resolveTrafficLightCoinFlipReward,
@@ -2127,8 +2131,14 @@ export function IslandRunBoardPrototype({
   const { state: __storeState } = useIslandRunState(session, client);
   const featureAccess = resolveIslandRunFeatureAccess(__storeState);
   const [showOpeningGamesCeremony, setShowOpeningGamesCeremony] = useState(false);
+  // Transient presentation only; canonical beacon/participation remain in the store.
+  const [openingCeremonyPlayback, setOpeningCeremonyPlayback] = useState<OpeningCeremonyPlayback | null>(null);
+  const [openingCeremonyWide, setOpeningCeremonyWide] = useState(false);
   useEffect(() => {
-    if (!featureAccess.gradual || __storeState.currentIslandNumber !== 2) setShowOpeningGamesCeremony(false);
+    if (!featureAccess.gradual || __storeState.currentIslandNumber !== 2) {
+      setShowOpeningGamesCeremony(false);
+      setOpeningCeremonyPlayback(null);
+    }
   }, [featureAccess.gradual, __storeState.currentIslandNumber]);
   const assemblyMandateRef = useRef<ReturnType<typeof showAssemblyMandate> | null>(null);
   const [assemblyMandateOpen, setAssemblyMandateOpen] = useState(false);
@@ -2501,7 +2511,9 @@ export function IslandRunBoardPrototype({
   // Island 004 uses the former Crown Citadel world; Island 005 uses the open
   // tropical Sunwheel Arena. Story, progression, rewards, and persistence
   // continue to use `islandArtPreviewNumber`.
-  const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
+  const island3DContentNumber = isIslandVisualPreview ? islandArtPreviewNumber
+    : resolveOpeningGamesContentIsland(__storeState.signatureMissionProgressByIsland, islandArtPreviewNumber);
+  const island3DWorldRoute = resolveIslandRun3DWorldRoute(island3DContentNumber);
   const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
   // Authored 3D islands are the production runtime. The legacy 2D board remains
@@ -3265,7 +3277,7 @@ export function IslandRunBoardPrototype({
     showCreatureChannelModal ||
     showConcordHubModal ||
     showBoardSymbolLegend ||
-    showVaultIslandGiftUnlock || showOpeningGamesCeremony ||
+    showVaultIslandGiftUnlock || showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     showMissionPhoneBriefing ||
     Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
@@ -3704,7 +3716,7 @@ export function IslandRunBoardPrototype({
       : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
-    showOpeningGamesCeremony ||
+    showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || showFirstCreaturePackModal ||
       showStoryReader ||
       activeStopId ||
@@ -5372,8 +5384,10 @@ export function IslandRunBoardPrototype({
     () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }).map(stop =>
       featureAccess.welcomeCheckIn && stop.stopId === 'hatchery'
         ? { ...stop, title: '⚑ Welcome Venue', description: 'Check in with your island hosts, then explore and build. Your welcome activity is free.' }
+        : featureAccess.arenaOrientation && stop.stopId === 'mystery'
+          ? { ...stop, title: 'Host Orientation', description: 'Meet the hosts and learn how to explore and build. The First Games open on Island 002.' }
         : stop),
-    [islandNumber, featureAccess.welcomeCheckIn],
+    [islandNumber, featureAccess.welcomeCheckIn, featureAccess.arenaOrientation],
   );
   const [showEarlyOwnedEggs, setShowEarlyOwnedEggs] = useState(false);
   useEffect(() => { setShowEarlyOwnedEggs(false); }, [activeStopId, islandNumber]);
@@ -7538,7 +7552,7 @@ export function IslandRunBoardPrototype({
     nowMs,
   });
   const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber, __storeState.signatureMissionProgressByIsland);
-  const diplomaticRewardChannelVisible = featureAccess.rewardChannel && isDiplomaticRewardChannelVisible({
+  const diplomaticRewardChannelVisible = openingCeremonyPlayback === null && featureAccess.rewardChannel && isDiplomaticRewardChannelVisible({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
     firstSessionTutorialState: runtimeState.firstSessionTutorialState,
@@ -7757,7 +7771,7 @@ export function IslandRunBoardPrototype({
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
 
   useEffect(() => {
-    if (activeStopId !== 'mystery') {
+    if (activeStopId !== 'mystery' || !featureAccess.ordinaryEvents) {
       setArenaBoostStatus('idle');
       return;
     }
@@ -7782,7 +7796,7 @@ export function IslandRunBoardPrototype({
       return;
     }
     setArenaBoostStatus(result.status === 'already_claimed' ? 'already_claimed' : 'idle');
-  }, [activeStopId, client, effectiveActiveTimedEvent?.eventId, islandNumber, session]);
+  }, [activeStopId, client, effectiveActiveTimedEvent?.eventId, featureAccess.ordinaryEvents, islandNumber, session]);
   const isRewardBarNearlyFull = rewardBarPercent >= 85 && rewardBarPercent < 100;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
   // const activeEventTickets = activeTimedEventId ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0) : 0;
@@ -8781,8 +8795,8 @@ export function IslandRunBoardPrototype({
   }, [handleRoll]);
 
   useEffect(() => {
-    if (showOpeningGamesCeremony) stopAutoRoll();
-  }, [showOpeningGamesCeremony, stopAutoRoll]);
+    if (showOpeningGamesCeremony || openingCeremonyPlayback !== null) stopAutoRoll();
+  }, [showOpeningGamesCeremony, openingCeremonyPlayback, stopAutoRoll]);
 
   useEffect(() => {
     if (dicePool < effectiveDiceCost && isAutoRolling) {
@@ -13469,7 +13483,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
-    showOpeningGamesCeremony ||
+    showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     assemblyMandateOpen ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
@@ -14131,7 +14145,7 @@ export function IslandRunBoardPrototype({
       islandClearStats?.islandNumber === runtimeState.currentIslandNumber
   );
   const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
-    showOpeningGamesCeremony ||
+    showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
       activeLaunchedMinigameId ||
@@ -15374,7 +15388,7 @@ export function IslandRunBoardPrototype({
           </div>
         ) : null}
         {diplomaticRewardChannelVisible ? (
-          <div className={`island-run-board__rewardbar-cluster${diplomaticActivationAnimating ? ' island-run-board__rewardbar-cluster--mission-reveal' : ''}`}>
+          <div className={`island-run-board__rewardbar-cluster${diplomaticActivationAnimating ? ' island-run-board__rewardbar-cluster--mission-reveal' : ''}${featureAccess.inauguralRound ? ' island-run-board__rewardbar-cluster--opening-reveal' : ''}`}>
           <div className="island-run-board__rewardbar-hatchery-tray">
             {hatcheryPendingEggs.length > 0 && (
               <button
@@ -15557,7 +15571,7 @@ export function IslandRunBoardPrototype({
                 );
               }
 
-              if (index === rewardBarTimedEventSlotIndex && hasRewardBarTimedEventQuickAction && activeEventSurfaceMeta && featureAccess.eventLauncher) {
+              if (index === rewardBarTimedEventSlotIndex && hasRewardBarTimedEventQuickAction && activeEventSurfaceMeta && featureAccess.eventLauncher && openingCeremonyPlayback === null) {
                 return (
                   <span key="timed-event" className="island-run-board__rewardbar-side-slot">
                     <button
@@ -15760,10 +15774,13 @@ export function IslandRunBoardPrototype({
                 isRolling={isRolling}
                 landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
-                cameraFocusPreset={threeCameraFocusPreset}
+                cameraFocusPreset={openingCeremonyPlayback && !openingCeremonyPlayback.reducedMotion
+                  ? openingCeremonyWide ? 'overview' : island5ThreeBuildLevels.boss > 0 ? 'boss' : 'event'
+                  : threeCameraFocusPreset}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
-                interactionPaused={doesModalOwnAttention}
+                interactionPaused={doesModalOwnAttention || openingCeremonyPlayback !== null}
+                openingCeremonyPlayback={openingCeremonyPlayback}
                 constructionPresentation={constructionPresentation}
                 arenaBattlePresentation={arenaBattlePresentation}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
@@ -16667,6 +16684,11 @@ export function IslandRunBoardPrototype({
               }}
             />
           ), document.body);
+        }
+        if (activeStop.stopId === 'mystery' && featureAccess.arenaOrientation
+          && (openedStopIsPlayable || openedStopIsCompleted)) {
+          return <IslandRunArenaOrientationModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
+            onClose={() => setActiveStopId(null)} />;
         }
         return (
         <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
@@ -19631,8 +19653,16 @@ export function IslandRunBoardPrototype({
           onBuild={() => { setShowOpeningGamesCeremony(false); openBuildPanelFromFooter(); }}
           onBeaconLit={() => {
             setShowOpeningGamesCeremony(false);
-            setLandingText('✨ The opening beacon is lit! Your reward bar is here. Tap First game for your free guided round.');
+            setOpeningCeremonyWide(false);
+            setOpeningCeremonyPlayback({ startedAtMs: Date.now(),
+              reducedMotion: Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) });
           }} />
+      ) : null}
+      {openingCeremonyPlayback && featureAccess.gradual && islandNumber === 2 ? (
+        <OpeningGamesShow {...openingCeremonyPlayback} onOverview={() => setOpeningCeremonyWide(true)} onFinish={() => {
+          setOpeningCeremonyPlayback(null);
+          setLandingText('✨ The First Games are open! Your reward bar is here. Tap First game for your free guided round.');
+        }} />
       ) : null}
       {activeLaunchedMinigameId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
