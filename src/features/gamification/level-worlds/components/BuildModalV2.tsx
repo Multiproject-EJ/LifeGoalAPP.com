@@ -295,7 +295,7 @@ export function BuildModalV2({
         {!fastBuildMode && (levelReview || isComplete) && <CelebrationFireworks key={levelReview?.presentationSequence ?? 'complete'} active variant="rapid" backdrop="none" placement="local" />}
         {!fastBuildMode && (levelReview || isComplete) && <div className="bm2-celebration-title" role="status">
           <span>{levelReview?.fastMode ? 'POW! Beautifully built.' : 'Beautifully built!'}</span>
-          <h2>{levelReview ? levelReview.title : 'All landmarks restored'}</h2>
+          <h2>{levelReview ? levelReview.title : 'All landmarks built'}</h2>
           <p>{levelReview ? `Level ${levelReview.level} complete` : 'Construction complete'}</p>
           {Boolean(levelReview?.diceAward) && <strong className="bm2-dice-award">🎲 +{levelReview?.diceAward}</strong>}
         </div>}

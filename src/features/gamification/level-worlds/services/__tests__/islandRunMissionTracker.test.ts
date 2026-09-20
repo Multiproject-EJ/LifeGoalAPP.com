@@ -284,7 +284,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
       assertEqual(tracker.objectives[0].label, 'Use Dynamite', 'Assembly objective uses compact approved copy');
       assertEqual(tracker.objectives[0].value, 3, 'detonation progress comes from canonical mission state');
       assertEqual(tracker.objectives[1].value, 4, 'all four outer objectives, builds and the egg are complete');
-      assertEqual(tracker.overallProgressPercent, 77, 'overall progress includes the separate activities row');
+      assertEqual(tracker.overallProgressPercent, tracker.islandCompletion?.percent, 'phone progress includes the same remaining mandate and egg requirements as departure');
 
       const unresolvedEgg = resolveIslandMissionTrackerPresentation({
         islandNumber: 1,
