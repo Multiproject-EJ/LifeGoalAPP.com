@@ -1,5 +1,4 @@
 import { MAX_BUILD_LEVEL, type IslandRunContractV2BuildState } from './islandRunContractV2EssenceBuild';
-import { getStopTicketsPaidForIsland, isStopTicketPaid } from './islandRunStopTickets';
 
 export type IslandRunContractV2StopType = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 export const ISLAND_RUN_CONTRACT_V2_STOP_TYPES: readonly IslandRunContractV2StopType[] = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'];
@@ -12,7 +11,7 @@ export const ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS = 3;
  *  - `active`: the single recommended unfinished accessible stop.
  *  - `accessible`: unfinished and enterable, but not the primary recommendation.
  *  - `postponed`: unfinished, enterable, and intentionally saved for later.
- *  - `ticket_required`: access is unlocked, but the per-island essence ticket is unpaid.
+ *  - `ticket_required`: legacy serialized status; no longer emitted for ordinary stops.
  *  - `locked`: not currently accessible.
  */
 export type IslandRunContractV2StopStatus = 'completed' | 'active' | 'accessible' | 'postponed' | 'ticket_required' | 'locked';
@@ -190,7 +189,7 @@ export function resolveIslandRunContractV2Stops(options: {
     const built = (index: number) => (options.stopBuildStateByIndex?.[index]?.buildLevel ?? 0) >= MAX_BUILD_LEVEL;
     const allBuilt = order.every(built);
     const eligible = (index: number) => built(index)
-      && (index !== 0 || (allBuilt && [1, 2, 3].every(complete)))
+      && (index !== 0 || allBuilt)
       && (index !== 4 || [1, 2, 3, 0].every(complete));
     const activeStopIndex = order.find(index => !complete(index) && eligible(index))
       ?? order.find(index => !complete(index)) ?? 4;
@@ -203,16 +202,13 @@ export function resolveIslandRunContractV2Stops(options: {
   const firstIncompleteIndex = normalizedStates.findIndex((entry) => !isStopObjectiveComplete(entry));
   const activeStopIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : ISLAND_RUN_CONTRACT_V2_STOP_TYPES.length - 1;
   const allObjectivesComplete = firstIncompleteIndex === -1;
-  const ticketsPaid = options.stopTicketsPaidByIsland != null && typeof options.islandNumber === 'number'
-    ? getStopTicketsPaidForIsland(options.stopTicketsPaidByIsland, options.islandNumber)
-    : null;
 
   const baseStatusesByIndex = ISLAND_RUN_CONTRACT_V2_STOP_TYPES.map((_, index): IslandRunContractV2StopStatus => {
     const entry = normalizedStates[index];
-    if (allObjectivesComplete || index < activeStopIndex || (index === activeStopIndex && isStopObjectiveComplete(entry))) return 'completed';
-    const accessUnlocked = index === 0 || entry?.accessUnlocked === true || index === activeStopIndex;
+    if (allObjectivesComplete || isStopObjectiveComplete(entry)) return 'completed';
+    // Beginner landmarks are free to enter; the final challenge still follows the activities.
+    const accessUnlocked = index < 4 || normalizedStates.slice(0, 4).every(isStopObjectiveComplete);
     if (!accessUnlocked) return 'locked';
-    if (ticketsPaid != null && index > 0 && !isStopTicketPaid({ ticketsPaid, stopIndex: index })) return 'ticket_required';
     if (index === activeStopIndex) return isStopPostponed(entry) ? 'postponed' : 'active';
     return isStopPostponed(entry) ? 'postponed' : 'accessible';
   });

@@ -257,7 +257,7 @@ export function applyLandmarkDoorTiles(
     const doorStopId = doorByIndex.get(entry.index);
     if (!doorStopId) return entry;
     return {
-      index: entry.index,
+      ...entry,
       tileType: 'landmark_door',
       doorStopId,
       ...(activeDoorClusterIndices.has(entry.index) ? { isActiveDoorCluster: true } : {}),

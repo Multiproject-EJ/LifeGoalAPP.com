@@ -1,3 +1,4 @@
+import { landmarkAttentionTests } from './landmarkAttention.test';
 import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
@@ -221,6 +222,7 @@ import { feedPetCompanionPresentationTests } from '../../../../habits/feedPetCom
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
+  { label: 'landmarkAttention', tests: landmarkAttentionTests },
   { label: 'developerDayLoop', tests: developerDayLoopTests },
   { label: 'islandRunStoryFastMode', tests: islandRunStoryFastModeTests },
   { label: 'dailySpinRewardPolicy', tests: dailySpinRewardPolicyTests },

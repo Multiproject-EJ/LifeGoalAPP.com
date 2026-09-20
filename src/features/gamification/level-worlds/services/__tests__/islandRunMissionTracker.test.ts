@@ -101,7 +101,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
     name: 'mission registry aligns every authored production world with its approved header',
     run: () => {
       const expected = [
-        [1, 'First Light Kingdom', 'First Light Assembly'],
+        [1, 'First Light Kingdom', 'Build the Diplomatic Peace Signing Assembly'],
         [2, 'Celestial Sky Kingdom', 'The Great Re-Docking'],
         [3, 'Frostmoon Haven', 'Open the Frostwell'],
         [4, 'Crown Citadel', 'Raise the Broken Causeway'],

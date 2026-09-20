@@ -247,7 +247,7 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
       assertEqual(objectiveDoneNoBuild.activeStopIndex, 1, 'Expected stop 1 to become active once stop 0 objective is done, even without build');
       assertDeepEqual(
         objectiveDoneNoBuild.statusesByIndex,
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         'Expected stop 0 completed status and stop 1 active without build requirement',
       );
     },

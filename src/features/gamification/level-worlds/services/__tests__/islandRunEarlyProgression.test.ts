@@ -42,6 +42,18 @@ const travel = (island:number) => travelToNextIsland({session,client:null,nextIs
   startTimer:true,nowMs:1000,getIslandDurationMs:()=>0,islandRunContractV2Enabled:true});
 
 export const islandRunEarlyProgressionTests: TestCase[] = [
+  {name:'Arena orientation is freely enterable before other beginner activities, without a pass',async run(){
+    const before=await seed({currentIslandNumber:1,cycleIndex:0,completedStopsByIsland:{},stopTicketsPaidByIsland:{},
+      stopStatesByIndex:Array.from({length:5},()=>({objectiveComplete:false,buildComplete:false}))});
+    const result=await completeIslandRunArenaOrientation({session,client:null,visitKey:'0:1',answers:['build-landmarks','island-002']});
+    assertEqual(result.status,'completed','free entry accepts actual completed answers');
+    const after=getIslandRunStateSnapshot(session);
+    const statuses=resolveIslandRunContractV2Stops({islandNumber:1,stopStatesByIndex:after.stopStatesByIndex}).statusesByIndex;
+    assertEqual(statuses[2],'completed','out-of-order completion remains complete');
+    assertEqual(statuses[0],'active','earlier unfinished activity stays recommended');
+    assertEqual(after.essence,before.essence,'no entry charge');
+  }},
+
   {name:'Island001 orientation requires actual answers and normal access, then completes once without early rewards',async run(){
     const before = await seed({ currentIslandNumber:1, cycleIndex:0,
       completedStopsByIsland:{'1':['hatchery','habit']}, stopTicketsPaidByIsland:{'1':[1,2]},
@@ -58,16 +70,14 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
     assert(after.stopStatesByIndex[2].objectiveComplete,'orientation completes Mystery');
     assertEqual(after.activeStopType,'wisdom','normal next landmark');
     assertEqual(after.runtimeVersion,before.runtimeVersion+1,'one write');
-    assertEqual(resolveIslandRunContractV2Stops({stopStatesByIndex:after.stopStatesByIndex,stopTicketsPaidByIsland:after.stopTicketsPaidByIsland,islandNumber:1}).statusesByIndex[3],'ticket_required','Wisdom ticket is not prepaid');
+    assertEqual(resolveIslandRunContractV2Stops({stopStatesByIndex:after.stopStatesByIndex,stopTicketsPaidByIsland:after.stopTicketsPaidByIsland,islandNumber:1}).statusesByIndex[3],'active','Wisdom opens without a ticket');
     for(const key of ['dicePool','essence','islandShards','perIslandEggs','minigameTicketsByEvent','stopBuildStateByIndex','signatureMissionProgressByIsland'] as const) {
       assertEqual(JSON.stringify(after[key]),JSON.stringify(before[key]),`${key} unchanged`);
     }
     assert(readIslandRunGameStateRecord(session).stopStatesByIndex[2].objectiveComplete,'reload retains orientation');
   }},
-  {name:'orientation rejects unpaid, locked, legacy, later-island and stale callbacks',async run(){
-    for (const overrides of [{}, {stopTicketsPaidByIsland:{'1':[1,2]}},
-      {completedStopsByIsland:{'1':['hatchery','habit']}},
-      {signatureMissionProgressByIsland:{}}, {currentIslandNumber:2}, {cycleIndex:1}]) {
+  {name:'orientation rejects legacy, later-island and stale callbacks',async run(){
+    for (const overrides of [{signatureMissionProgressByIsland:{}}, {currentIslandNumber:2}, {cycleIndex:1}]) {
       const before=await seed({currentIslandNumber:1,cycleIndex:0,
         stopStatesByIndex:Array.from({length:5},()=>({objectiveComplete:false,buildComplete:false})),
         ...overrides});
@@ -83,7 +93,7 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
       assertEqual(getIslandRunStateSnapshot(session),before,'no hidden early reward');
     }
   }},
-  {name:'early welcome check-in is explicit, free, durable and concurrent-safe; next landmark still needs its ticket',async run(){
+  {name:'early welcome check-in is explicit, free, durable and concurrent-safe; next landmark is free',async run(){
     for(const island of [1,2,3]) {
       const before=await seed({currentIslandNumber:island, firstSessionTutorialState:'complete',
         stopStatesByIndex:Array.from({length:5},()=>({objectiveComplete:false,buildComplete:false})),
@@ -97,7 +107,7 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
       assert(after.stopStatesByIndex[0].objectiveComplete,'real check-in completes first activity');
       assertEqual(after.stopStatesByIndex[0].buildComplete,false,'does not finish construction');
       assertEqual(after.activeStopType,'habit','shared resolver advances progression');
-      assertEqual(resolveIslandRunContractV2Stops({stopStatesByIndex:after.stopStatesByIndex,stopTicketsPaidByIsland:after.stopTicketsPaidByIsland,islandNumber:island}).statusesByIndex[1],'ticket_required','no free ticket');
+      assertEqual(resolveIslandRunContractV2Stops({stopStatesByIndex:after.stopStatesByIndex,stopTicketsPaidByIsland:after.stopTicketsPaidByIsland,islandNumber:island}).statusesByIndex[1],'active','ordinary entry is free');
       for(const key of ['dicePool','essence','islandShards','perIslandEggs','minigameTicketsByEvent','stopBuildStateByIndex'] as const) {
         assertEqual(JSON.stringify(after[key]),JSON.stringify(before[key]),`${key} unchanged`);
       }

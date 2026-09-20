@@ -46,6 +46,7 @@ export type BuildModalV2ActiveLandmarkViewModel = {
   /** Actual wallet deduction after the active Build Rush discount. */
   nextTapEssenceCost: number;
   canAffordNextTap: boolean;
+  canAffordFullLevel: boolean;
   imageSrc?: string;
   imageAlt: string;
   imageIsPlaceholder: boolean;
@@ -135,6 +136,13 @@ export function deriveBuildModalV2ViewModel(options: {
     ? Math.max(1, Math.ceil(nextTapCost * (1 - normalizedDiscountRate)))
     : 0;
 
+  // Round each actual spend step, just as the build action does.
+  const step = resolveBuildSpendStepForTier(sequentialBuildView.requiredEssence);
+  const fullSteps = step > 0 ? Math.floor(remainingToLevel / step) : 0;
+  const remainder = step > 0 ? remainingToLevel % step : 0;
+  const fullLevelCost = fullSteps * Math.max(1, Math.ceil(step * (1 - normalizedDiscountRate)))
+    + (remainder > 0 ? Math.max(1, Math.ceil(remainder * (1 - normalizedDiscountRate))) : 0);
+
   return {
     sequentialBuildView,
     activeLandmark: {
@@ -152,6 +160,7 @@ export function deriveBuildModalV2ViewModel(options: {
       progressRatio: sequentialBuildView.progressRatio,
       nextTapCost,
       nextTapEssenceCost,
+      canAffordFullLevel: fullLevelCost > 0 && options.essenceAvailable >= fullLevelCost,
       canAffordNextTap: options.essenceAvailable >= nextTapEssenceCost && nextTapEssenceCost > 0,
       ...art,
     },

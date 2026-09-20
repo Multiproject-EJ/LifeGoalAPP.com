@@ -74,8 +74,8 @@ function ArenaChoiceCard(props: {
       className="arena-choice__card"
       style={{ '--arena-choice-accent': props.game.accent } as CSSProperties}
       onClick={props.onChoose}
-      disabled={props.tickets < 1 && props.game.id !== 'crystal_miners'}
-      aria-label={`Play ${props.game.displayName}. ${props.game.familyLabel}. ${props.game.id === 'crystal_miners' ? 'Open your saved workshop for free. One event ticket per drop.' : props.game.id === 'journey_disc_arena' ? 'Choose one to four event-ticket weapon discs.' : 'Costs one event ticket.'}`}
+      disabled={props.tickets < 1}
+      aria-label={`Play ${props.game.displayName}. ${props.game.familyLabel}. ${props.game.id === 'crystal_miners' ? 'Requires an event ticket. One event ticket per drop.' : props.game.id === 'journey_disc_arena' ? 'Choose one to four event-ticket weapon discs.' : 'Costs one event ticket.'}`}
     >
       <span className="arena-choice__glow" aria-hidden="true" />
       <span className="arena-choice__icon" aria-hidden="true">{props.game.icon}</span>

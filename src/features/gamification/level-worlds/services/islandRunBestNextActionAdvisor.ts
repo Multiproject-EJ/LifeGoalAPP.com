@@ -1,7 +1,6 @@
 import { resolveIslandRunContractV2Stops, reconcileIslandRunStopObjectivesFromCompletionLedger } from './islandRunContractV2StopResolver';
 import { BOSS_STOP_INDEX, canChallengeBoss } from './islandRunBossEncounter';
 import {
-  getEffectiveIslandNumber,
   isStopBuildFullyComplete,
   MAX_BUILD_LEVEL,
   type IslandRunContractV2BuildState,
@@ -18,7 +17,7 @@ import {
 import { resolveIslandRunCompletion } from './islandRunCompletion';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { generateIslandStopPlan } from './islandRunStops';
-import { getStopTicketCost, getStopTicketsPaidForIsland, isStopTicketPaid, STOP_COUNT } from './islandRunStopTickets';
+import { STOP_COUNT } from './islandRunStopTickets';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 
 export type IslandRunBestNextActionKind =
@@ -212,28 +211,6 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
     };
   }
 
-  const ticketsPaid = getStopTicketsPaidForIsland(record.stopTicketsPaidByIsland, islandNumber);
-  const effectiveIslandNumber = getEffectiveIslandNumber(islandNumber, record.cycleIndex);
-  for (let stopIndex = 1; stopIndex < STOP_COUNT; stopIndex += 1) {
-    if (isStopTicketPaid({ ticketsPaid, stopIndex })) continue;
-    const previousStopId = stopPlan[stopIndex - 1]?.stopId ?? null;
-    if (!isStopEffectivelyCompleteByIndex({ record, stopId: previousStopId, completedStops: effectiveCompletedStops })) {
-      continue;
-    }
-    const cost = getStopTicketCost({ effectiveIslandNumber, stopIndex });
-    if (Math.max(0, Math.floor(record.essence)) >= cost) {
-      const stopId = stopPlan[stopIndex]?.stopId;
-      return {
-        action: 'pay_stop_ticket',
-        urgency: 'high',
-        ctaLabel: 'Open landmark',
-        reason: 'You have enough essence to open the next landmark.',
-        meta: { stopId, stopIndex },
-      };
-    }
-    break;
-  }
-
   const bossDefeated = record.bossTrialResolvedIslandNumber === islandNumber;
   if (canChallengeBoss({ stopBuildStateByIndex: record.stopBuildStateByIndex, isBossDefeated: bossDefeated })) {
     return {
@@ -245,8 +222,7 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
     };
   }
 
-  for (let stopIndex = 0; stopIndex < STOP_COUNT; stopIndex += 1) {
-    if (!isStopTicketPaid({ ticketsPaid, stopIndex })) continue;
+  for (let stopIndex = 0; stopIndex < STOP_COUNT - 1; stopIndex += 1) {
     const previousStopId = stopIndex > 0 ? stopPlan[stopIndex - 1]?.stopId ?? null : null;
     if (
       stopIndex > 0
@@ -262,7 +238,7 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
         action: 'complete_active_stop',
         urgency: 'normal',
         ctaLabel: 'Complete landmark',
-        reason: 'A paid landmark is open and still needs completion.',
+        reason: 'This landmark is open and still needs completion.',
         meta: { stopId: stopId ?? undefined, stopIndex },
       };
     }

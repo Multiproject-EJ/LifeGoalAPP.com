@@ -91,6 +91,16 @@ async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Pro
 }
 
 export const islandRunRollActionTests: TestCase[] = [
+  { name: 'first tutorial throw lands on a visible dynamite cache and persists one charge', run: async () => {
+    resetEnvironment();
+    seedState({ runtimeVersion:0, dicePool:30, tokenIndex:0, currentIslandNumber:1, cycleIndex:0, firstSessionTutorialState:'awaiting_first_roll' });
+    const result = await executeIslandRunRollAction({session:makeSession(),client:null});
+    assertEqual(result.status,'ok','first throw succeeds');
+    assertEqual(FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES.includes(result.newTokenIndex as any),true,'lands on authored cache');
+    assertEqual(result.firstLightAssemblyDynamiteCollectionKind,'landing','visible landing, not merely passing');
+    assertEqual(result.firstLightAssemblyDynamiteCollected,1,'one canonical charge');
+  }},
+
   {
     name: 'ceremony preparations read canonical L1 builds and concurrent taps reveal the beacon once',
     run: async () => {
@@ -434,23 +444,23 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 1 first-cycle Central Command onboarding suppresses the generic halfway briefing',
+    name: 'Island 1 introduces the mission phone on the first completed throw before halfway',
     run: async () => {
       resetEnvironment();
       seedState({
         runtimeVersion: 0,
         dicePool: 30,
-        tokenIndex: 16,
+        tokenIndex: 0,
         currentIslandNumber: 1,
         cycleIndex: 0,
-        firstSessionTutorialState: 'first_roll_consumed',
+        firstSessionTutorialState: 'normal_play_until_low_dice',
         narrativeSeenState: { beats: {}, episodes: {} },
       });
       const result = await withMockedRandom([0, 0], () =>
         executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
       );
-      assertEqual(result.newTokenIndex, 18, 'test crosses the halfway tile');
-      assertEqual(result.missionBriefingTrigger, null, 'existing Island 1 Central Command flow remains the only briefing');
+      assertEqual(result.newTokenIndex, 2, 'first throw lands before halfway');
+      assertEqual(result.missionBriefingTrigger?.beatId, 'MISSION-BRIEFING-C0-I001', 'first throw queues the dynamite and peace assembly mission');
     },
   },
   {

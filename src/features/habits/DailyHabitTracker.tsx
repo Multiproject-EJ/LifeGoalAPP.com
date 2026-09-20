@@ -1,3 +1,5 @@
+import { cancelNativeHabitAlerts, NATIVE_ALERTS_CHANGED, isNativeNotifications } from '../../services/nativeNotifications';
+import { habitAlertsAllowed } from '../../services/nativeNotificationPolicy';
 import { useCallback, useEffect, useMemo, useRef, useState, useId, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
@@ -2351,6 +2353,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
     return next;
   }, [habitHealthAssessmentsByHabitId, habits]);
+  useEffect(() => {
+    if (!isNativeNotifications()) return;
+    const suppressed = habits.filter(habit => !habitAlertsAllowed(habitHealthByHabitId[habit.id] ?? 'active')).map(habit => habit.id);
+    void cancelNativeHabitAlerts(suppressed).catch(console.warn);
+    window.dispatchEvent(new Event(NATIVE_ALERTS_CHANGED));
+  }, [habitHealthByHabitId, todayTodos]);
   const reviewQueueHabits = useMemo(
     () =>
       habits.filter((habit) => {

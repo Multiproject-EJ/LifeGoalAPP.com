@@ -1,3 +1,5 @@
+import { createLandmarkAttentionVisual } from './landmarkAttentionVisual';
+import type { LandmarkAttention } from '../services/islandRunLandmarkAttention';
 import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
 import {FIRST_ARRIVAL_WELCOME_TIME,advanceFirstArrivalTime} from '../services/islandRunFirstArrival';
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
@@ -390,7 +392,8 @@ interface Island5ThreePilotProps {
   worldSourceNumber?: IslandRunAuthored3DWorldSource;
   buildLevel: BuildLevel;
   landmarkBuildLevels?: Island5LandmarkBuildLevels;
-  landmarkProgress?: ReadonlyArray<{ id: string; title: string; percent: number; status: string }>;
+  landmarkProgress?: ReadonlyArray<{ id: string; title: string; percent: number; status: string; attention?: LandmarkAttention }>;
+  landedLandmarkId?: string;
   presentation?: 'workbench' | 'embedded';
   qualityOverride?: Island3DQualitySelection;
   /** Canonical presentation map. This never becomes a gameplay write path. */
@@ -3565,6 +3568,7 @@ export default function Island5ThreePilot({
   buildLevel,
   landmarkBuildLevels,
   landmarkProgress,
+  landedLandmarkId,
   presentation = 'workbench',
   qualityOverride,
   tileMap,
@@ -3763,6 +3767,12 @@ export default function Island5ThreePilot({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkProgressRef = useRef(landmarkProgress);
   landmarkProgressRef.current = landmarkProgress;
+  const selectedLandmarkIdRef = useRef<string | undefined>(undefined);
+  const landedLandmarkIdRef = useRef(landedLandmarkId);
+  landedLandmarkIdRef.current = landedLandmarkId;
+  const labelMovingRef = useRef(false);
+  labelMovingRef.current = isRolling || Boolean(pendingHopSequence);
+  if (labelMovingRef.current) selectedLandmarkIdRef.current = undefined;
   const landmarkLabelRefs = useRef(new Map<string, HTMLButtonElement>());
   const wonderRideTransitionVeilRef = useRef<HTMLDivElement>(null);
   const wonderRideFrontButtonRef = useRef<HTMLButtonElement>(null);
@@ -6024,6 +6034,7 @@ export default function Island5ThreePilot({
 
     const clickableLandmarks: THREE.Object3D[] = [];
     const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
+    const attentionVisuals = new Map<string, { root: THREE.Object3D; level: number; visual: ReturnType<typeof createLandmarkAttentionVisual> }>();
     const landmarkLabelAnchors = new WeakMap<THREE.Object3D, THREE.Vector3>();
     const projectedLandmarkLabel = new THREE.Vector3();
     const island15FallbackRoot = new THREE.Group();
@@ -6041,6 +6052,10 @@ export default function Island5ThreePilot({
       (isCrystalGlacier ? island15FallbackRoot : scene).add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
       landmarkRootsById.set(landmark.id, landmarkRoot);
+      // Capture authored surfaces before the static renderer hides/merges source meshes.
+      if (landmarkProgressRef.current) attentionVisuals.set(landmark.id, {
+        root: landmarkRoot, level: resolvedBuildLevel, visual: createLandmarkAttentionVisual(landmarkRoot),
+      });
       if (isCelestialSkyKingdom && landmark.id !== 'boss') {
         livingAmbience.registerRedockingLandmark?.(landmark.id, landmarkRoot);
       }
@@ -8671,6 +8686,7 @@ export default function Island5ThreePilot({
         idleOverviewAt = null;
         applyPreset(landmarkId);
         if (landmarkId === 'boss' || landmarkId === 'hatchery' || landmarkId === 'habit' || landmarkId === 'wisdom' || landmarkId === 'event') {
+          selectedLandmarkIdRef.current = landmarkId;
           onLandmarkClickRef.current?.(landmarkId);
         }
       }
@@ -10213,7 +10229,8 @@ export default function Island5ThreePilot({
       if (!activeWonderRide && !activeTrainRide) controls.update();
       if (islandNumber === 1 && (firstArrivalRef.current.active || firstArrival || firstArrivalCompletedRef.current)) {
         if (firstArrivalVersion !== firstArrivalRestartRef.current) {
-          firstArrival?.dispose(); firstArrival = null; firstArrivalTime = 0; firstArrivalWelcomeNotified = false;
+          attentionVisuals.forEach(entry => entry.visual.dispose());
+      firstArrival?.dispose(); firstArrival = null; firstArrivalTime = 0; firstArrivalWelcomeNotified = false;
           firstArrivalCompleted = false; firstArrivalVersion = firstArrivalRestartRef.current;
         }
         if (!firstArrival) {
@@ -10358,6 +10375,17 @@ export default function Island5ThreePilot({
         const label = landmarkLabelRefs.current.get(item.id);
         const root = landmarkRootsById.get(item.id as Island5LandmarkId);
         if (!label || !root) continue;
+        const presentationVisible = !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
+          && !constructionPresentationRef.current?.active;
+        let overlay = attentionVisuals.get(item.id);
+        const visualLevel = landmarkBuildLevelsRef.current?.[item.id as Island5LandmarkId] ?? buildLevelRef.current;
+        if (overlay?.root !== root || overlay?.level !== visualLevel) { overlay?.visual.dispose(); attentionVisuals.delete(item.id); overlay = undefined; }
+        if (!overlay && item.attention && item.attention !== 'none') {
+          overlay = { root, level: visualLevel, visual: createLandmarkAttentionVisual(root) };
+          attentionVisuals.set(item.id, overlay);
+        }
+        overlay?.visual.set(item.attention ?? 'none', presentationVisible);
+
         let anchor = landmarkLabelAnchors.get(root);
         if (!anchor) {
           const bounds = new THREE.Box3().setFromObject(root);
@@ -10368,11 +10396,15 @@ export default function Island5ThreePilot({
         }
         projectedLandmarkLabel.copy(anchor);
         root.localToWorld(projectedLandmarkLabel).project(renderCamera);
-        const visible = root.visible && !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
+        const visible = !labelMovingRef.current && (landedLandmarkIdRef.current === item.id || selectedLandmarkIdRef.current === item.id) && root.visible && !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
           && !constructionPresentationRef.current?.active
           && projectedLandmarkLabel.z > -1 && projectedLandmarkLabel.z < 1
           && Math.abs(projectedLandmarkLabel.x) < 0.95 && Math.abs(projectedLandmarkLabel.y) < 0.95;
-        label.style.display = visible ? 'flex' : 'none';
+        label.style.display = 'flex';
+        label.style.opacity = visible ? '1' : '0';
+        label.style.pointerEvents = visible ? 'auto' : 'none';
+        label.setAttribute('aria-hidden', String(!visible));
+        label.tabIndex = visible ? 0 : -1;
         if (visible) {
           const width = label.offsetWidth, height = label.offsetHeight;
           const x = Math.max(width / 2 + 4, Math.min(canvas.clientWidth - width / 2 - 4, (projectedLandmarkLabel.x + 1) * canvas.clientWidth / 2));
@@ -10802,7 +10834,8 @@ export default function Island5ThreePilot({
       {landmarkProgress ? <div className="island-landmark-progress-layer">
         {landmarkProgress.map(item => <button key={item.id} type="button"
           ref={element => { if (element) landmarkLabelRefs.current.set(item.id, element); else landmarkLabelRefs.current.delete(item.id); }}
-          className="island-landmark-progress-label"
+          className={`island-landmark-progress-label${item.attention === 'blue' ? ' island-landmark-progress-label--ready' : ''}`}
+          style={{ display: 'none' }}
           disabled={isRolling || interactionPaused}
           aria-label={`${item.title}: ${item.percent}% built. ${item.status}`}
           onClick={() => onLandmarkClick?.(item.id as Island5LandmarkId)}>

@@ -169,6 +169,12 @@ function resolveFirstSessionTutorialRollTotal(options: {
   // The first roll teaches resources and construction; Concord is recovered on Island 005.
   const islandOneTheme = getIslandBoardThemeForIslandNumber(1);
   const tileMap = generateTileMap(1, getIslandRarity(1), islandOneTheme.tileThemeId, 0, { profileId: boardProfile.id });
+  for (const requireMoney of [true, false]) {
+    for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
+      const tile = tileMap[resolveWrappedTokenIndex(options.tokenIndex, total, boardProfile.tileCount)];
+      if (tile?.signatureMissionKind === 'first_light_dynamite' && (!requireMoney || isPositiveEssenceTile(tile.tileType, 1))) return total;
+    }
+  }
   for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
     const targetIndex = resolveWrappedTokenIndex(options.tokenIndex, total, boardProfile.tileCount);
     const targetTile = tileMap[targetIndex];
@@ -499,7 +505,7 @@ async function performRollAction(options: {
       cycleIndex: state.cycleIndex,
       islandNumber: state.currentIslandNumber,
     }));
-  const missionBriefingTrigger = ordinaryTileGameplayActive
+  const missionBriefingTrigger = (ordinaryTileGameplayActive || (state.currentIslandNumber === 1 && state.cycleIndex === 0))
     ? resolveIslandMissionBriefingTrigger({
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,

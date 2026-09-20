@@ -1,3 +1,4 @@
+import { isNativeNotifications } from './nativeNotifications';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import { fetchHabitReminderPrefs } from './habitReminderPrefs';
 import { listHabitsV2, isHabitLifecycleActive } from './habitsV2';
@@ -503,6 +504,8 @@ export async function getHabitAlertSummary(
  * @param hatchAtMs - Unix ms timestamp when the egg will be ready
  */
 export async function scheduleEggHatchNotification(userId: string, hatchAtMs: number): Promise<void> {
+  if (isNativeNotifications()) return; // Canonical native ledger scheduler owns these alerts.
+
   const now = new Date();
   const scheduledAt = new Date(hatchAtMs);
   // Don't schedule notifications in the past

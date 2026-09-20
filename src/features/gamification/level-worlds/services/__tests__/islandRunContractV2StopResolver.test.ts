@@ -44,7 +44,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
     const resolve = (builds = FULL_BUILD_STATES) => resolveIslandRunContractV2Stops({
       islandNumber:4, stopStatesByIndex:states, stopBuildStateByIndex:builds, stopTicketsPaidByIsland:{} });
     assertDeepEqual(resolve(EMPTY_BUILD_STATES).statusesByIndex, ['locked','locked','locked','locked','locked'], 'nothing enters before Level3');
-    assertDeepEqual(resolve().statusesByIndex, ['locked','active','accessible','accessible','locked'], 'no additional ticket after building');
+    assertDeepEqual(resolve().statusesByIndex, ['accessible','active','accessible','accessible','locked'], 'Hatchery is available after all buildings, without solving their activities');
     states[1].objectiveComplete = true;
     states[2].objectiveComplete = true;
     states[3].objectiveComplete = true;
@@ -56,7 +56,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
   }},
 
   {
-    name: 'legacy save without access fields: brand-new island keeps only Hatchery active',
+    name: 'legacy save without access fields: brand-new island recommends Hatchery with free ordinary stops',
     run: () => {
       assertResolvedFrontier(
         [
@@ -66,7 +66,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
         ],
-        ['active', 'locked', 'locked', 'locked', 'locked'],
+        ['active', 'accessible', 'accessible', 'accessible', 'locked'],
         0,
         'brand-new legacy island',
       );
@@ -83,7 +83,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
         ],
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         1,
         'Hatchery-complete legacy island',
       );
@@ -100,7 +100,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
         ],
-        ['completed', 'completed', 'active', 'locked', 'locked'],
+        ['completed', 'completed', 'active', 'accessible', 'locked'],
         2,
         'Habit-complete legacy island',
       );
@@ -134,7 +134,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
         ],
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         1,
         'paid-ticket legacy frontier',
         { '1': [1] },
@@ -169,7 +169,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
         ],
-        ['completed', 'completed', 'active', 'locked', 'locked'],
+        ['completed', 'completed', 'active', 'accessible', 'locked'],
         2,
         'partial legacy island with paid future ticket',
         { '1': [1, 2, 3] },
@@ -177,7 +177,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
     },
   },
   {
-    name: 'resolver picks first stop without objective complete as active and locks all later stops',
+    name: 'resolver picks first stop without objective complete as active and preserves later completed objectives',
     run: () => {
       const result = resolveIslandRunContractV2Stops({
         stopStatesByIndex: [
@@ -193,7 +193,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       assertEqual(result.activeStopType, 'habit', 'Expected active stop type to match index 1');
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'completed', 'accessible', 'locked'],
         'Expected stop 0 completed (objective done) and stop 1 active',
       );
     },
@@ -215,7 +215,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       assertEqual(result.activeStopType, 'habit', 'Expected hatchery to be followed by habit');
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         'Expected stop 0 completed when objective complete, regardless of build',
       );
     },
@@ -255,7 +255,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         ],
       });
       assertEqual(result.activeStopIndex, 0, 'Expected malformed truthy values to remain incomplete');
-      assertDeepEqual(result.statusesByIndex, ['active', 'locked', 'locked', 'locked', 'locked'], 'Expected strict boolean completion checks');
+      assertDeepEqual(result.statusesByIndex, ['active', 'accessible', 'accessible', 'accessible', 'locked'], 'Expected strict boolean completion checks');
     },
   },
   {
@@ -266,7 +266,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       });
       assertEqual(result.activeStopIndex, 0, 'Expected first stop to remain active with missing state');
       assertEqual(result.activeStopType, 'hatchery', 'Expected hatchery as deterministic fallback active type');
-      assertDeepEqual(result.statusesByIndex, ['active', 'locked', 'locked', 'locked', 'locked'], 'Expected missing entries to remain locked after step 1');
+      assertDeepEqual(result.statusesByIndex, ['active', 'accessible', 'accessible', 'accessible', 'locked'], 'Missing save entries do not lock ordinary stops');
     },
   },
   {
@@ -445,7 +445,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
   },
   // ── P1-11: ticket_required status ────────────────────────────────────────
   {
-    name: 'ticket_required: emitted when active stop (index > 0) has no paid ticket on current island',
+    name: 'ticket_required: retired even when the active stop has no saved paid ticket',
     run: () => {
       const result = resolveIslandRunContractV2Stops({
         stopStatesByIndex: [
@@ -461,8 +461,8 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       assertEqual(result.activeStopIndex, 1, 'Expected stop 1 to be active');
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'ticket_required', 'locked', 'locked', 'locked'],
-        'Expected ticket_required for the active stop when its ticket is unpaid',
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
+        'Unpaid ordinary stops are freely accessible',
       );
     },
   },
@@ -482,7 +482,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       });
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         'Paid ticket on active stop keeps legacy active status',
       );
     },
@@ -504,7 +504,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       });
       assertDeepEqual(
         result.statusesByIndex,
-        ['active', 'locked', 'locked', 'locked', 'locked'],
+        ['active', 'accessible', 'accessible', 'accessible', 'locked'],
         'Hatchery active stays active regardless of ticket ledger',
       );
     },
@@ -523,7 +523,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       });
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'active', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         'Without ticket params, resolver falls back to legacy two-state behaviour',
       );
     },
@@ -544,7 +544,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       });
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'ticket_required', 'locked', 'locked', 'locked'],
+        ['completed', 'active', 'accessible', 'accessible', 'locked'],
         'Paid ticket on a different island must not leak into another island',
       );
     },
@@ -568,7 +568,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       assertEqual(result.recommendedStopIndex, 2, 'Immediate next unlocked stop should be recommended');
       assertDeepEqual(
         result.statusesByIndex,
-        ['completed', 'postponed', 'active', 'locked', 'locked'],
+        ['completed', 'postponed', 'active', 'accessible', 'locked'],
         'Habit remains postponed/incomplete while Mystery is the active recommendation',
       );
     },

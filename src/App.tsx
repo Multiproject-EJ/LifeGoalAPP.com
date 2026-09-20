@@ -1,3 +1,4 @@
+import { NativeNotificationCoordinator } from './features/notifications/NativeNotificationCoordinator';
 import {
   type CSSProperties,
   FormEvent,
@@ -6607,6 +6608,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onBack={() => setShowZenGardenFullScreen(false)}
         />
       )}
+      <NativeNotificationCoordinator session={activeSession} />
       <OfflineSyncDevPanel userId={activeSession?.user?.id ?? null} />
     </div>
   );

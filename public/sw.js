@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v10-ship-eggs-20260920';
+const CACHE_VERSION = 'v11-native-alerts-20260920';
 const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
 const APP_SHELL = [

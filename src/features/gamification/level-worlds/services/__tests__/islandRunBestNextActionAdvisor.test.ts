@@ -48,6 +48,11 @@ function makeRecord(overrides: Partial<IslandRunGameStateRecord> = {}): IslandRu
   };
 }
 
+function withoutOpenActivities(overrides: Partial<IslandRunGameStateRecord> = {}): Partial<IslandRunGameStateRecord> {
+  return { completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS.slice(0,4) },
+    stopStatesByIndex: Array.from({length:5},(_,i)=>({objectiveComplete:i<4,buildComplete:false})), ...overrides };
+}
+
 function resolveAction(record: IslandRunGameStateRecord) {
   return resolveIslandRunBestNextAction({ record, nowMs: NOW_MS, playerLevel: 1 });
 }
@@ -283,12 +288,12 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     },
   },
   {
-    name: 'affordable next stop ticket returns pay_stop_ticket',
+    name: 'next landmark recommendation never sells an obsolete pass',
     run: () => {
       const record = makeRecord({ essence: 30, dicePool: 5 });
 
       const result = requireResult(record, 'expected pay_stop_ticket result');
-      assertEqual(result.action, 'pay_stop_ticket', 'affordable ticket should win');
+      assertEqual(result.action, 'complete_active_stop', 'free landmark activity should be recommended');
       assertEqual(result.meta?.stopIndex, 1, 'habit stop ticket should be next');
     },
   },
@@ -334,10 +339,10 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     run: () => {
       const record = makeRecord({
         essence: 50,
-        completedStopsByIsland: { [ISLAND_KEY]: ['hatchery', 'habit'] },
+        completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS.slice(0,4) },
         stopTicketsPaidByIsland: { [ISLAND_KEY]: [1] },
         stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({
-          objectiveComplete: index <= 1,
+          objectiveComplete: index < 4,
           buildComplete: false,
         })),
         stopBuildStateByIndex: Array.from({ length: 5 }, (_, index) => ({
@@ -355,7 +360,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
   {
     name: 'dice available returns roll',
     run: () => {
-      expectAction(makeRecord({ dicePool: 1 }), 'roll');
+      expectAction(makeRecord(withoutOpenActivities({ dicePool: 1 })), 'roll');
     },
   },
   {
@@ -372,6 +377,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
 
       expectAction(
         makeRecord({
+          ...withoutOpenActivities(),
           dicePool: 3,
           activeTimedEvent,
           minigameTicketsByEvent: { space_excavator: 2 },
@@ -380,6 +386,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
       );
       expectAction(
         makeRecord({
+          ...withoutOpenActivities(),
           dicePool: 0,
           activeTimedEvent,
           minigameTicketsByEvent: { space_excavator: 2 },
@@ -392,6 +399,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     name: 'out of dice with regen ETA returns wait_for_dice_regen',
     run: () => {
       const record = makeRecord({
+        ...withoutOpenActivities(),
         dicePool: 0,
         diceRegenState: buildInitialDiceRegenState(1, NOW_MS),
       });
@@ -404,7 +412,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
   {
     name: 'impossible incomplete state returns resolve_stuck',
     run: () => {
-      expectAction(makeRecord({ dicePool: 0, diceRegenState: null }), 'resolve_stuck');
+      expectAction(makeRecord(withoutOpenActivities({ dicePool: 0, diceRegenState: null })), 'resolve_stuck');
     },
   },
   {
@@ -428,6 +436,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
       for (const testCase of cases) {
         expectAction(
           makeRecord({
+            ...withoutOpenActivities(),
             firstSessionTutorialState: testCase.firstSessionTutorialState,
             dicePool: 5,
           } as Partial<IslandRunGameStateRecord>),

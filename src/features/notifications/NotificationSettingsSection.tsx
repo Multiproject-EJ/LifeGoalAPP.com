@@ -1,3 +1,5 @@
+import { isNativeNotifications } from '../../services/nativeNotifications';
+import { NativeNotificationSettings } from './NativeNotificationSettings';
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -57,6 +59,10 @@ function mapRowToState(row: NotificationPreferencesRow | null, fallbackTimezone:
 }
 
 export function NotificationSettingsSection({ session }: Props) {
+  return isNativeNotifications() ? <NativeNotificationSettings userId={session.user.id} /> : <WebNotificationSettings session={session} />;
+}
+
+function WebNotificationSettings({ session }: Props) {
   const isDemoExperience = isDemoSession(session);
   const fallbackTimezone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {

@@ -92,8 +92,8 @@ type MissionCopy = Pick<
 const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   1: {
     progressKind: 'first_light_assembly',
-    headline: 'First Light Assembly',
-    missionStatement: 'First Light has no chamber where the whole island can be heard. Recover ten finite dynamite charges, excavate one shared civic hall beneath the circular route, and restore the four outer landmarks so the community can convene.',
+    headline: 'Build the Diplomatic Peace Signing Assembly',
+    missionStatement: 'Collect dynamite as you explore Island 001. Use it to excavate and create the Diplomatic Peace Signing Assembly: a shared place where the island can gather and sign for peace.',
     primaryObjective: 'Collect ten charges and detonate three batches: 3, 5, then 2.',
     supportingObjective: 'Raise Hatchery, Habit, Event Arena and Wisdom to Level 3. The Assembly replaces a separate Boss landmark on Island 001.',
     fieldProtocol: 'One controlled blast at a time. Protect the route above while every charge widens and deepens the same excavation.',
@@ -302,12 +302,14 @@ export function resolveIslandMissionBriefingTrigger(options: {
 }): IslandMissionBriefingTrigger | null {
   const islandNumber = Math.max(1, Math.floor(options.islandNumber));
   const cycleIndex = Math.max(0, Math.floor(options.cycleIndex));
-  // Island 1's first visit already has a mandatory Central Command order and
-  // Concord acquisition sequence. A second automatic briefing would overlap it.
-  if (islandNumber === 1 && cycleIndex === 0) return null;
+  // First Light introduces its mission phone after the first completed throw.
+  const firstLightIntroduction = islandNumber === 1 && cycleIndex === 0;
+  if (!options.hopSequence.length) return null;
 
   const tileCount = Math.max(1, Math.floor(options.tileCount));
-  const triggerTileIndex = Math.floor(tileCount * ISLAND_MISSION_BRIEFING_ROUTE_FRACTION) % tileCount;
+  const triggerTileIndex = firstLightIntroduction
+    ? options.hopSequence[options.hopSequence.length - 1]
+    : Math.floor(tileCount * ISLAND_MISSION_BRIEFING_ROUTE_FRACTION) % tileCount;
   if (!options.hopSequence.includes(triggerTileIndex)) return null;
 
   const beatId = getIslandMissionBriefingBeatId(cycleIndex, islandNumber);

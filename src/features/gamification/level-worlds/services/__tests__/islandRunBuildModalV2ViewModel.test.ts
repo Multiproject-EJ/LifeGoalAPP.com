@@ -47,6 +47,13 @@ const manifest = normalizeIslandArtManifest({
 }, 1)!;
 
 export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
+  { name: 'build attention requires the full remaining level, not one tap', run() {
+    const partial = vm([build(0, 20, 100), build(0), build(0), build(0), build(0)], 20);
+    assertEqual(partial.activeLandmark?.canAffordNextTap, true, 'one tap is affordable');
+    assertEqual(partial.activeLandmark?.canAffordFullLevel, false, 'full level is not');
+    const full = vm([build(0, 20, 100), build(0), build(0), build(0), build(0)], 80);
+    assertEqual(full.activeLandmark?.canAffordFullLevel, true, 'exact remaining level is affordable');
+  }},
   {
     name: 'level completion presentation only appears when a landmark advances',
     run: () => {

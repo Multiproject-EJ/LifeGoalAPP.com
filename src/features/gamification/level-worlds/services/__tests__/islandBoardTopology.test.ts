@@ -7,6 +7,14 @@ import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResol
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandBoardTopologyTests: TestCase[] = [
+  { name:'expanded landmark entrances retain dynamite and the event ticket remains functional', run:()=>{
+    for (const expandedActiveStopId of ['hatchery','habit','mystery','wisdom'] as const) {
+      const tiles=applyLandmarkDoorTiles(generateTileMap(1,'normal','forest',0),{expandedActiveStopId});
+      assertEqual(tiles.filter(t=>t.signatureMissionKind==='first_light_dynamite').length,10,'all ten finite dynamite caches remain visible');
+      assertEqual(tiles[30].tileType,'free_ticket','event ticket tile is not replaced by a landmark door');
+    }
+  }},
+
   {
     name: 'movement wrap uses profile tile count rather than hardcoded 17',
     run: () => {
@@ -31,7 +39,7 @@ export const islandBoardTopologyTests: TestCase[] = [
       });
 
       assertEqual(result.activeStopIndex, 1, 'Expected second stop to be active after first completion');
-      assertDeepEqual(result.statusesByIndex, ['completed', 'active', 'locked', 'locked', 'locked'], 'Expected index-sequential v2 statuses');
+      assertDeepEqual(result.statusesByIndex, ['completed', 'active', 'accessible', 'accessible', 'locked'], 'Expected index-sequential v2 statuses');
     },
   },
 

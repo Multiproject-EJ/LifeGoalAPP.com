@@ -36,7 +36,7 @@ function resetAll(): void {
 
 export const islandRunStopTicketActionTests: TestCase[] = [
   {
-    name: 'concurrent pass requests deduct once and persist one ticket',
+    name: 'stale concurrent pass requests cannot charge money or create a ticket',
     run: async () => {
       resetAll();
       const session = makeSession();
@@ -60,14 +60,11 @@ export const islandRunStopTicketActionTests: TestCase[] = [
       ]);
       const snapshot = getIslandRunStateSnapshot(session);
 
-      assertEqual(first.status, 'paid', 'First request should buy the pass');
-      assertEqual(second.status, 'rejected', 'Queued duplicate should observe the paid ledger');
-      if (second.status === 'rejected') {
-        assertEqual(second.reason, 'already_paid', 'Duplicate should be rejected as already paid');
-      }
-      assertEqual(snapshot.essence, 70, 'Wallet should be charged exactly once');
-      assertEqual(snapshot.essenceLifetimeSpent, 35, 'Lifetime spend should increase exactly once');
-      assertEqual(snapshot.stopTicketsPaidByIsland['1']?.join(','), '1', 'Pass ledger should contain one stop entry');
+      assertEqual(first.status, 'already_free', 'Landmarks no longer sell passes');
+      assertEqual(second.status, 'already_free', 'A duplicate remains free');
+      assertEqual(snapshot.essence, 100, 'Wallet is unchanged');
+      assertEqual(snapshot.essenceLifetimeSpent, 5, 'Lifetime spend is unchanged');
+      assertEqual(snapshot.stopTicketsPaidByIsland['1'], undefined, 'No obsolete pass is written');
     },
   },
   {
@@ -91,10 +88,7 @@ export const islandRunStopTicketActionTests: TestCase[] = [
       const result = await purchaseIslandRunStopTicket({ session, client: null, stopIndex: 1 });
       const snapshot = getIslandRunStateSnapshot(session);
 
-      assertEqual(result.status, 'rejected', 'Short wallet should be rejected');
-      if (result.status === 'rejected') {
-        assertEqual(result.reason, 'insufficient_essence', 'Rejection should explain the shortfall');
-      }
+      assertEqual(result.status, 'already_free', 'No balance is required for entry');
       assertEqual(snapshot.essence, 29, 'Rejected purchase must not change wallet');
       assertEqual(snapshot.stopTicketsPaidByIsland['1'], undefined, 'Rejected purchase must not add a pass');
     },

@@ -1,3 +1,6 @@
+import { ArenaTicketEntry } from './ArenaTicketEntry';
+import { resolveLandmarkAttention } from '../services/islandRunLandmarkAttention';
+import { NotificationBadge } from '../../../../components/NotificationBadge';
 import {getConcordCollectedSlots, getConcordRewardedLines} from '../services/islandRunConcordProgress';
 import {shouldPlayIsland001FirstArrival} from '../services/islandRunFirstArrival';
 import './Island001Arrival.css';
@@ -3468,6 +3471,10 @@ export function IslandRunBoardPrototype({
     cycleIndex: runtimeState.cycleIndex,
     islandNumber: 1,
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  // Gameplay commits before the hop animation. Keep the uncollected cache
+  // visible until the pawn arrives, rather than erasing it as the dice launch.
+  const visibleClaimedDynamiteTilesRef = useRef(firstLightAssemblyProgress.claimedDynamiteTileIndices);
+  if (!isRolling && !pendingHopSequence) visibleClaimedDynamiteTilesRef.current = firstLightAssemblyProgress.claimedDynamiteTileIndices;
   const firstLightAssemblyNextBatch = getFirstLightAssemblyNextBatch(firstLightAssemblyProgress.chargesDetonated);
   const firstLightAssemblyAvailableDynamite = getFirstLightAssemblyAvailableDynamite(firstLightAssemblyProgress);
   const firstLightAssemblyCompleted = firstLightAssemblyProgress.completedAtMs !== null;
@@ -6105,22 +6112,9 @@ export function IslandRunBoardPrototype({
     [islandProgressReadState.stopTicketsPaidByIsland, islandNumber],
   );
 
-  /**
-   * True when `stopId` is waiting on an essence ticket — the previous stop is
-   * complete but this stop hasn't been paid yet. Orbit clicks on such stops
-   * open the ticket-prompt modal instead of the stop itself.
-   */
-  const doesStopRequireTicketPayment = useCallback((stopId: string): boolean => {
-    const stopIndex = stopIndexByStopId.get(stopId);
-    if (stopIndex === undefined) return false;
-    if (stopIndex === 0) return false; // hatchery is always free
-    if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
-      return contractV2Stops.statusesByIndex[stopIndex] === 'ticket_required';
-    }
-    if (isStopTicketPaid({ ticketsPaid: ticketsPaidForCurrentIsland, stopIndex })) return false;
-    const prevState = islandProgressReadState.stopStatesByIndex[stopIndex - 1];
-    return Boolean(prevState?.objectiveComplete);
-  }, [contractV2Stops, islandProgressReadState.stopStatesByIndex, stopIndexByStopId, ticketsPaidForCurrentIsland]);
+  // Ordinary landmarks never charge entry passes. Saved payment ledgers remain
+  // readable for compatibility; Event Arena games own their ticket spending.
+  const doesStopRequireTicketPayment = useCallback((_stopId: string): boolean => false, []);
 
   const ticketRequirementByStopId = useMemo(() => {
     const requirements = new Map<string, { needsTicket: boolean; ticketCost?: number }>();
@@ -6160,7 +6154,7 @@ export function IslandRunBoardPrototype({
     });
 
     if (tapOutcome === 'locked') {
-      setLandingText('Build this landmark to Level 3 to enter. Hatchery follows all Level 3 buildings and the other activities; Boss comes last.');
+      setLandingText('Build this landmark to Level 3 to enter. Hatchery opens when every building is Level 3; Boss comes last.');
     } else if (tapOutcome === 'ticket_required') {
       setLandingText('Landmark preview opened. Pay ticket in the modal to enter this stop.');
     }
@@ -7376,12 +7370,10 @@ export function IslandRunBoardPrototype({
     setCameraMode('stop_focus');
   }, [activeBuildCameraStopId, constructionPresentation.cameraLocked, showBuildPanel]);
 
-  // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
-  // landmark has a next build step the player can pay for right now with their
-  // current essence wallet. Mirrors the orbit "affordable" cue so the player
-  // knows to open Build without having to peek inside the modal first.
+  // The attention dot means the entire next construction level is affordable,
+  // including per-step discount rounding, rather than only one partial tap.
   const hasAffordableBuildStep = useMemo(
-    () => Boolean(buildModalV2ViewModel.activeLandmark?.canAffordNextTap),
+    () => Boolean(buildModalV2ViewModel.activeLandmark?.canAffordFullLevel),
     [buildModalV2ViewModel],
   );
 
@@ -8487,10 +8479,9 @@ export function IslandRunBoardPrototype({
     // cleared by `onHopSequenceComplete`.
         setPendingHopSequence(null);
 
-        // The roll service atomically marks this cycle-scoped narrative beat
-        // seen when the route first crosses its halfway tile. Queue the visual
-        // briefing now; an encounter/landmark/reward modal from the landing is
-        // allowed to finish first, so two full-attention surfaces never stack.
+        // Island001 introduces its mission after the first throw; later islands
+        // use the halfway-route briefing. Acknowledgement persists the beat.
+        // Finish any landing reward before the queued briefing opens.
         if (rollResult.missionBriefingTrigger) {
           setPendingMissionBriefing(rollResult.missionBriefingTrigger);
         }
@@ -10606,6 +10597,12 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchTimedEventMinigame = async () => {
+    const entryEventId = effectiveActiveTimedEvent?.eventId ?? activeTimedEvent?.eventId;
+    if (!entryEventId || (getIslandRunStateSnapshot(session).minigameTicketsByEvent?.[entryEventId] ?? 0) < 1) {
+      setLandingText('No event tickets left. Land on the board’s ticket tile to earn more.');
+      playIslandRunSound('market_insufficient_coins');
+      return;
+    }
     if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) {
       if (getIslandRunStateSnapshot(session).currentIslandNumber === 2) setShowOpeningGamesCeremony(true);
       else setLandingText('The opening ceremony on Island 002 introduces the arena games.');
@@ -10913,6 +10910,12 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchArenaGame = (gameId: ArenaGameId) => {
+    const entryEventId = effectiveActiveTimedEvent?.eventId ?? activeTimedEvent?.eventId;
+    if (!entryEventId || (getIslandRunStateSnapshot(session).minigameTicketsByEvent?.[entryEventId] ?? 0) < 1) {
+      setLandingText('No event tickets left. Land on the board’s ticket tile to earn more.');
+      playIslandRunSound('market_insufficient_coins');
+      return;
+    }
     if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) { if (islandNumber === 2) setShowOpeningGamesCeremony(true); return; }
     if (gameId === 'crystal_miners') {
       const miningEvent = effectiveActiveTimedEvent ?? activeTimedEvent;
@@ -13743,9 +13746,13 @@ export function IslandRunBoardPrototype({
   }, [dragonCinematicStartedAtMs]);
   useEffect(() => {
     if (!pendingMissionBriefing || doesModalOwnAttention || queuedSignatureMissionPresentation) return;
-    setActiveMissionBriefing(pendingMissionBriefing);
-    setPendingMissionBriefing(null);
-  }, [doesModalOwnAttention, pendingMissionBriefing, queuedSignatureMissionPresentation]);
+    if (isRolling || pendingHopSequence) return;
+    const timer = window.setTimeout(() => {
+      setActiveMissionBriefing(pendingMissionBriefing);
+      setPendingMissionBriefing(null);
+    }, pendingMissionBriefing.islandNumber === 1 ? 850 : 0);
+    return () => window.clearTimeout(timer);
+  }, [doesModalOwnAttention, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
   useEffect(() => {
     if (!queuedSignatureMissionPresentation || doesModalOwnAttention) return undefined;
     const mission = queuedSignatureMissionPresentation;
@@ -14845,6 +14852,7 @@ export function IslandRunBoardPrototype({
             onClick={openSanctuaryPanel}
           >
             🐾 Sanctuary
+            <NotificationBadge show={sanctuaryRewardReadyCount > 0} ariaLabel="A creature bond reward is ready" />
           </button>
           <button
             type="button"
@@ -15529,7 +15537,7 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
-        {!diplomaticRewardChannelVisible && featureAccess.gradual ? (
+        {!diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
           <div className="island-run-board__rewardbar-cluster">
             <button type="button" className="island-run-board__mission-phone-rail"
               aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
@@ -15549,6 +15557,7 @@ export function IslandRunBoardPrototype({
                 title={`${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or uncollected${hatcheryPendingEggTimeLabel ? ` — ${hatcheryPendingEggTimeLabel}` : ''}`}
                 onClick={openHatcheryQuickAccess}
               >
+                <NotificationBadge show={hatcheryPendingEggs.some(egg => egg.isReady)} ariaLabel="An egg is ready to open" />
                 <span className="island-run-board__rewardbar-hatchery-egg-stack" aria-hidden="true">
                   {hatcheryPendingEggs.map((egg, index) => (
                     <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot">
@@ -15587,6 +15596,7 @@ export function IslandRunBoardPrototype({
                 title={dailySpinAvailable ? 'Daily Momentum — spin ready' : 'Daily Momentum — collected today'}
                 onClick={onOpenDailySpinWheel}
               >
+                <NotificationBadge show={dailySpinAvailable} ariaLabel="A spin is ready" />
                 <span className="island-run-board__daily-momentum-wheel" aria-hidden="true">
                   <span className="island-run-board__daily-momentum-star">✦</span>
                 </span>
@@ -15929,6 +15939,7 @@ export function IslandRunBoardPrototype({
                 worldSourceNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
                 landmarkBuildLevels={island5ThreeBuildLevels}
+                landedLandmarkId={!isRolling && !pendingHopSequence ? (landmarkDoorTileMap[tokenIndex]?.doorStopId === 'mystery' ? 'event' : landmarkDoorTileMap[tokenIndex]?.doorStopId) : undefined}
                 landmarkProgress={islandStopPlan.map((stop, index) => {
                   const build = islandProgressReadState.stopBuildStateByIndex[index];
                   const level = build?.buildLevel ?? 0;
@@ -15936,6 +15947,9 @@ export function IslandRunBoardPrototype({
                   const percent = level >= 3 ? 100 : Math.min(99, Math.floor((level + fraction) / 3 * 100));
                   const status = contractV2Stops?.statusesByIndex[index];
                   return { id: stop.stopId === 'mystery' ? 'event' : stop.stopId, title: stop.title, percent,
+                    attention: resolveLandmarkAttention({ id: stop.stopId, level, complete: status === 'completed',
+                      allBuilt: islandProgressReadState.stopBuildStateByIndex.every(entry => (entry?.buildLevel ?? 0) >= 3),
+                      actionable: status === 'active' || status === 'accessible' || status === 'postponed' }),
                     status: status === 'completed' ? 'Complete' : level < 3 ? `Build to Level 3` : status === 'locked' ? 'Finish earlier activities' : 'Ready to enter' };
                 })}
                 presentation="embedded"
@@ -16037,7 +16051,7 @@ export function IslandRunBoardPrototype({
                   completed: isIslandVisualPreview && islandArtPreviewNumber === 1
                     ? true
                     : firstLightAssemblyCompleted || firstLightAssemblyPendingSector === FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
-                  claimedDynamiteTileIndices: firstLightAssemblyProgress.claimedDynamiteTileIndices,
+                  claimedDynamiteTileIndices: visibleClaimedDynamiteTilesRef.current,
                   constructionSequence: firstLightAssemblyConstructionSequence,
                 }}
                 greatHoneyfallPresentation={{
@@ -16356,6 +16370,7 @@ export function IslandRunBoardPrototype({
                   onClick={openSanctuaryPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
+                  <NotificationBadge show={sanctuaryRewardReadyCount > 0} ariaLabel="A creature bond reward is ready" />
                   <svg
                     className="island-run-prototype__footer-handle-btn-shape island-run-prototype__footer-handle-btn-shape--left"
                     viewBox="0 0 100 170"
@@ -16419,11 +16434,7 @@ export function IslandRunBoardPrototype({
                 >
                   🔨 Build
                   {hasAffordableBuildStep && !isBuildTutorialPromptActive && (
-                    <span
-                      className="island-run-prototype__footer-build-dot"
-                      role="status"
-                      aria-label="A building can be funded with your money"
-                    />
+                    <NotificationBadge show ariaLabel="Your next full building level is affordable" />
                   )}
                 </button>
                 <button
@@ -16736,6 +16747,10 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {activeLaunchedMinigameId && activeLaunchedMinigameSource === 'timed_event' ? (
+        <ArenaTicketEntry key={activeLaunchedMinigameId} />
+      ) : null}
+
       {shouldRenderActiveStopModal({
         hasActiveStop: Boolean(activeStop),
         storyReaderOpen: showStoryReader,
@@ -16813,7 +16828,7 @@ export function IslandRunBoardPrototype({
                   <ul className="island-stop-modal__help-list">
                     <li>{activeStop.description}</li>
                     <li>The egg keeps incubating even while you travel.</li>
-                    <li>From Island 004, finish every building at Level 3 and the other landmark activities to earn your Hatchery egg.</li>
+                    <li>From Island 004, finish every building at Level 3 to earn your Hatchery egg.</li>
                     <li>Collect it into the spaceship incubator, then open it from any island when ready.</li>
                   </ul>
                 </div>
@@ -16833,7 +16848,7 @@ export function IslandRunBoardPrototype({
                 {openedStopNeedsTicket && openedStopTicketCost
                   ? <>This stop is ready to open. Pay <strong>{openedStopTicketCost} 💰</strong> to unlock this island ticket.</>
                   : islandNumber >= 4
-                  ? 'Build this landmark to Level 3 to enter. Complete the other activities before Hatchery, then face the Boss.'
+                  ? 'Build this landmark to Level 3 to enter. Hatchery opens when every building is Level 3. Finish the activities before facing the Boss.'
                   : priorStop
                   ? <>Complete <strong>{priorStop.title}</strong> first to unlock this stop.</>
                   : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
@@ -20071,7 +20086,7 @@ export function IslandRunBoardPrototype({
           runtimeStateRef.current = acknowledgement.record;
           setRuntimeState(acknowledgement.record);
           setActiveMissionBriefing(null);
-          setLandingText('Field order accepted. The Concord will keep the caretaker channel open.');
+          setLandingText(islandNumber === 1 ? 'Collect dynamite and build the Diplomatic Peace Signing Assembly. Your mission phone tracks the progress.' : 'Field order accepted. Your mission phone tracks the progress.');
           playIslandRunSound('stop_land');
           triggerIslandRunHaptic('stop_land');
         }}

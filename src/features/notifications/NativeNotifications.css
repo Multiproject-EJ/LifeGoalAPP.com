@@ -1,0 +1,8 @@
+.native-alert-backdrop { position: fixed; inset: 0; z-index: 2147483000; background: #031022c9; backdrop-filter: blur(9px); display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); }
+.native-alert-dialog { width: min(100%, 380px); max-height: 85dvh; overflow-y: auto; box-sizing: border-box; border: 1px solid #79c7e745; border-radius: 28px; padding: 26px; background: linear-gradient(155deg, #18364b, #091827); color: #eef8ff; box-shadow: 0 22px 80px #0008; text-align: center; }
+.native-alert-dialog p { color: #c5d9e8; line-height: 1.5; }
+.native-alert-egg { display: block; font-size: 52px; }
+.native-alert-dialog button, .native-alert-settings button { display: block; width: 100%; border-radius: 14px; padding: 13px 16px; margin-top: 10px; border: 1px solid #84b6cc55; background: #183c53; color: #fff; font: inherit; }
+.native-alert-dialog .native-alert-enable { background: #248456; border-color: #54d699; font-weight: 700; }
+.native-alert-settings { padding: 16px 0; }
+.native-alert-settings p { line-height: 1.5; }
