@@ -1,3 +1,4 @@
+import { crystalMinersManifest } from '../../games/crystal-miners';
 /**
  * Central registrar for every Island Run mini-game manifest.
  *
@@ -32,6 +33,7 @@ import type { ComponentType } from 'react';
 
 /** Ordered list of every manifest the game can launch. */
 export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze([
+  crystalMinersManifest,
   bossRhythmManifest,
   shooterBlitzManifest,
   spaceExcavatorManifest,

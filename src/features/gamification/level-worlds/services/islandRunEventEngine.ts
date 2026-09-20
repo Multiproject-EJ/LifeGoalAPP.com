@@ -350,6 +350,7 @@ export type EventMinigameId =
   | 'companion_feast'
   | 'skybound_expedition'
   | 'momentum_matrix'
+  | 'crystal_miners'
   | 'journey_disc_arena'
   | 'concord_categories'
   | 'lexicon_relay'

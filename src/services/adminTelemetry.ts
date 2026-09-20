@@ -92,3 +92,12 @@ export async function getAdminTelemetryInsights(options: {
     };
   }
 }
+
+/** Existing admin RLS remains authoritative; bounded raw events, no new public analytics endpoint. */
+export async function listCrystalMinersTelemetry(lookbackDays: number): Promise<{data:RecentTelemetryEventRow[];error:Error|null}> {
+  try {
+    const since=new Date(Date.now()-Math.min(90,Math.max(1,lookbackDays))*86400000).toISOString();
+    const {data,error}=await getUntypedSupabase().from('telemetry_events').select('id,user_id,event_type,metadata,occurred_at').eq('event_type','island_run_gameplay_event').eq('metadata->>game_id','crystal_miners').gte('occurred_at',since).order('occurred_at',{ascending:false}).limit(1000);
+    if(error)throw error;return {data:(data??[]) as RecentTelemetryEventRow[],error:null};
+  }catch(error){return {data:[],error:error instanceof Error?error:new Error('Could not load mining telemetry.')};}
+}

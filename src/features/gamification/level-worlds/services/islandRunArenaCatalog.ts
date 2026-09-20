@@ -5,6 +5,7 @@ import { isJourneyDiscArenaIsland } from './journeyDiscArmory';
 export type ArenaGameId =
   | EventId
   | 'momentum_matrix'
+  | 'crystal_miners'
   | 'journey_disc_arena'
   | 'concord_categories'
   | 'lexicon_relay'
@@ -112,6 +113,13 @@ export const ARENA_GAME_CATALOG: readonly ArenaGameDefinition[] = Object.freeze(
     artSrc: null,
     accent: '#65ddff',
     isNew: true,
+  },
+  {
+    id: 'crystal_miners', displayName: 'Crystal Miners', shortName: 'Miners', icon: '⛏',
+    family: 'planning', familyLabel: 'Merge & mine',
+    description: 'Merge stronger tools. Drop into the crystal depths and uncover buried treasure.',
+    availability: 'exhibition', estimatedSeconds: [30, 180], iconSrc: '/assets/event-games/crystal-miners/icon.svg', artSrc: '/assets/event-games/crystal-miners/cover.svg',
+    accent: '#77e9c0', isNew: true,
   },
   {
     id: 'momentum_matrix',

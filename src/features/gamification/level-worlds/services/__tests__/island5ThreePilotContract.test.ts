@@ -1841,7 +1841,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('landmarkRootsById.set(rendererId, runtime.nodes.rooms[room].root)'), 'construction and focus bounds must use semantic room roots after attachment');
       assert(pilotSource.includes('island15FallbackRoot.visible = false'), 'the V4 rollback must hide only after the palace runtime binds successfully');
       assert(pilotSource.includes('island15PalaceRuntime.cloneRoomAtLevel(landmarkId, currentLevel)'), 'Island 015 construction must use deep-owned runtime clones');
-      assert(pilotSource.includes('sceneBuildLevelDependency = isCrystalGlacier ? 0 : buildLevel'), 'Island 015 build levels must not recreate the Three scene');
+      assert(pilotSource.includes('sceneBuildLevelDependency = isCrystalGlacier ? 0 : constructionSceneLevelsRef.current.buildLevel'), 'Island 015 build levels must not recreate the Three scene; other worlds retain main\'s frozen construction-session levels');
       assert(pilotSource.includes('isCrystalGlacier ? undefined : landmarkRootsById.get(\'boss\')'), 'Island 015 must bypass shared-material boss fading');
       assert(!pilotSource.includes('createIsland15CrystalPalaceLoader({'), 'production must not depend on a missing asynchronous GLB asset');
       assert(pilotSource.includes('disposeScene(scene);'), 'the ambience-owned procedural palace must be released by generic scene disposal');
@@ -3060,7 +3060,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(theatreSource.includes('const shellClearanceMargin = targetEnvelope.radius * 0.0015'), 'robot occupancy projection must keep a stable positive shell margin instead of snapping to an exact floating-point boundary');
       assert(theatreSource.includes('const correctedRadius = minimumShellRadius + shellClearanceMargin'), 'robot shell correction must converge in one stable projection rather than retriggering as visible tremor');
       assert(theatreSource.includes('targetPosition.x *= 0.84'), 'resting workers must stay fully readable inside the phone edges while retaining legal shell clearance');
-      assert(pilotSource.includes('applyProgress(progress, { working })'), 'temporary construction dressing must follow active/resting mode');
+      assert(pilotSource.includes('applyProgress(presentedConstructionProgress, { working: activeConstruction?.working ?? false })'), 'interpolated construction dressing must still follow active/resting mode');
       assert(pilotSource.includes('constructionLandmarkGrounding'), 'the live modal must expose foundation-grounding evidence');
       assert(pilotSource.includes('previewFloorY: Number(constructionAnchor.position.y.toFixed(4))'), 'the construction preview must report its actual floor datum');
       assert(!pilotSource.includes('constructionBounds.min.y + horizontalExtent * 0.4'), 'the construction preview must never lift the whole landmark above its plot');
@@ -3130,7 +3130,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('getIsland3DTokenHopPosition'), '3D movement must use the tested grounded hop arc');
       assert(pilotSource.includes("presentation = 'workbench'"), 'live-shell use must opt into the stripped embedded presentation explicitly');
       assert(boardSource.includes('const Island5ThreeScene = lazy'), 'live shell should not eagerly load the Three.js scene');
-      assert(boardSource.includes("params.get('island3dPreview') === '1'"), 'internal QA should expose a deterministic Island 5 preview URL');
+      assert(!boardSource.includes('isIsland5ThreePreviewRequested'), '3D preview must not require a flag that silently defaults to the retired 2D board');
       assert(boardSource.includes('resolveIslandRun3DWorldRoute(island3DContentNumber)')
         && boardSource.includes('resolveOpeningGamesContentIsland(__storeState.signatureMissionProgressByIsland, islandArtPreviewNumber)')
         && boardSource.includes('const island3DContentNumber = isIslandVisualPreview ? islandArtPreviewNumber'),
@@ -3148,9 +3148,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes("setQueuedSignatureMissionPresentation('great_honeyfall')"), 'nectar pickup must queue its mission controller behind any competing full-attention reward');
       assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
       assert(
-        boardSource.includes('const shouldRenderIsland5Three = canUseIsland5Three')
-          && boardSource.includes('&& (!isIslandVisualPreview || isIsland5ThreePreviewRequested);'),
-        'authored live islands should default to 3D while legacy visual previews remain explicit',
+        boardSource.includes('const shouldRenderIsland5Three = canUseIsland5Three;')
+          && boardSource.includes('landmarkBuildLevels={island5ThreeBuildLevels}'),
+        'authored islands and previews must use 3D and the visible construction levels',
       );
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
       assert(pilotSource.includes('qualityOverride?: Island3DQualitySelection'), 'embedded renderer should accept a presentation-only dev quality override');
@@ -3219,7 +3219,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(embeddedQualityReader.indexOf('return requested;') < embeddedQualityReader.indexOf('localStorage.getItem'), 'explicit QA quality must take precedence over the saved/default High override');
       assert(boardSource.includes('tokenIndex={tokenIndex}'), 'embedded renderer must read the canonical token index already owned by the live board');
       assert(boardSource.includes('pendingHopSequence={pendingHopSequence}'), 'embedded renderer must consume the canonical roll hop sequence without deriving movement');
-      assert(boardSource.includes('landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}'), 'production landmarks must read their individual canonical build levels');
+      assert(boardSource.includes('landmarkBuildLevels={island5ThreeBuildLevels}'), 'gameplay and preview landmarks must read their individual construction levels');
       assert(boardSource.includes("handleLandmarkOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId)"), '3D landmark taps must reuse the shared landmark-opening dispatcher');
       assert(boardSource.includes('handleStopOpenRequest(stopId);'), 'the shared landmark dispatcher must delegate ordinary stops to the canonical stop-opening path');
       assert(!boardSource.includes('onRendererUnavailable'), 'an authored live island must never downgrade to the retired 2D board after a renderer restart');

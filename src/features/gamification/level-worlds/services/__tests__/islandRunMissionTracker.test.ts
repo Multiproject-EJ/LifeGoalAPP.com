@@ -44,6 +44,22 @@ function restoredStops(count = 5) {
 
 export const islandRunMissionTrackerTests: TestCase[] = [
   {
+    name: 'merged mission resolver preserves ceremony and Welcome credit without duplicate departure gates',
+    run: () => {
+      const ledger = createOpeningGamesCampaignLedger();
+      const state = makeState({currentIslandNumber: 2, ...restoredStops(), signatureMissionProgressByIsland: ledger});
+      const ready = resolveIslandMissionTrackerPresentation({islandNumber: 2, state});
+      assertEqual(ready.islandCompletion?.objectivesComplete, 5, 'Welcome check-in needs no egg');
+      assertEqual(ready.islandCompletion?.requirements.filter(item => !item.complete).length, 1, 'only ceremony remains');
+      assertEqual(ready.islandCompletion?.nextRequirement?.id, 'opening_ceremony', 'no legacy causeway or duplicate signature gate');
+      ledger[OPENING_GAMES_CEREMONY_KEY] = {...createOpeningGamesCeremonyProgress(), rollsCompleted: 12,
+        venuesPreparedAtMs: 1, teamsWelcomedAtMs: 2, beaconLitAtMs: 3, completedAtMs: 4};
+      const done = resolveIslandMissionTrackerPresentation({islandNumber: 2, state});
+      assert(done.complete && done.islandCompletion?.complete, 'phone and departure agree after participation');
+      assertEqual(done.overallProgressPercent, 100, 'phone reaches 100 only with all canonical requirements');
+    },
+  },
+  {
     name: 'new campaign mission phones use ceremony on002 and Re-Docking on004 without remapping save keys',
     run: () => {
       const ledger = createOpeningGamesCampaignLedger();
@@ -308,7 +324,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
       assertEqual(tracker.objectives[0].label, 'Use Dynamite', 'Assembly objective uses compact approved copy');
       assertEqual(tracker.objectives[0].value, 3, 'detonation progress comes from canonical mission state');
       assertEqual(tracker.objectives[1].value, 4, 'all four outer objectives, builds and the egg are complete');
-      assertEqual(tracker.overallProgressPercent, 77, 'overall progress includes the separate activities row');
+      assertEqual(tracker.overallProgressPercent, tracker.islandCompletion?.percent, 'phone progress includes the same remaining mandate and egg requirements as departure');
 
       const unresolvedEgg = resolveIslandMissionTrackerPresentation({
         islandNumber: 1,

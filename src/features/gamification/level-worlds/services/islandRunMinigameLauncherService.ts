@@ -272,7 +272,10 @@ export function shouldResolveEventArenaStopOnMinigameComplete(options: {
   minigameId: string | null | undefined;
   completed: boolean;
 }): boolean {
-  return resolveEventMinigameCompletionId(options) !== null;
+  // Crystal Miners settles event rewards atomically in its action service.
+  // Its successful exit can still resolve the existing Arena landmark objective.
+  return (options.completed && options.launchSource === 'timed_event' && options.minigameId === 'crystal_miners')
+    || resolveEventMinigameCompletionId(options) !== null;
 }
 
 /**

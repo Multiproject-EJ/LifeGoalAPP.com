@@ -1,3 +1,6 @@
+import { initStopBuildStatesForIsland } from '../islandRunContractV2EssenceBuild';
+import { quoteIslandRunFastBuild } from '../islandRunFastBuild';
+import { applyIslandRunFastBuild } from '../islandRunFastBuildAction';
 /**
  * C1 integration tests — islandRunStateActions
  *
@@ -279,6 +282,25 @@ function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] 
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
+  {
+    name: 'parallel fast-build clicks charge and award once through the canonical mutex',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ currentIslandNumber: 2, cycleIndex: 0, essence: 10000, dicePool: 10,
+        firstSessionTutorialState: 'complete', stopBuildStateByIndex: initStopBuildStatesForIsland(2),
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false })) });
+      const before = getIslandRunStateSnapshot(session);
+      const quote = quoteIslandRunFastBuild(before, 'island', 0)!;
+      const results = await Promise.all([applyIslandRunFastBuild({session, client: null, quote}), applyIslandRunFastBuild({session, client: null, quote})]);
+      assertEqual(results.filter(result => result.applied).length, 1, 'only one accepted action');
+      const after = getIslandRunStateSnapshot(session);
+      assertEqual(after.essence, before.essence - quote.cost, 'cost once');
+      assertEqual(after.dicePool, 25, 'fifteen completed levels rewarded once');
+      assertEqual(readIslandRunGameStateRecord(session).dicePool, 25, 'reward survives local hydration');
+      assert(after.stopStatesByIndex.every(stop => !stop.objectiveComplete), 'no activities skipped');
+    },
+  },
   {
     name: 'Event Arena first boost grants active-event tickets once through canonical action',
     run: () => {

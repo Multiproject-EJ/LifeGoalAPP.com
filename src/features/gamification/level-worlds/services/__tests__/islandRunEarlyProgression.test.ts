@@ -114,9 +114,11 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
       assertEqual(getIslandRunStateSnapshot(session),before,'rejection writes nothing');
     }
   }},
-  {name:'new Island003 can depart without eggs after genuine activities and builds; travel resets welcome',async run(){
+  {name:'new Island003 can depart without eggs after genuine activities, builds and its playable mission; travel resets welcome',async run(){
     const before=await completeBase(3);
-    const noEggs={...before,perIslandEggs:{}};
+    const noEggs={...before,perIslandEggs:{},signatureMissionProgressByIsland:{...before.signatureMissionProgressByIsland,
+      '0:3':{missionId:'frostwell-iceworks' as const,version:2 as const,metersDrilled:500,
+        spinsEarned:8,spinsUsed:8,lastSpinMeters:50,builtAtMs:1,updatedAtMs:1}}};
     resetIslandRunStateSnapshot(session,noEggs);
     assert(resolveIslandRunCompletion(noEggs).complete,'no egg softlock');
     const tracker=resolveIslandMissionTrackerPresentation({islandNumber:3,state:noEggs});
@@ -203,7 +205,10 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
   {name:'unmarked saves do not acquire new ceremony or Re-Docking departure requirements',async run(){
     for(const island of [2,4]) {
       const state=await completeBase(island);
-      assert(resolveIslandRunCompletion({...state,signatureMissionProgressByIsland:{}}).complete,'legacy clear preserved');
+      const completion = resolveIslandRunCompletion({...state,signatureMissionProgressByIsland:{}});
+      assert(!completion.requirements.some(item => item.id === 'opening_ceremony' || item.id === 'redocking'),
+        'unmarked saves never acquire the new campaign requirements');
+      assertEqual(completion.nextRequirement?.id, 'signature', 'latest main still requires the original playable mission');
     }
   }},
 ];

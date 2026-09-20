@@ -591,7 +591,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const fsMod = await import('fs');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx', 'utf8');
-      const trackerSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRunMissionTracker.ts', 'utf8');
+      const trackerSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRunMissionObjectives.ts', 'utf8');
       const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
       assert(boardSource.includes('island-run-board__rewardbar-side-rail'), 'board renders the shared right-side HUD rail');
       assert(boardSource.includes('island-run-board__mission-phone-rail'), 'board renders the compact mission phone beneath event actions');

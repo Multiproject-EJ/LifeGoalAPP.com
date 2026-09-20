@@ -1,7 +1,6 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
-import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
-import { ISLAND_RUN_CONTRACT_V2_STOP_TYPES } from './islandRunContractV2StopResolver';
+import { resolveIslandMissionObjectives, resolveLandmarkProgress } from './islandRunMissionObjectives';
 import { getIslandTechnologyAccess } from './islandRunTechnologyUnlocks';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveOpeningGamesCeremony } from './islandRunOpeningGames';
@@ -20,7 +19,7 @@ export type IslandRunCompletionState = Pick<IslandRunGameStateRecord,
   & Partial<Pick<IslandRunGameStateRecord, 'completedStopsByIsland' | 'technologyUnlocksById'>>;
 
 export interface IslandCompletionRequirement {
-  id: 'builds' | 'objectives' | 'egg' | 'assembly' | 'mandate' | 'concord' | 'extraction' | 'opening_ceremony' | 'redocking';
+  id: 'builds' | 'objectives' | 'egg' | 'assembly' | 'mandate' | 'concord' | 'extraction' | 'signature' | 'opening_ceremony' | 'redocking';
   label: string;
   value: number;
   target: number;
@@ -43,13 +42,9 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
     && assembly.chargesDetonated === 0
     && getIslandTechnologyAccess({ technologyUnlocksById: state.technologyUnlocksById ?? {} }, 'the-concord').active;
   const landmarkCount = islandNumber === 1 && !legacyConcord ? 4 : 5;
-  const completedIds = new Set(state.completedStopsByIsland?.[String(islandNumber)] ?? []);
-  const buildsComplete = Array.from({ length: landmarkCount }, (_, index) => (
-    (state.stopBuildStateByIndex[index]?.buildLevel ?? 0) >= MAX_BUILD_LEVEL
-  )).filter(Boolean).length;
-  const objectivesComplete = ISLAND_RUN_CONTRACT_V2_STOP_TYPES.slice(0, landmarkCount).filter((id, index) => (
-    state.stopStatesByIndex[index]?.objectiveComplete === true || completedIds.has(id)
-  )).length;
+  const { buildsComplete, objectivesComplete } = resolveLandmarkProgress({
+    islandNumber, state, landmarkCount,
+  });
   const eggResolved = areAllEggSlotsTerminalForIsland(state.perIslandEggs, islandNumber);
   const requirements: IslandCompletionRequirement[] = [];
   const add = (id: IslandCompletionRequirement['id'], label: string, value: number, target = 1) => {
@@ -61,6 +56,15 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   if (islandNumber === 1) {
     if (legacyConcord) add('concord', 'Activate the Concord', 1);
     else add('assembly', 'Complete the Assembly', assembly.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET);
+  }
+  // Every playable objective shown on the phone is required for departure.
+  // Planned missions expose only the standard goals, so cannot strand players.
+  if (islandNumber !== 1 && islandNumber !== 20 && !(access.gradual && (islandNumber === 2 || islandNumber === 4))) {
+    const mission = resolveIslandMissionObjectives({ islandNumber, state, landmarkCount });
+    if (mission.usesLiveSignatureProgress) {
+      const signature = mission.objectives[0];
+      add('signature', signature.label, signature.value, signature.target);
+    }
   }
   // Base completion unlocks Island 020's extraction. It is not permission to leave.
   const baseComplete = requirements.every(item => item.complete);

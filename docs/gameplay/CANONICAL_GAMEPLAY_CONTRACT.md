@@ -294,8 +294,10 @@ Stop rules:
 Each island has **5 buildings**, one per stop. Buildings are **completely decoupled from stop unlock sequencing**:
 - A building can be funded at **any time**, regardless of which stop is currently active.
 - Buildings have **3 levels (L1, L2, L3)**. Each level requires Essence to fund.
-- Tapping a building in the Build Panel spends 10 Essence toward the current level. Holding continues spending.
-- Each visible build beat remains one awaited canonical spend. A tap presents its beat within 500 ms; holding ramps the presentation cadence from 420 ms to 160 ms while preserving every funded part, sound, haptic, robot phase, and level boundary. Rapid hold must never batch, skip, or pre-fund the next building level.
+- Hold is the primary construction input; release, blur, backgrounding or closing stops further queued spending. Each hold step spends up to one fifth of the current tier (minimum nominal 10 Essence), using the existing discount and affordability rules. The additive reveal interpolates smoothly between funded steps.
+- An affordable orange fire action finishes the selected landmark through L3; an affordable blue triple-fire action finishes all remaining construction on the current island. Both display exact remaining costs, revalidate the quote against the current visit/progress/discount, and commit atomically. Island 1's separate Assembly mission and guided first build are excluded. No objective, egg, boss or travel gate is completed by these actions.
+- Each newly funded construction level grants one die in the same canonical commit. Reopening, replaying a quote, or reviewing already completed levels grants nothing. Construction dice are recorded separately in economy diagnostics.
+- Hold steps use a short accelerating cadence; fast modes use a roughly one-second reveal followed by a protected celebration. The full 3D world is retained during an open construction session. Celebration presents a centered title, front-facing modal crew, fireworks and dice flight with reduced-motion alternatives.
 - When a level is fully funded, the building animates and advances to the next level.
 - When **all 3 levels are funded**, the building's `buildComplete` flag is set.
 
@@ -448,7 +450,7 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 - A mission object is finite and claim-once unless its mission explicitly documents a repeatable interaction (for example a fishing spot or Frostwell drill station).
 - An exact landing collects the object first. Missions with route pity may instead secure the first unclaimed object crossed during an accepted roll; at most one pity object is collected per roll and token movement is never changed.
 - Collection and stage activation are canonical service actions persisted in `signatureMissionProgressByIsland`. React and Three.js only present committed results.
-- Mission completion is optional to ordinary island travel unless an island-specific contract explicitly declares it as a canonical stop substitute (Island 001 is the current exception).
+- Playable signature missions shown in the mission phone are required for departure, using the same canonical saved evidence as the phone (§7). Planned missions without implemented gameplay remain excluded.
 - Islands 004, 006, 007, 008, and 009 share the staged-restoration state machine but keep authored descriptors and bespoke 3D transformations. Each spend reveals exactly one durable world stage; the final spend triggers the island finale.
 
 ## 5C) Reward amplification and session dynamics
@@ -481,6 +483,8 @@ track is stored under the current active event runtime id in the canonical
 record. Such a track is not a second global reward bar: it cannot own another
 clock or wallet, and every claim must route through canonical action services
 into the existing Island Run wallets.
+
+Crystal Miners is an Arena exhibition using the current event ticket bucket and reward bar. Opening, gifts, ore purchases and tool arrangement cost no tickets; each accepted whole-rack drop costs one. Its complete mining career (tools, merged upgrades, ore, waiting gifts, cavern terrain and personal league) persists across island travel and event rotation. Event-keyed checkpoints retain spend evidence; the highest career revision supplies the workshop on every visit. A drop settles its ticket, mining result and normal event reward progress atomically before visual playback. Its forty-cavern journey and once-only milestone claims also persist across rotations. Five finish-line chests offer distinct ore/gift rewards; normal levels need one reached chest, levels ending in 8 or 9 need two. Every tenth level has a full-width guardian followed by a generous reward fall. Milestones automatically pay the existing dice/Essence wallets or active-event ticket bucket in the successful dig commit. The result offers Continue or Try again; both always return to workshop preparation. Only a separate explicit Drop action starts another expedition. Mined ore funds level-gated forge upgrades and tool purchases. Tools stay in their lanes except at marked rare deflectors. The playback camera follows the deepest active tool each frame, immediately following overtakes and returning upward to surviving tools after a leader finishes. Weighted normal/super gifts roll once when opened, with revealed tools saved immediately and a tier-20 ceiling. Low-ticket prompts route to island earning or the existing gated Stripe ticket and dice surfaces; ticket counts never alter physics or gift odds. Level forty ends the campaign without resetting investments or enabling repeat finale claims. It has no building side mission or separate island wallet.
 
 Journey Disc Arena reward-track points and claims are event-scoped. Its fighter
 rank, weapon levels, and highest Guardian clearance are a permanent owner-scoped
@@ -539,7 +543,7 @@ When all requirements are met, show **Island 100% complete** and automatically o
 
 Construction and activities must be displayed separately: **Build Landmarks** counts funded Level-3 buildings, not completed activities. The current-island completion checklist uses `resolveIslandRunCompletion` for all required construction, activities, terminal Hatchery eggs and mandatory finales; incomplete progress must never round to 100%.
 
-Island 001 replaces the Boss slot with the completed Assembly: four outer L3 landmarks, their four activities, resolved eggs, ten Assembly charges and the signed peacekeeping mandate are required. Legacy pre-Assembly saves with the activated Concord retain their five-stop completion route. Island 020 additionally requires the Iron Skiff extraction after its ordinary Level-3 clear. Other signature missions remain optional to ordinary departure.
+Island 001 replaces the Boss slot with the completed Assembly: four outer L3 landmarks, their four activities, resolved eggs, ten Assembly charges and the signed peacekeeping mandate are required. Legacy pre-Assembly saves with the activated Concord retain their five-stop completion route. Island 020 additionally requires the Iron Skiff extraction after its ordinary Level-3 clear. All playable signature missions shown in the mission phone are required for departure (updated by user request, 2026-09-20). Planned missions without canonical gameplay remain excluded. The phone and departure share the same objective and saved completion evidence; construction alone never grants activity credit.
 
 Additional rules:
 - Island progression is **not** time-based.
@@ -584,8 +588,8 @@ and legacy saves retain the rules above and all earned inventory/unlocks.
 - Previously earned eggs remain resolvable; the policy blocks new early egg
   creation, not ownership. Never delete saved eggs or creatures as migration.
 
-The ceremony and Re-Docking requirements are explicit exceptions to the
-otherwise optional signature-mission rule. Egg reward inventory/other grant
+The ceremony and Re-Docking requirements specialize the required playable
+mission rule for this explicit cohort. Egg reward inventory/other grant
 sources and full first-session onboarding remain separately tracked release gates.
 
 ---
@@ -715,3 +719,13 @@ the commit coordinator, not by hydration logic.
 
 Breaking any of these rules is considered a regression of P0-2 in
 `docs/gameplay/ISLAND_RUN_OPEN_ISSUES.md`.
+
+### Crystal Miners ticket funding and diagnostics (2026-09-19)
+
+The event grid launches Crystal Miners with its dedicated icon. Its canonical action converts one shared event ticket into three game-specific drops only when the saved drop bank is empty; each drop consumes one, and exact milestone rewards credit the drop bank directly. Earned and server-confirmed purchased tickets obey the same game-specific quantity profile. Conversion and spend commit atomically with terrain, rewards and career revision; event/island changes preserve already-funded drops and upgrades. Existing games retain their current quantities. Preparation costs ore. No UI wallet writes or new checkout eligibility bypasses.
+
+Versioned attempt/lifecycle/error telemetry uses the existing consent-aware pipeline and admin access policies. Per-cavern analysis is a capped sample, not a whole-population conversion claim. See `CRYSTAL_MINERS_TELEMETRY.md`.
+
+Crystal Miners guardian weapons (2026-09-19): each guardian telegraphs one lane, charges, destroys that lane's active falling tools, reloads and retargets until defeated. Targets can miss empty lanes and are independent of ticket balance. Tool impacts resolve before weapons, so a killing impact cancels a pending shot. Only this expedition's falling bodies are lost; the permanent rack remains intact. Ordinary rock impacts use a short tier-independent rebound: higher difficulty comes from equipment requirements, impact budgets and terrain variety, not stronger tools bouncing more slowly. Version-eight career migration preserves old terrain damage and investment while adding late-cavern obsidian.
+
+Crystal Miners focus and balance update (2026-09-19): normal players prepare in the workshop and automatically switch to the mine for a drop; manual Drop zone/Full shaft/Bottom treasure inspection is available only through admin or explicit development tooling. Six deterministic visual cave themes rotate by level without changing reward odds. Newly opened chests receive a 1.1-second end-of-drop celebration before results, including when fall playback is skipped; no additional reward settlement occurs during this hold. Dragging a valid matching pair highlights both tools before release without a gameplay mutation. Terrain schema nine increases equipment requirements and shortens the per-tool impact budget, while retaining short rebounds, saved damage ratios, opened chests, tools, forge and wallets. The last approaches have a gentler extra-hardness multiplier to avoid excessive retries; tickets never influence difficulty or targeting.
