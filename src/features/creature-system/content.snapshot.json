@@ -1,0 +1,2758 @@
+{
+  "version": "mask-creature-system-draft-1",
+  "provenance": {
+    "registrySha256": "8933fe0dda9bdced40655871cef9e6a36e876b126cc6f7ba83f6fa2604344e61",
+    "sourceHashes": [
+      {
+        "path": "src/features/identity/archetypes/archetypeDeck.ts",
+        "sha256": "547224804a9eaa4df84d040139cbc3a38f387eea1b435727bc1d6ab7e6b516e9"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/services/creatureCatalog.ts",
+        "sha256": "07b3c36d8a2aa872a147dc66afd68fcf998e2c30323f7eba47296551d3bcfb81"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/services/creatureCatalogV3.ts",
+        "sha256": "8bdce33bf78e196b51340ebb923df973f810263aee54d66615e8f1ae451b3df1"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/services/creaturePairingV3Catalog.ts",
+        "sha256": "d26585cf1507e3b43b942727b4af0dd186977f8ba69da5e3424c34db49e2c5c4"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/services/creatureStageCatalog.ts",
+        "sha256": "220a5975e6d3d7449c5c6031bd1f1d809e01122a8f870a6ab613f1eeb324e07e"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/services/eggService.ts",
+        "sha256": "0ce097592441446fe5884f9b76115fc13cdd24e4df130b4b39ef435bbb0df6e7"
+      },
+      {
+        "path": "src/features/gamification/level-worlds/services/creatureProgressionSystemV3.ts",
+        "sha256": "2821f07efa7539299af445df9d2159606441af4a28422b31f168c331aae44b61"
+      }
+    ]
+  },
+  "masks": [
+    {
+      "id": "commander",
+      "name": "Commander",
+      "suit": "power",
+      "emotions": [
+        "Confidence",
+        "Anticipation",
+        "Impatience"
+      ],
+      "drive": "Lead and direct others toward goals",
+      "stressBehavior": "Becomes more controlling and directive",
+      "growthStrategy": "Practice active listening and collaborative decision-making",
+      "productionAsset": null
+    },
+    {
+      "id": "champion",
+      "name": "Champion",
+      "suit": "power",
+      "emotions": [
+        "Determination",
+        "Hope",
+        "Frustration"
+      ],
+      "drive": "Achieve excellence and inspire others to win",
+      "stressBehavior": "Pushes harder, may burn out",
+      "growthStrategy": "Celebrate process over outcomes, practice rest",
+      "productionAsset": null
+    },
+    {
+      "id": "strategist",
+      "name": "Strategist",
+      "suit": "power",
+      "emotions": [
+        "Calm assurance",
+        "Curiosity",
+        "Apprehension"
+      ],
+      "drive": "Plan and execute long-term visions",
+      "stressBehavior": "Retreats into planning, avoids action",
+      "growthStrategy": "Practice rapid prototyping and iteration",
+      "productionAsset": null
+    },
+    {
+      "id": "challenger",
+      "name": "Challenger",
+      "suit": "power",
+      "emotions": [
+        "Indignation",
+        "Excitement",
+        "Anger"
+      ],
+      "drive": "Question norms and push boundaries",
+      "stressBehavior": "Becomes more aggressive and combative",
+      "growthStrategy": "Build coalitions, choose battles wisely",
+      "productionAsset": null
+    },
+    {
+      "id": "guardian",
+      "name": "Guardian",
+      "suit": "power",
+      "emotions": [
+        "Protective affection",
+        "Reassurance",
+        "Alarm"
+      ],
+      "drive": "Protect what matters and stand firm",
+      "stressBehavior": "Becomes rigid and hyper-vigilant",
+      "growthStrategy": "Embrace calculated risk and allow others to face challenges",
+      "productionAsset": null
+    },
+    {
+      "id": "warlord",
+      "name": "Warlord",
+      "suit": "power",
+      "emotions": [
+        "Fierce determination",
+        "Pride",
+        "Fury"
+      ],
+      "drive": "Dominate challenges through sheer force of will",
+      "stressBehavior": "Doubles down with brute force",
+      "growthStrategy": "Learn diplomacy and value long-term alliances",
+      "productionAsset": null
+    },
+    {
+      "id": "diplomat",
+      "name": "Diplomat",
+      "suit": "power",
+      "emotions": [
+        "Warm confidence",
+        "Interest",
+        "Unease"
+      ],
+      "drive": "Influence outcomes through negotiation and alliances",
+      "stressBehavior": "Over-negotiates, avoids direct confrontation",
+      "growthStrategy": "Be transparent about motives and take clear positions",
+      "productionAsset": null
+    },
+    {
+      "id": "enforcer",
+      "name": "Enforcer",
+      "suit": "power",
+      "emotions": [
+        "Conviction",
+        "Satisfaction",
+        "Disapproval"
+      ],
+      "drive": "Uphold standards and ensure accountability",
+      "stressBehavior": "Becomes rigid and punitive",
+      "growthStrategy": "Balance justice with mercy, allow context to shape decisions",
+      "productionAsset": null
+    },
+    {
+      "id": "caregiver",
+      "name": "Caregiver",
+      "suit": "heart",
+      "emotions": [
+        "Tenderness",
+        "Affection",
+        "Concern"
+      ],
+      "drive": "Nurture and support others",
+      "stressBehavior": "Takes on others' problems, becomes overwhelmed",
+      "growthStrategy": "Practice self-care and healthy boundaries",
+      "productionAsset": null
+    },
+    {
+      "id": "mentor",
+      "name": "Mentor",
+      "suit": "heart",
+      "emotions": [
+        "Encouraging hope",
+        "Warm pride",
+        "Disappointment"
+      ],
+      "drive": "Guide others toward their potential",
+      "stressBehavior": "Becomes overly directive or disappointed",
+      "growthStrategy": "Trust others' journeys, let go of outcomes",
+      "productionAsset": null
+    },
+    {
+      "id": "peacemaker",
+      "name": "Peacemaker",
+      "suit": "heart",
+      "emotions": [
+        "Serenity",
+        "Compassion",
+        "Anxiety about conflict"
+      ],
+      "drive": "Create harmony and resolve conflict",
+      "stressBehavior": "Withdraws or appeases to avoid tension",
+      "growthStrategy": "Practice assertiveness and healthy disagreement",
+      "productionAsset": null
+    },
+    {
+      "id": "altruist",
+      "name": "Altruist",
+      "suit": "heart",
+      "emotions": [
+        "Compassion",
+        "Hope",
+        "Sorrow"
+      ],
+      "drive": "Serve a greater cause beyond self",
+      "stressBehavior": "Overextends, ignores own limits",
+      "growthStrategy": "Balance service with self-care and sustainability",
+      "productionAsset": null
+    },
+    {
+      "id": "empath",
+      "name": "Empath",
+      "suit": "heart",
+      "emotions": [
+        "Emotional tenderness",
+        "Affection",
+        "Overwhelm"
+      ],
+      "drive": "Feel deeply and understand others' inner worlds",
+      "stressBehavior": "Becomes emotionally flooded, withdraws to recover",
+      "growthStrategy": "Build emotional shielding practices and set clear boundaries",
+      "productionAsset": null
+    },
+    {
+      "id": "healer",
+      "name": "Healer",
+      "suit": "heart",
+      "emotions": [
+        "Compassion",
+        "Reassurance",
+        "Grief"
+      ],
+      "drive": "Restore and mend what is broken",
+      "stressBehavior": "Focuses on healing others while ignoring own needs",
+      "growthStrategy": "Heal yourself first, accept that not everything can be fixed",
+      "productionAsset": null
+    },
+    {
+      "id": "connector",
+      "name": "Connector",
+      "suit": "heart",
+      "emotions": [
+        "Joy",
+        "Affection",
+        "Loneliness"
+      ],
+      "drive": "Build bridges between people and communities",
+      "stressBehavior": "Over-socializes or retreats from all connections",
+      "growthStrategy": "Deepen key relationships rather than expanding the network",
+      "productionAsset": null
+    },
+    {
+      "id": "devotee",
+      "name": "Devotee",
+      "suit": "heart",
+      "emotions": [
+        "Deep affection",
+        "Gratitude",
+        "Fear of separation"
+      ],
+      "drive": "Commit fully and love unconditionally",
+      "stressBehavior": "Clings tighter, fears abandonment",
+      "growthStrategy": "Practice detachment with love and embrace change as growth",
+      "productionAsset": null
+    },
+    {
+      "id": "sage",
+      "name": "Sage",
+      "suit": "mind",
+      "emotions": [
+        "Serenity",
+        "Wonder",
+        "Melancholy"
+      ],
+      "drive": "Seek wisdom and understanding",
+      "stressBehavior": "Withdraws into contemplation, avoids decisions",
+      "growthStrategy": "Apply knowledge through action, engage with present",
+      "productionAsset": null
+    },
+    {
+      "id": "analyst",
+      "name": "Analyst",
+      "suit": "mind",
+      "emotions": [
+        "Curiosity",
+        "Satisfaction",
+        "Doubt"
+      ],
+      "drive": "Understand through data and logic",
+      "stressBehavior": "Demands more data, delays decisions",
+      "growthStrategy": "Trust intuition, embrace uncertainty",
+      "productionAsset": null
+    },
+    {
+      "id": "architect",
+      "name": "Architect",
+      "suit": "mind",
+      "emotions": [
+        "Anticipation",
+        "Satisfaction",
+        "Frustration"
+      ],
+      "drive": "Design elegant systems and structures",
+      "stressBehavior": "Focuses on flaws, keeps iterating",
+      "growthStrategy": "Ship imperfect versions, iterate in public",
+      "productionAsset": null
+    },
+    {
+      "id": "inventor",
+      "name": "Inventor",
+      "suit": "mind",
+      "emotions": [
+        "Excitement",
+        "Curiosity",
+        "Restlessness"
+      ],
+      "drive": "Create novel solutions and possibilities",
+      "stressBehavior": "Jumps to new ideas, abandons projects",
+      "growthStrategy": "Finish what you start, build execution habits",
+      "productionAsset": null
+    },
+    {
+      "id": "scholar",
+      "name": "Scholar",
+      "suit": "mind",
+      "emotions": [
+        "Fascination",
+        "Quiet delight",
+        "Apprehension"
+      ],
+      "drive": "Master a domain through deep study",
+      "stressBehavior": "Retreats into study, avoids real-world engagement",
+      "growthStrategy": "Apply knowledge to solve real problems, teach others",
+      "productionAsset": null
+    },
+    {
+      "id": "detective",
+      "name": "Detective",
+      "suit": "mind",
+      "emotions": [
+        "Suspicion",
+        "Curiosity",
+        "Unease"
+      ],
+      "drive": "Uncover hidden truths and solve mysteries",
+      "stressBehavior": "Becomes paranoid or obsessively investigates",
+      "growthStrategy": "Balance skepticism with trust, know when to stop digging",
+      "productionAsset": null
+    },
+    {
+      "id": "philosopher",
+      "name": "Philosopher",
+      "suit": "mind",
+      "emotions": [
+        "Wonder",
+        "Longing",
+        "Existential doubt"
+      ],
+      "drive": "Question existence and seek deeper meaning",
+      "stressBehavior": "Falls into existential doubt, questions everything",
+      "growthStrategy": "Ground philosophy in daily practice and meaningful action",
+      "productionAsset": null
+    },
+    {
+      "id": "engineer",
+      "name": "Engineer",
+      "suit": "mind",
+      "emotions": [
+        "Quiet confidence",
+        "Satisfaction",
+        "Irritation"
+      ],
+      "drive": "Build practical solutions that work reliably",
+      "stressBehavior": "Over-engineers solutions, refuses to ship imperfect work",
+      "growthStrategy": "Embrace creative experimentation and tolerate imperfection",
+      "productionAsset": null
+    },
+    {
+      "id": "explorer",
+      "name": "Explorer",
+      "suit": "spirit",
+      "emotions": [
+        "Curiosity",
+        "Excitement",
+        "Restlessness"
+      ],
+      "drive": "Discover the unknown and expand horizons",
+      "stressBehavior": "Escapes into new adventures, avoids problems",
+      "growthStrategy": "Build roots while exploring, honor commitments",
+      "productionAsset": null
+    },
+    {
+      "id": "creator",
+      "name": "Creator",
+      "suit": "spirit",
+      "emotions": [
+        "Expressive joy",
+        "Longing",
+        "Frustration"
+      ],
+      "drive": "Express and bring vision into reality",
+      "stressBehavior": "Becomes blocked or overly self-critical",
+      "growthStrategy": "Embrace constraints as creative fuel, seek feedback",
+      "productionAsset": null
+    },
+    {
+      "id": "rebel",
+      "name": "Rebel",
+      "suit": "spirit",
+      "emotions": [
+        "Defiance",
+        "Mischievous delight",
+        "Indignation"
+      ],
+      "drive": "Challenge status quo and forge new paths",
+      "stressBehavior": "Becomes defiant or antagonistic",
+      "growthStrategy": "Pick meaningful battles, build alliances",
+      "productionAsset": null
+    },
+    {
+      "id": "visionary",
+      "name": "Visionary",
+      "suit": "spirit",
+      "emotions": [
+        "Hope",
+        "Awe",
+        "Disappointment"
+      ],
+      "drive": "See and communicate transformative possibilities",
+      "stressBehavior": "Escapes into fantasy, avoids present reality",
+      "growthStrategy": "Ground visions in actionable steps, partner with executors",
+      "productionAsset": null
+    },
+    {
+      "id": "mystic",
+      "name": "Mystic",
+      "suit": "spirit",
+      "emotions": [
+        "Awe",
+        "Serenity",
+        "Unease"
+      ],
+      "drive": "Connect with the unseen and transcend the ordinary",
+      "stressBehavior": "Retreats into inner world, disconnects from reality",
+      "growthStrategy": "Stay connected to community and engage with practical matters",
+      "productionAsset": null
+    },
+    {
+      "id": "dreamer",
+      "name": "Dreamer",
+      "suit": "spirit",
+      "emotions": [
+        "Wonder",
+        "Hope",
+        "Wistfulness"
+      ],
+      "drive": "Imagine worlds that could be and inspire hope",
+      "stressBehavior": "Escapes into daydreams, procrastinates on action",
+      "growthStrategy": "Turn dreams into plans with concrete first steps",
+      "productionAsset": null
+    },
+    {
+      "id": "shaman",
+      "name": "Shaman",
+      "suit": "spirit",
+      "emotions": [
+        "Reverence",
+        "Compassion",
+        "Sorrow"
+      ],
+      "drive": "Bridge worlds and guide transformative experiences",
+      "stressBehavior": "Becomes eccentric or withdraws into ritual",
+      "growthStrategy": "Ground spiritual gifts in evidence and community accountability",
+      "productionAsset": null
+    },
+    {
+      "id": "pioneer",
+      "name": "Pioneer",
+      "suit": "spirit",
+      "emotions": [
+        "Anticipation",
+        "Determination",
+        "Impatience"
+      ],
+      "drive": "Blaze new trails into uncharted territory",
+      "stressBehavior": "Pushes further into the unknown, refuses to turn back",
+      "growthStrategy": "Build sustainable systems behind your frontier advances",
+      "productionAsset": null
+    }
+  ],
+  "families": [
+    {
+      "id": "common-sproutling",
+      "number": 1,
+      "name": "Sproutling",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-sproutling.webp",
+      "emotions": [
+        "Earnest hope",
+        "Worry about failing a commitment"
+      ],
+      "expressionCue": "Forward-set seam gaze; root braces hesitate then settle",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-sproutling",
+        "name": "Tiny Return",
+        "practicePrompt": "Shrink the routine until returning feels possible today.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-sproutling:form-1",
+          "familyId": "common-sproutling",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-sproutling:form-2",
+          "familyId": "common-sproutling",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "common-sproutling:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "common-sproutling:form-3",
+          "familyId": "common-sproutling",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "common-sproutling:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-pebble-spirit",
+      "number": 2,
+      "name": "Pebble Spirit",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-pebble-spirit.webp",
+      "emotions": [
+        "Serenity",
+        "Reluctance to change"
+      ],
+      "expressionCue": "Long resting face groove; heavy plates settle rather than grin",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-pebble-spirit",
+        "name": "Ground Before Going",
+        "practicePrompt": "Feel both feet, loosen one breath, and continue without forcing speed.",
+        "alignedActionTag": "pause",
+        "previewUtility": "May recognize a completed regulation, recovery, or boundary action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-pebble-spirit:form-1",
+          "familyId": "common-pebble-spirit",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-pebble-spirit:form-2",
+          "familyId": "common-pebble-spirit",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "common-pebble-spirit:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "common-pebble-spirit:form-3",
+          "familyId": "common-pebble-spirit",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "common-pebble-spirit:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-mossling",
+      "number": 3,
+      "name": "Mossling",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-mossling.webp",
+      "emotions": [
+        "Tender sorrow",
+        "Cautious hope of recovery"
+      ],
+      "expressionCue": "Low soft gaze beneath a shelter; one protective layer opens",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-mossling",
+        "name": "Gentle Shelter",
+        "practicePrompt": "After a setback, choose recovery before self-criticism.",
+        "alignedActionTag": "pause",
+        "previewUtility": "May recognize a completed regulation, recovery, or boundary action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-mossling:form-1",
+          "familyId": "common-mossling",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-mossling:form-2",
+          "familyId": "common-mossling",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-mossling:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-glowtail",
+      "number": 4,
+      "name": "Glowtail",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-glowtail.webp",
+      "emotions": [
+        "Keen interest",
+        "Doubt when choices multiply"
+      ],
+      "expressionCue": "Directional aperture narrows onto one route",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-glowtail",
+        "name": "One Clear Glow",
+        "practicePrompt": "Name the smallest decision that would make the next step obvious.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-glowtail:form-1",
+          "familyId": "common-glowtail",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-glowtail:form-2",
+          "familyId": "common-glowtail",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-glowtail:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-drift-pup",
+      "number": 5,
+      "name": "Drift Pup",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-drift-pup.webp",
+      "emotions": [
+        "Playful delight",
+        "Impatience with stillness"
+      ],
+      "expressionCue": "Leading arc rises; attention skips then returns",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-drift-pup",
+        "name": "Play the First Path",
+        "practicePrompt": "Try one playful route for five minutes before judging where it leads.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-drift-pup:form-1",
+          "familyId": "common-drift-pup",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-drift-pup:form-2",
+          "familyId": "common-drift-pup",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-drift-pup:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-bloom-mite",
+      "number": 6,
+      "name": "Bloom Mite",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-bloom-mite.webp",
+      "emotions": [
+        "Tender affection",
+        "Encouraging hope",
+        "Concern"
+      ],
+      "expressionCue": "Small amber eyes; soft petal ridges; antennae invite or gather with concern.",
+      "mix": [
+        "caregiver",
+        "empath",
+        "mentor"
+      ],
+      "ability": {
+        "creatureId": "common-bloom-mite",
+        "name": "Borrowed Courage",
+        "practicePrompt": "Give yourself one specific sentence of permission, then act on it.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-bloom-mite:form-1",
+          "familyId": "common-bloom-mite",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-bloom-mite:form-2",
+          "familyId": "common-bloom-mite",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-bloom-mite:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-stone-hopper",
+      "number": 7,
+      "name": "Stone Hopper",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-stone-hopper.webp",
+      "emotions": [
+        "Stubborn resolve",
+        "Frustration at carrying too much"
+      ],
+      "expressionCue": "Squared plate-brow; braced stride relaxes after setting a load down",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-stone-hopper",
+        "name": "Set Down One Stone",
+        "practicePrompt": "Remove one responsibility from the immediate load before continuing.",
+        "alignedActionTag": "reduce_load",
+        "previewUtility": "May recognize a completed prioritization or simplification action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-stone-hopper:form-1",
+          "familyId": "common-stone-hopper",
+          "ordinal": 1,
+          "name": "Begin",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-stone-hopper:form-2",
+          "familyId": "common-stone-hopper",
+          "ordinal": 2,
+          "name": "Steady",
+          "previousFormId": "common-stone-hopper:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "common-stone-hopper:form-3",
+          "familyId": "common-stone-hopper",
+          "ordinal": 3,
+          "name": "Rooted",
+          "previousFormId": "common-stone-hopper:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-fern-fox",
+      "number": 8,
+      "name": "Fern Fox",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-fern-fox.webp",
+      "emotions": [
+        "Warm curiosity",
+        "Concern that becomes overguidance"
+      ],
+      "expressionCue": "Inset gaze tilts toward another; pendants point without enclosing",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-fern-fox",
+        "name": "Leave the Choice Whole",
+        "practicePrompt": "Offer one useful question without taking the decision away from yourself.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-fern-fox:form-1",
+          "familyId": "common-fern-fox",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-fern-fox:form-2",
+          "familyId": "common-fern-fox",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-fern-fox:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-dewling",
+      "number": 9,
+      "name": "Dewling",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-dewling.webp",
+      "emotions": [
+        "Tranquillity",
+        "Unease absorbed from surroundings"
+      ],
+      "expressionCue": "Level eye/waterline; fins widen as the inner wave settles",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-dewling",
+        "name": "Cool the Air",
+        "practicePrompt": "Lower the emotional temperature enough to hear what matters.",
+        "alignedActionTag": "pause",
+        "previewUtility": "May recognize a completed regulation, recovery, or boundary action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-dewling:form-1",
+          "familyId": "common-dewling",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-dewling:form-2",
+          "familyId": "common-dewling",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-dewling:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-root-whisp",
+      "number": 10,
+      "name": "Root Whisp",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-root-whisp.webp",
+      "emotions": [
+        "Longing",
+        "Fear of letting go"
+      ],
+      "expressionCue": "Gaze follows a tether; threads loosen without losing the anchor",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-root-whisp",
+        "name": "Tie It to Meaning",
+        "practicePrompt": "Attach the next action to a value, place, or cue you already trust.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-root-whisp:form-1",
+          "familyId": "common-root-whisp",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-root-whisp:form-2",
+          "familyId": "common-root-whisp",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-root-whisp:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-garden-puff",
+      "number": 11,
+      "name": "Garden Puff",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-garden-puff.webp",
+      "emotions": [
+        "Buoyant amusement",
+        "Evasion of discomfort"
+      ],
+      "expressionCue": "Open pores and rising cheek chambers; relief through an exhale",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-garden-puff",
+        "name": "Make Room for Light",
+        "practicePrompt": "Restore one pocket of ease before giving more energy away.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-garden-puff:form-1",
+          "familyId": "common-garden-puff",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-garden-puff:form-2",
+          "familyId": "common-garden-puff",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-garden-puff:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-lichen-kit",
+      "number": 12,
+      "name": "Lichen Kit",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-lichen-kit.webp",
+      "emotions": [
+        "Wariness",
+        "Trust that grows through adaptation"
+      ],
+      "expressionCue": "Offset watchful apertures; one plate stays open while others adjust",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-lichen-kit",
+        "name": "Keep One Constant",
+        "practicePrompt": "Choose one tiny part of the routine that can stay steady through change.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-lichen-kit:form-1",
+          "familyId": "common-lichen-kit",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-lichen-kit:form-2",
+          "familyId": "common-lichen-kit",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-lichen-kit:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-twilight-seed",
+      "number": 13,
+      "name": "Twilight Seed",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-twilight-seed.webp",
+      "emotions": [
+        "Curious wonder",
+        "Hope",
+        "Perplexity"
+      ],
+      "expressionCue": "Searching gaze; one lifted ridge; tiny parted mouth. Leaves follow attention.",
+      "mix": [
+        "dreamer",
+        "creator",
+        "explorer"
+      ],
+      "ability": {
+        "creatureId": "common-twilight-seed",
+        "name": "Show the First Shoot",
+        "practicePrompt": "Give a private hope one small visible form before the day ends.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-twilight-seed:form-1",
+          "familyId": "common-twilight-seed",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-twilight-seed:form-2",
+          "familyId": "common-twilight-seed",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "common-twilight-seed:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "common-twilight-seed:form-3",
+          "familyId": "common-twilight-seed",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "common-twilight-seed:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-river-bud",
+      "number": 14,
+      "name": "River Bud",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-river-bud.webp",
+      "emotions": [
+        "Gratitude",
+        "Anxiety about having enough to share"
+      ],
+      "expressionCue": "Gentle upward face crease; refill chamber expands before offering",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-river-bud",
+        "name": "Refill the River",
+        "practicePrompt": "Meet one of your own needs before offering care outward again.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-river-bud:form-1",
+          "familyId": "common-river-bud",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-river-bud:form-2",
+          "familyId": "common-river-bud",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "common-river-bud:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-petal-scout",
+      "number": 15,
+      "name": "Petal Scout",
+      "rarity": "common",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/common-petal-scout.webp",
+      "emotions": [
+        "Apprehensive curiosity",
+        "Excitement at discovery"
+      ],
+      "expressionCue": "Off-center sensory opening peeks past a raised leading leaf",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-petal-scout",
+        "name": "Follow One Clue",
+        "practicePrompt": "Pick the most inviting clue and move toward it for ten minutes.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-petal-scout:form-1",
+          "familyId": "common-petal-scout",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-petal-scout:form-2",
+          "familyId": "common-petal-scout",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "common-petal-scout:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "common-petal-scout:form-3",
+          "familyId": "common-petal-scout",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "common-petal-scout:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-luma-hatchling",
+      "number": 16,
+      "name": "Luma Hatchling",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-luma-hatchling.webp",
+      "emotions": [
+        "Shy anticipation",
+        "Embarrassment about being seen"
+      ],
+      "expressionCue": "Bud-face peeks out; inner petals open unevenly",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-luma-hatchling",
+        "name": "Let the Idea Glow",
+        "practicePrompt": "Share or sketch the smallest version of the idea while it is still tender.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-luma-hatchling:form-1",
+          "familyId": "rare-luma-hatchling",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-luma-hatchling:form-2",
+          "familyId": "rare-luma-hatchling",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-luma-hatchling:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-luma-hatchling:form-3",
+          "familyId": "rare-luma-hatchling",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-luma-hatchling:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-nebula-wisp",
+      "number": 17,
+      "name": "Nebula Wisp",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-nebula-wisp.webp",
+      "emotions": [
+        "Fascination",
+        "Unease in uncertainty"
+      ],
+      "expressionCue": "Gaze aperture travels around an open crescent, pausing at a gap",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-nebula-wisp",
+        "name": "Small Experiment",
+        "practicePrompt": "Replace certainty with one safe test that can teach you something.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-nebula-wisp:form-1",
+          "familyId": "rare-nebula-wisp",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-nebula-wisp:form-2",
+          "familyId": "rare-nebula-wisp",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-nebula-wisp:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-nebula-wisp:form-3",
+          "familyId": "rare-nebula-wisp",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-nebula-wisp:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-dewleaf-sprite",
+      "number": 18,
+      "name": "Dewleaf Sprite",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-dewleaf-sprite.webp",
+      "emotions": [
+        "Protective concern",
+        "Alarm that can become overprotection"
+      ],
+      "expressionCue": "Attentive eyes beneath an angled canopy; one side stays welcoming",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-dewleaf-sprite",
+        "name": "Gentle Guardrail",
+        "practicePrompt": "Place one kind boundary around the practice you want to protect.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-dewleaf-sprite:form-1",
+          "familyId": "rare-dewleaf-sprite",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-dewleaf-sprite:form-2",
+          "familyId": "rare-dewleaf-sprite",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-dewleaf-sprite:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-dewleaf-sprite:form-3",
+          "familyId": "rare-dewleaf-sprite",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-dewleaf-sprite:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-aurora-finch",
+      "number": 19,
+      "name": "Aurora Finch",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-aurora-finch.webp",
+      "emotions": [
+        "Exhilaration",
+        "Frustration when not understood"
+      ],
+      "expressionCue": "Emission vanes flare then align into one signal",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-aurora-finch",
+        "name": "Send the Signal",
+        "practicePrompt": "Give your direction one clear sentence, invitation, or visible first move.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-aurora-finch:form-1",
+          "familyId": "rare-aurora-finch",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-aurora-finch:form-2",
+          "familyId": "rare-aurora-finch",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-aurora-finch:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-aurora-finch:form-3",
+          "familyId": "rare-aurora-finch",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-aurora-finch:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-ember-sprout",
+      "number": 20,
+      "name": "Ember Sprout",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-ember-sprout.webp",
+      "emotions": [
+        "Eager excitement",
+        "Impatience before starting"
+      ],
+      "expressionCue": "Alert vent-face; compressed spring roots release once",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-ember-sprout",
+        "name": "Warm Start",
+        "practicePrompt": "Turn the thought into a two-minute first move.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-ember-sprout:form-1",
+          "familyId": "rare-ember-sprout",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-ember-sprout:form-2",
+          "familyId": "rare-ember-sprout",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-ember-sprout:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-ember-sprout:form-3",
+          "familyId": "rare-ember-sprout",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-ember-sprout:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-solar-pika",
+      "number": 21,
+      "name": "Sunbloom Pip",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-solar-pika.webp",
+      "emotions": [
+        "Brave hope",
+        "Fear of exposure"
+      ],
+      "expressionCue": "Forward gaze above a brace; contact pad reaches despite hesitation",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-solar-pika",
+        "name": "Brave Little Charge",
+        "practicePrompt": "Choose one warm act of courage small enough to attempt immediately.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-solar-pika:form-1",
+          "familyId": "rare-solar-pika",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-solar-pika:form-2",
+          "familyId": "rare-solar-pika",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-solar-pika:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-solar-pika:form-3",
+          "familyId": "rare-solar-pika",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-solar-pika:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-comet-cub",
+      "number": 22,
+      "name": "Comet Cub",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-comet-cub.webp",
+      "emotions": [
+        "Quiet assurance",
+        "Worry when a plan is uncertain"
+      ],
+      "expressionCue": "Tucked steady gaze; three facets align without rigid symmetry",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-comet-cub",
+        "name": "Three-Point Flight",
+        "practicePrompt": "Reduce the tangled plan to three ordered moves and begin with the lightest.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-comet-cub:form-1",
+          "familyId": "rare-comet-cub",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-comet-cub:form-2",
+          "familyId": "rare-comet-cub",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "rare-comet-cub:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-bloom-seraph",
+      "number": 23,
+      "name": "Bloom Seraph",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-bloom-seraph.webp",
+      "emotions": [
+        "Compassion",
+        "Concern that turns into directing others"
+      ],
+      "expressionCue": "Soft branch-set gaze; two openings remain equally available",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-bloom-seraph",
+        "name": "Wisdom Without Steering",
+        "practicePrompt": "Ask the question that helps ownership return to the person choosing.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-bloom-seraph:form-1",
+          "familyId": "rare-bloom-seraph",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-bloom-seraph:form-2",
+          "familyId": "rare-bloom-seraph",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-bloom-seraph:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-bloom-seraph:form-3",
+          "familyId": "rare-bloom-seraph",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-bloom-seraph:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-shard-marten",
+      "number": 24,
+      "name": "Shard Marten",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-shard-marten.webp",
+      "emotions": [
+        "Skeptical interest",
+        "Irritation at imperfections"
+      ],
+      "expressionCue": "Narrow unequal facet-eyes examine a joint, then release scrutiny",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-shard-marten",
+        "name": "Good-Enough Blueprint",
+        "practicePrompt": "Build a repeatable version that works before refining the perfect one.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-shard-marten:form-1",
+          "familyId": "rare-shard-marten",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-shard-marten:form-2",
+          "familyId": "rare-shard-marten",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "rare-shard-marten:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-cinder-mouse",
+      "number": 25,
+      "name": "Cinder Mouse",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-cinder-mouse.webp",
+      "emotions": [
+        "Protective indignation",
+        "Tenderness",
+        "Alarm"
+      ],
+      "expressionCue": "Firm crest and direct gaze; protective opening, not a snarl.",
+      "mix": [
+        "guardian",
+        "challenger",
+        "devotee"
+      ],
+      "ability": {
+        "creatureId": "rare-cinder-mouse",
+        "name": "Pocket-Sized Courage",
+        "practicePrompt": "State the smallest honest boundary or request you can stand behind.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-cinder-mouse:form-1",
+          "familyId": "rare-cinder-mouse",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-cinder-mouse:form-2",
+          "familyId": "rare-cinder-mouse",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "rare-cinder-mouse:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-tide-lantern",
+      "number": 26,
+      "name": "Tide Lantern",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-tide-lantern.webp",
+      "emotions": [
+        "Conciliatory warmth",
+        "Apprehension about confrontation"
+      ],
+      "expressionCue": "Broad relaxed tide apertures; mantle holds a shared still pool",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-tide-lantern",
+        "name": "Find the Shared Shore",
+        "practicePrompt": "Lower the heat, then name one value both sides still share.",
+        "alignedActionTag": "pause",
+        "previewUtility": "May recognize a completed regulation, recovery, or boundary action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-tide-lantern:form-1",
+          "familyId": "rare-tide-lantern",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-tide-lantern:form-2",
+          "familyId": "rare-tide-lantern",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "rare-tide-lantern:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-halo-staglet",
+      "number": 27,
+      "name": "Sunring Staglet",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-halo-staglet.png",
+      "emotions": [
+        "Protective affection",
+        "Fear of losing what is sheltered"
+      ],
+      "expressionCue": "Face turns toward an opening; ring protects without closing completely",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-halo-staglet",
+        "name": "Soft Shield",
+        "practicePrompt": "Protect what feels vulnerable without pretending you have no uncertainty.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-halo-staglet:form-1",
+          "familyId": "rare-halo-staglet",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-halo-staglet:form-2",
+          "familyId": "rare-halo-staglet",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-halo-staglet:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-halo-staglet:form-3",
+          "familyId": "rare-halo-staglet",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-halo-staglet:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-gear-wing",
+      "number": 28,
+      "name": "Gear Wing",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-gear-wing.webp",
+      "emotions": [
+        "Quiet satisfaction",
+        "Irritation when control slips"
+      ],
+      "expressionCue": "Rhythmic aperture alignment; vanes relax after a useful sequence",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-gear-wing",
+        "name": "Carry It in the System",
+        "practicePrompt": "Move one recurring burden out of memory and into a trusted cue.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-gear-wing:form-1",
+          "familyId": "rare-gear-wing",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-gear-wing:form-2",
+          "familyId": "rare-gear-wing",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "rare-gear-wing:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-gear-wing:form-3",
+          "familyId": "rare-gear-wing",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "rare-gear-wing:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-mirage-pup",
+      "number": 29,
+      "name": "Mirage Pup",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-mirage-pup.webp",
+      "emotions": [
+        "Mischievous amusement",
+        "Discomfort with commitment"
+      ],
+      "expressionCue": "One offset aperture seems to wink as a plane turns",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-mirage-pup",
+        "name": "Change the Gameboard",
+        "practicePrompt": "Reframe the heavy task as a small constraint, challenge, or experiment.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-mirage-pup:form-1",
+          "familyId": "rare-mirage-pup",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-mirage-pup:form-2",
+          "familyId": "rare-mirage-pup",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "rare-mirage-pup:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-crown-drifter",
+      "number": 30,
+      "name": "Crown Drifter",
+      "rarity": "rare",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/rare-crown-drifter.webp",
+      "emotions": [
+        "Adventurous anticipation",
+        "Restlessness"
+      ],
+      "expressionCue": "Navigator gaze toward the horizon; one sail remains turned homeward",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-crown-drifter",
+        "name": "Choose the Horizon",
+        "practicePrompt": "Commit to one brave direction while preserving the care that steadies you.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-crown-drifter:form-1",
+          "familyId": "rare-crown-drifter",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-crown-drifter:form-2",
+          "familyId": "rare-crown-drifter",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "rare-crown-drifter:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-starhorn-seraph",
+      "number": 31,
+      "name": "Starhorn Seraph",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-starhorn-seraph.webp",
+      "emotions": [
+        "Solemn awe",
+        "Uncertainty about meaning"
+      ],
+      "expressionCue": "Suspended face prism looks upward, then aligns to a grounded branch",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-starhorn-seraph",
+        "name": "Practical North",
+        "practicePrompt": "Name the meaning you trust, then choose one action it supports.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-starhorn-seraph:form-1",
+          "familyId": "mythic-starhorn-seraph",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-starhorn-seraph:form-2",
+          "familyId": "mythic-starhorn-seraph",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-starhorn-seraph:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-starhorn-seraph:form-3",
+          "familyId": "mythic-starhorn-seraph",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-starhorn-seraph:form-2",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-starhorn-seraph:form-4",
+          "familyId": "mythic-starhorn-seraph",
+          "ordinal": 4,
+          "name": "Mastery",
+          "previousFormId": "mythic-starhorn-seraph:form-3",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-voidlight-familiar",
+      "number": 32,
+      "name": "Voidlight Familiar",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-voidlight-familiar.webp",
+      "emotions": [
+        "Quiet trust",
+        "Apprehension in darkness"
+      ],
+      "expressionCue": "Small steady forward aperture within a weathered shell",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-voidlight-familiar",
+        "name": "Lantern Through Unknown",
+        "practicePrompt": "Carry the difficult vision forward with one grounded move you can verify.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-voidlight-familiar:form-1",
+          "familyId": "mythic-voidlight-familiar",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-voidlight-familiar:form-2",
+          "familyId": "mythic-voidlight-familiar",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "mythic-voidlight-familiar:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-sunflare-kirin",
+      "number": 33,
+      "name": "Sunflare Kirin",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-sunflare-kirin.webp",
+      "emotions": [
+        "Heartening confidence",
+        "Concern about spending itself"
+      ],
+      "expressionCue": "Open warm central planes; ribs gather rather than explode",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-sunflare-kirin",
+        "name": "Hold the Warm Line",
+        "practicePrompt": "Restore one source of warmth, then protect the next meaningful action.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-sunflare-kirin:form-1",
+          "familyId": "mythic-sunflare-kirin",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-sunflare-kirin:form-2",
+          "familyId": "mythic-sunflare-kirin",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-sunflare-kirin:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-sunflare-kirin:form-3",
+          "familyId": "mythic-sunflare-kirin",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-sunflare-kirin:form-2",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-sunflare-kirin:form-4",
+          "familyId": "mythic-sunflare-kirin",
+          "ordinal": 4,
+          "name": "Mastery",
+          "previousFormId": "mythic-sunflare-kirin:form-3",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-dreamroot-ancient",
+      "number": 34,
+      "name": "Dreamroot Ancient",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-dreamroot-ancient.webp",
+      "emotions": [
+        "Contemplative wonder",
+        "Wistful distance"
+      ],
+      "expressionCue": "Reserved suspended gaze; broad membrane stills around a slow core",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-dreamroot-ancient",
+        "name": "Find the Root Pattern",
+        "practicePrompt": "Slow the problem down until its essential pattern can be named simply.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-dreamroot-ancient:form-1",
+          "familyId": "mythic-dreamroot-ancient",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-dreamroot-ancient:form-2",
+          "familyId": "mythic-dreamroot-ancient",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-dreamroot-ancient:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-dreamroot-ancient:form-3",
+          "familyId": "mythic-dreamroot-ancient",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-dreamroot-ancient:form-2",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-dreamroot-ancient:form-4",
+          "familyId": "mythic-dreamroot-ancient",
+          "ordinal": 4,
+          "name": "Mastery",
+          "previousFormId": "mythic-dreamroot-ancient:form-3",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-celest-pup",
+      "number": 35,
+      "name": "Celest Pup",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-celest-pup.webp",
+      "emotions": [
+        "Knowing mischief",
+        "Fascination",
+        "Unease"
+      ],
+      "expressionCue": "Asymmetric lids and restrained crooked smile; retain darker presence.",
+      "mix": [
+        "rebel",
+        "inventor",
+        "mystic"
+      ],
+      "ability": {
+        "creatureId": "mythic-celest-pup",
+        "name": "Bring the Vast Close",
+        "practicePrompt": "Translate the enormous unknown into one human-sized thing you can care for.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-celest-pup:form-1",
+          "familyId": "mythic-celest-pup",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-celest-pup:form-2",
+          "familyId": "mythic-celest-pup",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "mythic-celest-pup:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-lux-leviathan",
+      "number": 36,
+      "name": "Lux Leviathan",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-lux-leviathan.webp",
+      "emotions": [
+        "Composed pride",
+        "Quiet assurance",
+        "Anger"
+      ],
+      "expressionCue": "Level gaze and raised angular head; restrained body tension when control slips.",
+      "mix": [
+        "strategist",
+        "architect",
+        "commander"
+      ],
+      "ability": {
+        "creatureId": "mythic-lux-leviathan",
+        "name": "Lead by Rhythm",
+        "practicePrompt": "Set a calm cadence that makes the next shared action dependable.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-lux-leviathan:form-1",
+          "familyId": "mythic-lux-leviathan",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-lux-leviathan:form-2",
+          "familyId": "mythic-lux-leviathan",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-lux-leviathan:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-lux-leviathan:form-3",
+          "familyId": "mythic-lux-leviathan",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-lux-leviathan:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-orbit-vulpine",
+      "number": 37,
+      "name": "Orbit Vulpine",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-orbit-vulpine.webp",
+      "emotions": [
+        "Contented curiosity",
+        "Unease about leaving a familiar route"
+      ],
+      "expressionCue": "Groove-bound gaze follows a returning fringe",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-orbit-vulpine",
+        "name": "Mark the Returning Path",
+        "practicePrompt": "Choose a route you can revisit even when plans and conditions change.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-orbit-vulpine:form-1",
+          "familyId": "mythic-orbit-vulpine",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-orbit-vulpine:form-2",
+          "familyId": "mythic-orbit-vulpine",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "mythic-orbit-vulpine:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-astral-titanet",
+      "number": 38,
+      "name": "Astral Titanet",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-astral-titanet.webp",
+      "emotions": [
+        "Cautious optimism",
+        "Worry that becomes overengineering"
+      ],
+      "expressionCue": "Small beam-set eyes inspect the load, then open the structure",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-astral-titanet",
+        "name": "Load-Bearing Smallness",
+        "practicePrompt": "Build only the smallest structure that can safely carry today's load.",
+        "alignedActionTag": "reduce_load",
+        "previewUtility": "May recognize a completed prioritization or simplification action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-astral-titanet:form-1",
+          "familyId": "mythic-astral-titanet",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-astral-titanet:form-2",
+          "familyId": "mythic-astral-titanet",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "mythic-astral-titanet:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-solstice-sylph",
+      "number": 39,
+      "name": "Solstice Sylph",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-solstice-sylph.png",
+      "emotions": [
+        "Wistful hope",
+        "Sadness about leaving a season behind"
+      ],
+      "expressionCue": "Hinge-face turns between unequal sheets; one old layer is released",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-solstice-sylph",
+        "name": "Clear Space, Begin Again",
+        "practicePrompt": "Release one stale commitment and use the space for a fresh first move.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-solstice-sylph:form-1",
+          "familyId": "mythic-solstice-sylph",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-solstice-sylph:form-2",
+          "familyId": "mythic-solstice-sylph",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-solstice-sylph:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-solstice-sylph:form-3",
+          "familyId": "mythic-solstice-sylph",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-solstice-sylph:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-echo-phoenix",
+      "number": 40,
+      "name": "Echo Phoenix",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-echo-phoenix.webp",
+      "emotions": [
+        "Determined hope",
+        "Exhilaration",
+        "Frustration"
+      ],
+      "expressionCue": "Core aperture opens with intention; resonators contract and misalign under tension.",
+      "mix": [
+        "champion",
+        "pioneer",
+        "commander"
+      ],
+      "ability": {
+        "creatureId": "mythic-echo-phoenix",
+        "name": "Wiser Return",
+        "practicePrompt": "Name what the setback taught you and begin again with that knowledge.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-echo-phoenix:form-1",
+          "familyId": "mythic-echo-phoenix",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-echo-phoenix:form-2",
+          "familyId": "mythic-echo-phoenix",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-echo-phoenix:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-echo-phoenix:form-3",
+          "familyId": "mythic-echo-phoenix",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-echo-phoenix:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-nightbloom-drake",
+      "number": 41,
+      "name": "Nightbloom Drake",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-nightbloom-drake.webp",
+      "emotions": [
+        "Guarded affection",
+        "Distrust when approached too quickly"
+      ],
+      "expressionCue": "Reserved inset face; outer rim closes but one entry remains open",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-nightbloom-drake",
+        "name": "Tender Boundary",
+        "practicePrompt": "Say a clear no or not-yet without closing your heart.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-nightbloom-drake:form-1",
+          "familyId": "mythic-nightbloom-drake",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-nightbloom-drake:form-2",
+          "familyId": "mythic-nightbloom-drake",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-nightbloom-drake:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-nightbloom-drake:form-3",
+          "familyId": "mythic-nightbloom-drake",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-nightbloom-drake:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-prism-warden",
+      "number": 42,
+      "name": "Prism Warden",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-prism-warden.webp",
+      "emotions": [
+        "Compassionate vigilance",
+        "Fear for the protected center"
+      ],
+      "expressionCue": "Sheltered light attends through one widened fold",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-prism-warden",
+        "name": "Many Views, Safe Center",
+        "practicePrompt": "Hold your boundary while making room for one additional perspective.",
+        "alignedActionTag": "pause",
+        "previewUtility": "May recognize a completed regulation, recovery, or boundary action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-prism-warden:form-1",
+          "familyId": "mythic-prism-warden",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-prism-warden:form-2",
+          "familyId": "mythic-prism-warden",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-prism-warden:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-prism-warden:form-3",
+          "familyId": "mythic-prism-warden",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-prism-warden:form-2",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-prism-warden:form-4",
+          "familyId": "mythic-prism-warden",
+          "ordinal": 4,
+          "name": "Mastery",
+          "previousFormId": "mythic-prism-warden:form-3",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-aurora-maned-cat",
+      "number": 43,
+      "name": "Aurora Maned Cat",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-aurora-maned-cat.webp",
+      "emotions": [
+        "Poised anticipation",
+        "Embarrassment about expression"
+      ],
+      "expressionCue": "Contained gaze and held membrane gesture, then deliberate opening",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-aurora-maned-cat",
+        "name": "Poise Into Motion",
+        "practicePrompt": "Let the polished idea become one visible, imperfect action.",
+        "alignedActionTag": "begin",
+        "previewUtility": "May recognize a completed first step or safe experiment.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-aurora-maned-cat:form-1",
+          "familyId": "mythic-aurora-maned-cat",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-aurora-maned-cat:form-2",
+          "familyId": "mythic-aurora-maned-cat",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "mythic-aurora-maned-cat:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-cosmos-songbird",
+      "number": 44,
+      "name": "Cosmos Songbird",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-cosmos-songbird.webp",
+      "emotions": [
+        "Attentive delight",
+        "Frustration when unheard"
+      ],
+      "expressionCue": "Framed face turns to listen; broad fan changes spacing",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-cosmos-songbird",
+        "name": "Sing the Essential",
+        "practicePrompt": "Turn the complex insight into one line another person could remember.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-cosmos-songbird:form-1",
+          "familyId": "mythic-cosmos-songbird",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-cosmos-songbird:form-2",
+          "familyId": "mythic-cosmos-songbird",
+          "ordinal": 2,
+          "name": "Practice",
+          "previousFormId": "mythic-cosmos-songbird:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-infinity-sprite",
+      "number": 45,
+      "name": "Infinity Sprite",
+      "rarity": "mythic",
+      "legacy": true,
+      "referenceArt": "/assets/creatures/mythic-infinity-sprite.webp",
+      "emotions": [
+        "Patient amazement",
+        "Perplexity that drifts into abstraction"
+      ],
+      "expressionCue": "Several lens openings look differently while one stays anchored",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-infinity-sprite",
+        "name": "Widen the Window",
+        "practicePrompt": "Find two more possible interpretations before treating the worst one as certain.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-infinity-sprite:form-1",
+          "familyId": "mythic-infinity-sprite",
+          "ordinal": 1,
+          "name": "Recognition",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-infinity-sprite:form-2",
+          "familyId": "mythic-infinity-sprite",
+          "ordinal": 2,
+          "name": "Stability",
+          "previousFormId": "mythic-infinity-sprite:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-infinity-sprite:form-3",
+          "familyId": "mythic-infinity-sprite",
+          "ordinal": 3,
+          "name": "Integration",
+          "previousFormId": "mythic-infinity-sprite:form-2",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-infinity-sprite:form-4",
+          "familyId": "mythic-infinity-sprite",
+          "ordinal": 4,
+          "name": "Mastery",
+          "previousFormId": "mythic-infinity-sprite:form-3",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "common-hearth-hare",
+      "number": 46,
+      "name": "Hearth Hare",
+      "rarity": "common",
+      "legacy": false,
+      "referenceArt": "/assets/creatures/v3/common-hearth-hare.png",
+      "emotions": [
+        "Affectionate concern",
+        "Guilt about reserving its own warmth"
+      ],
+      "expressionCue": "Chamber-face stays warm while one sheltering fold remains closed",
+      "mix": null,
+      "ability": {
+        "creatureId": "common-hearth-hare",
+        "name": "Keep Your Hearth",
+        "practicePrompt": "Care for what matters while reserving one act of care for yourself.",
+        "alignedActionTag": "encourage",
+        "previewUtility": "May recognize a completed confidence, care, or self-advocacy action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "common-hearth-hare:form-1",
+          "familyId": "common-hearth-hare",
+          "ordinal": 1,
+          "name": "Offer",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "common-hearth-hare:form-2",
+          "familyId": "common-hearth-hare",
+          "ordinal": 2,
+          "name": "Sustain",
+          "previousFormId": "common-hearth-hare:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-aura-otter",
+      "number": 47,
+      "name": "Aura Otter",
+      "rarity": "rare",
+      "legacy": false,
+      "referenceArt": "/assets/creatures/v3/rare-aura-otter.png",
+      "emotions": [
+        "Empathic concern",
+        "Unease from taking on others' feelings"
+      ],
+      "expressionCue": "Paired membranes receive then release; centered core remains steady",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-aura-otter",
+        "name": "Return What Is Not Yours",
+        "practicePrompt": "Notice which feeling belongs to someone else and release it without withdrawing care.",
+        "alignedActionTag": "pause",
+        "previewUtility": "May recognize a completed regulation, recovery, or boundary action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-aura-otter:form-1",
+          "familyId": "rare-aura-otter",
+          "ordinal": 1,
+          "name": "Attune",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-aura-otter:form-2",
+          "familyId": "rare-aura-otter",
+          "ordinal": 2,
+          "name": "Shield",
+          "previousFormId": "rare-aura-otter:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-threadtail-weaver",
+      "number": 48,
+      "name": "Threadtail Weaver",
+      "rarity": "rare",
+      "legacy": false,
+      "referenceArt": "/assets/creatures/v3/rare-threadtail-weaver.png",
+      "emotions": [
+        "Fondness",
+        "Fear of disconnection"
+      ],
+      "expressionCue": "Crossing-face attends to one reciprocal thread; other tips loosen",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-threadtail-weaver",
+        "name": "Tend the True Threads",
+        "practicePrompt": "Choose the few relationships that deserve real attention today.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-threadtail-weaver:form-1",
+          "familyId": "rare-threadtail-weaver",
+          "ordinal": 1,
+          "name": "Reach",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-threadtail-weaver:form-2",
+          "familyId": "rare-threadtail-weaver",
+          "ordinal": 2,
+          "name": "Weave",
+          "previousFormId": "rare-threadtail-weaver:form-1",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "rare-lantern-lynx",
+      "number": 49,
+      "name": "Lantern Lynx",
+      "rarity": "rare",
+      "legacy": false,
+      "referenceArt": "/assets/creatures/v3/rare-lantern-lynx.png",
+      "emotions": [
+        "Watchful doubt",
+        "Satisfaction when evidence becomes sufficient"
+      ],
+      "expressionCue": "Unequal lens apertures; unused ones close instead of staring forever",
+      "mix": null,
+      "ability": {
+        "creatureId": "rare-lantern-lynx",
+        "name": "Evidence, Then Rest",
+        "practicePrompt": "Name what would count as enough evidence before investigating further.",
+        "alignedActionTag": "choose",
+        "previewUtility": "May recognize a completed reflection, decision, or planning action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "rare-lantern-lynx:form-1",
+          "familyId": "rare-lantern-lynx",
+          "ordinal": 1,
+          "name": "Observe",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "rare-lantern-lynx:form-2",
+          "familyId": "rare-lantern-lynx",
+          "ordinal": 2,
+          "name": "Discern",
+          "previousFormId": "rare-lantern-lynx:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "rare-lantern-lynx:form-3",
+          "familyId": "rare-lantern-lynx",
+          "ordinal": 3,
+          "name": "Conclude",
+          "previousFormId": "rare-lantern-lynx:form-2",
+          "productionAsset": null
+        }
+      ]
+    },
+    {
+      "id": "mythic-grove-caller",
+      "number": 50,
+      "name": "Grove Caller",
+      "rarity": "mythic",
+      "legacy": false,
+      "referenceArt": "/assets/creatures/v3/mythic-grove-caller.png",
+      "emotions": [
+        "Reverence",
+        "Unease about change"
+      ],
+      "expressionCue": "Listening hollow inclines; inner rings open slowly through a repeated gesture",
+      "mix": null,
+      "ability": {
+        "creatureId": "mythic-grove-caller",
+        "name": "Practice the Change",
+        "practicePrompt": "Give the transformation a ritual small enough to repeat tomorrow.",
+        "alignedActionTag": "repeat",
+        "previewUtility": "May recognize a completed setup, routine, or return action.",
+        "authored": true
+      },
+      "forms": [
+        {
+          "id": "mythic-grove-caller:form-1",
+          "familyId": "mythic-grove-caller",
+          "ordinal": 1,
+          "name": "Listen",
+          "previousFormId": null,
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-grove-caller:form-2",
+          "familyId": "mythic-grove-caller",
+          "ordinal": 2,
+          "name": "Ritual",
+          "previousFormId": "mythic-grove-caller:form-1",
+          "productionAsset": null
+        },
+        {
+          "id": "mythic-grove-caller:form-3",
+          "familyId": "mythic-grove-caller",
+          "ordinal": 3,
+          "name": "Embodiment",
+          "previousFormId": "mythic-grove-caller:form-2",
+          "productionAsset": null
+        }
+      ]
+    }
+  ]
+}

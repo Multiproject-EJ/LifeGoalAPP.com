@@ -1,4 +1,6 @@
 node_modules
+dist-creature-system/
+.vite-creature-system-cache/
 .vite-cache/
 .pnpm-store
 .DS_Store

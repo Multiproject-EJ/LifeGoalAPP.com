@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "width": 1440,
+      "families": 5,
+      "formSlots": 12,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 700,
+      "families": 5,
+      "formSlots": 12,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "families": 5,
+      "formSlots": 12,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "families": 5,
+      "formSlots": 12,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "failures": []
+}

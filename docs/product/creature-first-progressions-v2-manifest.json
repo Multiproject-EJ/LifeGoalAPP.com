@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-20",
+  "status": "candidate-not-approved",
+  "policy": {"creatureBodiedMinimum": 40, "totalFamilies": 50, "abstractExceptionMaximum": 10},
+  "directory": "public/assets/creatures/creature-first-progressions-v2",
+  "selected": [
+    {"asset":"f8-1-clay.png","source":"exec-d8e6672b-5f36-4a93-925a-1bdf368e78d9.png"},
+    {"asset":"f8-1-card.png","source":"exec-0b557786-9936-41d3-9aa1-0363693ff5c3.png"},
+    {"asset":"f8-2-clay.png","source":"exec-9be291e4-d015-4e35-8147-59fd6a818b93.png"},
+    {"asset":"f8-2-card.png","source":"exec-0f371cf4-3c5d-449d-bdd1-bae4db48c84d.png"},
+    {"asset":"f41-1-clay.png","source":"exec-da6a5f1b-bc68-4491-af8c-b62c9163a10c.png"},
+    {"asset":"f41-1-card.png","source":"exec-cada8cc2-d0df-46da-b4dd-b99e948cd94c.png"},
+    {"asset":"f41-2-clay.png","source":"exec-05e76aeb-2590-4e28-b76f-564f627a2c8a.png"},
+    {"asset":"f41-2-card.png","source":"exec-33c2b1aa-64a9-4d8d-b0fc-471c2aa8b7f2.png"},
+    {"asset":"f41-3-clay.png","source":"exec-eca44fff-e6b1-40a1-b3b6-104e2d673a0e.png"},
+    {"asset":"f41-3-card.png","source":"exec-a70fe504-1323-4326-b775-de1c63627af6.png"},
+    {"asset":"f43-1-clay.png","source":"exec-845ec9df-bf2a-42cd-a4e1-caadf5db9677.png"},
+    {"asset":"f43-1-card.png","source":"exec-b4901fb1-b98c-4c42-93b4-43f134b0f7d7.png"},
+    {"asset":"f43-2-clay.png","source":"exec-2cac262d-761b-4e01-9a8b-bac00db3d110.png"},
+    {"asset":"f43-2-card.png","source":"exec-ff449e38-8464-47df-92ca-d013e77955bb.png"},
+    {"asset":"f44-1-clay.png","source":"exec-72de7791-3a70-43d0-9323-8450f0d70da0.png"},
+    {"asset":"f44-1-card.png","source":"exec-a1491dd3-a20f-4fce-9633-e0387c71d5cd.png"},
+    {"asset":"f44-2-clay.png","source":"exec-2688a5a4-8d10-4ac9-8930-518b58ac98d9.png"},
+    {"asset":"f44-2-card.png","source":"exec-0ed7d3c7-0905-4ba6-98e8-c020d612afa7.png"}
+  ],
+  "rejected": [
+    {"source":"exec-20765429-9e8a-4b56-a6ca-78116d2b2332.png","reason":"Nightbloom form 2 remained too close to the hatchling crouch"},
+    {"scope":"preferred-progressions-v1 F08/F41/F43/F44","reason":"too many designs read as living sculpture rather than bondable creatures; archived, not registered"}
+  ]
+}

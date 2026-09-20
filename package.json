@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev:creature-system": "vite --host 127.0.0.1 --port 5189 --strictPort --open /creature-system-lab.html",
+    "build:creature-system": "tsc -p tsconfig.creature-system.json && vite build --config vite.creature-system.config.ts && node scripts/package-creature-system-assets.mjs",
+    "test:creature-system": "node scripts/test-creature-system.mjs",
+    "calibrate:creature-system": "node scripts/calibrate-creature-system.mjs",
+    "check:creature-system-browser": "node scripts/check-creature-system-browser.mjs",
     "dev": "vite --config vite.config.ts",
     "build": "tsc -b && vite build",
     "build:island-profiler": "vite build --mode island-profiler",

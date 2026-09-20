@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "width": 1440,
+      "newFamilies": 10,
+      "twilightForms": 3,
+      "cinematicAndClay": true,
+      "lineage": true,
+      "pairDialog": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 700,
+      "newFamilies": 10,
+      "twilightForms": 3,
+      "cinematicAndClay": true,
+      "lineage": true,
+      "pairDialog": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "newFamilies": 10,
+      "twilightForms": 3,
+      "cinematicAndClay": true,
+      "lineage": true,
+      "pairDialog": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "newFamilies": 10,
+      "twilightForms": 3,
+      "cinematicAndClay": true,
+      "lineage": true,
+      "pairDialog": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "failures": []
+}

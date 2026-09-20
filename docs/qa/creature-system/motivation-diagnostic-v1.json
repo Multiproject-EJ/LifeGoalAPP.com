@@ -1,0 +1,117 @@
+{
+  "model": "direct-motives-experimental-1",
+  "method": "2000 seeded, uniformly random complete motivation ratings (seed 9142026). Diagnostic stress inputs, not a population, validation, or a comparison with the differently constructed foundation sample.",
+  "kindredCounts": {
+    "common-twilight-seed": 372,
+    "common-bloom-mite": 377,
+    "mythic-echo-phoenix": 310,
+    "rare-cinder-mouse": 315,
+    "mythic-celest-pup": 327,
+    "mythic-lux-leviathan": 299
+  },
+  "complementCounts": {
+    "common-twilight-seed": 406,
+    "common-bloom-mite": 428,
+    "mythic-echo-phoenix": 271,
+    "rare-cinder-mouse": 284,
+    "mythic-celest-pup": 367,
+    "mythic-lux-leviathan": 244
+  },
+  "close": 1153,
+  "exactTies": 453,
+  "meanAffinity": 14.194454990413602,
+  "meanMargin": 2.374286603638572,
+  "representedArchetypes": 17,
+  "unrepresentedArchetypes": [
+    "warlord",
+    "diplomat",
+    "enforcer",
+    "peacemaker",
+    "altruist",
+    "healer",
+    "connector",
+    "sage",
+    "analyst",
+    "scholar",
+    "detective",
+    "philosopher",
+    "engineer",
+    "visionary",
+    "shaman"
+  ],
+  "fixtures": [
+    {
+      "id": "common-twilight-seed",
+      "leading": [
+        "dreamer",
+        "creator",
+        "explorer"
+      ],
+      "selfMatch": 100,
+      "singleRatingChanges": 128,
+      "winnerChanges": 0
+    },
+    {
+      "id": "common-bloom-mite",
+      "leading": [
+        "caregiver",
+        "empath",
+        "mentor"
+      ],
+      "selfMatch": 100,
+      "singleRatingChanges": 128,
+      "winnerChanges": 0
+    },
+    {
+      "id": "mythic-echo-phoenix",
+      "leading": [
+        "champion",
+        "pioneer",
+        "commander"
+      ],
+      "selfMatch": 100,
+      "singleRatingChanges": 128,
+      "winnerChanges": 0
+    },
+    {
+      "id": "rare-cinder-mouse",
+      "leading": [
+        "guardian",
+        "challenger",
+        "devotee"
+      ],
+      "selfMatch": 100,
+      "singleRatingChanges": 128,
+      "winnerChanges": 0
+    },
+    {
+      "id": "mythic-celest-pup",
+      "leading": [
+        "rebel",
+        "inventor",
+        "mystic"
+      ],
+      "selfMatch": 100,
+      "singleRatingChanges": 128,
+      "winnerChanges": 0
+    },
+    {
+      "id": "mythic-lux-leviathan",
+      "leading": [
+        "strategist",
+        "architect",
+        "commander"
+      ],
+      "selfMatch": 100,
+      "singleRatingChanges": 128,
+      "winnerChanges": 0
+    }
+  ],
+  "releaseReady": false,
+  "limitations": [
+    "Only one direct self-report statement per archetype; question wording and response bias remain untested.",
+    "Six sparse authored targets leave 15 of 32 archetypes unrepresented in this pilot; broader players can receive low affinity and ties.",
+    "Author fixtures self-match by construction, not independent psychological evidence.",
+    "No match-based currency or progression change is enabled."
+  ]
+}
