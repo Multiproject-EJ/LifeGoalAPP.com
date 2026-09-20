@@ -10057,7 +10057,8 @@ export default function Island5ThreePilot({
         }
         if (!firstArrival) {
           firstArrival = createIsland001FirstArrival(scene, playerPiece.root, playerPiece.shadow,
-            getIsland5TokenGroundPosition(tileTransforms, firstArrivalCompletedRef.current ? tokenIndexRef.current : 0));
+            getIsland5TokenGroundPosition(tileTransforms, firstArrivalCompletedRef.current ? tokenIndexRef.current : 0),
+            {position:camera.position.clone(), target:controls.target.clone(), fov:camera.fov});
           if (firstArrivalCompletedRef.current) {firstArrivalTime = 29; firstArrivalCompleted = true;}
         }
         firstArrivalTime += document.hidden ? 0 : Math.min(actualFrameDeltaSeconds, 0.25);
@@ -10078,7 +10079,7 @@ export default function Island5ThreePilot({
         if (done && !firstArrivalCompleted) {
           firstArrivalCompleted = true;
           firstArrivalCompletedRef.current = true;
-          controls.target.set(0, 1, 0); controls.enabled = true;
+          controls.target.copy(firstArrival.handoffTarget); controls.enabled = true;
           firstArrivalRef.current.onComplete?.();
         }
       }

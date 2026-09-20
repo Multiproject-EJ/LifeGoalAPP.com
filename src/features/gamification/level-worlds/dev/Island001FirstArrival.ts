@@ -11,7 +11,8 @@ const roles: RobotRole[] = ['heavy-worker','project-manager','mini-artist'];
 
 /** One cinematic in the existing board renderer. Never writes gameplay state. */
 export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Group,
-  shadow: THREE.Object3D, start: readonly [number,number,number]) {
+  shadow: THREE.Object3D, start: readonly [number,number,number],
+  handoff = {position:v(0,25,33), target:v(0,.15,0), fov:44}) {
   const root = new THREE.Group(); root.name = 'ISLAND_001_FIRST_ARRIVAL'; scene.add(root);
   const ship = createExpeditionShipThreeModel('low');
   const shipPivot = new THREE.Group(); shipPivot.add(ship.root); shipPivot.scale.setScalar(1.05); root.add(shipPivot);
@@ -69,9 +70,11 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
       if(t>=19) {eye=reveal.clone().lerp(board,segment(t,19,28)); target=shipPivot.position.clone().lerp(v(0,1,0),segment(t,19,27));}
       // Slight restrained turbulence only in the approach, never reduced motion.
       if(!reduced && t>7 && t<11) eye.y+=Math.sin(t*31)*.045;
-      eye.sub(target).multiplyScalar(Math.max(1, (0.94 + 0.2 * segment(t,19,22)) / camera.aspect)).add(target);
-      camera.position.copy(eye); camera.lookAt(target); camera.fov=44; camera.updateProjectionMatrix();
-    } else if(!restored) {scene.background=originalBackground;scene.fog=originalFog;restored=true;}
+      eye.sub(target).multiplyScalar(Math.max(1, (0.94 + 0.46 * segment(t,19,22)) / camera.aspect)).add(target);
+      const handoffMix=segment(t,26,29);
+      eye.lerp(handoff.position,handoffMix); target.lerp(handoff.target,handoffMix);
+      camera.position.copy(eye); camera.lookAt(target); camera.fov=THREE.MathUtils.lerp(44,handoff.fov,handoffMix); camera.updateProjectionMatrix();
+    } else if(!restored) {scene.background=originalBackground;scene.fog=originalFog;camera.position.copy(handoff.position);camera.lookAt(handoff.target);camera.fov=handoff.fov;camera.updateProjectionMatrix();restored=true;}
     rings.forEach((m,i)=>{
       const age=(t-11.6-i*.35);const p=age<0?0:(age%3)/3;
       m.scale.setScalar(2+p*8);
@@ -108,7 +111,7 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
     root.userData.playerEndpoint=start;
     return t>=FIRST_ARRIVAL_DURATION;
   }
-  return {root, update, dispose(){
+  return {root, update, handoffTarget:handoff.target, dispose(){
     scene.background=originalBackground;scene.fog=originalFog;root.remove(shipPivot,crew.root);ship.dispose();crew.dispose();
     root.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){o.geometry.dispose(); const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose());}});
     thrusters.forEach(m=>m.geometry.dispose());glowMat.dispose();scene.remove(root);
