@@ -334,9 +334,9 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         }),
       });
       assertEqual(unresolvedEgg.objectives[1].value, 4, 'a ready egg does not erase a completed building');
-      assertEqual(unresolvedEgg.objectives[2].value, 3, 'Hatchery activity waits for its egg to be collected or sold');
+      assertEqual(unresolvedEgg.objectives[2].value, 4, 'beginner check-in does not wait for an old egg');
       assertEqual(unresolvedEgg.complete, false, 'unfinished activities still prevent mission completion');
-      assertEqual(unresolvedEgg.islandCompletion?.complete, false, 'Unresolved egg still prevents island completion');
+      assertEqual(unresolvedEgg.islandCompletion?.complete, false, 'Unfinished Assembly still prevents island completion');
     },
   },
   {

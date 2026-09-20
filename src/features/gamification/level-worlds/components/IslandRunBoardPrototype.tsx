@@ -5973,8 +5973,9 @@ export function IslandRunBoardPrototype({
       stopStatesByIndex: options.stopStatesByIndex,
       stopTicketsPaidByIsland: options.stopTicketsPaidByIsland ?? islandProgressReadState.stopTicketsPaidByIsland,
       islandNumber: options.islandNumber ?? islandNumber,
+      stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
     });
-  }, [islandNumber, islandProgressReadState.stopTicketsPaidByIsland]);
+  }, [islandNumber, islandProgressReadState.stopTicketsPaidByIsland, islandProgressReadState.stopBuildStateByIndex]);
 
   const contractV2Stops = useMemo(() => {
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return null;
@@ -6031,7 +6032,7 @@ export function IslandRunBoardPrototype({
         let status: StopProgressState = resolverStatus ?? 'locked';
         // Hatchery (index 0): show yellow 'partial' when egg is set but not yet collected/sold.
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
-        if (index === 0 && status === 'completed' && !islandEggSlotUsed && !featureAccess.welcomeCheckIn) {
+        if (islandNumber < 4 && index === 0 && status === 'completed' && !islandEggSlotUsed && !featureAccess.welcomeCheckIn) {
           status = 'partial';
         } else if (status === 'completed') {
           const buildState = islandProgressReadState.stopBuildStateByIndex[index];
@@ -6065,7 +6066,7 @@ export function IslandRunBoardPrototype({
     }
 
     return map;
-  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan, featureAccess.welcomeCheckIn]);
+  }, [islandNumber, contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan, featureAccess.welcomeCheckIn]);
 
   const landmarkDiscoveryStates = useMemo(
     () => islandStopPlan.map((stop) => (
@@ -6159,7 +6160,7 @@ export function IslandRunBoardPrototype({
     });
 
     if (tapOutcome === 'locked') {
-      setLandingText('Landmark preview opened. Complete the previous landmark to unlock actions.');
+      setLandingText('Build this landmark to Level 3 to enter. Hatchery follows all Level 3 buildings and the other activities; Boss comes last.');
     } else if (tapOutcome === 'ticket_required') {
       setLandingText('Landmark preview opened. Pay ticket in the modal to enter this stop.');
     }
@@ -9214,7 +9215,7 @@ export function IslandRunBoardPrototype({
   // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
   const handleSetEgg = async () => {
     if (isSettingEgg) return;
-    if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).eggs) {
+    if (getIslandRunStateSnapshot(session).currentIslandNumber < 4) {
       setLandingText('Your first Hatchery egg is introduced on Island 004.');
       return;
     }
@@ -9270,7 +9271,7 @@ export function IslandRunBoardPrototype({
         setAtMs,
         hatchAtMs,
         status: 'incubating',
-        location: 'island',
+        location: 'spaceship',
       };
       return {
         slotIndex,
@@ -9359,7 +9360,7 @@ export function IslandRunBoardPrototype({
       markHatcheryStopCompleteInV2();
       setActiveStopId(null);
     }
-    setLandingText(eggCount > 1 ? '🔥 Egg Mania! 3 eggs are now incubating.' : 'Egg is now incubating!');
+    setLandingText(eggCount > 1 ? '🔥 Egg Mania! 3 eggs are now incubating aboard your spaceship.' : 'Egg collected! It is now incubating aboard your spaceship.');
     setIsSettingEgg(false);
   };
 
@@ -9586,7 +9587,7 @@ export function IslandRunBoardPrototype({
     if (!selectedHatcheryDisplayEgg) return 1;
     return Math.min(HATCHERY_TIMELINE_STEPS.length, Math.max(1, selectedHatcheryEggStage));
   }, [islandEggSlotUsed, selectedHatcheryDisplayEgg, selectedHatcheryEgg, selectedHatcheryEggStage]);
-  const canResolveSelectedHatcheryEgg = Boolean(selectedHatcheryDisplayEgg) && (Boolean(selectedHatcheryEgg?.isCurrentIsland) || !selectedHatcheryEgg);
+  const canResolveSelectedHatcheryEgg = Boolean(selectedHatcheryDisplayEgg);
   const showHatcheryEggCarousel = hatcheryPendingEggCount > 1;
   const goToPreviousHatcheryEgg = useCallback(() => {
     if (hatcheryPendingEggCount <= 1) return;
@@ -9924,11 +9925,11 @@ export function IslandRunBoardPrototype({
     session.user.id,
   ]);
 
-  const resolveHatchedCreatureWithPerfectCompanionBias = (resolvedEgg: ActiveEgg) => {
+  const resolveHatchedCreatureWithPerfectCompanionBias = (resolvedEgg: ActiveEgg, sourceIslandNumber = islandNumber) => {
     const baselineCreature = selectCreatureForEggWithEarlyFeaturedPool({
       eggTier: resolvedEgg.tier,
       seed: resolvedEgg.setAtMs,
-      islandNumber,
+      islandNumber: sourceIslandNumber,
       earlyFeaturedPool: {
         enabled: isIslandRunFeatureEnabled('islandRunEarlyFeaturedCreaturePoolEnabled'),
         featuredWeightPercent: ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT,
@@ -9944,9 +9945,9 @@ export function IslandRunBoardPrototype({
     );
     const shouldApplyPity =
       !hasCollectedPerfectCompanion
-      && islandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
+      && sourceIslandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
 
-    const seedBase = `${session.user.id}:${cycleIndex}:${islandNumber}:${resolvedEgg.setAtMs}`;
+    const seedBase = `${session.user.id}:${cycleIndex}:${sourceIslandNumber}:${resolvedEgg.setAtMs}`;
     const seed = hashPerfectCompanionSeed(seedBase);
 
     if (shouldApplyPity) {
@@ -9966,6 +9967,7 @@ export function IslandRunBoardPrototype({
     const resolvedEgg = selectedHatcheryDisplayEgg;
     if (!resolvedEgg || selectedHatcheryEggStage < 4) return;
     if (!canResolveSelectedHatcheryEgg) return;
+    const sourceIslandNumber = selectedHatcheryEgg?.islandNumber ?? islandNumber;
     const selectedLedgerKey = selectedHatcheryEgg?.ledgerKey ?? getEggSlotLedgerKey(islandNumber, 0);
     const selectedEntry = runtimeState.perIslandEggs?.[selectedLedgerKey];
     if (selectedEntry?.status === 'collected' || selectedEntry?.status === 'sold') return;
@@ -9979,19 +9981,19 @@ export function IslandRunBoardPrototype({
     setIsCollectingCreature(true);
     const nowTs = Date.now();
     const eggLocation = selectedHatcheryEggLocation;
-    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
+    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg, sourceIslandNumber);
     const hasCollectedPerfectCompanionBeforeCollect = creatureCollection.some((entry) =>
       (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
     );
     const isPerfectCompanionCollected = (runtimeState.perfectCompanionIds ?? []).includes(creature.id);
     const pityWasEligible =
       !hasCollectedPerfectCompanionBeforeCollect
-      && islandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
-    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
+      && sourceIslandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
+    const nextCompletedStops = ensureStopCompleted(getIslandRunStateSnapshot(session).completedStopsByIsland[String(sourceIslandNumber)] ?? [], 'hatchery');
     const transitionResult = resolveReadyEggTerminalTransition({
       session,
       client,
-      islandNumber,
+      islandNumber: sourceIslandNumber,
       terminalStatus: 'collected',
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
@@ -10014,7 +10016,7 @@ export function IslandRunBoardPrototype({
     setCreatureCollection(collectCreatureForUser({
       userId: session.user.id,
       creature,
-      islandNumber,
+      islandNumber: sourceIslandNumber,
       collectedAtMs: nowTs,
     }));
     setHatchReveal({ creatureId: creature.id, creatureName: creature.name, rarity: creature.tier });
@@ -10061,8 +10063,10 @@ export function IslandRunBoardPrototype({
       }
     }
     const nextRecord = transitionResult.record;
-    updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_board_collect_creature' });
-    markHatcheryStopCompleteInV2();
+    if (sourceIslandNumber === islandNumber) {
+      updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_board_collect_creature' });
+      markHatcheryStopCompleteInV2();
+    }
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery' && areAllEggSlotsTerminalForIsland(nextRecord.perIslandEggs, islandNumber)) {
       setActiveStopId(null);
@@ -10080,16 +10084,17 @@ export function IslandRunBoardPrototype({
     const resolvedEgg = selectedHatcheryDisplayEgg;
     if (!resolvedEgg || selectedHatcheryEggStage < 4) return;
     if (!canResolveSelectedHatcheryEgg) return;
+    const sourceIslandNumber = selectedHatcheryEgg?.islandNumber ?? islandNumber;
     const selectedLedgerKey = selectedHatcheryEgg?.ledgerKey ?? getEggSlotLedgerKey(islandNumber, 0);
     const selectedEntry = runtimeState.perIslandEggs?.[selectedLedgerKey];
     if (selectedEntry?.status === 'collected' || selectedEntry?.status === 'sold') return;
-    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
+    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg, sourceIslandNumber);
     const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
     const options = getEggSellRewardOptions(resolvedEgg.tier);
     const picked = options.find((o) => o.choice === choice) ?? options[0];
     const nowTs = Date.now();
     const eggLocation = selectedHatcheryEggLocation;
-    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
+    const nextCompletedStops = ensureStopCompleted(getIslandRunStateSnapshot(session).completedStopsByIsland[String(sourceIslandNumber)] ?? [], 'hatchery');
 
     // Also give essence from bundle (always)
     const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
@@ -10099,7 +10104,7 @@ export function IslandRunBoardPrototype({
     const transitionResult = resolveReadyEggTerminalTransition({
       session,
       client,
-      islandNumber,
+      islandNumber: sourceIslandNumber,
       terminalStatus: 'sold',
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
@@ -10131,7 +10136,9 @@ export function IslandRunBoardPrototype({
       metadata: { stage: 'island_creature_sold', island_number: islandNumber, tier: resolvedEgg.tier, creature_id: creature.id, sell_choice: choice, sell_amount: picked.amount },
     });
     const nextRecord = transitionResult.record;
-    updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_board_sell_egg_choice' });
+    if (sourceIslandNumber === islandNumber) {
+      updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_board_sell_egg_choice' });
+    }
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery' && areAllEggSlotsTerminalForIsland(nextRecord.perIslandEggs, islandNumber)) {
       setActiveStopId(null);
@@ -11402,7 +11409,7 @@ export function IslandRunBoardPrototype({
     // value). Removed 2026-04-19.
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setRollValue(null);
-    setActiveStopId('hatchery');
+    setActiveStopId(resolvedIsland < 4 ? 'hatchery' : null);
     setFocusedStopId(null);
     setCameraMode('overview_manual');
     window.requestAnimationFrame(() => boardCameraRef.current?.goDefault());
@@ -15922,6 +15929,15 @@ export function IslandRunBoardPrototype({
                 worldSourceNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
                 landmarkBuildLevels={island5ThreeBuildLevels}
+                landmarkProgress={islandStopPlan.map((stop, index) => {
+                  const build = islandProgressReadState.stopBuildStateByIndex[index];
+                  const level = build?.buildLevel ?? 0;
+                  const fraction = build && build.requiredEssence > 0 ? Math.min(1, build.spentEssence / build.requiredEssence) : 0;
+                  const percent = level >= 3 ? 100 : Math.min(99, Math.floor((level + fraction) / 3 * 100));
+                  const status = contractV2Stops?.statusesByIndex[index];
+                  return { id: stop.stopId === 'mystery' ? 'event' : stop.stopId, title: stop.title, percent,
+                    status: status === 'completed' ? 'Complete' : level < 3 ? `Build to Level 3` : status === 'locked' ? 'Finish earlier activities' : 'Ready to enter' };
+                })}
                 presentation="embedded"
                 qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
                 tileMap={landmarkDoorTileMap}
@@ -16779,7 +16795,7 @@ export function IslandRunBoardPrototype({
         <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy${isFocusedBehaviorEncounter ? ' island-stop-modal--behavior-focus' : ''}`} role="dialog" aria-modal="true" aria-label={activeStop.title}>
             {!isFocusedBehaviorEncounter ? <div className="island-stop-modal__header-row">
-              <h3 className="island-stop-modal__title">{activeStop.title}</h3>
+              <h3 className="island-stop-modal__title">{activeStopId === 'hatchery' && selectedHatcheryDisplayEgg ? 'Spaceship incubator' : activeStop.title}</h3>
               {activeStopId === 'hatchery' ? (
                 <button
                   type="button"
@@ -16797,7 +16813,8 @@ export function IslandRunBoardPrototype({
                   <ul className="island-stop-modal__help-list">
                     <li>{activeStop.description}</li>
                     <li>The egg keeps incubating even while you travel.</li>
-                    <li>Each island has one egg slot — set it before you leave.</li>
+                    <li>From Island 004, finish every building at Level 3 and the other landmark activities to earn your Hatchery egg.</li>
+                    <li>Collect it into the spaceship incubator, then open it from any island when ready.</li>
                   </ul>
                 </div>
               ) : null}
@@ -16815,6 +16832,8 @@ export function IslandRunBoardPrototype({
                 <span aria-hidden="true">🔒</span>{' '}
                 {openedStopNeedsTicket && openedStopTicketCost
                   ? <>This stop is ready to open. Pay <strong>{openedStopTicketCost} 💰</strong> to unlock this island ticket.</>
+                  : islandNumber >= 4
+                  ? 'Build this landmark to Level 3 to enter. Complete the other activities before Hatchery, then face the Boss.'
                   : priorStop
                   ? <>Complete <strong>{priorStop.title}</strong> first to unlock this stop.</>
                   : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
@@ -16835,6 +16854,10 @@ export function IslandRunBoardPrototype({
             {activeStopId === 'hatchery' && (
               <>
                 <div className="island-hatchery-card">
+                {selectedHatcheryEgg && !islandEggEntry && openedStopIsPlayable && islandNumber >= 4 ? (
+                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary"
+                    disabled={isSettingEgg} onClick={handleSetEgg}>Collect this island’s egg into spaceship</button>
+                ) : null}
                 {showHatcheryEggCarousel && selectedHatcheryEgg ? (
                   <div className="island-hatchery-card__carousel" aria-label="Pending hatchery eggs">
                     <button
@@ -16897,11 +16920,11 @@ export function IslandRunBoardPrototype({
                     />
                     {selectedHatcheryDisplayEgg.isDormant ? (
                       <>
-                        <p className="island-hatchery-card__headline">💤 Dormant egg ready!</p>
+                        <p className="island-hatchery-card__headline">Egg ready in your spaceship!</p>
                         <p className="island-hatchery-card__copy">
                           {selectedHatcheryEgg && !selectedHatcheryEgg.isCurrentIsland ? `Island ${selectedHatcheryEgg.islandNumber}'s ` : 'Your '}
                           <strong>{selectedHatcheryDisplayEgg.tier}</strong> creature is ready.
-                          {canResolveSelectedHatcheryEgg ? ' Keep it for your collection or sell it for rewards.' : ' Return to that island to collect or sell it.'}
+                          {canResolveSelectedHatcheryEgg ? ' Keep it for your collection or sell it for rewards.' : ' Open it aboard your spaceship from any island.'}
                         </p>
                       </>
                     ) : (
@@ -16910,7 +16933,7 @@ export function IslandRunBoardPrototype({
                         <p className="island-hatchery-card__copy">
                           {selectedHatcheryEgg && !selectedHatcheryEgg.isCurrentIsland ? `Island ${selectedHatcheryEgg.islandNumber}'s ` : 'Your '}
                           <strong>{selectedHatcheryDisplayEgg.tier}</strong> egg has hatched.
-                          {canResolveSelectedHatcheryEgg ? ' Choose whether to collect the creature or sell it now for rewards.' : ' Return to that island to collect or sell it.'}
+                          {canResolveSelectedHatcheryEgg ? ' Choose whether to collect the creature or sell it now for rewards.' : ' Open it aboard your spaceship from any island.'}
                         </p>
                       </>
                     )}
@@ -16920,7 +16943,7 @@ export function IslandRunBoardPrototype({
                           type="button"
                           className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                           onClick={handleCollectCreature}
-                          disabled={isCollectingCreature || islandEggSlotUsed}
+                          disabled={isCollectingCreature}
                         >
                           {isCollectingCreature ? 'Collecting…' : 'Collect Creature 🐾'}
                         </button>
@@ -16957,7 +16980,7 @@ export function IslandRunBoardPrototype({
                       </div>
                     ) : (
                       <p className="island-hatchery-card__remote-note" role="status">
-                        This egg belongs to Island {selectedHatcheryEgg?.islandNumber}. It is shown here so you can track all pending eggs, but collection still happens on that island.
+                        This egg belongs to Island {selectedHatcheryEgg?.islandNumber}. It travels with your spaceship and can be opened from any island.
                       </p>
                     )}
                   </div>
@@ -16982,7 +17005,7 @@ export function IslandRunBoardPrototype({
                     <p className="island-hatchery-card__headline">Stage {selectedHatcheryEggStage}: {getEggStageName(selectedHatcheryEggStage)}</p>
                     <p className="island-hatchery-card__copy">
                       {selectedHatcheryEgg && !selectedHatcheryEgg.isCurrentIsland ? `Island ${selectedHatcheryEgg.islandNumber}'s ` : 'Your '}
-                      <strong>{selectedHatcheryDisplayEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
+                      <strong>{selectedHatcheryDisplayEgg.tier}</strong> egg is incubating aboard your spaceship. Open it here from any island when ready!
                     </p>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
@@ -17014,7 +17037,7 @@ export function IslandRunBoardPrototype({
                     <p className="island-hatchery-card__copy">
                       {isEggManiaUnused
                         ? 'This island has Egg Mania: set three surprise-tier eggs at once. Each hatches independently in 24–72h.'
-                        : 'Set an egg now to earn rewards. The tier is a surprise, and hatch time is random (24–72h).'}
+                        : 'Complete every building at Level 3 and the other activities, then collect your egg into the spaceship incubator. It hatches in 24–72h.'}
                     </p>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
@@ -17032,14 +17055,15 @@ export function IslandRunBoardPrototype({
                         );
                       })}
                     </div>
+                    {!openedStopIsPlayable ? <p role="status">Finish every building at Level 3 and complete Habit, Event and Wisdom. Then return here before facing the Boss.</p> : null}
                     <div className="island-hatchery-card__actions">
                       <button
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                         onClick={handleSetEgg}
-                        disabled={isSettingEgg}
+                        disabled={isSettingEgg || !openedStopIsPlayable || islandNumber < 4}
                       >
-                        {isSettingEgg ? 'Setting Egg...' : isEggManiaUnused ? '🔥🥚 Set 3 Eggs' : '🥚 Set Egg'}
+                        {isSettingEgg ? 'Collecting…' : isEggManiaUnused ? 'Collect 3 eggs into spaceship' : 'Collect egg into spaceship'}
                       </button>
                     </div>
                   </div>
@@ -18675,6 +18699,11 @@ export function IslandRunBoardPrototype({
               </button>
             </div>
 
+            {hatcheryPendingEggCount > 0 ? <button type="button"
+              className="island-stop-modal__btn island-stop-modal__btn--primary"
+              onClick={() => { setShowSanctuaryPanel(false); setShowEarlyOwnedEggs(true); openHatcheryQuickAccess(); }}>
+              Spaceship incubator · {hatcheryPendingEggCount} egg{hatcheryPendingEggCount === 1 ? '' : 's'}
+            </button> : null}
             {showSanctuaryMenu && sanctuaryMenuModule === 'collection' ? (
             <>
             <p className="island-stop-modal__copy">Your creatures live here. Hatch eggs, collect companions, and grow bonds over time.</p>

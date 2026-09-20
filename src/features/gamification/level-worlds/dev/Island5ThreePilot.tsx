@@ -390,6 +390,7 @@ interface Island5ThreePilotProps {
   worldSourceNumber?: IslandRunAuthored3DWorldSource;
   buildLevel: BuildLevel;
   landmarkBuildLevels?: Island5LandmarkBuildLevels;
+  landmarkProgress?: ReadonlyArray<{ id: string; title: string; percent: number; status: string }>;
   presentation?: 'workbench' | 'embedded';
   qualityOverride?: Island3DQualitySelection;
   /** Canonical presentation map. This never becomes a gameplay write path. */
@@ -3563,6 +3564,7 @@ export default function Island5ThreePilot({
   worldSourceNumber,
   buildLevel,
   landmarkBuildLevels,
+  landmarkProgress,
   presentation = 'workbench',
   qualityOverride,
   tileMap,
@@ -3759,6 +3761,9 @@ export default function Island5ThreePilot({
   const [rendererRetryVersion, setRendererRetryVersion] = useState(0);
   const [assemblyAssetsReady, setAssemblyAssetsReady] = useState(areIsland001V2AssetsReady);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const landmarkProgressRef = useRef(landmarkProgress);
+  landmarkProgressRef.current = landmarkProgress;
+  const landmarkLabelRefs = useRef(new Map<string, HTMLButtonElement>());
   const wonderRideTransitionVeilRef = useRef<HTMLDivElement>(null);
   const wonderRideFrontButtonRef = useRef<HTMLButtonElement>(null);
   const wonderRideMiddleButtonRef = useRef<HTMLButtonElement>(null);
@@ -6019,6 +6024,8 @@ export default function Island5ThreePilot({
 
     const clickableLandmarks: THREE.Object3D[] = [];
     const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
+    const landmarkLabelAnchors = new WeakMap<THREE.Object3D, THREE.Vector3>();
+    const projectedLandmarkLabel = new THREE.Vector3();
     const island15FallbackRoot = new THREE.Group();
     island15FallbackRoot.name = 'ISLAND_15_CRYSTAL_PALACE_V4_LOADING_FALLBACK';
     if (isCrystalGlacier) scene.add(island15FallbackRoot);
@@ -10345,6 +10352,40 @@ export default function Island5ThreePilot({
           renderCamera = plantingMicroscopeCamera;
         }
       }
+      // DOM presentation follows the camera without React updates every frame.
+      const occupiedLabelRects: Array<{ left: number; top: number; right: number; bottom: number }> = [];
+      for (const item of landmarkProgressRef.current ?? []) {
+        const label = landmarkLabelRefs.current.get(item.id);
+        const root = landmarkRootsById.get(item.id as Island5LandmarkId);
+        if (!label || !root) continue;
+        let anchor = landmarkLabelAnchors.get(root);
+        if (!anchor) {
+          const bounds = new THREE.Box3().setFromObject(root);
+          anchor = bounds.getCenter(new THREE.Vector3());
+          anchor.y = bounds.max.y + 0.25;
+          root.worldToLocal(anchor);
+          landmarkLabelAnchors.set(root, anchor);
+        }
+        projectedLandmarkLabel.copy(anchor);
+        root.localToWorld(projectedLandmarkLabel).project(renderCamera);
+        const visible = root.visible && !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
+          && !constructionPresentationRef.current?.active
+          && projectedLandmarkLabel.z > -1 && projectedLandmarkLabel.z < 1
+          && Math.abs(projectedLandmarkLabel.x) < 0.95 && Math.abs(projectedLandmarkLabel.y) < 0.95;
+        label.style.display = visible ? 'flex' : 'none';
+        if (visible) {
+          const width = label.offsetWidth, height = label.offsetHeight;
+          const x = Math.max(width / 2 + 4, Math.min(canvas.clientWidth - width / 2 - 4, (projectedLandmarkLabel.x + 1) * canvas.clientWidth / 2));
+          let bottom = Math.max(height + 4, (1 - projectedLandmarkLabel.y) * canvas.clientHeight / 2);
+          for (let attempt = 0; attempt < 5; attempt += 1) {
+            const collision = occupiedLabelRects.find(rect => x + width / 2 > rect.left - 4 && x - width / 2 < rect.right + 4 && bottom > rect.top - 4 && bottom - height < rect.bottom + 4);
+            if (!collision) break;
+            bottom = collision.top - 5;
+          }
+          label.style.transform = `translate(${x}px, ${bottom}px) translate(-50%, -100%)`;
+          occupiedLabelRects.push({ left: x - width / 2, right: x + width / 2, top: bottom - height, bottom });
+        }
+      }
       try { renderer.render(scene, renderCamera); }
       finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
@@ -10758,6 +10799,19 @@ export default function Island5ThreePilot({
         className="island-5-three-pilot__canvas"
         aria-label={`${canvasAccessibilityLabel}${isCrystalGlacier ? '; select the palace exterior to enter' : ''}`}
       />
+      {landmarkProgress ? <div className="island-landmark-progress-layer">
+        {landmarkProgress.map(item => <button key={item.id} type="button"
+          ref={element => { if (element) landmarkLabelRefs.current.set(item.id, element); else landmarkLabelRefs.current.delete(item.id); }}
+          className="island-landmark-progress-label"
+          disabled={isRolling || interactionPaused}
+          aria-label={`${item.title}: ${item.percent}% built. ${item.status}`}
+          onClick={() => onLandmarkClick?.(item.id as Island5LandmarkId)}>
+          <span className="island-landmark-progress-ring" style={{ background: `conic-gradient(#70e6ad ${item.percent}%, #ffffff26 0)` }}>
+            <span>{item.percent}%</span>
+          </span>
+          <span><strong>{item.title}</strong><small>{item.status}</small></span>
+        </button>)}
+      </div> : null}
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
           <span aria-hidden="true" />

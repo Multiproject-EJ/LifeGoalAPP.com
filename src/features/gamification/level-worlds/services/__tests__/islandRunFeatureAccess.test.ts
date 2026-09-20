@@ -94,7 +94,8 @@ export const islandRunFeatureAccessTests: TestCase[] = [
     for(const island of [2,3,4,120]){
       const a=resolveIslandRunFeatureAccess({currentIslandNumber:island});
       assert(!a.gradual,'unmarked is legacy, not guessed from island');
-      assert(a.trafficLight && a.dailyWheel && a.eggs && a.ordinaryEvents,'legacy access preserved');
+      assert(a.trafficLight && a.dailyWheel && a.ordinaryEvents,'other legacy access preserved');
+      assertEqual(a.eggs,island>=4,'new eggs start on004 for every save');
       assertEqual(a.puzzleCollection,island>=2,'legacy puzzle introduction unchanged');
     }
   }},

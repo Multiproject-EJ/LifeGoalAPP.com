@@ -76,7 +76,7 @@ export type { JourneyDiscArmoryState } from './journeyDiscArmory';
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
 /** Where an egg lives: on a specific island, or dormant after hatching while the player is away. */
-export type PerIslandEggLocation = 'island' | 'dormant';
+export type PerIslandEggLocation = 'island' | 'dormant' | 'spaceship';
 
 export interface PerIslandEggEntry {
   tier: 'common' | 'rare' | 'mythic';

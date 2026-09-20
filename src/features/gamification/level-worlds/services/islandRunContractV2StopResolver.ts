@@ -180,7 +180,25 @@ export function resolveIslandRunContractV2Stops(options: {
   stopStatesByIndex: Array<StopRuntimeStateEntry | null | undefined>;
   stopTicketsPaidByIsland?: Record<string, number[]> | null;
   islandNumber?: number;
+  stopBuildStateByIndex?: Array<IslandRunContractV2BuildState | null | undefined>;
 }): ResolveIslandRunContractV2StopsResult {
+  // Stable save indices stay unchanged. Activity recommendations move Hatchery
+  // immediately before Boss, while construction itself retains its saved order.
+  if ((options.islandNumber ?? 0) >= 4 && options.stopBuildStateByIndex) {
+    const order = [1, 2, 3, 0, 4];
+    const complete = (index: number) => isStopObjectiveComplete(options.stopStatesByIndex[index]);
+    const built = (index: number) => (options.stopBuildStateByIndex?.[index]?.buildLevel ?? 0) >= MAX_BUILD_LEVEL;
+    const allBuilt = order.every(built);
+    const eligible = (index: number) => built(index)
+      && (index !== 0 || (allBuilt && [1, 2, 3].every(complete)))
+      && (index !== 4 || [1, 2, 3, 0].every(complete));
+    const activeStopIndex = order.find(index => !complete(index) && eligible(index))
+      ?? order.find(index => !complete(index)) ?? 4;
+    const statusesByIndex = ISLAND_RUN_CONTRACT_V2_STOP_TYPES.map((_, index): IslandRunContractV2StopStatus =>
+      complete(index) ? 'completed' : !eligible(index) ? 'locked' : index === activeStopIndex ? 'active' : 'accessible');
+    return { activeStopIndex, activeStopType: ISLAND_RUN_CONTRACT_V2_STOP_TYPES[activeStopIndex],
+      recommendedStopIndex: activeStopIndex, recommendedStopType: ISLAND_RUN_CONTRACT_V2_STOP_TYPES[activeStopIndex], statusesByIndex };
+  }
   const normalizedStates = ISLAND_RUN_CONTRACT_V2_STOP_TYPES.map((_, index) => options.stopStatesByIndex[index]);
   const firstIncompleteIndex = normalizedStates.findIndex((entry) => !isStopObjectiveComplete(entry));
   const activeStopIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : ISLAND_RUN_CONTRACT_V2_STOP_TYPES.length - 1;

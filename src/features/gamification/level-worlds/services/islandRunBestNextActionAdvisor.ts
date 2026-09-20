@@ -1,3 +1,4 @@
+import { resolveIslandRunContractV2Stops, reconcileIslandRunStopObjectivesFromCompletionLedger } from './islandRunContractV2StopResolver';
 import { BOSS_STOP_INDEX, canChallengeBoss } from './islandRunBossEncounter';
 import {
   getEffectiveIslandNumber,
@@ -18,7 +19,7 @@ import { resolveIslandRunCompletion } from './islandRunCompletion';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { generateIslandStopPlan } from './islandRunStops';
 import { getStopTicketCost, getStopTicketsPaidForIsland, isStopTicketPaid, STOP_COUNT } from './islandRunStopTickets';
-import { areAllEggSlotsTerminalForIsland, getUnresolvedEggSlotsForIsland } from './islandRunEggMania';
+import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 
 export type IslandRunBestNextActionKind =
   | 'claim_island_clear'
@@ -95,8 +96,7 @@ function isEggSlotUsed(record: IslandRunGameStateRecord): boolean {
 }
 
 function isCollectableEggReady(record: IslandRunGameStateRecord, nowMs: number): boolean {
-  const unresolvedSlots = getUnresolvedEggSlotsForIsland(record.perIslandEggs, getCurrentIslandNumber(record));
-  const readySlot = unresolvedSlots.find(({ entry }) => entry.status === 'ready' || Math.floor(nowMs) >= Math.floor(entry.hatchAtMs));
+  const readySlot = Object.values(record.perIslandEggs).find(entry => entry.status === 'ready' || (entry.status === 'incubating' && nowMs >= entry.hatchAtMs));
   if (readySlot) return true;
 
   if (!record.activeEggTier || record.activeEggSetAtMs === null || record.activeEggHatchDurationMs === null) {
@@ -183,11 +183,23 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
       action: 'collect_egg',
       urgency: 'high',
       ctaLabel: 'Collect egg',
-      reason: 'An egg is ready to collect from the Hatchery.',
+      reason: 'An egg is ready aboard your spaceship.',
       meta: { stopId: 'hatchery', stopIndex: 0 },
     };
   }
 
+  if (islandNumber >= 4) {
+    const stops = resolveIslandRunContractV2Stops({ islandNumber,
+      stopStatesByIndex: reconcileIslandRunStopObjectivesFromCompletionLedger({stopStatesByIndex:record.stopStatesByIndex,completedStops}),
+      stopBuildStateByIndex:record.stopBuildStateByIndex });
+    const index=stops.recommendedStopIndex;
+    if (stops.statusesByIndex[index] === 'active') {
+      return { action:index===0?'set_egg_hatchery':index===4?'challenge_boss':'complete_active_stop',
+        urgency:'high', ctaLabel:index===0?'Collect spaceship egg':index===4?'Challenge boss':'Enter landmark',
+        reason:index===0?'Every building is Level 3. Your Hatchery egg is ready to claim.':'This Level 3 landmark is ready for its activity.',
+        meta:{stopId:stops.recommendedStopType,stopIndex:index} };
+    }
+  } else {
   if (!isStopEffectivelyCompleteByIndex({ record, stopId: 'hatchery', completedStops })) {
     return {
       action: 'set_egg_hatchery',
@@ -254,6 +266,8 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
         meta: { stopId: stopId ?? undefined, stopIndex },
       };
     }
+  }
+
   }
 
   const affordableBuildIndex = getAffordableBuildIndex(record);

@@ -187,7 +187,7 @@ export const islandRunCompletionTests: TestCase[] = [
       assert(phone.complete, 'Phone agrees with completion when saved evidence is restored');
       const incomplete = { ...state, stopBuildStateByIndex: state.stopBuildStateByIndex.map((entry, i) => i === 4 ? { ...entry, buildLevel: 2 } : entry) };
       assert(!resolveIslandRunCompletion(incomplete).complete, 'A nearly finished L2 is not L3');
-      assert(!resolveIslandRunCompletion({ ...state, perIslandEggs: { '11': { ...state.perIslandEggs[11], status: 'ready' } } }).complete, 'Ready egg must still be resolved');
+      assert(resolveIslandRunCompletion({ ...state, perIslandEggs: { '11': { ...state.perIslandEggs[11], status: 'ready', location: 'spaceship' } } }).complete, 'Shipboard egg can be opened after departure');
     },
   },
   {

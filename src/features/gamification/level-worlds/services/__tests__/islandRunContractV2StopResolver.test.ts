@@ -39,6 +39,22 @@ function assertResolvedFrontier(
 }
 
 export const islandRunContractV2StopResolverTests: TestCase[] = [
+  { name: 'Island004 activities unlock at Level3 with Hatchery immediately before Boss', run() {
+    const states = Array.from({length:5}, () => ({objectiveComplete:false,buildComplete:false}));
+    const resolve = (builds = FULL_BUILD_STATES) => resolveIslandRunContractV2Stops({
+      islandNumber:4, stopStatesByIndex:states, stopBuildStateByIndex:builds, stopTicketsPaidByIsland:{} });
+    assertDeepEqual(resolve(EMPTY_BUILD_STATES).statusesByIndex, ['locked','locked','locked','locked','locked'], 'nothing enters before Level3');
+    assertDeepEqual(resolve().statusesByIndex, ['locked','active','accessible','accessible','locked'], 'no additional ticket after building');
+    states[1].objectiveComplete = true;
+    states[2].objectiveComplete = true;
+    states[3].objectiveComplete = true;
+    assertEqual(resolve().activeStopType, 'hatchery', 'hatchery follows other activities');
+    assertEqual(resolve(FULL_BUILD_STATES.map((b,i) => i === 4 ? {...b,buildLevel:2} : b)).statusesByIndex[0], 'locked', 'boss building must also be Level3');
+    states[0].objectiveComplete = true;
+    assertEqual(resolve().activeStopType, 'boss', 'boss follows hatchery');
+    assertDeepEqual(resolve(EMPTY_BUILD_STATES).statusesByIndex.slice(0,4), ['completed','completed','completed','completed'], 'legacy completed activities retained');
+  }},
+
   {
     name: 'legacy save without access fields: brand-new island keeps only Hatchery active',
     run: () => {

@@ -110,7 +110,7 @@ export function resolveLandmarkProgress(options: {
     const stopObjectiveComplete = isCurrentIsland
       && (options.state.stopStatesByIndex[index]?.objectiveComplete === true
         || completedIds.has(ISLAND_RUN_CONTRACT_V2_STOP_TYPES[index]))
-      && (index !== 0 || eggResolved);
+      && (index !== 0 || options.islandNumber >= 4 || eggResolved);
     const buildComplete = isCurrentIsland
       && (options.state.stopBuildStateByIndex[index]?.buildLevel ?? 0) >= MAX_BUILD_LEVEL;
     if (stopObjectiveComplete) objectivesComplete += 1;

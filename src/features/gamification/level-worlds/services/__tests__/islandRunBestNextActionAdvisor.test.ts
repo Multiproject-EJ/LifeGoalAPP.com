@@ -154,10 +154,9 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     },
   },
   {
-    name: 'egg ready (not collected) does not trigger claim island clear even if all stops and builds done',
+    name: 'ready ship egg does not block a completed island',
     run: () => {
-      // Regression: BNA must not return claim_island_clear before egg is collected/sold.
-      // The departure finish gate requires hatcheryEggResolved (collected or sold).
+      // An earned egg travels with the ship; finished island activities permit departure.
       const record = makeRecord({
         completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS },
         stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
@@ -181,12 +180,12 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         },
       });
 
-      // Egg is ready but not yet collected — should NOT claim island clear; should surface collect_egg instead.
-      expectAction(record, 'collect_egg', 'egg ready but not collected');
+      // The island is finished; the egg can be opened after departure.
+      expectAction(record, 'claim_island_clear', 'egg travels aboard the spaceship');
     },
   },
   {
-    name: 'egg incubating (not collected) never triggers claim island clear',
+    name: 'incubating ship egg does not block a completed island',
     run: () => {
       const record = makeRecord({
         completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS },
@@ -211,7 +210,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
       });
 
       const result = requireResult(record, 'expected non-null action while egg is pending');
-      assert(result.action !== 'claim_island_clear', 'incubating egg must block island clear claim');
+      assertEqual(result.action, 'claim_island_clear', 'incubation continues after departure');
     },
   },
   {

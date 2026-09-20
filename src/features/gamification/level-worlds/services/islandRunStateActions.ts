@@ -1,3 +1,4 @@
+import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 /**
  * islandRunStateActions — pure action functions that mutate Island Run
@@ -101,7 +102,7 @@ import {
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveCompanionRegenModifier } from './companionRegenModifier';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
-import { getEggSlotLedgerKey } from './islandRunEggMania';
+import { getEggSlotLedgerKey, parseEggSlotLedgerKey } from './islandRunEggMania';
 import { getCreatureById } from './creatureCatalog';
 import {
   addCreatureToRuntimeCollection,
@@ -4671,6 +4672,19 @@ export interface ResolveReadyEggTerminalTransitionResult {
  * `handleSetEgg` so egg lifecycle state and completed-stop ledger updates are
  * committed atomically through the store coordinator.
  */
+function hatcheryGrantProgress(current: IslandRunGameStateRecord, completedStops: string[]) {
+  const islandKey = String(current.currentIslandNumber);
+  const completed = Array.from(new Set([...(current.completedStopsByIsland[islandKey] ?? []), ...completedStops, 'hatchery']));
+  const ids = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'];
+  const stopStatesByIndex = current.stopStatesByIndex.map((entry, index) => ({ ...entry,
+    objectiveComplete: entry.objectiveComplete || completed.includes(ids[index]),
+  }));
+  const resolution = resolveIslandRunContractV2Stops({ islandNumber: current.currentIslandNumber,
+    stopStatesByIndex, stopBuildStateByIndex: current.stopBuildStateByIndex });
+  return { stopStatesByIndex, activeStopIndex: resolution.activeStopIndex, activeStopType: resolution.activeStopType,
+    completedStopsByIsland: { ...current.completedStopsByIsland, [islandKey]: completed } };
+}
+
 export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): IslandRunGameStateRecord {
   const {
     session,
@@ -4684,19 +4698,15 @@ export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): 
     triggerSource,
   } = options;
   const current = getIslandRunStateSnapshot(session);
-  const islandKey = String(islandNumber);
   if (!canPlaceIslandRunEggs(current, islandNumber, Object.keys(eggEntriesByLedgerKey))) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
+    ...hatcheryGrantProgress(current, completedStops),
     activeEggTier,
     activeEggSetAtMs,
     activeEggHatchDurationMs,
     activeEggIsDormant: false,
-    perIslandEggs: { ...current.perIslandEggs, ...eggEntriesByLedgerKey },
-    completedStopsByIsland: {
-      ...current.completedStopsByIsland,
-      [islandKey]: completedStops,
-    },
+    perIslandEggs: { ...current.perIslandEggs, ...Object.fromEntries(Object.entries(eggEntriesByLedgerKey).map(([key, entry]) => [key, { ...entry, location: 'spaceship' as const }])) },
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({
@@ -4725,15 +4735,12 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
   if (!canPlaceIslandRunEggs(current, islandNumber, [islandKey])) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
+    ...hatcheryGrantProgress(current, completedStops),
     activeEggTier,
     activeEggSetAtMs,
     activeEggHatchDurationMs,
     activeEggIsDormant: false,
-    perIslandEggs: { ...current.perIslandEggs, [islandKey]: perIslandEggEntry },
-    completedStopsByIsland: {
-      ...current.completedStopsByIsland,
-      [islandKey]: completedStops,
-    },
+    perIslandEggs: { ...current.perIslandEggs, [islandKey]: { ...perIslandEggEntry, location: 'spaceship' } },
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({
@@ -4858,8 +4865,15 @@ export function resolveReadyEggTerminalTransition(
   const islandKey = String(islandNumber);
   const baseEggLedgerKey = getEggSlotLedgerKey(islandNumber, 0);
   const resolvedEggLedgerKey = eggLedgerKey ?? baseEggLedgerKey;
+  if (parseEggSlotLedgerKey(resolvedEggLedgerKey)?.islandNumber !== islandNumber) {
+    return { record: current, changed: false, reason: 'missing_ledger_entry' };
+  }
   const ledgerEntry = current.perIslandEggs?.[resolvedEggLedgerKey];
+  if (!ledgerEntry && islandNumber !== current.currentIslandNumber) {
+    return { record: current, changed: false, reason: 'missing_ledger_entry' };
+  }
   const canBackfillBaseActiveEgg = !ledgerEntry
+    && islandNumber === current.currentIslandNumber
     && resolvedEggLedgerKey === baseEggLedgerKey
     && typeof current.activeEggTier === 'string'
     && typeof current.activeEggSetAtMs === 'number'
@@ -4902,7 +4916,8 @@ export function resolveReadyEggTerminalTransition(
     return { record: current, changed: false, reason: 'not_ready' };
   }
 
-  const shouldClearActiveEgg = resolvedEggLedgerKey === baseEggLedgerKey;
+  const shouldClearActiveEgg = islandNumber === current.currentIslandNumber
+    && resolvedEggLedgerKey === baseEggLedgerKey;
   const normalizedCollectedCreatureId = terminalStatus === 'collected' && typeof collectedCreatureId === 'string' && collectedCreatureId.trim().length > 0
     ? collectedCreatureId.trim()
     : null;
@@ -5386,7 +5401,7 @@ export function resolveIslandRunTravelState(options: ResolveIslandRunTravelState
       setAtMs,
       hatchAtMs,
       status: isReady ? 'ready' : 'incubating',
-      location: isReady ? 'dormant' : 'island',
+      location: currentPerIslandEggs[oldIslandKey]?.location === 'spaceship' ? 'spaceship' : isReady ? 'dormant' : 'island',
     };
   }
 

@@ -107,8 +107,8 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
       assert(!resolveIslandRunCompletion(after).complete,'other activities and builds remain required');
     }
   }},
-  {name:'welcome rejects legacy, Island004 and stale island or cycle callbacks without mutation',async run(){
-    for(const overrides of [{currentIslandNumber:4},{signatureMissionProgressByIsland:{}},{currentIslandNumber:3},{cycleIndex:1}]) {
+  {name:'welcome rejects Island004 and stale island or cycle callbacks without mutation',async run(){
+    for(const overrides of [{currentIslandNumber:4},{currentIslandNumber:3},{cycleIndex:1}]) {
       const before=await seed(overrides);
       assertEqual((await completeIslandRunWelcomeCheckIn({session,client:null,visitKey:'0:2'})).status,'ineligible','not this early visit');
       assertEqual(getIslandRunStateSnapshot(session),before,'rejection writes nothing');
@@ -123,11 +123,11 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
     assert(resolveIslandRunCompletion(noEggs).complete,'no egg softlock');
     const tracker=resolveIslandMissionTrackerPresentation({islandNumber:3,state:noEggs});
     assertEqual(tracker.objectives.find(item=>item.label==='Complete Landmarks')?.value,5,'mission phone counts check-in without an egg');
-    assert(!resolveIslandRunCompletion({...noEggs,signatureMissionProgressByIsland:{}}).complete,'legacy still needs egg');
+    assert(!resolveIslandRunCompletion({...noEggs,signatureMissionProgressByIsland:{}}).complete,'playable mission remains required');
     assert(!resolveIslandRunCompletion({...noEggs,stopStatesByIndex:noEggs.stopStatesByIndex.map((entry,index)=>index===0?{...entry,objectiveComplete:false}:entry)}).complete,'construction cannot substitute for check-in');
     assertEqual((await travel(3)).resolvedIsland,4,'actual egg-free travel succeeds');
     assert(!getIslandRunStateSnapshot(session).stopStatesByIndex[0].objectiveComplete,'next island activity resets');
-    assert(resolveIslandRunCompletion(getIslandRunStateSnapshot(session)).requirements.some(item=>item.id==='egg'),'first egg required on004');
+    assert(!resolveIslandRunCompletion(getIslandRunStateSnapshot(session)).requirements.some(item=>item.id==='egg'),'shipboard incubation never blocks004 departure');
   }},
   {name:'new Islands001–003 reject single and batch eggs without granting stop completion',async run(){
     for(const island of [1,2,3]) {
@@ -139,7 +139,10 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
     }
   }},
   {name:'Island004 permits placement once but rejects cross-island, malformed and overwritten slots',async run(){
-    const before=await seed({currentIslandNumber:4});
+    const before=await seed({currentIslandNumber:4,
+      stopBuildStateByIndex:Array.from({length:5},()=>({buildLevel:3,requiredEssence:100,spentEssence:100})),
+      stopStatesByIndex:Array.from({length:5},(_,i)=>({objectiveComplete:i>=1&&i<=3,buildComplete:true})),
+    });
     for(const keys of [['1'],['4garbage'],['4#egg3'],['04'],['4#egg1#egg2'],[]]) {
       assertEqual(placeBatch(4,keys),before,'invalid batch remains inert');
     }
@@ -150,9 +153,9 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
     assertEqual(place(4),placed,'repeated callback cannot replace egg');
     assertEqual(placeBatch(4,['4','4#egg1']),placed,'mixed batch cannot replace owned egg');
   }},
-  {name:'legacy early placement and earned egg resolution are preserved',async run(){
+  {name:'legacy early placement is disabled while earned egg resolution is preserved',async run(){
     await seed({currentIslandNumber:1,signatureMissionProgressByIsland:{}});
-    assertEqual(place(1).perIslandEggs['1']?.status,'incubating','legacy behavior unchanged');
+    assertEqual(place(1).perIslandEggs['1'],undefined,'new eggs begin on004 for every save');
     const saved=await seed({currentIslandNumber:2,perIslandEggs:{'2':{...egg,status:'ready'}}});
     const result=resolveReadyEggTerminalTransition({session,client:null,islandNumber:2,terminalStatus:'sold',openedAtMs:30,completedStops:['hatchery'],rewardDeltas:{dicePool:5}});
     assert(result.changed,'already earned egg remains resolvable');

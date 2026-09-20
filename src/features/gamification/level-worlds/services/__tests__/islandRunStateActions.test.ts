@@ -282,6 +282,51 @@ function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] 
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
+  { name: 'Hatchery grant requires all Level3 buildings, awards once and starts ship incubation', run() {
+    resetAll(); const session=makeSession();
+    const eligible = {
+      currentIslandNumber:4, perIslandEggs:{},
+      stopBuildStateByIndex:Array.from({length:5},()=>({buildLevel:3,spentEssence:0,requiredEssence:0})),
+      stopStatesByIndex:Array.from({length:5},(_,i)=>({objectiveComplete:i>=1&&i<=3,buildComplete:true})),
+      completedStopsByIsland:{'4':['habit','mystery','wisdom']},
+    };
+    const place = (islandNumber=4) => applyEggPlacement({session,client:null,islandNumber,
+      activeEggTier:'rare',activeEggSetAtMs:1000,activeEggHatchDurationMs:5000,
+      perIslandEggEntry:{tier:'rare',setAtMs:1000,hatchAtMs:6000,status:'incubating'},completedStops:['hatchery']});
+    for (let index=0;index<5;index++) {
+      seedState({...eligible,stopBuildStateByIndex:eligible.stopBuildStateByIndex.map((b,i)=>({...b,buildLevel:i===index?2:3}))});
+      assertEqual(place().perIslandEggs['4'],undefined,'every building is required');
+    }
+    for (const islandNumber of [1,2,3]) {
+      seedState({...eligible,currentIslandNumber:islandNumber});
+      assertEqual(place(islandNumber).perIslandEggs[String(islandNumber)],undefined,'no new beginner eggs');
+    }
+    seedState(eligible);
+    const first=place();
+    assertEqual(first.perIslandEggs['4']?.location,'spaceship','egg incubates aboard ship');
+    assertEqual(first.stopStatesByIndex[0].objectiveComplete,true,'hatchery activity committed atomically');
+    assertEqual(first.activeStopType,'boss','boss is next');
+    assertEqual(first.completedStopsByIsland['4'].includes('habit'),true,'existing completion retained');
+    assertEqual(place().runtimeVersion,first.runtimeVersion,'duplicate grant no-op');
+  }},
+  { name: 'off-island egg collection preserves current active egg and attributes creature to source', run() {
+    resetAll(); const session=makeSession();
+    seedState({currentIslandNumber:8,activeEggTier:'rare',activeEggSetAtMs:300,activeEggHatchDurationMs:10000,
+      completedStopsByIsland:{'8':['habit'],'4':['hatchery','habit','mystery','wisdom']},
+      perIslandEggs:{'4':{tier:'common',setAtMs:100,hatchAtMs:200,status:'ready',location:'spaceship'},
+        '8':{tier:'rare',setAtMs:300,hatchAtMs:10300,status:'incubating',location:'spaceship'}}});
+    const collect=()=>resolveReadyEggTerminalTransition({session,client:null,islandNumber:4,eggLedgerKey:'4',
+      terminalStatus:'collected',openedAtMs:500,location:'spaceship',collectedCreatureId:'test-away-creature',
+      completedStops:['hatchery','habit','mystery','wisdom']});
+    const first=collect();
+    assertEqual(first.changed,true,'away collection succeeds');
+    assertEqual(first.record.activeEggTier,'rare','current egg survives');
+    assertEqual(first.record.activeEggSetAtMs,300,'current timer survives');
+    assertEqual(first.record.completedStopsByIsland['8'].join(','),'habit','current activities untouched');
+    assertEqual(first.record.perIslandEggs['4'].status,'collected','source ledger resolved');
+    assertEqual(collect().changed,false,'repeat cannot award twice');
+  }},
+
   {
     name: 'parallel fast-build clicks charge and award once through the canonical mutex',
     run: async () => {
@@ -4490,6 +4535,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       seedState({
         runtimeVersion: 4,
         currentIslandNumber: 7,
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ buildLevel: 3, spentEssence: 0, requiredEssence: 0 })),
+        stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({ objectiveComplete: index >= 1 && index <= 3, buildComplete: true })),
         activeEggTier: null,
         activeEggSetAtMs: null,
         activeEggHatchDurationMs: null,
@@ -5956,7 +6003,10 @@ export const islandRunStateActionsTests: TestCase[] = [
     run: () => {
       resetAll();
       const session = makeSession();
-      seedState({ runtimeVersion: 10, currentIslandNumber: 12, perIslandEggs: {} });
+      seedState({ runtimeVersion: 10, currentIslandNumber: 12, perIslandEggs: {},
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ buildLevel: 3, spentEssence: 0, requiredEssence: 0 })),
+        stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({ objectiveComplete: index >= 1 && index <= 3, buildComplete: true })),
+      });
       const entries = {
         [getEggSlotLedgerKey(12, 0)]: { tier: 'common' as const, setAtMs: 1000, hatchAtMs: 2000, status: 'incubating' as const, location: 'island' as const },
         [getEggSlotLedgerKey(12, 1)]: { tier: 'rare' as const, setAtMs: 1001, hatchAtMs: 3000, status: 'incubating' as const, location: 'island' as const },
