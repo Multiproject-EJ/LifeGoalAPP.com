@@ -1,3 +1,4 @@
+import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
 import { creatureCatalogTests } from './creatureCatalog.test';
@@ -260,6 +261,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'fortuneEngineEconomyModel', tests: fortuneEngineEconomyModelTests },
   { label: 'fortuneEngineStateActions', tests: fortuneEngineStateActionsTests },
   { label: 'islandWorkshopGame', tests: islandWorkshopGameTests },
+  { label: 'islandRunFirstArrival', tests: islandRunFirstArrivalTests },
   { label: 'islandRunFastBuild', tests: islandRunFastBuildTests },
   { label: 'crystalMiners', tests: crystalMinersTests },
   { label: 'momentumMatrixGame', tests: momentumMatrixGameTests },

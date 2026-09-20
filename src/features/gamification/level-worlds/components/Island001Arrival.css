@@ -1,0 +1,15 @@
+.island-run-board__three-preview--arrival { position:fixed!important; inset:0!important; z-index:100000!important; width:100vw!important; height:100dvh!important; background:#030e23; }
+.island-run-board__three-preview--arrival .island-5-three-pilot {height:100%!important; width:100%!important; border:0; border-radius:0;}
+.island-run-board__three-preview--arrival canvas {height:100%!important; width:100%!important;}
+.arrival-caption {position:fixed;inset:0;z-index:100001;pointer-events:none;color:#f4f9fc;font-family:system-ui,sans-serif;display:flex;flex-direction:column;justify-content:space-between;padding:max(28px,env(safe-area-inset-top)) 6vw max(36px,env(safe-area-inset-bottom));background:linear-gradient(#00122688,transparent 22%,transparent 66%,#001226cc);box-sizing:border-box;}
+.arrival-caption__brand {font-size:11px;letter-spacing:.32em;font-weight:600;}
+.arrival-caption__bottom {display:flex;align-items:flex-end;justify-content:space-between;gap:20px;}
+.arrival-caption small {font-size:10px;letter-spacing:.28em;color:#b9edf1;}
+.arrival-caption h1 {font-family:Georgia,serif;font-size:clamp(26px,4vw,52px);font-weight:400;margin:10px 0 0;letter-spacing:-.03em;}
+.arrival-caption button {pointer-events:auto;border:1px solid #ffffff55;border-radius:30px;background:#071d36aa;color:white;padding:11px 20px;cursor:pointer;white-space:nowrap;}
+.arrival-review {background:#031222; margin:0;height:100dvh;overflow:hidden;}
+.arrival-review .island-5-three-pilot {height:100dvh!important;width:100vw!important;border:0;border-radius:0;}
+.arrival-review .island-5-three-pilot__canvas {height:100%!important; width:100%!important;}
+.arrival-review .island-5-three-pilot > :not(canvas):not(.island-5-three-pilot__loading) {display:none!important;}
+.arrival-review-chapters {display:flex;gap:6px;margin-top:18px;flex-wrap:wrap;}
+.arrival-review-chapters button {font-size:10px;padding:7px 10px;background:#071d3666;}

@@ -1,3 +1,4 @@
+import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './Island19WonderRide.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
@@ -356,6 +357,11 @@ export interface IslandRunArenaBattlePresentation {
 }
 
 interface Island5ThreePilotProps {
+  firstArrivalPreviewTime?: number;
+  firstArrivalActive?: boolean;
+  firstArrivalSkip?: boolean;
+  onFirstArrivalComplete?: () => void;
+  onFirstArrivalBeat?: (beat: string) => void;
   /** Runtime identity: owns arena cadence, story, progression, and persistence. */
   islandNumber?: number;
   /** Visual-only authored geometry/material pack selected by the routing manifest. */
@@ -3489,6 +3495,7 @@ function collectIslandThreeScenePerformanceInventory(scene: THREE.Object3D) {
 }
 
 export default function Island5ThreePilot({
+  firstArrivalPreviewTime, firstArrivalActive = false, firstArrivalSkip = false, onFirstArrivalComplete, onFirstArrivalBeat,
   islandNumber = 5,
   worldSourceNumber,
   buildLevel,
@@ -3542,6 +3549,13 @@ export default function Island5ThreePilot({
   constructionPresentation = null,
   arenaBattlePresentation = null,
 }: Island5ThreePilotProps) {
+  const firstArrivalCompletedRef = useRef(false);
+  const firstArrivalRestartRef = useRef(0);
+  useEffect(() => {
+    if (firstArrivalActive) { firstArrivalCompletedRef.current = false; firstArrivalRestartRef.current += 1; }
+  }, [firstArrivalActive]);
+  const firstArrivalRef = useRef({previewTime:firstArrivalPreviewTime, active:firstArrivalActive, skip:firstArrivalSkip, onComplete:onFirstArrivalComplete, onBeat:onFirstArrivalBeat});
+  firstArrivalRef.current = {previewTime:firstArrivalPreviewTime, active:firstArrivalActive, skip:firstArrivalSkip, onComplete:onFirstArrivalComplete, onBeat:onFirstArrivalBeat};
   const resolvedWorldSourceNumber = worldSourceNumber
     ?? resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber
     ?? 5;
@@ -8563,6 +8577,11 @@ export default function Island5ThreePilot({
     const celestialPlantBatches = isCelestialSkyKingdom ? createCelestialPlantRuntimeBatches(scene) : null;
     let appliedConstructionCameraKey = '';
     let appliedIsland15ConstructionRevealKey = '';
+    let firstArrival: ReturnType<typeof createIsland001FirstArrival> | null = null;
+    let firstArrivalTime = 0;
+    let firstArrivalCompleted = false;
+    let firstArrivalBeat = '';
+    let firstArrivalVersion = firstArrivalRestartRef.current;
     const animate = (now: number) => {
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
@@ -10031,6 +10050,38 @@ export default function Island5ThreePilot({
       // A ride owns its seat position; applying the overview limits here
       // pulls the eye out of the wagon immediately before rendering.
       if (!activeWonderRide && !activeTrainRide) controls.update();
+      if (islandNumber === 1 && (firstArrivalRef.current.active || firstArrival || firstArrivalCompletedRef.current)) {
+        if (firstArrivalVersion !== firstArrivalRestartRef.current) {
+          firstArrival?.dispose(); firstArrival = null; firstArrivalTime = 0;
+          firstArrivalCompleted = false; firstArrivalVersion = firstArrivalRestartRef.current;
+        }
+        if (!firstArrival) {
+          firstArrival = createIsland001FirstArrival(scene, playerPiece.root, playerPiece.shadow,
+            getIsland5TokenGroundPosition(tileTransforms, 0));
+          if (firstArrivalCompletedRef.current) {firstArrivalTime = 29; firstArrivalCompleted = true;}
+        }
+        firstArrivalTime += document.hidden ? 0 : Math.min(actualFrameDeltaSeconds, 0.25);
+        if (firstArrivalRef.current.skip || isReducedMotion) firstArrivalTime = Math.max(firstArrivalTime, 29);
+        if (import.meta.env.DEV && firstArrivalRef.current.previewTime !== undefined) {
+          firstArrivalTime = firstArrivalRef.current.previewTime;
+        }
+        const ownsCamera = !firstArrivalCompleted;
+        if (ownsCamera) { transition = null; controls.enabled = false; }
+        const done = firstArrival.update(firstArrivalTime, frameDeltaSeconds, camera, isReducedMotion,
+          Boolean(constructionPresentationRef.current?.active));
+        canvas.dataset.firstArrivalTime = firstArrivalTime.toFixed(2);
+        canvas.dataset.firstArrivalBeat = firstArrival.root.userData.beat;
+        if (firstArrivalBeat !== firstArrival.root.userData.beat) {
+          firstArrivalBeat = firstArrival.root.userData.beat;
+          firstArrivalRef.current.onBeat?.(firstArrivalBeat);
+        }
+        if (done && !firstArrivalCompleted) {
+          firstArrivalCompleted = true;
+          firstArrivalCompletedRef.current = true;
+          controls.target.set(0, 1, 0); controls.enabled = true;
+          firstArrivalRef.current.onComplete?.();
+        }
+      }
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -10327,6 +10378,7 @@ export default function Island5ThreePilot({
         setProfilerNotice('Profile cancelled because the 3D scene changed.');
       }
       window.cancelAnimationFrame(animationFrame);
+      firstArrival?.dispose();
       moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;
       resizeObserver.disconnect();

@@ -1,3 +1,5 @@
+import {shouldPlayIsland001FirstArrival} from '../services/islandRunFirstArrival';
+import './Island001Arrival.css';
 import { IslandAssemblyCraterModal } from './IslandAssemblyCraterModal';
 import { quoteIslandRunFastBuild, type FastBuildQuote } from '../services/islandRunFastBuild';
 import { applyIslandRunFastBuild } from '../services/islandRunFastBuildAction';
@@ -2618,6 +2620,22 @@ export function IslandRunBoardPrototype({
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
+  const [firstArrivalSkip, setFirstArrivalSkip] = useState(false);
+  const [firstArrivalBeat, setFirstArrivalBeat] = useState('FAST TRAVEL');
+  const firstArrivalActive = shouldPlayIsland001FirstArrival(__storeState, hasHydratedRuntimeState, isIslandVisualPreview);
+  const finishFirstArrival = useCallback(() => {
+    applyStoryPrologueSeenMarker({session, client, storyPrologueSeen: true, triggerSource: 'island001_ship_arrival_complete'});
+  }, [session, client]);
+  useEffect(() => {
+    if (firstArrivalActive) {setFirstArrivalSkip(false); return lockPageScroll();}
+  }, [firstArrivalActive]);
+  useEffect(() => {
+    if (!firstArrivalActive || !firstArrivalSkip) return;
+    // A failed WebGL context must never trap a fresh player behind the intro.
+    const fallback = window.setTimeout(finishFirstArrival, 1200);
+    return () => window.clearTimeout(fallback);
+  }, [firstArrivalActive, firstArrivalSkip, finishFirstArrival]);
+
   const [showEntryAudioModal, setShowEntryAudioModal] = useState(false);
   const [hasDismissedEntryAudioModal, setHasDismissedEntryAudioModal] = useState(false);
   const [isDocumentVisible, setIsDocumentVisible] = useState(
@@ -3689,7 +3707,7 @@ export function IslandRunBoardPrototype({
       : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
-    isCompassBookCeremonyPlaying || showFirstCreaturePackModal ||
+    firstArrivalActive || isCompassBookCeremonyPlaying || showFirstCreaturePackModal ||
       showStoryReader ||
       activeStopId ||
       activeLaunchedMinigameId ||
@@ -4571,7 +4589,7 @@ export function IslandRunBoardPrototype({
   }, [showShopPanel]);
 
   useEffect(() => {
-    if (!hasHydratedRuntimeState || hasPresentedEntryAudioModalRef.current) return;
+    if (!hasHydratedRuntimeState || firstArrivalActive || hasPresentedEntryAudioModalRef.current) return;
     hasPresentedEntryAudioModalRef.current = true;
     if (isIslandVisualPreview) {
       setHasDismissedEntryAudioModal(true);
@@ -4579,7 +4597,6 @@ export function IslandRunBoardPrototype({
       return;
     }
     const isReturningPlayer = isOnboardingComplete
-      || runtimeState.storyPrologueSeen
       || runtimeState.welcomePackRewardBundleClaimed;
     if (isReturningPlayer) {
       setHasDismissedEntryAudioModal(true);
@@ -4605,6 +4622,7 @@ export function IslandRunBoardPrototype({
     setShowEntryAudioModal(true);
   }, [
     client,
+    firstArrivalActive,
     guestFunnelState.entryAmbienceEnabled,
     guestFunnelState.entryAudioChoiceCompleted,
     guestFunnelState.entryMusicEnabled,
@@ -8094,6 +8112,7 @@ export function IslandRunBoardPrototype({
   };
 
   const handleRoll = async (): Promise<boolean> => {
+    if (firstArrivalActive) return false;
     logIslandRunEntryDebug('roll_click_start', {
       userId: session.user.id,
       tokenIndex: runtimeStateRef.current.tokenIndex,
@@ -13540,6 +13559,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
+    firstArrivalActive ||
     assemblyMandateOpen ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
@@ -15803,7 +15823,7 @@ export function IslandRunBoardPrototype({
           }}
         /> : null}
         {shouldRenderIsland5Three ? (
-          <div className="island-run-board__three-preview">
+          <div className={`island-run-board__three-preview${firstArrivalActive ? " island-run-board__three-preview--arrival" : ""}`}>
             <Suspense
               fallback={(
                 <div className="island-run-board__three-preview-loading" role="status">
@@ -15812,6 +15832,10 @@ export function IslandRunBoardPrototype({
               )}
             >
               <Island5ThreeScene
+                firstArrivalActive={firstArrivalActive}
+                firstArrivalSkip={firstArrivalSkip}
+                onFirstArrivalComplete={finishFirstArrival}
+                onFirstArrivalBeat={setFirstArrivalBeat}
                 islandNumber={islandArtPreviewNumber}
                 worldSourceNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
@@ -19563,6 +19587,13 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {firstArrivalActive ? createPortal(
+        <div className="arrival-caption" aria-label="Your arrival on Island 001">
+          <div className="arrival-caption__brand">HABITGAME / FIRST LIGHT</div>
+          <div className="arrival-caption__bottom"><div><small>{firstArrivalBeat}</small><h1>A new world. A new beginning.</h1></div>
+            <button onClick={() => setFirstArrivalSkip(true)}>Skip arrival</button>
+          </div>
+        </div>, document.body) : null}
       {showFirstVoyageDepartureModal ? createPortal(
         <div className="first-voyage-departure" role="dialog" aria-modal="true" aria-labelledby="first-voyage-departure-title">
           <div className="first-voyage-departure__backdrop" aria-hidden="true" />
