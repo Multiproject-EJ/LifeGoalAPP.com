@@ -144,7 +144,7 @@ export function resolveConcordRollProtection(options: {
   const placements = listIslandTechnologyFragmentPlacements(options.islandNumber);
   const remaining = placements.filter((placement) => !collected.has(placement.fragmentSlot));
 
-  if (Math.floor(options.islandNumber) !== 1 || remaining.length === 0) {
+  if (Math.floor(options.islandNumber) !== 5 || remaining.length === 0) {
     return { state: currentState, pickup: null };
   }
 

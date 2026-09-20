@@ -430,18 +430,13 @@ Invariants:
 
 Fractional positions mean the encounter placement works on any `tileCount` without hard-coded indices.
 
-## 5G) Island 1 Concord fragment pacing
+## 5G) Island 005 Concord recovery
 
-- The nine Concord fragments retain their fixed visible placements and are collected naturally by exact landing whenever possible.
-- Island 1 persists `concordRollProtectionState` as part of the canonical gameplay record so pacing survives reloads and device sync.
-- After 7 consecutive eligible rolls without a new fragment, crossing an uncollected fragment may recover it through a visible **Concord resonance** assist. Dice movement and the rolled result are never altered.
-- After 10 consecutive eligible rolls without a new fragment, the nearest forward uncollected fragment is recovered through a visible **signal lock** assist.
-- A minimum-progress schedule keeps a fresh run on track at rolls `3, 16, 22, 28, 34, 40, 45, 50, 55`; ordinary lucky landings can put the player ahead, but the first fragment is guaranteed by eligible roll 3 and all nine fragments are guaranteed by eligible roll 55. The first-session tutorial may deliberately land its first roll on a visible fragment; this narrow onboarding roll is the only exception to the later resonance assists preserving an unaltered random result.
-- Existing partial Island 1 saves are initialized at the checkpoint matching their collected count and one roll before the soft-assist window. Their prior play is respected even though historical roll count was not previously persisted.
-- Fragment pickup, line rewards, full-grid reward, and Concord construction remain routed through the canonical collection/action services; React only presents the returned pickup reason and animation.
-- The ninth fragment is a capability unlock, not only a collection reward: the completion sequence assembles and activates **The Concord**, then offers immediate entry to its channel console.
-- The active Concord is the island communication hub. It provides the **Creature Channel**, **Caretaker Channel**, and **Story Mode**; channel-specific eligibility (for example, an owned active companion) remains authoritative in the corresponding communication access service.
-- The Concord remains available from the controller after activation, while unread mandatory story may temporarily take priority on the same controller affordance. Island 1 cannot be cleared until the canonical Concord technology unlock is active.
+- New Concord fragments appear only on Island005. Nine fixed visible collectible positions clear all possible landmark-door clusters, traffic light, ticket, discount, card and encounter tiles.
+- Natural landings, seven-miss crossing resonance, ten-miss signal lock and the 55-eligible-roll completion schedule operate only on005. Other islands do not advance its counter.
+- Collection reads the union of legacy001 and005 slots and paid-line ledgers. Existing built capabilities remain available; earned fragments and rewards are not removed or paid again. A new save merely reaching002 does not auto-unlock Concord.
+- The ninth distinct fragment activates the canonical Concord hub. Island001 uses its Assembly/mandate departure contract and begins with resource collection/construction, without requiring a Concord fragment.
+- First arrival runs the authored ship flight and expansion, pauses at the cabin for the canonical one-time welcome bundle, and resumes crew deployment only after PLAY. Skip and reduced motion retain the welcome claim and final START endpoint.
 
 ## 5H) Signature mission route objects
 
@@ -450,7 +445,7 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 - A mission object is finite and claim-once unless its mission explicitly documents a repeatable interaction (for example a fishing spot or Frostwell drill station).
 - An exact landing collects the object first. Missions with route pity may instead secure the first unclaimed object crossed during an accepted roll; at most one pity object is collected per roll and token movement is never changed.
 - Collection and stage activation are canonical service actions persisted in `signatureMissionProgressByIsland`. React and Three.js only present committed results.
-- Mission completion is optional to ordinary island travel unless an island-specific contract explicitly declares it as a canonical stop substitute (Island 001 is the current exception).
+- Playable signature missions shown in the mission phone are required for departure, using the same canonical saved evidence as the phone (§7). Planned missions without implemented gameplay remain excluded.
 - Islands 004, 006, 007, 008, and 009 share the staged-restoration state machine but keep authored descriptors and bespoke 3D transformations. Each spend reveals exactly one durable world stage; the final spend triggers the island finale.
 
 ## 5C) Reward amplification and session dynamics
@@ -550,6 +545,47 @@ Additional rules:
 - Timer expiration cannot auto-complete or auto-fail island progression.
 - A completed island **cannot** decay (Essence drift is suspended once island is fully cleared).
 - Buildings **reset** to Level 0 on island travel.
+
+### Gradual-introduction cohort (`opening-games-v1`)
+
+This user-approved rollout is explicit and persisted, not inferred from island
+number or save age. Enrollment remains disabled until the integration gates in
+`docs/gauntlets/2026-09-19-gradual-island-feature-introductions.md` pass. Unmarked
+and legacy saves retain the rules above and all earned inventory/unlocks.
+
+- On Islands001–003 the first landmark is a **Welcome Venue** with an explicit,
+  free arrival check-in. It retains internal stop ID `hatchery`, completes only
+  that activity and opens normal next-stop ticket eligibility. It grants no
+  currency, egg, construction credit or prepaid ticket. Building alone never
+  completes check-in. These islands do not require a resolved egg to depart.
+  New egg placement is unavailable until Island004, which introduces the
+  Hatchery activity and restores the terminal-egg departure requirement.
+- New Island002 requires the opening ceremony **and completed participation in
+  its free inaugural game** before island clear/departure. Canceling the game,
+  finishing construction, or lighting the beacon alone does not satisfy this.
+- New Island001 replaces the Mystery/Event Arena activity with an explicit
+  two-question host orientation about building and the Island002 opening.
+  Normal previous-stop access and the Mystery ticket remain required. Correct
+  completion records only this activity; it creates no event tickets, eggs,
+  construction credit or prepaid Wisdom ticket. Closing or incorrect answers
+  give no completion credit. Legacy arena activity/boost behavior is preserved
+  for unmarked journeys; the boost is unavailable to the gradual cohort before
+  ordinary events unlock.
+- New Island002's opening presentation is skippable and has a reduced-motion
+  equivalent. Presentation never grants a reward or replaces participation in
+  its free inaugural game, and the canonical saved beacon milestone precedes
+  the animation.
+- New Island004 requires twenty canonical Re-Docking rolls and the committed
+  completion timestamp for the current cycle's Island004 mission. Old Island002
+  progress or a previous-cycle Vault entitlement cannot substitute for it.
+- Canonical travel enforces new-cohort completion even if a caller omits the
+  legacy optional completed-visit key. No skip-ahead travel is introduced.
+- Previously earned eggs remain resolvable; the policy blocks new early egg
+  creation, not ownership. Never delete saved eggs or creatures as migration.
+
+The ceremony and Re-Docking requirements specialize the required playable
+mission rule for this explicit cohort. Egg reward inventory/other grant
+sources and full first-session onboarding remain separately tracked release gates.
 
 ---
 

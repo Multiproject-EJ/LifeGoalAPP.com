@@ -11,6 +11,7 @@ import {
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
+  getStagedRestorationPickupTileIndices,
 } from '../services/islandRunSignatureMissions';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
@@ -60,6 +61,10 @@ function readInitialPreviewState() {
   const honeyfallMissionStage = Number.isFinite(honeyfallMissionStageParam)
     ? Math.max(0, Math.min(4, Math.floor(honeyfallMissionStageParam)))
     : 0;
+  const causewayMissionStageParam = Number(params.get('causewayMissionStage'));
+  const causewayMissionStage = Number.isFinite(causewayMissionStageParam)
+    ? Math.max(0, Math.min(3, Math.floor(causewayMissionStageParam)))
+    : 0;
   const firebridgeMissionStageParam = Number(params.get('firebridgeMissionStage'));
   const firebridgeMissionStage = Number.isFinite(firebridgeMissionStageParam)
     ? Math.max(0, Math.min(4, Math.floor(firebridgeMissionStageParam)))
@@ -99,6 +104,8 @@ function readInitialPreviewState() {
     assemblyReplay,
     honeyfallMissionStage,
     honeyfallReplay: params.get('honeyfallReplay') === '1',
+    causewayMissionStage,
+    causewayReplay: params.get('causewayReplay') === '1',
     firebridgeMissionStage,
     firebridgeReplay: params.get('firebridgeReplay') === '1',
     firebridgeEscape: params.get('firebridgeEscape') === '1',
@@ -239,6 +246,9 @@ export default function IslandTemplateKitPage() {
   const [assemblyCharges, setAssemblyCharges] = useState(initialState.assemblyCharges);
   const [assemblyConstructionSequence, setAssemblyConstructionSequence] = useState(0);
   const [assemblyReplayActive, setAssemblyReplayActive] = useState(initialState.assemblyReplay);
+  const [causewayStage, setCausewayStage] = useState(initialState.causewayMissionStage);
+  const [causewaySequence, setCausewaySequence] = useState(initialState.causewayReplay ? 1 : 0);
+  const [causewayReplayActive, setCausewayReplayActive] = useState(initialState.causewayReplay);
   const [firebridgeStage, setFirebridgeStage] = useState(initialState.firebridgeMissionStage);
   const [firebridgeSequence, setFirebridgeSequence] = useState(initialState.firebridgeReplay ? 1 : 0);
   const [firebridgeEscape, setFirebridgeEscape] = useState({
@@ -324,6 +334,19 @@ export default function IslandTemplateKitPage() {
     }, assemblyCharges === 0 ? 500 : 5_500);
     return () => window.clearTimeout(timer);
   }, [assemblyCharges, assemblyReplayActive]);
+
+  useEffect(() => {
+    if (!causewayReplayActive || initialState.islandNumber !== 4) return undefined;
+    if (causewayStage >= 3) {
+      setCausewayReplayActive(false);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      setCausewayStage((current) => Math.min(3, current + 1));
+      setCausewaySequence((current) => current + 1);
+    }, causewayStage === 0 ? 650 : 2_400);
+    return () => window.clearTimeout(timer);
+  }, [causewayReplayActive, causewayStage, initialState.islandNumber]);
 
   useEffect(() => {
     if (!initialState.focusPreset || initialState.construction) return undefined;
@@ -434,6 +457,34 @@ export default function IslandTemplateKitPage() {
               </output>
             </div>
           ) : null}
+          {mode === '3d' && initialState.islandNumber === 4 ? (
+            <div className="island-kit-control-group" data-testid="causeway-preview-controls">
+              <span>Raise the Broken Causeway</span>
+              <button type="button" onClick={() => {
+                setCausewayReplayActive(false);
+                setCausewayStage(0);
+                setCausewaySequence((value) => value + 1);
+              }}>Reset</button>
+              <button
+                type="button"
+                disabled={causewayStage >= 3 || causewayReplayActive}
+                onClick={() => {
+                  setCausewayStage((value) => Math.min(3, value + 1));
+                  setCausewaySequence((value) => value + 1);
+                }}
+              >Raise next span</button>
+              <button
+                type="button"
+                aria-pressed={causewayReplayActive}
+                onClick={() => {
+                  setCausewayStage(0);
+                  setCausewaySequence((value) => value + 1);
+                  setCausewayReplayActive(true);
+                }}
+              >{causewayReplayActive ? 'Replaying…' : 'Play mission build'}</button>
+              <output aria-live="polite">Causeway spans {causewayStage}/3 · Masonry Sparks {causewayStage * 2}/6</output>
+            </div>
+          ) : null}
           {mode === '3d' && initialState.islandNumber === 20 ? (
             <div className="island-kit-control-group" data-testid="firebridge-preview-controls">
               <span>Forge the Iron Skiff</span>
@@ -530,7 +581,13 @@ export default function IslandTemplateKitPage() {
                 activatedReservoirs: initialState.honeyfallMissionStage as 0 | 1 | 2 | 3 | 4,
                 constructionSequence: initialState.honeyfallReplay ? 1 : 0,
               } : undefined}
-              stagedRestorationPresentation={initialState.islandNumber === 20 ? {
+              stagedRestorationPresentation={initialState.islandNumber === 4 ? {
+                islandNumber: 4,
+                activatedStages: causewayStage,
+                stageCount: 3,
+                constructionSequence: causewaySequence,
+                claimedPickupTileIndices: getStagedRestorationPickupTileIndices(4, TILE_ANCHORS_36.length).slice(0, causewayStage * 2),
+              } : initialState.islandNumber === 20 ? {
                 islandNumber: 20,
                 activatedStages: firebridgeStage,
                 stageCount: 4,

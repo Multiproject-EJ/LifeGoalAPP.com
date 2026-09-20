@@ -1,3 +1,5 @@
+import {FIRST_ARRIVAL_WELCOME_TIME,advanceFirstArrivalTime} from '../services/islandRunFirstArrival';
+import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './Island19WonderRide.css';
@@ -68,6 +70,11 @@ import {
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
 import { createCrownDrifterModel } from './CrownDrifterThreeModel';
+import { createIsland4OpeningPalaceModel } from './Island4OpeningPalaceThreeModel';
+import { createPalaceBalconyPlanting } from './PalaceBalconyPlanting';
+import { createPalaceBalconyGardenAssembly } from './PalaceBalconyGardenAssembly';
+import { createOpeningGamesCeremonyThree } from './OpeningGamesCeremonyThree';
+import { sampleOpeningCeremony, type OpeningCeremonyPlayback } from '../services/islandRunOpeningCeremonyPresentation';
 import { createRobotFamilyModel } from './RobotFamilyThreeModel';
 import { createRobotConstructionTheatre } from './RobotConstructionTheatre';
 import { createIslandConstructionCommissioningFx } from './IslandConstructionCommissioningFx';
@@ -129,6 +136,15 @@ import {
   ISLAND_3_FROSTMOON_LANDMARK_LABELS,
   ISLAND_3_FROSTMOON_WORLD_NAME,
 } from './Island3FrostmoonThreeWorld';
+import {
+  createIsland4DriftwoodLivingAmbience,
+  createIsland4DriftwoodMaterials,
+  ISLAND_4_DRIFTWOOD_LANDMARK_LABELS,
+  ISLAND_4_DRIFTWOOD_WORLD_NAME,
+  upgradeIsland4LegacyLandmark,
+  createIsland4LandmarkPalette,
+  compactIsland4Landmark,
+} from './Island4DriftwoodThreeWorld';
 import type { FrostwellIceworksPresentation } from './FrostwellIceworksThreeModel';
 import { createMoonwellThermalAnimator, type MoonwellThermalPresentation } from './Island3MoonwellThermalPresentation';
 import {
@@ -357,6 +373,11 @@ export interface IslandRunArenaBattlePresentation {
 }
 
 interface Island5ThreePilotProps {
+  visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
+  trafficLightCharge?: number;
+  firstArrivalWaitForWelcome?: boolean;
+  firstArrivalWelcomeComplete?: boolean;
+  onFirstArrivalWelcome?: () => void;
   firstArrivalPreviewTime?: number;
   firstArrivalActive?: boolean;
   firstArrivalSkip?: boolean;
@@ -409,6 +430,7 @@ interface Island5ThreePilotProps {
   /** Read-only build-modal choreography. It cannot mutate gameplay state. */
   constructionPresentation?: IslandRunConstructionPresentation | null;
   arenaBattlePresentation?: IslandRunArenaBattlePresentation | null;
+  openingCeremonyPlayback?: OpeningCeremonyPlayback | null;
 }
 
 interface TokenMotionRequest {
@@ -2340,6 +2362,13 @@ export function createPilotMaterials(quality: Island3DQuality, worldSourceNumber
   };
 }
 
+export function compactOpeningPalaceParts(building: THREE.Group) {
+  // Preserve the semantic groups while batching their static, funded surfaces.
+  for (const child of building.children) if (child instanceof THREE.Group) {
+    compactStaticGeometry(child, child.name);
+  }
+}
+
 export function buildLandmark(
   definition: Island5LandmarkDefinition,
   level: BuildLevel,
@@ -2350,6 +2379,7 @@ export function buildLandmark(
 ): THREE.Group {
   const root = new THREE.Group();
   root.position.set(...definition.position);
+  if (worldSourceNumber === 4) materials = createIsland4LandmarkPalette(materials, definition.id);
 
   const foundationMaterial = new THREE.MeshStandardMaterial({
     color: definition.accent,
@@ -2364,8 +2394,13 @@ export function buildLandmark(
 
   if (level > 0) {
     const builtLevel = level as 1 | 2 | 3;
+    // Visual-only replacement for source 004. Campaign ordinal, saved progress
+    // and ceremony eligibility remain owned by the existing gameplay services.
+    const usesOpeningPalace = worldSourceNumber === 4 && definition.id === 'boss';
     const building = definition.id === 'boss'
-      ? createCrownCitadelModel({ level: builtLevel, quality, materials, compact: !options.constructionPreview })
+      ? usesOpeningPalace
+        ? createIsland4OpeningPalaceModel({ level: builtLevel, quality, materials })
+        : createCrownCitadelModel({ level: builtLevel, quality, materials, compact: worldSourceNumber !== 4 && !options.constructionPreview })
       : definition.id === 'hatchery'
         ? createHatcheryLandmark(builtLevel, quality, materials)
         : definition.id === 'habit'
@@ -2373,13 +2408,33 @@ export function buildLandmark(
           : definition.id === 'wisdom'
             ? createWisdomLandmark(builtLevel, quality, materials)
             : createEventLandmark(builtLevel, quality, materials);
-    if (definition.id === 'boss') {
+    if (definition.id === 'boss' && !usesOpeningPalace) {
       const scale = options.constructionPreview
         ? CROWN_CITADEL_LEVEL_SCALES[2]
         : CROWN_CITADEL_LEVEL_SCALES[builtLevel];
       building.scale.set(scale[0], scale[1], scale[2]);
     } else {
       building.scale.setScalar(1);
+    }
+    if (worldSourceNumber === 4 && !usesOpeningPalace) {
+      upgradeIsland4LegacyLandmark(building, definition, level, quality, createIsland4DriftwoodMaterials());
+    }
+    if (usesOpeningPalace && import.meta.env?.DEV && typeof window !== 'undefined') {
+      const plantingMode = new URLSearchParams(window.location.search).get('islandPalacePlanting');
+      if (plantingMode === 'bay' || plantingMode === 'assembly') {
+        const planting = plantingMode === 'assembly'
+          ? createPalaceBalconyGardenAssembly(builtLevel, quality, materials.limestoneBright)
+          : createPalaceBalconyPlanting(quality, materials.limestoneBright);
+        planting.position.y = .24;
+        building.add(planting);
+      }
+      const proofMode = new URLSearchParams(window.location.search).get('islandPalaceProof');
+      if (proofMode === 'clay' || proofMode === 'normals') {
+        const proofMaterial = proofMode === 'normals'
+          ? new THREE.MeshNormalMaterial()
+          : new THREE.MeshStandardMaterial({ color: 0xb8b6b0, roughness: .9 });
+        building.traverse(node => { if (node instanceof THREE.Mesh) node.material = proofMaterial; });
+      }
     }
     if (options.constructionPreview === 'target') {
       applyIslandConstructionAuthoring({
@@ -2390,7 +2445,11 @@ export function buildLandmark(
         includeTemporaryRig: true,
       });
     }
-    if (definition.id !== 'boss' && !options.constructionPreview) {
+    if (usesOpeningPalace && !options.constructionPreview) {
+      compactOpeningPalaceParts(building);
+    } else if (worldSourceNumber === 4 && !options.constructionPreview) {
+      compactIsland4Landmark(building, definition.id);
+    } else if (definition.id !== 'boss' && !options.constructionPreview) {
       compactStaticGeometry(building, `ISLAND5_${definition.id.toUpperCase()}`);
     }
     root.add(building);
@@ -3495,7 +3554,10 @@ function collectIslandThreeScenePerformanceInventory(scene: THREE.Object3D) {
 }
 
 export default function Island5ThreePilot({
+  visibleTechnologyFragments = [], trafficLightCharge = 0,
+  firstArrivalWaitForWelcome = false, firstArrivalWelcomeComplete = false, onFirstArrivalWelcome,
   firstArrivalPreviewTime, firstArrivalActive = false, firstArrivalSkip = false, onFirstArrivalComplete, onFirstArrivalBeat,
+  openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
   buildLevel,
@@ -3549,13 +3611,15 @@ export default function Island5ThreePilot({
   constructionPresentation = null,
   arenaBattlePresentation = null,
 }: Island5ThreePilotProps) {
+  const tilePresentationRef = useRef({fragments:visibleTechnologyFragments,trafficLightCharge});
+  tilePresentationRef.current = {fragments:visibleTechnologyFragments,trafficLightCharge};
   const firstArrivalCompletedRef = useRef(false);
   const firstArrivalRestartRef = useRef(0);
   useEffect(() => {
     if (firstArrivalActive) { firstArrivalCompletedRef.current = false; firstArrivalRestartRef.current += 1; }
   }, [firstArrivalActive]);
-  const firstArrivalRef = useRef({previewTime:firstArrivalPreviewTime, active:firstArrivalActive, skip:firstArrivalSkip, onComplete:onFirstArrivalComplete, onBeat:onFirstArrivalBeat});
-  firstArrivalRef.current = {previewTime:firstArrivalPreviewTime, active:firstArrivalActive, skip:firstArrivalSkip, onComplete:onFirstArrivalComplete, onBeat:onFirstArrivalBeat};
+  const firstArrivalRef = useRef({waitForWelcome:firstArrivalWaitForWelcome, welcomeComplete:firstArrivalWelcomeComplete, onWelcome:onFirstArrivalWelcome, previewTime:firstArrivalPreviewTime, active:firstArrivalActive, skip:firstArrivalSkip, onComplete:onFirstArrivalComplete, onBeat:onFirstArrivalBeat});
+  firstArrivalRef.current = {waitForWelcome:firstArrivalWaitForWelcome, welcomeComplete:firstArrivalWelcomeComplete, onWelcome:onFirstArrivalWelcome, previewTime:firstArrivalPreviewTime, active:firstArrivalActive, skip:firstArrivalSkip, onComplete:onFirstArrivalComplete, onBeat:onFirstArrivalBeat};
   const resolvedWorldSourceNumber = worldSourceNumber
     ?? resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber
     ?? 5;
@@ -3566,6 +3630,7 @@ export default function Island5ThreePilot({
   const isAssemblyCraterFirstLight = resolvedWorldSourceNumber === 1 && islandNumber === 1;
   const isCelestialSkyKingdom = resolvedWorldSourceNumber === 2;
   const isFrostmoonHaven = resolvedWorldSourceNumber === 3;
+  const isDriftwoodIsle = resolvedWorldSourceNumber === 4;
   const isSunshoreAtoll = resolvedWorldSourceNumber === 5;
   const isMoonveilNexus = resolvedWorldSourceNumber === 6;
   const isAbyssalPearlKingdom = resolvedWorldSourceNumber === 7;
@@ -3601,6 +3666,8 @@ export default function Island5ThreePilot({
       ? ISLAND_2_CELESTIAL_WORLD_NAME
       : isFrostmoonHaven
         ? ISLAND_3_FROSTMOON_WORLD_NAME
+        : isDriftwoodIsle
+          ? ISLAND_4_DRIFTWOOD_WORLD_NAME
         : isSunshoreAtoll
           ? ISLAND_5_SUNSHORE_WORLD_NAME
           : isMoonveilNexus
@@ -3704,6 +3771,12 @@ export default function Island5ThreePilot({
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
+  useEffect(() => {
+    if (isDriftwoodIsle && activePreset === 'wisdom') applyPresetRef.current('wisdom');
+    // The active preset itself is not a dependency: this only reacts to opening
+    // or closing the roof; camera selection already applies its own preset.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [archiveInteriorOpen, isDriftwoodIsle]);
   const applyEvidenceOrbitRef = useRef<(degrees: number) => void>(() => undefined);
   const exitIsland15PalaceRef = useRef<() => void>(() => undefined);
   const previousCameraFocusPresetRef = useRef<Island5CameraPresetId | null>(null);
@@ -3742,6 +3815,8 @@ export default function Island5ThreePilot({
   const moonwellThermalCompleteRef = useRef(onMoonwellThermalComplete);
   moonwellThermalCompleteRef.current = onMoonwellThermalComplete;
   const celestialRedockingPresentationRef = useRef(celestialRedockingPresentation);
+  const openingCeremonyPlaybackRef = useRef(openingCeremonyPlayback);
+  openingCeremonyPlaybackRef.current = openingCeremonyPlayback;
   celestialRedockingPresentationRef.current = celestialRedockingPresentation;
   const rootheartPowerworksPresentationRef = useRef(rootheartPowerworksPresentation);
   rootheartPowerworksPresentationRef.current = rootheartPowerworksPresentation;
@@ -4039,6 +4114,8 @@ export default function Island5ThreePilot({
         ? 0x86c8ff
         : isFrostmoonHaven
           ? 0xc6d5ee
+          : isDriftwoodIsle
+            ? 0x7bcbd0
           : isSunshoreAtoll
             ? 0x78d7ee
             : isMoonveilNexus
@@ -4070,6 +4147,8 @@ export default function Island5ThreePilot({
         ? 0xbddfff
         : isFrostmoonHaven
           ? 0xdbe5f3
+          : isDriftwoodIsle
+            ? 0xa9d9d1
           : isSunshoreAtoll
             ? 0x9fe9ef
             : isMoonveilNexus
@@ -4101,6 +4180,8 @@ export default function Island5ThreePilot({
         ? 0.0036
         : isFrostmoonHaven
           ? 0.008
+          : isDriftwoodIsle
+            ? 0.0042
           : isSunshoreAtoll
             ? 0.0035
             : isMoonveilNexus
@@ -4350,6 +4431,8 @@ export default function Island5ThreePilot({
         ? 0.92
         : isFrostmoonHaven
           ? 0.9
+          : isDriftwoodIsle
+            ? 0.94
           : isSunshoreAtoll
             ? 0.9
             : isMoonveilNexus
@@ -4530,6 +4613,8 @@ export default function Island5ThreePilot({
         ? 0x7787a0
         : isFrostmoonHaven
           ? 0x47546e
+          : isDriftwoodIsle
+            ? 0x3b5f55
           : isSunshoreAtoll
             ? 0x50754d
             : isMoonveilNexus
@@ -4571,6 +4656,8 @@ export default function Island5ThreePilot({
         ? 1.05
         : isFrostmoonHaven
           ? 1.55
+          : isDriftwoodIsle
+            ? 1.78
           : isSunshoreAtoll
             ? 1.82
             : isMoonveilNexus
@@ -4607,7 +4694,7 @@ export default function Island5ThreePilot({
             ? 0xd9eaff
             : isArchiveBacklightLookdev
               ? 0x7d9bc2
-          : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : isJungleExpedition ? 0xdaf6d8 : isLavaLabyrinth ? 0xc5d2e4 : isCrystalGlacier ? 0xdceaf0 : 0xeefcff,
+          : isDriftwoodIsle ? 0xffefcf : isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : isEverblossomKingdom ? 0xd9fbff : isHeartshaftCrucible ? 0xc76d45 : isRootheartCanopyCity ? 0xffedc2 : isSunkenSands ? 0xfff0ca : isCactusCanyon ? 0xffd5a8 : isFishermansVillage ? 0xffe0b7 : isHoneycombKingdom ? 0xd7f5ff : isJungleExpedition ? 0xdaf6d8 : isLavaLabyrinth ? 0xc5d2e4 : isCrystalGlacier ? 0xdceaf0 : 0xeefcff,
       hemisphereGroundColor,
       hemisphereIntensity,
     );
@@ -4628,6 +4715,8 @@ export default function Island5ThreePilot({
         ? 2.8
         : isFrostmoonHaven
           ? 2.65
+          : isDriftwoodIsle
+            ? 3.25
           : isSunshoreAtoll
             ? 3.25
             : isMoonveilNexus
@@ -4664,7 +4753,7 @@ export default function Island5ThreePilot({
             ? 0xe8f2ff
             : isArchiveBacklightLookdev
               ? 0x83c7ff
-          : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isJungleExpedition ? 0xffdda6 : isLavaLabyrinth ? 0xffd9c2 : isCrystalGlacier ? 0xf5fbff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
+          : isDriftwoodIsle ? 0xffcf91 : isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isHeartshaftCrucible ? 0xff9b65 : isRootheartCanopyCity ? 0xffc36d : isSunkenSands ? 0xffdf9f : isCactusCanyon ? 0xffb36b : isFishermansVillage ? 0xffbd72 : isHoneycombKingdom ? 0xffc052 : isJungleExpedition ? 0xffdda6 : isLavaLabyrinth ? 0xffd9c2 : isCrystalGlacier ? 0xf5fbff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     if (isJungleExpedition) sunlight.name = 'ISLAND_18_PRIMARY_SUN_LIGHT';
@@ -4873,6 +4962,11 @@ export default function Island5ThreePilot({
     }
 
     const materials = createPilotMaterials(qualityProfile.id, resolvedWorldSourceNumber);
+    if (isDriftwoodIsle) {
+      materials.grass.color.setHex(0x4b975f);
+      materials.reef.dispose();
+      materials.reef = new THREE.MeshStandardMaterial({color:0xb8ac99,roughness:.92});
+    }
     const island1Materials = isFirstLightKingdom ? createIsland1WorldMaterials() : null;
     // This palette belongs to this scene. Tinted reflective glass avoids the
     // extra opaque transmission pass on the mobile Assembly island.
@@ -4883,6 +4977,7 @@ export default function Island5ThreePilot({
     }
     const island2CelestialMaterials = isCelestialSkyKingdom ? createIsland2CelestialMaterials() : null;
     const island3FrostmoonMaterials = isFrostmoonHaven ? createIsland3FrostmoonMaterials() : null;
+    const island4DriftwoodMaterials = isDriftwoodIsle ? createIsland4DriftwoodMaterials() : null;
     const island5SunshoreMaterials = isSunshoreAtoll ? createIsland5SunshoreWorldMaterials() : null;
     const island6MoonveilMaterials = isMoonveilNexus ? createIsland6MoonveilMaterials() : null;
     const island7UnderwaterMaterials = isAbyssalPearlKingdom ? createIsland7UnderwaterMaterials() : null;
@@ -5109,6 +5204,9 @@ export default function Island5ThreePilot({
         ? createIsland2CelestialLivingAmbience(scene, qualityProfile, island2CelestialMaterials, water)
         : isFrostmoonHaven && island3FrostmoonMaterials
           ? createIsland3FrostmoonLivingAmbience(scene, qualityProfile, island3FrostmoonMaterials, water)
+          : isDriftwoodIsle && island4DriftwoodMaterials
+            ? createIsland4DriftwoodLivingAmbience(scene, qualityProfile, island4DriftwoodMaterials, water,
+                createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water))
           : isSunshoreAtoll && island5SunshoreMaterials
             ? createIsland5SunshoreLivingAmbience(scene, qualityProfile, island5SunshoreMaterials, water)
             : isMoonveilNexus && island6MoonveilMaterials
@@ -5317,6 +5415,12 @@ export default function Island5ThreePilot({
               new THREE.MeshStandardMaterial({ color: 0x536bb8, roughness: 0.52, metalness: 0.07 }),
               new THREE.MeshStandardMaterial({ color: 0x9a72e2, roughness: 0.36, metalness: 0.22, emissive: 0x46257d, emissiveIntensity: 0.18 }),
             ]
+          : isDriftwoodIsle
+            ? [
+                new THREE.MeshStandardMaterial({ color: 0xe9d8b5, roughness: 0.74 }),
+                new THREE.MeshStandardMaterial({ color: 0xa67ade, roughness: 0.5, metalness: 0.08 }),
+                new THREE.MeshStandardMaterial({ color: 0xe6a84f, roughness: 0.34, metalness: 0.34, emissive: 0x6b3510, emissiveIntensity: 0.15 }),
+              ]
           : isSunshoreAtoll
         ? [
             new THREE.MeshStandardMaterial({ color: 0xf5dc9b, roughness: 0.76 }),
@@ -5500,7 +5604,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isFrostmoonHaven || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
+    const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
     const instancedTileCounts = Array(isAssemblyCraterFirstLight ? 6 : 3).fill(0) as number[];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -5530,6 +5634,7 @@ export default function Island5ThreePilot({
                 : isCoasterCarnival
                   ? `ISLAND_19_TILE_SURFACE_BATCH_${materialIndex + 1}`
               : isFrostmoonHaven ? `ISLAND_3_TILE_SURFACE_BATCH_${materialIndex + 1}`
+              : isDriftwoodIsle ? `ISLAND_4_TILE_SURFACE_BATCH_${materialIndex + 1}`
               : `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
           if (isAbyssalPearlKingdom && materialIndex === 0) {
             mesh.userData.sculptRuntime = {
@@ -5673,7 +5778,7 @@ export default function Island5ThreePilot({
       tileMap: sceneTileMap,
       tileTransforms,
       quality: qualityProfile.id,
-      compactCollectibles: isFrostmoonHaven || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
+      compactCollectibles: isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth,
       staticBatchNonMissionRewards: isLavaLabyrinth,
       signatureMissionOnly: isCoasterCarnival,
     });
@@ -5809,6 +5914,15 @@ export default function Island5ThreePilot({
                 island3FrostmoonMaterials,
                 { constructionPreview },
               )
+            : isDriftwoodIsle && island4DriftwoodMaterials
+              ? buildLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    materials,
+                    resolvedWorldSourceNumber,
+                    { constructionPreview },
+                )
             : isSunshoreAtoll && island5SunshoreMaterials
               ? buildIsland5SunshoreLandmark(
                   landmark,
@@ -5930,7 +6044,7 @@ export default function Island5ThreePilot({
     }
     const moonwellRoot = isFrostmoonHaven ? landmarkRootsById.get('event') : null;
     const archiveInspectionParts: THREE.Object3D[] = [];
-    if (isFrostmoonHaven) landmarkRootsById.get('wisdom')?.traverse(node => {
+    if (isFrostmoonHaven || isDriftwoodIsle) landmarkRootsById.get('wisdom')?.traverse(node => {
       if (node.userData.archiveInspectionHide === true) archiveInspectionParts.push(node);
     });
     const moonwellThermalAnimator = moonwellRoot ? createMoonwellThermalAnimator(moonwellRoot) : null;
@@ -6160,6 +6274,10 @@ export default function Island5ThreePilot({
       });
       constructionPreviewBounds.getSize(constructionPreviewSize);
       constructionLevelDelta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+      if (isDriftwoodIsle && landmarkId === 'boss' && currentLevel > 0) {
+        const fundedPalace = current.getObjectByName('OPENING_PALACE');
+        if (fundedPalace instanceof THREE.Group) compactOpeningPalaceParts(fundedPalace);
+      }
       if ((isFirstLightKingdom || isJungleExpedition) && currentLevel > 0 && current instanceof THREE.Group) {
         const worldPrefix = isJungleExpedition ? 'ISLAND18' : 'ISLAND1';
         compactStaticGeometry(current, `${worldPrefix}_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED`);
@@ -6658,15 +6776,17 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
       ? 0x9be5ff
       : isCelestialSkyKingdom
         ? 0xd7f4ff
-        : isFrostmoonHaven
+      : isFrostmoonHaven
           ? 0xa98cff
+          : isDriftwoodIsle
+            ? 0xf4b85b
           : isSunshoreAtoll
             ? 0x77e8df
             : isMoonveilNexus
@@ -6696,8 +6816,10 @@ export default function Island5ThreePilot({
       ? 0x247bb2
       : isCelestialSkyKingdom
         ? 0x286fb3
-        : isFrostmoonHaven
+      : isFrostmoonHaven
           ? 0x52289f
+          : isDriftwoodIsle
+            ? 0x8b4a16
           : isSunshoreAtoll
             ? 0x11767a
             : isMoonveilNexus
@@ -6737,7 +6859,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier)
+    const isMapStrippedEvidence = (isCelestialSkyKingdom || isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier)
       && isMapStrippedEvidenceEnabled;
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -7477,6 +7599,9 @@ export default function Island5ThreePilot({
       const lavaLabyrinthOverride = isLavaLabyrinth ? lavaLabyrinthFocusOverrides[id] : undefined;
       const authoredFocusOverride = celestialOverride ?? assemblyCraterFocusOverride ?? fishermansVillageOverride ?? jungleExpeditionOverride ?? honeycombOverride ?? lavaLabyrinthOverride ?? cactusCanyonOverride ?? frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride ?? rootheartOverride ?? sunkenSandsOverride;
       let preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
+      if (isDriftwoodIsle && id === 'wisdom' && archiveInteriorOpenRef.current) {
+        preset = { ...preset, position: [-4.36, 8.5, 6.8], target: [-4.36, .9, 3.9] };
+      }
       if (isCrystalGlacier) {
         const fromRoom = isIsland15PalaceRoomPreset(activeInspectionPreset)
           ? activeInspectionPreset
@@ -8212,6 +8337,11 @@ export default function Island5ThreePilot({
     if (controlledCameraFocusRequestRef.current) {
       applyControlledCameraFocus(controlledCameraFocusRequestRef.current);
     }
+    // DEV microscope crops the original projection, never moves the review camera.
+    const plantingMicroscopeCamera = import.meta.env?.DEV
+      && new URLSearchParams(window.location.search).get('islandPalaceMicroscope') === '1'
+      && new URLSearchParams(window.location.search).get('island3dEvidence') === '1'
+      ? camera.clone() : null;
     if (new URLSearchParams(window.location.search).get('island3dEvidence') === '1') {
       const evidenceParams = new URLSearchParams(window.location.search);
       const evidencePreset = evidenceParams.get('island3dEvidencePreset');
@@ -8538,7 +8668,7 @@ export default function Island5ThreePilot({
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointerup', handlePointerUp);
 
-    if (isFrostmoonHaven) {
+    if (isFrostmoonHaven || isDriftwoodIsle) {
       // At phone scale the authored alpha, clearcoat and highlights carry glass
       // and frost. Avoid a second full-world transmission render for tiny panes.
       scene.traverse(object => {
@@ -8558,6 +8688,11 @@ export default function Island5ThreePilot({
         'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS',
         'ISLAND_5_CARETAKER_BOARD_LOD',
       ], 'ISLAND_002_ANIMATED_SURFACE_BATCHES', 32)
+      : isDriftwoodIsle ? createIslandRigidSurfaceBatches(scene, [
+        'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS', 'ISLAND_5_CARETAKER_BOARD_LOD',
+        'ISLAND_4_V2_LIVING_WORLD',
+        ...['BOSS','HATCHERY','HABIT','WISDOM','EVENT'].map(id => `ISLAND_4_V2_${id}_MODEL`),
+      ], 'ISLAND_004_BOARD_SURFACE_BATCHES', 32)
       : isFrostmoonHaven ? createIslandRigidSurfaceBatches(scene, [
         'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS', 'ISLAND_5_CARETAKER_BOARD_LOD',
         'ISLAND_3_FROSTMOON_LIVING_AMBIENCE',
@@ -8579,13 +8714,29 @@ export default function Island5ThreePilot({
     let appliedIsland15ConstructionRevealKey = '';
     let firstArrival: ReturnType<typeof createIsland001FirstArrival> | null = null;
     let firstArrivalTime = 0;
+    let firstArrivalWelcomeNotified = false;
     let firstArrivalCompleted = false;
     let firstArrivalBeat = '';
     let firstArrivalVersion = firstArrivalRestartRef.current;
+    const openingCeremonyFx = isDriftwoodIsle ? createOpeningGamesCeremonyThree() : null;
+    if (openingCeremonyFx) {
+      openingCeremonyFx.bindPalace(scene.getObjectByName('OPENING_PALACE'),
+        ISLAND_5_LANDMARKS.find(landmark => landmark.id === 'event')?.position);
+      scene.add(openingCeremonyFx.root);
+    }
     const animate = (now: number) => {
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
       const elapsed = timer.getElapsed();
+      tileRewardObjects.setTechnologyFragments(tilePresentationRef.current.fragments);
+      tileRewardObjects.setTrafficLightCharge(tilePresentationRef.current.trafficLightCharge);
+      const ceremonyPlayback = openingCeremonyPlaybackRef.current;
+      const ceremonyElapsed = ceremonyPlayback ? Math.max(0, Date.now() - ceremonyPlayback.startedAtMs) : 0;
+      openingCeremonyFx?.update(ceremonyPlayback ? {
+        active: true, elapsedMs: ceremonyElapsed, reducedMotion: ceremonyPlayback.reducedMotion,
+      } : null);
+      if (openingCeremonyFx) canvas.dataset.openingCeremonyPhase = ceremonyPlayback
+        ? sampleOpeningCeremony(ceremonyElapsed, ceremonyPlayback.reducedMotion).phase : 'idle';
       const actualFrameDeltaSeconds = Math.max(0, (now - lastAnimationFrameAt) / 1000);
       const frameDeltaSeconds = Math.min(0.05, actualFrameDeltaSeconds);
       // A tab suspension must not teleport the physical rider several metres.
@@ -9929,11 +10080,11 @@ export default function Island5ThreePilot({
           canvas.dataset.island19WonderRideReducedMotion = String(isReducedMotion);
         }
       }
-      const archiveCutaway = isFrostmoonHaven && activeInspectionPreset === 'wisdom'
+      const archiveCutaway = (isFrostmoonHaven || isDriftwoodIsle) && activeInspectionPreset === 'wisdom'
         && archiveInteriorOpenRef.current && (landmarkBuildLevelsRef.current?.wisdom ?? buildLevelRef.current) >= 3
         && !constructionPresentationRef.current?.active;
       archiveInspectionParts.forEach(node => { node.visible = !archiveCutaway; });
-      if (isFrostmoonHaven) canvas.dataset.archiveInteriorOpen = String(archiveCutaway);
+      if (isFrostmoonHaven || isDriftwoodIsle) canvas.dataset.archiveInteriorOpen = String(archiveCutaway);
       const thermalPresentation = moonwellThermalPresentationRef.current;
       if (isFrostmoonHaven && activeInspectionPreset === 'event' && !transition
         && !constructionPresentationRef.current?.active
@@ -10052,7 +10203,7 @@ export default function Island5ThreePilot({
       if (!activeWonderRide && !activeTrainRide) controls.update();
       if (islandNumber === 1 && (firstArrivalRef.current.active || firstArrival || firstArrivalCompletedRef.current)) {
         if (firstArrivalVersion !== firstArrivalRestartRef.current) {
-          firstArrival?.dispose(); firstArrival = null; firstArrivalTime = 0;
+          firstArrival?.dispose(); firstArrival = null; firstArrivalTime = 0; firstArrivalWelcomeNotified = false;
           firstArrivalCompleted = false; firstArrivalVersion = firstArrivalRestartRef.current;
         }
         if (!firstArrival) {
@@ -10061,10 +10212,13 @@ export default function Island5ThreePilot({
             {position:camera.position.clone(), target:controls.target.clone(), fov:camera.fov});
           if (firstArrivalCompletedRef.current) {firstArrivalTime = 29; firstArrivalCompleted = true;}
         }
-        firstArrivalTime += document.hidden ? 0 : Math.min(actualFrameDeltaSeconds, 0.25);
-        if (firstArrivalRef.current.skip || isReducedMotion) firstArrivalTime = Math.max(firstArrivalTime, 29);
+        firstArrivalTime = advanceFirstArrivalTime(firstArrivalTime,actualFrameDeltaSeconds,{hidden:document.hidden,skip:firstArrivalRef.current.skip,reducedMotion:isReducedMotion,waitForWelcome:firstArrivalRef.current.waitForWelcome,welcomeComplete:firstArrivalRef.current.welcomeComplete});
         if (import.meta.env.DEV && firstArrivalRef.current.previewTime !== undefined) {
           firstArrivalTime = firstArrivalRef.current.previewTime;
+        }
+        if (firstArrivalRef.current.waitForWelcome && !firstArrivalRef.current.welcomeComplete && firstArrivalTime >= FIRST_ARRIVAL_WELCOME_TIME) {
+          firstArrivalTime = FIRST_ARRIVAL_WELCOME_TIME;
+          if (!firstArrivalWelcomeNotified) { firstArrivalWelcomeNotified = true; firstArrivalRef.current.onWelcome?.(); }
         }
         const ownsCamera = !firstArrivalCompleted;
         if (ownsCamera) { transition = null; controls.enabled = false; }
@@ -10169,7 +10323,26 @@ export default function Island5ThreePilot({
       if (livingAmbience.consumeShadowUpdate?.() && sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
       const automaticWorldMatrices = scene.matrixWorldAutoUpdate;
       if (isFrostmoonHaven) scene.matrixWorldAutoUpdate = false;
-      try { renderer.render(scene, camera); }
+      let renderCamera = camera;
+      if (plantingMicroscopeCamera) {
+        const bay = scene.getObjectByName(new URLSearchParams(window.location.search).get('islandPalaceMicroscopePart') || 'palace-planting-prototype');
+        if (bay) {
+          camera.updateMatrixWorld(true);
+          bay.updateWorldMatrix(true, false);
+          const centre = (Array.isArray(bay.userData.microscopeLocalCenter)
+            ? new THREE.Vector3().fromArray(bay.userData.microscopeLocalCenter).applyMatrix4(bay.matrixWorld)
+            : new THREE.Box3().setFromObject(bay).getCenter(new THREE.Vector3())).project(camera);
+          const width = canvas.clientWidth, height = canvas.clientHeight, fraction = .22;
+          plantingMicroscopeCamera.copy(camera);
+          const x = (centre.x + 1) * .5 * width - width * fraction * .5;
+          const y = (1 - centre.y) * .5 * height - height * fraction * .5;
+          plantingMicroscopeCamera.setViewOffset(width, height, x, y, width * fraction, height * fraction);
+          canvas.dataset.plantingMicroscope = JSON.stringify({ width, height, x, y, fraction,
+            cameraPosition: camera.position.toArray(), cameraQuaternion: camera.quaternion.toArray() });
+          renderCamera = plantingMicroscopeCamera;
+        }
+      }
+      try { renderer.render(scene, renderCamera); }
       finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
         const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
@@ -10380,6 +10553,7 @@ export default function Island5ThreePilot({
       }
       window.cancelAnimationFrame(animationFrame);
       firstArrival?.dispose();
+      tileRewardObjects.disposeFragments();
       moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;
       resizeObserver.disconnect();
@@ -10407,6 +10581,7 @@ export default function Island5ThreePilot({
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
       livingAmbience.dispose?.();
+      openingCeremonyFx?.dispose();
       const disposedSceneBackground = scene.background;
       if (assemblyEnvironmentTarget) { scene.environment = null; assemblyEnvironmentTarget.dispose(); }
       if (archiveLookdevEnvironmentTarget) {
@@ -10471,7 +10646,7 @@ export default function Island5ThreePilot({
       setCameraAuthoringModeRef.current = () => undefined;
       setIsland15PalaceEntryPhase('idle');
     };
-  }, [assemblyAssetsReady, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isCrystalGlacier, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, qualityProfile, rendererRetryVersion, sceneTileMap, resolvedWorldSourceNumber, sceneBuildLevelDependency, sceneLandmarkBuildLevelsDependency, tileRewardMapKey]);
+  }, [assemblyAssetsReady, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCactusCanyon, isCelestialSkyKingdom, isCircuitFPreviewEnabled, isCircuitGBoardPreviewEnabled, isCoasterCarnival, isCrystalGlacier, isDriftwoodIsle, isEverblossomKingdom, isFirstLightKingdom, isFishermansVillage, isFrostmoonHaven, isHeartshaftCrucible, isHoneycombKingdom, isIsland19BoardFocusEvidenceEnabled, isJungleExpedition, isLavaLabyrinth, isMapStrippedEvidenceEnabled, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunkenSands, isSunshoreAtoll, qualityProfile, rendererRetryVersion, sceneTileMap, resolvedWorldSourceNumber, sceneBuildLevelDependency, sceneLandmarkBuildLevelsDependency, tileRewardMapKey]);
 
   const trainRideViewCopy = trainRidePhase === 'driver'
     ? { eyebrow: 'ENGINEER\'S CAB', title: 'Forward through the canyon', next: 'Rear observation deck' }
@@ -10747,7 +10922,7 @@ export default function Island5ThreePilot({
       ) : null}
       {!useIsland15ProductPresentation ? (
         <>
-          {isFrostmoonHaven && activePreset === 'wisdom' && (landmarkBuildLevels?.wisdom ?? buildLevel) >= 3 && !constructionPresentation?.active ? (
+          {(isFrostmoonHaven || isDriftwoodIsle) && activePreset === 'wisdom' && (landmarkBuildLevels?.wisdom ?? buildLevel) >= 3 && !constructionPresentation?.active ? (
         <button type="button" className="island-3-archive-inspect-toggle" aria-pressed={archiveInteriorOpen}
           onClick={() => setArchiveInteriorOpen(value => !value)}>{archiveInteriorOpen ? 'Close roof' : 'Look inside'}</button>
       ) : null}
@@ -10855,6 +11030,8 @@ export default function Island5ThreePilot({
                   ? ISLAND_2_CELESTIAL_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_2_CELESTIAL_LANDMARK_LABELS]
                   : isFrostmoonHaven
                     ? ISLAND_3_FROSTMOON_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_3_FROSTMOON_LANDMARK_LABELS]
+                    : isDriftwoodIsle
+                      ? ISLAND_4_DRIFTWOOD_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_4_DRIFTWOOD_LANDMARK_LABELS]
                     : isSunshoreAtoll
                       ? ISLAND_5_SUNSHORE_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_5_SUNSHORE_LANDMARK_LABELS]
                       : isMoonveilNexus
@@ -10901,7 +11078,7 @@ export default function Island5ThreePilot({
         <button type="button" onClick={() => setIsEvidenceCapture(true)}>
           Hide overlays for evidence
         </button>
-        {(isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival) ? (
+        {(isCelestialSkyKingdom || isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival) ? (
           <button
             type="button"
             aria-pressed={isMapStrippedEvidenceEnabled}
@@ -10910,7 +11087,7 @@ export default function Island5ThreePilot({
             {isMapStrippedEvidenceEnabled ? 'Show materials' : 'Geometry proof'}
           </button>
         ) : null}
-        {(isCelestialSkyKingdom || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
+        {(isCelestialSkyKingdom || isDriftwoodIsle || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth) ? (
           <div className="island-5-three-pilot__camera-row" aria-label={`${worldName} 360 evidence orbit`}>
             {[0, 45, 90, 135, 180, 225, 270, 315].map((degrees) => (
               <button

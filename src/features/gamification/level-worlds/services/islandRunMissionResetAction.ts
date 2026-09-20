@@ -40,7 +40,7 @@ export function buildCurrentIslandMissionResetRecord(
   delete narrativeBeats[briefingBeatId];
   const shouldReleaseIslandOneIntroGate = islandNumber === 1
     && cycleIndex === 0
-    && isIslandRunFragmentOnlyBoardPhase(current.firstSessionTutorialState);
+    && (isIslandRunFragmentOnlyBoardPhase(current.firstSessionTutorialState) || current.firstSessionTutorialState === 'awaiting_first_roll');
 
   return {
     ...current,

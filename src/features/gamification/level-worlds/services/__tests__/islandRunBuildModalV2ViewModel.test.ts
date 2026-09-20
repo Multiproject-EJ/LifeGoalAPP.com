@@ -181,6 +181,14 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
 
+      const appCss = fsMod.readFileSync('src/index.css', 'utf8');
+      const layer = (source: string, selector: string): number => {
+        const block = source.slice(source.indexOf(selector + ' {')).split('}')[0];
+        return Number(block.match(/z-index:\s*(\d+)/)?.[1] ?? 0);
+      };
+      assert(layer(cssSource, '.bm2-build-mode') > layer(appCss, '.level-worlds-entry-modal'), 'Body-portaled Build controls must render above the full-screen game entry layer');
+      assert(layer(cssSource, '.bm2-build-mode') > layer(appCss, '.level-worlds-mobile-exit-overlay'), 'Build controls must stay above the native/mobile exit overlay');
+
       assert(modalSource.includes('role="dialog"') && modalSource.includes('aria-modal="true"'), 'Build should expose its exclusive live-board session as an accessible modal dialog');
       assert(!modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
       assert(modalSource.includes('completed-crest-v001.png'), 'the final state should use the generated in-world Completed crest');

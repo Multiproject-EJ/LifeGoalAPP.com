@@ -1,0 +1,51 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "clayCards": true,
+      "correctRasterCaption": true,
+      "echoVariants": true,
+      "exactImageEnlargement": true,
+      "beforeAfter": true,
+      "clayImages": true,
+      "enlargedDialog": true,
+      "focusReturn": true,
+      "greyscale": true,
+      "thumbnail": true,
+      "hiddenHints": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "clayCards": true,
+      "correctRasterCaption": true,
+      "echoVariants": true,
+      "exactImageEnlargement": true,
+      "beforeAfter": true,
+      "clayImages": true,
+      "enlargedDialog": true,
+      "focusReturn": true,
+      "greyscale": true,
+      "thumbnail": true,
+      "hiddenHints": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "clayCards": true,
+      "correctRasterCaption": true,
+      "echoVariants": true,
+      "exactImageEnlargement": true,
+      "beforeAfter": true,
+      "clayImages": true,
+      "enlargedDialog": true,
+      "focusReturn": true,
+      "greyscale": true,
+      "thumbnail": true,
+      "hiddenHints": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "failures": []
+}

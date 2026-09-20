@@ -32,6 +32,8 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
   const starGeo=new THREE.BufferGeometry(); starGeo.setAttribute('position',new THREE.BufferAttribute(streakPositions,3));
   const starMat=new THREE.LineBasicMaterial({color:'#a7edff',transparent:true,opacity:.75});
   const stars=new THREE.LineSegments(starGeo,starMat); root.add(stars);
+  const oceanBackdrop=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({color:'#8cc9d2'}));
+  oceanBackdrop.name='ARRIVAL_OCEAN_HORIZON';oceanBackdrop.rotation.x=-Math.PI/2;oceanBackdrop.position.y=-2.8;root.add(oceanBackdrop);
   const rings = Array.from({length:4},(_,i)=>{
     const m = new THREE.Mesh(new THREE.RingGeometry(.96,1,96),new THREE.MeshBasicMaterial({color:'#c6fbff',transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));
     m.rotation.x=-Math.PI/2; m.position.set(dock.x,-2.59+i*.004,dock.z); root.add(m); return m;
@@ -50,30 +52,62 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
   let restored=false;
   let playerDelivered=false;
   function update(t:number,delta:number,camera:THREE.PerspectiveCamera, reduced:boolean, constructionActive:boolean) {
+    oceanBackdrop.visible=t>=5.2 && t<FIRST_ARRIVAL_DURATION;
     const flight=segment(t,5,12);
-    shipPivot.position.copy(v(-28,32,-36).lerp(dock,flight));
-    shipPivot.rotation.set(0, -.28*(1-flight), Math.sin(flight*Math.PI)*-.25);
-    const expansion=segment(t,14,20);
+    // Sweeping approach: cross the sky, bank toward the coast, then brake over water.
+    const approach=new THREE.CubicBezierCurve3(v(-30,27,-28),v(3,22,-19),v(-22,5,7),dock);
+    shipPivot.position.copy(approach.getPoint(flight));
+    shipPivot.rotation.set(Math.sin(flight*Math.PI)*.18, -.35*(1-flight), Math.sin(flight*Math.PI)*-.48);
+    const expansion=segment(t,14,18.4);
     ship.update({timeSeconds:t,pose:'flight',poseProgress:1-expansion,thrust:t<11?.7:.12,hover:t<14?.5:.04,reducedMotion:true});
     // Parent carries the trajectory; the canonical model owns its transformation.
     thrusters.forEach(m=>{m.visible=t<13; m.scale.y=1+Math.sin(t*20)*.08;});
-    stars.position.copy(shipPivot.position); stars.position.z+=(t*22)%4;
+    stars.position.copy(shipPivot.position); stars.position.z+=(t*35)%4;
     stars.visible=t<7; starMat.opacity=.65*(1-segment(t,4,7));
     if(t<FIRST_ARRIVAL_DURATION) {
       restored=false;
       scene.background=space.clone().lerp(daylight,segment(t,4,10)); scene.fog=fog;
-      const chase=shipPivot.position.clone().add(v(8,5,12));
-      const landing=v(-28,9,24); const reveal=v(-24,6,22); const board=v(-5,24,34);
-      let eye=chase, target=shipPivot.position.clone();
-      if(t>=7) eye=chase.lerp(landing,segment(t,7,12));
-      if(t>=13) eye=landing.clone().lerp(reveal,segment(t,13,18));
-      if(t>=19) {eye=reveal.clone().lerp(board,segment(t,19,28)); target=shipPivot.position.clone().lerp(v(0,1,0),segment(t,19,27));}
-      // Slight restrained turbulence only in the approach, never reduced motion.
-      if(!reduced && t>7 && t<11) eye.y+=Math.sin(t*31)*.045;
-      eye.sub(target).multiplyScalar(Math.max(1, (0.94 + 0.46 * segment(t,19,22)) / camera.aspect)).add(target);
-      const handoffMix=segment(t,26,29);
+      let eye:THREE.Vector3, target=shipPivot.position.clone().add(v(0,.5,0));
+      let lens=42;
+      // Intentional editorial cuts. Each shot has a restrained camera move of its own.
+      if(t<3.4) { // close tracking three-quarter view, hull fills the frame
+        eye=shipPivot.position.clone().add(v(7,2.7,10).lerp(v(5.8,2.2,9),segment(t,0,3.4)));
+      } else if(t<5.2) { // reverse engine shot before leaving fast travel
+        eye=shipPivot.position.clone().add(v(-7,1.6,-11).lerp(v(-5,2.5,-12),segment(t,3.4,5.2)));
+      } else if(t<8.2) { // wide destination reveal: establish the island and trajectory
+        eye=v(19,29,34).lerp(v(16,27,32),segment(t,5.2,8.2));
+        target=v(-9,10,-6);lens=48;
+      } else if(t<11.4) { // cut back alongside the banking ship
+        eye=shipPivot.position.clone().add(v(8,3,12).lerp(v(10,2,9),segment(t,8.2,11.4)));
+        target.add(v(0,.4,0));lens=44;
+      } else if(t<14) { // low coastal wide shot: braking and ocean contact
+        eye=v(-34,5,26).lerp(v(-32,6,24),segment(t,11.4,14));
+        target=dock.clone().lerp(v(-10,1,3),.22);lens=48;
+      } else if(t<18.4) { // cut in: watch the mechanical transformation
+        eye=dock.clone().add(v(-9,5.8,17).lerp(v(-5,6.8,17),segment(t,14,20)));
+        target=dock.clone().add(v(0,1.1,0));lens=42;
+      } else if(t<20) { // enter the opened ship; the welcome modal pauses here
+        const u=segment(t,18.4,19.8);
+        eye=dock.clone().add(v(-5,6.8,17).lerp(v(-1.8,2.7,7),u));
+        target=dock.clone().add(v(0,1.6,0));lens=42;
+      } else if(t<22.6) { // launch camera: travel with the player toward START
+        const u=segment(t,20,22.5);
+        target=dock.clone().add(v(1,1.8,2)).lerp(startPoint,u);
+        target.y+=Math.sin(u*Math.PI)*3.5;
+        eye=target.clone().add(v(-6,4,11));lens=48;
+      } else if(t>=25.1 && t<26.5) { // brief close-up confirms the player is settled on START
+        target=startPoint.clone().add(v(0,.45,0));
+        eye=startPoint.clone().add(v(3.2,2.5,4.4));lens=42;
+      } else { // wide crew deployment, then hand control to the normal board camera
+        eye=v(-20,22,33).lerp(v(-7,26,37),segment(t,22.6,26));
+        target=v(-6,1,3).lerp(v(0,1,0),segment(t,22.6,26));lens=48;
+      }
+      if(!reduced && t>8.2 && t<11.4) eye.y+=Math.sin(t*31)*.035;
+      // Fit the ship and landing path in a narrow phone viewport, without changing shot direction.
+      eye.sub(target).multiplyScalar(Math.max(1,.78/camera.aspect)).add(target);
+      const handoffMix=segment(t,26.5,29);
       eye.lerp(handoff.position,handoffMix); target.lerp(handoff.target,handoffMix);
-      camera.position.copy(eye); camera.lookAt(target); camera.fov=THREE.MathUtils.lerp(44,handoff.fov,handoffMix); camera.updateProjectionMatrix();
+      camera.position.copy(eye); camera.lookAt(target); camera.fov=THREE.MathUtils.lerp(lens,handoff.fov,handoffMix); camera.updateProjectionMatrix();
     } else if(!restored) {scene.background=originalBackground;scene.fog=originalFog;camera.position.copy(handoff.position);camera.lookAt(handoff.target);camera.fov=handoff.fov;camera.updateProjectionMatrix();restored=true;}
     rings.forEach((m,i)=>{
       const age=(t-11.6-i*.35);const p=age<0?0:(age%3)/3;
@@ -108,6 +142,7 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
       }
     });
     root.userData.beat=arrivalBeat(t);
+    root.userData.cameraShot=t<3.4?'hull-close':t<5.2?'engines':t<8.2?'island-wide':t<11.4?'descent-close':t<14?'ocean-wide':t<20?'unfold-close':t<22.6?'player-flight':'crew-wide';
     root.userData.playerEndpoint=start;
     return t>=FIRST_ARRIVAL_DURATION;
   }

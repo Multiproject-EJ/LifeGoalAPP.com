@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "composite": false, "incremental": false },
+  "include": ["src/features/creature-system/**/*.ts", "src/features/creature-system/**/*.tsx", "src/dev/CreatureSystemLab.tsx"],
+  "references": []
+}

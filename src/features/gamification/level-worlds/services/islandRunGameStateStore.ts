@@ -1,3 +1,4 @@
+import {getConcordCollectedSlots} from './islandRunConcordProgress';
 import { sanitizeCrystalMinersProgressByEvent, mergeCrystalMinersProgressByEvent, type CrystalMinersProgress } from './crystalMinersGame';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isDemoSession } from '../../../../services/demoSession';
@@ -406,7 +407,7 @@ export interface IslandRunGameStateRecord {
    * `maybeCollectTechItem` in the board prototype for the accumulator semantics.
    */
   techCollectionByIsland: Record<string, number[]>;
-  /** Persisted Island 1 Concord pacing counters; owned by the roll action. */
+  /** Persisted Island 005 Concord pacing counters; owned by the roll action. */
   concordRollProtectionState: ConcordRollProtectionState;
   /**
    * Per-island ledger of tech-grid line indices (0–7, see
@@ -557,7 +558,7 @@ function sanitizeIslandIndexLedger(
 function hasAllIslandOneTechnologySlots(recordLike: { techCollectionByIsland?: unknown }): boolean {
   const ledger = recordLike.techCollectionByIsland;
   if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)) return false;
-  const slots = (ledger as Record<string, unknown>)['1'];
+  const slots = getConcordCollectedSlots(ledger as Record<string, number[]>);
   if (!Array.isArray(slots)) return false;
   const slotSet = new Set<number>();
   for (const raw of slots) {
@@ -601,7 +602,7 @@ function sanitizeTechnologyUnlocksById(
   // Compatibility policy: old users with a complete Island 1 grid, or users whose
   // canonical progression already proves they are established beyond Island 1,
   // receive durable Concord access without replaying tech-grid rewards.
-  if (!out['the-concord'] && compatibilityRecord && (hasAllIslandOneTechnologySlots(compatibilityRecord) || isEstablishedBeyondIslandOne(compatibilityRecord))) {
+  if (!out['the-concord'] && compatibilityRecord && (hasAllIslandOneTechnologySlots(compatibilityRecord) || (value == null && isEstablishedBeyondIslandOne(compatibilityRecord)))) {
     out['the-concord'] = { builtAtMs: 1, active: true };
   }
   return out;
@@ -1303,7 +1304,7 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
   const rawConcordRollProtectionState = value.concordRollProtectionState
     ?? (value as Record<string, unknown>).concord_roll_protection_state;
   const concordRollProtectionState = rawConcordRollProtectionState === undefined
-    ? resolveInitialConcordRollProtectionState(techCollectionByIsland['1'] ?? [])
+    ? resolveInitialConcordRollProtectionState(getConcordCollectedSlots(techCollectionByIsland))
     : sanitizeConcordRollProtectionState(rawConcordRollProtectionState);
   return {
     runtimeVersion:

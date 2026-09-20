@@ -246,7 +246,11 @@ export const islandTechCollectionComponentTests: TestCase[] = [
   {
     name: 'board accepts the Assembly finale as Island 1 departure authority alongside legacy Concord completion',
     run: () => {
-      includes(boardSource, "getIslandTechnologyAccess(runtimeState, 'the-concord').active");
+      // Departure resolves fresh canonical state; its legacy compatibility
+      // guard deliberately reads the current ref, not a captured render value.
+      includes(boardSource, 'const latestCompletion = resolveIslandRunCompletion(getIslandRunStateSnapshot(session));');
+      includes(boardSource, '!latestCompletion.complete || latestCompletion.visitKey !== islandClearVisitKey');
+      includes(boardSource, "getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active");
       includes(boardSource, 'latestAssembly.completedAtMs === null');
       includes(boardSource, "source !== 'dev_clear_island'");
       includes(boardSource, 'Complete the ten-charge Assembly Crater mission before finishing Island 1.');

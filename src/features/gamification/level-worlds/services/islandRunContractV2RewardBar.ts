@@ -1,4 +1,5 @@
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
+import { resolveIslandRunFeatureAccess, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 
 export type IslandRunTimedEvent = NonNullable<IslandRunRuntimeState['activeTimedEvent']>;
 
@@ -15,7 +16,12 @@ export type IslandRunRewardBarRuntimeSlice = Pick<
   | 'activeTimedEventProgress'
   | 'stickerProgress'
   | 'stickerInventory'
->;
+> & Partial<Pick<IslandRunRuntimeState, 'signatureMissionProgressByIsland' | 'currentIslandNumber'>>;
+
+function isRewardChannelAvailable(state: IslandRunRewardBarRuntimeSlice, islandNumber = state.currentIslandNumber): boolean {
+  return resolveIslandRunFeatureAccess({ currentIslandNumber: islandNumber ?? 0,
+    signatureMissionProgressByIsland: state.signatureMissionProgressByIsland }).rewardChannel;
+}
 
 export type RewardBarProgressSource =
   | { kind: 'tile'; tileType: string }
@@ -186,12 +192,11 @@ const REWARD_ROTATION: readonly RewardBarRewardKind[] = [
 export const FIRST_PUZZLE_COLLECTION_ISLAND = 2;
 
 /**
- * Island 001 is the Concord onboarding island, so puzzle collection stays
- * completely out of its reward loop. The Sticker Album begins on Island 002.
+ * Legacy journeys introduce puzzles on Island002. Explicit opening-games
+ * journeys introduce them on Island003; reward previews and grants agree.
  */
-export function isPuzzleCollectionAvailableForIsland(islandNumber: number): boolean {
-  if (!Number.isFinite(islandNumber)) return true;
-  return Math.floor(islandNumber) >= FIRST_PUZZLE_COLLECTION_ISLAND;
+export function isPuzzleCollectionAvailableForIsland(islandNumber: number, signatureMissionProgressByIsland?: IslandRunFeatureAccessContext['signatureMissionProgressByIsland']): boolean {
+  return resolveIslandRunFeatureAccess({currentIslandNumber:islandNumber, signatureMissionProgressByIsland}).puzzleCollection;
 }
 
 /** Icon for the upcoming reward displayed on the bar endcap. */
@@ -202,9 +207,9 @@ export const REWARD_KIND_ICON: Readonly<Record<RewardBarRewardKind, string>> = {
   sticker_fragments: '🧩',
 };
 
-export function resolveNextRewardKind(claimCount: number, islandNumber = FIRST_PUZZLE_COLLECTION_ISLAND): RewardBarRewardKind {
+export function resolveNextRewardKind(claimCount: number, islandNumber = FIRST_PUZZLE_COLLECTION_ISLAND, signatureMissionProgressByIsland?: IslandRunFeatureAccessContext['signatureMissionProgressByIsland']): RewardBarRewardKind {
   const rotatedKind = REWARD_ROTATION[Math.max(0, Math.floor(claimCount)) % REWARD_ROTATION.length]!;
-  return rotatedKind === 'sticker_fragments' && !isPuzzleCollectionAvailableForIsland(islandNumber)
+  return rotatedKind === 'sticker_fragments' && !isPuzzleCollectionAvailableForIsland(islandNumber, signatureMissionProgressByIsland)
     ? 'essence'
     : rotatedKind;
 }
@@ -529,6 +534,7 @@ export function applyIslandRunContractV2RewardBarProgress(options: {
   /** Dice multiplier (default 1). Multiplies progress contributed. */
   multiplier?: number;
 }): IslandRunRewardBarRuntimeSlice {
+  if (!isRewardChannelAvailable(options.state)) return options.state;
   const ensured = ensureIslandRunContractV2ActiveTimedEvent({ state: options.state, nowMs: options.nowMs }).state;
   const delta = resolveIslandRunContractV2RewardBarProgressDelta(options.source);
   if (delta.progressDelta < 1) return ensured;
@@ -546,6 +552,7 @@ export function applyIslandRunContractV2RewardBarProgress(options: {
 }
 
 export function canClaimIslandRunContractV2RewardBar(state: IslandRunRewardBarRuntimeSlice): boolean {
+  if (!isRewardChannelAvailable(state)) return false;
   const threshold = resolveEscalatingThreshold(Math.max(0, Math.floor(state.rewardBarEscalationTier)));
   return state.rewardBarProgress >= threshold;
 }
@@ -569,9 +576,10 @@ function resolveProgressivePayout(options: {
   claimNumber: number;
   template: TimedEventTemplate;
   islandNumber?: number;
+  signatureMissionProgressByIsland?: IslandRunFeatureAccessContext['signatureMissionProgressByIsland'];
 }): RewardBarClaimPayout {
   const { tier, claimNumber, template, islandNumber } = options;
-  const rewardKind = resolveNextRewardKind(claimNumber - 1, islandNumber);
+  const rewardKind = resolveNextRewardKind(claimNumber - 1, islandNumber, options.signatureMissionProgressByIsland);
 
   // Base amounts that scale with tier (progressive rewards get bigger)
   const diceBase = 5 + tier * 3;           // 5, 8, 11, 14, 17, 20, ...
@@ -623,13 +631,13 @@ function resolveProgressivePayout(options: {
 }
 
 export function resolveRewardBarClaimPayoutPreview(options: {
-  state: Pick<IslandRunRewardBarRuntimeSlice, 'activeTimedEvent' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>;
+  state: Pick<IslandRunRewardBarRuntimeSlice, 'activeTimedEvent' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent' | 'signatureMissionProgressByIsland'>;
   islandNumber?: number;
 }): RewardBarClaimPayout {
   const nextClaimNumber = Math.max(0, Math.floor(options.state.rewardBarClaimCountInEvent)) + 1;
   const tier = Math.max(0, Math.floor(options.state.rewardBarEscalationTier));
   const template = getTemplateForEvent(options.state.activeTimedEvent);
-  return resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template, islandNumber: options.islandNumber });
+  return resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template, islandNumber: options.islandNumber, signatureMissionProgressByIsland: options.state.signatureMissionProgressByIsland });
 }
 
 export function claimIslandRunContractV2RewardBar(options: {
@@ -637,8 +645,9 @@ export function claimIslandRunContractV2RewardBar(options: {
   nowMs: number;
   islandNumber?: number;
 }): { state: IslandRunRewardBarRuntimeSlice; payout: RewardBarClaimPayout | null } {
+  if (!isRewardChannelAvailable(options.state, options.islandNumber)) return { state: options.state, payout: null };
   const ensured = ensureIslandRunContractV2ActiveTimedEvent({ state: options.state, nowMs: options.nowMs }).state;
-  if (!canClaimIslandRunContractV2RewardBar(ensured) || !ensured.activeTimedEvent) {
+  if (!canClaimIslandRunContractV2RewardBar({ ...ensured, currentIslandNumber: options.islandNumber ?? ensured.currentIslandNumber }) || !ensured.activeTimedEvent) {
     return { state: ensured, payout: null };
   }
 
@@ -647,7 +656,7 @@ export function claimIslandRunContractV2RewardBar(options: {
   const template = getTemplateForEvent(ensured.activeTimedEvent);
   const currentThreshold = resolveEscalatingThreshold(tier);
 
-  const payout = resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template, islandNumber: options.islandNumber });
+  const payout = resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template, islandNumber: options.islandNumber, signatureMissionProgressByIsland: options.state.signatureMissionProgressByIsland });
 
   // Carry over excess progress beyond threshold (supports multi-fill chains)
   const overflowProgress = Math.max(0, Math.floor(ensured.rewardBarProgress) - currentThreshold);
@@ -713,7 +722,7 @@ export function resolveChainedRewardBarClaims(options: {
   const payouts: RewardBarClaimPayout[] = [];
 
   for (let i = 0; i < maxChain; i++) {
-    if (!canClaimIslandRunContractV2RewardBar(current)) break;
+    if (!canClaimIslandRunContractV2RewardBar({ ...current, currentIslandNumber: options.islandNumber ?? current.currentIslandNumber })) break;
     const result = claimIslandRunContractV2RewardBar({
       state: current,
       nowMs: options.nowMs,

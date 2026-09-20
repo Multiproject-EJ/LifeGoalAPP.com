@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { IslandTileMapEntry, IslandTileType } from '../services/islandBoardTileMap';
 import type { Island3DQuality, Island5TileTransform } from './island5ThreePilotContract';
@@ -7,6 +8,9 @@ import { compactStaticGeometry } from './CrownCitadelThreeModel';
 export interface IslandRunTileRewardThreeRuntime {
   root: THREE.Group;
   animate: (elapsed: number, tokenIndex: number) => void;
+  disposeFragments: () => void;
+  setTechnologyFragments: (fragments: readonly VisibleTechnologyFragment[]) => void;
+  setTrafficLightCharge: (charge: number) => void;
   setCactusCanyonMissionStarted: (started: boolean) => void;
   setFirstLightClaimedDynamiteTiles: (tileIndices: readonly number[]) => void;
   setStagedRestorationClaimedTiles: (tileIndices: readonly number[]) => void;
@@ -52,6 +56,7 @@ function compactRewardToVertexColorMesh(root: THREE.Group, material: THREE.MeshS
 }
 
 export type IslandRunTileRewardObjectKind =
+  | 'money_symbol'
   | 'golden_event_ticket'
   | 'essence_crystal'
   | 'universal_reward_token'
@@ -89,15 +94,10 @@ export function resolveIslandRunTileRewardObjectKind(
     || entry.signatureMissionKind === 'heatshield_plate'
     || entry.signatureMissionKind === 'golden_ride_ticket') return 'staged_restoration_pickup';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
-  if (entry.tileType === 'currency') return 'essence_crystal';
-  if (entry.tileType === 'micro') return 'universal_reward_token';
-  if (entry.tileType === 'chest') return 'treasure_chest';
-  if (entry.tileType === 'hazard') return 'hazard_rift';
-  if (entry.tileType === 'encounter') return 'encounter_scroll';
+  if (entry.tileType === 'currency' || entry.tileType === 'chest') return 'money_symbol';
   if (entry.tileType === 'card') return 'caretaker_card';
   if (entry.tileType === 'build_discount') return 'build_rush_hammer';
   if (entry.tileType === 'traffic_light') return 'traffic_beacon';
-  if (entry.tileType === 'landmark_door' && entry.isActiveDoorCluster) return 'active_landmark_door';
   return null;
 }
 
@@ -341,18 +341,36 @@ function createBuildRushHammer(materials: RewardMaterials, quality: Island3DQual
   return root;
 }
 
+function createMoneySymbol(materials: RewardMaterials, quality: Island3DQuality) {
+  const root = new THREE.Group(); root.name = 'ISLAND_RUN_TILE_OBJECT_MONEY';
+  const coin = new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.055,qualitySegments(quality)*2),materials.gold);
+  coin.rotation.x = Math.PI/2; root.add(coin);
+  // Raised currency mark is geometry, readable from either side without a font download.
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(.085,.11,.045),new THREE.Vector3(-.08,.12,.045),
+    new THREE.Vector3(-.08,.035,.045),new THREE.Vector3(.08,-.035,.045),
+    new THREE.Vector3(.08,-.11,.045),new THREE.Vector3(-.085,-.11,.045)]);
+  root.add(new THREE.Mesh(new THREE.TubeGeometry(curve,18,.022,5,false),materials.midnight));
+  const bar=new THREE.Mesh(new THREE.BoxGeometry(.024,.34,.027),materials.midnight);bar.position.z=.047;root.add(bar);
+  return root;
+}
+
 function createTrafficBeacon(materials: RewardMaterials, quality: Island3DQuality) {
   const root = new THREE.Group();
   root.name = 'ISLAND_RUN_TILE_OBJECT_TRAFFIC_BEACON';
   const housing = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.4, 0.14), materials.midnight);
   [materials.hazard, materials.amber, materials.green].forEach((material, index) => {
-    const light = new THREE.Mesh(new THREE.SphereGeometry(0.045, qualitySegments(quality), 7), material);
+    const light = new THREE.Mesh(new THREE.SphereGeometry(0.045, qualitySegments(quality), 7), material.clone());
+    light.name=`TRAFFIC_LAMP_${index}`;
     light.position.set(0, 0.12 - index * 0.12, 0.08);
     root.add(light);
   });
   const cap = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.045, 0.18), materials.gold);
   cap.position.y = 0.23;
-  root.add(housing, cap);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.028,.04,.52,8),materials.midnight);
+  pole.position.y=-.45;
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.05,8),materials.gold);foot.position.y=-.72;
+  root.add(housing, cap, pole, foot);
   return root;
 }
 
@@ -553,6 +571,7 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
     root.add(core, halo);
     return root;
   }
+  if (kind === 'money_symbol') return createMoneySymbol(materials, quality);
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -598,7 +617,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   options.tileMap.forEach((tileEntry) => {
     const transform = transformByIndex.get(tileEntry.index);
     if (!transform) return;
-    if (options.signatureMissionOnly && !tileEntry.signatureMissionKind) return;
+    if (options.signatureMissionOnly && !tileEntry.signatureMissionKind && tileEntry.tileType !== 'traffic_light') return;
     // Low mode keeps the important economy/special objects but omits common
     // reward-progress tokens so the visual tier is materially cheaper.
     if (options.quality === 'low' && tileEntry.tileType === 'micro' && !tileEntry.signatureMissionKind) return;
@@ -607,7 +626,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
     // Each collectible still owns its transform for bob, spin and occupancy
     // hiding, but repeated pieces inside it share one batch per material.
     // This is especially important for hazard shards, tickets and scrolls.
-    if (compactCollectibleMaterial) {
+    if (tileEntry.tileType === 'traffic_light') {
+      // Keep the three live signal materials independent of the static reward batches.
+    } else if (compactCollectibleMaterial) {
       compactRewardToVertexColorMesh(visual, compactCollectibleMaterial, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
     } else {
       compactStaticGeometry(visual, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
@@ -639,7 +660,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
       : tileEntry.tileType === 'landmark_door'
         ? 0.86
         : tileEntry.tileType === 'traffic_light'
-          ? 0.76
+          ? 1.15
           : tileEntry.tileType === 'currency'
             ? 0.72
             : tileEntry.tileType === 'micro'
@@ -671,7 +692,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   if (options.staticBatchNonMissionRewards && compactCollectibleMaterial) {
     root.updateMatrixWorld(true);
     const geometries: THREE.BufferGeometry[] = [];
-    const batchedEntries = entries.filter((entry) => !entry.signatureMissionKind);
+    const batchedEntries = entries.filter((entry) => !entry.signatureMissionKind && entry.tileType !== 'traffic_light');
     batchedEntries.forEach((entry) => {
       entry.root.updateMatrix();
       entry.root.traverse((child) => {
@@ -692,7 +713,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
       batch.userData.authority = 'canonical-island-tile-map';
       root.add(batch);
     }
-    entries = entries.filter((entry) => Boolean(entry.signatureMissionKind));
+    entries = entries.filter((entry) => Boolean(entry.signatureMissionKind) || entry.tileType === 'traffic_light');
     root.userData.staticNonMissionRewardBatch = true;
   }
 
@@ -702,11 +723,46 @@ export function createIslandRunTileRewardThreeObjects(options: {
     child.receiveShadow = false;
   });
 
+  const fragmentSprites = new Map<number, THREE.Sprite>();
+  const textureLoader = new THREE.TextureLoader();
+  let fragmentKey = '';
+  const setTechnologyFragments = (fragments: readonly VisibleTechnologyFragment[]) => {
+    const nextKey=fragments.map(f=>`${f.tileIndex}:${f.fragmentSlot}`).join(',');
+    if(nextKey===fragmentKey)return; fragmentKey=nextKey;
+    for(const [index,sprite] of fragmentSprites) if(!fragments.some(f=>f.tileIndex===index)) {
+      sprite.material.map?.dispose();sprite.material.dispose();root.remove(sprite);fragmentSprites.delete(index);
+    }
+    for(const f of fragments) {
+      const transform=transformByIndex.get(f.tileIndex);if(!transform || fragmentSprites.has(f.tileIndex) || !f.imageSrc)continue;
+      const texture=textureLoader.load(f.imageSrc);texture.colorSpace=THREE.SRGBColorSpace;
+      const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));
+      sprite.name=`CONCORD_FRAGMENT_${f.fragmentSlot+1}`;sprite.userData={tileIndex:f.tileIndex,fragmentSlot:f.fragmentSlot,presentationOnly:true};
+      sprite.position.set(transform.position[0],transform.position[1]+.75,transform.position[2]);sprite.scale.set(1.05,1.05,1);
+      root.add(sprite);fragmentSprites.set(f.tileIndex,sprite);
+    }
+  };
+  let trafficCharge=0;
   let cactusCanyonMissionStarted = true;
   let firstLightClaimedDynamiteTiles = new Set<number>();
   let stagedRestorationClaimedTiles = new Set<number>();
   const update = (elapsed: number, tokenIndex: number) => {
     entries.forEach((entry) => {
+      // A real collectible owns its tile; don't stack a generic money icon beneath it.
+      entry.root.visible = !fragmentSprites.has(entry.tileIndex);
+      if (!entry.root.visible) return;
+      if (entry.tileType === 'traffic_light') {
+        entry.root.position.y=entry.baseY+.4;
+        entry.root.scale.setScalar(entry.baseScale);
+        entry.root.userData.charge=trafficCharge;
+        entry.root.traverse(child=>{
+          if(!(child instanceof THREE.Mesh)||!child.name.startsWith('TRAFFIC_LAMP_'))return;
+          const index=Number(child.name.slice(-1));
+          const active=trafficCharge>=8?2:trafficCharge>=3?1:0;
+          const material=child.material as THREE.MeshPhysicalMaterial;
+          material.emissiveIntensity=index===active?2:.06;
+        });
+        return;
+      }
       if (entry.signatureMissionKind === 'first_light_dynamite') {
         entry.root.visible = !firstLightClaimedDynamiteTiles.has(entry.tileIndex);
         if (!entry.root.visible) return;
@@ -740,6 +796,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
   return {
     root,
     animate: update,
+    setTechnologyFragments,
+    disposeFragments: () => { for(const sprite of fragmentSprites.values()){sprite.material.map?.dispose();sprite.material.dispose();root.remove(sprite);}fragmentSprites.clear(); },
+    setTrafficLightCharge: (charge) => { trafficCharge=charge; },
     setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
     setFirstLightClaimedDynamiteTiles: (tileIndices) => {
       firstLightClaimedDynamiteTiles = new Set(tileIndices);

@@ -8,7 +8,9 @@ import {
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getIslandRunSignatureMissionKey,
+  createOpeningGamesCampaignLedger,
 } from '../islandRunSignatureMissions';
+import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 type TrackerState = Parameters<typeof resolveIslandMissionTrackerPresentation>[0]['state'];
@@ -41,6 +43,44 @@ function restoredStops(count = 5) {
 }
 
 export const islandRunMissionTrackerTests: TestCase[] = [
+  {
+    name: 'merged mission resolver preserves ceremony and Welcome credit without duplicate departure gates',
+    run: () => {
+      const ledger = createOpeningGamesCampaignLedger();
+      const state = makeState({currentIslandNumber: 2, ...restoredStops(), signatureMissionProgressByIsland: ledger});
+      const ready = resolveIslandMissionTrackerPresentation({islandNumber: 2, state});
+      assertEqual(ready.islandCompletion?.objectivesComplete, 5, 'Welcome check-in needs no egg');
+      assertEqual(ready.islandCompletion?.requirements.filter(item => !item.complete).length, 1, 'only ceremony remains');
+      assertEqual(ready.islandCompletion?.nextRequirement?.id, 'opening_ceremony', 'no legacy causeway or duplicate signature gate');
+      ledger[OPENING_GAMES_CEREMONY_KEY] = {...createOpeningGamesCeremonyProgress(), rollsCompleted: 12,
+        venuesPreparedAtMs: 1, teamsWelcomedAtMs: 2, beaconLitAtMs: 3, completedAtMs: 4};
+      const done = resolveIslandMissionTrackerPresentation({islandNumber: 2, state});
+      assert(done.complete && done.islandCompletion?.complete, 'phone and departure agree after participation');
+      assertEqual(done.overallProgressPercent, 100, 'phone reaches 100 only with all canonical requirements');
+    },
+  },
+  {
+    name: 'new campaign mission phones use ceremony on002 and Re-Docking on004 without remapping save keys',
+    run: () => {
+      const ledger = createOpeningGamesCampaignLedger();
+      ledger['0:4'] = { missionId: 'celestial-great-redocking', version: 1, rollsCompleted: 10, completedAtMs: null, updatedAtMs: 10 };
+      const state = makeState({ currentIslandNumber: 4, signatureMissionProgressByIsland: ledger });
+      const redocking = resolveIslandMissionTrackerPresentation({ islandNumber: 4, state });
+      assertEqual(redocking.briefing.islandName, 'Celestial Sky Kingdom', 'content identity moves, not saved progression');
+      assertEqual(redocking.briefing.islandNumber, 4, 'runtime destination remains004');
+      assertEqual(redocking.briefing.headline, 'The Great Re-Docking', 'no causeway copy');
+      assertEqual(redocking.objectives[0].value, 10, 'reads actual004 progress');
+      ledger[OPENING_GAMES_CEREMONY_KEY] = { ...createOpeningGamesCeremonyProgress(), venuesPreparedAtMs: 1, rollsCompleted: 12 };
+      const ceremony = resolveIslandMissionTrackerPresentation({ islandNumber: 2, state: { ...state, currentIslandNumber: 2 } });
+      assertEqual(ceremony.briefing.islandName, 'Crown Citadel', 'palace identity moves to002');
+      assertEqual(ceremony.briefing.headline, 'Host the First Games', 'ceremony mission named');
+      const welcome = ceremony.objectives.find(item => item.label === 'Welcome the Teams')!;
+      assert(welcome.value < welcome.target, 'twelve rolls prepare but do not auto-acknowledge the welcome');
+      assertEqual(welcome.displayValue, 'Ready', 'explicit action remains clear');
+      assertEqual(ceremony.objectives.length, 3, 'ceremony must fit the authored three-row mission phone');
+      assertEqual(getIslandMissionBriefingPresentation(4).headline, 'Raise the Broken Causeway', 'legacy copy unchanged');
+    },
+  },
   {
     name: 'mission phones preserve all L3 build credit while activities remain unfinished',
     run: () => {

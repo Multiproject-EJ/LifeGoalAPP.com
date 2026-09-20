@@ -1,0 +1,2198 @@
+{
+  "version": "roster-draft-1",
+  "method": "Same 2000 seeded complete uniform rating vectors compared against six versus fifty targets. Only catalogue changed; scoring unchanged. Synthetic stress diagnostic, not player prevalence or psychological validation.",
+  "before": {
+    "close": 1156,
+    "exactTies": 453,
+    "meanBestAffinity": 14.194454990413645,
+    "meanMargin": 2.3742866036385686
+  },
+  "after": {
+    "close": 1793,
+    "exactTies": 950,
+    "meanBestAffinity": 17.071046713653782,
+    "meanMargin": 1.0186235688641194
+  },
+  "coverage": {
+    "represented": 32,
+    "dominant": 31,
+    "duplicateOrderedMixes": [],
+    "sharedMotiveGroups": [
+      [
+        "caregiver/devotee/guardian",
+        [
+          "rare-halo-staglet",
+          "common-hearth-hare"
+        ]
+      ]
+    ],
+    "rows": [
+      {
+        "id": "commander",
+        "dominant": [],
+        "supporting": [
+          "rare-comet-cub",
+          "mythic-lux-leviathan",
+          "mythic-echo-phoenix"
+        ]
+      },
+      {
+        "id": "champion",
+        "dominant": [
+          "mythic-sunflare-kirin",
+          "mythic-echo-phoenix"
+        ],
+        "supporting": [
+          "rare-ember-sprout",
+          "rare-solar-pika",
+          "mythic-aurora-maned-cat"
+        ]
+      },
+      {
+        "id": "strategist",
+        "dominant": [
+          "rare-comet-cub",
+          "mythic-lux-leviathan"
+        ],
+        "supporting": []
+      },
+      {
+        "id": "challenger",
+        "dominant": [
+          "common-lichen-kit"
+        ],
+        "supporting": [
+          "rare-cinder-mouse",
+          "rare-mirage-pup"
+        ]
+      },
+      {
+        "id": "guardian",
+        "dominant": [
+          "rare-dewleaf-sprite",
+          "rare-cinder-mouse",
+          "rare-halo-staglet",
+          "mythic-nightbloom-drake",
+          "mythic-prism-warden"
+        ],
+        "supporting": [
+          "common-pebble-spirit",
+          "common-stone-hopper",
+          "common-lichen-kit",
+          "mythic-astral-titanet",
+          "common-hearth-hare",
+          "rare-aura-otter"
+        ]
+      },
+      {
+        "id": "warlord",
+        "dominant": [
+          "common-stone-hopper"
+        ],
+        "supporting": []
+      },
+      {
+        "id": "diplomat",
+        "dominant": [
+          "rare-tide-lantern"
+        ],
+        "supporting": [
+          "mythic-cosmos-songbird"
+        ]
+      },
+      {
+        "id": "enforcer",
+        "dominant": [
+          "common-sproutling"
+        ],
+        "supporting": [
+          "common-stone-hopper",
+          "rare-dewleaf-sprite",
+          "rare-gear-wing",
+          "mythic-grove-caller"
+        ]
+      },
+      {
+        "id": "caregiver",
+        "dominant": [
+          "common-bloom-mite",
+          "common-hearth-hare"
+        ],
+        "supporting": [
+          "common-mossling",
+          "common-river-bud",
+          "rare-dewleaf-sprite",
+          "rare-solar-pika",
+          "rare-halo-staglet"
+        ]
+      },
+      {
+        "id": "mentor",
+        "dominant": [
+          "common-fern-fox",
+          "rare-bloom-seraph"
+        ],
+        "supporting": [
+          "common-bloom-mite",
+          "mythic-sunflare-kirin"
+        ]
+      },
+      {
+        "id": "peacemaker",
+        "dominant": [
+          "common-pebble-spirit",
+          "common-dewling"
+        ],
+        "supporting": [
+          "common-garden-puff",
+          "rare-tide-lantern"
+        ]
+      },
+      {
+        "id": "altruist",
+        "dominant": [
+          "common-river-bud"
+        ],
+        "supporting": [
+          "mythic-sunflare-kirin",
+          "mythic-prism-warden"
+        ]
+      },
+      {
+        "id": "empath",
+        "dominant": [
+          "rare-aura-otter"
+        ],
+        "supporting": [
+          "common-bloom-mite",
+          "common-fern-fox",
+          "common-dewling",
+          "rare-luma-hatchling",
+          "rare-tide-lantern",
+          "mythic-nightbloom-drake"
+        ]
+      },
+      {
+        "id": "healer",
+        "dominant": [
+          "common-mossling"
+        ],
+        "supporting": [
+          "common-dewling",
+          "rare-bloom-seraph",
+          "mythic-solstice-sylph",
+          "rare-aura-otter",
+          "mythic-grove-caller"
+        ]
+      },
+      {
+        "id": "connector",
+        "dominant": [
+          "common-garden-puff",
+          "mythic-cosmos-songbird",
+          "rare-threadtail-weaver"
+        ],
+        "supporting": [
+          "rare-aurora-finch"
+        ]
+      },
+      {
+        "id": "devotee",
+        "dominant": [
+          "common-root-whisp",
+          "mythic-voidlight-familiar"
+        ],
+        "supporting": [
+          "common-sproutling",
+          "common-river-bud",
+          "rare-cinder-mouse",
+          "rare-halo-staglet",
+          "rare-crown-drifter",
+          "mythic-orbit-vulpine",
+          "mythic-aurora-maned-cat",
+          "common-hearth-hare",
+          "rare-threadtail-weaver"
+        ]
+      },
+      {
+        "id": "sage",
+        "dominant": [
+          "mythic-infinity-sprite"
+        ],
+        "supporting": [
+          "common-pebble-spirit",
+          "common-root-whisp",
+          "rare-bloom-seraph",
+          "mythic-starhorn-seraph",
+          "mythic-dreamroot-ancient",
+          "rare-lantern-lynx"
+        ]
+      },
+      {
+        "id": "analyst",
+        "dominant": [
+          "rare-shard-marten"
+        ],
+        "supporting": [
+          "common-glowtail",
+          "rare-nebula-wisp",
+          "rare-lantern-lynx"
+        ]
+      },
+      {
+        "id": "architect",
+        "dominant": [
+          "mythic-astral-titanet"
+        ],
+        "supporting": [
+          "rare-shard-marten",
+          "rare-gear-wing",
+          "mythic-lux-leviathan",
+          "mythic-prism-warden",
+          "rare-threadtail-weaver"
+        ]
+      },
+      {
+        "id": "inventor",
+        "dominant": [
+          "rare-nebula-wisp"
+        ],
+        "supporting": [
+          "rare-ember-sprout",
+          "mythic-celest-pup",
+          "mythic-astral-titanet",
+          "mythic-infinity-sprite"
+        ]
+      },
+      {
+        "id": "scholar",
+        "dominant": [
+          "common-glowtail"
+        ],
+        "supporting": [
+          "mythic-orbit-vulpine",
+          "mythic-cosmos-songbird"
+        ]
+      },
+      {
+        "id": "detective",
+        "dominant": [
+          "rare-lantern-lynx"
+        ],
+        "supporting": [
+          "common-petal-scout",
+          "mythic-voidlight-familiar"
+        ]
+      },
+      {
+        "id": "philosopher",
+        "dominant": [
+          "mythic-dreamroot-ancient"
+        ],
+        "supporting": [
+          "mythic-starhorn-seraph",
+          "mythic-infinity-sprite"
+        ]
+      },
+      {
+        "id": "engineer",
+        "dominant": [
+          "rare-gear-wing"
+        ],
+        "supporting": [
+          "common-lichen-kit",
+          "rare-comet-cub",
+          "rare-shard-marten"
+        ]
+      },
+      {
+        "id": "explorer",
+        "dominant": [
+          "common-drift-pup",
+          "common-petal-scout",
+          "mythic-orbit-vulpine"
+        ],
+        "supporting": [
+          "common-glowtail",
+          "common-fern-fox",
+          "common-twilight-seed"
+        ]
+      },
+      {
+        "id": "creator",
+        "dominant": [
+          "rare-luma-hatchling",
+          "rare-aurora-finch",
+          "mythic-aurora-maned-cat"
+        ],
+        "supporting": [
+          "common-drift-pup",
+          "common-garden-puff",
+          "common-twilight-seed",
+          "rare-mirage-pup"
+        ]
+      },
+      {
+        "id": "rebel",
+        "dominant": [
+          "rare-mirage-pup",
+          "mythic-celest-pup"
+        ],
+        "supporting": [
+          "mythic-nightbloom-drake"
+        ]
+      },
+      {
+        "id": "visionary",
+        "dominant": [
+          "rare-solar-pika"
+        ],
+        "supporting": [
+          "rare-aurora-finch",
+          "rare-crown-drifter",
+          "mythic-voidlight-familiar"
+        ]
+      },
+      {
+        "id": "mystic",
+        "dominant": [
+          "mythic-starhorn-seraph"
+        ],
+        "supporting": [
+          "rare-nebula-wisp",
+          "mythic-celest-pup"
+        ]
+      },
+      {
+        "id": "dreamer",
+        "dominant": [
+          "common-twilight-seed"
+        ],
+        "supporting": [
+          "common-mossling",
+          "rare-luma-hatchling",
+          "mythic-dreamroot-ancient",
+          "mythic-solstice-sylph"
+        ]
+      },
+      {
+        "id": "shaman",
+        "dominant": [
+          "mythic-solstice-sylph",
+          "mythic-grove-caller"
+        ],
+        "supporting": [
+          "common-root-whisp"
+        ]
+      },
+      {
+        "id": "pioneer",
+        "dominant": [
+          "rare-ember-sprout",
+          "rare-crown-drifter"
+        ],
+        "supporting": [
+          "common-sproutling",
+          "common-drift-pup",
+          "common-petal-scout",
+          "mythic-echo-phoenix"
+        ]
+      }
+    ]
+  },
+  "examples": [
+    {
+      "id": "supporter",
+      "story": "Wants to understand and help people, but also needs quiet reflection and reliable personal boundaries.",
+      "leadingMotives": [
+        "caregiver",
+        "empath",
+        "guardian",
+        "mentor",
+        "healer",
+        "devotee",
+        "sage",
+        "philosopher"
+      ],
+      "status": "ranked",
+      "tiedFirst": [
+        "common-bloom-mite"
+      ],
+      "topFive": [
+        {
+          "id": "common-bloom-mite",
+          "score": 23.40425531914899
+        },
+        {
+          "id": "rare-aura-otter",
+          "score": 21.276595744680915
+        },
+        {
+          "id": "common-hearth-hare",
+          "score": 19.148936170212828
+        },
+        {
+          "id": "rare-halo-staglet",
+          "score": 19.148936170212817
+        },
+        {
+          "id": "common-dewling",
+          "score": 17.021276595744727
+        }
+      ],
+      "complementAfterIllustrativeFirst": [
+        {
+          "id": "common-drift-pup",
+          "score": 23.404255319148934,
+          "after": 67.55319148936167,
+          "contributions": [
+            {
+              "id": "explorer",
+              "gain": 10.57919621749409
+            },
+            {
+              "id": "creator",
+              "gain": 7.801418439716312
+            },
+            {
+              "id": "pioneer",
+              "gain": 5.023640661938534
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-garden-puff",
+          "score": 23.404255319148934,
+          "after": 67.55319148936167,
+          "contributions": [
+            {
+              "id": "connector",
+              "gain": 10.57919621749409
+            },
+            {
+              "id": "creator",
+              "gain": 7.801418439716312
+            },
+            {
+              "id": "peacemaker",
+              "gain": 5.023640661938534
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-glowtail",
+          "score": 23.404255319148934,
+          "after": 67.55319148936167,
+          "contributions": [
+            {
+              "id": "scholar",
+              "gain": 10.57919621749409
+            },
+            {
+              "id": "analyst",
+              "gain": 7.801418439716312
+            },
+            {
+              "id": "explorer",
+              "gain": 5.023640661938534
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        }
+      ],
+      "baseline": 44.148936170212735
+    },
+    {
+      "id": "builder",
+      "story": "Loves understanding how something works, experimenting with alternatives and making a practical result.",
+      "leadingMotives": [
+        "inventor",
+        "engineer",
+        "analyst",
+        "architect",
+        "scholar",
+        "explorer",
+        "detective",
+        "pioneer"
+      ],
+      "status": "ranked",
+      "tiedFirst": [
+        "rare-shard-marten"
+      ],
+      "topFive": [
+        {
+          "id": "rare-shard-marten",
+          "score": 20.83333333333336
+        },
+        {
+          "id": "common-glowtail",
+          "score": 18.750000000000032
+        },
+        {
+          "id": "mythic-astral-titanet",
+          "score": 16.666666666666696
+        },
+        {
+          "id": "rare-gear-wing",
+          "score": 16.666666666666686
+        },
+        {
+          "id": "rare-nebula-wisp",
+          "score": 16.666666666666686
+        }
+      ],
+      "complementAfterIllustrativeFirst": [
+        {
+          "id": "common-bloom-mite",
+          "score": 23.4375,
+          "after": 68.22916666666664,
+          "contributions": [
+            {
+              "id": "caregiver",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "empath",
+              "gain": 7.8125
+            },
+            {
+              "id": "mentor",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-dewling",
+          "score": 23.4375,
+          "after": 68.22916666666664,
+          "contributions": [
+            {
+              "id": "peacemaker",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "empath",
+              "gain": 7.8125
+            },
+            {
+              "id": "healer",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-garden-puff",
+          "score": 23.4375,
+          "after": 68.22916666666664,
+          "contributions": [
+            {
+              "id": "connector",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "creator",
+              "gain": 7.8125
+            },
+            {
+              "id": "peacemaker",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        }
+      ],
+      "baseline": 44.79166666666664
+    },
+    {
+      "id": "pathfinder",
+      "story": "Imagines a self-chosen future and explores it carefully while staying attached to a few trusted people.",
+      "leadingMotives": [
+        "explorer",
+        "dreamer",
+        "devotee",
+        "creator",
+        "rebel",
+        "visionary",
+        "empath",
+        "pioneer"
+      ],
+      "status": "ranked",
+      "tiedFirst": [
+        "common-twilight-seed"
+      ],
+      "topFive": [
+        {
+          "id": "common-twilight-seed",
+          "score": 22.916666666666675
+        },
+        {
+          "id": "common-drift-pup",
+          "score": 18.75000000000001
+        },
+        {
+          "id": "rare-luma-hatchling",
+          "score": 18.74999999999999
+        },
+        {
+          "id": "mythic-orbit-vulpine",
+          "score": 16.666666666666664
+        },
+        {
+          "id": "rare-crown-drifter",
+          "score": 16.666666666666675
+        }
+      ],
+      "complementAfterIllustrativeFirst": [
+        {
+          "id": "common-lichen-kit",
+          "score": 23.4375,
+          "after": 67.70833333333333,
+          "contributions": [
+            {
+              "id": "challenger",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "guardian",
+              "gain": 7.8125
+            },
+            {
+              "id": "engineer",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-pebble-spirit",
+          "score": 23.4375,
+          "after": 67.70833333333333,
+          "contributions": [
+            {
+              "id": "peacemaker",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "sage",
+              "gain": 7.8125
+            },
+            {
+              "id": "guardian",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-stone-hopper",
+          "score": 23.4375,
+          "after": 67.70833333333333,
+          "contributions": [
+            {
+              "id": "warlord",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "guardian",
+              "gain": 7.8125
+            },
+            {
+              "id": "enforcer",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "explorer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        }
+      ],
+      "baseline": 44.27083333333333
+    },
+    {
+      "id": "organiser",
+      "story": "Wants shared work to be dependable and fair, with clear direction, cooperation and room to recover.",
+      "leadingMotives": [
+        "commander",
+        "enforcer",
+        "strategist",
+        "guardian",
+        "diplomat",
+        "engineer",
+        "caregiver",
+        "peacemaker"
+      ],
+      "status": "ranked",
+      "tiedFirst": [
+        "rare-comet-cub"
+      ],
+      "topFive": [
+        {
+          "id": "rare-comet-cub",
+          "score": 20.833333333333382
+        },
+        {
+          "id": "rare-dewleaf-sprite",
+          "score": 18.750000000000068
+        },
+        {
+          "id": "common-stone-hopper",
+          "score": 16.666666666666742
+        },
+        {
+          "id": "mythic-lux-leviathan",
+          "score": 16.666666666666707
+        },
+        {
+          "id": "rare-gear-wing",
+          "score": 16.666666666666707
+        }
+      ],
+      "complementAfterIllustrativeFirst": [
+        {
+          "id": "common-drift-pup",
+          "score": 23.4375,
+          "after": 68.22916666666663,
+          "contributions": [
+            {
+              "id": "explorer",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "creator",
+              "gain": 7.8125
+            },
+            {
+              "id": "pioneer",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-fern-fox",
+          "score": 23.4375,
+          "after": 68.22916666666663,
+          "contributions": [
+            {
+              "id": "mentor",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "empath",
+              "gain": 7.8125
+            },
+            {
+              "id": "explorer",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "analyst",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "scholar",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        },
+        {
+          "id": "common-glowtail",
+          "score": 23.4375,
+          "after": 68.22916666666663,
+          "contributions": [
+            {
+              "id": "scholar",
+              "gain": 10.590277777777777
+            },
+            {
+              "id": "analyst",
+              "gain": 7.8125
+            },
+            {
+              "id": "explorer",
+              "gain": 5.034722222222221
+            },
+            {
+              "id": "commander",
+              "gain": 0
+            },
+            {
+              "id": "champion",
+              "gain": 0
+            },
+            {
+              "id": "strategist",
+              "gain": 0
+            },
+            {
+              "id": "challenger",
+              "gain": 0
+            },
+            {
+              "id": "guardian",
+              "gain": 0
+            },
+            {
+              "id": "warlord",
+              "gain": 0
+            },
+            {
+              "id": "diplomat",
+              "gain": 0
+            },
+            {
+              "id": "enforcer",
+              "gain": 0
+            },
+            {
+              "id": "caregiver",
+              "gain": 0
+            },
+            {
+              "id": "mentor",
+              "gain": 0
+            },
+            {
+              "id": "peacemaker",
+              "gain": 0
+            },
+            {
+              "id": "altruist",
+              "gain": 0
+            },
+            {
+              "id": "empath",
+              "gain": 0
+            },
+            {
+              "id": "healer",
+              "gain": 0
+            },
+            {
+              "id": "connector",
+              "gain": 0
+            },
+            {
+              "id": "devotee",
+              "gain": 0
+            },
+            {
+              "id": "sage",
+              "gain": 0
+            },
+            {
+              "id": "architect",
+              "gain": 0
+            },
+            {
+              "id": "inventor",
+              "gain": 0
+            },
+            {
+              "id": "detective",
+              "gain": 0
+            },
+            {
+              "id": "philosopher",
+              "gain": 0
+            },
+            {
+              "id": "engineer",
+              "gain": 0
+            },
+            {
+              "id": "creator",
+              "gain": 0
+            },
+            {
+              "id": "rebel",
+              "gain": 0
+            },
+            {
+              "id": "visionary",
+              "gain": 0
+            },
+            {
+              "id": "mystic",
+              "gain": 0
+            },
+            {
+              "id": "dreamer",
+              "gain": 0
+            },
+            {
+              "id": "shaman",
+              "gain": 0
+            },
+            {
+              "id": "pioneer",
+              "gain": 0
+            }
+          ]
+        }
+      ],
+      "baseline": 44.79166666666663
+    }
+  ],
+  "releaseReady": false
+}

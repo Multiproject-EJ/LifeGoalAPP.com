@@ -12,10 +12,10 @@ export const islandRunConcordRollProtectionTests: TestCase[] = [
     name: 'an exact landing recovers the visible fragment without waiting for pity',
     run: () => {
       const result = resolveConcordRollProtection({
-        islandNumber: 1,
+        islandNumber: 5,
         tileCount: 36,
-        landingTileIndex: 6,
-        hopSequence: [2, 3, 4, 5, 6],
+        landingTileIndex: 3,
+        hopSequence: [1, 2, 3],
         collectedSlots: [],
         state: { rollsTaken: 0, rollsSinceFragment: 0 },
       });
@@ -28,14 +28,14 @@ export const islandRunConcordRollProtectionTests: TestCase[] = [
     name: 'soft pity recovers a crossed fragment on the seventh miss without altering movement',
     run: () => {
       const result = resolveConcordRollProtection({
-        islandNumber: 1,
+        islandNumber: 5,
         tileCount: 36,
         landingTileIndex: 8,
         hopSequence: [5, 6, 7, 8],
         collectedSlots: [],
         state: { rollsTaken: 6, rollsSinceFragment: CONCORD_SOFT_PITY_MISS_ROLLS - 1 },
       });
-      assertEqual(result.pickup?.tileIndex, 6, 'crossed fixed fragment should answer the resonance');
+      assertEqual(result.pickup?.tileIndex, 7, 'crossed fixed fragment should answer the resonance');
       assertEqual(result.pickup?.reason, 'resonance_crossing', 'assist must be visibly identified');
       assertEqual(result.state.rollsTaken, 7, 'eligible roll counter advances once');
     },
@@ -44,11 +44,11 @@ export const islandRunConcordRollProtectionTests: TestCase[] = [
     name: 'hard pity locks the nearest forward remaining signal after ten misses',
     run: () => {
       const result = resolveConcordRollProtection({
-        islandNumber: 1,
+        islandNumber: 5,
         tileCount: 36,
         landingTileIndex: 18,
         hopSequence: [15, 16, 17, 18],
-        collectedSlots: [4],
+        collectedSlots: [4,8],
         state: { rollsTaken: 8, rollsSinceFragment: 9 },
       });
       assertEqual(result.pickup?.tileIndex, 21, 'nearest forward uncollected signal should be chosen');
@@ -56,10 +56,10 @@ export const islandRunConcordRollProtectionTests: TestCase[] = [
     },
   },
   {
-    name: 'fresh Island 1 run receives its first fragment by roll three',
+    name: 'fresh Island 5 run receives its first fragment by roll three',
     run: () => {
       const result = resolveConcordRollProtection({
-        islandNumber: 1,
+        islandNumber: 5,
         tileCount: 36,
         landingTileIndex: 4,
         hopSequence: [],
@@ -77,7 +77,7 @@ export const islandRunConcordRollProtectionTests: TestCase[] = [
       const collected: number[] = [];
       for (let roll = 1; roll <= CONCORD_COMPLETION_ROLL_CAP; roll += 1) {
         const result = resolveConcordRollProtection({
-          islandNumber: 1,
+          islandNumber: 5,
           tileCount: 36,
           landingTileIndex: 4,
           hopSequence: [],

@@ -1,0 +1,24 @@
+PASS low: all five landmarks L1–L3, palette isolation, anchors, finite geometry and roof-last interiors
+PASS medium: all five landmarks L1–L3, palette isolation, anchors, finite geometry and roof-last interiors
+PASS high: all five landmarks L1–L3, palette isolation, anchors, finite geometry and roof-last interiors
+PASS Three outside-route causeway spans; stage visibility and mid-animation reduced-motion settle
+PASS Island missions expose a compact reward-rail phone above the HUD with live progress and queued pickup handoff
+PASS staged restoration routes are unique, collision-free, and correctly sized on every authored island
+PASS staged restoration route pity collects one object and cannot claim it twice
+PASS staged restoration sanitizer and conflict merge preserve monotonic progress
+PASS staged restoration action spends the exact authored charge cost and cannot overspend
+PASS mission phones preserve all L3 build credit while activities remain unfinished
+PASS mission registry aligns every authored production world with its approved header
+PASS Lava Labyrinth tracker reveals the long Iron Skiff sequence only after the Level-3 labyrinth
+PASS Honeycomb Kingdom mission phone exposes live reservoir pressure progress and ready nectar
+PASS staged restoration missions expose live canonical progress beside landmark counters
+PASS Coaster Carnival tracker distinguishes ready Golden Ride Tickets from committed circuit systems
+PASS Celestial tracker keeps the phone compact while showing live platform and landmark progress
+PASS First Light tracker counts construction separately from unresolved Hatchery activities
+PASS Frostwell tracker changes phase without losing accumulated mission progress
+PASS Rootheart, Sunken Sands and Cactus Canyon expose phase-correct canonical signature progress
+PASS keeps runtime identity separate from the authored visual-world source
+PASS keeps Island 015 on one ordinary-Boss classification across routing, roster, and battle services
+PASS keeps every runtime island on an explicit authored source identity
+PASS keeps runtime Island 020 on the approved Lava Labyrinth identity
+Island 004 V2 focused checks: 23 passed.

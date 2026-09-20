@@ -1,5 +1,6 @@
 import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
 import { getIslandDisplayName } from './islandNames';
+import { resolveOpeningGamesContentIsland, usesOpeningGamesCampaign, type OpeningGamesLedgerView } from './islandRunOpeningGames';
 
 export const ISLAND_MISSION_BRIEFING_ROUTE_FRACTION = 0.5;
 
@@ -37,6 +38,7 @@ export interface IslandMissionBriefingPresentation {
 export type IslandMissionProgressKind =
   | 'first_light_assembly'
   | 'celestial_redocking'
+  | 'opening_games'
   | 'frostwell_iceworks'
   | 'arena_guardian'
   | 'rootheart_powerworks'
@@ -331,11 +333,23 @@ export function markIslandMissionBriefingSeen(
 export function getIslandMissionBriefingPresentation(
   islandNumber: number,
   cycleIndex = 0,
+  ledger: OpeningGamesLedgerView = {},
 ): IslandMissionBriefingPresentation {
   const safeIslandNumber = Math.max(1, Math.floor(islandNumber));
   const safeCycleIndex = Math.max(0, Math.floor(cycleIndex));
-  const islandName = AUTHORED_MISSION_NAMES[safeIslandNumber] ?? getIslandDisplayName(safeIslandNumber);
-  const authored = AUTHORED_MISSIONS[safeIslandNumber];
+  const contentIsland = resolveOpeningGamesContentIsland(ledger, safeIslandNumber);
+  const islandName = AUTHORED_MISSION_NAMES[contentIsland] ?? getIslandDisplayName(contentIsland);
+  const authored: MissionCopy | undefined = usesOpeningGamesCampaign(ledger) && safeIslandNumber === 2
+    ? {
+      progressKind: 'opening_games',
+      headline: 'Host the First Games',
+      missionStatement: 'Prepare Crown Citadel for the visiting teams, welcome them to the island, and light the opening beacon. Then take part in the inaugural arena game.',
+      primaryObjective: 'Prepare the venues, welcome the teams and light the beacon.',
+      supportingObjective: 'Play the inaugural game to open the regular arena events.',
+      fieldProtocol: 'The beacon introduces your reward bar and event launcher. Your first game is a guided introduction.',
+      caretakerSignal: 'Let the first games bring our islands together.',
+    }
+    : AUTHORED_MISSIONS[contentIsland];
   const fallback: MissionCopy = {
     progressKind: 'standard_landmarks',
     headline: `Establish trust on ${islandName}`,

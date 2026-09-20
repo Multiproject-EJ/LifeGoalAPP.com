@@ -1,0 +1,13 @@
+{
+  "query": "stylized mobile game island citadel dome arena vegetation",
+  "collection": "core_3d",
+  "indexFingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8",
+  "matches": [
+    {
+      "recordId": "core.pbr-hand-painted-vs-pbr-texture",
+      "score": 2.632304791455,
+      "use": "Keep V2 color separation in dynamic PBR materials; do not bake concept lighting into runtime color."
+    }
+  ],
+  "decision": "No reusable object-specific local spec matched. Preserve the existing runtime landmark geometry and author only bounded additive V2 structure."
+}

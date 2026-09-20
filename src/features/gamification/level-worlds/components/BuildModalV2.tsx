@@ -341,7 +341,10 @@ export function BuildModalV2({
           {fastBuildMode ? <p className="bm2-fast-status">Your construction is saved. Enjoy the reveal…</p> : levelReview ? (
             <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} />
           ) : isComplete ? (
-            <BuildModalV2CompleteState viewModel={viewModel} />
+            <>
+              <BuildModalV2CompleteState viewModel={viewModel} />
+              <button type="button" className="bm2-level-review__advance" onClick={onClose}>Back to island</button>
+            </>
           ) : (
             <>
               <div className="bm2-dock__summary" aria-live="polite">

@@ -25684,7 +25684,8 @@
 .bm2-build-mode {
   position: fixed;
   inset: 0;
-  z-index: 2100;
+  /* Body portal: above the app entry modal (9999) and mobile exit (10001). */
+  z-index: 10060;
   width: 100vw;
   min-height: 100dvh;
   overflow: hidden;

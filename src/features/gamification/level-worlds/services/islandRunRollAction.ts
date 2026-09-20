@@ -1,3 +1,4 @@
+import {getConcordCollectedSlots} from './islandRunConcordProgress';
 /**
  * islandRunRollAction — PWA-authority roll execution service.
  *
@@ -63,6 +64,8 @@ import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
 import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { advanceOpeningGamesForRoll, OPENING_GAMES_CEREMONY_KEY } from './islandRunOpeningGames';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import { collectMoonwellHeatForLanding } from './islandRunMoonwellThermal';
 import {
@@ -87,7 +90,6 @@ import {
   TRAFFIC_LIGHT_TILE_INDEX,
   type TrafficLightPassResult,
 } from './islandRunTrafficLightTile';
-import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 import {
   advanceCelestialRedockingForRoll,
   advanceSunkenSandsTreasureForRoll,
@@ -164,18 +166,7 @@ function resolveFirstSessionTutorialRollTotal(options: {
   }
 
   const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark36_ring');
-  const reachableFragment = listIslandTechnologyFragmentPlacements(1)
-    .map((placement) => ({
-      placement,
-      distance: (placement.tileIndex - options.tokenIndex + boardProfile.tileCount) % boardProfile.tileCount,
-    }))
-    .filter(({ distance }) => distance >= ROLL_MIN * 2 && distance <= ROLL_MAX * 2)
-    .sort((a, b) => a.distance - b.distance)[0];
-  if (reachableFragment) return reachableFragment.distance;
-
-  // A future topology may put every fragment outside the immediate 2–12
-  // movement window. Fall back to the former positive-essence tutorial roll;
-  // the Concord roll-protection schedule still guarantees a fragment by roll 3.
+  // The first roll teaches resources and construction; Concord is recovered on Island 005.
   const islandOneTheme = getIslandBoardThemeForIslandNumber(1);
   const tileMap = generateTileMap(1, getIslandRarity(1), islandOneTheme.tileThemeId, 0, { profileId: boardProfile.id });
   for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
@@ -234,7 +225,7 @@ export interface IslandRunRollActionResult {
   /** Landing kind in canonical movement loop (tile traversal). */
   landingKind?: 'tile';
   /**
-   * Optional Island 1 Concord pickup selected by canonical roll pacing. The
+   * Optional Island 005 Concord pickup selected by canonical roll pacing. The
    * renderer presents it through the existing collection animation/action;
    * dice movement is never changed to manufacture the outcome.
    */
@@ -411,7 +402,7 @@ async function performRollAction(options: {
     tileCount: boardProfile.tileCount,
     landingTileIndex: newTokenIndex,
     hopSequence,
-    collectedSlots: state.techCollectionByIsland[String(state.currentIslandNumber)] ?? [],
+    collectedSlots: getConcordCollectedSlots(state.techCollectionByIsland),
     state: state.concordRollProtectionState,
   });
 
@@ -456,8 +447,8 @@ async function performRollAction(options: {
   );
   const nextFirstSessionTutorialState = tutorialRollTotal === null
     ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
-    : state.firstSessionTutorialState;
-  const trafficLightPass = ordinaryTileGameplayActive && hopSequence.includes(TRAFFIC_LIGHT_TILE_INDEX)
+    : 'first_roll_consumed';
+  const trafficLightPass = ordinaryTileGameplayActive && resolveIslandRunFeatureAccess(state).trafficLight && hopSequence.includes(TRAFFIC_LIGHT_TILE_INDEX)
     ? applyTrafficLightPass({
         bonusTileChargeByIsland: state.bonusTileChargeByIsland,
         islandNumber: state.currentIslandNumber,
@@ -588,6 +579,7 @@ async function performRollAction(options: {
     cycleIndex: state.cycleIndex,
     nowMs,
   });
+  const ceremonyRoll = advanceOpeningGamesForRoll(sunkenSandsTreasureRoll.ledger, state.currentIslandNumber, nowMs);
   const isLivingTicketLanding = ordinaryTileGameplayActive
     && newTokenIndex === getFreeTicketTileIndexForTileCount(boardProfile.tileCount);
   const livingTicketLanding = isLivingTicketLanding
@@ -619,7 +611,9 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
-    signatureMissionProgressByIsland: sunkenSandsTreasureRoll.ledger,
+    signatureMissionProgressByIsland: ceremonyRoll
+      ? { ...sunkenSandsTreasureRoll.ledger, [OPENING_GAMES_CEREMONY_KEY]: ceremonyRoll }
+      : sunkenSandsTreasureRoll.ledger,
     narrativeSeenState: livingTicketLanding.narrativeSeenState,
     minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };

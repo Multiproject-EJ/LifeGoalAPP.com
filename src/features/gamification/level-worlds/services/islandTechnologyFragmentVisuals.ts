@@ -35,7 +35,7 @@ const CONCORD_FRAGMENT_IMAGE_SRC_BY_SLOT = Array.from(
   (_, index) => `/tech/Concord_frag${index + 1}.webp`,
 ) as readonly string[];
 
-const ISLAND_1_CONCORD_FRAGMENT_VISUALS: Readonly<Record<number, IslandTechnologyFragmentVisual>> = Object.freeze(
+const ISLAND_5_CONCORD_FRAGMENT_VISUALS: Readonly<Record<number, IslandTechnologyFragmentVisual>> = Object.freeze(
   Object.fromEntries(
     CONCORD_FRAGMENT_PLACEHOLDERS.map((placeholder, index) => [
       index,
@@ -51,7 +51,7 @@ const ISLAND_1_CONCORD_FRAGMENT_VISUALS: Readonly<Record<number, IslandTechnolog
 );
 
 const VISUALS_BY_ISLAND: Readonly<Record<number, Readonly<Record<number, IslandTechnologyFragmentVisual>>>> = Object.freeze({
-  1: ISLAND_1_CONCORD_FRAGMENT_VISUALS,
+  5: ISLAND_5_CONCORD_FRAGMENT_VISUALS,
 });
 
 export function getTechnologyFragmentVisual(

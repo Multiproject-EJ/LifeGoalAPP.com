@@ -496,9 +496,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
         'Crown of Tides landmarks need phase-shaped routes rather than one rotated generic loop',
       );
       assert(
-        crownTidesProfiles.every((profile) => profile?.stageNames.some((name) => /tide|coral|pearl|sail|reef|floodgate|arena|archive/i.test(name))),
-        'Crown of Tides reveal stories must describe the actual maritime construction language',
+        crownTidesProfiles.every((profile) => profile?.stageNames.some((name) => /tide|coral|pearl|sail|reef|palace|arena|archive/i.test(name))),
+        'Crown of Tides reveal stories must describe its maritime landmarks and royal palace',
       );
+      const palaceProfile = resolveIslandLandmarkConstructionProfile(4, 'boss');
+      assert(palaceProfile?.choreography.styleId === 'crown-tides-ornate-palace-commissioning', 'source 004 boss must use palace assembly choreography');
+      assert(!palaceProfile?.stageNames.some((name) => /floodgate|tide pipes|Voice Prism/i.test(name)), 'palace construction must not advertise retired floodgate machinery');
       const sunshoreProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(5, landmark.id)
       ));
@@ -1838,7 +1841,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('landmarkRootsById.set(rendererId, runtime.nodes.rooms[room].root)'), 'construction and focus bounds must use semantic room roots after attachment');
       assert(pilotSource.includes('island15FallbackRoot.visible = false'), 'the V4 rollback must hide only after the palace runtime binds successfully');
       assert(pilotSource.includes('island15PalaceRuntime.cloneRoomAtLevel(landmarkId, currentLevel)'), 'Island 015 construction must use deep-owned runtime clones');
-      assert(pilotSource.includes('sceneBuildLevelDependency = isCrystalGlacier ? 0 : buildLevel'), 'Island 015 build levels must not recreate the Three scene');
+      assert(pilotSource.includes('sceneBuildLevelDependency = isCrystalGlacier ? 0 : constructionSceneLevelsRef.current.buildLevel'), 'Island 015 build levels must not recreate the Three scene; other worlds retain main\'s frozen construction-session levels');
       assert(pilotSource.includes('isCrystalGlacier ? undefined : landmarkRootsById.get(\'boss\')'), 'Island 015 must bypass shared-material boss fading');
       assert(!pilotSource.includes('createIsland15CrystalPalaceLoader({'), 'production must not depend on a missing asynchronous GLB asset');
       assert(pilotSource.includes('disposeScene(scene);'), 'the ambience-owned procedural palace must be released by generic scene disposal');
@@ -2430,12 +2433,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
     name: 'maps canonical board tiles to presentation-only 3D reward identities',
     run: () => {
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'free_ticket', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'golden_event_ticket', 'ticket tiles need a readable golden ticket');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'essence_crystal', 'currency tiles keep the canonical Essence identity');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'universal_reward_token', 'ordinary reward progress may use the Universal Reward Token visual language');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', isActiveDoorCluster: false, signatureMissionKind: undefined }), 'money_symbol', 'currency tiles advertise their money payout');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: undefined }), null, 'ordinary progress tiles have no pretend collectible');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: 'first_light_dynamite' }), 'first_light_dynamite', 'First Light finite charges get a distinct 3D dynamite identity');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: 'cactus_canyon_dynamite' }), 'cactus_canyon_dynamite', 'Cactus Canyon cache gets a distinct 3D dynamite identity');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false, signatureMissionKind: 'great_honeyfall_nectar' }), 'great_honeyfall_nectar', 'Honeycomb Kingdom nectar gets a distinct glossy 3D pickup identity');
-      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true, signatureMissionKind: undefined }), 'active_landmark_door', 'only the active door cluster gets a door sigil');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true, signatureMissionKind: undefined }), null, 'doors use their existing tile and landmark presentation without extra props');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: false, signatureMissionKind: undefined }), null, 'inactive doors must not imply a collectible reward');
     },
   },
@@ -2447,14 +2450,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
-        'Islands 003, 007, 012, 013, 014, 018, runtime 016 and non-Circuit-G Island 019 should use the proven per-material instanced route path',
+        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
+        'Island 004 and the established authored worlds use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];'), 'Circuit G must substitute its own one-to-one canonical mesh route instead of layering a second board');
       assert(pilotSource.includes('ISLAND_22_TILE_BRASS_RIM_BATCH_'), 'runtime Island 016 needs named metallic tile rims so the circular board remains legible over the fishing pond');
       assert(pilotSource.includes('transform.position[1] + ISLAND_22_BOARD_PRESENTATION_Y_OFFSET'), 'runtime Island 016 must lift tile, reward and token transforms together as one presentation-only board plane');
       assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
-      assert(pilotSource.includes('compactCollectibles: isFrostmoonHaven || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
+      assert(pilotSource.includes('compactCollectibles: isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isAbyssalPearlKingdom || isSunkenSands || isJungleExpedition || isLavaLabyrinth'), 'complex environment rewards should collapse their static submeshes while retaining mission-tile transforms');
       assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
       assert(pilotSource.includes('canvas.dataset.island12ScenePerformanceInventory'), 'the full Island 012 scene must expose read-only renderer-family evidence');
       assert(rewardSource.includes('root.userData.sculptRuntime = {'), 'reward objects must keep explicit presentation-only runtime metadata');
@@ -3019,7 +3022,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
       assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
       assert(boardSource.includes("if (stopId === 'mystery') return 'event'"), 'Build camera should resolve Mystery to the authored Concord Arena preset');
-      assert(boardSource.includes('cameraFocusPreset={threeCameraFocusPreset}'), 'the live 3D board must receive Build and ordinary landmark focus requests');
+      assert(/cameraFocusPreset=\{openingCeremonyPlayback && !openingCeremonyPlayback\.reducedMotion[\s\S]*?: threeCameraFocusPreset\}/.test(boardSource), 'the ceremony may temporarily focus the live renderer, but quiet mode and ordinary Build/landmark requests must retain the canonical focus');
       assert(boardSource.includes('if (constructionPresentation.cameraLocked) return;'), 'landmark-to-landmark Build handoff must wait until active/recent construction is quiet');
       assert(boardSource.includes('Math.max(ISLAND_3D_BUILD_MODAL_POV_IDLE_DELAY_MS, lingerMs)'), 'the canonical seven-second Build quiet-period constant must own the recent-action camera lock');
       assert(pilotSource.includes('&& !activeConstruction?.cameraLocked'), 'the renderer-level camera reassertion must also remain locked during active/recent construction');
@@ -3110,7 +3113,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('new OrbitControls'), 'pilot should provide touch and pointer orbit controls');
       assert(pilotSource.includes('controls.enableRotate = true') && pilotSource.includes('controls.enableZoom = true'), 'the actual-3D Island 020 world must support touch orbit and zoom from every evidence angle');
       assert(!pilotSource.includes("isLavaLabyrinth && id !== 'overview'"), 'programmatic Island 020 focus requests must not collapse back to a camera-locked plate view');
-      assert(pilotSource.includes('(isCelestialSkyKingdom || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)') && pilotSource.includes('applyEvidenceOrbitRef.current(degrees)'), 'Island 020 must expose the complete eight-angle evidence orbit');
+      assert(pilotSource.includes('(isCelestialSkyKingdom || isDriftwoodIsle || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)') && pilotSource.includes('applyEvidenceOrbitRef.current(degrees)'), 'Island 004 and the existing authored worlds expose the complete eight-angle evidence orbit');
       assert(pilotSource.includes('material.polygonOffsetUnits = -4'), 'Cactus Canyon tiles need a deterministic depth bias so camera motion cannot reveal z-fighting');
       assert(pilotSource.includes('tappedAt - lastTrainTapAt <= 430'), 'Cactus Canyon must support a deliberate mouse double-click and mobile double-tap on the moving train');
       assert(pilotSource.includes("const ISLAND_13_TRAIN_RIDE_PHASE_MS = 15_000"), 'each train ride viewpoint must hold for the requested fifteen seconds');
@@ -3128,7 +3131,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes("presentation = 'workbench'"), 'live-shell use must opt into the stripped embedded presentation explicitly');
       assert(boardSource.includes('const Island5ThreeScene = lazy'), 'live shell should not eagerly load the Three.js scene');
       assert(!boardSource.includes('isIsland5ThreePreviewRequested'), '3D preview must not require a flag that silently defaults to the retired 2D board');
-      assert(boardSource.includes('resolveIslandRun3DWorldRoute(islandArtPreviewNumber)'), 'production 3D routing must use the explicit runtime-to-authored-world contract');
+      assert(boardSource.includes('resolveIslandRun3DWorldRoute(island3DContentNumber)')
+        && boardSource.includes('resolveOpeningGamesContentIsland(__storeState.signatureMissionProgressByIsland, islandArtPreviewNumber)')
+        && boardSource.includes('const island3DContentNumber = isIslandVisualPreview ? islandArtPreviewNumber'),
+        'production 3D routing must compose explicit cohort content mapping with the canonical authored-world route; art previews retain their requested source');
       assert(boardSource.includes('const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;'), 'all runtime islands without an assigned authored world must retain the existing fallback');
       assert(boardSource.includes('islandNumber={islandArtPreviewNumber}') && boardSource.includes('worldSourceNumber={island3DWorldNumber ?? 5}'), 'the shared renderer must keep gameplay identity separate from the selected authored world');
       assert(routingSource.includes('runtimeIslandNumber: 2, worldSourceNumber: 2') && routingSource.includes('runtimeIslandNumber: 3, worldSourceNumber: 3'), 'Islands 002 and 003 must route their dedicated Celestial and Frostmoon world packs');

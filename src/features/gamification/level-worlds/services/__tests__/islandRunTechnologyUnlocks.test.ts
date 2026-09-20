@@ -43,15 +43,15 @@ export const islandRunTechnologyUnlockTests: TestCase[] = [
       const base = readIslandRunGameStateRecord(session);
       void writeIslandRunGameStateRecord({ session, client: null, record: { ...base, dicePool: 7 } });
       refreshIslandRunStateFromLocal(session);
-      applyTechCollectionState({ session, client: null, islandNumber: 1, collectedSlots: ALL, rewardedLines: [0, 1, 2] });
-      const built = applyIslandRunTechnologyBuild({ session, client: null, technologyId: 'the-concord', source: 'island-1-tech-grid-completed', nowMs: 777 });
+      applyTechCollectionState({ session, client: null, islandNumber: 5, collectedSlots: ALL, rewardedLines: [0, 1, 2] });
+      const built = applyIslandRunTechnologyBuild({ session, client: null, technologyId: 'the-concord', source: 'island-5-tech-grid-completed', nowMs: 777 });
       assertEqual(built.reason, 'built', 'first call builds');
       assertEqual(built.changed, true, 'first call changes');
       assertEqual(built.record.technologyUnlocksById['the-concord']?.builtAtMs, 777, 'timestamp persisted');
       assertEqual(built.record.dicePool, 7, 'does not grant dice');
-      assertDeepEqual(built.record.techCollectionByIsland['1'], ALL, 'does not alter collected slots');
-      assertDeepEqual(built.record.techCollectionRewardedLinesByIsland['1'], [0, 1, 2], 'does not alter rewarded lines');
-      const again = applyIslandRunTechnologyBuild({ session, client: null, technologyId: 'the-concord', source: 'island-1-tech-grid-completed', nowMs: 888 });
+      assertDeepEqual(built.record.techCollectionByIsland['5'], ALL, 'does not alter collected slots');
+      assertDeepEqual(built.record.techCollectionRewardedLinesByIsland['5'], [0, 1, 2], 'does not alter rewarded lines');
+      const again = applyIslandRunTechnologyBuild({ session, client: null, technologyId: 'the-concord', source: 'island-5-tech-grid-completed', nowMs: 888 });
       assertEqual(again.reason, 'already-built', 'repeat is idempotent');
       assertEqual(again.changed, false, 'repeat does not change');
     },
@@ -79,7 +79,7 @@ export const islandRunTechnologyUnlockTests: TestCase[] = [
       assertEqual(fullGrid.dicePool, 5, 'compatibility does not replay dice');
       void writeIslandRunGameStateRecord({ session, client: null, record: { ...base, currentIslandNumber: 2, techCollectionByIsland: {} } });
       const later = readIslandRunGameStateRecord(session);
-      assertEqual(later.technologyUnlocksById['the-concord']?.active, true, 'later-island established user receives compatibility access');
+      assertEqual(Boolean(later.technologyUnlocksById['the-concord']?.active), false, 'new save reaching Island002 must not unlock Concord early');
       const incomplete = readIslandRunGameStateRecord({ ...session, user: { ...session.user, id: `${USER_ID}-incomplete` } });
       assertEqual(Boolean(incomplete.technologyUnlocksById['the-concord']), false, 'incomplete Island 1 user remains unbuilt');
     },

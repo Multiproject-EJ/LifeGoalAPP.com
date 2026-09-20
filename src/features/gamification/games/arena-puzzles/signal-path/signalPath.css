@@ -14,8 +14,11 @@
 .signal-path__grid button strong { position: relative; z-index: 3; color: #eafff9; font-size: clamp(14px, 5vw, 23px); text-shadow: 0 0 11px rgba(118,240,208,.75); }
 .signal-path__grid button.is-routed strong { color: #08251d; text-shadow: none; }
 .signal-path__grid button.is-hinted { animation: signal-hint 900ms ease-in-out infinite; }
+/* The first-game teaching target must remain stationary while being tapped. */
+.signal-path--introduction .signal-path__grid button.is-hinted { animation-name: signal-introduction-hint; }
 .signal-path__grid button i { display: none; }
 .signal-path__actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
 @keyframes signal-head { 50% { transform: scale(1.24); box-shadow: 0 0 18px #aaffea; } }
 @keyframes signal-hint { 50% { border-color: #fff; box-shadow: 0 0 24px rgba(118,240,208,.56); transform: scale(.94); } }
+@keyframes signal-introduction-hint { 50% { border-color: #fff; box-shadow: 0 0 24px rgba(118,240,208,.56); } }
 @media (max-height: 720px) { .signal-path__grid { width: min(100%, calc(100dvh - 220px)); min-width: 255px; } }

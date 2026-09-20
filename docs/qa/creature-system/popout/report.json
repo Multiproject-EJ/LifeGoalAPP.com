@@ -1,0 +1,28 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "openRotateResetClose": true,
+      "focusRestored": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "openRotateResetClose": true,
+      "focusRestored": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "openRotateResetClose": true,
+      "focusRestored": true,
+      "noOverflow": true
+    }
+  ],
+  "reducedMotion": true,
+  "webglFallback": true,
+  "pageErrors": [],
+  "triangles": 18720,
+  "partCount": 26,
+  "scope": "Bloom form 2 study edition only; no production approval"
+}

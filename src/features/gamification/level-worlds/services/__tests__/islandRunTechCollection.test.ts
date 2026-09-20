@@ -1,3 +1,5 @@
+import {getIslandRunReservedTileIndices} from '../islandRunTileReservations';
+import {getConcordCollectedSlots,getConcordRewardedLines} from '../islandRunConcordProgress';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 import {
   resolveTechCollection,
@@ -10,7 +12,7 @@ import {
 import {
   getIslandTechnologyFragmentPlacement,
   getTechnologyFragmentSlotForTile,
-  ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS,
+  ISLAND_5_CONCORD_FRAGMENT_PLACEMENTS,
   listIslandTechnologyFragmentPlacements,
   listVisibleTechnologyFragmentTileIndices,
   listVisibleTechnologyFragments,
@@ -22,6 +24,19 @@ import {
 } from '../islandTechnologyFragmentVisuals';
 
 export const islandRunTechCollectionTests: TestCase[] = [
+  {name:'Concord appears only on005 and clears all possible control tiles',run:()=>{
+    for(const island of [1,2,3,4,6,20]) assertEqual(listVisibleTechnologyFragments(island,[]).length,0,'no fragments outside005');
+    const reserved=getIslandRunReservedTileIndices(36);
+    assert(listIslandTechnologyFragmentPlacements(5).every(p=>!reserved.has(p.tileIndex)),'no entrance, signal, card, ticket or encounter collision');
+  }},
+  {name:'legacy Concord fragments and paid lines carry forward without paying them again',run:()=>{
+    const slots=getConcordCollectedSlots({'1':[0,1,2],'5':[2,3]});
+    const lines=getConcordRewardedLines({'1':[0],'5':[]});
+    assertDeepEqual(slots,[0,1,2,3],'union preserves legacy and new progress');
+    const duplicate=resolveTechCollection({slotIndex:2,collectedSlots:slots,rewardedLines:lines});
+    assertEqual(duplicate.totalRewardDice,0,'legacy fragment never pays twice');
+    assertEqual(listVisibleTechnologyFragments(5,slots).length,5,'only uncollected fragments appear');
+  }},
   {
     name: 'adds a brand-new slot and reports the next collected set',
     run: () => {
@@ -45,9 +60,9 @@ export const islandRunTechCollectionTests: TestCase[] = [
     },
   },
   {
-    name: 'validates Island 1 fixed Concord fragment placements',
+    name: 'validates Island 5 fixed Concord fragment placements',
     run: () => {
-      const placements = listIslandTechnologyFragmentPlacements(1);
+      const placements = listIslandTechnologyFragmentPlacements(5);
       assertEqual(placements.length, TECH_COLLECTION_CELL_COUNT, 'exactly nine placements');
       assertDeepEqual(placements.map((p) => p.fragmentSlot).sort((a, b) => a - b), [0, 1, 2, 3, 4, 5, 6, 7, 8], 'slots are exactly 0-8');
       assertEqual(new Set(placements.map((p) => p.tileIndex)).size, TECH_COLLECTION_CELL_COUNT, 'no duplicate tile indices');
@@ -58,47 +73,47 @@ export const islandRunTechCollectionTests: TestCase[] = [
   {
     name: 'resolves only explicitly assigned tiles to their fixed slots with no modulo fallback',
     run: () => {
-      assertDeepEqual(ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS.map((p) => p.tileIndex), [1, 6, 10, 13, 17, 21, 25, 29, 33], 'selected tile indices stay content-driven');
-      assertEqual(getTechnologyFragmentSlotForTile(1, 1), 0, 'tile 1 maps to slot 0');
-      assertEqual(getTechnologyFragmentSlotForTile(1, 6), 1, 'tile 6 maps to slot 1, not 6 % 9');
-      assertEqual(getTechnologyFragmentSlotForTile(1, 13), 3, 'tile 13 maps to fixed slot 3, not 13 % 9');
-      assertEqual(getIslandTechnologyFragmentPlacement(1, 4), null, 'unassigned hazard/non-fragment tile returns no placement');
-      assertEqual(getIslandTechnologyFragmentPlacement(2, 1), null, 'non-Island-1 has no placements in this PR');
+      assertDeepEqual(ISLAND_5_CONCORD_FRAGMENT_PLACEMENTS.map((p) => p.tileIndex), [2, 3, 10, 7, 16, 21, 25, 29, 18], 'selected tile indices stay content-driven');
+      assertEqual(getTechnologyFragmentSlotForTile(5, 2), 0, 'tile 1 maps to slot 0');
+      assertEqual(getTechnologyFragmentSlotForTile(5, 3), 1, 'tile 6 maps to slot 1, not 6 % 9');
+      assertEqual(getTechnologyFragmentSlotForTile(5, 7), 3, 'tile 13 maps to fixed slot 3, not 13 % 9');
+      assertEqual(getIslandTechnologyFragmentPlacement(5, 4), null, 'unassigned hazard/non-fragment tile returns no placement');
+      assertEqual(getIslandTechnologyFragmentPlacement(2, 1), null, 'non-Island-5 has no placements in this PR');
     },
   },
   {
     name: 'visible fragment tiles hide already-collected slots for existing users',
     run: () => {
-      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [])).sort((a, b) => a - b), [1, 6, 10, 13, 17, 21, 25, 29, 33], 'reset/no progress shows all nine fragments');
-      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 2, 7])).sort((a, b) => a - b), [6, 13, 17, 21, 25, 33], 'existing collected slots hide matching fixed tiles');
-      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 1, 2, 3, 4, 5, 6, 7, 8])), [], 'full collection shows no fragments');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(5, [])).sort((a, b) => a - b), [2, 3, 7, 10, 16, 18, 21, 25, 29], 'reset/no progress shows all nine fragments');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(5, [0, 2, 7])).sort((a, b) => a - b), [3, 7, 16, 18, 21, 25], 'existing collected slots hide matching fixed tiles');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(5, [0, 1, 2, 3, 4, 5, 6, 7, 8])), [], 'full collection shows no fragments');
     },
   },
 
   {
-    name: 'resolves slot-specific Concord placeholder visuals for Island 1',
+    name: 'resolves slot-specific Concord placeholder visuals for Island 5',
     run: () => {
       assertEqual(CONCORD_FRAGMENT_PLACEHOLDERS.length, TECH_COLLECTION_CELL_COUNT, 'exactly nine temporary placeholders');
       assertDeepEqual([...CONCORD_FRAGMENT_PLACEHOLDERS], ['💠', '🔷', '🔹', '🧿', '⚙️', '🔮', '💎', '🌀', '✨'], 'slot placeholders stay centralized and ordered');
       CONCORD_FRAGMENT_PLACEHOLDERS.forEach((placeholder, slot) => {
-        assertEqual(getTechnologyFragmentPlaceholder(1, slot), placeholder, `slot ${slot} resolves to its placeholder`);
-        assertEqual(getTechnologyFragmentVisual(1, slot)?.ariaLabel, `Technology fragment available: Concord fragment ${slot + 1}`, `slot ${slot} has accessible copy`);
-        assertEqual(getTechnologyFragmentVisual(1, slot)?.imageSrc, `/tech/Concord_frag${slot + 1}.webp`, `slot ${slot} resolves to its actual Concord image`);
+        assertEqual(getTechnologyFragmentPlaceholder(5, slot), placeholder, `slot ${slot} resolves to its placeholder`);
+        assertEqual(getTechnologyFragmentVisual(5, slot)?.ariaLabel, `Technology fragment available: Concord fragment ${slot + 1}`, `slot ${slot} has accessible copy`);
+        assertEqual(getTechnologyFragmentVisual(5, slot)?.imageSrc, `/tech/Concord_frag${slot + 1}.webp`, `slot ${slot} resolves to its actual Concord image`);
       });
-      assertEqual(getTechnologyFragmentPlaceholder(1, 9), '', 'out-of-range slots do not resolve a visual');
-      assertEqual(getTechnologyFragmentPlaceholder(2, 0), '', 'non-Island-1 slots do not resolve a visual');
+      assertEqual(getTechnologyFragmentPlaceholder(5, 9), '', 'out-of-range slots do not resolve a visual');
+      assertEqual(getTechnologyFragmentPlaceholder(2, 0), '', 'non-Island-5 slots do not resolve a visual');
     },
   },
   {
     name: 'visible fragment records carry tile, slot, placeholder, and hide collected slots',
     run: () => {
-      const visible = listVisibleTechnologyFragments(1, [0, 4, 8]);
-      assertDeepEqual(visible.map((fragment) => fragment.tileIndex), [6, 10, 13, 21, 25, 29], 'collected slots remove only their fixed tiles');
+      const visible = listVisibleTechnologyFragments(5, [0, 4, 8]);
+      assertDeepEqual(visible.map((fragment) => fragment.tileIndex), [3, 10, 7, 21, 25, 29], 'collected slots remove only their fixed tiles');
       assertDeepEqual(visible.map((fragment) => fragment.fragmentSlot), [1, 2, 3, 5, 6, 7], 'visible records preserve fixed slot identity');
       assertDeepEqual(visible.map((fragment) => fragment.placeholder), ['🔷', '🔹', '🧿', '🔮', '💎', '🌀'], 'visible records use slot placeholders, not tile type');
       assertDeepEqual(visible.map((fragment) => fragment.imageSrc), ['/tech/Concord_frag2.webp', '/tech/Concord_frag3.webp', '/tech/Concord_frag4.webp', '/tech/Concord_frag6.webp', '/tech/Concord_frag7.webp', '/tech/Concord_frag8.webp'], 'visible records expose actual fragment image paths');
-      assertEqual(listVisibleTechnologyFragments(1, [0, 1, 2, 3, 4, 5, 6, 7, 8]).length, 0, 'collected fragments have no visual records');
-      assertEqual(listVisibleTechnologyFragments(1, []).some((fragment) => fragment.tileIndex === 2), false, 'unmapped object-capable tiles receive no fragment visual');
+      assertEqual(listVisibleTechnologyFragments(5, [0, 1, 2, 3, 4, 5, 6, 7, 8]).length, 0, 'collected fragments have no visual records');
+      assertEqual(listVisibleTechnologyFragments(5, []).some((fragment) => fragment.tileIndex === 4), false, 'unmapped object-capable tiles receive no fragment visual');
     },
   },
   {

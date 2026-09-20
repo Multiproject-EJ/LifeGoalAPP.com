@@ -1,0 +1,26 @@
+{
+  "referenceAreaFraction": 0.9887926844087982,
+  "angles": [
+    {
+      "path": "docs/gauntlets/island-004-v2/angles-v006/angle-90.png",
+      "areaFraction": 0.9836211872645522,
+      "ratio": 0.9947698873325119,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/island-004-v2/angles-v006/angle-180.png",
+      "areaFraction": 0.9840875258233078,
+      "ratio": 0.9952415115325175,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/island-004-v2/angles-v006/angle-270.png",
+      "areaFraction": 0.9881858366751731,
+      "ratio": 0.9993862740459211,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "deterministic; zero token; a flat-plane-faking-a-volume collapses in silhouette area when orbited"
+}

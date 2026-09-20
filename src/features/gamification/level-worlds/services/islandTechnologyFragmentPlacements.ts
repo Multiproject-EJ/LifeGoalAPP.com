@@ -6,33 +6,21 @@ export type IslandTechnologyFragmentPlacement = {
   fragmentSlot: number;
 };
 
-/**
- * Island 1: The Concord is recovered as nine fixed physical board fragments.
- *
- * These tiles reuse the existing board pop-out collectible structure on normal
- * reachable reward tiles. Fragments must sit on ordinary economy tiles only —
- * special tiles (landmark doors, traffic light, build-discount, free-ticket,
- * card station, encounters) short-circuit the landing handler before the
- * fragment-collection step, so a fragment on one of them would be
- * uncollectable. On the 36-tile ring the reserved indices are: landmark doors
- * 5/14/23/32, traffic light 19, build-discount 12, free-ticket 30, card
- * station 22, encounters 5/9/27. The placements below deliberately avoid all
- * of those (and tile 0, the caretaker/start tile).
- */
-export const ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS: readonly IslandTechnologyFragmentPlacement[] = Object.freeze([
-  { tileIndex: 1, fragmentSlot: 0 },
-  { tileIndex: 6, fragmentSlot: 1 },
+/** Nine fixed collectible tiles on Island 005, clear of every entrance cluster and special tile. */
+export const ISLAND_5_CONCORD_FRAGMENT_PLACEMENTS: readonly IslandTechnologyFragmentPlacement[] = Object.freeze([
+  { tileIndex: 2, fragmentSlot: 0 },
+  { tileIndex: 3, fragmentSlot: 1 },
   { tileIndex: 10, fragmentSlot: 2 },
-  { tileIndex: 13, fragmentSlot: 3 },
-  { tileIndex: 17, fragmentSlot: 4 },
+  { tileIndex: 7, fragmentSlot: 3 },
+  { tileIndex: 16, fragmentSlot: 4 },
   { tileIndex: 21, fragmentSlot: 5 },
   { tileIndex: 25, fragmentSlot: 6 },
   { tileIndex: 29, fragmentSlot: 7 },
-  { tileIndex: 33, fragmentSlot: 8 },
+  { tileIndex: 18, fragmentSlot: 8 },
 ] as const);
 
 const PLACEMENTS_BY_ISLAND: Readonly<Record<number, readonly IslandTechnologyFragmentPlacement[]>> = Object.freeze({
-  1: ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS,
+  5: ISLAND_5_CONCORD_FRAGMENT_PLACEMENTS,
 });
 
 export function listIslandTechnologyFragmentPlacements(islandNumber: number): readonly IslandTechnologyFragmentPlacement[] {

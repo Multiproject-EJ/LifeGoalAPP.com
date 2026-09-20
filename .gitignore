@@ -1,4 +1,6 @@
 node_modules
+dist-creature-system/
+.vite-creature-system-cache/
 .vite-cache/
 .pnpm-store
 .DS_Store
@@ -30,3 +32,5 @@ __pycache__/
 
 # Per-worktree visual review cache
 .vite-island*/
+
+.vite-arrival-cache/

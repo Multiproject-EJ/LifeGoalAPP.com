@@ -1,4 +1,9 @@
 import { getMoonwellHeatTileIndex, resolveMoonwellThermalProgress } from '../islandRunMoonwellThermal';
+import { createOpeningGamesCampaignLedger } from '../islandRunSignatureMissions';
+import { isVaultIslandCollectionUnlocked } from '../islandRunVaultCollection';
+import { activateStagedRestorationMissionStage } from '../islandRunSignatureMissionAction';
+import { prepareIslandRunOpeningGames } from '../islandRunOpeningGamesAction';
+import { resolveOpeningGamesCeremony, resolveOpeningGamesAccess } from '../islandRunOpeningGames';
 import {
   __resetIslandRunRollActionMutexesForTests,
   executeIslandRunRollAction,
@@ -86,6 +91,86 @@ async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Pro
 }
 
 export const islandRunRollActionTests: TestCase[] = [
+  {
+    name: 'ceremony preparations read canonical L1 builds and concurrent taps reveal the beacon once',
+    run: async () => {
+      resetEnvironment();
+      seedState({ currentIslandNumber: 2, dicePool: 30, tokenIndex: 0, cycleIndex: 0,
+        firstSessionTutorialState: 'complete', signatureMissionProgressByIsland: createOpeningGamesCampaignLedger(),
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ buildLevel: 0, requiredEssence: 100, spentEssence: 0 })),
+      });
+      const prepare = (action: Parameters<typeof prepareIslandRunOpeningGames>[0]['action']) =>
+        prepareIslandRunOpeningGames({ session: makeSession(), client: null, action });
+      assertEqual((await prepare('prepare-venues')).status, 'builds-required', 'cannot invent paid construction');
+      seedState({ stopBuildStateByIndex: [3,3,1,0,0].map(buildLevel => ({ buildLevel, requiredEssence: 100, spentEssence: buildLevel > 0 ? 100 : 0 })) });
+      const taps = await Promise.all([prepare('prepare-venues'), prepare('prepare-venues')]);
+      assertEqual(taps.filter(result => result.status === 'ok').length, 1, 'rapid taps commit one milestone');
+      assertEqual((await prepare('welcome-teams')).status, 'teams-required', 'teams require actual rolls');
+      const before = getIslandRunStateSnapshot(makeSession());
+      await withMockedRandom([0, 0], () => Promise.all(Array.from({ length: 12 }, () => executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }))));
+      const rolled = getIslandRunStateSnapshot(makeSession());
+      assertEqual(resolveOpeningGamesCeremony(rolled.signatureMissionProgressByIsland).rollsCompleted, 12, 'each accepted roll advances once with no lost deltas');
+      assertEqual(rolled.dicePool, before.dicePool - 12, 'rolls pay ordinary costs');
+      assertEqual((await prepare('welcome-teams')).status, 'ok', 'welcome after twelve rolls');
+      const beacons = await Promise.all([prepare('light-beacon'), prepare('light-beacon')]);
+      assertEqual(beacons.filter(result => result.status === 'ok').length, 1, 'beacon reveal commits once');
+      const saved = readIslandRunGameStateRecord(makeSession());
+      assert(resolveOpeningGamesAccess(saved.signatureMissionProgressByIsland, 2).inauguralRound, 'saved beacon permits the guided game');
+      assertEqual(resolveOpeningGamesAccess(saved.signatureMissionProgressByIsland, 2).ordinaryEvents, false, 'regular events still wait for participation');
+      assertEqual(saved.essence, before.essence, 'preparation cannot add or consume money');
+      assertEqual(JSON.stringify(saved.perIslandEggs), JSON.stringify(before.perIslandEggs), 'no egg grant side effect');
+    },
+  },
+  {
+    name: 'ceremony actions reject legacy and wrong-island calls without writing progress',
+    run: async () => {
+      for (const scenario of [{ island: 2, ledger: {} }, { island: 1, ledger: createOpeningGamesCampaignLedger() }, { island: 4, ledger: createOpeningGamesCampaignLedger() }]) {
+        resetEnvironment();
+        seedState({ currentIslandNumber: scenario.island, signatureMissionProgressByIsland: scenario.ledger });
+        const before = JSON.stringify(getIslandRunStateSnapshot(makeSession()));
+        const result = await prepareIslandRunOpeningGames({ session: makeSession(), client: null, action: 'prepare-venues' });
+        assertEqual(result.status, 'ineligible', 'explicit cohort and Island002 required');
+        assertEqual(JSON.stringify(getIslandRunStateSnapshot(makeSession())), before, 'rejected calls preserve the full save');
+      }
+    },
+  },
+  {
+    name: 'rejected canonical rolls cannot advance the ceremony',
+    run: async () => {
+      resetEnvironment();
+      seedState({ currentIslandNumber: 2, dicePool: 0, diceRegenState: null, signatureMissionProgressByIsland: createOpeningGamesCampaignLedger() });
+      const result = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
+      assertEqual(result.status, 'insufficient_dice', 'roll rejected');
+      assertEqual(resolveOpeningGamesCeremony(getIslandRunStateSnapshot(makeSession()).signatureMissionProgressByIsland).rollsCompleted, 0, 'only accepted rolls count');
+    },
+  },
+  {
+    name: 'new Island004 commits Re-Docking without a causeway pickup overwriting it',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0, dicePool: 30, tokenIndex: 6, currentIslandNumber: 4, cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+        signatureMissionProgressByIsland: { ...createOpeningGamesCampaignLedger(), '0:4': {
+          missionId: 'celestial-great-redocking', version: 1, rollsCompleted: 19, completedAtMs: null, updatedAtMs: 1,
+        } },
+      });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.status, 'ok', 'accepted canonical roll');
+      assertEqual(result.newTokenIndex, 8, 'lands on a legacy causeway pickup position');
+      assertEqual(result.stagedRestorationPickup, null, 'retired pickup cannot replace the mission record');
+      assertEqual(result.celestialRedockingBecameComplete, true, 'twentieth accepted roll completes Re-Docking');
+      const saved = readIslandRunGameStateRecord(makeSession());
+      assertEqual(isVaultIslandCollectionUnlocked(saved.signatureMissionProgressByIsland), true, 'persisted result unlocks the Vault');
+      const attempt = await activateStagedRestorationMissionStage({ session: makeSession(), client: null });
+      assertEqual(attempt.status, 'unsupported_island', 'stale causeway UI cannot spend or replace Re-Docking');
+      assertEqual(JSON.stringify(readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland), JSON.stringify(saved.signatureMissionProgressByIsland), 'rejected action leaves earned progress intact');
+      const repeated = await withMockedRandom([0, 0], () => executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }));
+      assertEqual(repeated.celestialRedockingBecameComplete, false, 'completion is not emitted twice');
+    },
+  },
   {
     name: 'Island 001 landing collects one finite Assembly Crater charge in the canonical roll commit',
     run: async () => {
@@ -622,6 +707,23 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
+    name: 'new campaign traffic-light traversal is inert on Islands001/002 and charges on003',
+    run: async () => {
+      for(const island of [1,2,3]){
+        resetEnvironment();
+        seedState({runtimeVersion:5,dicePool:30,tokenIndex:TRAFFIC_LIGHT_TILE_INDEX-1,currentIslandNumber:island,
+          firstSessionTutorialState:'first_roll_consumed',signatureMissionProgressByIsland:createOpeningGamesCampaignLedger(),
+          bonusTileChargeByIsland:{[String(island)]:{[TRAFFIC_LIGHT_TILE_INDEX]:6}}});
+        const result=await withMockedRandom([0,0],()=>executeIslandRunRollAction({session:makeSession(),client:null,diceMultiplier:1}));
+        assertEqual(result.status,'ok','roll still works');
+        if(island<3){
+          assertEqual(result.trafficLightPass,null,'no invisible traffic progress');
+          assertEqual(getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland,island),6,'old saved charge not deleted or increased');
+        }else assertEqual(result.trafficLightPass?.chargeAfter,7,'Island003 charge available');
+      }
+    },
+  },
+  {
     name: 'traffic-light traversal charges atomically, unlocks once at 8, then starts a fresh cycle',
     run: async () => {
       resetEnvironment();
@@ -790,7 +892,7 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'first-session tutorial roll: awaiting first roll lands deterministically on a visible Concord fragment',
+    name: 'first-session tutorial roll: awaiting first roll lands on resources without requiring Concord',
     run: async () => {
       resetEnvironment();
       seedState({
@@ -807,19 +909,14 @@ export const islandRunRollActionTests: TestCase[] = [
       );
 
       assertEqual(result.status, 'ok', 'Tutorial roll should succeed');
-      assertEqual(result.total, 4, 'Token index 2 should target the visible fragment at tile 6');
-      assertEqual(result.dieOne, 1, 'Deterministic total still returns a normal die face');
-      assertEqual(result.dieTwo, 3, 'Deterministic total still returns a normal die face');
-      assertEqual(result.newTokenIndex, 6, 'Roll lands on the fixed Island 1 fragment tile');
-      assertEqual(result.hopSequence?.length, 4, 'Movement still uses normal hop pipeline');
-      assertEqual(result.concordFragmentPickup?.fragmentSlot, 1, 'The first visible Concord fragment is selected');
-      assertEqual(result.ordinaryTileGameplayActive, false, 'Ordinary tile play stays dormant until the follow-up order');
-
+      assert(result.total! >= 2 && result.total! <= 12, 'normal movement range');
+      assertEqual(result.concordFragmentPickup, null, 'no Concord on Island001');
+      assertEqual(result.ordinaryTileGameplayActive, true, 'resource gameplay is active');
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(
         persisted.firstSessionTutorialState,
-        'awaiting_first_roll',
-        'The roll stays recoverable until the fragment collection action commits the pickup',
+        'first_roll_consumed',
+        'Resource landing can advance the construction tutorial',
       );
     },
   },
@@ -838,7 +935,7 @@ export const islandRunRollActionTests: TestCase[] = [
 
       const first = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
       assertEqual(first.status, 'ok', 'Initial tutorial roll should succeed');
-      assertEqual(first.total, 4, 'Initial tutorial roll targets the fragment');
+      assert(first.total! >= 2 && first.total! <= 12, 'Initial tutorial roll uses normal movement range');
 
       seedState({ firstSessionTutorialState: 'first_fragment_collected' });
 
@@ -974,14 +1071,14 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 1 roll persists Concord pacing and returns a resonance pickup',
+    name: 'Island 5 roll persists Concord pacing and returns a resonance pickup',
     run: async () => {
       resetEnvironment();
       seedState({
         runtimeVersion: 2,
         dicePool: 30,
         tokenIndex: 0,
-        currentIslandNumber: 1,
+        currentIslandNumber: 5,
         cycleIndex: 0,
         firstSessionTutorialState: 'complete',
         techCollectionByIsland: { '1': [0] },
@@ -993,7 +1090,7 @@ export const islandRunRollActionTests: TestCase[] = [
       );
 
       assertEqual(result.total, 8, 'mocked roll should move from tile 0 to tile 8');
-      assertEqual(result.concordFragmentPickup?.tileIndex, 6, 'crossed remaining fragment should resonate');
+      assertEqual(result.concordFragmentPickup?.tileIndex, 3, 'crossed remaining fragment should resonate');
       assertEqual(result.concordFragmentPickup?.reason, 'resonance_crossing', 'renderer receives visible assist reason');
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(persisted.concordRollProtectionState.rollsTaken, 21, 'eligible roll count persists canonically');

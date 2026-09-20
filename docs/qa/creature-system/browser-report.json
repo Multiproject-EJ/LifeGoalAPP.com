@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "viewports": [
+    1440,
+    700,
+    390,
+    320
+  ],
+  "checks": [
+    "50 family cards",
+    "owned-first A–Z default",
+    "dex match sorting",
+    "50-row matching statistics",
+    "owned/unowned filters and stable ranks",
+    "marginal Complement excludes anchors",
+    "50 visual production briefs",
+    "three mature contrast candidates",
+    "Bloom form-2 art without unlock",
+    "5:7 cards across narrow/tablet widths",
+    "individual form art without ownership grant",
+    "modal scroll lock",
+    "Escape and focus return",
+    "32 masks / 4 candidates",
+    "three egg collections",
+    "duplicate hatch",
+    "retained favourite after hatch and retest",
+    "no-answer suppression",
+    "32 unseeded motivation ratings",
+    "apply changes Kindred without changing favourite",
+    "cancelled edits preserved",
+    "foundation remains separate",
+    "32-archetype roster map and suit filters",
+    "draft rationale detail",
+    "four mixed-profile scenarios",
+    "mobile overflow",
+    "mobile modal placement",
+    "responsive questionnaire"
+  ],
+  "errors": [],
+  "failures": []
+}

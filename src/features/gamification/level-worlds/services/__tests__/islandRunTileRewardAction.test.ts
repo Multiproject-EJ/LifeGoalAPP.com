@@ -45,13 +45,13 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
 
 export const islandRunTileRewardActionTests: TestCase[] = [
   {
-    name: 'fragment-only introduction suppresses ordinary tile rewards',
+    name: 'unread first field order suppresses ordinary tile rewards',
     run: async () => {
       resetEnvironment();
       seedState({
         currentIslandNumber: 1,
         cycleIndex: 0,
-        firstSessionTutorialState: 'awaiting_first_roll',
+        firstSessionTutorialState: 'awaiting_first_orders',
         essence: 0,
         rewardBarProgress: 0,
       });

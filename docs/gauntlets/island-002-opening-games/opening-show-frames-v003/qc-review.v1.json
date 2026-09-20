@@ -1,0 +1,10 @@
+{
+  "reviewer": "/root/quality_lord",
+  "mode": "independent-read-only",
+  "scope": "corrected ceremony still-frame presentation only",
+  "action": "approve",
+  "scores": {"beaconContact":null,"beaconClarity":0.87,"cameraClarity":0.88,"fireworksReadability":0.86,"fireworksPlacement":0.91,"captionHudFit":0.90,"returnToBoardClarity":0.89,"motionAccessibilityPerformance":null},
+  "worstApplicableScore":0.86,
+  "notes":["Flame unmistakably lit; colorful bursts clear against the ocean.","Fireworks remain stylized radial graphics; motion quality not established by stills.","Initial opening-show capture has a different camera phase, not a matched comparison; beacon and celebration beats match.","No whole-island, physical-device, performance or release approval."],
+  "budget": {"candidates":1,"correctionsUsed":1,"maxCorrections":1,"reviews":2}
+}

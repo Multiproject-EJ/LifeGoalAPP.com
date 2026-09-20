@@ -1,0 +1,42 @@
+{
+  "scope": "Local type/build/geometry/canonical service validation. No deployment or physical-device test.",
+  "results": [
+    {
+      "id": "types",
+      "code": 0,
+      "startedAt": "2026-09-14T03:32:02.751Z",
+      "finishedAt": "2026-09-14T03:35:33.007Z",
+      "failures": []
+    },
+    {
+      "id": "production-build",
+      "code": 0,
+      "startedAt": "2026-09-14T03:35:33.009Z",
+      "finishedAt": "2026-09-14T03:36:12.705Z",
+      "failures": []
+    },
+    {
+      "id": "island-run-services",
+      "code": 1,
+      "startedAt": "2026-09-14T03:36:12.706Z",
+      "finishedAt": "2026-09-14T03:37:49.717Z",
+      "failures": [
+        "FAIL islandTechCollectionComponent: board accepts the Assembly finale as Island 1 departure authority alongside legacy Concord completion"
+      ]
+    },
+    {
+      "id": "island004-focused",
+      "code": 0,
+      "startedAt": "2026-09-14T03:37:49.727Z",
+      "finishedAt": "2026-09-14T03:37:59.559Z",
+      "failures": []
+    }
+  ],
+  "preExisting": {
+    "name": "islandTechCollectionComponent: board accepts the Assembly finale as Island 1 departure authority alongside legacy Concord completion",
+    "baselineHead": "da642f12f1ab6cefd3254c91716ff62913387720",
+    "baselineBoardHasExpectedLiteral": false,
+    "baselineTestRequiresLiteral": true,
+    "boardModified": false
+  }
+}

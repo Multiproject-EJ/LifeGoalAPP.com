@@ -43,6 +43,7 @@ export function useLandmarkWhispers({
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
       lastOpenKeyRef.current = null;
+      activeWisdomAiRequestRef.current = null;
       setActiveWhisper(null);
       return;
     }

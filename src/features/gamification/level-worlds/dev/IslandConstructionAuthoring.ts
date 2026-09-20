@@ -252,7 +252,7 @@ const CROWN_TIDES_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [st
   habit: ['driftwood sleepers and tidal court', 'patched hall walls and pearl pilasters', 'purple sail roof and gold ridge braces', 'training rails, tide wheel, and rope tackle', 'hall crest, signal pennants, and window lights'],
   event: ['open arena pitch, drainage bed, and entry lane', 'low spectator terraces and team tunnels', 'canopy spars, rails, and viewing platform', 'scoreboard, goals, and floodlight rig', 'team standards, trophy plinth, and match lights'],
   wisdom: ['reading terrace and shelf-wall footing', 'archive wings, shelves, and scroll columns', 'gabled roofs, balcony, and gold cornices', 'book lift, lamps, and codex mechanism', 'knowledge rays, pearl beacons, and archive seal'],
-  boss: ['floodgate court and bridge foundations', 'citadel walls, portal frame, and buttresses', 'tower caps, upper wings, and crown deck', 'floodgate machinery, tide pipes, and prism hoist', 'royal crown, Voice Prism, and victory beacon'],
+  boss: ['palace footing, upper-floor anchoring, and crown seat', 'arched halls, turret masonry, and crown ribs', 'balcony rails, cornices, and crown rings', 'ceremonial textiles, interior dais, and crown jewels', 'royal roof, gold scrollwork, and crown finial'],
 };
 
 const CROWN_TIDES_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
@@ -333,7 +333,7 @@ const CROWN_TIDES_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionC
     },
   },
   boss: {
-    styleId: 'crown-tides-citadel-floodgate-commissioning',
+    styleId: 'crown-tides-ornate-palace-commissioning',
     stationOffset: 4,
     stationStep: 1,
     relocationSeconds: 1.54,
@@ -1081,8 +1081,10 @@ export function applyIslandConstructionAuthoring(options: {
   const rootBounds = new THREE.Box3().setFromObject(options.root);
   const stageCounts: Record<number, number> = {};
   options.root.traverse((entry) => {
-    if (!(entry instanceof THREE.Mesh) || entry.userData.constructionStage !== undefined) return;
-    const stage = resolveAuthoredStage(entry, options.root, rootBounds);
+    if (!(entry instanceof THREE.Mesh)) return;
+    // Explicitly authored parts participate in coverage too; do not overwrite
+    // their assembly order with the legacy name/height inference.
+    const stage = entry.userData.constructionStage ?? resolveAuthoredStage(entry, options.root, rootBounds);
     entry.userData.constructionStage = stage;
     stageCounts[stage] = (stageCounts[stage] ?? 0) + 1;
   });

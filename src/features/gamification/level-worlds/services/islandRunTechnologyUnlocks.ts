@@ -1,6 +1,6 @@
+import {getConcordCollectedSlots} from './islandRunConcordProgress';
 import type { IslandRunGameStateRecord, IslandRunTechnologyId } from './islandRunGameStateStore';
 
-const ISLAND_ONE_KEY = '1';
 const REQUIRED_CONCORD_SLOTS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 export interface IslandTechnologyBuildEligibility {
@@ -27,7 +27,7 @@ export function resolveIslandTechnologyBuildEligibility(
   if (technologyId !== 'the-concord') {
     return { eligible: false, alreadyBuilt, missingSlots: [...REQUIRED_CONCORD_SLOTS] };
   }
-  const slots = normalizedSlotSet(record.techCollectionByIsland?.[ISLAND_ONE_KEY]);
+  const slots = normalizedSlotSet(getConcordCollectedSlots(record.techCollectionByIsland));
   const missingSlots = REQUIRED_CONCORD_SLOTS.filter((slot) => !slots.has(slot));
   return { eligible: missingSlots.length === 0, alreadyBuilt, missingSlots };
 }

@@ -63,8 +63,8 @@ export const island001NarrativeDefinition = {
       priority: 'major',
       repeatPolicy: 'once',
       headline: 'FIRST FIELD ORDER',
-      text: 'Roll the dice. Collect the fragments.',
-      objectiveText: 'Recover the first Concord fragment',
+      text: 'Roll the dice. Gather Essence and build your first landmark.',
+      objectiveText: 'Gather your first building resources',
       displayCtaText: 'Begin mission',
     },
     {
@@ -144,8 +144,8 @@ export const island001NarrativeDefinition = {
       repeatPolicy: 'once',
       headline: 'DIPLOMATIC EFFORT',
       text: 'Begin the diplomatic effort. Earn, build, and play.',
-      secondaryText: 'The island network is online. Recover the remaining Concord fragments as you explore.',
-      objectiveText: 'Recover all 9 Concord fragments',
+      secondaryText: 'The island network is online. Explore, gather resources, and rebuild. Concord recovery begins on Island 005.',
+      objectiveText: 'Rebuild the island',
       displayCtaText: 'Activate island',
     },
     {

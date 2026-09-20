@@ -11,7 +11,8 @@ import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePac
 import type { ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
 import { buildWelcomePackGiftBody } from '../services/islandRunWelcomePackCopy';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../services/islandRunAudio';
-import { UsctCollectionAnimation } from './UsctCollectionAnimation';
+import { IslandMoneyNote } from './IslandMoney';
+import './WelcomePackModal.css';
 
 import { lockPageScroll } from '../../../../utils/scrollLock';
 export interface WelcomePackModalProps {
@@ -25,6 +26,7 @@ export interface WelcomePackModalProps {
   deferCreaturePack?: boolean;
   isDevPreview?: boolean;
   displayName?: string | null;
+  autoCollect?: boolean;
 }
 
 type Phase = 'economy' | 'celebration' | 'cards-intro' | 'pack-opening' | 'card-reveal';
@@ -43,13 +45,10 @@ type WelcomeCelebrationStep =
   | 'usct-award'
   | 'complete';
 
-const WELCOME_CABIN_ART = '/assets/onboarding/welcome-issue/welcome-cabin.webp';
 const WELCOME_DICE_ART = '/assets/onboarding/welcome-issue/dice-150-number-only.webp';
-const WELCOME_USCT_ART = '/assets/onboarding/welcome-issue/usct-600.webp';
 const WELCOME_DECKHAND_CLOSED_ART = '/assets/onboarding/welcome-issue/deckhand-box-closed.webp';
 const WELCOME_DECKHAND_OPEN_ART = '/assets/onboarding/welcome-issue/deckhand-box-open.webp';
 const WELCOME_DECKHAND_MEDALLION_ART = '/assets/onboarding/welcome-issue/deckhand-rank-medallion.webp';
-const WELCOME_OUTER_GIFT_ANIMATION = '/assets/animations/gift-box-opening.webm';
 
 function waitForWelcomeBeat(delayMs: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, delayMs));
@@ -71,17 +70,19 @@ export function WelcomePackModal({
   deferCreaturePack = false,
   isDevPreview = false,
   displayName = null,
+  autoCollect = false,
 }: WelcomePackModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<WelcomePackPhase>('economy');
   const [collectAnimating, setCollectAnimating] = React.useState(false);
   const [celebrationStep, setCelebrationStep] = React.useState<WelcomeCelebrationStep>('idle');
   const [revealIndex, setRevealIndex] = React.useState(0);
   const celebrationRunRef = React.useRef(0);
-  const usctGiftRef = React.useRef<HTMLImageElement>(null);
-  const usctWalletTargetRef = React.useRef<HTMLDivElement>(null);
+  const autoCollectStartedRef = React.useRef(false);
+  React.useEffect(() => () => { celebrationRunRef.current += 1; }, []);
 
   React.useEffect(() => {
     if (!open) {
+      autoCollectStartedRef.current = false;
       setPhase('economy');
       setCollectAnimating(false);
       setCelebrationStep('idle');
@@ -99,8 +100,6 @@ export function WelcomePackModal({
     if (open && !deferCreaturePack) preloadCreaturePackOpeningAnimation();
   }, [deferCreaturePack, open]);
 
-  if (!open) return null;
-
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
   const berthReadyBody = buildWelcomePackGiftBody({ displayName });
   const isAlreadyClaimed = deferCreaturePack
@@ -112,7 +111,7 @@ export function WelcomePackModal({
     if (claimPending || collectAnimating) return;
     setCollectAnimating(true);
     const claimSucceeded = isAlreadyClaimed || (onClaim ? await onClaim() : false);
-    if (!claimSucceeded || claimError) {
+    if (!claimSucceeded) {
       setCollectAnimating(false);
       return;
     }
@@ -124,46 +123,38 @@ export function WelcomePackModal({
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     setPhase('celebration');
-    setCelebrationStep('outer-gift-focus');
-    if (!reducedMotion) await waitForWelcomeBeat(360);
-    if (celebrationRunRef.current !== runId) return;
-    setCelebrationStep('outer-gift-open');
-    playIslandRunSound('shop_open');
-    triggerIslandRunHaptic('reward_claim');
-    if (!reducedMotion) await waitForWelcomeBeat(2550);
-    if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('rank-focus');
-    if (!reducedMotion) await waitForWelcomeBeat(360);
+    if (!reducedMotion) await waitForWelcomeBeat(220);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('rank-open');
     playIslandRunSound('egg_open');
-    if (!reducedMotion) await waitForWelcomeBeat(430);
+    if (!reducedMotion) await waitForWelcomeBeat(320);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('rank-reveal');
     playIslandRunSound('boss_island_clear');
     triggerIslandRunHaptic('reward_claim');
-    if (!reducedMotion) await waitForWelcomeBeat(850);
+    if (!reducedMotion) await waitForWelcomeBeat(650);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('rank-return');
-    if (!reducedMotion) await waitForWelcomeBeat(280);
+    if (!reducedMotion) await waitForWelcomeBeat(200);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('dice-focus');
-    if (!reducedMotion) await waitForWelcomeBeat(360);
+    if (!reducedMotion) await waitForWelcomeBeat(220);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('dice-award');
     playIslandRunSound('reward_bar_claim_burst');
     triggerIslandRunHaptic('reward_claim');
-    if (!reducedMotion) await waitForWelcomeBeat(460);
+    if (!reducedMotion) await waitForWelcomeBeat(420);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('usct-focus');
-    if (!reducedMotion) await waitForWelcomeBeat(360);
+    if (!reducedMotion) await waitForWelcomeBeat(220);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('usct-award');
     playIslandRunSound('reward_bar_claim_burst');
     triggerIslandRunHaptic('reward_claim');
     // The large flock staggers 20 tokens across roughly 1.73 seconds. Keep the
     // award surface mounted until the final token reaches the wallet target.
-    if (!reducedMotion) await waitForWelcomeBeat(1850);
+    if (!reducedMotion) await waitForWelcomeBeat(650);
     if (celebrationRunRef.current !== runId) return;
     setCelebrationStep('complete');
     setCollectAnimating(false);
@@ -185,137 +176,49 @@ export function WelcomePackModal({
     }
   };
 
-  if (phase === 'economy') {
+  React.useEffect(() => {
+    if (!open || !autoCollect || autoCollectStartedRef.current || !onClaim) return;
+    autoCollectStartedRef.current = true;
+    void handleCollectEconomy();
+  }, [open, autoCollect, onClaim]);
+
+  if (!open) return null;
+  if (phase === 'economy' || phase === 'celebration') {
+    const rankFocused=celebrationStep.startsWith('rank-') && celebrationStep !== 'rank-return';
+    const diceFocused=celebrationStep.startsWith('dice-');
+    const moneyFocused=celebrationStep.startsWith('usct-');
+    const rankRevealed=['rank-reveal','rank-return','dice-focus','dice-award','usct-focus','usct-award','complete'].includes(celebrationStep);
+    const ready=celebrationStep==='complete';
+    const status=ready ? 'Your crew and supplies are ready.' : rankFocused ? 'Deckhand rank confirmed' : diceFocused ? '+150 Dice' : moneyFocused ? '+600 Money' : 'Preparing your expedition supplies';
     return renderWelcomePackPortal(
-      <div className="island-run-overlay-root wpm-overlay" role="presentation">
-        <section className="wpm-shell wpm-shell--welcome-scene" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
-          <h2 id="wpm-title" className="wpm-visually-hidden">Welcome to the Compass Expedition</h2>
-          <p className="wpm-visually-hidden">{berthReadyBody}</p>
-          <img className="wpm-welcome-scene__background" src={WELCOME_CABIN_ART} alt="" />
-
-          <div className="wpm-welcome-gifts" aria-label="Your expedition issue includes Deckhand rank, 150 Dice, and 600 Universal Star Credit Tokens">
-            <img className="wpm-gift wpm-gift--dice" src={WELCOME_DICE_ART} alt="150 Dice" />
-            <img className="wpm-gift wpm-gift--usct" src={WELCOME_USCT_ART} alt="600 Universal Star Credit Tokens" />
-            <img className="wpm-gift wpm-gift--rank" src={WELCOME_DECKHAND_CLOSED_ART} alt="Deckhand rank presentation box" />
+      <div className="island-run-overlay-root wpm-issue-overlay" role="presentation">
+        <section className="wpm-issue" role="dialog" aria-modal="true" aria-labelledby="wpm-issue-title">
+          <header><small>COMPASS EXPEDITION · ISLAND 001</small><h2 id="wpm-issue-title">Welcome aboard.</h2><p>{berthReadyBody}</p></header>
+          <div className={`wpm-issue-gifts${rankFocused||diceFocused||moneyFocused?' is-highlighting':''}`}>
+            <figure className={`wpm-issue-gift wpm-issue-gift--rank${rankFocused?' is-focused':''}`}>
+              <img src={rankRevealed ? WELCOME_DECKHAND_MEDALLION_ART : celebrationStep==='rank-open' ? WELCOME_DECKHAND_OPEN_ART : WELCOME_DECKHAND_CLOSED_ART} alt="Deckhand rank" />
+              <figcaption><strong>Deckhand</strong><span>Your first rank</span></figcaption>
+            </figure>
+            <figure className={`wpm-issue-gift wpm-issue-gift--dice${diceFocused?' is-focused':''}`}>
+              <img src={WELCOME_DICE_ART} alt="150 Dice" />
+              <figcaption><strong>150 Dice</strong><span>Explore the island</span></figcaption>
+            </figure>
+            <figure className={`wpm-issue-gift wpm-issue-gift--money${moneyFocused?' is-focused':''}`}>
+              <div className="wpm-issue-money"><IslandMoneyNote islandNumber={1} /></div>
+              <figcaption><strong>600 Money</strong><span>Build your first home</span></figcaption>
+            </figure>
           </div>
-
-          {isDevPreview ? <span className="wpm-preview-badge">Preview</span> : null}
-          {claimError ? <p className="wpm-scene-message wpm-error" role="alert">{claimError}</p> : null}
-          {isAlreadyClaimed ? (
-            <p className="wpm-scene-message wpm-already-claimed" role="status">Your expedition issue is already registered.</p>
-          ) : null}
-
-          <button
-            type="button"
-            className="wpm-collect-btn wpm-collect-btn--scene"
-            onClick={() => { void handleCollectEconomy(); }}
-            disabled={claimPending || collectAnimating || (!isAlreadyClaimed && !onClaim)}
-          >
-            {claimPending || collectAnimating ? <span className="wpm-collect-btn__spinner" aria-hidden="true" /> : null}
-            {claimPending || collectAnimating ? 'Preparing issue…' : isAlreadyClaimed ? 'View issue' : 'Step Aboard'}
-          </button>
-        </section>
-      </div>,
-    );
-  }
-
-  if (phase === 'celebration') {
-    const awardedUsctBalance = bundleOnlyClaimResult?.record.essence
-      ?? claimResult?.bundle.record.essence
-      ?? 600;
-    const rankIsOpen = ['rank-open', 'rank-reveal', 'rank-return', 'dice-focus', 'dice-award', 'usct-focus', 'usct-award', 'complete'].includes(celebrationStep);
-    const celebrationLabel = celebrationStep === 'outer-gift-focus' || celebrationStep === 'outer-gift-open'
-      ? 'Your crew appointment is ready'
-      : celebrationStep === 'rank-focus'
-        ? 'Crew appointment 1 of 3'
-        : celebrationStep === 'rank-open'
-          ? 'Opening your rank presentation'
-          : celebrationStep === 'rank-reveal' || celebrationStep === 'rank-return'
-            ? 'Deckhand rank confirmed'
-        : celebrationStep === 'dice-focus'
-          ? 'Expedition issue 2 of 3'
-          : celebrationStep === 'dice-award'
-            ? '+150 Dice secured'
-            : celebrationStep === 'usct-focus'
-              ? 'Construction funds 3 of 3'
-              : celebrationStep === 'usct-award'
-                ? '+600 USCT secured'
-                : 'Deckhand rank, 150 Dice, and 600 USCT secured';
-
-    return renderWelcomePackPortal(
-      <div className="island-run-overlay-root wpm-overlay" role="presentation">
-        {celebrationStep === 'rank-open' || celebrationStep === 'rank-reveal' || celebrationStep === 'rank-return' || celebrationStep === 'dice-award' || celebrationStep === 'usct-award' ? (
-          <CelebrationFireworks key={celebrationStep} variant={celebrationStep === 'rank-reveal' ? 'hero' : 'rapid'} />
-        ) : null}
-        <section
-          className={`wpm-shell wpm-shell--welcome-scene wpm-celebration wpm-celebration--${celebrationStep}`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="wpm-celebration-title"
-        >
-          <h2 id="wpm-celebration-title" className="wpm-visually-hidden">Receiving your expedition issue</h2>
-          <img className="wpm-welcome-scene__background" src={WELCOME_CABIN_ART} alt="" />
-          <div ref={usctWalletTargetRef} className="wpm-usct-wallet-target" aria-label={`${awardedUsctBalance} Universal Star Credit Tokens`}>
-            <img src="/assets/currency/usct-token.webp" alt="" />
-            <span><strong>{awardedUsctBalance}</strong><small>USCT</small></span>
-          </div>
-          {celebrationStep === 'outer-gift-focus' || celebrationStep === 'outer-gift-open' ? (
-            <video
-              key={celebrationStep}
-              className="wpm-outer-gift-opening"
-              src={WELCOME_OUTER_GIFT_ANIMATION}
-              autoPlay={celebrationStep === 'outer-gift-open'}
-              muted
-              playsInline
-              aria-hidden="true"
-            />
-          ) : null}
-          {celebrationStep === 'rank-open' || celebrationStep === 'rank-reveal' ? (
-            <div className="wpm-rank-spotlights" aria-hidden="true"><span /><span /></div>
-          ) : null}
-          {celebrationStep === 'rank-open' || celebrationStep === 'rank-reveal' ? (
-            <div className="wpm-rank-flash" aria-hidden="true" />
-          ) : null}
-          <div className="wpm-welcome-gifts" aria-hidden="true">
-            <img className="wpm-gift wpm-gift--dice" src={WELCOME_DICE_ART} alt="" />
-            <img ref={usctGiftRef} className="wpm-gift wpm-gift--usct" src={WELCOME_USCT_ART} alt="" />
-            <img
-              className="wpm-gift wpm-gift--rank"
-              src={rankIsOpen ? WELCOME_DECKHAND_OPEN_ART : WELCOME_DECKHAND_CLOSED_ART}
-              alt=""
-            />
-          </div>
-          {celebrationStep === 'rank-reveal' ? (
-            <img className="wpm-rank-medallion" src={WELCOME_DECKHAND_MEDALLION_ART} alt="" />
-          ) : null}
-          {celebrationStep === 'rank-reveal' ? (
-            <div className="wpm-crew-cheer" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span></div>
-          ) : null}
-          {celebrationStep === 'usct-award' ? (
-            <UsctCollectionAnimation amount="large" originRef={usctGiftRef} targetRef={usctWalletTargetRef} />
-          ) : null}
-          <p className="wpm-celebration-status" role="status" aria-live="polite">{celebrationLabel}</p>
-          <button
-            type="button"
-            className="wpm-collect-btn wpm-collect-btn--scene"
-            disabled={celebrationStep !== 'complete'}
-            onClick={() => {
-              if (deferCreaturePack) {
-                onClose();
-              } else {
-                setPhase('cards-intro');
-              }
-            }}
-          >
-            {celebrationStep === 'complete' ? (
-              deferCreaturePack ? 'Begin the mission' : 'Continue'
-            ) : (
-              <>
-                <span className="wpm-collect-btn__spinner" aria-hidden="true" />
-                Preparing issue…
-              </>
-            )}
-          </button>
+          <footer>
+            <p className="wpm-issue-status" role="status" aria-live="polite">{claimError ?? status}</p>
+            <button type="button" className="wpm-issue-play" disabled={claimPending || collectAnimating}
+              onClick={()=>{
+                if(ready || isAlreadyClaimed) { if(deferCreaturePack)onClose();else setPhase('cards-intro'); }
+                else void handleCollectEconomy();
+              }}>
+              {claimPending || collectAnimating ? 'Preparing…' : ready || isAlreadyClaimed ? 'PLAY' : claimError ? 'Retry' : 'Collect gifts'}
+            </button>
+          </footer>
+          {isDevPreview ? <span className="wpm-issue-preview">Preview</span> : null}
         </section>
       </div>,
     );

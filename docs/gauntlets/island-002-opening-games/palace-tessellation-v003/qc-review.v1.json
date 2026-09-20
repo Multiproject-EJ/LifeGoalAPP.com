@@ -1,0 +1,29 @@
+{
+  "reviewer": "/root/quality_lord",
+  "action": "approve",
+  "scope": "Visual preservation of accepted palace and planting under tessellation optimization only",
+  "categoryOrder": ["silhouetteVolume", "preservedOrnamentIdentity", "attachments", "crossViewCoherence", "assembly", "intendedScaleReadability"],
+  "scores": {
+    "orbit-0": [0.93,0.89,0.91,0.92,0.91,0.90],
+    "orbit-40": [0.92,0.88,0.90,0.92,0.90,0.89],
+    "orbit-80": [0.91,0.87,0.89,0.91,0.90,0.88],
+    "orbit-120": [0.91,0.86,0.89,0.91,0.90,0.87],
+    "orbit-160": [0.92,0.87,0.90,0.92,0.91,0.88],
+    "orbit-200": [0.92,0.87,0.90,0.92,0.91,0.88],
+    "orbit-240": [0.91,0.86,0.89,0.91,0.90,0.87],
+    "orbit-280": [0.91,0.87,0.89,0.91,0.90,0.88],
+    "orbit-320": [0.92,0.88,0.90,0.92,0.90,0.89],
+    "clay-front": [0.92,0.88,0.90,0.91,0.90,0.88],
+    "clay-rear": [0.92,0.87,0.90,0.91,0.90,0.87],
+    "normals-quarter": [0.92,0.88,0.90,0.92,0.90,null],
+    "world-phone": [0.93,0.90,null,null,0.91,0.91],
+    "level-1": [0.92,0.89,0.91,0.91,0.91,0.90],
+    "level-2": [0.92,0.88,0.91,0.92,0.91,0.90]
+  },
+  "worstApplicableScore": 0.86,
+  "hardVetoes": [],
+  "notes": "Slightly more angular gold arch rims and scrollwork close up, especially oblique views, but readable. No missing surfaces, detached balconies, garden loss, runner regression or silhouette collapse. Phone appearance preserved. Null is not independently assessable, not an invented pass. Tier1 background masks do not establish likeness.",
+  "performanceApproved": false,
+  "releaseApproved": false,
+  "captureManifest": "capture-manifest.v1.json"
+}

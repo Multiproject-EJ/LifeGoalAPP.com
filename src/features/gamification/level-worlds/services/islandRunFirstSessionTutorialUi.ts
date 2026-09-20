@@ -15,7 +15,6 @@ export function isIslandRunFragmentOnlyBoardPhase(
   firstSessionTutorialState: IslandRunFirstSessionTutorialState,
 ): boolean {
   return firstSessionTutorialState === 'awaiting_first_orders'
-    || firstSessionTutorialState === 'awaiting_first_roll'
     || firstSessionTutorialState === 'first_fragment_collected';
 }
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { compactStaticGeometry } from './CrownCitadelThreeModel';
 import type { Island3DQuality } from './island5ThreePilotContract';
 
 export interface IslandStagedRestorationPresentation {
@@ -50,22 +51,41 @@ function makeRobot(materials: { metal: THREE.Material; glow: THREE.Material }, i
   return root;
 }
 
+/** The restored promenade stays entirely OUTSIDE the canonical tile corridor. */
+export const ISLAND_4_CAUSEWAY_POINTS = [
+  [-3.1, 0.3, 4.85], [-1.05, 0.3, 6.35], [1.05, 0.3, 6.35], [3.1, 0.3, 4.85],
+] as const;
+
 function createCausewayStage(index: number, materials: Record<string, THREE.Material>) {
   const group = new THREE.Group();
-  const angles = [-0.78, 0, 0.78];
-  const angle = angles[index] ?? 0;
-  const start = new THREE.Vector3(Math.sin(angle) * 2.45, 0.52, Math.cos(angle) * 2.45);
-  const end = new THREE.Vector3(Math.sin(angle) * 5.25, 0.62, Math.cos(angle) * 5.25);
-  const deck = cylinderBetween(start, end, 0.34, materials.primary);
-  deck.scale.z = 0.52;
-  group.add(deck);
-  for (let stone = -2; stone <= 2; stone += 1) {
-    const t = (stone + 2) / 4;
-    const block = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.18, 0.72), materials.secondary);
-    block.position.lerpVectors(start, end, t);
-    block.rotation.y = angle;
-    group.add(block);
+  const start = new THREE.Vector3(...ISLAND_4_CAUSEWAY_POINTS[index]!);
+  const end = new THREE.Vector3(...ISLAND_4_CAUSEWAY_POINTS[index + 1]!);
+  const length = start.distanceTo(end);
+  group.position.copy(start).add(end).multiplyScalar(.5);
+  group.rotation.y = Math.atan2(end.x-start.x,end.z-start.z);
+  group.userData.sculptRuntime={clickable:true,explodable:true,part:`causeway-span-${index+1}`,presentationOnly:true};
+  const assembly = new THREE.Group();
+  for (let stone = 0; stone < 9; stone += 1) {
+    const block = new THREE.Mesh(new THREE.BoxGeometry(.74,.16,length/9-.014),materials.primary);
+    block.name=`CAUSEWAY_SPAN_${index+1}_DECK_STONE_${stone+1}`;
+    block.position.set(0,.1,-length/2+(stone+.5)*length/9);
+    assembly.add(block);
   }
+  for(const side of [-1,1]) {
+    for(let i=0;i<7;i++) {
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(.027,.037,.36,6),materials.secondary);
+      post.position.set(side*.34,.3,-length/2+i*length/6);assembly.add(post);
+    }
+    const rail=new THREE.Mesh(new THREE.BoxGeometry(.045,.055,length),materials.secondary);
+    rail.position.set(side*.34,.49,0);assembly.add(rail);
+    // An actual arched supporting wall, including its open underside.
+    const shape=new THREE.Shape();shape.moveTo(-length/2,.03);shape.lineTo(length/2,.03);shape.lineTo(length/2,-.75);
+    shape.lineTo(length*.4,-.75);shape.quadraticCurveTo(0,.0,-length*.4,-.75);shape.lineTo(-length/2,-.75);shape.closePath();
+    const arch=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.085,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:1,curveSegments:12}),materials.primary);
+    arch.rotation.y=Math.PI/2;arch.position.set(side*.3,0,0);assembly.add(arch);
+  }
+  assembly.traverse(n=>{if(n instanceof THREE.Mesh){n.castShadow=true;n.receiveShadow=true;}});
+  compactStaticGeometry(assembly,`ISLAND_4_CAUSEWAY_SPAN_${index+1}`);group.add(assembly);
   return group;
 }
 
@@ -276,6 +296,10 @@ export function createIslandStagedRestorationThreePresentation(options: {
   finaleRing.position.copy(finaleCore.position);
   finaleRing.rotation.x = Math.PI / 2;
   finale.add(finaleCore, finaleRing);
+  if (options.islandNumber === 4) {
+    finale.position.set(0, -.55, 6.35);
+    finale.scale.setScalar(.4);
+  }
   if (options.islandNumber === 19) {
     finale.name = 'ISLAND_19_WONDER_EXPRESS_VICTORY_RIDE_BEACON';
     finale.position.set(7.35, -0.25, -0.78);
@@ -310,6 +334,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
   );
   missionHitTarget.name = `ISLAND_${options.islandNumber}_STAGED_RESTORATION_MISSION_HIT_TARGET`;
   missionHitTarget.position.y = 1.15;
+  if(options.islandNumber===4) {missionHitTarget.position.set(0,.5,5.9);missionHitTarget.scale.set(.65,.45,.65);}
   root.add(missionHitTarget);
 
   let presentation: IslandStagedRestorationPresentation = {
@@ -333,7 +358,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
       if (group.visible && (immediate || !changed || index < stage - 1)) group.scale.setScalar(1);
     });
     finale.visible = stage >= options.stageCount;
-    if (immediate) finale.scale.setScalar(1);
+    if (immediate) finale.scale.setScalar(options.islandNumber === 4 ? .4 : 1);
     if (changed && !immediate) transitionPending = true;
     previousStage = stage;
     previousSequence = sequence;
@@ -347,7 +372,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
     const transitionAge = elapsed - transitionStartedAt;
     const activeTransition = !reducedMotion && transitionAge >= 0 && transitionAge < 2.5;
     flashPoints.visible = activeTransition;
-    robots.visible = activeTransition && presentation.activatedStages < options.stageCount;
+    robots.visible = activeTransition && (options.islandNumber === 4 || presentation.activatedStages < options.stageCount);
     if (activeTransition && presentation.activatedStages > 0) {
       const t = Math.min(1, transitionAge / 0.72);
       const pop = 1 - Math.pow(1 - t, 3) + Math.sin(t * Math.PI * 3) * (1 - t) * 0.18;
@@ -356,6 +381,10 @@ export function createIslandStagedRestorationThreePresentation(options: {
         robot.rotation.y = elapsed * (index % 2 === 0 ? 1.4 : -1.2);
         robot.position.y = 0.55 + Math.abs(Math.sin(elapsed * 5 + index)) * 0.12;
       });
+      if(options.islandNumber===4) {
+        const worksite=stageGroups[presentation.activatedStages-1];
+        if(worksite){robots.position.copy(worksite.position);robots.position.y-=.2;flashPoints.position.copy(worksite.position);flashPoints.scale.setScalar(.35);}
+      }
       if (options.islandNumber === 19) {
         const wonderWorksites = [
           new THREE.Vector3(0, 0, -4.28),
@@ -373,6 +402,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
     });
     stageGroups.forEach((group, index) => {
       if (!group.visible) return;
+      if (options.islandNumber === 4 && !activeTransition) group.scale.setScalar(1);
       group.traverse((child) => {
         if (typeof child.userData.bubblePhase === 'number') {
           child.position.y += reducedMotion ? 0 : Math.sin(elapsed * 1.9 + child.userData.bubblePhase) * 0.0025;
@@ -395,8 +425,9 @@ export function createIslandStagedRestorationThreePresentation(options: {
       const pulse = reducedMotion ? 1 : 1 + Math.sin(elapsed * 2.2) * 0.12;
       finaleCore.scale.setScalar(pulse);
       finaleRing.rotation.z = reducedMotion ? 0 : elapsed * 0.5;
-      if (activeTransition) finale.scale.setScalar(Math.min(1, Math.max(0.05, transitionAge / 0.9)));
-      else finale.scale.setScalar(1);
+      const finaleScale = options.islandNumber === 4 ? .32 : 1;
+      if (activeTransition) finale.scale.setScalar(finaleScale * Math.min(1, Math.max(0.05, transitionAge / 0.9)));
+      else finale.scale.setScalar(finaleScale);
     }
   };
 
