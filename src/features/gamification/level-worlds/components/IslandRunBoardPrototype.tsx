@@ -740,6 +740,11 @@ import {
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 
+// The legacy Island Mission narrative was designed around unsolicited story
+// interruptions. Keep its authored data for future reuse, but do not surface
+// any of its automatic dialogue cards, toasts, or phone transmissions in play.
+const LEGACY_SIDE_STORY_POPUPS_ENABLED = false;
+
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
 const VaultIslandCollectionModal = lazy(() => import('./VaultIslandCollectionModal'));
 const VaultCasinoLab = lazy(() => import('../../../../dev/VaultCasinoLab'));
@@ -14292,7 +14297,7 @@ export function IslandRunBoardPrototype({
     userId: session.user.id,
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
-    hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
+    hasHydratedRuntimeState: LEGACY_SIDE_STORY_POPUPS_ENABLED && hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
     isOpeningBriefingComplete: isOpeningBriefingCompleteForNarrative,
     firstSessionTutorialState: runtimeState.firstSessionTutorialState,
     isNarrativeSurfaceBlocked,
@@ -14338,7 +14343,7 @@ export function IslandRunBoardPrototype({
 
   const landmarkWhispers = useLandmarkWhispers({
     activeStopId,
-    hasHydratedRuntimeState,
+    hasHydratedRuntimeState: LEGACY_SIDE_STORY_POPUPS_ENABLED && hasHydratedRuntimeState,
     isNarrativeSurfaceBlocked: Boolean(
       isNarrativeSurfaceBlocked ||
       islandNarrativeOpeningFlow.activeDialogue ||
