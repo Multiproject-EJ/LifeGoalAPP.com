@@ -1,0 +1,414 @@
+{
+  "created": "2026-09-19",
+  "tool": "built-in image_gen via imagegen skill",
+  "status": "review candidates; not production approval or meshes",
+  "jobs": [
+    {
+      "number": 25,
+      "id": "rare-cinder-mouse",
+      "name": "Cinder Mouse",
+      "body": "compact vaulted shield body, wide arched red mantle over an open apricot underside, three thick unequal wedge contacts, no separate head",
+      "face": "protective indignation tempered by tenderness: short LEVEL narrow rectangular eye openings beneath one firm blunt crest, direct gaze; body braces while the side arch remains welcoming. No snarl, no angry V-brows",
+      "palette": "brick red #9d594e, apricot #d09574, charcoal plum #493e52",
+      "avoid": "no mouse, ears, tail, mammal muzzle, claws or turtle shell pattern",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 25 (legacy name Cinder Mouse; the name is NOT an animal anatomy instruction). BODY: compact vaulted shield body, wide arched red mantle over an open apricot underside, three thick unequal wedge contacts, no separate head. EMOTION AND ATTENTION: protective indignation tempered by tenderness: short LEVEL narrow rectangular eye openings beneath one firm blunt crest, direct gaze; body braces while the side arch remains welcoming. No snarl, no angry V-brows. COLOURS: brick red #9d594e, apricot #d09574, charcoal plum #493e52. AVOID: no mouse, ears, tail, mammal muzzle, claws or turtle shell pattern. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: protective indignation tempered by tenderness: short LEVEL narrow rectangular eye openings beneath one firm blunt crest, direct gaze; body braces while the side arch remains welcoming. No snarl, no angry V-brows. The visual emotional cue, not a label, is essential. Replace studio clay surface with Living matte fired-earth mantle with soft ember-toned inner tissue. Set it in a rain-dark volcanic passage, warm light spilling through its protected arch. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a rain-dark volcanic passage, warm light spilling through its protected arch"
+    },
+    {
+      "number": 35,
+      "id": "mythic-celest-pup",
+      "name": "Celest Pup",
+      "body": "broken thick crescent frame holding an off-centre squat dark core on a single wide bent crescent contact; visibly asymmetric open negative space, no legs, no spherical head",
+      "face": "knowing mischief: one high horizontal slit and one lower tiny notch under differently angled lid planes, restrained crooked mouth SEAM at the core edge, slight sideways conspiratorial lean, NOT hostile or baby-cute",
+      "palette": "ink plum #302b48, muted violet #796784, cool sage seams #88aea1",
+      "avoid": "no puppy, cat, ears, snout, paws, generic cyclops or eye pair at equal height",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 35 (legacy name Celest Pup; the name is NOT an animal anatomy instruction). BODY: broken thick crescent frame holding an off-centre squat dark core on a single wide bent crescent contact; visibly asymmetric open negative space, no legs, no spherical head. EMOTION AND ATTENTION: knowing mischief: one high horizontal slit and one lower tiny notch under differently angled lid planes, restrained crooked mouth SEAM at the core edge, slight sideways conspiratorial lean, NOT hostile or baby-cute. COLOURS: ink plum #302b48, muted violet #796784, cool sage seams #88aea1. AVOID: no puppy, cat, ears, snout, paws, generic cyclops or eye pair at equal height. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: knowing mischief: one high horizontal slit and one lower tiny notch under differently angled lid planes, restrained crooked mouth SEAM at the core edge, slight sideways conspiratorial lean, NOT hostile or baby-cute. The visual emotional cue, not a label, is essential. Replace studio clay surface with Dark mineral-organic skin, cool mint seams, subtle moist inner core. Set it in a moonlit cleft in purple rock, one oblique beam of light. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a moonlit cleft in purple rock, one oblique beam of light"
+    },
+    {
+      "number": 36,
+      "id": "mythic-lux-leviathan",
+      "name": "Lux Leviathan",
+      "body": "long low angular articulated keel with four staggered broad rounded dorsal planes, asymmetric blunt prow, length twice height, thick belly runner instead of legs or tail",
+      "face": "composed pride: narrow LEVEL rectangular inset gaze under raised front plane, attention forward and slightly above horizon, deliberate upright front with body resting in controlled calm; not anger, sleepy or smiling",
+      "palette": "deep teal #355c69, restrained ochre-gold #9b956d, slate #879ca5",
+      "avoid": "no whale, fish, crocodile, dragon, fins, scales, teeth or pointed tail",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 36 (legacy name Lux Leviathan; the name is NOT an animal anatomy instruction). BODY: long low angular articulated keel with four staggered broad rounded dorsal planes, asymmetric blunt prow, length twice height, thick belly runner instead of legs or tail. EMOTION AND ATTENTION: composed pride: narrow LEVEL rectangular inset gaze under raised front plane, attention forward and slightly above horizon, deliberate upright front with body resting in controlled calm; not anger, sleepy or smiling. COLOURS: deep teal #355c69, restrained ochre-gold #9b956d, slate #879ca5. AVOID: no whale, fish, crocodile, dragon, fins, scales, teeth or pointed tail. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: composed pride: narrow LEVEL rectangular inset gaze under raised front plane, attention forward and slightly above horizon, deliberate upright front with body resting in controlled calm; not anger, sleepy or smiling. The visual emotional cue, not a label, is essential. Replace studio clay surface with Dense teal mineral-organic skin with weathered ochre bands, no scales. Set it in an immense dusk shoreline with low mist and a narrow distant sunrise. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "an immense dusk shoreline with low mist and a narrow distant sunrise"
+    },
+    {
+      "number": 8,
+      "id": "common-fern-fox",
+      "name": "Fern Fox",
+      "body": "inclined jade frond ladder organism, three staggered paddle-shaped fronds attached to a curved sturdy stem, unequal soft pendant buds hanging from two fronds, one broad folded root base, narrow tall silhouette",
+      "face": "warm curiosity: two tiny staggered inset curved DASHES on different frond joints, both tilt attentively toward one side with one frond raised in an inviting open gesture; no separate head or central face, no glossy eyes",
+      "palette": "jade #46816f, light olive #a8b86e, muted copper #9f7356",
+      "avoid": "no fox, ears, paws, fur, potted plant, straight botanical stem or humanoid limbs",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 8 (legacy name Fern Fox; the name is NOT an animal anatomy instruction). BODY: inclined jade frond ladder organism, three staggered paddle-shaped fronds attached to a curved sturdy stem, unequal soft pendant buds hanging from two fronds, one broad folded root base, narrow tall silhouette. EMOTION AND ATTENTION: warm curiosity: two tiny staggered inset curved DASHES on different frond joints, both tilt attentively toward one side with one frond raised in an inviting open gesture; no separate head or central face, no glossy eyes. COLOURS: jade #46816f, light olive #a8b86e, muted copper #9f7356. AVOID: no fox, ears, paws, fur, potted plant, straight botanical stem or humanoid limbs. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: warm curiosity: two tiny staggered inset curved DASHES on different frond joints, both tilt attentively toward one side with one frond raised in an inviting open gesture; no separate head or central face, no glossy eyes. The visual emotional cue, not a label, is essential. Replace studio clay surface with Jade fibrous living fronds and translucent olive membranes, copper seed pendants. Set it in a misty woodland opening at early morning, a side beam touching the raised frond. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a misty woodland opening at early morning, a side beam touching the raised frond"
+    },
+    {
+      "number": 34,
+      "id": "mythic-dreamroot-ancient",
+      "name": "Dreamroot Ancient",
+      "body": "wide suspended root canopy like an uneven soft umbrella, flattened aubergine crown above a visibly low-hanging seed core linked by three thick organic roots, broad hovering mass with tiny ground clearance and shadow",
+      "face": "contemplative wonder with wistful distance: very small far-looking gaze embedded along canopy seam, long broad relaxed brow plane, one gaze opening quietly lifted; hanging seed turns slightly in thought, no sleepy closed eyes",
+      "palette": "aubergine #67546c, parchment #a89779, muted jade #789386",
+      "avoid": "no tree with human face, mushroom character, octopus, tentacles, ordinary animal or shiny baby eyes",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 34 (legacy name Dreamroot Ancient; the name is NOT an animal anatomy instruction). BODY: wide suspended root canopy like an uneven soft umbrella, flattened aubergine crown above a visibly low-hanging seed core linked by three thick organic roots, broad hovering mass with tiny ground clearance and shadow. EMOTION AND ATTENTION: contemplative wonder with wistful distance: very small far-looking gaze embedded along canopy seam, long broad relaxed brow plane, one gaze opening quietly lifted; hanging seed turns slightly in thought, no sleepy closed eyes. COLOURS: aubergine #67546c, parchment #a89779, muted jade #789386. AVOID: no tree with human face, mushroom character, octopus, tentacles, ordinary animal or shiny baby eyes. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: contemplative wonder with wistful distance: very small far-looking gaze embedded along canopy seam, long broad relaxed brow plane, one gaze opening quietly lifted; hanging seed turns slightly in thought, no sleepy closed eyes. The visual emotional cue, not a label, is essential. Replace studio clay surface with Weathered aubergine living bark canopy, parchment membranes, jade patches. Set it in an ancient fog-filled grove with broken shafts of dawn light. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "an ancient fog-filled grove with broken shafts of dawn light"
+    },
+    {
+      "number": 41,
+      "id": "mythic-nightbloom-drake",
+      "name": "Nightbloom Drake",
+      "body": "partly wrapped oblique chamber of two thick black-cherry folded membranes, a sage inner opening kept to one side, crouched diagonal asymmetric parcel-shaped organism, two low broad folded supports",
+      "face": "guarded affection: two SMALL slant-free recessed glints under separate guarding folds, one more visible than the other, soft inward ridge and tentative sideways attention, a small edge opens towards viewer while outer body shields the core, not an angry sneer",
+      "palette": "black cherry #53394c, soft sage #7e9784, dusty rose #af8281",
+      "avoid": "no dragon, wings, reptile head, horns, cat ears, baby face or flower petal body",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 41 (legacy name Nightbloom Drake; the name is NOT an animal anatomy instruction). BODY: partly wrapped oblique chamber of two thick black-cherry folded membranes, a sage inner opening kept to one side, crouched diagonal asymmetric parcel-shaped organism, two low broad folded supports. EMOTION AND ATTENTION: guarded affection: two SMALL slant-free recessed glints under separate guarding folds, one more visible than the other, soft inward ridge and tentative sideways attention, a small edge opens towards viewer while outer body shields the core, not an angry sneer. COLOURS: black cherry #53394c, soft sage #7e9784, dusty rose #af8281. AVOID: no dragon, wings, reptile head, horns, cat ears, baby face or flower petal body. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: guarded affection: two SMALL slant-free recessed glints under separate guarding folds, one more visible than the other, soft inward ridge and tentative sideways attention, a small edge opens towards viewer while outer body shields the core, not an angry sneer. The visual emotional cue, not a label, is essential. Replace studio clay surface with Black-cherry velvety folded tissue, soft sage inner membrane. Set it in a sheltered night garden with soft warm light approaching from one side. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a sheltered night garden with soft warm light approaching from one side"
+    },
+    {
+      "number": 42,
+      "id": "mythic-prism-warden",
+      "name": "Prism Warden",
+      "body": "three tall thick rounded prism walls growing together around a visibly open centre, unequal wall heights, one wall turns outward as if listening, low three-lobed connected base, tall broad architectural creature silhouette",
+      "face": "compassionate vigilance: thin VERTICAL observation slit on each wall, one slit wider and gently bowed toward sheltered centre, one outward watch, no central face and no paired eyes. Subtle protective lean without sealing centre",
+      "palette": "matte seafoam #77a5a0, muted rose joints #b393a4, pale sage #bfc4b3",
+      "avoid": "no castle, robot, crystal jewellery, faceted sharp glass, animal, pupil face or figurine pedestal",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 42 (legacy name Prism Warden; the name is NOT an animal anatomy instruction). BODY: three tall thick rounded prism walls growing together around a visibly open centre, unequal wall heights, one wall turns outward as if listening, low three-lobed connected base, tall broad architectural creature silhouette. EMOTION AND ATTENTION: compassionate vigilance: thin VERTICAL observation slit on each wall, one slit wider and gently bowed toward sheltered centre, one outward watch, no central face and no paired eyes. Subtle protective lean without sealing centre. COLOURS: matte seafoam #77a5a0, muted rose joints #b393a4, pale sage #bfc4b3. AVOID: no castle, robot, crystal jewellery, faceted sharp glass, animal, pupil face or figurine pedestal. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: compassionate vigilance: thin VERTICAL observation slit on each wall, one slit wider and gently bowed toward sheltered centre, one outward watch, no central face and no paired eyes. Subtle protective lean without sealing centre. The visual emotional cue, not a label, is essential. Replace studio clay surface with Frosted sea-glass-like living walls with muted rose flexible joints, not carved stone. Set it in a storm-dark landscape around a quiet protected patch of warm light. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a storm-dark landscape around a quiet protected patch of warm light"
+    },
+    {
+      "number": 43,
+      "id": "mythic-aurora-maned-cat",
+      "name": "Aurora Maned Cat",
+      "body": "one swept asymmetric expression crest, broad flattened folded stepping base with two offset curled contact edges, low crest on one side and tall swept crest on the other, no spherical torso or separate head",
+      "face": "poised anticipation: long narrow LATERAL eye seams separated by a wide plain bridge, one slightly lifted edge and restrained small parted crease, body leans forward in an almost-starting gesture, dignity with vulnerable excitement, no glamour makeup",
+      "palette": "silver lilac #a39bad, dusty rose #c792a1, muted blue #657c94",
+      "avoid": "no cat, mane fur, ears, paws, tails, feather crest, eyelashes or paired round eyes",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 43 (legacy name Aurora Maned Cat; the name is NOT an animal anatomy instruction). BODY: one swept asymmetric expression crest, broad flattened folded stepping base with two offset curled contact edges, low crest on one side and tall swept crest on the other, no spherical torso or separate head. EMOTION AND ATTENTION: poised anticipation: long narrow LATERAL eye seams separated by a wide plain bridge, one slightly lifted edge and restrained small parted crease, body leans forward in an almost-starting gesture, dignity with vulnerable excitement, no glamour makeup. COLOURS: silver lilac #a39bad, dusty rose #c792a1, muted blue #657c94. AVOID: no cat, mane fur, ears, paws, tails, feather crest, eyelashes or paired round eyes. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: poised anticipation: long narrow LATERAL eye seams separated by a wide plain bridge, one slightly lifted edge and restrained small parted crease, body leans forward in an almost-starting gesture, dignity with vulnerable excitement, no glamour makeup. The visual emotional cue, not a label, is essential. Replace studio clay surface with Silver-lilac satin living membrane with fine dusty-rose fibres, no fur. Set it in a windswept dusky terrace, pale sunrise light cutting across the crest. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a windswept dusky terrace, pale sunrise light cutting across the crest"
+    },
+    {
+      "number": 44,
+      "id": "mythic-cosmos-songbird",
+      "name": "Cosmos Songbird",
+      "body": "broad listening fan of five substantial rounded dusty-blue reed lobes around an off-centre framed hollow, fan wider than tall, tilted open frame resting on two unequal folded membrane pads",
+      "face": "attentive delight: two listening slots at DIFFERENT heights on the inner frame, one slot opens into a buoyant rising curve; reed fan spreads asymmetrically towards a sound, joyous alert presence without mouth or eye pair",
+      "palette": "dusty blue #7292ab, pale copper #c1a08e, muted periwinkle #838ba0",
+      "avoid": "no bird, wings, beak, feather texture, instrument, peacock fan or human smile",
+      "prompt": "Use case: stylized-concept. Asset: ONE full-body mature form-2 invented personality creature, a rounded clay interpretation that can later coexist with differently styled card art. Plain warm-grey studio background and floor, square canvas, complete silhouette with 15 percent margins, front three-quarter view at creature height, soft warm key and gentle fill, contact shadow. Tiny hand-shaped matte clay maquette, broad simple volumes and lightly tactile surface, 4/10 prototype detail, no fine ornament. Expressive living presence is essential, not an inanimate sculpture. Shared clay material must NOT force a shared head, face or body plan. No labels, typography, card frame, props, extra creatures, pedestal, magic particles, shiny plastic or photoreal animal anatomy. No universal infant eyes in this mature form. Family identity 44 (legacy name Cosmos Songbird; the name is NOT an animal anatomy instruction). BODY: broad listening fan of five substantial rounded dusty-blue reed lobes around an off-centre framed hollow, fan wider than tall, tilted open frame resting on two unequal folded membrane pads. EMOTION AND ATTENTION: attentive delight: two listening slots at DIFFERENT heights on the inner frame, one slot opens into a buoyant rising curve; reed fan spreads asymmetrically towards a sound, joyous alert presence without mouth or eye pair. COLOURS: dusty blue #7292ab, pale copper #c1a08e, muted periwinkle #838ba0. AVOID: no bird, wings, beak, feather texture, instrument, peacock fan or human smile. Make the distinctive emotional gesture readable in a small card image.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: attentive delight: two listening slots at DIFFERENT heights on the inner frame, one slot opens into a buoyant rising curve; reed fan spreads asymmetrically towards a sound, joyous alert presence without mouth or eye pair. The visual emotional cue, not a label, is essential. Replace studio clay surface with Dusty-blue fibrous reeds with pale copper living membranes, no feathers. Set it in a cavern mouth at blue hour, distant warm light beyond the listening fan. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a cavern mouth at blue hour, distant warm light beyond the listening fan"
+    },
+    {
+      "number": 38,
+      "id": "mythic-astral-titanet",
+      "name": "Astral Titanet",
+      "body": "open load-bearing lattice with an off-centre warm moss core",
+      "face": "cautious optimism",
+      "palette": "powder blue #879eaf, moss #9caa79, warm sand #c5ad8e",
+      "avoid": "no human, robot or ordinary animal",
+      "prompt": "Use case: stylized-concept. A single tiny invented mature personality creature rendered as a simple soft matte clay maquette on a warm-grey studio floor and background, square canvas, whole silhouette with generous margins. A low broad OPEN asymmetric lattice of five thick powder-blue living beams around one off-centre warm moss-green core. The beams branch like soft folded bridges, visibly connected, not separate limbs. One support is lifted tentatively as the core leans towards a new opening. A single small diagonal amber attention window in the core widens gently, conveying CAUTIOUS OPTIMISM: interest and readiness balanced with a little hesitation. No human head, two-eye face, nose, mouth, fingers, animal anatomy, armour or mechanical joints. Palette powder blue #879eaf, moss #9caa79, warm sand #c5ad8e. Rounded edges, tactile broad simple volumes, restrained 4/10 modelling-study detail. Front three-quarter view, soft light and contact shadow, no props, labels, text, pedestal or effects. Make this a living asymmetrical open scaffold organism, not a building or robot. The opening, lean and support gesture should show intent.",
+      "cardPrompt": "Use case: style-transfer. Input image 1 is the sole creature identity and pose reference. Create ONE CINEMATIC, REALISTIC FANTASY CREATURE CARD ILLUSTRATION, NOT a clay figurine photograph. Keep the same body topology, silhouette, exact number and placement of attention organs, palette landmarks and pose from the reference. Do not add an animal muzzle, human face, generic baby eyes, extra limbs, armour or ornament. Preserve this mature expression: cautious optimism. The visual emotional cue, not a label, is essential. Replace studio clay surface with Powder-blue mineral-organic beams and supple moss-green core tissue. Set it in a misty ridge at dawn with one opening towards a warm horizon. Dramatic directional lighting, rich shadow, restrained atmospheric depth, film-like colour and believable small-scale surface detail. Physically convincing invented biology; realism does NOT mean changing it into a real animal. The creature occupies about 70 percent of the square frame, entire silhouette visible with room around it, three-quarter camera and pose matching input, face/attention clearly legible. Quiet blurred environment supports rather than obscures the creature. No sculpture base, no toy-plastic, no clay cracks or studio backdrop; no explosion, unnecessary particles, other characters, text, card border, logo or watermark. This is the dramatic card-art interpretation of the same character, not a redesign.",
+      "scene": "a misty ridge at dawn with one opening towards a warm horizon"
+    }
+  ],
+  "evolution": [
+    {
+      "level": 1,
+      "prompt": "Use case: identity-preserve. Input image is the mature level-2 Twilight Seed: use it as family identity and clay material reference. Generate ONE full-body level-1 young version of that same invented seed creature. Preserve indigo-violet body, pink-lilac leaf tips, cyan attention windows, three root-fold ground contacts, TWO asymmetric crown leaves (one curled, one open), and an opening front leaf cradle. Preserve warm grey studio, soft shadow, front three-quarter framing, matte rounded clay. Young form: rounder squat closed seed body, a small tight leaf cradle, shorter still-unfurling twin crown, larger softer eyes are allowed ONLY for this young form. Expression is innocent curious wonder with a little perplexity, NOT a generic smiling animal. Tiny intrigued mouth seam. No ears, nose, paws or animal muzzle. Broad simple tactile clay volumes, not ornamental vines, no extra crown leaves, no particle effects, no props, no text or card. Whole creature, square canvas, 15 percent quiet margins. This is a raster modelling study, not a mesh.",
+      "cardPrompt": "Use case: style-transfer. Input image is Twilight Seed level 1; preserve this exact character, pose, crown curl and open leaf, root-fold base, cyan eyes, violet body and rose leaf tips. Make a CINEMATIC REALISTIC FANTASY CARD illustration, not a clay toy or sculpture. The living husk has fine satin plant fibres, believable gently translucent leaf edges and subtle moisture. A misty night garden with one warm dawn beam and cool blue backlight creates dramatic depth. Level 1: innocent curious wonder, larger soft eyes, compact protected seed. Keep all body and facial landmarks, face visible despite the cinematic light, full figure with quiet margins, square composition, same three-quarter camera. Not an animal, no added ears, paws, muzzle, horns, armour or flowers. No text, card frame, logo, extra figures or unnecessary particles. Realism means convincing living surfaces and atmosphere, not different anatomy."
+    },
+    {
+      "level": 3,
+      "prompt": "Use case: identity-preserve. Input image is the mature level-2 Twilight Seed: use it as family identity and clay material reference. Generate ONE full-body level-3 fully integrated mature version of that same invented seed creature. Preserve indigo-violet body, pink-lilac leaf tips, cyan attention windows, three root-fold ground contacts, TWO asymmetric crown leaves (one curled, one open), and an opening front leaf cradle. Preserve warm grey studio, soft shadow, front three-quarter framing, matte rounded clay. Mature form: elongated stable seed body, broader open front cradle and two confidently unfurled asymmetric crown leaves, smaller narrower eyes with clearly unequal attentive lids and one lifted natural husk ridge. Dominant curious wonder, supporting hopeful openness; gaze turns outward toward a new possibility, not down at itself. A restrained intrigued mouth seam. Not angry, sleepy, serene or a giant baby. Maturity changes posture and emotional control, not merely size or armour. Broad simple tactile clay volumes, not ornamental vines, no extra crown leaves, no particle effects, no props, no text or card. Whole creature, square canvas, 15 percent quiet margins. This is a raster modelling study, not a mesh.",
+      "cardPrompt": "Use case: style-transfer. Input image is Twilight Seed level 3; preserve this exact character, pose, crown curl and open leaf, root-fold base, cyan eyes, violet body and rose leaf tips. Make a CINEMATIC REALISTIC FANTASY CARD illustration, not a clay toy or sculpture. The living husk has fine satin plant fibres, believable gently translucent leaf edges and subtle moisture. A misty night garden with one warm dawn beam and cool blue backlight creates dramatic depth. Level 3: small mature outward-searching eyes, hopeful open curiosity, stable tall body and wider cradle, no baby face or generic angry brows. Keep all body and facial landmarks, face visible despite the cinematic light, full figure with quiet margins, square composition, same three-quarter camera. Not an animal, no added ears, paws, muzzle, horns, armour or flowers. No text, card frame, logo, extra figures or unnecessary particles. Realism means convincing living surfaces and atmosphere, not different anatomy."
+    },
+    {
+      "level": 2,
+      "cardPrompt": "Use case: style-transfer. Input image is Twilight Seed level 2. Keep its exact anatomy, pose, uneven small searching cyan eyes, violet seed body, rose leaf tips, curled/open twin crown, front leaf cradle and root-fold base. Render cinematic realistic fantasy card art, not a clay figurine: satin living seed fibres, subtle dew and translucent violet leaf edges, misty night garden, dramatic warm dawn beam and cool rim light, deep atmospheric background. Curious wonder with hope and perplexity: eyes still examine its own opening cradle, not a baby smile or angry gaze. Full body and quiet margins, square framing, matching three-quarter camera. No new anatomy, no animal muzzle, ears or paws, no extra leaves or other characters, no text, frame, logo, particles or sculpture pedestal."
+    }
+  ],
+  "outputs": [
+    {
+      "number": 25,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-a87ee6b4-060a-424c-8fa9-c4c56e387e42.png",
+      "asset": "/assets/creatures/batch-ten-v1/f25-clay.png"
+    },
+    {
+      "number": 25,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-96f6518c-ca37-44ce-8cd7-a484a2107596.png",
+      "asset": "/assets/creatures/batch-ten-v1/f25-card.png"
+    },
+    {
+      "number": 35,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-b5f5845a-8a1a-4b52-824b-d4a1fcc4db8e.png",
+      "asset": "/assets/creatures/batch-ten-v1/f35-clay.png"
+    },
+    {
+      "number": 35,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-6a41fb50-738e-419f-a5ab-126a14b125ad.png",
+      "asset": "/assets/creatures/batch-ten-v1/f35-card.png"
+    },
+    {
+      "number": 36,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-0c397e12-2ae4-4bc9-a8d7-d1ebffcd1566.png",
+      "asset": "/assets/creatures/batch-ten-v1/f36-clay.png"
+    },
+    {
+      "number": 36,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-68d1be0f-e120-4207-9527-efe01185f582.png",
+      "asset": "/assets/creatures/batch-ten-v1/f36-card.png"
+    },
+    {
+      "number": 8,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-4f871e21-006b-483b-9a3c-2c28fb8433f4.png",
+      "asset": "/assets/creatures/batch-ten-v1/f8-clay.png"
+    },
+    {
+      "number": 8,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-9072932d-2c08-4bca-b925-0317f82333ed.png",
+      "asset": "/assets/creatures/batch-ten-v1/f8-card.png"
+    },
+    {
+      "number": 34,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-2809cad3-fbd9-4b61-bcc0-2f96e963c9d8.png",
+      "asset": "/assets/creatures/batch-ten-v1/f34-clay.png"
+    },
+    {
+      "number": 34,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-a6d657cd-db68-4bdd-b494-08c629869255.png",
+      "asset": "/assets/creatures/batch-ten-v1/f34-card.png"
+    },
+    {
+      "number": 41,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-35af83b0-894e-4606-b7a8-b9ed81170278.png",
+      "asset": "/assets/creatures/batch-ten-v1/f41-clay.png"
+    },
+    {
+      "number": 41,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-85d6556c-0330-41d4-a723-b19f54e5fd45.png",
+      "asset": "/assets/creatures/batch-ten-v1/f41-card.png"
+    },
+    {
+      "number": 42,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-48b32d7c-109c-4215-a4fa-044b54726c94.png",
+      "asset": "/assets/creatures/batch-ten-v1/f42-clay.png"
+    },
+    {
+      "number": 42,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-2193b3ca-3f4d-415d-9674-5e0dc6708c61.png",
+      "asset": "/assets/creatures/batch-ten-v1/f42-card.png"
+    },
+    {
+      "number": 43,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-1e89fb04-35c9-43ed-b90c-8fd86829ce74.png",
+      "asset": "/assets/creatures/batch-ten-v1/f43-clay.png"
+    },
+    {
+      "number": 43,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-701a5ab1-498a-469c-b6aa-ff1f5b0af99f.png",
+      "asset": "/assets/creatures/batch-ten-v1/f43-card.png"
+    },
+    {
+      "number": 44,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-0d809413-2029-46b7-bf7a-45e53840d9db.png",
+      "asset": "/assets/creatures/batch-ten-v1/f44-clay.png"
+    },
+    {
+      "number": 44,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-4d99e277-798f-415b-b7ab-42ef53f73e64.png",
+      "asset": "/assets/creatures/batch-ten-v1/f44-card.png"
+    },
+    {
+      "number": 38,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-f4415f1c-d739-4ee3-8ec5-4d4cd852ebc5.png",
+      "asset": "/assets/creatures/batch-ten-v1/f38-clay.png"
+    },
+    {
+      "number": 38,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-7ed670b0-70f9-4ba7-a98b-f2678a80835d.png",
+      "asset": "/assets/creatures/batch-ten-v1/f38-card.png"
+    },
+    {
+      "number": 13,
+      "form": 1,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-1fcb6643-b124-4212-b59b-7ef1cfddd184.png",
+      "asset": "/assets/creatures/batch-ten-v1/f13-level-1-clay.png"
+    },
+    {
+      "number": 13,
+      "form": 1,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-377840bf-7423-46e7-a47b-4ed1096520d6.png",
+      "asset": "/assets/creatures/batch-ten-v1/f13-level-1-card.png"
+    },
+    {
+      "number": 13,
+      "form": 2,
+      "edition": "clay",
+      "source": "/Users/ejmac/Documents/Codex/2026-09-13/i-x20/work/habitgame-system-upgrade/public/assets/creatures/comparisons/mature-trio-v2/twilight-clay.png",
+      "asset": "/assets/creatures/comparisons/mature-trio-v2/twilight-clay.png"
+    },
+    {
+      "number": 13,
+      "form": 2,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-bf40f11b-665a-435b-a6ff-77cc8f35bc92.png",
+      "asset": "/assets/creatures/batch-ten-v1/f13-level-2-card.png"
+    },
+    {
+      "number": 13,
+      "form": 3,
+      "edition": "clay",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-2ee79c7e-10d4-4fc7-9239-b7f1d6bf994a.png",
+      "asset": "/assets/creatures/batch-ten-v1/f13-level-3-clay.png"
+    },
+    {
+      "number": 13,
+      "form": 3,
+      "edition": "card",
+      "source": "/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-373d6e24-842e-4b15-98a0-9714f8efbae9.png",
+      "asset": "/assets/creatures/batch-ten-v1/f13-level-3-card.png"
+    }
+  ],
+  "deferredFamily": {
+    "number": 24,
+    "name": "Shard Marten",
+    "reason": "Two generation failures; substituted F38 Astral Titanet, not counted as completed"
+  },
+  "reviews": [
+    {
+      "familyId": "rare-cinder-mouse",
+      "number": 25,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f25-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f25-clay.png",
+      "review": "Protective resolve reads clearly; tenderness is less visible. Rounded shelter anatomy, not a mouse."
+    },
+    {
+      "familyId": "mythic-celest-pup",
+      "number": 35,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f35-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f35-clay.png",
+      "review": "Mischief reads strongly, but can lean sinister. The broken crescent needs originality review against other moon-shaped characters."
+    },
+    {
+      "familyId": "mythic-lux-leviathan",
+      "number": 36,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f36-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f36-clay.png",
+      "review": "Composed gaze is readable. Long neck and belly runner still suggest a seal; revise that resemblance before approval."
+    },
+    {
+      "familyId": "common-fern-fox",
+      "number": 8,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f8-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f8-clay.png",
+      "review": "Scattered attention slots avoid a reused face. Warm curiosity is subtle; may read as a living plant rather than a companion."
+    },
+    {
+      "familyId": "mythic-dreamroot-ancient",
+      "number": 34,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f34-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f34-clay.png",
+      "review": "Distinct canopy and hanging core. Gaze is tiny at card size; contemplative wonder may be lost."
+    },
+    {
+      "familyId": "mythic-nightbloom-drake",
+      "number": 41,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f41-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f41-clay.png",
+      "review": "Guarded affection is among the clearest expressions. Keep softness rather than letting the folded face become an angry V."
+    },
+    {
+      "familyId": "mythic-prism-warden",
+      "number": 42,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f42-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f42-clay.png",
+      "review": "Strong three-wall silhouette, weak emotional specificity. Needs more living intent; currently sculpture-like."
+    },
+    {
+      "familyId": "mythic-aurora-maned-cat",
+      "number": 43,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f43-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f43-clay.png",
+      "review": "Distinct sweeping crest. Poise is visible, but anticipation can read aloof; no feline anatomy intended."
+    },
+    {
+      "familyId": "mythic-cosmos-songbird",
+      "number": 44,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f44-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f44-clay.png",
+      "review": "Different listening anatomy, but delight is not clear enough. Needs expressive membrane tension or motion."
+    },
+    {
+      "familyId": "mythic-astral-titanet",
+      "number": 38,
+      "form": 2,
+      "card": "/assets/creatures/batch-ten-v1/f38-card.png",
+      "clay": "/assets/creatures/batch-ten-v1/f38-clay.png",
+      "review": "Open scaffold and lifted support communicate hesitation. Cautious optimism needs a clearer living response."
+    }
+  ]
+}

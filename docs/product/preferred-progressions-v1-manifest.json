@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-20",
+  "status": "candidate-not-approved",
+  "generator": "built-in image generation",
+  "sharedContract": {
+    "clay": "rounded matte 4/10-detail modelling reference on warm-grey studio ground",
+    "card": "cinematic realistic dramatic translation using the selected clay image as sole identity, topology, palette and pose reference",
+    "originality": "exclude real-animal anatomy implied by legacy names and exclude recognisable franchise characters; no exhaustive clearance claimed",
+    "threeD": "no mesh or rotatable model in this batch; Astra handoff required before production"
+  },
+  "selected": [
+    {"asset":"f8-1-clay.png","source":"exec-2baf7ae1-8969-406e-b588-ee8d1bdef172.png","purpose":"F08 form 1 low connected root-hook"},
+    {"asset":"f8-1-card.png","source":"exec-e3a234c0-b572-4670-ac9b-4daf5b5303fb.png","purpose":"F08 form 1 cinematic translation"},
+    {"asset":"f34-1-clay.png","source":"exec-649b49a5-4435-41b9-9207-70e0a1f3bcab.png","purpose":"F34 form 1 angular shelter plate and seed"},
+    {"asset":"f34-1-card.png","source":"exec-e52c24c2-53ef-4b07-b259-a9e51898cf86.png","purpose":"F34 form 1 cinematic translation"},
+    {"asset":"f34-3-clay.png","source":"exec-49f15040-1c91-4bc1-bd80-dcb70377b089.png","purpose":"F34 form 3 split-canopy corridor"},
+    {"asset":"f34-3-card.png","source":"exec-b88bdb32-4150-4eeb-b923-1dfc62935e50.png","purpose":"F34 form 3 cinematic translation"},
+    {"asset":"f34-4-clay.png","source":"exec-0787ffbb-3977-4a51-8270-379cea7e38de.png","purpose":"F34 form 4 monumental open root-canopy"},
+    {"asset":"f34-4-card.png","source":"exec-d49a18a5-8282-459b-86ce-e686048e115a.png","purpose":"F34 form 4 cinematic translation"},
+    {"asset":"f41-1-clay.png","source":"exec-5b74392b-b17c-4f72-bccc-c300f0e7f722.png","purpose":"F41 form 1 sealed oblique parcel"},
+    {"asset":"f41-1-card.png","source":"exec-381d2101-b5d5-4f74-9ce3-5ab163e59ceb.png","purpose":"F41 form 1 cinematic translation"},
+    {"asset":"f41-3-clay.png","source":"exec-8a5fa0d9-f8dc-443e-80af-da084a3652e6.png","purpose":"F41 form 3 low protective alcove"},
+    {"asset":"f41-3-card.png","source":"exec-a28e03e8-6606-4d19-8d61-767ef23f2a5e.png","purpose":"F41 form 3 cinematic translation"},
+    {"asset":"f42-1-clay.png","source":"exec-d40b64bc-e1b9-4d72-8637-45a86300e034.png","purpose":"F42 form 1 one-wall shelter"},
+    {"asset":"f42-1-card.png","source":"exec-48f53d19-cf97-488d-93d6-ccc3709b77f0.png","purpose":"F42 form 1 cinematic translation"},
+    {"asset":"f42-3-clay.png","source":"exec-7cadd720-4535-4b48-85dc-896f5dffde50.png","purpose":"F42 form 3 open triangular orbit"},
+    {"asset":"f42-3-card.png","source":"exec-0f257a73-072d-4ead-8186-0804dbc7a36e.png","purpose":"F42 form 3 one-sun cinematic revision"},
+    {"asset":"f42-4-clay.png","source":"exec-8105b892-912f-443e-bc3b-365f4aa543cc.png","purpose":"F42 form 4 six-direction sanctuary"},
+    {"asset":"f42-4-card.png","source":"exec-aa7ff1b1-34cf-41ba-a7bf-ed8a823b2b5e.png","purpose":"F42 form 4 cinematic translation"},
+    {"asset":"f43-1-clay.png","source":"exec-2f9f79ff-ff30-4a64-888f-02f2bde47545.png","purpose":"F43 form 1 continuous ribbon figure-eight"},
+    {"asset":"f43-1-card.png","source":"exec-6cfc4ffa-4bda-4344-910b-01ae4d673f88.png","purpose":"F43 form 1 cinematic translation"},
+    {"asset":"f44-1-clay.png","source":"exec-9fda36d5-99a2-4c4a-8b3c-3abc016a8ba0.png","purpose":"F44 form 1 three-reed listening shell"},
+    {"asset":"f44-1-card.png","source":"exec-a2115287-05a1-4e71-8e18-c6e693ba4e8d.png","purpose":"F44 form 1 cinematic translation"}
+  ],
+  "rejected": [
+    {"source":"exec-fed7aab8-2876-44be-a241-c32ae2acfd32.png","reason":"F08 floating attention marks and silhouette too close to mature form"},
+    {"source":"exec-b7be3a7e-6bfb-4326-801d-05fcb049712b.png","reason":"F34 form 1 ordinary mushroom reading"},
+    {"source":"exec-f8bd7133-3969-4d96-baee-333414fc6ec1.png","reason":"F34 form 3 mushrooms/building/tree reading"},
+    {"source":"exec-d1871830-4099-4313-9b96-a5631c04468a.png","reason":"F41 form 3 humanoid robed figure"},
+    {"source":"exec-20269b24-601a-4859-8948-8a0f8564aa73.png","reason":"F42 form 3 upright wrapped person/baby core"},
+    {"source":"exec-2bdf309e-93f2-45e0-a939-65e79d1522cf.png","reason":"F43 form 1 generic baby-animal face"},
+    {"source":"exec-37c3791c-21e4-480e-9803-1f94e6068221.png","reason":"F43 form 1 alpha/background and composition failure"},
+    {"source":"exec-9ef0dc48-f3e4-4c3b-9901-c458730043d0.png","reason":"F42 form 3 cinematic scene contained three literal suns"}
+  ]
+}

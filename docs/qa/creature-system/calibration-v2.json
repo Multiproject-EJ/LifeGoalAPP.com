@@ -1,0 +1,385 @@
+{
+  "version": "kindred-breadth-experimental-2",
+  "method": "2000 deterministic uniformly random complete V2 answer sequences, seed 9142026. Synthetic diagnostic, not representative player data or psychometric validation.",
+  "total": 2000,
+  "kindredCounts": {
+    "common-twilight-seed": 1010,
+    "common-bloom-mite": 333,
+    "mythic-echo-phoenix": 196,
+    "rare-cinder-mouse": 194,
+    "mythic-celest-pup": 64,
+    "mythic-lux-leviathan": 203
+  },
+  "complementCounts": {
+    "common-twilight-seed": 145,
+    "common-bloom-mite": 92,
+    "mythic-echo-phoenix": 763,
+    "rare-cinder-mouse": 271,
+    "mythic-celest-pup": 602,
+    "mythic-lux-leviathan": 127
+  },
+  "close": 538,
+  "meanMargin": 5.689557754863746,
+  "meanTopAffinity": 81.12039490601165,
+  "fixtures": [
+    {
+      "id": "common-twilight-seed",
+      "label": "Imaginative, sensitive, exploratory",
+      "answers": {
+        "v2_plan_01": "b",
+        "v2_plan_02": "d",
+        "v2_plan_03": "c",
+        "v2_plan_04": "b",
+        "v2_bounce_01": "b",
+        "v2_bounce_02": "d",
+        "v2_bounce_03": "b",
+        "v2_bounce_04": "b",
+        "v2_coop_01": "b",
+        "v2_coop_02": "c",
+        "v2_coop_03": "d",
+        "v2_coop_04": "d",
+        "v2_explore_01": "c",
+        "v2_explore_02": "a",
+        "v2_explore_03": "b",
+        "v2_explore_04": "b",
+        "v2_sprint_01": "b",
+        "v2_sprint_02": "d",
+        "v2_sprint_03": "b",
+        "v2_sprint_04": "b"
+      },
+      "leadingArchetypes": [
+        {
+          "id": "empath",
+          "score": 65.23333333333333
+        },
+        {
+          "id": "dreamer",
+          "score": 63.75000000000001
+        },
+        {
+          "id": "philosopher",
+          "score": 62.333333333333336
+        },
+        {
+          "id": "creator",
+          "score": 61.787878787878796
+        },
+        {
+          "id": "sage",
+          "score": 61.21212121212122
+        }
+      ],
+      "intendedArtMix": [
+        "dreamer",
+        "creator",
+        "explorer"
+      ],
+      "intendedMixInTop5": [
+        "dreamer",
+        "creator"
+      ],
+      "singleAnswerPerturbations": 60,
+      "changedWinner": 0,
+      "nearestOther": "mythic-celest-pup"
+    },
+    {
+      "id": "common-bloom-mite",
+      "label": "Caring, encouraging, steady",
+      "answers": {
+        "v2_plan_01": "b",
+        "v2_plan_02": "b",
+        "v2_plan_03": "b",
+        "v2_plan_04": "a",
+        "v2_bounce_01": "b",
+        "v2_bounce_02": "b",
+        "v2_bounce_03": "b",
+        "v2_bounce_04": "b",
+        "v2_coop_01": "b",
+        "v2_coop_02": "b",
+        "v2_coop_03": "b",
+        "v2_coop_04": "b",
+        "v2_explore_01": "b",
+        "v2_explore_02": "d",
+        "v2_explore_03": "c",
+        "v2_explore_04": "d",
+        "v2_sprint_01": "c",
+        "v2_sprint_02": "c",
+        "v2_sprint_03": "b",
+        "v2_sprint_04": "a"
+      },
+      "leadingArchetypes": [
+        {
+          "id": "enforcer",
+          "score": 74.46875
+        },
+        {
+          "id": "commander",
+          "score": 74.0909090909091
+        },
+        {
+          "id": "guardian",
+          "score": 73.93939393939394
+        },
+        {
+          "id": "diplomat",
+          "score": 72.58823529411765
+        },
+        {
+          "id": "devotee",
+          "score": 69.76923076923076
+        }
+      ],
+      "intendedArtMix": [
+        "caregiver",
+        "empath",
+        "mentor"
+      ],
+      "intendedMixInTop5": [],
+      "singleAnswerPerturbations": 60,
+      "changedWinner": 1,
+      "nearestOther": "rare-cinder-mouse"
+    },
+    {
+      "id": "mythic-echo-phoenix",
+      "label": "Driven, outgoing, experimental",
+      "answers": {
+        "v2_plan_01": "b",
+        "v2_plan_02": "c",
+        "v2_plan_03": "a",
+        "v2_plan_04": "c",
+        "v2_bounce_01": "a",
+        "v2_bounce_02": "a",
+        "v2_bounce_03": "a",
+        "v2_bounce_04": "a",
+        "v2_coop_01": "a",
+        "v2_coop_02": "a",
+        "v2_coop_03": "a",
+        "v2_coop_04": "a",
+        "v2_explore_01": "d",
+        "v2_explore_02": "a",
+        "v2_explore_03": "a",
+        "v2_explore_04": "b",
+        "v2_sprint_01": "a",
+        "v2_sprint_02": "a",
+        "v2_sprint_03": "a",
+        "v2_sprint_04": "a"
+      },
+      "leadingArchetypes": [
+        {
+          "id": "shaman",
+          "score": 90.07692307692307
+        },
+        {
+          "id": "explorer",
+          "score": 89.71428571428571
+        },
+        {
+          "id": "mystic",
+          "score": 88.86363636363636
+        },
+        {
+          "id": "peacemaker",
+          "score": 88.48387096774194
+        },
+        {
+          "id": "champion",
+          "score": 88.44117647058823
+        }
+      ],
+      "intendedArtMix": [
+        "champion",
+        "pioneer",
+        "commander"
+      ],
+      "intendedMixInTop5": [
+        "champion"
+      ],
+      "singleAnswerPerturbations": 60,
+      "changedWinner": 0,
+      "nearestOther": "mythic-celest-pup"
+    },
+    {
+      "id": "rare-cinder-mouse",
+      "label": "Protective, committed, boundary-setting",
+      "answers": {
+        "v2_plan_01": "a",
+        "v2_plan_02": "a",
+        "v2_plan_03": "b",
+        "v2_plan_04": "a",
+        "v2_bounce_01": "a",
+        "v2_bounce_02": "b",
+        "v2_bounce_03": "b",
+        "v2_bounce_04": "c",
+        "v2_coop_01": "b",
+        "v2_coop_02": "b",
+        "v2_coop_03": "c",
+        "v2_coop_04": "c",
+        "v2_explore_01": "b",
+        "v2_explore_02": "b",
+        "v2_explore_03": "c",
+        "v2_explore_04": "d",
+        "v2_sprint_01": "c",
+        "v2_sprint_02": "b",
+        "v2_sprint_03": "a",
+        "v2_sprint_04": "a"
+      },
+      "leadingArchetypes": [
+        {
+          "id": "enforcer",
+          "score": 75.74999999999999
+        },
+        {
+          "id": "engineer",
+          "score": 73.3888888888889
+        },
+        {
+          "id": "analyst",
+          "score": 72.6875
+        },
+        {
+          "id": "architect",
+          "score": 72.18918918918921
+        },
+        {
+          "id": "commander",
+          "score": 72.18181818181819
+        }
+      ],
+      "intendedArtMix": [
+        "guardian",
+        "challenger",
+        "devotee"
+      ],
+      "intendedMixInTop5": [],
+      "singleAnswerPerturbations": 60,
+      "changedWinner": 0,
+      "nearestOther": "common-bloom-mite"
+    },
+    {
+      "id": "mythic-celest-pup",
+      "label": "Independent, mischievous, inventive",
+      "answers": {
+        "v2_plan_01": "d",
+        "v2_plan_02": "c",
+        "v2_plan_03": "c",
+        "v2_plan_04": "d",
+        "v2_bounce_01": "b",
+        "v2_bounce_02": "c",
+        "v2_bounce_03": "a",
+        "v2_bounce_04": "c",
+        "v2_coop_01": "c",
+        "v2_coop_02": "d",
+        "v2_coop_03": "c",
+        "v2_coop_04": "a",
+        "v2_explore_01": "d",
+        "v2_explore_02": "a",
+        "v2_explore_03": "a",
+        "v2_explore_04": "a",
+        "v2_sprint_01": "b",
+        "v2_sprint_02": "d",
+        "v2_sprint_03": "c",
+        "v2_sprint_04": "b"
+      },
+      "leadingArchetypes": [
+        {
+          "id": "dreamer",
+          "score": 61.2857142857143
+        },
+        {
+          "id": "rebel",
+          "score": 60.50000000000001
+        },
+        {
+          "id": "philosopher",
+          "score": 59.5
+        },
+        {
+          "id": "creator",
+          "score": 59.121212121212125
+        },
+        {
+          "id": "mystic",
+          "score": 59.04545454545455
+        }
+      ],
+      "intendedArtMix": [
+        "rebel",
+        "inventor",
+        "mystic"
+      ],
+      "intendedMixInTop5": [
+        "rebel",
+        "mystic"
+      ],
+      "singleAnswerPerturbations": 60,
+      "changedWinner": 0,
+      "nearestOther": "common-twilight-seed"
+    },
+    {
+      "id": "mythic-lux-leviathan",
+      "label": "Composed, systematic, analytical",
+      "answers": {
+        "v2_plan_01": "a",
+        "v2_plan_02": "a",
+        "v2_plan_03": "d",
+        "v2_plan_04": "a",
+        "v2_bounce_01": "a",
+        "v2_bounce_02": "a",
+        "v2_bounce_03": "a",
+        "v2_bounce_04": "a",
+        "v2_coop_01": "c",
+        "v2_coop_02": "c",
+        "v2_coop_03": "c",
+        "v2_coop_04": "a",
+        "v2_explore_01": "a",
+        "v2_explore_02": "b",
+        "v2_explore_03": "b",
+        "v2_explore_04": "c",
+        "v2_sprint_01": "c",
+        "v2_sprint_02": "c",
+        "v2_sprint_03": "b",
+        "v2_sprint_04": "a"
+      },
+      "leadingArchetypes": [
+        {
+          "id": "devotee",
+          "score": 82.88235294117646
+        },
+        {
+          "id": "guardian",
+          "score": 80.66666666666667
+        },
+        {
+          "id": "analyst",
+          "score": 79.62499999999999
+        },
+        {
+          "id": "architect",
+          "score": 78.43243243243244
+        },
+        {
+          "id": "detective",
+          "score": 78.22857142857141
+        }
+      ],
+      "intendedArtMix": [
+        "strategist",
+        "architect",
+        "commander"
+      ],
+      "intendedMixInTop5": [
+        "architect"
+      ],
+      "singleAnswerPerturbations": 60,
+      "changedWinner": 0,
+      "nearestOther": "rare-cinder-mouse"
+    }
+  ],
+  "releaseReady": false,
+  "remaining": [
+    "Resolve overlap between intended visual mixes and measured target archetypes.",
+    "Author and compare remaining 44 targets.",
+    "Review questionnaire construct coverage before adding new questions.",
+    "Real-player comprehension and stability testing."
+  ]
+}

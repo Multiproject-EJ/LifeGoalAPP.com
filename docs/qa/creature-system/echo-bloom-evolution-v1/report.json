@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "width": 1440,
+      "echoForms": 3,
+      "bloomForms": 2,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 700,
+      "echoForms": 3,
+      "bloomForms": 2,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "echoForms": 3,
+      "bloomForms": 2,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "echoForms": 3,
+      "bloomForms": 2,
+      "bothEditions": true,
+      "pairDialogs": true,
+      "focusAndScroll": true,
+      "ratio": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "failures": []
+}

@@ -1,0 +1,10 @@
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { build } = createRequire(require.resolve('vite'))('esbuild');
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+const dir = mkdtempSync(path.join(tmpdir(), 'habitgame-creature-tests-'));
+await build({ entryPoints: ['scripts/creature-system.test.ts'], bundle: true, platform: 'node', format: 'esm', outfile: path.join(dir, 'system.test.mjs') });
+execFileSync(process.execPath, ['--test', path.join(dir, 'system.test.mjs')], { stdio: 'inherit' });

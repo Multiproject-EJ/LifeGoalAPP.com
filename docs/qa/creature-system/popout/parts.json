@@ -1,0 +1,212 @@
+{
+  "parts": [
+    {
+      "id": "body",
+      "name": "body",
+      "meshNames": [
+        "body-mesh"
+      ],
+      "componentId": "body"
+    },
+    {
+      "id": "face",
+      "name": "face",
+      "meshNames": [
+        "face-mesh"
+      ],
+      "componentId": "face"
+    },
+    {
+      "id": "pad-left-0",
+      "name": "pad-left-0",
+      "meshNames": [
+        "pad-left-0-mesh"
+      ],
+      "componentId": "pad-left-0"
+    },
+    {
+      "id": "pad-left-right",
+      "name": "pad-left-right",
+      "meshNames": [
+        "pad-left-right-mesh"
+      ],
+      "componentId": "pad-left-right"
+    },
+    {
+      "id": "pad-left-2",
+      "name": "pad-left-2",
+      "meshNames": [
+        "pad-left-2-mesh"
+      ],
+      "componentId": "pad-left-2"
+    },
+    {
+      "id": "pad-right-0",
+      "name": "pad-right-0",
+      "meshNames": [
+        "pad-right-0-mesh"
+      ],
+      "componentId": "pad-right-0"
+    },
+    {
+      "id": "pad-right-1",
+      "name": "pad-right-1",
+      "meshNames": [
+        "pad-right-1-mesh"
+      ],
+      "componentId": "pad-right-1"
+    },
+    {
+      "id": "pad-right-2",
+      "name": "pad-right-2",
+      "meshNames": [
+        "pad-right-2-mesh"
+      ],
+      "componentId": "pad-right-2"
+    },
+    {
+      "id": "petal-left-0",
+      "name": "petal-left-0",
+      "meshNames": [
+        "petal-left-0-mesh"
+      ],
+      "componentId": "petal-left-0"
+    },
+    {
+      "id": "petal-left-right",
+      "name": "petal-left-right",
+      "meshNames": [
+        "petal-left-right-mesh"
+      ],
+      "componentId": "petal-left-right"
+    },
+    {
+      "id": "petal-left-2",
+      "name": "petal-left-2",
+      "meshNames": [
+        "petal-left-2-mesh"
+      ],
+      "componentId": "petal-left-2"
+    },
+    {
+      "id": "petal-right-0",
+      "name": "petal-right-0",
+      "meshNames": [
+        "petal-right-0-mesh"
+      ],
+      "componentId": "petal-right-0"
+    },
+    {
+      "id": "petal-right-1",
+      "name": "petal-right-1",
+      "meshNames": [
+        "petal-right-1-mesh"
+      ],
+      "componentId": "petal-right-1"
+    },
+    {
+      "id": "petal-right-2",
+      "name": "petal-right-2",
+      "meshNames": [
+        "petal-right-2-mesh"
+      ],
+      "componentId": "petal-right-2"
+    },
+    {
+      "id": "rear-petal",
+      "name": "rear-petal",
+      "meshNames": [
+        "rear-petal-mesh"
+      ],
+      "componentId": "rear-petal"
+    },
+    {
+      "id": "crown",
+      "name": "crown",
+      "meshNames": [
+        "crown-mesh"
+      ],
+      "componentId": "crown"
+    },
+    {
+      "id": "stalk-base-left",
+      "name": "stalk-base-left",
+      "meshNames": [
+        "stalk-base-left-mesh"
+      ],
+      "componentId": "stalk-base-left"
+    },
+    {
+      "id": "stalk-tip-left",
+      "name": "stalk-tip-left",
+      "meshNames": [
+        "stalk-tip-left-mesh"
+      ],
+      "componentId": "stalk-tip-left"
+    },
+    {
+      "id": "bud-left",
+      "name": "bud-left",
+      "meshNames": [
+        "bud-left-mesh"
+      ],
+      "componentId": "bud-left"
+    },
+    {
+      "id": "bud-cap-left",
+      "name": "bud-cap-left",
+      "meshNames": [
+        "bud-cap-left-mesh"
+      ],
+      "componentId": "bud-cap-left"
+    },
+    {
+      "id": "eye-left",
+      "name": "eye-left",
+      "meshNames": [
+        "eye-left-mesh"
+      ],
+      "componentId": "eye-left"
+    },
+    {
+      "id": "stalk-base-right",
+      "name": "stalk-base-right",
+      "meshNames": [
+        "stalk-base-right-mesh"
+      ],
+      "componentId": "stalk-base-right"
+    },
+    {
+      "id": "stalk-tip-right",
+      "name": "stalk-tip-right",
+      "meshNames": [
+        "stalk-tip-right-mesh"
+      ],
+      "componentId": "stalk-tip-right"
+    },
+    {
+      "id": "bud-right",
+      "name": "bud-right",
+      "meshNames": [
+        "bud-right-mesh"
+      ],
+      "componentId": "bud-right"
+    },
+    {
+      "id": "bud-cap-right",
+      "name": "bud-cap-right",
+      "meshNames": [
+        "bud-cap-right-mesh"
+      ],
+      "componentId": "bud-cap-right"
+    },
+    {
+      "id": "eye-right",
+      "name": "eye-right",
+      "meshNames": [
+        "eye-right-mesh"
+      ],
+      "componentId": "eye-right"
+    }
+  ]
+}

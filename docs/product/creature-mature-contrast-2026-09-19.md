@@ -1,0 +1,34 @@
+# Mature contrast candidates — 2026-09-19
+
+Generated using the built-in image-generation tool, not the CLI/API fallback. Project copies preserve the original files. Source style/species reference: `/Users/ejmac/Documents/Codex/2026-09-13/i-x20/outputs/companion-purpose-pilot/art-proof/three-families-v2.png`.
+
+## Echo Phoenix · form 2
+
+Project: `public/assets/creatures/candidates/echo-phoenix/form-2-v1.png`
+Source: `/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-b4a21ea9-d4ab-42a4-9944-6dc771aad755.png`
+
+Prompt:
+
+> Use case: stylized-concept. Asset: ONE individual full-body HabitGame creature illustration, Echo Phoenix FORM 2, no card/UI/typography. Input image is a STYLE AND SPECIES REFERENCE: use ONLY the right-hand radial creature identity and the shared premium painterly fantasy finish; do NOT copy the three-column composition, any lettering, or the other creatures. Create one mature invented living resonance organism, NOT a bird. Compact off-centre copper radial core with an asymmetrical central aperture, two curling offset resonant structures and deliberate pale gaps. Coral translucent resonant glass and desaturated teal inner surfaces. Distinctive side-loaded radial silhouette; avoid a perfectly circular generic magic orb. The central aperture and one leading curled resonator orient decisively forward/upward: dominant emotion DETERMINED HOPE, supporting exhilaration, with restraint rather than explosive fire. No eyes or eye pair, no pupils, no mouth, no beak, no feathers, no animal limbs, no human mask. Emotional attention is communicated by directional aperture opening and braced asymmetric posture. Existing curls separate their timing around a quiet gap, one short restrained glow trail only, not huge flames or sparkle confetti. Tactile hand-painted material, soft warm key and cool rim lighting matching reference. Square canvas, entire silhouette visible with 10% padding, plain dark ink-blue backdrop matching the other individual creature candidates. No props, no extra subjects, no labels, no border, no watermark.
+
+Review: clearly different eyeless radial structure, copper/coral/teal material and upward aperture orientation. It still reads partly like a crafted instrument/ornament and includes a long trail and floating beads beyond the restrained-effects request. Determined hope is not yet independently legibility-tested. Candidate only; no production approval.
+
+## Bloom Mite · form 2
+
+Project selected candidate: `public/assets/creatures/candidates/bloom-mite/form-2-v2.png`
+Source: `/Users/ejmac/.codex/generated_images/01a09804-1202-7ac3-af05-9038935a9915/exec-33828b5c-136d-40b5-bd59-2168a384bca5.png`
+Initial attempt retained at source only: `exec-81d7df2c-d049-422e-b8e3-61f6c5ef5428.png` in the same generated-images directory.
+
+Initial prompt:
+
+> Use case: stylized-concept. Asset: ONE individual full-body HabitGame creature illustration, Bloom Mite FORM 2. Input image is a STYLE AND FAMILY REFERENCE: take ONLY the centre creature's identity landmarks (horizontal many-contact floral organism, uneven thin wing pairs, forked expressive antennae, rose/amber palette), not its baby face. Do not repeat the sheet, neighbouring characters or text. Create a visibly mature invented organism with a long LOW horizontal pollen-soft body, six short overlapping petal-contact supports, asymmetric wing pair lengths and two curved jointed antennae. The face is integrated into overlapping rose petal layers, not a separate round head: exactly two TINY widely spaced amber sensory eye openings, no white sclera, very small highlights, much smaller than the reference's eyes. Petal overhangs supply soft inward concern and attentive lids. Dominant emotion TENDER AFFECTION, with encouraging hope and concern: incline toward the viewer with one antenna inviting forward, the other calmly held back; small relaxed asymmetrical mouth crease in the petal surface. Adult patient attentive warmth, not a generic broad smile, no humanoid eyebrows or make-up, no animal muzzle or nose. Reserve its own space with one side wing partly folded while the other offers an open invitation. Different in shape from an upright seed creature and a radial copper resonator. Painterly dimensional fantasy matching the reference, tactile pollen and translucent membranes, soft warm key/cool rim light. Rose plum and muted leafy olive, amber light within wings; restrained emission, no glitter shower. Full silhouette on square canvas with 10% margins, plain dark ink-blue background; no lettering, UI, other subjects, props or watermark. No bee/fox/cat/rabbit anatomy; no fur, paws, animal ears or huge baby eyes.
+
+Targeted revision prompt:
+
+> Use case: precise-object-edit. Edit ONLY the face area of this Bloom Mite mature creature. Preserve all anatomy outside the face, exact six contact supports, horizontal body, petal texture, rose/olive/amber palette, wing and antenna asymmetry, lighting, square framing and dark background. The current face looks like a cat muzzle with slanted eyes. REMOVE the protruding central muzzle, pointed nose, split upper lip and feline cheek pads entirely. Replace this face with a nearly flat continuous surface of small overlapping rose petals matching the body. Exactly TWO tiny ROUND amber sensory pinholes, each less than half the diameter of the current eye, broadly spaced and embedded in petal seams. No almond outlines, no pupils separated by sclera, no glossy eye spheres, no animal nose. Shape the OVERHANGING PETALS, not human eyebrows: lift the inner edges slightly in tender concern and relax the outer edges; do not slant down into a hostile scowl. A very small gently curved mouth crease in a lower petal seam, with no muzzle or human lips. Warm patient attentive affection, not smug, predatory, startled or babyish. Face must read as an invented living floral membrane, not a mammal wearing petals. Do not add or remove any other body part, text, symbols or props.
+
+Review: initial face was too feline and its gaze too slanted; not selected. Revision reduces eye openings, embeds them in petals and reduces the nose cue. Horizontal body, uneven wing/antenna gesture and floral contact supports remain distinct from Twilight and Echo. The rounded mouth/cheek region still risks reading as a mammal muzzle, and patient tenderness needs a stronger blind expression test. Selected for review, NOT accepted as final mature face. Do not propagate it through the roster until this risk is resolved.
+
+## Readiness
+
+Two additional individual form candidates, bringing the active total to five candidates across three families. All remain review pending. No alpha/transparency/export optimisation or user approval claimed. The full roster is NOT finished. Keep original masters and historical candidates; do not overwrite approved art or mutate owned forms when browsing these previews.
