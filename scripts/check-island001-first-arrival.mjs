@@ -17,6 +17,6 @@ if(p.position.distanceTo(new THREE.Vector3(0,1,7))>1e-7)throw Error('token misse
 p.position.set(2,1,8);a.update(30,.016,c,false,false);if(p.position.x!==2)throw Error('cinematic overwrote gameplay after handoff');
 a.dispose();const b=createIsland001FirstArrival(scene,p,s,[0,1,7]);b.update(29,0,c,true,false);if(p.position.distanceTo(new THREE.Vector3(0,1,7))>1e-7)throw Error('skip/reduced motion missed start');b.dispose();
 console.log('PASS actual scene player endpoint, handoff ownership, skip and disposal');
-if(failed)process.exit(1);
+process.exit(failed ? 1 : 0);
 `,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',packages:'external',outfile:'work/check-arrival-bundle.mjs'});
 await import(pathToFileURL(path.resolve('work/check-arrival-bundle.mjs')).href);

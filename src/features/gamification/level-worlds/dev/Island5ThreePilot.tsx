@@ -10057,7 +10057,7 @@ export default function Island5ThreePilot({
         }
         if (!firstArrival) {
           firstArrival = createIsland001FirstArrival(scene, playerPiece.root, playerPiece.shadow,
-            getIsland5TokenGroundPosition(tileTransforms, 0));
+            getIsland5TokenGroundPosition(tileTransforms, firstArrivalCompletedRef.current ? tokenIndexRef.current : 0));
           if (firstArrivalCompletedRef.current) {firstArrivalTime = 29; firstArrivalCompleted = true;}
         }
         firstArrivalTime += document.hidden ? 0 : Math.min(actualFrameDeltaSeconds, 0.25);

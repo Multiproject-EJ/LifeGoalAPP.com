@@ -27,6 +27,10 @@ function Review() {
         <button onClick={()=>{if(done || previewTime !== undefined){setDone(false);setSkip(false);setPreviewTime(undefined);setGeneration(x=>x+1);}else setSkip(true);}}>{done || previewTime !== undefined?'Replay arrival':'Skip arrival'}</button>
       </div></div></>;
 }
-createRoot(document.getElementById('root')!).render(<Review/>);
+const reviewRoot = createRoot(document.getElementById('root')!);
+reviewRoot.render(<Review/>);
 
-if (import.meta.hot) import.meta.hot.accept(() => window.location.reload());
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => reviewRoot.unmount());
+  import.meta.hot.accept(() => window.location.reload());
+}
