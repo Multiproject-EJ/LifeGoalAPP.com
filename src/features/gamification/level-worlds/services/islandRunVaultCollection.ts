@@ -2,7 +2,11 @@ import {
   sanitizeVaultRushClaimsByIsland,
   type VaultRushClaimsByIsland,
 } from './islandRunVaultRush';
-import type { IslandRunSignatureMissionProgressByIsland } from './islandRunSignatureMissions';
+import {
+  CELESTIAL_REDOCKING_ROLL_TARGET,
+  type IslandRunSignatureMissionProgressByIsland,
+} from './islandRunSignatureMissions';
+import { usesOpeningGamesCampaign } from './islandRunOpeningGames';
 
 export const VAULT_ISLAND_UNLOCK_MISSION_ID = 'broken-causeway' as const;
 
@@ -56,9 +60,28 @@ export interface VaultIslandWealthDisplay {
 export function isVaultIslandCollectionUnlocked(
   missionProgressByIsland: IslandRunSignatureMissionProgressByIsland | null | undefined,
 ): boolean {
-  return Object.values(missionProgressByIsland ?? {}).some((progress) => (
+  const ledger = missionProgressByIsland ?? {};
+  const hasLegacyUnlock = Object.values(ledger).some((progress) => (
     progress.missionId === VAULT_ISLAND_UNLOCK_MISSION_ID
-    && progress.completedAtMs !== null
+    && typeof progress.completedAtMs === 'number'
+    && Number.isFinite(progress.completedAtMs)
+    && progress.completedAtMs >= 0
+  ));
+  if (hasLegacyUnlock) return true;
+  if (!usesOpeningGamesCampaign(ledger)) return false;
+
+  // A later island number is not an entitlement. Only completed Re-Docking
+  // on the new campaign's Island 004 qualifies, in any journey cycle. Do not
+  // reinterpret old Island 002 progress as an earned Vault unlock.
+  return Object.entries(ledger).some(([key, progress]) => (
+    /^(0|[1-9]\d*):4$/.test(key)
+    && progress.missionId === 'celestial-great-redocking'
+    && progress.version === 1
+    && Number.isFinite(progress.rollsCompleted)
+    && progress.rollsCompleted >= CELESTIAL_REDOCKING_ROLL_TARGET
+    && typeof progress.completedAtMs === 'number'
+    && Number.isFinite(progress.completedAtMs)
+    && progress.completedAtMs >= 0
   ));
 }
 

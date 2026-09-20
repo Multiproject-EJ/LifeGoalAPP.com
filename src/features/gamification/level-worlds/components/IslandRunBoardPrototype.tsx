@@ -99,6 +99,13 @@ import type { ConcordFragmentPickupReason } from '../services/islandRunConcordRo
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
+import { OpeningGamesCeremonyModal } from './OpeningGamesCeremonyModal';
+import { OpeningGamesShow } from './OpeningGamesShow';
+import { resolveOpeningGamesContentIsland } from '../services/islandRunOpeningGames';
+import type { OpeningCeremonyPlayback } from '../services/islandRunOpeningCeremonyPresentation';
+import { IslandRunWelcomeCheckInModal } from './IslandRunWelcomeCheckInModal';
+import { IslandRunArenaOrientationModal } from './IslandRunArenaOrientationModal';
 import {
   getTrafficLightCharge,
   resolveTrafficLightCoinFlipReward,
@@ -739,6 +746,11 @@ import {
 } from '../dev/island5ThreePilotContract';
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
+
+// The legacy Island Mission narrative was designed around unsolicited story
+// interruptions. Keep its authored data for future reuse, but do not surface
+// any of its automatic dialogue cards, toasts, or phone transmissions in play.
+const LEGACY_SIDE_STORY_POPUPS_ENABLED = false;
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
 const VaultIslandCollectionModal = lazy(() => import('./VaultIslandCollectionModal'));
@@ -2117,6 +2129,17 @@ export function IslandRunBoardPrototype({
   // each shim commits through the store, and C1-specific paths (roll,
   // reward-bar, minigame) use dedicated action functions.
   const { state: __storeState } = useIslandRunState(session, client);
+  const featureAccess = resolveIslandRunFeatureAccess(__storeState);
+  const [showOpeningGamesCeremony, setShowOpeningGamesCeremony] = useState(false);
+  // Transient presentation only; canonical beacon/participation remain in the store.
+  const [openingCeremonyPlayback, setOpeningCeremonyPlayback] = useState<OpeningCeremonyPlayback | null>(null);
+  const [openingCeremonyWide, setOpeningCeremonyWide] = useState(false);
+  useEffect(() => {
+    if (!featureAccess.gradual || __storeState.currentIslandNumber !== 2) {
+      setShowOpeningGamesCeremony(false);
+      setOpeningCeremonyPlayback(null);
+    }
+  }, [featureAccess.gradual, __storeState.currentIslandNumber]);
   const assemblyMandateRef = useRef<ReturnType<typeof showAssemblyMandate> | null>(null);
   const [assemblyMandateOpen, setAssemblyMandateOpen] = useState(false);
   useEffect(() => () => assemblyMandateRef.current?.close(), [__storeState.currentIslandNumber, __storeState.cycleIndex, session.user.id]);
@@ -2487,7 +2510,9 @@ export function IslandRunBoardPrototype({
   // Island 004 uses the former Crown Citadel world; Island 005 uses the open
   // tropical Sunwheel Arena. Story, progression, rewards, and persistence
   // continue to use `islandArtPreviewNumber`.
-  const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
+  const island3DContentNumber = isIslandVisualPreview ? islandArtPreviewNumber
+    : resolveOpeningGamesContentIsland(__storeState.signatureMissionProgressByIsland, islandArtPreviewNumber);
+  const island3DWorldRoute = resolveIslandRun3DWorldRoute(island3DContentNumber);
   const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
   // Preview and gameplay share the authored 3D renderer. A missing URL flag
@@ -2728,7 +2753,7 @@ export function IslandRunBoardPrototype({
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
   const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
-  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id }));
+  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(__storeState.currentIslandNumber, getIslandRarity(__storeState.currentIslandNumber), 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id, signatureMissionProgressByIsland: __storeState.signatureMissionProgressByIsland }));
 
   // C1 store-derived spinTokens (see dicePool/tokenIndex above for pattern notes).
   const spinTokens = __storeState.spinTokens;
@@ -3250,7 +3275,7 @@ export function IslandRunBoardPrototype({
     showCreatureChannelModal ||
     showConcordHubModal ||
     showBoardSymbolLegend ||
-    showVaultIslandGiftUnlock ||
+    showVaultIslandGiftUnlock || showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     showMissionPhoneBriefing ||
     Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
@@ -3424,12 +3449,12 @@ export function IslandRunBoardPrototype({
   const firstLightAssemblyAvailableDynamite = getFirstLightAssemblyAvailableDynamite(firstLightAssemblyProgress);
   const firstLightAssemblyCompleted = firstLightAssemblyProgress.completedAtMs !== null;
   const stagedRestorationDescriptor = useMemo(
-    () => getStagedRestorationMissionDescriptor(islandNumber),
-    [islandNumber],
+    () => getStagedRestorationMissionDescriptor(islandNumber, __storeState.signatureMissionProgressByIsland),
+    [islandNumber, __storeState.signatureMissionProgressByIsland],
   );
   const stagedRestorationVisualDescriptor = useMemo(
-    () => getStagedRestorationMissionDescriptor(islandArtPreviewNumber),
-    [islandArtPreviewNumber],
+    () => getStagedRestorationMissionDescriptor(islandArtPreviewNumber, __storeState.signatureMissionProgressByIsland),
+    [islandArtPreviewNumber, __storeState.signatureMissionProgressByIsland],
   );
   const stagedRestorationPreviewStage = useMemo(() => {
     if (!isIslandVisualPreview || !stagedRestorationVisualDescriptor || typeof window === 'undefined') return null;
@@ -3689,6 +3714,7 @@ export function IslandRunBoardPrototype({
       : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
+    showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || showFirstCreaturePackModal ||
       showStoryReader ||
       activeStopId ||
@@ -5360,9 +5386,16 @@ export function IslandRunBoardPrototype({
   // the celebration can never persist across an island change.
 
   const islandStopPlan = useMemo(
-    () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }),
-    [islandNumber],
+    () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }).map(stop =>
+      featureAccess.welcomeCheckIn && stop.stopId === 'hatchery'
+        ? { ...stop, title: '⚑ Welcome Venue', description: 'Check in with your island hosts, then explore and build. Your welcome activity is free.' }
+        : featureAccess.arenaOrientation && stop.stopId === 'mystery'
+          ? { ...stop, title: 'Host Orientation', description: 'Meet the hosts and learn how to explore and build. The First Games open on Island 002.' }
+        : stop),
+    [islandNumber, featureAccess.welcomeCheckIn, featureAccess.arenaOrientation],
   );
+  const [showEarlyOwnedEggs, setShowEarlyOwnedEggs] = useState(false);
+  useEffect(() => { setShowEarlyOwnedEggs(false); }, [activeStopId, islandNumber]);
 
   // B1-3: dayIndex computed from island start time
   const dayIndex = useMemo(
@@ -5373,8 +5406,11 @@ export function IslandRunBoardPrototype({
   // B1-3: regenerate tileMap whenever islandNumber or dayIndex changes
   useEffect(() => {
     const rarity = getIslandRarity(islandNumber);
-    setTileMap(generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex, { profileId: ACTIVE_BOARD_PROFILE.id }));
-  }, [activeTheme.tileThemeId, islandNumber, dayIndex]);
+    const next = generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex, { profileId: ACTIVE_BOARD_PROFILE.id, signatureMissionProgressByIsland: __storeState.signatureMissionProgressByIsland });
+    // Mission rolls update the ledger without changing feature eligibility.
+    // Keep the scene's tile-map identity stable unless its actual contents change.
+    setTileMap(current => JSON.stringify(current) === JSON.stringify(next) ? current : next);
+  }, [activeTheme.tileThemeId, islandNumber, dayIndex, __storeState.signatureMissionProgressByIsland]);
 
   // B4-4: log dayIndex changes for debug
   useEffect(() => {
@@ -5735,27 +5771,14 @@ export function IslandRunBoardPrototype({
     // reward-earning tile landing + every claim), so routing it through the
     // commit coordinator removes a class of overlap bugs where a tile
     // landing's bar progress could race an auto-claim's bar reset.
-    applyRewardBarState({
+    const record = applyRewardBarState({
       session,
       client,
       nextState: nextRewardBarState,
       triggerSource: 'reward_bar_runtime_state',
     });
 
-    setRuntimeState((current) => ({
-      ...current,
-      rewardBarProgress: nextRewardBarState.rewardBarProgress,
-      rewardBarThreshold: nextRewardBarState.rewardBarThreshold,
-      rewardBarClaimCountInEvent: nextRewardBarState.rewardBarClaimCountInEvent,
-      rewardBarEscalationTier: nextRewardBarState.rewardBarEscalationTier,
-      rewardBarLastClaimAtMs: nextRewardBarState.rewardBarLastClaimAtMs,
-      rewardBarBoundEventId: nextRewardBarState.rewardBarBoundEventId,
-      rewardBarLadderId: nextRewardBarState.rewardBarLadderId,
-      activeTimedEvent: nextRewardBarState.activeTimedEvent,
-      activeTimedEventProgress: nextRewardBarState.activeTimedEventProgress,
-      stickerProgress: nextRewardBarState.stickerProgress,
-      stickerInventory: nextRewardBarState.stickerInventory,
-    }));
+    setRuntimeState(record);
   }, [client, session]);
 
   useEffect(() => {
@@ -5883,7 +5906,7 @@ export function IslandRunBoardPrototype({
     cycleIndex,
     perIslandEggs: islandProgressReadState.perIslandEggs,
   }), [cycleIndex, islandNumber, islandProgressReadState.perIslandEggs, session.user.id]);
-  const isEggManiaActive = eggManiaState.active;
+  const isEggManiaActive = featureAccess.eggs && eggManiaState.active;
   const isEggManiaUnused = isEggManiaActive && !eggManiaState.consumed;
   const effectiveCompletedStops = useMemo(
     () => getEffectiveCompletedStops({
@@ -5984,7 +6007,7 @@ export function IslandRunBoardPrototype({
         let status: StopProgressState = resolverStatus ?? 'locked';
         // Hatchery (index 0): show yellow 'partial' when egg is set but not yet collected/sold.
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
-        if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
+        if (index === 0 && status === 'completed' && !islandEggSlotUsed && !featureAccess.welcomeCheckIn) {
           status = 'partial';
         } else if (status === 'completed') {
           const buildState = islandProgressReadState.stopBuildStateByIndex[index];
@@ -6018,7 +6041,7 @@ export function IslandRunBoardPrototype({
     }
 
     return map;
-  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan]);
+  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandProgressReadState.stopBuildStateByIndex, islandStopPlan, featureAccess.welcomeCheckIn]);
 
   const landmarkDiscoveryStates = useMemo(
     () => islandStopPlan.map((stop) => (
@@ -6180,7 +6203,9 @@ export function IslandRunBoardPrototype({
         // island). A deliberate 3D landmark/tray tap still opens it normally.
         setRequiredDoorStopId(null);
         requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking');
-        setLandingText('🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
+        setLandingText(featureAccess.welcomeCheckIn
+          ? '⚑ Welcome Venue reached. Tap the landmark to check in for free.'
+          : '🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
         return;
       }
       setRequiredDoorStopId(doorStopId);
@@ -6561,6 +6586,7 @@ export function IslandRunBoardPrototype({
         seed: current.seed,
         stickerFragments: runtimeStateRef.current.stickerProgress.fragments,
         islandNumber: runtimeStateRef.current.currentIslandNumber,
+        signatureMissionProgressByIsland: runtimeStateRef.current.signatureMissionProgressByIsland,
       });
 
       playIslandRunSound('coin_flip');
@@ -6835,7 +6861,7 @@ export function IslandRunBoardPrototype({
         focusX: focusPosition.x,
         focusY: focusPosition.y,
         state,
-        icon: getStopIcon(stop),
+        icon: featureAccess.welcomeCheckIn && stop.stopId === 'hatchery' ? '⚑' : getStopIcon(stop),
         labelOffsetY,
         labelOffsetX: 0,
         hideLabel: false,
@@ -6903,6 +6929,7 @@ export function IslandRunBoardPrototype({
     completedStops,
     islandStopPlan,
     islandArtManifest,
+    featureAccess.welcomeCheckIn,
     stopStateMap,
     ticketRequirementByStopId,
     ticketsPaidForCurrentIsland,
@@ -7534,8 +7561,8 @@ export function IslandRunBoardPrototype({
     runtimeState,
     nowMs,
   });
-  const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber);
-  const diplomaticRewardChannelVisible = isDiplomaticRewardChannelVisible({
+  const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber, __storeState.signatureMissionProgressByIsland);
+  const diplomaticRewardChannelVisible = openingCeremonyPlayback === null && featureAccess.rewardChannel && isDiplomaticRewardChannelVisible({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
     firstSessionTutorialState: runtimeState.firstSessionTutorialState,
@@ -7562,6 +7589,10 @@ export function IslandRunBoardPrototype({
     return `${devTimedEventOverrideType}:dev:${nonce}`;
   }, [devTimedEventOverrideType]);
   const effectiveActiveTimedEvent = useMemo(() => {
+    // The free ceremony round is not an unreleased ordinary event surface.
+    // Its button must remain reachable without admin/dev privileges. Keep the
+    // canonical event identity; do not mint a tutorial-specific event wallet.
+    if (featureAccess.inauguralRound) return activeTimedEvent;
     // The legacy four event surfaces remain preview-gated. Skybound Academy is
     // the first production event promoted through the full canonical cycle.
     const journeyDiscChapterExhibitionCanExposeEvent = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
@@ -7581,7 +7612,7 @@ export function IslandRunBoardPrototype({
       expiresAtMs: now + (24 * 60 * 60 * 1000),
       version: 1,
     };
-  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, isAdmin, isDevModeEnabled, islandNumber]);
+  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, featureAccess.inauguralRound, isAdmin, isDevModeEnabled, islandNumber]);
   const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
@@ -7750,7 +7781,7 @@ export function IslandRunBoardPrototype({
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
 
   useEffect(() => {
-    if (activeStopId !== 'mystery') {
+    if (activeStopId !== 'mystery' || !featureAccess.ordinaryEvents) {
       setArenaBoostStatus('idle');
       return;
     }
@@ -7775,7 +7806,7 @@ export function IslandRunBoardPrototype({
       return;
     }
     setArenaBoostStatus(result.status === 'already_claimed' ? 'already_claimed' : 'idle');
-  }, [activeStopId, client, effectiveActiveTimedEvent?.eventId, islandNumber, session]);
+  }, [activeStopId, client, effectiveActiveTimedEvent?.eventId, featureAccess.ordinaryEvents, islandNumber, session]);
   const isRewardBarNearlyFull = rewardBarPercent >= 85 && rewardBarPercent < 100;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
   // const activeEventTickets = activeTimedEventId ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0) : 0;
@@ -8007,7 +8038,8 @@ export function IslandRunBoardPrototype({
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
     const nowMs = Date.now();
     const chainResult = resolveChainedRewardBarClaims({
-      state: options.state,
+      state: { ...options.state, currentIslandNumber: getIslandRunStateSnapshot(session).currentIslandNumber,
+        signatureMissionProgressByIsland: getIslandRunStateSnapshot(session).signatureMissionProgressByIsland },
       nowMs,
       islandNumber,
     });
@@ -8507,7 +8539,7 @@ export function IslandRunBoardPrototype({
             suppressLandingText: true,
             suppressTechPickup: true,
           });
-          const pickupLabel = getStagedRestorationMissionDescriptor(runtimeStateRef.current.currentIslandNumber)?.pickupLabel
+          const pickupLabel = getStagedRestorationMissionDescriptor(runtimeStateRef.current.currentIslandNumber, runtimeStateRef.current.signatureMissionProgressByIsland)?.pickupLabel
             ?? 'Mission object';
           setLandingText(`${rollResult.stagedRestorationPickup.collectionKind === 'route_pass' ? '✨ Secured along the route' : '✨ Collected'}: ${pickupLabel}. Open the mission phone to activate the next transformation.`);
           setShowMissionPhoneBriefing(true);
@@ -8771,6 +8803,10 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     handleRollRef.current = handleRoll;
   }, [handleRoll]);
+
+  useEffect(() => {
+    if (showOpeningGamesCeremony || openingCeremonyPlayback !== null) stopAutoRoll();
+  }, [showOpeningGamesCeremony, openingCeremonyPlayback, stopAutoRoll]);
 
   useEffect(() => {
     if (dicePool < effectiveDiceCost && isAutoRolling) {
@@ -9152,6 +9188,10 @@ export function IslandRunBoardPrototype({
   // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
   const handleSetEgg = async () => {
     if (isSettingEgg) return;
+    if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).eggs) {
+      setLandingText('Your first Hatchery egg is introduced on Island 004.');
+      return;
+    }
     setIsSettingEgg(true);
     // Cross-device guard: another device may already have set this island's
     // egg while this device held a stale snapshot. Egg tier + hatch timer are
@@ -9225,6 +9265,7 @@ export function IslandRunBoardPrototype({
     const nextCompletedStops = activeStopId === 'hatchery'
       ? ensureStopCompleted(completedStops, 'hatchery')
       : completedStops;
+    const placementSnapshot = getIslandRunStateSnapshot(session);
     const nextRecord = eggCount > 1
       ? applyEggPlacementBatch({
           session,
@@ -9249,6 +9290,13 @@ export function IslandRunBoardPrototype({
           triggerSource: 'island_run_set_egg',
         });
 
+    // The canonical action can reject a stale pre-introduction callback. Never
+    // animate an egg, schedule a notification or complete a stop it rejected.
+    if (nextRecord === placementSnapshot || nextRecord.perIslandEggs[primaryEgg.ledgerKey]?.setAtMs !== primaryEgg.setAtMs) {
+      setIsSettingEgg(false);
+      setLandingText('This egg could not be placed. Return to the island and try again.');
+      return;
+    }
     setActiveEgg(nextActiveEgg);
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
@@ -10525,6 +10573,11 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchTimedEventMinigame = async () => {
+    if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) {
+      if (getIslandRunStateSnapshot(session).currentIslandNumber === 2) setShowOpeningGamesCeremony(true);
+      else setLandingText('The opening ceremony on Island 002 introduces the arena games.');
+      return;
+    }
     if (!effectiveActiveTimedEvent) return;
     if (journeyDiscReplacesTimedEventSurface) {
       setIsTimedEventLaunchQueued(false);
@@ -10743,6 +10796,7 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchMomentumMatrix = () => {
+    if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) { if (islandNumber === 2) setShowOpeningGamesCeremony(true); return; }
     if (
       !effectiveActiveTimedEvent
       || !isCanonicalEventId(effectiveActiveTimedEvent.eventType)
@@ -10826,6 +10880,7 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchArenaGame = (gameId: ArenaGameId) => {
+    if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) { if (islandNumber === 2) setShowOpeningGamesCeremony(true); return; }
     if (gameId === 'crystal_miners') {
       const miningEvent = effectiveActiveTimedEvent ?? activeTimedEvent;
       if (!miningEvent || !isCanonicalEventId(miningEvent.eventType)) {
@@ -11011,6 +11066,7 @@ export function IslandRunBoardPrototype({
     }
   }, [activeLaunchedMinigameId, handleLaunchTimedEventMinigame, isRolling, isTimedEventLaunchQueued, journeyDiscReplacesTimedEventSurface]);
   const handleLaunchEventSurface = () => {
+    if (!featureAccess.ordinaryEvents) { if (islandNumber === 2) setShowOpeningGamesCeremony(true); return; }
     if (journeyDiscReplacesTimedEventSurface) {
       handleLaunchArenaGame('journey_disc_arena');
       return;
@@ -13540,6 +13596,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
+    showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     assemblyMandateOpen ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
@@ -14205,6 +14262,7 @@ export function IslandRunBoardPrototype({
       islandClearStats?.islandNumber === runtimeState.currentIslandNumber
   );
   const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
+    showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
       activeLaunchedMinigameId ||
@@ -14292,7 +14350,7 @@ export function IslandRunBoardPrototype({
     userId: session.user.id,
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
-    hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
+    hasHydratedRuntimeState: LEGACY_SIDE_STORY_POPUPS_ENABLED && hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
     isOpeningBriefingComplete: isOpeningBriefingCompleteForNarrative,
     firstSessionTutorialState: runtimeState.firstSessionTutorialState,
     isNarrativeSurfaceBlocked,
@@ -14337,8 +14395,8 @@ export function IslandRunBoardPrototype({
     : concordFirstContactPreviewDialogue;
 
   const landmarkWhispers = useLandmarkWhispers({
-    activeStopId,
-    hasHydratedRuntimeState,
+    activeStopId: featureAccess.welcomeCheckIn && activeStopId === 'hatchery' ? null : activeStopId,
+    hasHydratedRuntimeState: LEGACY_SIDE_STORY_POPUPS_ENABLED && hasHydratedRuntimeState,
     isNarrativeSurfaceBlocked: Boolean(
       isNarrativeSurfaceBlocked ||
       islandNarrativeOpeningFlow.activeDialogue ||
@@ -15437,8 +15495,17 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
+        {!diplomaticRewardChannelVisible && featureAccess.gradual ? (
+          <div className="island-run-board__rewardbar-cluster">
+            <button type="button" className="island-run-board__mission-phone-rail"
+              aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+              onClick={() => setShowMissionPhoneBriefing(true)}>
+              <img src="/tech/ExpeditionPhone_v19_folded.webp" alt="" aria-hidden="true" /><small>Mission</small>
+            </button>
+          </div>
+        ) : null}
         {diplomaticRewardChannelVisible ? (
-          <div className={`island-run-board__rewardbar-cluster${diplomaticActivationAnimating ? ' island-run-board__rewardbar-cluster--mission-reveal' : ''}`}>
+          <div className={`island-run-board__rewardbar-cluster${diplomaticActivationAnimating ? ' island-run-board__rewardbar-cluster--mission-reveal' : ''}${featureAccess.inauguralRound ? ' island-run-board__rewardbar-cluster--opening-reveal' : ''}`}>
           <div className="island-run-board__rewardbar-hatchery-tray">
             {hatcheryPendingEggs.length > 0 && (
               <button
@@ -15474,7 +15541,7 @@ export function IslandRunBoardPrototype({
                 🧩 {runtimeState.stickerProgress.fragments}/5
               </button>
             ) : null}
-            {onOpenDailySpinWheel ? (
+            {onOpenDailySpinWheel && featureAccess.dailyWheel ? (
               <button
                 type="button"
                 className={`island-run-board__daily-momentum-btn${dailySpinAvailable ? ' island-run-board__daily-momentum-btn--ready' : ' island-run-board__daily-momentum-btn--used'}`}
@@ -15621,33 +15688,33 @@ export function IslandRunBoardPrototype({
                 );
               }
 
-              if (index === rewardBarTimedEventSlotIndex && hasRewardBarTimedEventQuickAction && activeEventSurfaceMeta) {
+              if (index === rewardBarTimedEventSlotIndex && hasRewardBarTimedEventQuickAction && activeEventSurfaceMeta && featureAccess.eventLauncher && openingCeremonyPlayback === null) {
                 return (
                   <span key="timed-event" className="island-run-board__rewardbar-side-slot">
                     <button
                       type="button"
                       className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
-                      aria-label={isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface ? `${activeEventSurfaceMeta.displayName} queued to auto-open` : `Open ${activeEventSurfaceMeta.displayName}`}
+                      aria-label={featureAccess.inauguralRound ? 'Open first games · Free guided round' : isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface ? `${activeEventSurfaceMeta.displayName} queued to auto-open` : `Open ${activeEventSurfaceMeta.displayName}`}
                       onClick={handleLaunchEventSurface}
                     >
                       <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
-                        {activeEventIcon.startsWith('/') ? <img className="island-run-board__minigame-icon-image" src={activeEventIcon} alt="" loading="lazy" /> : activeEventIcon}
+                        {featureAccess.inauguralRound ? '⌁' : activeEventIcon.startsWith('/') ? <img className="island-run-board__minigame-icon-image" src={activeEventIcon} alt="" loading="lazy" /> : activeEventIcon}
                       </span>
-                      <span className="island-run-board__minigame-icon-label">{activeEventTickets} {eventSurfaceTicketIcon}</span>
-                      {isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface && (
+                      <span className="island-run-board__minigame-icon-label">{featureAccess.inauguralRound ? 'FREE' : `${activeEventTickets} ${eventSurfaceTicketIcon}`}</span>
+                      {!featureAccess.inauguralRound && isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface && (
                         <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
                       )}
-                      {journeyDiscReplacesTimedEventSurface && (
+                      {!featureAccess.inauguralRound && journeyDiscReplacesTimedEventSurface && (
                         <span className="island-run-board__minigame-icon-helper">Each ticket deploys one disc</span>
                       )}
-                      {isSpaceExcavatorEffectiveEvent && (
+                      {!featureAccess.inauguralRound && isSpaceExcavatorEffectiveEvent && (
                         <>
                           <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
                           <span className="island-run-board__minigame-icon-helper">Progress saved</span>
                           <span className="island-run-board__minigame-icon-helper">Earn from reward bar</span>
                         </>
                       )}
-                      {isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
+                      {!featureAccess.inauguralRound && isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
                         <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--dev">
                           DEV override tickets
                         </span>
@@ -15779,7 +15846,7 @@ export function IslandRunBoardPrototype({
             // Light the traffic-light tile the instant the token passes over it
             // (mid-roll), rather than waiting for the landing/commit. Functional
             // update handles the rare big-roll case of passing it twice.
-            if (ordinaryBoardTilesActive && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+            if (ordinaryBoardTilesActive && featureAccess.trafficLight && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
               setTrafficLightVisualCharge((prev) => {
                 const base = prev ?? trafficLightCharge;
                 return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
@@ -15824,16 +15891,19 @@ export function IslandRunBoardPrototype({
                 isRolling={isRolling}
                 landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
-                cameraFocusPreset={threeCameraFocusPreset}
+                cameraFocusPreset={openingCeremonyPlayback && !openingCeremonyPlayback.reducedMotion
+                  ? openingCeremonyWide ? 'overview' : island5ThreeBuildLevels.boss > 0 ? 'boss' : 'event'
+                  : threeCameraFocusPreset}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
-                interactionPaused={doesModalOwnAttention}
+                interactionPaused={doesModalOwnAttention || openingCeremonyPlayback !== null}
+                openingCeremonyPlayback={openingCeremonyPlayback}
                 constructionPresentation={constructionPresentation}
                 arenaBattlePresentation={arenaBattlePresentation}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();
-                  if (ordinaryBoardTilesActive && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+                  if (ordinaryBoardTilesActive && featureAccess.trafficLight && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
                     setTrafficLightVisualCharge((prev) => {
                       const base = prev ?? trafficLightCharge;
                       return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
@@ -15956,7 +16026,7 @@ export function IslandRunBoardPrototype({
                     reelPulse: fishingReelPulse,
                   },
                 }}
-                onSignatureMissionClick={getStagedRestorationMissionDescriptor(islandArtPreviewNumber)
+                onSignatureMissionClick={stagedRestorationVisualDescriptor
                   ? isIslandVisualPreview ? undefined : () => setShowMissionPhoneBriefing(true)
                   : islandArtPreviewNumber === 1
                   ? isIslandVisualPreview ? undefined : openFirstLightAssemblyCrater
@@ -16616,6 +16686,11 @@ export function IslandRunBoardPrototype({
         storyReaderOpen: showStoryReader,
         firstRunCelebrationOpen: showFirstRunCelebration,
       }) && activeStop && (() => {
+        if (activeStop.stopId === 'hatchery' && featureAccess.welcomeCheckIn && !showEarlyOwnedEggs) {
+          return <IslandRunWelcomeCheckInModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
+            onClose={() => setActiveStopId(null)}
+            onReviewEggs={hatcheryPendingEggCount > 0 ? () => setShowEarlyOwnedEggs(true) : undefined} />;
+        }
         const openedStopIndex = islandStopPlan.findIndex((s) => s.stopId === activeStop.stopId);
         const openedStopState = stopStateMap.get(activeStop.stopId) ?? 'active';
         const openedStopIsLocked = openedStopState === 'locked';
@@ -16655,6 +16730,11 @@ export function IslandRunBoardPrototype({
               }}
             />
           ), document.body);
+        }
+        if (activeStop.stopId === 'mystery' && featureAccess.arenaOrientation
+          && (openedStopIsPlayable || openedStopIsCompleted)) {
+          return <IslandRunArenaOrientationModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
+            onClose={() => setActiveStopId(null)} />;
         }
         return (
         <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
@@ -17493,7 +17573,7 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {trafficLightCoinFlip && (
+      {trafficLightCoinFlip && featureAccess.trafficLight && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
             {trafficLightCoinFlip.phase !== 'flipping' && trafficLightCoinFlip.phase !== 'opening' && (
@@ -19619,6 +19699,23 @@ export function IslandRunBoardPrototype({
         />
       ) : null}
 
+      {showOpeningGamesCeremony && featureAccess.gradual && islandNumber === 2 ? (
+        <OpeningGamesCeremonyModal session={session} client={client}
+          onClose={() => setShowOpeningGamesCeremony(false)}
+          onBuild={() => { setShowOpeningGamesCeremony(false); openBuildPanelFromFooter(); }}
+          onBeaconLit={() => {
+            setShowOpeningGamesCeremony(false);
+            setOpeningCeremonyWide(false);
+            setOpeningCeremonyPlayback({ startedAtMs: Date.now(),
+              reducedMotion: Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) });
+          }} />
+      ) : null}
+      {openingCeremonyPlayback && featureAccess.gradual && islandNumber === 2 ? (
+        <OpeningGamesShow {...openingCeremonyPlayback} onOverview={() => setOpeningCeremonyWide(true)} onFinish={() => {
+          setOpeningCeremonyPlayback(null);
+          setLandingText('✨ The First Games are open! Your reward bar is here. Tap First game for your free guided round.');
+        }} />
+      ) : null}
       {activeLaunchedMinigameId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
           <IslandRunMinigameLauncher
@@ -19818,7 +19915,9 @@ export function IslandRunBoardPrototype({
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
-        primaryActionLabel={showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
+        primaryActionLabel={showMissionPhoneBriefing && featureAccess.gradual && islandNumber === 2
+          ? 'Open ceremony preparations'
+          : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? firstLightAssemblyProgress.mandateSignedAtMs != null ? 'View sealed mandate' : 'Sign the peacekeeping mandate'
           : showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.label : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
@@ -19872,7 +19971,9 @@ export function IslandRunBoardPrototype({
         milestoneCount={showMissionPhoneBriefing && stagedRestorationDescriptor
           ? stagedRestorationDescriptor.stageCount
           : showMissionPhoneBriefing && islandNumber === 14 ? GREAT_HONEYFALL_MAX_STAGE : 0}
-        onPrimaryAction={showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
+        onPrimaryAction={showMissionPhoneBriefing && featureAccess.gradual && islandNumber === 2
+          ? () => { setShowMissionPhoneBriefing(false); setShowOpeningGamesCeremony(true); }
+          : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? () => { setShowMissionPhoneBriefing(false); openAssemblyMandate(); }
           : showMissionPhoneBriefing && stagedRestorationDescriptor
           ? () => void handleActivateStagedRestoration()

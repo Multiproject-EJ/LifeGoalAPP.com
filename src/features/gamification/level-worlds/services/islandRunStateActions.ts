@@ -41,6 +41,9 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { canPlaceIslandRunEggs } from './islandRunEggPlacementPolicy';
+import { ensureIslandRunContractV2ActiveTimedEvent } from './islandRunContractV2RewardBar';
 import { resolveIslandRunCompletion } from './islandRunCompletion';
 import type {
   CompanionFeastProgressEntry,
@@ -1830,6 +1833,10 @@ export function applyTrafficLightTilePass(options: {
 }): ApplyTrafficLightPassResult {
   const { session, client, islandNumber, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  const access = resolveIslandRunFeatureAccess(current);
+  if (!access.trafficLight || (access.gradual && islandNumber !== current.currentIslandNumber)) {
+    return { record: current, chargeAfter: 0, unlocked: false };
+  }
   const result = applyTrafficLightPass({
     bonusTileChargeByIsland: current.bonusTileChargeByIsland,
     islandNumber,
@@ -1856,6 +1863,7 @@ export function applyTrafficLightCoinFlipReward(options: {
 }): IslandRunGameStateRecord {
   const { session, client, reward, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  if (!resolveIslandRunFeatureAccess(current).trafficLight) return current;
   const stickerFragmentsDelta = Math.max(0, Math.floor(reward.stickerFragments));
   const nextStickerProgress = stickerFragmentsDelta > 0
     ? {
@@ -1908,6 +1916,9 @@ export function claimArenaFirstTicketBoost(
   const { session, client, islandNumber, cycleIndex, stopId, activeTimedEventId, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const eventId = typeof activeTimedEventId === 'string' ? activeTimedEventId.trim() : '';
+  if (!resolveIslandRunFeatureAccess(current).ordinaryEvents) {
+    return { record: current, status: 'ineligible', granted: 0, eventId: eventId || null };
+  }
   if (!eventId) return { record: current, status: 'no_active_event', granted: 0, eventId: null };
   if (Math.trunc(islandNumber) !== 1 || Math.trunc(cycleIndex) !== 0 || stopId !== 'mystery') {
     return { record: current, status: 'ineligible', granted: 0, eventId };
@@ -1959,6 +1970,7 @@ export function applyTimedEventTicketSpend(
   const current = getIslandRunStateSnapshot(session);
   const canonicalEventId = typeof eventId === 'string' ? eventId.trim() : '';
   const requested = Number.isFinite(ticketsToSpend) ? Math.max(0, Math.floor(ticketsToSpend)) : 0;
+  if (!resolveIslandRunFeatureAccess(current).ordinaryEvents) return { record: current, spent: 0 };
   if (!canonicalEventId || requested < 1) return { record: current, spent: 0 };
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[canonicalEventId] ?? 0));
   if (available < requested) return { record: current, spent: 0 };
@@ -4190,8 +4202,13 @@ export interface ApplyRewardBarStateOptions {
  * landing's bar progress could race an auto-claim's bar reset.
  */
 export function applyRewardBarState(options: ApplyRewardBarStateOptions): IslandRunGameStateRecord {
-  const { session, client, nextState, triggerSource } = options;
+  const { session, client, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  // Hidden channels cannot accept progress or claim mutations, including stale
+  // UI callbacks. The shared event clock may still initialise/rotate normally.
+  const nextState = resolveIslandRunFeatureAccess(current).rewardChannel
+    ? options.nextState
+    : ensureIslandRunContractV2ActiveTimedEvent({ state: current, nowMs: Date.now() }).state;
   const next: IslandRunGameStateRecord = {
     ...current,
     rewardBarProgress: nextState.rewardBarProgress,
@@ -4668,6 +4685,7 @@ export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): 
   } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  if (!canPlaceIslandRunEggs(current, islandNumber, Object.keys(eggEntriesByLedgerKey))) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
     activeEggTier,
@@ -4704,6 +4722,7 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
   } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  if (!canPlaceIslandRunEggs(current, islandNumber, [islandKey])) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
     activeEggTier,
@@ -4850,6 +4869,9 @@ export function resolveReadyEggTerminalTransition(
   const activeEggHatchAtMs = canBackfillBaseActiveEgg
     ? (current.activeEggSetAtMs as number) + (current.activeEggHatchDurationMs as number)
     : 0;
+  if (!resolveIslandRunFeatureAccess(current).eggs && !ledgerEntry && !canBackfillBaseActiveEgg) {
+    return { record: current, changed: false, reason: 'missing_ledger_entry' };
+  }
   const readyCheckMs = Number.isFinite(readyNowMs) ? (readyNowMs as number) : openedAtMs;
   const currentEntry: PerIslandEggEntry | undefined = ledgerEntry ?? (canBackfillBaseActiveEgg
     ? {
@@ -5291,9 +5313,9 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
   } = options;
 
   const current = getIslandRunStateSnapshot(session);
-  if (options.completedVisitKey !== undefined) {
+  if (options.completedVisitKey !== undefined || resolveIslandRunFeatureAccess(current).gradual) {
     const completion = resolveIslandRunCompletion(current);
-    if (!completion.complete || completion.visitKey !== options.completedVisitKey
+    if (!completion.complete || (options.completedVisitKey !== undefined && completion.visitKey !== options.completedVisitKey)
       || nextIsland !== current.currentIslandNumber + 1) {
       throw new Error('Island completion changed before departure. Return to the current island and try again.');
     }

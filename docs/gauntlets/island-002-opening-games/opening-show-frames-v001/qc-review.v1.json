@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/quality_lord",
+  "mode": "independent-read-only",
+  "scope": "core ceremony still-frame presentation, not whole island or release",
+  "action": "refine",
+  "scores": {"beaconContact":null,"beaconClarity":0.62,"cameraClarity":0.88,"fireworksReadability":0.58,"fireworksPlacement":0.91,"captionHudFit":0.90,"firstGameClarity":0.87,"rewardClarity":0.92,"motionAccessibilityPerformance":null},
+  "correction": "Improve flame contrast and visible mass; replace subpixel firework dots with clearly colored trails. Preserve positions, camera, palace and board.",
+  "budget": {"candidates":1,"correctionsUsed":0,"maxCorrections":1,"reviews":1}
+}

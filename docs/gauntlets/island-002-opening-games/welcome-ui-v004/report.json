@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "scope": "offline real-board welcome check-in, next ticket, reload and legacy/004 Hatchery preservation; not first-session or physical-device acceptance",
+  "cases": [
+    {
+      "island": 2,
+      "gradual": true,
+      "puzzle": false,
+      "mission": "Host the First Games",
+      "puzzleCount": 0,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "externalRequestsBlocked": 0
+}

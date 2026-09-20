@@ -1,4 +1,11 @@
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
+import {
+  OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
+  createOpeningGamesCampaignMarker, sanitizeOpeningGamesCampaignMarker,
+  sanitizeOpeningGamesCeremonyProgress, mergeOpeningGamesCampaignMarkers,
+  mergeOpeningGamesCeremonyProgress, usesOpeningGamesCampaign,
+  type OpeningGamesCampaignMarker, type OpeningGamesCeremonyProgress,
+} from './islandRunOpeningGames';
 import { resolveCollisionFreeTileIndices } from './islandRunTileReservations';
 import { mergeMoonwellThermalProgress, sanitizeMoonwellThermalProgress, type MoonwellThermalProgress } from './islandRunMoonwellThermal';
 
@@ -166,7 +173,9 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
 
 export function getStagedRestorationMissionDescriptor(
   islandNumber: number,
+  ledger: IslandRunSignatureMissionProgressByIsland = {},
 ): StagedRestorationMissionDescriptor | null {
+  if (Math.floor(islandNumber) === 4 && usesOpeningGamesCampaign(ledger)) return null;
   return STAGED_RESTORATION_MISSIONS[Math.max(1, Math.floor(islandNumber))] ?? null;
 }
 
@@ -180,8 +189,12 @@ export function getStagedRestorationMissionDescriptorById(
   return Object.values(STAGED_RESTORATION_MISSIONS).find((descriptor) => descriptor.missionId === missionId) ?? null;
 }
 
-export function getStagedRestorationPickupTileIndices(islandNumber: number, tileCount: number): number[] {
-  const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
+export function getStagedRestorationPickupTileIndices(
+  islandNumber: number,
+  tileCount: number,
+  ledger: IslandRunSignatureMissionProgressByIsland = {},
+): number[] {
+  const descriptor = getStagedRestorationMissionDescriptor(islandNumber, ledger);
   return descriptor
     ? resolveCollisionFreeTileIndices({ tileCount, preferredFractions: descriptor.preferredPickupFractions })
     : [];
@@ -191,9 +204,10 @@ export function getStagedRestorationPickupForTile(
   islandNumber: number,
   tileIndex: number,
   tileCount: number,
+  ledger: IslandRunSignatureMissionProgressByIsland = {},
 ): { kind: StagedRestorationPickupKind; amount: number } | null {
-  const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
-  if (!descriptor || !getStagedRestorationPickupTileIndices(islandNumber, tileCount).includes(tileIndex)) return null;
+  const descriptor = getStagedRestorationMissionDescriptor(islandNumber, ledger);
+  if (!descriptor || !getStagedRestorationPickupTileIndices(islandNumber, tileCount, ledger).includes(tileIndex)) return null;
   return { kind: descriptor.pickupKind, amount: 1 };
 }
 
@@ -326,6 +340,8 @@ export interface StagedRestorationMissionProgress {
 }
 
 export type IslandRunSignatureMissionProgress =
+  | OpeningGamesCampaignMarker
+  | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
   | CelestialRedockingProgress
   | FrostwellIceworksProgress
@@ -377,6 +393,15 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'opening-games-campaign') {
+      const marker = sanitizeOpeningGamesCampaignMarker(record);
+      if (key === OPENING_GAMES_CAMPAIGN_KEY && marker) result[key] = marker;
+      return;
+    }
+    if (record.missionId === 'host-the-first-games') {
+      if (key === OPENING_GAMES_CEREMONY_KEY && record.version === 1) result[key] = sanitizeOpeningGamesCeremonyProgress(record);
+      return;
+    }
     if (record.missionId === 'moonwell-thermal' && /^\d+:3:moonwell$/.test(key)) {
       result[key] = sanitizeMoonwellThermalProgress(record);
       return;
@@ -683,6 +708,20 @@ export function sanitizeIslandRunSignatureMissionProgress(
   return result;
 }
 
+/** Existing records without a rollout marker stay on their original journey.
+ * New records must explicitly seed opening-games-v1; never inherit it from a
+ * hydration fallback or infer it from currentIslandNumber. */
+export function normalizeExistingCampaignMissionLedger(raw: unknown): IslandRunSignatureMissionProgressByIsland {
+  const ledger = sanitizeIslandRunSignatureMissionProgress(raw);
+  return ledger[OPENING_GAMES_CAMPAIGN_KEY] ? ledger : {
+    ...ledger, [OPENING_GAMES_CAMPAIGN_KEY]: createOpeningGamesCampaignMarker('legacy'),
+  };
+}
+
+export function createOpeningGamesCampaignLedger(): IslandRunSignatureMissionProgressByIsland {
+  return { [OPENING_GAMES_CAMPAIGN_KEY]: createOpeningGamesCampaignMarker('opening-games-v1') };
+}
+
 export function resolveFrostwellIceworksProgress(options: {
   ledger: IslandRunSignatureMissionProgressByIsland;
   cycleIndex: number;
@@ -714,7 +753,7 @@ export function resolveCelestialRedockingProgress(options: {
 }): CelestialRedockingProgress {
   const key = getIslandRunSignatureMissionKey(
     options.cycleIndex,
-    options.islandNumber ?? CELESTIAL_REDOCKING_ISLAND_NUMBER,
+    options.islandNumber ?? (usesOpeningGamesCampaign(options.ledger) ? 4 : CELESTIAL_REDOCKING_ISLAND_NUMBER),
   );
   const current = options.ledger[key];
   return current?.missionId === 'celestial-great-redocking' ? current : {
@@ -866,7 +905,7 @@ export function resolveStagedRestorationMissionProgress(options: {
   cycleIndex: number;
   islandNumber: number;
 }): StagedRestorationMissionProgress | null {
-  const descriptor = getStagedRestorationMissionDescriptor(options.islandNumber);
+  const descriptor = getStagedRestorationMissionDescriptor(options.islandNumber, options.ledger);
   if (!descriptor) return null;
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, descriptor.islandNumber);
   const current = options.ledger[key];
@@ -917,8 +956,8 @@ function collectStagedRestorationPickupForLanding(options: {
   tileCount: number;
   nowMs: number;
 }): { ledger: IslandRunSignatureMissionProgressByIsland; pickupCollected: number } {
-  const descriptor = getStagedRestorationMissionDescriptor(options.islandNumber);
-  const pickup = getStagedRestorationPickupForTile(options.islandNumber, options.tileIndex, options.tileCount);
+  const descriptor = getStagedRestorationMissionDescriptor(options.islandNumber, options.ledger);
+  const pickup = getStagedRestorationPickupForTile(options.islandNumber, options.tileIndex, options.tileCount, options.ledger);
   if (!descriptor || !pickup) return { ledger: options.ledger, pickupCollected: 0 };
   const current = resolveStagedRestorationMissionProgress(options);
   const pickupTarget = descriptor.stageCount * descriptor.chargeCostPerStage;
@@ -968,7 +1007,7 @@ export function collectStagedRestorationPickupForRoute(options: {
   collectionKind: 'landing' | 'route_pass' | null;
   pickupKind: StagedRestorationPickupKind | null;
 } {
-  const descriptor = getStagedRestorationMissionDescriptor(options.islandNumber);
+  const descriptor = getStagedRestorationMissionDescriptor(options.islandNumber, options.ledger);
   if (!descriptor) {
     return { ledger: options.ledger, pickupCollected: 0, collectedTileIndex: null, collectionKind: null, pickupKind: null };
   }
@@ -1347,7 +1386,8 @@ export function advanceCelestialRedockingForRoll(options: {
   dockedPlatformIndex: number | null;
   becameComplete: boolean;
 } {
-  if (options.islandNumber !== CELESTIAL_REDOCKING_ISLAND_NUMBER) {
+  const celestialIsland = usesOpeningGamesCampaign(options.ledger) ? 4 : CELESTIAL_REDOCKING_ISLAND_NUMBER;
+  if (options.islandNumber !== celestialIsland) {
     return {
       ledger: options.ledger,
       rollsCompleted: 0,
@@ -1540,6 +1580,16 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'opening-games-campaign' || b.missionId === 'opening-games-campaign') {
+      merged[key] = a.missionId === 'opening-games-campaign' && b.missionId === 'opening-games-campaign'
+        ? mergeOpeningGamesCampaignMarkers(a, b) : a.missionId === 'opening-games-campaign' ? a : b;
+      return;
+    }
+    if (a.missionId === 'host-the-first-games' || b.missionId === 'host-the-first-games') {
+      merged[key] = a.missionId === 'host-the-first-games' && b.missionId === 'host-the-first-games'
+        ? mergeOpeningGamesCeremonyProgress(a, b) : a.missionId === 'host-the-first-games' ? a : b;
+      return;
+    }
     if (a.missionId === 'moonwell-thermal' && b.missionId === 'moonwell-thermal') {
       merged[key] = mergeMoonwellThermalProgress(a, b);
       return;

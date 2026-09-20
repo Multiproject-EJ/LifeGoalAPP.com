@@ -512,9 +512,9 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Reward bar marker should render a compact amount label using canonical event-ticket presentation.',
       );
       assert(
-        source.includes('{activeEventTickets} {eventSurfaceTicketIcon}') &&
+        source.includes("featureAccess.inauguralRound ? 'FREE' : `${activeEventTickets} ${eventSurfaceTicketIcon}`") &&
           !source.includes('{activeEventTickets} 🎫'),
-        'Launcher token badge should use the canonical token icon through its event-surface adapter.',
+        'Only the inaugural round is FREE; ordinary launcher badges retain canonical tickets and the event-surface icon.',
       );
       assert(
         source.includes('`+${totalMinigameTokens} ${eventSurfaceTicketIcon}`') &&

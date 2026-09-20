@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-09-14T02:19:18.464Z",
+  "status": "captured-unreviewed",
+  "scope": "Actual Island 004 browser runtime at desktop-hosted phone viewport; not physical-device evidence.",
+  "finalVisualAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "dpr": 2,
+  "quality": "high",
+  "reducedMotion": false,
+  "mission": false,
+  "sourceStart": {
+    "branch": "codex/island-004-v2-20260914",
+    "head": "da642f12f1ab6cefd3254c91716ff62913387720",
+    "sources": {
+      "scripts/capture-island004-v2-local.mjs": "d73a5eae6ea04d7c71537943fa23890330fb6d20268b9fdc0e286bfb2c666166",
+      "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx": "c39033a750dd1a496d10d22f650d6aec2d37179de74d7e2c1db8a4f5c799cb51",
+      "src/features/gamification/level-worlds/dev/CrownCitadelThreeModel.ts": "cb88b20531f665e23e2f5ba151f931c2aa113d543eeae056b601368020cfc2f9",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "fae9aa0ff00c71f545cba329e91d5482eb83a5f50e4993ad5d7be97b73329c7e",
+      "src/features/gamification/level-worlds/dev/IslandStagedRestorationThreePresentation.ts": "7874db2a2cbaabe46f19afc2fe3f7e139e20539a223b7884d55efe0651f7ff52",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "5768367c371ec03c77a406e34fb8a09cc13bfc488af973822f5ed3e28dee12be",
+      "src/features/gamification/level-worlds/services/islandRunMissionBriefing.ts": "118600aa6a75acece8051e38b9b6c9399833cd4cffb5f68518c53c34bd0a813a",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts": "8937bfa72a605c547aa920e070a679858b34adb67e5c8b64cf340276da320ba7",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts": "a0b04a24a92ebf9e8907e975bdb1b9993613120dd0b5bf66ee378c525505e465"
+    },
+    "sourceSetSha256": "39fd153abc933d340067778d2c8dad61eaf8b008e96f9c74bece4dac432bfa30"
+  },
+  "captures": [
+    {
+      "name": "overview",
+      "control": "Overview",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "overview.png",
+      "sha256": "de5bd8f89835d9ca4860e067e1af878cefe45f458ea0eab72b4ceff432202e79",
+      "metrics": "36 FPS\n571 calls\n312k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "survey",
+      "control": "High survey",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "survey.png",
+      "sha256": "d52b9ed11e77480f2dace77c66f979309a95cf81105e3e5e62e1451ee25262b0",
+      "metrics": "37 FPS\n571 calls\n312k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "left",
+      "control": "Left orbit",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "left.png",
+      "sha256": "31d289156840cf766f568492b07e79f6c3c139d58ef29d767fdcabe445ab3561",
+      "metrics": "37 FPS\n571 calls\n312k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "right",
+      "control": "Right orbit",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "right.png",
+      "sha256": "a913b2e4ce75ef0651de85363c96a965bf52da531499a1b80b0af87c587e9428",
+      "metrics": "37 FPS\n570 calls\n312k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "boss",
+      "control": "boss",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "boss.png",
+      "sha256": "fb6dfdecc247c9780c2123ce793efe16a96e231f7c63900bcd6f3b81bba1d668",
+      "metrics": "51 FPS\n378 calls\n253k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "hatchery",
+      "control": "hatchery",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "hatchery.png",
+      "sha256": "43ae1dae75c95a435b55413462807e758eac33fed579602f091046eb324be18c",
+      "metrics": "53 FPS\n128 calls\n135k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "habit",
+      "control": "habit",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "habit.png",
+      "sha256": "4a9612031041ec0f482191f6b53d6eeeb111bec19f6cd7794657f6c6dca38b4d",
+      "metrics": "32 FPS\n130 calls\n136k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "wisdom",
+      "control": "wisdom",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "wisdom.png",
+      "sha256": "bfb442a78274aef260a5db4fdddef10997a314c6cd31b0c9f4771f8b981a6a6f",
+      "metrics": "57 FPS\n352 calls\n269k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    },
+    {
+      "name": "event",
+      "control": "event",
+      "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+      "file": "event.png",
+      "sha256": "1754d4ea7207fc6df81c9001ca24cdf3831a83c468f62cdc17c571f87784e58b",
+      "metrics": "50 FPS\n360 calls\n273k tris\n752×1660 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "89",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "assemblyBlastCameraShake": "0.000"
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5176/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5176/dev/island-template-kit?island=4&mode=3d&level=3&island3dQuality=high",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "errors": [],
+  "browser": {
+    "engine": "Chromium",
+    "version": "149.0.7827.55",
+    "headless": true
+  },
+  "sourceEnd": {
+    "branch": "codex/island-004-v2-20260914",
+    "head": "da642f12f1ab6cefd3254c91716ff62913387720",
+    "sources": {
+      "scripts/capture-island004-v2-local.mjs": "d73a5eae6ea04d7c71537943fa23890330fb6d20268b9fdc0e286bfb2c666166",
+      "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx": "c39033a750dd1a496d10d22f650d6aec2d37179de74d7e2c1db8a4f5c799cb51",
+      "src/features/gamification/level-worlds/dev/CrownCitadelThreeModel.ts": "cb88b20531f665e23e2f5ba151f931c2aa113d543eeae056b601368020cfc2f9",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "fae9aa0ff00c71f545cba329e91d5482eb83a5f50e4993ad5d7be97b73329c7e",
+      "src/features/gamification/level-worlds/dev/IslandStagedRestorationThreePresentation.ts": "7874db2a2cbaabe46f19afc2fe3f7e139e20539a223b7884d55efe0651f7ff52",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "ace684f76c5c4974a99036624a6dbc400ef9582bad60258b17ce4fd31608df66",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "5768367c371ec03c77a406e34fb8a09cc13bfc488af973822f5ed3e28dee12be",
+      "src/features/gamification/level-worlds/services/islandRunMissionBriefing.ts": "118600aa6a75acece8051e38b9b6c9399833cd4cffb5f68518c53c34bd0a813a",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts": "8937bfa72a605c547aa920e070a679858b34adb67e5c8b64cf340276da320ba7",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts": "a0b04a24a92ebf9e8907e975bdb1b9993613120dd0b5bf66ee378c525505e465"
+    },
+    "sourceSetSha256": "39fd153abc933d340067778d2c8dad61eaf8b008e96f9c74bece4dac432bfa30"
+  },
+  "changedDuringCapture": false,
+  "finishedAt": "2026-09-14T02:21:08.522Z"
+}

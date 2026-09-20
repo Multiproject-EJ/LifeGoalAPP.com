@@ -14,6 +14,7 @@
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
 import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
+import { resolveIslandRunFeatureAccess, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
 import { getMoonwellHeatTileIndex } from './islandRunMoonwellThermal';
 import {
@@ -274,7 +275,7 @@ export function generateTileMap(
   rarity: IslandRarity,
   _themeId: string,
   dayIndex: number,
-  options?: { profileId?: IslandBoardProfileId },
+  options?: { profileId?: IslandBoardProfileId; signatureMissionProgressByIsland?: IslandRunFeatureAccessContext['signatureMissionProgressByIsland'] },
 ): IslandTileMapEntry[] {
   const boardProfile = resolveIslandBoardProfile(options?.profileId);
   const tileCount = boardProfile.tileCount;
@@ -283,9 +284,11 @@ export function generateTileMap(
   const buildDiscountTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(BUILD_DISCOUNT_TILE_FRACTION * tileCount)));
   const freeTicketTileIndex = getFreeTicketTileIndexForTileCount(tileCount);
   const tiles: IslandTileMapEntry[] = [];
+  const trafficLightAvailable = resolveIslandRunFeatureAccess({ currentIslandNumber: islandNumber,
+    signatureMissionProgressByIsland: options?.signatureMissionProgressByIsland }).trafficLight;
 
   for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-    if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+    if (trafficLightAvailable && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
       tiles.push({ index: tileIndex, tileType: 'traffic_light' });
       continue;
     }
@@ -323,7 +326,9 @@ export function generateTileMap(
     if (islandNumber === 3 && entry.index === getMoonwellHeatTileIndex(tileCount)) {
       return { ...entry, signatureMissionKind: 'moonwell_heat' };
     }
-    const stagedRestorationPickup = getStagedRestorationPickupForTile(islandNumber, entry.index, tileCount);
+    const stagedRestorationPickup = getStagedRestorationPickupForTile(
+      islandNumber, entry.index, tileCount, options?.signatureMissionProgressByIsland,
+    );
     if (stagedRestorationPickup) {
       return {
         ...entry,

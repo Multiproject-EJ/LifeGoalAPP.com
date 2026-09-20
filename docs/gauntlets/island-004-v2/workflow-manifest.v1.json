@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "status": "local-implementation-validated-visual-gate-stopped",
+  "subject": "Island 004 same-island multicolor V2",
+  "branch": "codex/island-004-v2-20260914",
+  "baseSha": "da642f12f1ab6cefd3254c91716ff62913387720",
+  "referencePacket": "docs/visual-references/island-004-driftwood-v2",
+  "selectedGoalSha256": "5911c413313606c9844f898ee85e61d87d741ed4b5c296d0b7c53ea9f1abf04c",
+  "baselineOverviewSha256": "de5bd8f89835d9ca4860e067e1af878cefe45f458ea0eab72b4ceff432202e79",
+  "qualityGate": { "minPerRequiredView": 0.85, "worstViewGoverns": true, "independentReviewer": true, "passed": false, "worstObservedSetting": 0.68, "review": "FINAL-REVIEW.md" },
+  "independentReviewConstraint": "The 3d-asset-gauntlet skill explicitly requires an independent reviewer. The read-only quality_lord agent reviewed three checkpoints and stopped the bounded art loop; no geometry was delegated.",
+  "performance": { "maxDrawCalls": 175, "maxTriangles": 180000, "minimumAverageFps": 50, "maximumP95Ms": 29, "maximumSlowFramesPercent": 15, "physicalTargetPhoneRequired": true, "physicalTargetPhoneTested": false, "waiver": null, "localOverview": { "averageFps": 60, "p95Ms": 18.6, "slowFramesPercent": 0, "drawCalls": 170, "trianglesApproximate": 118000 }, "constructionBudgetAccepted": false },
+  "authority": { "conceptAndDiscovery": true, "implementation": true, "commit": true, "publish": false, "merge": false },
+  "geometryWriters": "serialized-root-only",
+  "next": "User checkpoint for a new environment/citadel/construction art route. Preserve validated work; do not claim reference-quality completion or publish. See FINAL-REVIEW.md for exact remaining gates."
+}

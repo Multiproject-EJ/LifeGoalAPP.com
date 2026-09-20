@@ -1,0 +1,46 @@
+{
+  "status": "pass",
+  "scope": "offline real-board puzzle HUD and mission identity; not ceremony, wheel callback or physical-device acceptance",
+  "cases": [
+    {
+      "island": 1,
+      "gradual": true,
+      "puzzle": false,
+      "puzzleCount": 0,
+      "status": "pass"
+    },
+    {
+      "island": 2,
+      "gradual": true,
+      "puzzle": false,
+      "mission": "Host the First Games",
+      "puzzleCount": 0,
+      "status": "pass"
+    },
+    {
+      "island": 3,
+      "gradual": true,
+      "puzzle": true,
+      "puzzleCount": 1,
+      "status": "pass"
+    },
+    {
+      "island": 4,
+      "gradual": true,
+      "puzzle": true,
+      "mission": "The Great Re-Docking",
+      "puzzleCount": 1,
+      "status": "pass"
+    },
+    {
+      "island": 2,
+      "gradual": false,
+      "puzzle": true,
+      "mission": "The Great Re-Docking",
+      "puzzleCount": 1,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "externalRequestsBlocked": 0
+}

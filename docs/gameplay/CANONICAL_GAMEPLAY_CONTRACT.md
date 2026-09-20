@@ -450,7 +450,7 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 - A mission object is finite and claim-once unless its mission explicitly documents a repeatable interaction (for example a fishing spot or Frostwell drill station).
 - An exact landing collects the object first. Missions with route pity may instead secure the first unclaimed object crossed during an accepted roll; at most one pity object is collected per roll and token movement is never changed.
 - Collection and stage activation are canonical service actions persisted in `signatureMissionProgressByIsland`. React and Three.js only present committed results.
-- Mission completion is optional to ordinary island travel unless an island-specific contract explicitly declares it as a canonical stop substitute (Island 001 is the current exception).
+- Playable signature missions shown in the mission phone are required for departure, using the same canonical saved evidence as the phone (§7). Planned missions without implemented gameplay remain excluded.
 - Islands 004, 006, 007, 008, and 009 share the staged-restoration state machine but keep authored descriptors and bespoke 3D transformations. Each spend reveals exactly one durable world stage; the final spend triggers the island finale.
 
 ## 5C) Reward amplification and session dynamics
@@ -550,6 +550,47 @@ Additional rules:
 - Timer expiration cannot auto-complete or auto-fail island progression.
 - A completed island **cannot** decay (Essence drift is suspended once island is fully cleared).
 - Buildings **reset** to Level 0 on island travel.
+
+### Gradual-introduction cohort (`opening-games-v1`)
+
+This user-approved rollout is explicit and persisted, not inferred from island
+number or save age. Enrollment remains disabled until the integration gates in
+`docs/gauntlets/2026-09-19-gradual-island-feature-introductions.md` pass. Unmarked
+and legacy saves retain the rules above and all earned inventory/unlocks.
+
+- On Islands001–003 the first landmark is a **Welcome Venue** with an explicit,
+  free arrival check-in. It retains internal stop ID `hatchery`, completes only
+  that activity and opens normal next-stop ticket eligibility. It grants no
+  currency, egg, construction credit or prepaid ticket. Building alone never
+  completes check-in. These islands do not require a resolved egg to depart.
+  New egg placement is unavailable until Island004, which introduces the
+  Hatchery activity and restores the terminal-egg departure requirement.
+- New Island002 requires the opening ceremony **and completed participation in
+  its free inaugural game** before island clear/departure. Canceling the game,
+  finishing construction, or lighting the beacon alone does not satisfy this.
+- New Island001 replaces the Mystery/Event Arena activity with an explicit
+  two-question host orientation about building and the Island002 opening.
+  Normal previous-stop access and the Mystery ticket remain required. Correct
+  completion records only this activity; it creates no event tickets, eggs,
+  construction credit or prepaid Wisdom ticket. Closing or incorrect answers
+  give no completion credit. Legacy arena activity/boost behavior is preserved
+  for unmarked journeys; the boost is unavailable to the gradual cohort before
+  ordinary events unlock.
+- New Island002's opening presentation is skippable and has a reduced-motion
+  equivalent. Presentation never grants a reward or replaces participation in
+  its free inaugural game, and the canonical saved beacon milestone precedes
+  the animation.
+- New Island004 requires twenty canonical Re-Docking rolls and the committed
+  completion timestamp for the current cycle's Island004 mission. Old Island002
+  progress or a previous-cycle Vault entitlement cannot substitute for it.
+- Canonical travel enforces new-cohort completion even if a caller omits the
+  legacy optional completed-visit key. No skip-ahead travel is introduced.
+- Previously earned eggs remain resolvable; the policy blocks new early egg
+  creation, not ownership. Never delete saved eggs or creatures as migration.
+
+The ceremony and Re-Docking requirements specialize the required playable
+mission rule for this explicit cohort. Egg reward inventory/other grant
+sources and full first-session onboarding remain separately tracked release gates.
 
 ---
 

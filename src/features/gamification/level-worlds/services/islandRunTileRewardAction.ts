@@ -220,6 +220,8 @@ async function performTileRewardAction(
   if (effectiveRewardBarProgress && islandRunContractV2Enabled) {
     nextRewardBarSlice = recordEventProgress({
       state: {
+        currentIslandNumber: state.currentIslandNumber,
+        signatureMissionProgressByIsland: state.signatureMissionProgressByIsland,
         rewardBarProgress: state.rewardBarProgress,
         rewardBarThreshold: state.rewardBarThreshold,
         rewardBarClaimCountInEvent: state.rewardBarClaimCountInEvent,

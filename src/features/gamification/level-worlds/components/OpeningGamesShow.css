@@ -1,0 +1,60 @@
+.opening-games-show {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(transparent 50%, rgb(10 24 49 / 60%));
+  padding: max(16px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+  color: #fff8dd;
+}
+.opening-games-show__caption {
+  align-self: end;
+  width: min(100%, 440px);
+  padding: 16px 20px;
+  border: 1px solid #e6c475;
+  border-radius: 20px;
+  background: rgb(24 25 61 / 95%);
+  text-align: center;
+  box-shadow: 0 8px 32px #0005;
+}
+.opening-games-show__caption p { margin: 0 0 12px; line-height: 1.45; }
+.opening-games-show__eyebrow { color: #f7d68b; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.opening-games-show__caption button {
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid #dfbd73;
+  border-radius: 24px;
+  background: #fff0c9;
+  color: #292450;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.opening-games-show__caption button:focus-visible { outline: 3px solid #65e7e0; outline-offset: 4px; }
+
+/* Introduce a stationary, easy-to-tap target. Sparkle through light rather
+   than moving the first-game button continuously under the player's finger. */
+@keyframes opening-games-channel-glow {
+  0%, 100% { box-shadow: 0 0 6px #f5cc6b66; }
+  50% { box-shadow: 0 0 18px #ffe9ad, 0 0 28px #62d9d780; }
+}
+@keyframes opening-games-channel-reveal {
+  from { opacity: 0; filter: brightness(1.7) drop-shadow(0 0 15px #ffe4a0); }
+  to { opacity: 1; filter: brightness(1) drop-shadow(0 0 0 transparent); }
+}
+.island-run-board__rewardbar-cluster--opening-reveal .island-run-board__minigame-icon-btn {
+  animation: opening-games-channel-glow 2.4s ease-in-out 3;
+}
+.island-run-board__rewardbar-cluster--opening-reveal.island-run-board__rewardbar-cluster--mission-reveal .island-run-board__rewardbar,
+.island-run-board__rewardbar-cluster--opening-reveal.island-run-board__rewardbar-cluster--mission-reveal .island-run-board__rewardbar-side-rail {
+  animation: opening-games-channel-reveal 1.2s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__rewardbar-cluster--opening-reveal .island-run-board__minigame-icon-btn,
+  .island-run-board__rewardbar-cluster--opening-reveal.island-run-board__rewardbar-cluster--mission-reveal .island-run-board__rewardbar,
+  .island-run-board__rewardbar-cluster--opening-reveal.island-run-board__rewardbar-cluster--mission-reveal .island-run-board__rewardbar-side-rail {
+    animation: none;
+    box-shadow: 0 0 10px #f5cc6b99;
+  }
+}

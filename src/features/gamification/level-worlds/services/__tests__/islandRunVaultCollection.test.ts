@@ -7,8 +7,56 @@ import {
   VAULT_ISLAND_COLLECTION_TREASURE_IDS,
 } from '../islandRunVaultCollection';
 import { normalizeVaultIslandPerimeterStyle } from '../islandRunVaultCustomization';
+import {
+  advanceCelestialRedockingForRoll, collectStagedRestorationPickupForRoute,
+  createOpeningGamesCampaignLedger, getStagedRestorationMissionDescriptor,
+  resolveStagedRestorationMissionProgress, type CelestialRedockingProgress,
+} from '../islandRunSignatureMissions';
+import { resolveIslandRunFeatureAccess } from '../islandRunFeatureAccess';
 
 export const islandRunVaultCollectionTests: TestCase[] = [
+  {
+    name: 'new Island004 unlocks Vault and wheel on the twentieth Re-Docking roll, once',
+    run: () => {
+      let ledger = createOpeningGamesCampaignLedger();
+      for (let roll = 1; roll <= 21; roll++) {
+        const result = advanceCelestialRedockingForRoll({ ledger, islandNumber: 4, cycleIndex: 2, nowMs: roll });
+        ledger = result.ledger;
+        assertEqual(result.becameComplete, roll === 20, 'completion edge occurs once');
+        assertEqual(isVaultIslandCollectionUnlocked(ledger), roll >= 20, 'twenty committed rolls unlock');
+        assertEqual(resolveIslandRunFeatureAccess({ currentIslandNumber: 1, signatureMissionProgressByIsland: ledger }).dailyWheel, roll >= 20, 'earned wheel survives return to an earlier island');
+      }
+      assertEqual(isVaultIslandCollectionUnlocked(JSON.parse(JSON.stringify(ledger))), true, 'reload keeps the earned unlock');
+    },
+  },
+  {
+    name: 'Re-Docking cannot grant Vault from another island, unmarked cohort or malformed completion',
+    run: () => {
+      const complete: CelestialRedockingProgress = { missionId: 'celestial-great-redocking', version: 1, rollsCompleted: 20, completedAtMs: 20, updatedAtMs: 20 };
+      assertEqual(isVaultIslandCollectionUnlocked({ '0:4': complete }), false, 'unmarked existing journeys retain the original prerequisite');
+      for (const key of ['0:2', '0:3', '0:4:preview', '-1:4', 'bad:4']) {
+        assertEqual(isVaultIslandCollectionUnlocked({ ...createOpeningGamesCampaignLedger(), [key]: complete }), false, 'only a canonical Island004 key qualifies');
+      }
+      for (const patch of [{ rollsCompleted: 19 }, { rollsCompleted: NaN }, { completedAtMs: null }, { completedAtMs: NaN }, { completedAtMs: -1 }]) {
+        assertEqual(isVaultIslandCollectionUnlocked({ ...createOpeningGamesCampaignLedger(), '0:4': { ...complete, ...patch } }), false, 'malformed or partial completion stays locked');
+      }
+    },
+  },
+  {
+    name: 'new Island004 has no competing causeway mission or route pickups',
+    run: () => {
+      const ledger = createOpeningGamesCampaignLedger();
+      const before = JSON.stringify(ledger);
+      assertEqual(getStagedRestorationMissionDescriptor(4, ledger), null, 'new004 is Re-Docking only');
+      assertEqual(resolveStagedRestorationMissionProgress({ ledger, islandNumber: 4, cycleIndex: 0 }), null, 'no hidden restoration progress');
+      const pickup = collectStagedRestorationPickupForRoute({ ledger, islandNumber: 4, cycleIndex: 0, landingTileIndex: 8, routeTileIndices: [1, 8, 11, 20, 26, 35], tileCount: 36, nowMs: 10 });
+      assertEqual(pickup.pickupCollected, 0, 'no causeway rewards');
+      assertEqual(pickup.ledger, ledger, 'cannot overwrite the Re-Docking slot');
+      assertEqual(JSON.stringify(ledger), before, 'source remains unchanged');
+      assertEqual(getStagedRestorationMissionDescriptor(4)?.missionId, 'broken-causeway', 'legacy mission remains available');
+      assertEqual(getStagedRestorationMissionDescriptor(6, ledger)?.missionId, 'moon-mirrors', 'other staged missions unchanged');
+    },
+  },
   {
     name: 'normalizes the persisted Vault Island perimeter cosmetic without gameplay state',
     run: () => {

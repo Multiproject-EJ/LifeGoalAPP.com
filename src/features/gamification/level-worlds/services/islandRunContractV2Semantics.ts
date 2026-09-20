@@ -23,7 +23,7 @@ export function formatIslandRunSpinTokenReward(params: {
 export function resolveIslandRunContractV2RewardHudState(params: {
   islandRunContractV2Enabled: boolean;
   runtimeState: Pick<IslandRunRuntimeState, 'activeTimedEvent' | 'rewardBarProgress' | 'rewardBarThreshold' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>
-    & Partial<Pick<IslandRunRuntimeState, 'currentIslandNumber'>>;
+    & Partial<Pick<IslandRunRuntimeState, 'currentIslandNumber' | 'signatureMissionProgressByIsland'>>;
   nowMs: number;
 }): {
   activeTimedEvent: IslandRunRuntimeState['activeTimedEvent'];
@@ -44,7 +44,7 @@ export function resolveIslandRunContractV2RewardHudState(params: {
     ? Math.max(0, activeTimedEvent.expiresAtMs - params.nowMs)
     : 0;
   const claimCount = Math.max(0, Math.floor(params.runtimeState.rewardBarClaimCountInEvent));
-  const nextRewardKind = resolveNextRewardKind(claimCount, params.runtimeState.currentIslandNumber);
+  const nextRewardKind = resolveNextRewardKind(claimCount, params.runtimeState.currentIslandNumber, params.runtimeState.signatureMissionProgressByIsland);
   const nextRewardIcon = REWARD_KIND_ICON[nextRewardKind];
   const nextRewardPayout = resolveRewardBarClaimPayoutPreview({
     state: params.runtimeState,
