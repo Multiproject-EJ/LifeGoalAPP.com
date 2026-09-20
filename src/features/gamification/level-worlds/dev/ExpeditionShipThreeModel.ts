@@ -1,5 +1,18 @@
 import * as THREE from 'three';
-import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {addHollowOakStructure} from './ExpeditionShipHollowOak';
+import {createBranchedOakWall} from './ExpeditionShipBranchedOak';
+import {createSculptedOakGeometry, SCULPTED_OAK_CIRCULATION} from './ExpeditionShipSculptedOak';
+import {createArtistOakGeometry, ARTIST_OAK_CIRCULATION} from './ExpeditionShipArtistOak';
+import {batchExpeditionRigidSurfaces} from './ExpeditionShipRigidBatches';
+import {makeCommandInteriorGeometry} from './ExpeditionShipCommandInteriors';
+import {installCommandRoomClearance,reconcileRoomLandscapeInterfaces} from './ExpeditionShipRoomClearance';
+import {addExpeditionRingRooms,makeExpeditionRingRoomDefinitions} from './ExpeditionShipRoomKit';
+import {installExpeditionRoomLighting} from './ExpeditionShipRoomLighting';
+import {makeConstructiveWorkshopParts,consolidateLowerDeckMesh,makeLowerDeckPlate,rebuildCreatureMacro,makeHollowGarageWindow,makeHollowGarageSkirt} from './ExpeditionShipLowerDecks';
+import {subtractSolidBoxes} from './ExpeditionShipSolidCut';
+import {addOakStructure} from './ExpeditionShipOak';
+import {createExpeditionOakCageGeometry} from './ExpeditionShipOakCage';
+import {mergeGeometries, toCreasedNormals} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export type ExpeditionShipPose = 'docked' | 'expedition' | 'flight';
 export type ExpeditionShipQuality = 'low' | 'high';
@@ -28,6 +41,7 @@ export interface ExpeditionShipThreeModel {
   root: THREE.Group;
   metrics: {triangles: number; meshCount: number; materials: number};
   update: (options: ExpeditionShipUpdateOptions) => ExpeditionShipEnvironmentSignal;
+  prepareRender: () => void;
   dispose: () => void;
 }
 
@@ -93,6 +107,160 @@ function makeRoundedExtrudeGeometry(width: number, height: number, depth: number
     steps: 1,
   });
   geometry.translate(0, 0, -depth * 0.5);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function taperAftPressureVolumeGeometry(
+  geometry: THREE.BufferGeometry,
+  depth: number,
+  yTaper = 0.16,
+  xTaper = 0.07,
+  cornerRound = 0.075,
+) {
+  // Preserve every front vertex from the literal controller authority while
+  // easing the inferred hidden half inward. A smooth aft taper gives the new
+  // depth a vehicle-like pressure-vessel profile instead of a box extrusion.
+  geometry.computeBoundingBox();
+  const positions = geometry.attributes.position as THREE.BufferAttribute;
+  const halfHeight = Math.max(
+    0.001,
+    Math.abs(geometry.boundingBox?.min.y ?? 0),
+    Math.abs(geometry.boundingBox?.max.y ?? 0),
+  );
+  for (let index = 0; index < positions.count; index += 1) {
+    const originalY = positions.getY(index);
+    const originalZ = positions.getZ(index);
+    const rearward = THREE.MathUtils.clamp((depth * 0.5 - originalZ) / depth, 0, 1);
+    const eased = rearward * rearward * (3 - 2 * rearward);
+    const pressureCentreY = -0.035;
+    const cornerWeight = smoothstep(Math.abs(originalY) / halfHeight, 0.54, 1);
+    positions.setX(index, positions.getX(index) * (1 - eased * xTaper));
+    positions.setY(
+      index,
+      pressureCentreY + (originalY - pressureCentreY) * (1 - eased * yTaper) - eased * 0.025,
+    );
+    // Pull the rear top and belly corners forward more than the side centre.
+    // This rounds the pressure-hull termination in profile while leaving the
+    // literal controller front ring untouched and costs no extra triangles.
+    positions.setZ(index, originalZ + eased * cornerWeight * depth * cornerRound);
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function sculptContinuousDepthLoftGeometry(
+  geometry: THREE.BufferGeometry,
+  depth: number,
+  {
+    midWidthSwell = 0.05,
+    midHeightSwell = 0.06,
+    rearWidthTaper = 0.09,
+    rearHeightTaper = 0.12,
+    rearDrop = 0.04,
+    pressureCentreY = 0,
+  }: {
+    midWidthSwell?: number;
+    midHeightSwell?: number;
+    rearWidthTaper?: number;
+    rearHeightTaper?: number;
+    rearDrop?: number;
+    pressureCentreY?: number;
+  } = {},
+) {
+  // Convert a shaped extrusion into a continuous pressure-vessel loft. The
+  // exact front section remains untouched; inferred hidden sections swell
+  // gently through the middle and ease into one rounded, finished aft hull.
+  const positions = geometry.attributes.position as THREE.BufferAttribute;
+  for (let index = 0; index < positions.count; index += 1) {
+    const z = positions.getZ(index);
+    const rearward = THREE.MathUtils.clamp((depth * 0.5 - z) / depth, 0, 1);
+    const middle = Math.sin(rearward * Math.PI);
+    const aft = smoothstep(rearward, 0.52, 1);
+    const xScale = 1 + middle * midWidthSwell - aft * rearWidthTaper;
+    const yScale = 1 + middle * midHeightSwell - aft * rearHeightTaper;
+    positions.setX(index, positions.getX(index) * xScale);
+    positions.setY(
+      index,
+      pressureCentreY + (positions.getY(index) - pressureCentreY) * yScale - aft * rearDrop,
+    );
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function removeControllerArchFillTriangles(geometry: THREE.BufferGeometry) {
+  // ExtrudeGeometry can bridge a deep Bézier concavity with cap triangles even
+  // when the outline itself is valid. Cull only triangle centroids that land
+  // inside the controller authority's open lower arch; handle and bridge
+  // pressure surfaces remain untouched.
+  const source = geometry.index ? geometry.toNonIndexed() : geometry;
+  const position = source.getAttribute('position');
+  const keptVertices: number[] = [];
+  for (let vertex = 0; vertex < position.count; vertex += 3) {
+    const centreX = (
+      position.getX(vertex)
+      + position.getX(vertex + 1)
+      + position.getX(vertex + 2)
+    ) / 3;
+    const centreY = (
+      position.getY(vertex)
+      + position.getY(vertex + 1)
+      + position.getY(vertex + 2)
+    ) / 3;
+    const archProgress = THREE.MathUtils.clamp((-centreY - 0.18) / 1.16, 0, 1);
+    const archHalfWidth = 1.04 + archProgress * 0.74;
+    if (centreY < -0.18 && Math.abs(centreX) < archHalfWidth) continue;
+    keptVertices.push(vertex, vertex + 1, vertex + 2);
+  }
+
+  const cleaned = new THREE.BufferGeometry();
+  Object.entries(source.attributes).forEach(([name, attribute]) => {
+    const values = new Float32Array(keptVertices.length * attribute.itemSize);
+    keptVertices.forEach((sourceVertex, outputVertex) => {
+      for (let component = 0; component < attribute.itemSize; component += 1) {
+        values[outputVertex * attribute.itemSize + component]
+          = attribute.array[sourceVertex * attribute.itemSize + component];
+      }
+    });
+    cleaned.setAttribute(name, new THREE.BufferAttribute(values, attribute.itemSize, attribute.normalized));
+  });
+  cleaned.computeVertexNormals();
+  cleaned.computeBoundingBox();
+  cleaned.computeBoundingSphere();
+  if (source !== geometry) source.dispose();
+  return cleaned;
+}
+
+function makeContinuousKeelBridgeGeometry(quality: ExpeditionShipQuality) {
+  // Slice 1C turns the old shallow sill into the controller's visible belly.
+  // Its front lip stays on the approved controller plane while the extra
+  // volume runs aft beneath the sanctuary and into the rear pressure collar.
+  const foreAftDepth = 3.52;
+  const geometry = makeRoundedExtrudeGeometry(
+    5.32,
+    foreAftDepth,
+    0.76,
+    0.38,
+    quality === 'high' ? 4 : 2,
+  );
+  const positions = geometry.attributes.position as THREE.BufferAttribute;
+  for (let index = 0; index < positions.count; index += 1) {
+    const foreAft = THREE.MathUtils.clamp(
+      Math.abs(positions.getY(index)) / (foreAftDepth * 0.5),
+      0,
+      1,
+    );
+    const edgeEase = foreAft * foreAft * (3 - 2 * foreAft);
+    positions.setX(index, positions.getX(index) * (1 - edgeEase * 0.14));
+    const centreBulge = 1 - edgeEase;
+    positions.setZ(index, positions.getZ(index) * ((1 - edgeEase * 0.22) * (1 + centreBulge * 0.18)));
+  }
+  positions.needsUpdate = true;
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -403,7 +571,7 @@ function makeShoulderSuiteDeckGeometry(thickness: number) {
   return geometry;
 }
 
-function makeCommandSuiteAssemblyGeometries(quality: ExpeditionShipQuality) {
+function makeCommandSuiteAssemblyGeometries(quality: ExpeditionShipQuality, fittedRooms = false) {
   type SuiteMaterialKey = 'shell' | 'glass' | 'frame' | 'power' | 'warm';
   const buckets: Record<SuiteMaterialKey, THREE.BufferGeometry[]> = {
     shell: [], glass: [], frame: [], power: [], warm: [],
@@ -439,18 +607,18 @@ function makeCommandSuiteAssemblyGeometries(quality: ExpeditionShipQuality) {
   );
   addPart('glass', new THREE.PlaneGeometry(1.14, 1.18, 1, 1), [-0.57, 0.14, -0.01], [0, -Math.PI * 0.5, 0]);
   addPart('glass', new THREE.PlaneGeometry(1.14, 1.18, 1, 1), [0.57, 0.14, -0.01], [0, Math.PI * 0.5, 0]);
-  addPart(
-    'frame',
-    makeRoundedExtrudeGeometry(0.48, 0.065, 0.14, 0.028, quality === 'high' ? 2 : 1),
-    [0, 0.01, 0.62],
-  );
-  addPart('frame', makeRoundedExtrudeGeometry(0.22, 0.04, 0.2, 0.025, 1), [-0.4, -0.015, 0.52], [0, -0.18, 0]);
-  addPart('frame', makeRoundedExtrudeGeometry(0.22, 0.04, 0.2, 0.025, 1), [0.4, -0.015, 0.52], [0, 0.18, 0]);
+  if(!fittedRooms) {
+    addPart('frame',makeRoundedExtrudeGeometry(0.48,0.065,0.14,0.028,quality==='high'?2:1),[0,0.01,0.62]);
+    addPart('frame',makeRoundedExtrudeGeometry(0.22,0.04,0.2,0.025,1),[-0.4,-0.015,0.52],[0,-0.18,0]);
+    addPart('frame',makeRoundedExtrudeGeometry(0.22,0.04,0.2,0.025,1),[0.4,-0.015,0.52],[0,0.18,0]);
+  }
   // Keep the panoramic aperture unobstructed. Status lighting belongs in the
   // sill; the role-specific furniture owns the actual helm/admin instruments.
-  addPart('power', new THREE.BoxGeometry(0.36, 0.016, 0.012), [0, 0.035, 0.686]);
-  addPart('power', new THREE.BoxGeometry(0.11, 0.012, 0.012), [-0.4, 0.02, 0.61], [0, -0.18, 0]);
-  addPart('power', new THREE.BoxGeometry(0.11, 0.012, 0.012), [0.4, 0.02, 0.61], [0, 0.18, 0]);
+  if(!fittedRooms) {
+    addPart('power',new THREE.BoxGeometry(0.36,0.016,0.012),[0,0.035,0.686]);
+    addPart('power',new THREE.BoxGeometry(0.11,0.012,0.012),[-0.4,0.02,0.61],[0,-0.18,0]);
+    addPart('power',new THREE.BoxGeometry(0.11,0.012,0.012),[0.4,0.02,0.61],[0,0.18,0]);
+  } else addPart('power',new THREE.BoxGeometry(.94,.004,.008),[0,-.085,.64]);
   addPart('warm', new THREE.BoxGeometry(0.94, 0.022, 0.035), [0, 0.49, 0.2]);
   addPart('warm', new THREE.BoxGeometry(0.28, 0.08, 0.2), [0, -0.24, -0.08]);
 
@@ -463,7 +631,10 @@ function makeCommandSuiteAssemblyGeometries(quality: ExpeditionShipQuality) {
       sources[index].dispose();
     });
     if (!merged) throw new Error(`Unable to merge ${key} command-suite geometry`);
-    merged.computeVertexNormals();
+    // Non-indexed recomputation discards the pressure panel's smooth normals
+    // and turns its glazing into large reflective triangles. Preserve the
+    // source glass normals in the room correction; positions are unchanged.
+    if(!fittedRooms || key !== 'glass')merged.computeVertexNormals();
     return merged;
   };
   return {
@@ -741,33 +912,204 @@ function makeControllerBridgeGeometry(depth: number, bevelSegments: number) {
 }
 
 function makeGameControllerSpeedCoreGeometry(depth: number, bevelSegments: number) {
-  // The closed travel body follows the same smooth dark centre mass as the
-  // controller image used by the game. It deliberately masks the blockout's
-  // rectangular pressure frame once the outer shell has sealed.
-  const core = new THREE.Shape();
-  core.moveTo(-2.06, 0.72);
-  core.bezierCurveTo(-1.68, 1.24, -0.94, 1.43, -0.34, 1.36);
-  core.bezierCurveTo(-0.12, 1.33, 0.12, 1.33, 0.34, 1.36);
-  core.bezierCurveTo(0.94, 1.43, 1.68, 1.24, 2.06, 0.72);
-  core.bezierCurveTo(2.18, 0.43, 2.08, 0.03, 1.76, -0.2);
-  core.bezierCurveTo(1.48, -0.54, 1.2, -0.69, 0.96, -0.58);
-  core.bezierCurveTo(0.8, -0.39, 0.62, -0.19, 0.4, -0.12);
-  core.lineTo(-0.4, -0.12);
-  core.bezierCurveTo(-0.62, -0.19, -0.8, -0.39, -0.96, -0.58);
-  core.bezierCurveTo(-1.2, -0.69, -1.48, -0.54, -1.76, -0.2);
-  core.bezierCurveTo(-2.08, 0.03, -2.18, 0.43, -2.06, 0.72);
-  const geometry = new THREE.ExtrudeGeometry(core, {
+  // Treat the complete front planform as one coupled authority trace. The
+  // alpha silhouette's central opening begins near source y=200 with inner
+  // boundaries around x=164/423: a low, broad U rather than the predecessor's
+  // narrow high notch. Keeping this as an open contour also prevents an
+  // accidental triangulated crossbar across the controller silhouette.
+  const controller = new THREE.Shape();
+  controller.moveTo(-2.33, -1.54);
+  controller.bezierCurveTo(-2.14, -1.25, -1.78, -0.62, -1.42, -0.42);
+  controller.bezierCurveTo(-1, -0.32, 1, -0.32, 1.42, -0.42);
+  controller.bezierCurveTo(1.78, -0.62, 2.14, -1.25, 2.33, -1.54);
+  controller.bezierCurveTo(2.42, -1.69, 2.5, -1.79, 2.62, -1.76);
+  controller.bezierCurveTo(2.92, -1.55, 3.14, -1.08, 3.2, -0.5);
+  controller.bezierCurveTo(3.28, 0.18, 3.16, 0.72, 2.9, 1.04);
+  controller.bezierCurveTo(2.56, 1.4, 1.98, 1.52, 1.28, 1.46);
+  controller.bezierCurveTo(0.54, 1.52, -0.54, 1.52, -1.28, 1.46);
+  controller.bezierCurveTo(-1.98, 1.52, -2.56, 1.4, -2.9, 1.04);
+  controller.bezierCurveTo(-3.16, 0.72, -3.28, 0.18, -3.2, -0.5);
+  controller.bezierCurveTo(-3.14, -1.08, -2.92, -1.55, -2.56, -1.72);
+  controller.bezierCurveTo(-2.5, -1.79, -2.42, -1.69, -2.33, -1.54);
+  controller.closePath();
+
+  const geometry = new THREE.ExtrudeGeometry(controller, {
     depth,
     bevelEnabled: true,
     bevelSegments,
-    bevelSize: Math.min(0.12, depth * 0.12),
-    bevelThickness: Math.min(0.1, depth * 0.1),
+    bevelSize: Math.min(0.15, depth * 0.12),
+    bevelThickness: Math.min(0.13, depth * 0.1),
+    curveSegments: bevelSegments + 8,
+    steps: bevelSegments + 3,
+  });
+  geometry.translate(0, 0, -depth * 0.5);
+  const lofted = sculptContinuousDepthLoftGeometry(geometry, depth, {
+    midWidthSwell: 0.035,
+    midHeightSwell: 0.07,
+    rearWidthTaper: 0.055,
+    rearHeightTaper: 0.09,
+    rearDrop: 0.035,
+    pressureCentreY: -0.08,
+  });
+  const cleaned = removeControllerArchFillTriangles(lofted);
+  lofted.dispose();
+  // Smooth the continuous pressure surface across tessellation boundaries,
+  // while retaining actual sharp seams. This changes lighting, not volume.
+  return toCreasedNormals(cleaned, Math.PI / 3);
+}
+
+function makeCompoundControllerShellCapGeometry(
+  shell: THREE.Shape,
+  depth: number,
+  bevelSegments: number,
+  frontOffset = 0.36,
+  domeRise = 0.13,
+) {
+  // A straight ExtrudeGeometry front cap shades as one flat graphic plate.
+  // Tessellate horizontal cross-sections of the exact 2D authority boundary,
+  // then raise a smooth sine-eased pressure patch inside them. Unlike a radial
+  // dome, this remains well behaved across the shell's concave inner edge and
+  // rolls one continuous highlight from shoulder through the handle.
+  const sampled = shell.getSpacedPoints(Math.max(96, bevelSegments * 24 + 48));
+  const contour = sampled.length > 1 && sampled[0].distanceTo(sampled[sampled.length - 1]) < 0.0001
+    ? sampled.slice(0, -1)
+    : sampled;
+  const front = depth * 0.5;
+  const minY = contour.reduce((minimum, point) => Math.min(minimum, point.y), Infinity);
+  const maxY = contour.reduce((maximum, point) => Math.max(maximum, point.y), -Infinity);
+  const rowSegments = bevelSegments >= 4 ? 28 : 18;
+  const columnSegments = bevelSegments >= 4 ? 12 : 8;
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  for (let row = 0; row <= rowSegments; row += 1) {
+    const v = (row + 0.04) / (rowSegments + 0.08);
+    const y = THREE.MathUtils.lerp(minY, maxY, v);
+    const crossings: number[] = [];
+    for (let index = 0; index < contour.length; index += 1) {
+      const start = contour[index];
+      const end = contour[(index + 1) % contour.length];
+      if ((start.y <= y && end.y > y) || (end.y <= y && start.y > y)) {
+        crossings.push(start.x + ((y - start.y) / (end.y - start.y)) * (end.x - start.x));
+      }
+    }
+    crossings.sort((left, right) => left - right);
+    const minX = crossings[0];
+    const maxX = crossings[crossings.length - 1];
+    for (let column = 0; column <= columnSegments; column += 1) {
+      const u = column / columnSegments;
+      const x = THREE.MathUtils.lerp(minX, maxX, u);
+      const acrossDome = Math.pow(Math.sin(Math.PI * u), 0.78);
+      const verticalDome = Math.pow(Math.sin(Math.PI * v), 0.52);
+      // Keep the structural extrusion recessed behind the dark controller
+      // body while the fitted ceramic faceplate sits on the authority plane.
+      // This prevents bevel fragments from breaking the continuous roof line.
+      const z = front + frontOffset + acrossDome * verticalDome * domeRise;
+      positions.push(x, y, z);
+      uvs.push(u, v);
+    }
+  }
+
+  const indices: number[] = [];
+  const rowStride = columnSegments + 1;
+  for (let row = 0; row < rowSegments; row += 1) {
+    for (let column = 0; column < columnSegments; column += 1) {
+      const lowerLeft = row * rowStride + column;
+      const lowerRight = lowerLeft + 1;
+      const upperLeft = lowerLeft + rowStride;
+      const upperRight = upperLeft + 1;
+      indices.push(lowerLeft, lowerRight, upperRight, lowerLeft, upperRight, upperLeft);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function makeLiteralControllerGripShellGeometry(side: -1 | 1, depth: number, bevelSegments: number) {
+  // The white authority overlay shares the outer lobe but retreats sharply
+  // outward as it descends. Source landmarks move from about x=430 at y=140
+  // to x=548 at y=300 on the starboard side, exposing the defining dark-blue
+  // diagonal handle sweep instead of filling the whole grip with a teardrop.
+  const shellX = (value: number) => value * side;
+  const shell = new THREE.Shape();
+  shell.moveTo(shellX(1.38), 1.46);
+  shell.bezierCurveTo(shellX(1.9), 1.53, shellX(2.52), 1.39, shellX(2.9), 1.04);
+  shell.bezierCurveTo(shellX(3.18), 0.72, shellX(3.3), 0.1, shellX(3.19), -0.56);
+  shell.bezierCurveTo(shellX(3.1), -1.16, shellX(2.86), -1.64, shellX(2.62), -1.76);
+  shell.bezierCurveTo(shellX(2.78), -1.68, shellX(2.88), -1.56, shellX(2.84), -1.44);
+  shell.bezierCurveTo(shellX(2.72), -1.08, shellX(2.58), -0.78, shellX(2.4), -0.56);
+  shell.bezierCurveTo(shellX(2.18), -0.26, shellX(2.02), 0.04, shellX(1.82), 0.28);
+  shell.bezierCurveTo(shellX(1.62), 0.54, shellX(1.52), 0.82, shellX(1.52), 1.04);
+  shell.bezierCurveTo(shellX(1.5), 1.22, shellX(1.44), 1.38, shellX(1.38), 1.46);
+  shell.closePath();
+  const geometry = new THREE.ExtrudeGeometry(shell, {
+    depth,
+    bevelEnabled: true,
+    bevelSegments,
+    bevelSize: Math.min(0.13, depth * 0.1),
+    bevelThickness: Math.min(0.11, depth * 0.08),
     curveSegments: bevelSegments + 6,
+    steps: bevelSegments + 3,
+  });
+  geometry.translate(0, 0, -depth * 0.5);
+  const lofted = sculptContinuousDepthLoftGeometry(geometry, depth, {
+    midWidthSwell: 0.03,
+    midHeightSwell: 0.07,
+    rearWidthTaper: 0.05,
+    rearHeightTaper: 0.08,
+    rearDrop: 0.035,
+    pressureCentreY: -0.12,
+  });
+  const cap = makeCompoundControllerShellCapGeometry(shell, depth, bevelSegments);
+  const compatible = [lofted, cap].map(source => (source.index ? source.toNonIndexed() : source));
+  const merged = mergeGeometries(compatible, false);
+  compatible.forEach(source => {
+    if (source !== lofted && source !== cap) source.dispose();
+  });
+  cap.dispose();
+  if (!merged) {
+    return lofted;
+  }
+  lofted.dispose();
+  merged.computeBoundingBox();
+  merged.computeBoundingSphere();
+  return merged;
+}
+
+function makeLiteralControllerTouchInsetGeometry(depth: number, bevelSegments: number) {
+  const inset = new THREE.Shape();
+  inset.moveTo(-1.46, 1.34);
+  inset.lineTo(1.46, 1.34);
+  inset.bezierCurveTo(1.4, 1.02, 1.32, 0.55, 0.98, 0.34);
+  inset.bezierCurveTo(0.56, 0.18, -0.56, 0.18, -0.98, 0.34);
+  inset.bezierCurveTo(-1.32, 0.55, -1.4, 1.02, -1.46, 1.34);
+  inset.closePath();
+  const geometry = new THREE.ExtrudeGeometry(inset, {
+    depth,
+    bevelEnabled: true,
+    bevelSegments,
+    bevelSize: 0.045,
+    bevelThickness: 0.035,
+    curveSegments: bevelSegments + 5,
     steps: 1,
   });
   geometry.translate(0, 0, -depth * 0.5);
-  geometry.computeVertexNormals();
-  return geometry;
+  // Keep the measured perimeter while giving the touch panel a shallow lens
+  // surface. Its apex stays behind the white grip apex and depth ceiling.
+  const cap = makeCompoundControllerShellCapGeometry(inset, depth, bevelSegments, 0.035, 0.075);
+  const flatCap = cap.toNonIndexed();
+  const merged = mergeGeometries([geometry, flatCap], false);
+  cap.dispose();
+  flatCap.dispose();
+  if (!merged) return geometry;
+  geometry.dispose();
+  merged.computeBoundingBox();
+  merged.computeBoundingSphere();
+  return merged;
 }
 
 function makePressureHabitatFrameGeometry(depth: number, bevelSegments: number) {
@@ -829,15 +1171,21 @@ function makeControllerWingGeometry(side: -1 | 1, depth: number, bevelSegments: 
     depth,
     bevelEnabled: true,
     bevelSegments,
-    bevelSize: 0.09,
-    bevelThickness: 0.07,
+    bevelSize: 0.11,
+    bevelThickness: 0.12,
     curveSegments: bevelSegments + 4,
-    steps: 1,
+    steps: bevelSegments + 3,
   });
   geometry.translate(0, 0, -depth * 0.5);
   if (side < 0) geometry.rotateY(Math.PI);
-  geometry.computeVertexNormals();
-  return geometry;
+  return sculptContinuousDepthLoftGeometry(geometry, depth, {
+    midWidthSwell: 0.08,
+    midHeightSwell: 0.09,
+    rearWidthTaper: 0.13,
+    rearHeightTaper: 0.3,
+    rearDrop: 0.04,
+    pressureCentreY: -0.28,
+  });
 }
 
 function makeControllerShellGeometry(side: -1 | 1, depth: number, bevelSegments: number) {
@@ -861,10 +1209,13 @@ function makeControllerShellGeometry(side: -1 | 1, depth: number, bevelSegments:
     bevelSize: 0.085,
     bevelThickness: 0.065,
     curveSegments: bevelSegments + 4,
-    steps: 1,
+    steps: 3,
   });
   geometry.translate(0, 0, -depth * 0.5);
   if (side < 0) geometry.rotateY(Math.PI);
+  // Keep more shoulder section at the rear than Slice 1B. The former strong
+  // contraction made a deep extrusion look like a thin facade in profile.
+  taperAftPressureVolumeGeometry(geometry, depth, 0.24, 0.09, 0.15);
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -885,10 +1236,11 @@ function makeShoulderCrownGeometry(side: -1 | 1, depth: number, bevelSegments: n
     bevelSize: 0.08,
     bevelThickness: 0.07,
     curveSegments: bevelSegments + 5,
-    steps: 1,
+    steps: 3,
   });
   geometry.translate(0, 0, -depth * 0.5);
   if (side < 0) geometry.rotateY(Math.PI);
+  taperAftPressureVolumeGeometry(geometry, depth, 0.2, 0.08, 0.14);
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -925,9 +1277,18 @@ function makeAtriumCrownGeometry(depth: number, bevelSegments: number, frameOnly
     bevelSize: Math.min(0.075, depth * 0.06),
     bevelThickness: Math.min(0.06, depth * 0.05),
     curveSegments: bevelSegments + 6,
-    steps: 1,
+    steps: 3,
   });
   geometry.translate(0, 0, -depth * 0.5);
+  const positions = geometry.attributes.position as THREE.BufferAttribute;
+  for (let index = 0; index < positions.count; index += 1) {
+    const z = positions.getZ(index);
+    const rearward = THREE.MathUtils.clamp((depth * 0.5 - z) / depth, 0, 1);
+    const aftCamber = smoothstep(rearward, 0.34, 1);
+    positions.setX(index, positions.getX(index) * (1 - aftCamber * 0.035));
+    positions.setY(index, positions.getY(index) - aftCamber * 0.24);
+  }
+  positions.needsUpdate = true;
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -1011,7 +1372,7 @@ function makeMaterials(): ShipMaterials {
       clearcoat: 1, clearcoatRoughness: 0.03,
       emissive: '#074b59', emissiveIntensity: 0.62,
     }),
-    thrust: new THREE.MeshBasicMaterial({color: '#67ddff', transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false}),
+    thrust: new THREE.MeshBasicMaterial({color: '#67ddff', transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide}),
     hover: new THREE.MeshBasicMaterial({color: '#70e6ff', transparent: true, opacity: 0.58, blending: THREE.AdditiveBlending, depthWrite: false}),
     ripple: new THREE.MeshBasicMaterial({color: '#8be8ff', transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false}),
   };
@@ -1088,7 +1449,11 @@ function addWindowBand(parent: THREE.Object3D, side: -1 | 1, materials: ShipMate
   // Pull the inhabited bands toward the centreline so the dark grip core reads
   // as usable ship volume instead of a blank circular void.
   windowRoot.position.x = side * -0.35;
-  windowRoot.position.z = 0.34;
+  // Keep every inhabited shoulder deck, but recess the whole pressure facade
+  // behind the ceramic authority surface. Compacting the repeated rows makes
+  // them read as windows inside a controller grip instead of shelves attached
+  // to its front face; instance and mesh counts remain unchanged.
+  windowRoot.position.z = 0.06;
   const facadeMaterial = materials.glass.clone();
   facadeMaterial.color.set('#102b37');
   facadeMaterial.opacity = 0.9;
@@ -1100,9 +1465,9 @@ function addWindowBand(parent: THREE.Object3D, side: -1 | 1, materials: ShipMate
     [side * 0.62, 0.02, 0.61],
   );
   const deckDefinitions = [
-    {x: 0.42, y: 0.44, width: 1.18, depth: 1.08, cant: 0.045, columns: quality === 'high' ? 5 : 4},
-    {x: 0.64, y: 0.02, width: 0.7, depth: 1.2, cant: -0.075, columns: quality === 'high' ? 3 : 2},
-    {x: 0.38, y: -0.43, width: 1.3, depth: 0.92, cant: 0.03, columns: quality === 'high' ? 4 : 3},
+    {x: 0.42, y: 0.44, width: 0.82, depth: 1.08, cant: 0.045, columns: quality === 'high' ? 5 : 4},
+    {x: 0.58, y: 0.02, width: 0.62, depth: 1.2, cant: -0.075, columns: quality === 'high' ? 3 : 2},
+    {x: 0.38, y: -0.43, width: 0.86, depth: 0.92, cant: 0.03, columns: quality === 'high' ? 4 : 3},
   ];
   const geometry = makeRoundedExtrudeGeometry(0.18, 0.075, 0.055, 0.022, 1);
   const windowCount = deckDefinitions.reduce((total, definition) => total + definition.columns, 0);
@@ -1116,7 +1481,7 @@ function addWindowBand(parent: THREE.Object3D, side: -1 | 1, materials: ShipMate
   for (let deck = 0; deck < deckDefinitions.length; deck += 1) {
     const definition = deckDefinitions[deck];
     for (let column = 0; column < definition.columns; column += 1) {
-      const columnOffset = (column - (definition.columns - 1) * 0.5) * (deck === 1 ? 0.22 : 0.235);
+      const columnOffset = (column - (definition.columns - 1) * 0.5) * (deck === 1 ? 0.18 : 0.16);
       const x = side * (definition.x + columnOffset);
       deckQuaternion.setFromEuler(new THREE.Euler(0, 0, side * definition.cant));
       matrix.compose(
@@ -1173,20 +1538,20 @@ function addWingStructuralRibs(
     rotation: number;
     scale: [number, number, number];
   }> = [
-    {position: [side * -0.5, 0.68, 0.64], rotation: side * -0.22, scale: [1, 0.92, 1]},
-    {position: [side * -0.22, 0.42, 0.655], rotation: side * 0.18, scale: [1, 0.88, 1]},
-    {position: [side * 0.08, 0.14, 0.665], rotation: side * -0.15, scale: [1, 0.94, 1]},
-    {position: [side * 0.31, -0.2, 0.66], rotation: side * 0.12, scale: [1, 0.88, 1]},
-    {position: [side * 0.44, -0.58, 0.64], rotation: side * -0.1, scale: [1, 0.8, 1]},
-    {position: [side * 0.34, -0.9, 0.615], rotation: side * 0.08, scale: [1, 0.62, 1]},
-    {position: [side * -0.11, 0.86, 0.65], rotation: Math.PI * 0.5, scale: [1, 0.88, 1]},
-    {position: [side * 0.22, 0.54, 0.67], rotation: Math.PI * 0.5, scale: [1, 0.82, 1]},
-    {position: [side * 0.34, 0.18, 0.68], rotation: Math.PI * 0.5, scale: [1, 0.74, 1]},
-    {position: [side * 0.4, -0.46, 0.66], rotation: Math.PI * 0.5, scale: [1, 0.7, 1]},
+    {position: [side * -0.5, 0.68, 0.5], rotation: side * -0.22, scale: [1, 0.92, 1]},
+    {position: [side * -0.22, 0.42, 0.51], rotation: side * 0.18, scale: [1, 0.88, 1]},
+    {position: [side * 0.08, 0.14, 0.52], rotation: side * -0.15, scale: [1, 0.94, 1]},
+    {position: [side * 0.31, -0.2, 0.51], rotation: side * 0.12, scale: [1, 0.88, 1]},
+    {position: [side * 0.44, -0.58, 0.49], rotation: side * -0.1, scale: [1, 0.8, 1]},
+    {position: [side * 0.34, -0.9, 0.48], rotation: side * 0.08, scale: [1, 0.62, 1]},
+    {position: [side * -0.11, 0.86, 0.44], rotation: Math.PI * 0.5, scale: [1, 0.56, 1]},
+    {position: [side * 0.22, 0.54, 0.44], rotation: Math.PI * 0.5, scale: [1, 0.54, 1]},
+    {position: [side * 0.34, 0.18, 0.44], rotation: Math.PI * 0.5, scale: [1, 0.5, 1]},
+    {position: [side * 0.4, -0.46, 0.44], rotation: Math.PI * 0.5, scale: [1, 0.48, 1]},
     // A darker inner-edge stack preserves the observed shoulder-to-roof load
     // path without the former oversized criss-cross bars.
-    {position: [side * -0.6, 0.98, 0.645], rotation: side * -0.42, scale: [2.1, 0.92, 1.15]},
-    {position: [side * -0.48, 1.28, 0.64], rotation: Math.PI * 0.5, scale: [1.8, 0.82, 1.12]},
+    {position: [side * -0.6, 0.98, 0.46], rotation: side * -0.42, scale: [2.1, 0.92, 1.15]},
+    {position: [side * -0.48, 1.28, 0.44], rotation: Math.PI * 0.5, scale: [1.8, 0.58, 1.12]},
   ];
   const ribs = new THREE.InstancedMesh(ribGeometry, materials.frameLight, definitions.length);
   ribs.name = side < 0 ? 'PORT_SHELL_TRUSS_INSTANCES' : 'STARBOARD_SHELL_TRUSS_INSTANCES';
@@ -1219,9 +1584,14 @@ function makeWing(
   const sideHabitat = addMesh(
     pivot,
     side < 0 ? 'PORT_INHABITED_SHOULDER_POD' : 'STARBOARD_INHABITED_SHOULDER_POD',
-    makeRoundedExtrudeGeometry(1.48, 2.18, 1.42, 0.36, quality === 'high' ? 5 : 3),
+    taperAftPressureVolumeGeometry(
+      makeRoundedExtrudeGeometry(1.48, 2.18, 2.6, 0.36, quality === 'high' ? 5 : 3),
+      2.6,
+      0.32,
+      0.12,
+    ),
     materials.glass,
-    [side * 0.18, 0.18, -0.18],
+    [side * 0.18, 0.18, -0.77],
     [1, 1, 1],
     [0, 0, side * -0.11],
   );
@@ -1231,6 +1601,8 @@ function makeWing(
     gesture: 'cants-and-loads-outward',
     destination: side < 0 ? 'port-controller-shoulder' : 'starboard-controller-shoulder',
     sanctuaryClearance: 'does-not-converge-on-great-tree',
+    pressureDepth: 2.6,
+    preservedFrontEdge: 0.53,
   };
   const shoulderGlazing = materials.glass.clone();
   shoulderGlazing.opacity = 0.58;
@@ -1246,9 +1618,9 @@ function makeWing(
   const gripMass = addMesh(
     pivot,
     side < 0 ? 'PORT_GRIP_NACELLE_MASS' : 'STARBOARD_GRIP_NACELLE_MASS',
-    makeControllerWingGeometry(side, 1.08, quality === 'high' ? 5 : 3),
+    makeControllerWingGeometry(side, 2.5, quality === 'high' ? 5 : 3),
     materials.frame,
-    [side * 0.26, -0.18, -0.28],
+    [side * 0.26, -0.18, -0.99],
     [0.92, 0.96, 0.9],
     [0.018, 0, side * -0.025],
   );
@@ -1258,9 +1630,9 @@ function makeWing(
   const underframe = addMesh(
     pivot,
     side < 0 ? 'LEFT_UNDERFRAME' : 'RIGHT_UNDERFRAME',
-    makeControllerWingGeometry(side, 1.12, quality === 'high' ? 5 : 3),
+    makeControllerWingGeometry(side, 2.5, quality === 'high' ? 5 : 3),
     materials.frame,
-    [side * 0.28, -0.14, -0.1],
+    [side * 0.28, -0.14, -0.79],
     [0.98, 0.98, 0.94],
     [0.025, 0, side * -0.035],
   );
@@ -1269,9 +1641,9 @@ function makeWing(
   const shell = addMesh(
     pivot,
     side < 0 ? 'LEFT_OUTER_SHELL' : 'RIGHT_OUTER_SHELL',
-    makeControllerShellGeometry(side, 1, quality === 'high' ? 5 : 3),
+    makeControllerShellGeometry(side, 3.66, quality === 'high' ? 5 : 3),
     materials.shell,
-    [side * 0.02, 0.08, 0.52],
+    [side * 0.02, 0.08, -0.84],
     [0.92, 1.18, 1.06],
     [0.025, 0, side * -0.035],
   );
@@ -1281,10 +1653,10 @@ function makeWing(
   const shoulderYoke = addMesh(
     pivot,
     side < 0 ? 'PORT_GRIP_SHOULDER_YOKE' : 'STARBOARD_GRIP_SHOULDER_YOKE',
-    makeShoulderCrownGeometry(side, 1.12, quality === 'high' ? 5 : 3),
+    makeShoulderCrownGeometry(side, 3.46, quality === 'high' ? 5 : 3),
     materials.shell,
-    [side * 0.06, 1.34, 0.72],
-    [1.3, 0.86, 1.13],
+    [side * 0.06, 1.08, -0.68],
+    [1.3, 0.94, 1.18],
     [0, 0, side * -0.11],
   );
   const shoulderWindowGeometry = makeRoundedExtrudeGeometry(0.86, 0.15, 0.09, 0.055, quality === 'high' ? 3 : 2);
@@ -1330,14 +1702,21 @@ function makeWing(
   const travelGripFairing = addMesh(
     pivot,
     side < 0 ? 'PORT_TRAVEL_GRIP_FAIRING' : 'STARBOARD_TRAVEL_GRIP_FAIRING',
-    makeControllerWingGeometry(side, 1.18, quality === 'high' ? 5 : 3),
+    makeControllerWingGeometry(side, 4.36, quality === 'high' ? 5 : 3),
     materials.shell,
-    [side * 0.16, -0.12, 0.18],
-    [1.34, 1.12, 1.08],
+    [side * 0.16, -0.12, -0.74],
+    [1.34, 1.12, 1],
     [0.02, 0, side * -0.035],
   );
   travelGripFairing.visible = false;
   travelGripFairing.userData.clearance = {role: 'travel-mode-controller-envelope'};
+  travelGripFairing.userData.volumeContract = {
+    pressureDepth: 4.36,
+    frontEdge: 1.44,
+    rearEdge: -2.92,
+    authority: 'src/assets/Blue_darkcontroller.webp',
+    topology: 'continuous-rounded-depth-loft',
+  };
 
   const occupiedDeckWindows = addWindowBand(pivot, side, materials, quality);
 
@@ -1365,17 +1744,23 @@ function makeWing(
   const effect = addMesh(
     engineHousing,
     side < 0 ? 'LEFT_MAIN_ENGINE_THRUST' : 'RIGHT_MAIN_ENGINE_THRUST',
-    new THREE.ConeGeometry(0.2, 1.22, quality === 'high' ? 22 : 12, 1, true),
+    new THREE.ConeGeometry(0.26, 1.72, quality === 'high' ? 22 : 12, 1, false),
     materials.thrust,
     [0, 0, -1.08],
     [1, 1, 1],
-    [Math.PI / 2, 0, 0],
+    [-Math.PI / 2, 0, 0],
   );
   effect.visible = false;
   thrusterEffects.push(effect);
 
   underframe.userData.collider = {type: 'capsule', role: 'wing-compound-proxy'};
   shell.userData.clearance = {role: 'outer-transform-envelope'};
+  shell.userData.volumeContract = {
+    pressureDepth: 2.6,
+    preservedFrontEdge: 1.02,
+    authority: 'src/assets/Blue_darkcontroller.webp',
+  };
+  shoulderYoke.userData.volumeContract = {pressureDepth: 2.5, preservedFrontEdge: 1.28};
   return {
     pivot,
     engineHousing,
@@ -1567,6 +1952,160 @@ function makeTree(parent: THREE.Object3D, materials: ShipMaterials, quality: Exp
   if (!treeTerraceGeometry) throw new Error('Unable to merge Great Tree terrace and pavilion');
   mergeReadyTreeTerraceParts.forEach((geometry) => geometry.dispose());
   addMesh(tree, 'GREAT_TREE_CROWN_TERRACE_AND_PAVILION', treeTerraceGeometry, materials.bark, [0, 0, 0]);
+
+  const treeLoungeDefinitions: Array<{position: [number, number, number]; rotation: number}> = [
+    {position: [-0.48, 1.3, 0.2], rotation: -0.45},
+    {position: [-0.18, 1.3, 0.38], rotation: -0.12},
+    {position: [0.18, 1.3, 0.38], rotation: 0.12},
+    {position: [0.5, 1.3, 0.18], rotation: 0.45},
+    {position: [-0.5, 1.3, -0.26], rotation: -0.65},
+    {position: [0.02, 1.3, -0.46], rotation: 0},
+  ];
+  const treeLounges = new THREE.InstancedMesh(
+    new THREE.CapsuleGeometry(0.085, 0.19, quality === 'high' ? 3 : 2, quality === 'high' ? 7 : 5),
+    materials.warmWindow,
+    treeLoungeDefinitions.length,
+  );
+  treeLounges.name = 'tree-top-observatory-lounge-instances';
+  treeLoungeDefinitions.forEach((definition, index) => {
+    branchMatrix.compose(
+      new THREE.Vector3(...definition.position),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI * 0.5, 0, definition.rotation)),
+      new THREE.Vector3(1.3, 0.72, 1),
+    );
+    treeLounges.setMatrixAt(index, branchMatrix);
+  });
+  treeLounges.instanceMatrix.needsUpdate = true;
+  tree.add(treeLounges);
+  return tree;
+}
+
+function makeOakStudyTree(parent: THREE.Object3D, materials: ShipMaterials, quality: ExpeditionShipQuality, cage = false, hollow = false, branched = false, sculpted = false, subdivision = false, artist = false, polyhaven = false) {
+  const tree = new THREE.Group();
+  tree.name = 'GREAT_TREE';
+  tree.position.set(0, -0.3, -0.04);
+  // The habitat frame is compacted relative to the outer controller shell, but
+  // the Great Tree grows within that frame and remains the dominant landmark.
+  tree.scale.setScalar(1.12);
+  parent.add(tree);
+  if (artist) {
+    addHollowOakStructure(tree, materials.bark, materials.habitatFloor, materials.workshopBronze, quality === 'high', createArtistOakGeometry(quality === 'high',polyhaven?'polyhaven':'julius'), ARTIST_OAK_CIRCULATION);
+    tree.getObjectByName('great-tree-stair-treads')!.userData.enclosureVerified=false;
+    return tree;
+  }
+  if (hollow) {
+    addHollowOakStructure(tree, materials.bark, materials.habitatFloor, materials.workshopBronze, quality === 'high', sculpted ? createSculptedOakGeometry(quality === 'high', subdivision) : branched ? createBranchedOakWall(quality === 'high') : undefined, sculpted ? SCULPTED_OAK_CIRCULATION : undefined);
+    return tree; // Structural proof: the old overheight pavilion/foliage are not inherited.
+  }
+  const crownStructure = addOakStructure(tree, materials.bark, materials.habitatFloor, materials.workshopBronze, quality === 'high', cage ? createExpeditionOakCageGeometry(quality === 'high') : undefined);
+  const branchMatrix = new THREE.Matrix4();
+
+  const crownGeometry = new THREE.IcosahedronGeometry(0.11, 1);
+  const crownDefinitions: Array<{position: [number, number, number]; scale: [number, number, number]; light: boolean}> = [];
+  const crownRings = [
+    {count: quality === 'high' ? 42 : 26, radiusX: 1.18, radiusZ: 0.64, y: 1.43},
+    {count: quality === 'high' ? 34 : 21, radiusX: 0.86, radiusZ: 0.76, y: 1.63},
+    {count: quality === 'high' ? 24 : 15, radiusX: 0.52, radiusZ: 0.5, y: 1.83},
+  ];
+  crownRings.forEach((ring, ringIndex) => {
+    for (let index = 0; index < ring.count; index += 1) {
+      const angle = index / ring.count * Math.PI * 2 + ringIndex * 0.41;
+      const ripple = Math.sin(index * 2.17 + ringIndex) * 0.055;
+      crownDefinitions.push({
+        position: [
+          Math.cos(angle) * (ring.radiusX + ripple),
+          ring.y + Math.sin(index * 1.73) * 0.055,
+          Math.sin(angle) * (ring.radiusZ + ripple * 0.6),
+        ],
+        scale: [1.15 + (index % 3) * 0.12, 0.72 + (index % 2) * 0.12, 0.95 + ((index + 1) % 3) * 0.1],
+        light: (index + ringIndex) % 3 === 0,
+      });
+    }
+  });
+  // From the garden floor the tree-house terrace should feel nested in a
+  // living canopy, not like an exposed slab. A sparse ring of broad, hanging
+  // foliage masks most of its underside while retaining glimpses of the warm
+  // pavilion and a clear route around the trunk.
+  const underCanopyCount = quality === 'high' ? 26 : 20;
+  for (let index = 0; index < underCanopyCount; index += 1) {
+    const angle = index * 2.399963 + 0.24;
+    const canopyRadius = Math.sqrt((index + 0.75) / underCanopyCount) * 0.82;
+    crownDefinitions.push({
+      position: [
+        Math.cos(angle) * canopyRadius,
+        1.08 + Math.sin(index * 1.91) * 0.045,
+        Math.sin(angle) * canopyRadius * 0.8,
+      ],
+      scale: [2.08 + (index % 3) * 0.14, 1.32 + (index % 2) * 0.16, 1.82 + ((index + 1) % 3) * 0.12],
+      light: index % 3 === 1,
+    });
+  }
+  // Clear the occupied crown volume in the new study. These are still old
+  // unapproved proxies, not a finished canopy or a foliage quality pass.
+  const visibleCrownDefinitions = cage
+    ? crownDefinitions.filter(definition => definition.position[1] > 1.3).map(definition => ({
+        ...definition,
+        position: [definition.position[0], Math.max(1.88, definition.position[1] + .29), definition.position[2]] as [number, number, number],
+      }))
+    : crownDefinitions;
+  for (const light of [false, true]) {
+    const definitions = visibleCrownDefinitions.filter((definition) => definition.light === light);
+    const crowns = new THREE.InstancedMesh(crownGeometry, light ? materials.foliageLight : materials.foliage, definitions.length);
+    crowns.name = light ? 'great-tree-crown-light' : 'great-tree-crown-dark';
+    definitions.forEach((definition, index) => {
+      branchMatrix.compose(new THREE.Vector3(...definition.position), new THREE.Quaternion(), new THREE.Vector3(...definition.scale));
+      crowns.setMatrixAt(index, branchMatrix);
+    });
+    crowns.instanceMatrix.needsUpdate = true;
+    crowns.castShadow = true;
+    tree.add(crowns);
+  }
+
+  // A low garden understorey adds the inhabited depth seen in the goal image,
+  // while leaving the Great Tree's central circulation volume unobstructed.
+  const undergrowthDefinitions: Array<{
+    position: [number, number, number];
+    scale: [number, number, number];
+    light: boolean;
+  }> = [];
+  const undergrowthCount = quality === 'high' ? 28 : 18;
+  for (let index = 0; index < undergrowthCount; index += 1) {
+    const angle = index / undergrowthCount * Math.PI * 2;
+    const radius = index % 2 === 0 ? 0.91 : 0.68;
+    undergrowthDefinitions.push({
+      position: [Math.cos(angle) * radius, -0.39 + (index % 3) * 0.045, Math.sin(angle) * radius * 0.62],
+      scale: [0.92 + (index % 4) * 0.08, 0.62 + (index % 3) * 0.08, 0.88 + ((index + 2) % 4) * 0.08],
+      light: index % 3 === 0,
+    });
+  }
+  const undergrowthGeometry = new THREE.IcosahedronGeometry(0.105, quality === 'high' ? 1 : 0);
+  for (const light of [false, true]) {
+    const definitions = undergrowthDefinitions.filter((definition) => definition.light === light);
+    const undergrowth = new THREE.InstancedMesh(
+      undergrowthGeometry,
+      light ? materials.foliageLight : materials.foliage,
+      definitions.length,
+    );
+    undergrowth.name = light ? 'sanctuary-undergrowth-light' : 'sanctuary-undergrowth-dark';
+    definitions.forEach((definition, index) => {
+      branchMatrix.compose(
+        new THREE.Vector3(...definition.position),
+        new THREE.Quaternion(),
+        new THREE.Vector3(...definition.scale),
+      );
+      undergrowth.setMatrixAt(index, branchMatrix);
+    });
+    undergrowth.instanceMatrix.needsUpdate = true;
+    undergrowth.castShadow = true;
+    tree.add(undergrowth);
+  }
+
+  // Retain the existing pavilion as its own named parts until its approved slice.
+  const treeHouseBody = makeRoundedExtrudeGeometry(0.58, 0.3, 0.42, 0.09, 2);
+  addMesh(crownStructure, 'great-tree-pavilion', treeHouseBody, materials.bark, [0.36, 1.43, -0.15]);
+  const treeHouseRoof = new THREE.ConeGeometry(0.46, 0.18, 4);
+  treeHouseRoof.rotateY(Math.PI * 0.25);
+  addMesh(crownStructure, 'great-tree-pavilion-roof', treeHouseRoof, materials.bark, [0.36, 1.68, -0.15]);
 
   const treeLoungeDefinitions: Array<{position: [number, number, number]; rotation: number}> = [
     {position: [-0.48, 1.3, 0.2], rotation: -0.45},
@@ -1899,10 +2438,16 @@ function makeWalkerLeg(
   };
 }
 
-export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 'high'): ExpeditionShipThreeModel {
+export function createExpeditionShipThreeModel(
+  quality: ExpeditionShipQuality = 'high',
+  options: {interiorStudy?: 'oak' | 'oak-cage' | 'oak-hollow' | 'oak-branched' | 'oak-sculpted' | 'oak-subdivision' | 'oak-artist' | 'oak-polyhaven'; roomStudy?: boolean; roomFinishStudy?: boolean; lowerDeckStudy?:boolean; hollowGarageStudy?:boolean} = {},
+): ExpeditionShipThreeModel {
+  if(options.hollowGarageStudy)options={...options,lowerDeckStudy:true};
   const materials = makeMaterials();
   const root = new THREE.Group();
   root.name = 'EXPEDITION_SHIP_ROOT';
+  let rigidBatches: ReturnType<typeof batchExpeditionRigidSurfaces> | undefined;
+  let roomClearance: ReturnType<typeof installCommandRoomClearance> | undefined;
 
   const stabilizedHull = new THREE.Group();
   stabilizedHull.name = 'STABILIZED_INHABITED_HULL';
@@ -1923,12 +2468,15 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     gesture: 'load-bypasses-glazing-through-controller-shoulders',
     sanctuaryClearance: 'keeps-front-and-tree-centre-open',
   };
+  // This is the controller's continuous roof carapace, not a thin decorative
+  // arch. Keep its front edge fixed while carrying the same curve rearward to
+  // the aft pressure collar so roof and side views read as one hull volume.
   const centreTopArch = addMesh(
     centreSpine,
-    'CENTRE_SHELL_TOP_ARCH',
-    makeAtriumCrownGeometry(2.18, 3, true),
+    'CONTINUOUS_CONTROLLER_ROOF_CARAPACE',
+    makeAtriumCrownGeometry(4, 3, true),
     materials.frameLight,
-    [0, 1.86, -0.02],
+    [0, 1.86, -0.93],
   );
   const centreLeftPier = addMesh(
     centreSpine,
@@ -1950,46 +2498,189 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   );
   centreLeftPier.userData.structure = {gesture: 'leans-outward', destination: 'left-controller-shoulder'};
   centreRightPier.userData.structure = {gesture: 'leans-outward', destination: 'right-controller-shoulder'};
-  const centreLowerSill = addMesh(centreSpine, 'CENTRE_SHELL_LOWER_SILL', makeRoundedExtrudeGeometry(3.82, 0.24, 1.9, 0.1, quality === 'high' ? 4 : 2), materials.frameLight, [0, -0.88, 0.02]);
+  // Reuse the former shallow lower sill as a broad X/Z pressure deck. It ties
+  // both grip load paths to the garage belly and central drive without adding
+  // another mesh or projecting a new bar across the controller's front face.
+  const centreLowerSill = addMesh(
+    centreSpine,
+    'CONTINUOUS_UNDERSIDE_KEEL_BRIDGE',
+    makeContinuousKeelBridgeGeometry(quality),
+    materials.frameLight,
+    [0, -1.12, -0.77],
+    [1, 1, 1],
+    [Math.PI * 0.5, 0, 0],
+  );
   const bridgeVisor = addMesh(centreSpine, 'BRIDGE_VISOR', makeTaperedExtrudeGeometry(2.82, 2.42, 0.22, 0.18, quality === 'high' ? 4 : 2), materials.glass, [0, 1.78, 1.12]);
+  if(options.hollowGarageStudy){
+    // Authorized real room cavity and service wells in the thick underbody.
+    centreLowerSill.updateMatrix();
+    const source=centreLowerSill.geometry.clone().applyMatrix4(centreLowerSill.matrix);
+    const box=(x0:number,y0:number,z0:number,x1:number,y1:number,z1:number)=>new THREE.Box3(new THREE.Vector3(x0,y0,z0),new THREE.Vector3(x1,y1,z1));
+    const cut=subtractSolidBoxes(source,[box(-1.34,-1.255,-.54,1.34,-.830,1.14),box(-.59,-2.6,-.71,.59,-1.255,.51),box(-.59,-2.6,-1.62,.59,-.70,-1.18),box(-.355,-.835,-.475,.355,-.69,.235)]);
+    source.dispose();centreLowerSill.geometry.dispose();cut.applyMatrix4(centreLowerSill.matrix.clone().invert());centreLowerSill.geometry=cut;
+    centreLowerSill.userData.hollowHousing={roomVoid:true,pressureOwnedBy:'DECK_00_RETRACTABLE_FABRICATION_AND_GARAGE',startWell:true,rearSocketWell:true,upperShaftPassage:true,productionApproved:false};
+  }
+  // The old second roof arch made the crown look stacked while leaving the
+  // back open. Spend that same mesh on the missing aft pressure-hull collar;
+  // the existing wraparound rear glass now terminates inside a real frame.
   const centreRoofObservatory = addMesh(
     centreSpine,
-    'CENTRE_ROOF_OBSERVATORY',
-    makeAtriumCrownGeometry(1.94, quality === 'high' ? 5 : 3, false),
-    materials.glass,
-    [0, 1.84, 0.04],
-    [0.88, 0.84, 1],
+    'AFT_PRESSURE_HULL_COLLAR',
+    makePressureHabitatFrameGeometry(1.12, quality === 'high' ? 3 : 2),
+    materials.shellInset,
+    [0, 0.28, -2.42],
+    [1.05, 0.98, 1],
   );
+  centreRoofObservatory.userData.structure = {
+    role: 'rear-pressure-hull-termination',
+    glazing: 'HAVEN_WRAPAROUND_GLASS_CORRIDOR',
+    loadPath: 'roof-carapace-to-controller-shoulders-to-keel-bridge',
+  };
+  centreTopArch.userData.volumeContract = {
+    depth: 4,
+    frontEdge: 1.07,
+    rearEdge: -2.93,
+    preservesFrontPlanform: true,
+    overlapsShoulderShells: true,
+  };
+  centreRoofObservatory.userData.volumeContract = {
+    depth: 1.12,
+    frontEdge: -1.86,
+    rearEdge: -2.98,
+    overlapsRoofAndShoulders: true,
+  };
+  centreLowerSill.userData.volumeContract = {
+    width: 5.32,
+    thickness: 0.76,
+    foreAftDepth: 3.52,
+    frontEdge: 0.99,
+    rearEdge: -2.53,
+    connects: ['LEFT_OUTER_SHELL', 'GARAGE_BELLY', 'CENTRAL_KEEL_DRIVE', 'RIGHT_OUTER_SHELL'],
+  };
 
   const speedShellMaterial = materials.frameLight.clone();
-  speedShellMaterial.color.set('#0b2941');
-  speedShellMaterial.roughness = 0.18;
-  speedShellMaterial.metalness = 0.54;
+  speedShellMaterial.color.set('#1e506f');
+  speedShellMaterial.roughness = 0.24;
+  speedShellMaterial.metalness = 0.46;
   speedShellMaterial.clearcoat = 0.92;
   speedShellMaterial.clearcoatRoughness = 0.1;
+  speedShellMaterial.emissive.set('#0c2c42');
+  speedShellMaterial.emissiveIntensity = 0.2;
+  const speedGripShellMaterial = materials.shell.clone();
+  speedGripShellMaterial.color.set('#f4f7fb');
+  speedGripShellMaterial.roughness = 0.18;
+  speedGripShellMaterial.metalness = 0.12;
+  speedGripShellMaterial.side = THREE.DoubleSide;
+  speedGripShellMaterial.clearcoat = 0.96;
+  speedGripShellMaterial.clearcoatRoughness = 0.08;
   const speedTouchpadMaterial = materials.glass.clone();
-  speedTouchpadMaterial.color.set('#147ba8');
-  speedTouchpadMaterial.emissive.set('#093b5b');
-  speedTouchpadMaterial.emissiveIntensity = 0.46;
-  speedTouchpadMaterial.transmission = 0.12;
-  speedTouchpadMaterial.opacity = 0.92;
-  const speedControllerCore = addMesh(
+  speedTouchpadMaterial.color.set('#1596c6');
+  speedTouchpadMaterial.emissive.set('#087ba8');
+  speedTouchpadMaterial.emissiveIntensity = 0.8;
+  speedTouchpadMaterial.roughness = 0.19;
+  speedTouchpadMaterial.metalness = 0.18;
+  speedTouchpadMaterial.clearcoat = 1;
+  speedTouchpadMaterial.clearcoatRoughness = 0.09;
+  speedTouchpadMaterial.transmission = 0;
+  speedTouchpadMaterial.transparent = false;
+  speedTouchpadMaterial.opacity = 1;
+  // The final locking layer is one literal controller wrapper. Four material
+  // regions share one batched selectable mesh: continuous dark body, both
+  // overlapping white grip shells and the cyan touch inset. Earlier roof,
+  // belly, aft-ring and separate-grip construction remains in the scene graph
+  // only as retracted transition mechanics; it cannot compete in Fast Space.
+  const speedControllerCore = addGroupedMesh(
     centreSpine,
     'SPEED_CONTROLLER_GAME_SHELL_CORE',
-    makeGameControllerSpeedCoreGeometry(0.52, quality === 'high' ? 3 : 2),
-    speedShellMaterial,
-    [0, 0.24, 1.2],
-    [1.04, 1.02, 1],
+    [
+      {
+        geometry: makeGameControllerSpeedCoreGeometry(2.1, quality === 'high' ? 2 : 1),
+        material: speedShellMaterial,
+        position: [0, 0.12, -0.18],
+      },
+      {
+        geometry: makeLiteralControllerGripShellGeometry(-1, 1.5, quality === 'high' ? 4 : 2),
+        material: speedGripShellMaterial,
+        position: [0, 0.12, -0.1],
+      },
+      {
+        geometry: makeLiteralControllerGripShellGeometry(1, 1.5, quality === 'high' ? 4 : 2),
+        material: speedGripShellMaterial,
+        position: [0, 0.12, -0.1],
+      },
+      {
+        geometry: makeLiteralControllerTouchInsetGeometry(0.18, quality === 'high' ? 2 : 1),
+        material: speedTouchpadMaterial,
+        position: [0, 0.12, 0.92],
+      },
+    ],
   );
   speedControllerCore.visible = false;
+  // The lab's ground plane made the open controller arch read as a solid
+  // rectangular beam because the final shell cast a hard shadow through it.
+  // Fast Space has no ground receiver, so preserve the literal open silhouette
+  // in evidence and runtime presentation while still receiving hull lighting.
+  speedControllerCore.castShadow = false;
   speedControllerCore.userData.shapeAuthority = 'src/assets/Blue_darkcontroller.webp';
+  speedControllerCore.userData.volumeContract = {
+    pressureDepth: 2.1,
+    frontEdge: 0.87,
+    rearEdge: -1.23,
+    topology: 'batched-multi-material-literal-controller-wrapper-shell',
+    constructionFamily: 'authority-measured-compound-shell-controller',
+    components: ['continuous-dark-controller-body', 'port-authority-white-overlay-mask', 'starboard-authority-white-overlay-mask', 'broad-cyan-touch-inset'],
+  };
+  const fastSpaceRoofCap = new THREE.Object3D();
+  fastSpaceRoofCap.name = 'FAST_SPACE_CONTINUOUS_ROOF_CAP';
+  fastSpaceRoofCap.position.set(0, 0.12, -0.74);
+  fastSpaceRoofCap.userData.volumeContract = {
+    pressureDepth: 2.1,
+    frontEdge: 0.87,
+    rearEdge: -1.23,
+    overlaps: ['SPEED_CONTROLLER_GAME_SHELL_CORE'],
+    topology: 'semantic-region-of-literal-controller-wrapper',
+  };
+  speedControllerCore.add(fastSpaceRoofCap);
+  const fastSpaceBelly = new THREE.Object3D();
+  fastSpaceBelly.name = 'FAST_SPACE_INTERLOCKED_BELLY';
+  fastSpaceBelly.position.set(0, -0.42, -0.74);
+  fastSpaceBelly.userData.volumeContract = {
+    pressureDepth: 2.1,
+    frontEdge: 0.87,
+    rearEdge: -1.23,
+    preservesFrontControllerOpening: true,
+    overlaps: ['SPEED_CONTROLLER_GAME_SHELL_CORE', 'CENTRAL_KEEL_DRIVE'],
+    topology: 'lower-arch-region-of-literal-controller-wrapper',
+  };
+  speedControllerCore.add(fastSpaceBelly);
+  const fastSpaceVentralPlate = new THREE.Object3D();
+  fastSpaceVentralPlate.name = 'FAST_SPACE_VENTRAL_PRESSURE_PLATE';
+  fastSpaceVentralPlate.position.set(0, -1.08, -0.74);
+  fastSpaceVentralPlate.userData.volumeContract = {
+    width: 6.5,
+    foreAftDepth: 2.1,
+    thickness: 0.72,
+    overlaps: ['FAST_SPACE_INTERLOCKED_BELLY', 'CENTRAL_KEEL_DRIVE'],
+    topology: 'underside-region-of-literal-controller-wrapper',
+  };
+  speedControllerCore.add(fastSpaceVentralPlate);
+  const fastSpaceAftCap = new THREE.Object3D();
+  fastSpaceAftCap.name = 'FAST_SPACE_AFT_PRESSURE_CAP';
+  fastSpaceAftCap.position.set(0, 0.08, -1.23);
+  fastSpaceAftCap.userData.volumeContract = {
+    depth: 0.18,
+    frontEdge: -1.19,
+    rearEdge: -1.23,
+    overlaps: ['FAST_SPACE_CONTINUOUS_ROOF_CAP', 'FAST_SPACE_INTERLOCKED_BELLY'],
+    topology: 'closed-aft-surface-of-literal-controller-wrapper',
+  };
+  speedControllerCore.add(fastSpaceAftCap);
   const havenCentreStructures = [
     centreFrame,
     centreTopArch,
     centreLeftPier,
     centreRightPier,
     centreLowerSill,
-    centreRoofObservatory,
   ];
 
   const occupiedAtriumDecks = new THREE.Group();
@@ -2043,7 +2734,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   fabricationDeck.userData.program = {
     level: 0,
     role: 'retractable-garage-machine-workbench',
-    motion: 'extends-in-haven-retracts-before-travel-shell-closure',
+    motion: options.lowerDeckStudy?'fixed-occupied-core-external-service-envelope-only-retracts':'extends-in-haven-retracts-before-travel-shell-closure',
     dedicatedFullWidthDeck: true,
     clearHeightClass: 'industrial-double-height',
     garageBays: ['empty-rover-service-bay', 'engine-pod-rotary-lift', 'clean-fabrication-bench-line'],
@@ -2065,9 +2756,9 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     {
       // Extend the protected service floor toward the viewer so the true POV
       // can stand inside a vehicle-scale aisle instead of on its front lip.
-      geometry: makeRoundedExtrudeGeometry(3.48, 0.12, 2, 0.1, 2),
+      geometry: options.lowerDeckStudy?makeLowerDeckPlate(3.48,2,.12,-.12/.84-.34+.05):makeRoundedExtrudeGeometry(3.48, 0.12, 2, 0.1, 2),
       material: materials.workshopSurface,
-      position: [0, -0.88, -0.05],
+      position: [0, options.lowerDeckStudy?-.808:-.88, -0.05],
     },
     {
       // One continuous bowed liner replaces the flat black ceiling slab. Its
@@ -2176,7 +2867,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
         geometry: makeRoundedExtrudeGeometry(0.24, 1.62, 0.19, 0.055, 1),
         material: materials.shellInset,
         position: [side * 1.43, -0.69, -0.08],
-        rotation: [0, Math.PI * 0.5, 0],
+        rotation: options.lowerDeckStudy?[Math.PI*.5,0,0]:[0, Math.PI * 0.5, 0],
       },
       {
         geometry: new THREE.BoxGeometry(0.27, 0.035, 1.62),
@@ -2412,11 +3103,19 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       })),
     ]),
   ];
-  addGroupedMesh(
+  if(options.lowerDeckStudy){
+    fabricationFloorParts.forEach(part=>part.geometry.dispose());
+    // This study uses the shared glass palette; the replaced clone has no
+    // scene owner. Release it here even when the visual study is not promoted.
+    workshopPanoramicGlass.dispose();
+    fabricationFloorParts.splice(0,fabricationFloorParts.length,...makeConstructiveWorkshopParts({surface:materials.shellInset,frame:materials.frameLight,metal:materials.workshopBronze,light:materials.warmWindow,screen:materials.power,glass:materials.glass},options.hollowGarageStudy,quality==='high'));
+  }
+  const lowerWorkshopMesh=addGroupedMesh(
     fabricationDeck,
     'RETRACTABLE_FABRICATION_GARAGE_DECK',
     fabricationFloorParts,
   );
+  if(options.lowerDeckStudy)consolidateLowerDeckMesh(lowerWorkshopMesh);
   const panoramicFrameMaterial = new THREE.LineBasicMaterial({
     color: '#b89462',
     transparent: true,
@@ -2428,7 +3127,8 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     panoramicFrameMaterial,
   );
   panoramicFrame.name = 'FABRICATION_PANORAMIC_GLASS_SPARSE_LOAD_FRAME';
-  fabricationDeck.add(panoramicFrame);
+  if(!options.lowerDeckStudy)fabricationDeck.add(panoramicFrame);
+  else {panoramicFrame.geometry.dispose();panoramicFrameMaterial.dispose();}
   const fabricationModuleDefinitions: Array<{
     position: [number, number, number];
     scale: [number, number, number];
@@ -2459,6 +3159,11 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       scale: [0.82, 0.54, 0.62],
       rotation: [0, x * -0.055, 0],
     });
+  }
+  if(options.lowerDeckStudy){
+    fabricationModuleDefinitions.length=0;
+    for(const x of [-1.15,-.6,.6,1.15])fabricationModuleDefinitions.push({position:[x,-.748,-.82],scale:[.6,.6,.6],rotation:[0,0,0]});
+    for(const side of [-1,1])for(const z of [-.35,.25])fabricationModuleDefinitions.push({position:[side*1.35,-.748,z],scale:[.6,.6,.6],rotation:[0,-side*Math.PI/2,0]});
   }
   const fabricationModuleParts: GroupedMeshPart[] = [
     {
@@ -2562,6 +3267,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   fabricationModules.instanceMatrix.needsUpdate = true;
   fabricationModules.castShadow = true;
   fabricationDeck.add(fabricationModules);
+  if(options.lowerDeckStudy)consolidateLowerDeckMesh(fabricationModules);
 
   const creatureHabitatDeck = new THREE.Group();
   creatureHabitatDeck.name = 'DECK_01_PREMIUM_CREATURE_HABITAT';
@@ -2925,6 +3631,10 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     accessPrinciple: 'low-gradient-water-entry-and-unobstructed-mixed-size-circulation',
     occupantsPresent: false,
   };
+  if(options.lowerDeckStudy)rebuildCreatureMacro(creatureHabitatLandscape,creatureComfortPods,{
+    wood:materials.habitatFloor,cream:materials.shell,metal:materials.workshopBronze,
+    water:materials.water,green:materials.foliage,light:materials.warmWindow,glass:materials.glass,
+  },options.hollowGarageStudy);
 
   const mixedUseRing = new THREE.Group();
   mixedUseRing.name = 'DECK_03_MIXED_USE_RESIDENTIAL_RING';
@@ -3006,7 +3716,8 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   amenityWindows.userData.storeys = atriumDeckLevels.length;
   amenityWindows.userData.compactModuleScale = 0.72;
   amenityWindows.userData.visibleSuiteFrontages = amenityDefinitions.length;
-  mixedUseRing.add(amenityWindows);
+  if(!options.roomStudy)mixedUseRing.add(amenityWindows);
+  else {amenityWindows.geometry.dispose();amenityWindows.dispose();}
 
   const crownProgram = new THREE.Group();
   crownProgram.name = 'CROWN_COMMAND_AND_ADMINISTRATION';
@@ -3025,7 +3736,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     }
   }
   crownProgram.add(commandSuitePracticalLights);
-  const commandSuiteGeometries = makeCommandSuiteAssemblyGeometries(quality);
+  const commandSuiteGeometries = makeCommandSuiteAssemblyGeometries(quality, Boolean(options.roomStudy));
   const steeringFurniture = makeCommandSuiteFurnitureGeometries('steering');
   const administrationFurniture = makeCommandSuiteFurnitureGeometries('administration');
   const frontSuiteMatrix = new THREE.Matrix4().makeTranslation(0, 0, 1);
@@ -3080,10 +3791,33 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   const commandSuiteMaterials = [
     commandSuiteShellMaterial,
     commandSuiteGlassMaterial,
-    commandSuiteFrameMaterial,
+    options.roomStudy ? materials.habitatFloor : commandSuiteFrameMaterial,
     materials.power,
     materials.warmWindow,
   ];
+  if(options.roomStudy){
+    commandSuiteFrameMaterial.dispose();commandSuiteShellMaterial.roughness=.78;
+    commandSuiteShellMaterial.clearcoat=.08;commandSuiteShellMaterial.clearcoatRoughness=.72;
+    commandSuiteShellMaterial.metalness=.02;commandSuiteShellMaterial.emissiveIntensity=.08;
+  }
+  const fittedRingRooms=options.roomStudy?makeExpeditionRingRoomDefinitions(atriumDeckLevels):[];
+  if(options.roomStudy){
+    const fitouts=addExpeditionRingRooms(mixedUseRing,commandSuiteShellMaterial,quality,fittedRingRooms,options.roomFinishStudy?{
+      rooms:['ROOM_APARTMENT_005'],materials:{wood:materials.habitatFloor,cream:commandSuiteShellMaterial,
+        fabric:materials.habitatFabric,metal:materials.frame,brass:materials.workshopBronze,
+        screen:materials.power,light:materials.warmWindow,leaf:materials.foliage},
+    }:undefined);
+    mixedUseRing.userData.fittedRoomCount=fittedRingRooms.filter(room=>room.program!=='service').length;
+    mixedUseRing.userData.structuralServiceBays=fittedRingRooms.filter(room=>room.program==='service').map(room=>room.slots[0]);
+    mixedUseRing.userData.productionApproved=false;
+    mixedUseRing.userData.program.apartments=fittedRingRooms.filter(room=>room.program==='apartment').length;
+    mixedUseRing.userData.program.residentialCapacityClass='illustrative-stateroom-count-not-verified-accommodation-capacity';
+    facilityZoneDefinitions.forEach(definition=>{
+      const zone=mixedUseRing.getObjectByName(definition.name)!;
+      zone.userData.program={...zone.userData.program,status:'furnished-study-awaiting-visual-and-circulation-gates',
+        capacityVerified:false,fixtureRoot:fitouts.name};
+    });
+  }
   const commandSuiteInstances = [
     {position: new THREE.Vector3(-3.05, 1.28, 1), yaw: 0},
     {position: new THREE.Vector3(3.05, 1.28, 1), yaw: 0},
@@ -3115,7 +3849,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     makePairedFurnitureLayer(steeringFurniture.power, administrationFurniture.power),
     makePairedFurnitureLayer(steeringFurniture.warm, administrationFurniture.warm),
   ];
-  const commandFurnitureGeometry = mergeGeometries(commandFurnitureParts, true);
+  let commandFurnitureGeometry = mergeGeometries(commandFurnitureParts, true);
   if (!commandFurnitureGeometry) throw new Error('Unable to merge grouped command-suite furniture geometry');
   commandFurnitureParts.forEach(geometry => geometry.dispose());
   Object.values(steeringFurniture).forEach(geometry => geometry.dispose());
@@ -3133,9 +3867,22 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     side: THREE.DoubleSide,
     depthWrite: false,
   });
+  if(options.roomStudy) {
+    const front=makeCommandInteriorGeometry('steering').applyMatrix4(frontSuiteMatrix);
+    const rear=makeCommandInteriorGeometry('administration').applyMatrix4(rearSuiteMatrix);
+    const merged=mergeGeometries([front,rear],false)!;
+    for(const group of front.groups)merged.addGroup(group.start,group.count,group.materialIndex);
+    for(const group of rear.groups)merged.addGroup(group.start+front.attributes.position.count,group.count,group.materialIndex);
+    merged.userData={roleParts:[front.userData,rear.userData],productionApproved:false};
+    front.dispose();rear.dispose();commandFurnitureGeometry.dispose();
+    commandFurnitureGeometry=merged;
+    commandInteriorMaterial.dispose();commandHologramMaterial.dispose();
+  }
   const commandFurniture = new THREE.InstancedMesh(
     commandFurnitureGeometry,
-    [commandInteriorMaterial, commandHologramMaterial, materials.warmWindow],
+    options.roomStudy
+      ? [materials.habitatFloor,commandSuiteShellMaterial,materials.frame,materials.power,materials.warmWindow,materials.foliage,materials.workshopBronze]
+      : [commandInteriorMaterial, commandHologramMaterial, materials.warmWindow],
     2,
   );
   commandFurniture.name = 'DISTINCT_STEERING_AND_ADMINISTRATION_INTERIORS';
@@ -3147,9 +3894,10 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   commandFurniture.castShadow = true;
   commandFurniture.receiveShadow = true;
   commandFurniture.userData.program = {
-    forward: 'paired-helm-seats-and-holographic-command-table',
-    aft: 'strategy-table-archive-wall-and-planning-displays',
+    forward: options.roomStudy ? 'three-bowed-helm-stations-nine-instruments-ergonomic-chairs-and-rear-lounges' : 'paired-helm-seats-and-holographic-command-table',
+    aft: options.roomStudy ? 'six-seat-strategy-salon-library-cabinetry-and-rear-lounges' : 'strategy-table-archive-wall-and-planning-displays',
   };
+  if(options.roomStudy)commandFurniture.userData.productionApproved = false;
   crownProgram.add(commandFurniture);
 
   // The old interior used closed boxes just behind the front glazing. These
@@ -3209,7 +3957,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   roomPortals.receiveShadow = true;
   roomBacklights.instanceMatrix.needsUpdate = true;
 
-  const pressureBulkheads = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), materials.shellInset, 4);
+  const pressureBulkheads = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), materials.shellInset, options.lowerDeckStudy?3:4);
   pressureBulkheads.name = 'interior-pressure-bulkhead-instances';
   const bulkheadDefinitions = [
     {position: [0, -0.82, -1.1] as [number, number, number], scale: [4.18, 0.12, 0.07] as [number, number, number]},
@@ -3220,6 +3968,10 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     // batch preserves the 159-mesh mobile ceiling.
     {position: [0, -0.93, -0.08] as [number, number, number], scale: [3.42, 0.08, 1.24] as [number, number, number]},
   ];
+  if(options.lowerDeckStudy){
+    bulkheadDefinitions.pop();
+    addMesh(inhabitedInterior,'CREATURE_STRUCTURAL_SEPARATOR',makeLowerDeckPlate(3.42,1.24,.08,-.12/.84+.08),materials.shellInset,[0,-.89,-.08]);
+  }
   bulkheadDefinitions.forEach((definition, index) => {
     interiorMatrix.compose(new THREE.Vector3(...definition.position), new THREE.Quaternion(), new THREE.Vector3(...definition.scale));
     pressureBulkheads.setMatrixAt(index, interiorMatrix);
@@ -3310,7 +4062,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   for (const deckY of atriumDeckLevels) {
     const y = deckY + 0.28;
     for (const x of [-1.38, -0.46, 0.46, 1.38]) {
-      interiorMatrix.makeTranslation(x, y, -0.82);
+      interiorMatrix.makeTranslation(x, y+(options.roomStudy&&Math.abs(x)>1?.015:0), -0.82);
       ceilingLights.setMatrixAt(lightIndex, interiorMatrix);
       lightIndex += 1;
     }
@@ -3341,15 +4093,14 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     }
   }
   loungePods.instanceMatrix.needsUpdate = true;
+  if(!options.roomStudy)inhabitedInterior.add(roomPortals,roomBacklights,loungePods);
+  else for(const replaced of [roomPortals,roomBacklights,loungePods]){replaced.geometry.dispose();replaced.dispose();}
   inhabitedInterior.add(
-    roomPortals,
-    roomBacklights,
     pressureBulkheads,
     balconyRails,
     liftShafts,
     stairFlights,
     ceilingLights,
-    loungePods,
     starPoints,
   );
   const interiorPracticalLights = new THREE.Group();
@@ -3432,7 +4183,12 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   }
   zenWaterSegments.instanceMatrix.needsUpdate = true;
   zenCommons.add(zenWaterSegments);
-  makeTree(zenCommons, materials, quality);
+  // Unapproved anatomical studies must not silently replace the garage asset.
+  const greatTree = options.interiorStudy
+    ? makeOakStudyTree(zenCommons, materials, quality, options.interiorStudy === 'oak-cage', ['oak-hollow','oak-branched','oak-sculpted','oak-subdivision'].includes(options.interiorStudy), options.interiorStudy === 'oak-branched', ['oak-sculpted','oak-subdivision'].includes(options.interiorStudy), options.interiorStudy === 'oak-subdivision', ['oak-artist','oak-polyhaven'].includes(options.interiorStudy), options.interiorStudy === 'oak-polyhaven')
+    : makeTree(zenCommons, materials, quality);
+  greatTree.userData.productionStatus = options.interiorStudy ? 'unapproved-structural-study' : 'baseline';
+  greatTree.userData.studyFamily = options.interiorStudy || null;
 
   const gardenPathStones = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.075, 0.09, 0.035, 8),
@@ -3842,7 +4598,16 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
   for (const side of [-1, 1] as const) {
     const tower = new THREE.Group();
     tower.name = side < 0 ? 'LEFT_POWER_TOWER' : 'RIGHT_POWER_TOWER';
-    tower.position.set(side * 1.68, 1.42, -0.02);
+    // Seat the existing telescoping power towers into the aft carapace instead
+    // of stacking them above the controller silhouette. Their hierarchy and
+    // deployment animation stay unchanged; only the expedition rest socket
+    // moves down and aft into the continuous roof volume.
+    tower.position.set(side * 1.68, 0.94, -0.42);
+    tower.userData.roofIntegration = {
+      socket: 'CONTINUOUS_CONTROLLER_ROOF_CARAPACE',
+      recessedRestPosition: true,
+      preservesTelescopingDeployment: true,
+    };
     towers.add(tower);
     addMesh(
       tower,
@@ -3912,7 +4677,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       position: [0, -1.3, -0.12],
     },
     ...[-0.35, -1.2, -2.05].map((y, index): GroupedMeshPart => ({
-      geometry: new THREE.TorusGeometry(index === 0 ? 0.35 : 0.29, index === 0 ? 0.055 : 0.025, quality === 'high' ? 3 : 3, quality === 'high' ? 10 : 8),
+      geometry: new THREE.TorusGeometry(index === 0 ? (options.lowerDeckStudy?.28:.35) : .29, index === 0 && !options.lowerDeckStudy ? .055 : .025, 3, quality === 'high' ? 10 : 8),
       material: index === 0 ? materials.power : materials.frameLight,
       position: [0, y, -0.12],
       rotation: [Math.PI * 0.5, 0, 0],
@@ -3934,8 +4699,15 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     access: 'retractable-vehicle-and-machine-service-bay',
   };
   stabilizedHull.add(garage);
-  addMesh(garage, 'garage-volume', makeRoundedExtrudeGeometry(1.82, 0.62, 1.22, 0.18, quality === 'high' ? 4 : 2), materials.frame, [0, 0, 0]);
-  addMesh(garage, 'garage-door', makeRoundedExtrudeGeometry(1.28, 0.38, 0.08, 0.1, 2), materials.shellInset, [0, -0.03, 0.66]);
+  if(options.hollowGarageStudy){
+    garage.position.set(0,0,0);
+    addMesh(garage,'garage-volume',makeHollowGarageSkirt(),materials.frame,[0,0,0]);
+    addMesh(garage,'garage-door',makeHollowGarageWindow(),materials.glass,[0,0,0]);
+    garage.userData.program={...garage.userData.program,representation:'hollow-shell-shared-room-pressure-surfaces',pressureWindowOwner:'garage-door',storageSkirtOwner:'garage-volume',occupiedCoreFixed:true};
+  }else{
+    addMesh(garage, 'garage-volume', makeRoundedExtrudeGeometry(1.82, 0.62, 1.22, 0.18, quality === 'high' ? 4 : 2), materials.frame, [0, 0, 0]);
+    addMesh(garage, 'garage-door', makeRoundedExtrudeGeometry(1.28, 0.38, 0.08, 0.1, 2), materials.shellInset, [0, -0.03, 0.66]);
+  }
 
   const walkerLegs: WalkerLegRig[] = [];
   walkerLegs.push(makeWalkerLeg(leftWing, -1, -1, materials, quality));
@@ -3992,10 +4764,10 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     ['ENTRY_POV', new THREE.Vector3(0, -1.1, 1.3)],
     ['GARDEN_REVEAL', new THREE.Vector3(0, 0.2, 2.2)],
     ['SKY_TERRACE_REVEAL', new THREE.Vector3(0, 1.15, 1.6)],
-    ['SANCTUARY_FLOOR_POV', new THREE.Vector3(0.98, -0.16, 0.42)],
+    ['SANCTUARY_FLOOR_POV', options.interiorStudy ? new THREE.Vector3(-0.79968, 0.03736, 0.29568) : new THREE.Vector3(0.98, -0.16, 0.42)],
     ['SANCTUARY_FLOOR_LOOK', new THREE.Vector3(0, 0.66, -0.06)],
-    ['SANCTUARY_CANOPY_POV', new THREE.Vector3(0, 1.14, 0.26)],
-    ['SANCTUARY_CANOPY_LOOK', new THREE.Vector3(0, 1.28, 3)],
+    ['SANCTUARY_CANOPY_POV', options.interiorStudy ? new THREE.Vector3(-0.395136, 1.454608, 0.370944) : new THREE.Vector3(0, 1.14, 0.26)],
+    ['SANCTUARY_CANOPY_LOOK', new THREE.Vector3(0, options.interiorStudy ? 1.55 : 1.28, 3)],
     ['UPPER_BALCONY_DOWN_POV', new THREE.Vector3(-1.05, 1.36, 0.9)],
     ['UPPER_BALCONY_DOWN_LOOK', new THREE.Vector3(0, -0.3, 0)],
     ['UPPER_BALCONY_ACROSS_POV', new THREE.Vector3(1.1, 1.28, 0.95)],
@@ -4024,6 +4796,24 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     cameraAnchors.add(anchor);
   }
 
+  for(const room of fittedRingRooms){
+    for(const [suffix,point] of [
+      ['POV',new THREE.Vector3(0,.125,-.095)],
+      ['LOOK',new THREE.Vector3(0,.105,room.depth*.64)],
+      ['PLAN',new THREE.Vector3(0,.80,room.depth*.5+.001)],
+      ['PLAN_LOOK',new THREE.Vector3(0,.002,room.depth*.5)],
+      // A clinical service chase fills the port corner. Place this diagnostic
+      // camera in the actual occupied side, never inside the reserved solid.
+      ['CORNER',new THREE.Vector3(room.program==='medical'?room.width*.37:-room.width*.37,.145,.035)],
+      ['CORNER_LOOK',new THREE.Vector3(room.width*.13,.073,room.depth*.68)],
+      ['SECTION_HEIGHT',new THREE.Vector3(0,.173,0)],
+    ] as const){
+      const anchor=new THREE.Object3D();anchor.name=`${room.name}_${suffix}`;
+      anchor.position.copy(point).applyAxisAngle(new THREE.Vector3(0,1,0),room.yaw).add(new THREE.Vector3(...room.position)).multiplyScalar(.84);
+      anchor.userData={room:room.name,diagnostic:true,probe:suffix,
+        eyeHeightLocal:suffix==='POV'?.125:suffix==='CORNER'?.145:null};cameraAnchors.add(anchor);
+    }
+  }
   const downwashSignal: ExpeditionShipEnvironmentSignal = {
     origin: new THREE.Vector3(),
     normal: new THREE.Vector3(0, 1, 0),
@@ -4048,6 +4838,22 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       immutableLocalScale: true,
       immutableLocalOrientation: true,
       dimensions: {width: 2.48, height: 2.18, depth: 1.46},
+    },
+    exteriorVolume: {
+      cycle: '2026-08-30-slice1c-controller-pressure-frame',
+      frontShapeAuthority: 'src/assets/Blue_darkcontroller.webp',
+      frontPlanformChanged: false,
+      components: {
+        shoulderShells: ['LEFT_OUTER_SHELL', 'RIGHT_OUTER_SHELL'],
+        roofCarapace: 'CONTINUOUS_CONTROLLER_ROOF_CARAPACE',
+        aftPressureHull: 'AFT_PRESSURE_HULL_COLLAR',
+        undersideKeelBridge: 'CONTINUOUS_UNDERSIDE_KEEL_BRIDGE',
+      },
+      loadPath: ['controller-shoulders', 'aft-pressure-collar', 'roof-carapace', 'underside-keel-bridge', 'tri-drive'],
+      roofTowerIntegration: 'recessed-into-continuous-controller-roof-carapace',
+      sideSurfacing: 'front-locked-rounded-aft-shoulder-pressure-loft',
+      undersidePlanform: 'deep-cambered-overlapping-controller-keel-belly',
+      pressureFrameContinuity: 'shoulders-roof-aft-collar-belly-overlap',
     },
     inhabitedInterior: {
       node: 'INHABITED_INTERIOR_ARCHITECTURE',
@@ -4084,7 +4890,8 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       ],
       fabrication: {
         node: 'DECK_00_RETRACTABLE_FABRICATION_AND_GARAGE',
-        retractable: true,
+        retractable: !options.lowerDeckStudy,
+        occupiedCoreFixed: Boolean(options.lowerDeckStudy),
         dedicatedFullWidthDeck: true,
         includes: ['garage', 'machine-workbench', 'fabrication-machines', 'forward-panoramic-pressure-glass'],
         garageBays: ['empty-rover-service-bay', 'engine-pod-rotary-lift', 'clean-fabrication-bench-line'],
@@ -4127,7 +4934,24 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     speedShell: {
       node: 'SPEED_CONTROLLER_GAME_SHELL_CORE',
       shapeAuthority: 'src/assets/Blue_darkcontroller.webp',
-      designLanguage: 'smooth-exact-game-controller',
+      designLanguage: 'literal-habitgame-controller-wrapper',
+      cycle: '2026-09-06-slice5c-compound-controller-shell',
+      topology: 'one-persistent-literal-controller-wrapper-shell',
+      constructionFamily: 'authority-measured-compound-shell-controller',
+      exactControllerAtFullDeployment: true,
+      havenPresentationFrozen: true,
+      pressureDepth: 2.1,
+      lowerArch: 'unobstructed-negative-space',
+      components: {
+        continuousDarkBody: 'SPEED_CONTROLLER_GAME_SHELL_CORE',
+        whiteGripShells: ['SPEED_CONTROLLER_GAME_SHELL_CORE-2', 'SPEED_CONTROLLER_GAME_SHELL_CORE-3'],
+        cyanInset: 'SPEED_CONTROLLER_GAME_SHELL_CORE-4',
+        roofCap: 'FAST_SPACE_CONTINUOUS_ROOF_CAP',
+        belly: 'FAST_SPACE_INTERLOCKED_BELLY',
+        ventralPlate: 'FAST_SPACE_VENTRAL_PRESSURE_PLATE',
+        aftPressureCap: 'FAST_SPACE_AFT_PRESSURE_CAP',
+        retractedTransitionFairings: ['PORT_TRAVEL_GRIP_FAIRING', 'STARBOARD_TRAVEL_GRIP_FAIRING'],
+      },
     },
     occupiedVolumes: [
       'SANCTUARY_CLEARANCE_VOLUME',
@@ -4198,49 +5022,66 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     const travelEnvelope = smoothstep(progress, 0.58, 0.9);
     fabricationDeck.position.set(
       0,
-      THREE.MathUtils.lerp(-0.68, -0.82, travelEnvelope),
-      THREE.MathUtils.lerp(0.34, -0.46, travelEnvelope),
+      options.lowerDeckStudy?-.68:THREE.MathUtils.lerp(-0.68, -0.82, travelEnvelope),
+      options.lowerDeckStudy?.34:THREE.MathUtils.lerp(0.34, -0.46, travelEnvelope),
     );
     fabricationDeck.scale.set(
       1,
       1,
-      THREE.MathUtils.lerp(1, 0.9, travelEnvelope),
+      options.lowerDeckStudy?1:THREE.MathUtils.lerp(1, 0.9, travelEnvelope),
     );
+    fabricationDeck.visible = travelEnvelope < 0.94;
+    creatureHabitatDeck.visible = travelEnvelope < 0.94;
     // The smooth speed skin is the final locking layer. Keep it parked until
     // the mechanical leaves and warning-light phase have been visible, rather
     // than letting one large black surface hide the transformation story.
     const speedShellDeployment = smoothstep(progress, 0.82, 0.985);
     speedControllerCore.visible = speedShellDeployment > 0.015;
+    fastSpaceRoofCap.visible = speedShellDeployment > 0.015;
+    fastSpaceBelly.visible = speedShellDeployment > 0.015;
+    fastSpaceVentralPlate.visible = speedShellDeployment > 0.015;
+    fastSpaceAftCap.visible = speedShellDeployment > 0.015;
+    const shellLockScale = 0.94 + speedShellDeployment * 0.06;
     speedControllerCore.scale.set(
-      1.22 * (0.82 + speedShellDeployment * 0.18),
-      1.12 * (0.82 + speedShellDeployment * 0.18),
-      1.1 * (0.72 + speedShellDeployment * 0.28),
+      shellLockScale,
+      shellLockScale,
+      0.9 + speedShellDeployment * 0.1,
     );
+    // Haven retains the existing garage and landing-keel presentation. Only
+    // the locked Fast Space wrapper retracts those two persistent assemblies
+    // from the authority's open lower arch; the separate central drive remains
+    // present so the three-drive architecture is never rewritten.
+    keel.visible = speedShellDeployment < 0.92;
+    // The earlier aft collar visibly changed Haven's rear silhouette. Keep the
+    // inhabited Haven presentation untouched and deploy this mobile pressure
+    // termination only after the ship begins leaving Haven.
+    centreRoofObservatory.visible = progress > 0.04 && travelEnvelope < 0.9;
     bridgeVisor.material = travelEnvelope > 0.52 ? speedTouchpadMaterial : materials.glass;
-    bridgeVisor.visible = true;
+    bridgeVisor.visible = speedShellDeployment < 0.82;
     bridgeVisor.position.set(
       0,
-      THREE.MathUtils.lerp(1.78, 1.15, travelEnvelope),
+      THREE.MathUtils.lerp(1.78, 1.08, travelEnvelope),
       THREE.MathUtils.lerp(1.12, 1.51, travelEnvelope),
     );
     bridgeVisor.scale.set(
-      THREE.MathUtils.lerp(1, 0.92, travelEnvelope),
-      THREE.MathUtils.lerp(1, 2.78, travelEnvelope),
+      THREE.MathUtils.lerp(1, 1.14, travelEnvelope),
+      THREE.MathUtils.lerp(1, 2.28, travelEnvelope),
       THREE.MathUtils.lerp(1, 1.28, travelEnvelope),
     );
     havenCentreStructures.forEach((object) => { object.visible = travelEnvelope < 0.9; });
     occupiedAtriumDecks.visible = travelEnvelope < 0.94;
     inhabitedInterior.visible = travelEnvelope < 0.94;
     garden.visible = travelEnvelope < 0.94;
+    greatTree.visible = travelEnvelope < 0.94;
     [leftTravelGripMass, rightTravelGripMass, leftTravelUnderframe, rightTravelUnderframe]
-      .forEach((mesh) => { mesh.visible = travelEnvelope > 0.18; });
+      .forEach((mesh) => { mesh.visible = travelEnvelope > 0.18 && speedShellDeployment < 0.72; });
     const fairingDeployment = smoothstep(progress, 0.48, 0.9);
     [leftTravelFairing, rightTravelFairing].forEach((mesh) => {
-      mesh.visible = fairingDeployment > 0.015;
+      mesh.visible = fairingDeployment > 0.015 && speedShellDeployment < 0.72;
       mesh.scale.set(
         1.34 * (0.72 + fairingDeployment * 0.28),
         1.12 * (0.72 + fairingDeployment * 0.28),
-        1.08 * (0.72 + fairingDeployment * 0.28),
+        0.76 + fairingDeployment * 0.24,
       );
     });
     [
@@ -4251,6 +5092,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     ].forEach((object) => { object.visible = travelEnvelope < 0.72; });
 
     const towerDeployment = 1 - smoothstep(progress, 0.62, 0.96);
+    towers.visible = speedShellDeployment < 0.88;
     towers.scale.y = 0.28 + towerDeployment * 0.72;
     towers.position.y = THREE.MathUtils.lerp(0, -0.64, smoothstep(progress, 0.62, 0.96));
     // The large luxury garden terraces belong only to Haven. Their transparent
@@ -4274,7 +5116,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     const keelRetraction = smoothstep(progress, 0.04, 0.5);
     // The service column telescopes downward into the belly cassette. It never
     // rises through the garden or shares volume with the Great Tree.
-    keel.position.y = THREE.MathUtils.lerp(0, -0.72, keelRetraction);
+    keel.position.y = THREE.MathUtils.lerp(0, options.lowerDeckStudy?-.89:-.72, keelRetraction);
     keel.scale.y = THREE.MathUtils.lerp(1, 0.22, keelRetraction);
     garage.position.z = THREE.MathUtils.lerp(0.24, -0.2, travelEnvelope);
     garage.scale.set(
@@ -4282,11 +5124,13 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       THREE.MathUtils.lerp(1, 0.44, travelEnvelope),
       THREE.MathUtils.lerp(1, 0.78, travelEnvelope),
     );
+    if(options.hollowGarageStudy){garage.position.set(0,0,0);garage.scale.set(1,1,1);}
+    garage.visible = travelEnvelope < 0.94 && speedShellDeployment < 0.92;
     // Walker is sealed by the permanent transparent pressure glass while its
     // physical armor remains parked. Armor commits only for fast-space.
     const walkerGlassSeal = smoothstep(progress, 0.08, 0.44) * (1 - smoothstep(progress, 0.62, 0.96));
-    permanentPressureWindow.visible = true;
-    wraparoundGlazing.visible = true;
+    permanentPressureWindow.visible = speedShellDeployment < 0.9;
+    wraparoundGlazing.visible = speedShellDeployment < 0.9;
     pressureWindowMaterial.color.lerpColors(havenPressureGlassColor, walkerPressureGlassColor, walkerGlassSeal);
     pressureWindowMaterial.opacity = THREE.MathUtils.lerp(0.3, 0.56, walkerGlassSeal);
     pressureWindowMaterial.transmission = THREE.MathUtils.lerp(0.34, 0.14, walkerGlassSeal);
@@ -4300,10 +5144,10 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
         THREE.MathUtils.lerp(openRotation.y, closedRotation.y, leafClosure),
         THREE.MathUtils.lerp(openRotation.z, closedRotation.z, leafClosure),
       );
-      mesh.visible = armorClosure > (index < 2 ? 0.015 : 0.18);
+      mesh.visible = armorClosure > (index < 2 ? 0.015 : 0.18) && speedShellDeployment < 0.9;
       mesh.scale.setScalar(0.9 + leafClosure * 0.1);
     });
-    wrapArmorScales.visible = armorClosure > 0.025;
+    wrapArmorScales.visible = armorClosure > 0.025 && speedShellDeployment < 0.9;
     wrapArmorDefinitions.forEach((definition, index) => {
       const sequence = index / Math.max(1, wrapArmorDefinitions.length - 1);
       const plateClosure = smoothstep(armorClosure, sequence * 0.34, 0.5 + sequence * 0.34);
@@ -4322,7 +5166,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       wrapArmorScales.setMatrixAt(index, wrapArmorMatrix);
     });
     wrapArmorScales.instanceMatrix.needsUpdate = true;
-    armorSeamBackstop.visible = armorClosure > 0.58;
+    armorSeamBackstop.visible = armorClosure > 0.58 && speedShellDeployment < 0.9;
     const warningActivity = smoothstep(progress, 0.48, 0.62) * (1 - smoothstep(progress, 0.94, 1));
     transformationWarningBeacons.visible = warningActivity > 0.02;
     transformationWarningMaterial.emissiveIntensity = 1.4 + warningActivity * (1.8 + Math.sin(timeSeconds * 9) * 0.8);
@@ -4337,9 +5181,16 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     });
     transformationWarningBeacons.instanceMatrix.needsUpdate = true;
     shieldEmitters.scale.setScalar(0.18 + armorClosure * 0.82);
-    shieldEmitters.visible = armorClosure > 0.12;
-    conformalFieldMeshes.forEach((mesh) => { mesh.visible = armorClosure > 0.88; });
-    conformalMaterial.opacity = THREE.MathUtils.lerp(0, 0.16, smoothstep(armorClosure, 0.86, 1));
+    shieldEmitters.visible = armorClosure > 0.12 && speedShellDeployment < 0.92;
+    const conformalFieldFade = 1 - smoothstep(speedShellDeployment, 0.62, 0.9);
+    conformalFieldMeshes.forEach((mesh) => {
+      mesh.visible = armorClosure > 0.88 && conformalFieldFade > 0.015;
+    });
+    conformalMaterial.opacity = THREE.MathUtils.lerp(
+      0,
+      0.16,
+      smoothstep(armorClosure, 0.86, 1) * conformalFieldFade,
+    );
 
     // Walker is the fully deployed terrain configuration. Retraction belongs
     // to the late flight transition, not the Haven-to-Walker transition.
@@ -4356,6 +5207,7 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
       const stride = Math.sin(gaitPhase) * gaitStrength;
       const lift = Math.max(0, Math.sin(gaitPhase)) * gaitStrength;
       leg.root.position.y = leg.restY + (1 - legDeployment) * 1.82 + lift * (leg.role === 'powered-grip-front' ? 0.25 : 0.18);
+      leg.root.visible = legDeployment > 0.035;
       const stowedCrossSection = leg.role === 'powered-grip-front' ? 0.34 : 0.24;
       leg.root.scale.set(
         stowedCrossSection + legDeployment * (1 - stowedCrossSection),
@@ -4380,9 +5232,31 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     const thrustStrength = THREE.MathUtils.clamp(thrust + boost * 0.65, 0, 1);
     const driveStrength = Math.max(hoverStrength, thrustStrength);
     const downwardVector = THREE.MathUtils.clamp(hoverStrength * (1 - progress * 0.72), 0, 1);
+    leftGripDrive.position.set(
+      THREE.MathUtils.lerp(-0.5, -0.58, travelEnvelope),
+      THREE.MathUtils.lerp(-1.94, -1.82, travelEnvelope),
+      THREE.MathUtils.lerp(-0.42, -2.5, travelEnvelope),
+    );
+    rightGripDrive.position.set(
+      THREE.MathUtils.lerp(0.5, 0.58, travelEnvelope),
+      THREE.MathUtils.lerp(-1.94, -1.82, travelEnvelope),
+      THREE.MathUtils.lerp(-0.42, -2.5, travelEnvelope),
+    );
     leftGripDrive.rotation.x = -Math.PI * 0.5 * downwardVector;
     rightGripDrive.rotation.x = -Math.PI * 0.5 * downwardVector;
-    centralKeelDrive.rotation.x = Math.PI * 0.5 * THREE.MathUtils.clamp(thrustStrength * progress, 0, 1);
+    // The same drive moves from the hover keel into the rear bridge socket.
+    // Cruise direction is determined by deployment, not throttle: otherwise
+    // low thrust leaves its bright nozzle facing through the front arch.
+    centralKeelDrive.position.set(
+      0,
+      THREE.MathUtils.lerp(-1.38, 0.04, speedShellDeployment),
+      THREE.MathUtils.lerp(-0.1, -1.4, speedShellDeployment),
+    );
+    centralKeelDrive.rotation.x = THREE.MathUtils.lerp(
+      Math.PI * 0.5 * THREE.MathUtils.clamp(thrustStrength * progress, 0, 1),
+      Math.PI * 0.5,
+      speedShellDeployment,
+    );
     primaryDriveEffects.forEach((effect, index) => {
       const pulse = reducedMotion ? 1 : 0.88 + Math.sin(timeSeconds * (5.8 + boost * 3) + index * 0.7) * 0.12;
       effect.visible = driveStrength > 0.015;
@@ -4410,19 +5284,24 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     downwashSignal.radius = 2.2 + hoverStrength * 2.4;
     downwashSignal.strength = hoverStrength;
     downwashSignal.phase = reducedMotion ? 0 : (timeSeconds * 0.36) % 1;
-    environmentPreview.visible = hoverStrength > 0.02;
+    environmentPreview.visible = hoverStrength > 0.02 && speedShellDeployment < 0.92;
 
     const flightPitch = pose === 'flight' && !reducedMotion ? Math.sin(timeSeconds * 0.45) * 0.012 : 0;
     root.rotation.x = flightPitch;
     root.position.y = hoverStrength > 0 && !reducedMotion ? Math.sin(timeSeconds * 1.15) * 0.035 : 0;
+    rigidBatches?.sync();
+    roomClearance?.sync();
     return downwashSignal;
   };
 
   const dispose = () => {
+    rigidBatches?.dispose(false); // Traversal below releases every instance buffer once.
+    roomClearance?.dispose();
     const disposedGeometries = new Set<THREE.BufferGeometry>();
     const disposedMaterials = new Set<THREE.Material>();
     root.traverse((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
+      if (!(object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points)) return;
+      if(object instanceof THREE.InstancedMesh)object.dispose();
       if (!disposedGeometries.has(object.geometry)) {
         object.geometry.dispose();
         disposedGeometries.add(object.geometry);
@@ -4435,8 +5314,15 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
         }
       });
     });
+    if(options.lowerDeckStudy)Object.values(materials).forEach(material=>{
+      if(!disposedMaterials.has(material)){material.dispose();disposedMaterials.add(material);}
+    });
   };
 
+  if(options.roomStudy)reconcileRoomLandscapeInterfaces(root,fittedRingRooms);
+  if(['oak-artist','oak-polyhaven'].includes(options.interiorStudy??'') || options.roomStudy) rigidBatches=batchExpeditionRigidSurfaces(root);
+  if(options.roomStudy)roomClearance=installCommandRoomClearance(root);
+  const roomLighting=options.roomFinishStudy?installExpeditionRoomLighting(root):undefined;
   let triangles = 0;
   let meshCount = 0;
   const metricMaterials = new Set<string>();
@@ -4447,9 +5333,11 @@ export function createExpeditionShipThreeModel(quality: ExpeditionShipQuality = 
     triangles += geometry.index ? geometry.index.count / 3 : geometry.attributes.position.count / 3;
     const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
     objectMaterials.forEach((material) => metricMaterials.add(material.uuid));
+    if(object.customDepthMaterial)metricMaterials.add(object.customDepthMaterial.uuid);
+    if(object.customDistanceMaterial)metricMaterials.add(object.customDistanceMaterial.uuid);
   });
   const metrics = {triangles: Math.round(triangles), meshCount, materials: metricMaterials.size};
 
   update({timeSeconds: 0, pose: 'expedition'});
-  return {root, metrics, update, dispose};
+  return {root, metrics, update, prepareRender: () => {rigidBatches?.sync();roomClearance?.sync();roomLighting?.sync();}, dispose};
 }

@@ -1,0 +1,30 @@
+{
+  "source": "/Users/ejmac/.codex/worktrees/e838/Mini Project - iOS and Adroid capcitor/src/features/gamification/level-worlds/dev",
+  "status": "snapshot of existing uncommitted user ship work; no source edits",
+  "sha256": {
+    "ExpeditionShipThreeModel": "6bc2ed590ddbab06e7f3f703f1411acdd334f6205bc842c9ba7a7184765134fa",
+    "ExpeditionShipOakCage": "9e6f92c08100453dc5406d6c34281b4e84d67745565cb481b546f396b28158f7",
+    "ExpeditionShipOak": "1701e315bb8ad52804b8522fc8a40456fc189fb3ede05de6302b44603786942c",
+    "ExpeditionShipSolidCut": "8b863297880f87961c64fa661de3c8c51f384672194c8bf6babbb2dee7b6bcbc",
+    "ExpeditionShipLowerDecks": "d35751b7b9f89743f6441b5dcc8bc2c662624c6de3278ac559a801970cf52aa3",
+    "ExpeditionShipRoomLighting": "8ba22b80107fc2ed5b830ae322bc959aa57f71e874f32db749df1bf9dfaa3264",
+    "ExpeditionShipRoomKit": "c3784fba06455c318a0b1b37872b0e2d3ddfb8cf3c86f66dece3436d1b44bc74",
+    "ExpeditionShipRoomClearance": "b927a63d839f97a1ba89b62d75cd27895c3de136b5ddb3311be8b2399b13a412",
+    "ExpeditionShipCommandInteriors": "2a313eb86f7d43816c2e37f2b901fac42038f6973139da4bd85ab496ef120210",
+    "ExpeditionShipRigidBatches": "53f4368f372263f959f8c9886b0a823f63d8c2558276987ac42b82252733254d",
+    "ExpeditionShipArtistOak": "ff086283c1732243309123cfb3aadd91981ebe20153880d634eca9093f7d1051",
+    "ExpeditionShipHollowOak": "a5436908afac2390d05aa7ba374dfd01810178505aad0b8a3b051f53abbbacb7",
+    "ExpeditionShipSculptedOak": "3d109490898354a0f67fd2870b24a6595e75a57cd94009ce12cdbb4a799dcb7e",
+    "ExpeditionShipBranchedOak": "66e8cc47ed4550c1eab6418a315124487244ece2fdfc33fb14c8834fdbd97f04",
+    ".img2threejs/expedition-ship/interior-production-2026-09-08-sculpted-route/inhabited-oak-low-v002.json": "2110badae0f2ac6c75d98f56b1cf11ad3c2aa66760de31fd339040aa0a1e2219",
+    ".img2threejs/expedition-ship/interior-production-2026-09-08-sculpted-route/inhabited-oak-high-v002.json": "33f9ec6774f0e2c0c49047d0f674537bf38bb05f382331e6a5e41dcc526266b5",
+    ".img2threejs/expedition-ship/interior-production-2026-09-08-sculpted-route/subdivision-oak-low-v002.json": "3a7f997fd495dbb68e48a7f57f2ecf6242552f67d09631810c28d9bf2cb2fb6f",
+    ".img2threejs/expedition-ship/interior-production-2026-09-08-sculpted-route/subdivision-oak-high-v002.json": "1474753e8feaa38c157ab540cec792813c2b3cce710775b021415ef776cd4f04",
+    ".img2threejs/expedition-ship/interior-production-2026-09-09-artist-oak/julius-adaptation/artist-oak-low-v002-repaired.json": "059f3333451d8f8a7c435bedf9ebbd361971ccc240824f2372c1cedb8792b5be",
+    ".img2threejs/expedition-ship/interior-production-2026-09-09-artist-oak/julius-adaptation/artist-oak-high-v002-repaired.json": "53dcf38cdabd0d101a00a9b7e322933aceb9554eb1f2c5885c68e3058131544f",
+    ".img2threejs/expedition-ship/interior-production-2026-09-09-artist-oak/polyhaven-adaptation/polyhaven-oak-low-v002.json": "9bab4da0bdba518af88c0f3eb425008c2ce06effa859e9fc1572ab4db2bb4fd7",
+    ".img2threejs/expedition-ship/interior-production-2026-09-09-artist-oak/polyhaven-adaptation/polyhaven-oak-high-v002.json": "47104e79e5c9fda66ff3d78c0c719e57ed5949c0cbc38fa61b63225cb85fddfc",
+    "src/features/gamification/level-worlds/dev/useExpeditionShipBooster.ts": "63b201eba3a4bf73e2422e93ead6833159a0bdda9e4a8927fadac97e76f2f9e5",
+    "src/features/gamification/level-worlds/services/__tests__/expeditionShipThreeContract.test.ts": "2b517f25d31039890fcd710a98ed9a64dbddcbe9e0cba3fe7eb992e95b74a75b"
+  }
+}
