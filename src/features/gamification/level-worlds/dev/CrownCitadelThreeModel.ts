@@ -46,8 +46,10 @@ function markStructural(object: THREE.Mesh) {
 export function compactStaticGeometry(
   root: THREE.Group,
   batchName = 'CROWN_CITADEL',
-  shouldInclude: (mesh: THREE.Mesh) => boolean = () => true,
+  filterOrOptions: ((mesh: THREE.Mesh) => boolean) | { preserveKeepSeparate?: boolean } = {},
 ) {
+  const shouldInclude = typeof filterOrOptions === 'function' ? filterOrOptions : () => true;
+  const options = typeof filterOrOptions === 'function' ? {} : filterOrOptions;
   root.updateMatrixWorld(true);
   const inverseRoot = root.matrixWorld.clone().invert();
   const batches = new Map<string, {
@@ -63,13 +65,23 @@ export function compactStaticGeometry(
       || child instanceof THREE.InstancedMesh
       || child.name === 'CROWN_CITADEL_VOICE_PRISM'
       || !shouldInclude(child)
+      || options.preserveKeepSeparate && child.userData.keepSeparate
     ) return;
+    let cursor: THREE.Object3D | null = child;
+    while (cursor && cursor !== root) {
+      if (!cursor.visible) return;
+      cursor = cursor.parent;
+    }
     const material = Array.isArray(child.material) ? child.material[0] : child.material;
-    // Keep indexed and non-indexed sources in separate batches. Converting every
-    // primitive to non-indexed geometry multiplied first-frame vertex work on
-    // the procedural Island 15 palace even though Three can merge like-indexed
-    // geometry directly.
-    const key = `${material.uuid}:${child.castShadow ? 'shadow' : 'visual'}:${child.geometry.index ? 'indexed' : 'non-indexed'}`;
+    const attributeSignature = Object.entries(
+      child.geometry.attributes as Record<string, THREE.BufferAttribute | THREE.InterleavedBufferAttribute>,
+    )
+      .map(([name, attribute]) => `${name}:${attribute.itemSize}:${attribute.normalized ? 1 : 0}`)
+      .sort()
+      .join(',');
+    const morphSignature = Object.keys(child.geometry.morphAttributes).sort().join(',');
+    // Keep indexed sources indexed to avoid multiplying mobile vertex work.
+    const key = `${material.uuid}:${child.castShadow ? 'shadow' : 'visual'}:${child.geometry.index ? 'indexed' : 'non-indexed'}:${attributeSignature}:${morphSignature}`;
     const batch = batches.get(key) ?? {
       material,
       castShadow: child.castShadow,

@@ -1,4 +1,5 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import { resolveIslandRunRestorationDiceReward } from './islandRunRestorationReward';
 import { getEffectiveIslandNumber, resolveBuildSpendStepForTier, spendIslandRunContractV2EssenceOnStopBuild } from './islandRunContractV2EssenceBuild';
 
 export type FastBuildMode = 'landmark' | 'island';
@@ -46,13 +47,16 @@ export function quoteIslandRunFastBuild(record: BuildRecord, mode: FastBuildMode
 
 export function resolveIslandRunFastBuild(record: IslandRunGameStateRecord, quote: FastBuildQuote, nowMs = Date.now()) {
   const currentQuote = quoteIslandRunFastBuild(record, quote.mode, quote.stopIndex, quote.discountRate, quote.expiresAtMs, nowMs);
-  if (!currentQuote || currentQuote.key !== quote.key || currentQuote.cost !== quote.cost) return { record, applied: false, reason: 'quote_changed' as const, diceAward: 0 };
-  if (record.essence < currentQuote.cost) return { record, applied: false, reason: 'insufficient_money' as const, diceAward: 0 };
+  if (!currentQuote || currentQuote.key !== quote.key || currentQuote.cost !== quote.cost) return { record, applied: false, reason: 'quote_changed' as const, diceAward: 0, constructionDiceAwarded: 0, restorationDiceAwarded: 0, diceAwarded: 0 };
+  if (record.essence < currentQuote.cost) return { record, applied: false, reason: 'insufficient_money' as const, diceAward: 0, constructionDiceAwarded: 0, restorationDiceAwarded: 0, diceAwarded: 0 };
   const next = simulate(record, quote.mode, quote.stopIndex, currentQuote.discountRate);
+  const restorationDiceAwarded = resolveIslandRunRestorationDiceReward(record.stopBuildStateByIndex, next.stopBuildStateByIndex);
+  const diceAwarded = next.levels + restorationDiceAwarded;
   return {
+    constructionDiceAwarded: next.levels, restorationDiceAwarded, diceAwarded,
     applied: true, reason: 'built' as const, diceAward: next.levels,
     record: { ...record, essence: record.essence - next.cost, essenceLifetimeSpent: record.essenceLifetimeSpent + next.cost,
       stopBuildStateByIndex: next.stopBuildStateByIndex, stopStatesByIndex: next.stopStatesByIndex,
-      dicePool: record.dicePool + next.levels, runtimeVersion: record.runtimeVersion + 1 },
+      dicePool: record.dicePool + diceAwarded, runtimeVersion: record.runtimeVersion + 1 },
   };
 }

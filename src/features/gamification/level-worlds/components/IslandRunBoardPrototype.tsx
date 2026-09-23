@@ -3488,16 +3488,17 @@ export function IslandRunBoardPrototype({
   );
   const stagedRestorationPreviewStage = useMemo(() => {
     if (!isIslandVisualPreview || !stagedRestorationVisualDescriptor || typeof window === 'undefined') return null;
-    const requested = Number(new URLSearchParams(window.location.search).get('stagedMissionStage'));
+    const raw = new URLSearchParams(window.location.search).get('stagedMissionStage');
+    const requested = raw === null ? NaN : Number(raw);
     return Number.isFinite(requested)
       ? Math.max(0, Math.min(stagedRestorationVisualDescriptor.stageCount, Math.floor(requested)))
       : stagedRestorationVisualDescriptor.stageCount;
   }, [isIslandVisualPreview, stagedRestorationVisualDescriptor]);
   const stagedRestorationProgress = useMemo(() => resolveStagedRestorationMissionProgress({
-    ledger: runtimeState.signatureMissionProgressByIsland,
-    cycleIndex: runtimeState.cycleIndex,
+    ledger: __storeState.signatureMissionProgressByIsland,
+    cycleIndex: __storeState.cycleIndex,
     islandNumber,
-  }), [islandNumber, runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  }), [islandNumber, __storeState.cycleIndex, __storeState.signatureMissionProgressByIsland]);
   const stagedRestorationAvailableCharges = stagedRestorationProgress
     ? getStagedRestorationAvailableCharges(stagedRestorationProgress)
     : 0;
@@ -11708,7 +11709,7 @@ export function IslandRunBoardPrototype({
         buildLevelReviewIdRef.current += 1;
         const review: ActiveBuildLevelReview = {
           ...completionPresentation,
-          diceAward: Math.max(0, nextBuildState.buildLevel - currentBuildState.buildLevel),
+          diceAward: batchResult.diceAwarded,
           reviewId: buildLevelReviewIdRef.current,
           stopIndex,
           stopId: stopEntry?.stopId ?? '',
@@ -11836,7 +11837,7 @@ export function IslandRunBoardPrototype({
     setBuildActionError(null);
     try {
       const result = await applyIslandRunFastBuild({ session, client, quote });
-      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_result', mode: quote.mode, island_number: before.currentIslandNumber, levels: quote.levels, cost: quote.cost, outcome: result.reason, dice_awarded: result.diceAward } });
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_result', mode: quote.mode, island_number: before.currentIslandNumber, levels: quote.levels, cost: quote.cost, outcome: result.reason, dice_awarded: result.diceAwarded } });
       if (!result.applied) {
         setBuildActionError(result.reason === 'insufficient_money' ? 'Need more Money. Roll to earn more.' : 'Your build price changed. Please check the updated cost.');
         return;
@@ -11854,7 +11855,7 @@ export function IslandRunBoardPrototype({
       const review: ActiveBuildLevelReview = {
         title: quote.mode === 'island' ? 'All landmarks' : stop.title, heading: 'Restored!', body: 'Ready at full strength.',
         level: 3, previousLevel: before.stopBuildStateByIndex[quote.stopIndex].buildLevel,
-        stopIndex: quote.stopIndex, stopId: stop.stopId, isFullyBuilt: true, diceAward: result.diceAward, fastMode: quote.mode,
+        stopIndex: quote.stopIndex, stopId: stop.stopId, isFullyBuilt: true, diceAward: result.diceAwarded, fastMode: quote.mode,
         reviewId: ++buildLevelReviewIdRef.current, minAdvanceAtMs: now + BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
         autoAdvanceAtMs: now + 2600, isAdvanceReady: false, isAdvanceQueued: false,
       };
@@ -14179,7 +14180,7 @@ export function IslandRunBoardPrototype({
       if (isLivingCompass) presentCompassBookCeremony(false);
       // Canonical completion is immutable; this only replays the world payoff.
       setStagedRestorationConstructionSequence((value) => value + 1);
-      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setBuildCameraFocusRequest({ preset: stagedRestorationDescriptor.islandNumber === 17 ? 'titan-spine' : 'boss', transition: 'quick' });
       if (stagedRestorationDescriptor.islandNumber === 20) beginLavaSkiffEscape();
       else setLandingText(`✨ ${currentMissionTracker.briefing.headline} finale replaying.`);
       playIslandRunSound('reward_bar_claim_burst');
@@ -14208,7 +14209,7 @@ export function IslandRunBoardPrototype({
       runtimeStateRef.current = fresh;
       setRuntimeStateWithTrace('activate_staged_restoration_mission_stage', fresh);
       setStagedRestorationConstructionSequence((value) => value + 1);
-      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setBuildCameraFocusRequest({ preset: stagedRestorationDescriptor.islandNumber === 17 ? 'titan-spine' : 'boss', transition: 'quick' });
       const completed = result.completedAtMs !== null;
       const unlockedVaultIsland = completed && stagedRestorationDescriptor.islandNumber === 4;
       const revealedCompassBook = completed

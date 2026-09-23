@@ -89,6 +89,9 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
       description: 'Land here to cast into the central pond, then reel in whatever takes the hook.',
     };
   }
+  if (entry?.signatureMissionKind === 'titan_soul_bolt') {
+    return { title: 'Soul-bolt', description: "An ancient binding for the Titan's Spine. One soul-bolt restores one bridge section." };
+  }
   const restorationCopy = entry?.signatureMissionKind === 'causeway_masonry'
     ? ['Masonry Spark', 'Recover this charged masonry to raise the next Broken Causeway span.']
     : entry?.signatureMissionKind === 'moon_mirror_lens'

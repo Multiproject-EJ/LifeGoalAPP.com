@@ -23,6 +23,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   creatureFormUpgradeDice: 'creature_form_upgrade_dice',
   signatureTreasureDice: 'signature_treasure_dice',
   signatureMissionFinaleDice: 'signature_mission_finale_dice',
+  fullRestorationDice: 'full_restoration_dice',
   unknownDiceDelta: 'unknown_dice_delta',
 } as const;
 

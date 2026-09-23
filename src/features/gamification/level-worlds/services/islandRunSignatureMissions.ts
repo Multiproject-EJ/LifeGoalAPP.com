@@ -96,7 +96,8 @@ export type StagedRestorationMissionId =
   | 'ignition-chain'
   | 'jungle-expedition-living-compass'
   | 'escape-lava-labyrinth'
-  | 'restart-wonder-circuit';
+  | 'restart-wonder-circuit'
+  | 'rebuild-the-titans-spine';
 
 export type StagedRestorationPickupKind =
   | 'causeway_masonry'
@@ -106,10 +107,11 @@ export type StagedRestorationPickupKind =
   | 'ignition_core'
   | 'wayfinder_glyph'
   | 'heatshield_plate'
-  | 'golden_ride_ticket';
+  | 'golden_ride_ticket'
+  | 'titan_soul_bolt';
 
 export interface StagedRestorationMissionDescriptor {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 19 | 20;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 17 | 18 | 19 | 20;
   missionId: StagedRestorationMissionId;
   pickupKind: StagedRestorationPickupKind;
   pickupLabel: string;
@@ -121,6 +123,12 @@ export interface StagedRestorationMissionDescriptor {
 }
 
 export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorationMissionDescriptor>> = Object.freeze({
+  17: {
+    islandNumber: 17, missionId: 'rebuild-the-titans-spine', pickupKind: 'titan_soul_bolt',
+    pickupLabel: 'Soul-bolt', actionLabel: 'Restore Spine Section', stageLabel: 'Spine Sections Restored',
+    stageCount: 8, chargeCostPerStage: 1,
+    preferredPickupFractions: [0 / 36, 3 / 36, 8 / 36, 11 / 36, 18 / 36, 20 / 36, 26 / 36, 29 / 36],
+  },
   4: {
     islandNumber: 4, missionId: 'broken-causeway', pickupKind: 'causeway_masonry',
     pickupLabel: 'Masonry Spark', actionLabel: 'Raise Causeway Span', stageLabel: 'Causeway Spans',

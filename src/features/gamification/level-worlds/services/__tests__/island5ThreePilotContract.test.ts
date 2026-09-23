@@ -447,9 +447,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, 015, 018, 019 and 020',
+    name: 'requires authored five-stage landmark construction across Islands 002 through 010, 014, 015, 017, 018, 019 and 020',
     run: () => {
-      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 70, 'fourteen authored worlds need five landmark construction profiles each');
+      assertEqual(ISLAND_LANDMARK_CONSTRUCTION_PROFILES.length, 75, 'fifteen authored worlds need five landmark construction profiles each');
       const frostmoonProfiles = ISLAND_5_LANDMARKS.map((landmark) => (
         resolveIslandLandmarkConstructionProfile(3, landmark.id)
       ));
@@ -2827,10 +2827,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
   {
     name: 'defines reusable overview, orbit, survey, five landmarks, and signature-mission inspection presets',
     run: () => {
-      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 12, 'camera rig should expose twelve reusable presets');
+      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 13, 'camera rig includes the Titan spine inspection');
       assertEqual(getIsland5CameraPreset('canyon-spiral').id, 'canyon-spiral', 'Cactus Canyon needs a full-column railway inspection camera');
-      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 12, 'camera preset ids must be unique');
-      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'powerworks', 'canyon-spiral', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
+      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 13, 'camera preset ids must be unique');
+      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'powerworks', 'canyon-spiral', 'titan-spine', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
         assert(ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === id), `missing camera preset ${id}`);
       });
       ISLAND_5_CAMERA_PRESETS.forEach((preset) => {
@@ -3094,7 +3094,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including Crystal Glacier Island 015, promoted Island 016, Jungle Expedition and Lava Labyrinth Island 020');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including Titan Rest Island 017 and all current main worlds');
       assert(pageSource.includes('assembly-crater-preview-controls') && pageSource.includes('Blast next'), 'the workbench must replay Assembly Crater sectors without writing a real gameplay save');
       assert(pageSource.includes('Play 3 + 5 + 2') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of the three charge batches');
       assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');

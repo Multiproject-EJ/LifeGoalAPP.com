@@ -4,6 +4,7 @@ import { lockPageScroll } from '../../../../utils/scrollLock';
 import { ShopItemCostLine } from './ShopItemCostLine';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import type { FastBuildQuote } from '../services/islandRunFastBuild';
+import { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from '../services/islandRunRestorationReward';
 const BuildCelebrationCrew = lazy(() => import('./BuildCelebrationCrew'));
 import type { BuildModalV2ViewModel, BuildModalV2PartViewModel } from '../services/islandRunBuildModalV2ViewModel';
 
@@ -60,14 +61,28 @@ export interface BuildModalV2LevelReview {
 function BuildModalV2CompleteState({ viewModel }: { viewModel: BuildModalV2ViewModel }) {
   return (
     <div className="bm2-complete-state" role="status">
-      <img
-        className="bm2-complete-state__crest"
-        src="/assets/island-run/build-modal/completed-crest-v001.png"
-        alt="Completed!"
-      />
+      <div className="bm2-complete-state__fireworks" aria-hidden="true">
+        {Array.from({ length: 8 }, (_, index) => <span key={index} />)}
+      </div>
+      <div className="bm2-complete-state__dice-rain" aria-hidden="true">
+        {Array.from({ length: 14 }, (_, index) => (
+          <img key={index} src="/assets/spin-wheel/daily-momentum/prizes/prize-dice-pair-transparent.png" alt="" />
+        ))}
+      </div>
+      <div className="bm2-complete-state__banner">
+        <img
+          className="bm2-complete-state__crest"
+          src="/assets/island-run/build-modal/completed-crest-v001.png"
+          alt="Completed!"
+        />
+      </div>
+      <div className="bm2-complete-state__reward" aria-label={`Full restoration bonus: ${ISLAND_RUN_FULL_RESTORATION_DICE_REWARD} dice, once per visit, in addition to level rewards`}>
+        <img src="/assets/spin-wheel/daily-momentum/prizes/prize-dice-pair-transparent.png" alt="" aria-hidden="true" />
+        <span><small>Full restoration bonus</small><strong>+{ISLAND_RUN_FULL_RESTORATION_DICE_REWARD} Dice</strong></span>
+      </div>
       <div className="bm2-complete-state__copy">
         <h3>All landmarks restored</h3>
-        <p>Every construction level complete · the crew is celebrating</p>
+        <p>Once per visit · plus level rewards</p>
       </div>
       <div className="bm2-level-rail" aria-label="All landmark levels completed">
         {viewModel.levelRail.map((item) => (
@@ -293,7 +308,7 @@ export function BuildModalV2({
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
         <Suspense fallback={null}><BuildCelebrationCrew active={Boolean(levelReview || isComplete || fastBuildMode)} orbit={Boolean(fastBuildMode)} /></Suspense>
         {!fastBuildMode && (levelReview ? levelReview.level === 3 : isComplete) && <CelebrationFireworks key={levelReview?.presentationSequence ?? 'complete'} active variant="rapid" backdrop="none" placement="local" />}
-        {!fastBuildMode && (levelReview || isComplete) && <div className="bm2-celebration-title" role="status">
+        {!fastBuildMode && levelReview && <div className="bm2-celebration-title" role="status">
           <span>{levelReview?.fastMode ? 'POW! Beautifully built.' : 'Beautifully built!'}</span>
           <h2>{levelReview ? levelReview.title : 'All landmarks built'}</h2>
           <p>{levelReview ? `Level ${levelReview.level} complete` : 'Construction complete'}</p>
@@ -315,6 +330,8 @@ export function BuildModalV2({
           <span className="bm2-header__essence" aria-label={`${essenceAvailable} Money available`}><span aria-hidden="true">💰</span> {essenceAvailable}</span>
           <button type="button" className="bm2-header__close" onClick={onClose} aria-label="Close build panel">✕</button>
         </header>
+
+        {!fastBuildMode && isComplete && !levelReview ? <BuildModalV2CompleteState viewModel={viewModel} /> : null}
 
         <div className="bm2-build-mode__messages" aria-live="polite">
           {buildActionError && <p role="alert">{buildActionError}</p>}
@@ -341,11 +358,8 @@ export function BuildModalV2({
           {fastBuildMode ? <p className="bm2-fast-status">Your construction is saved. Enjoy the reveal…</p> : levelReview ? (
             <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} />
           ) : isComplete ? (
-            <>
-              <BuildModalV2CompleteState viewModel={viewModel} />
-              <button type="button" className="bm2-level-review__advance" onClick={onClose}>Back to island</button>
-            </>
-          ) : (
+            <button type="button" className="bm2-level-review__advance" onClick={onClose}>Back to island</button>
+          ) : active ? (
             <>
               <div className="bm2-dock__summary" aria-live="polite">
                 <div className="bm2-dock__topline">
@@ -405,7 +419,7 @@ export function BuildModalV2({
                 </div>
               </details>
             </>
-          )}
+          ) : null}
         </div>
       </section>
     </div>, document.body

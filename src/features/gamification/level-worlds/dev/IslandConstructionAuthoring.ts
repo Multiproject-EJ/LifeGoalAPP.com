@@ -44,6 +44,7 @@ const WORLD_LANDMARK_LABELS: Readonly<Record<number, Readonly<Record<Island5Land
   18: { boss: 'Lost City Temple', hatchery: 'Explorer Nest', habit: 'Jungle Path', wisdom: "Explorer's Camp", event: 'Survival Trials' },
   20: { boss: 'Crucible Citadel', hatchery: 'Magma Crucible Hatchery', habit: 'Fire Path Sanctum', wisdom: 'Obsidian Archive', event: 'Ashen Trialworks' },
   19: { boss: 'Loopmaster Castle', hatchery: 'Hatchery Gondola Nursery', habit: 'Habit Momentum Station', wisdom: 'Wisdom Carousel of Perspectives', event: 'Mystery Courage Drop' },
+  17: { boss: 'Titan Skull', hatchery: 'Bone Hollow', habit: 'Strength Altar', wisdom: "Oracle's Cranium", event: 'Coliseum Pit' },
 };
 
 const LANDMARK_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
@@ -84,6 +85,14 @@ const COASTER_CARNIVAL_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, Construc
   event: { styleId: 'coaster-courage-drop-guide-climb', stationOffset: 5, stationStep: 1, relocationSeconds: 1.5, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 3, finish: 1 } },
   wisdom: { styleId: 'coaster-perspectives-carousel-radial-lift', stationOffset: 3, stationStep: -1, relocationSeconds: 1.58, phaseStationOffsets: { foundation: 0, frame: 1, assemble: 2, finish: 0 } },
   boss: { styleId: 'coaster-loopmaster-portal-commissioning', stationOffset: 4, stationStep: 1, relocationSeconds: 1.46, phaseStationOffsets: { foundation: 0, frame: 2, assemble: 1, finish: 3 } },
+};
+
+const TITANS_REST_STAGE_STORIES: Readonly<Record<Island5LandmarkId, readonly [string, string, string, string, string]>> = {
+  hatchery: ['bone hollow footing and stone cradle', 'ancient egg basin and ribs', 'protective skull shell', 'teal hatch glow and handling ledges', 'moss, banners, and awakened egg light'],
+  habit: ['strength court and altar base', 'paired tusk sockets and stone body', 'banner poles and bronze binders', 'teal soulflame and discipline markers', 'restored tusk crown and commissioning pulse'],
+  event: ['trial disk foundation', 'coliseum rim and torch posts', 'bone arch and spectator stones', 'mystery trial flame mechanism', 'completed pit seal and warm torch ring'],
+  wisdom: ['oracle plinth and rune threshold', 'cranium archive body', 'rune tablets and eye sockets', 'whisper light and archive instruments', 'soulfire crown and restored oracle glow'],
+  boss: ['central skull court and pit collar', 'jaw, brow, and cheekbone mass', 'cracked crown dome and teeth', 'teal eyes and under-mouth soulwell', 'crown seal, halo, and rest pulse'],
 };
 
 const HONEYCOMB_CHOREOGRAPHY: Readonly<Record<Island5LandmarkId, ConstructionChoreography>> = {
@@ -803,6 +812,8 @@ export const ISLAND_LANDMARK_CONSTRUCTION_PROFILES: readonly IslandLandmarkConst
                       ? LAVA_LABYRINTH_STAGE_STORIES[landmarkId]
                     : Number(worldSourceNumber) === 19
                       ? COASTER_CARNIVAL_STAGE_STORIES[landmarkId]
+                    : Number(worldSourceNumber) === 17
+                      ? TITANS_REST_STAGE_STORIES[landmarkId]
                       : LANDMARK_STAGE_STORIES[landmarkId],
       choreography: resolveConstructionChoreography(
         Number(worldSourceNumber),

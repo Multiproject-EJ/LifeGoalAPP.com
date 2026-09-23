@@ -26312,6 +26312,7 @@
    and remaining HUD stay hidden so the focused landmark has one clear frame. */
 .island-run-prototype--build-exclusive .island-run-board__topbar,
 .island-run-prototype--build-exclusive .island-run-board__rewardbar-cluster,
+.island-run-prototype--build-exclusive .island-orbit-stop,
 .island-run-prototype--build-exclusive .island-run-prototype__best-next-action-chip,
 .island-run-prototype--build-exclusive .island-run-board__dice-roll-overlay,
 .island-run-prototype--build-exclusive .island-run-prototype__camera-reset-floating,
@@ -26321,6 +26322,172 @@
 .island-run-prototype--build-exclusive .island-run-board__three-preview-badge {
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+/* Full restoration is a viewport celebration, not a second bottom modal. */
+.bm2-build-mode > .bm2-shell > .bm2-complete-state {
+  position: absolute;
+  top: max(4.35rem, calc(env(safe-area-inset-top, 0px) + 4.35rem));
+  left: 0;
+  z-index: 2;
+  width: 100vw;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  overflow: visible;
+  text-align: center;
+  pointer-events: none;
+}
+
+.bm2-build-mode > .bm2-shell > .bm2-complete-state,
+.bm2-build-mode > .bm2-shell > .bm2-complete-state * {
+  box-sizing: border-box;
+}
+
+.bm2-complete-state__banner {
+  width: 100%;
+  height: min(50vw, 22dvh);
+  display: grid;
+  place-items: center;
+  overflow: visible;
+}
+
+.bm2-build-mode .bm2-complete-state__crest {
+  display: block;
+  width: min(100vw, 62rem);
+  max-width: none;
+  height: 100%;
+  max-height: 22dvh;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 18px rgba(255, 214, 76, 0.38));
+  animation: bm2-complete-crest-proud 2.8s cubic-bezier(0.2, 1.05, 0.35, 1) both;
+}
+
+.bm2-complete-state__reward {
+  min-width: min(19rem, calc(100vw - 2rem));
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 0.45rem 1rem;
+  border: 2px solid rgba(255, 231, 135, 0.92);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(24, 74, 82, 0.96), rgba(8, 31, 47, 0.96));
+  box-shadow: 0 0 0 4px rgba(3, 16, 26, 0.68), 0 10px 28px rgba(0, 0, 0, 0.42), 0 0 30px rgba(77, 238, 225, 0.34);
+  color: #fff7d2;
+  animation: bm2-complete-reward-arrive 700ms 420ms cubic-bezier(0.2, 1.35, 0.35, 1) both;
+}
+
+.bm2-complete-state__reward img {
+  width: 3.2rem;
+  height: 3.2rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(255, 245, 188, 0.9));
+}
+
+.bm2-complete-state__reward span { display: grid; justify-items: start; line-height: 1; }
+.bm2-complete-state__reward small { color: #8ff8ee; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+.bm2-complete-state__reward strong { margin-top: 0.2rem; font-family: 'Cinzel', Georgia, serif; font-size: 1.35rem; }
+.bm2-build-mode .bm2-complete-state__copy { padding: 0.2rem 0.75rem; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.72); }
+.bm2-build-mode .bm2-complete-state__copy h3 { margin: 0; font-size: 1rem; }
+.bm2-build-mode .bm2-complete-state__copy p { margin: 0.12rem 0 0; font-size: 0.7rem; }
+.bm2-build-mode .bm2-complete-state > .bm2-level-rail { flex-direction: row; width: min(13rem, calc(100vw - 2rem)); }
+.bm2-build-mode .bm2-complete-state > .bm2-level-rail .bm2-level-rail__item { min-height: 1.7rem; flex: 1; }
+.bm2-build-mode .bm2-complete-state > .bm2-complete-state__banner,
+.bm2-build-mode .bm2-complete-state > .bm2-complete-state__reward,
+.bm2-build-mode .bm2-complete-state > .bm2-complete-state__copy,
+.bm2-build-mode .bm2-complete-state > .bm2-level-rail {
+  grid-column: 1;
+  grid-row: auto;
+}
+
+.bm2-complete-state__dice-rain,
+.bm2-complete-state__fireworks {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bm2-complete-state__dice-rain img {
+  position: absolute;
+  top: -5rem;
+  width: clamp(2rem, 7vw, 3.8rem);
+  height: auto;
+  opacity: 0;
+  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.42));
+  animation: bm2-complete-dice-rain 3.35s ease-in 1 both;
+}
+
+.bm2-complete-state__dice-rain img:nth-child(1) { left: 4%; animation-delay: 0s; }
+.bm2-complete-state__dice-rain img:nth-child(2) { left: 11%; animation-delay: 0.12s; }
+.bm2-complete-state__dice-rain img:nth-child(3) { left: 18%; animation-delay: 0.24s; }
+.bm2-complete-state__dice-rain img:nth-child(4) { left: 25%; animation-delay: 0.36s; }
+.bm2-complete-state__dice-rain img:nth-child(5) { left: 32%; animation-delay: 0.48s; }
+.bm2-complete-state__dice-rain img:nth-child(6) { left: 39%; animation-delay: 0.6s; }
+.bm2-complete-state__dice-rain img:nth-child(7) { left: 46%; animation-delay: 0.72s; }
+.bm2-complete-state__dice-rain img:nth-child(8) { left: 53%; animation-delay: 0.84s; }
+.bm2-complete-state__dice-rain img:nth-child(9) { left: 60%; animation-delay: 0.96s; }
+.bm2-complete-state__dice-rain img:nth-child(10) { left: 67%; animation-delay: 1.08s; }
+.bm2-complete-state__dice-rain img:nth-child(11) { left: 74%; animation-delay: 1.2s; }
+.bm2-complete-state__dice-rain img:nth-child(12) { left: 81%; animation-delay: 1.32s; }
+.bm2-complete-state__dice-rain img:nth-child(13) { left: 88%; animation-delay: 1.44s; }
+.bm2-complete-state__dice-rain img:nth-child(14) { left: 95%; animation-delay: 1.56s; }
+
+.bm2-complete-state__fireworks span {
+  --firework-x: 18%;
+  --firework-y: 28%;
+  position: absolute;
+  top: var(--firework-y);
+  left: var(--firework-x);
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  color: #fff1a1;
+  box-shadow: 0 -2.7rem currentColor, 1.9rem -1.9rem #67e8f9, 2.7rem 0 #ffd25f, 1.9rem 1.9rem #7cf7b5, 0 2.7rem #fff1a1, -1.9rem 1.9rem #67e8f9, -2.7rem 0 #ffd25f, -1.9rem -1.9rem #7cf7b5;
+  animation: bm2-complete-firework 1.65s ease-out 1 both;
+}
+.bm2-complete-state__fireworks span:nth-child(2) { --firework-x: 82%; --firework-y: 24%; animation-delay: 0.3s; }
+.bm2-complete-state__fireworks span:nth-child(3) { --firework-x: 32%; --firework-y: 44%; animation-delay: 0.75s; }
+.bm2-complete-state__fireworks span:nth-child(4) { --firework-x: 69%; --firework-y: 46%; animation-delay: 1.05s; }
+.bm2-complete-state__fireworks span:nth-child(5) { --firework-x: 10%; --firework-y: 62%; animation-delay: 1.3s; }
+.bm2-complete-state__fireworks span:nth-child(6) { --firework-x: 91%; --firework-y: 64%; animation-delay: 0.9s; }
+.bm2-complete-state__fireworks span:nth-child(7) { --firework-x: 42%; --firework-y: 19%; animation-delay: 1.55s; }
+.bm2-complete-state__fireworks span:nth-child(8) { --firework-x: 58%; --firework-y: 72%; animation-delay: 1.8s; }
+
+@keyframes bm2-complete-reward-arrive {
+  from { opacity: 0; transform: translateY(-12px) scale(0.72); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bm2-complete-dice-rain {
+  0% { opacity: 0; transform: translate3d(-1rem, -3rem, 0) rotate(-35deg) scale(0.7); }
+  12% { opacity: 0.95; }
+  82% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate3d(1.5rem, 105dvh, 0) rotate(620deg) scale(1); }
+}
+
+@keyframes bm2-complete-firework {
+  0% { opacity: 0; transform: scale(0.05); }
+  18% { opacity: 1; }
+  68% { opacity: 0.86; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.32); }
+}
+
+@media (max-width: 480px) {
+  .bm2-complete-state__reward { min-width: min(17rem, calc(100vw - 1.5rem)); min-height: 3.55rem; }
+  .bm2-complete-state__reward img { width: 2.75rem; height: 2.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bm2-complete-state__dice-rain,
+  .bm2-complete-state__fireworks { display: none; }
+  .bm2-build-mode .bm2-complete-state__crest,
+  .bm2-complete-state__reward { animation: none; }
 }
 
 @keyframes bm2-live-header-arrive {

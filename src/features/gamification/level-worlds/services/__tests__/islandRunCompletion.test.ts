@@ -40,7 +40,7 @@ export const islandRunCompletionTests: TestCase[] = [
         14: { missionId: 'great-honeyfall-coronation', activatedReservoirs: 4 },
         16: { missionId: 'fishermans-village-fishing', fishCaughtKg: 100, rodCollectedAtMs: 1 },
       };
-      for (const island of [4, 6, 7, 8, 9, 18, 19]) {
+      for (const island of [4, 6, 7, 8, 9, 17, 18, 19]) {
         const descriptor = getStagedRestorationMissionDescriptor(island)!;
         missions[island] = { missionId: descriptor.missionId, activatedStages: descriptor.stageCount,
           chargesEarned: descriptor.stageCount * descriptor.chargeCostPerStage, completedAtMs: 1 };
@@ -153,8 +153,29 @@ export const islandRunCompletionTests: TestCase[] = [
       reset();
       for (let island = 1; island <= 120; island++) {
         const result = resolveIslandRunCompletion(completeState(island));
-        assertEqual(result.complete, ![1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 14, 16, 18, 19, 20].includes(island), `Island ${island} completion gate`);
+        assertEqual(result.complete, ![1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20].includes(island), `Island ${island} completion gate`);
         assertEqual(result.percent === 100, result.complete, `Island ${island} has truthful 100%`);
+      }
+    },
+  },
+  {
+    name: 'Island 017 requires all eight spine sections in the current cycle for phone and departure',
+    run: () => {
+      reset();
+      const state = { ...completeState(17), cycleIndex: 1 };
+      for (const [missionCycle, stages, expected] of [[1, 7, false], [0, 8, false], [1, 8, true]] as const) {
+        const record = { ...state, signatureMissionProgressByIsland: sanitizeIslandRunSignatureMissionProgress({
+          [getIslandRunSignatureMissionKey(missionCycle, 17)]: {
+            missionId: 'rebuild-the-titans-spine', version: 1,
+            chargesEarned: 8, chargesSpent: stages, activatedStages: stages,
+            completedAtMs: stages === 8 ? 2 : null, updatedAtMs: 2,
+          },
+        }) };
+        const completion = resolveIslandRunCompletion(record);
+        assertEqual(completion.complete, expected, 'Departure requires current-cycle spine completion');
+        assertEqual(completion.percent === 100, expected, 'Partial or old spine progress never reports 100%');
+        assertEqual(resolveIslandMissionTrackerPresentation({ islandNumber: 17, state: record }).complete, expected, 'Phone agrees with departure');
+        if (!expected) assertEqual(completion.nextRequirement?.id, 'signature', 'Spine mission remains the blocking requirement');
       }
     },
   },
