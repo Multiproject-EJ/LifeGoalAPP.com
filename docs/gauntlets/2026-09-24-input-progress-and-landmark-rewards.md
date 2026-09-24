@@ -1,6 +1,6 @@
 # Input progress and landmark reward gates
 
-Status: five-dice landmark reward implemented locally; production release QA pending.
+Status: five-dice landmark reward released to PWA and installed in the iOS developer app.
 
 ## 2026-09-24 reward checkpoint
 
@@ -16,7 +16,10 @@ five-dice reward as locked, earned, or legacy-complete. The JSON parser retains
 receipts and same-visit conflict merge cannot lose a receipt. Isolated reward
 coverage passes 21 scenarios; the full Island Run service suite passes 2,305/0,
 the architecture guard reports 0 violations, shared progress render tests pass,
-and TypeScript project compilation passes. This remains local and undeployed.
+and TypeScript project compilation passes. Commit `4aa37424` deployed through
+GitHub Pages run `36052983303`; the public lazy game bundle contains the reward
+UI and economy marker. The signed Capacitor Debug build succeeded and was
+installed in place on Eivind's connected iPhone without removing app data.
 Cross-device simultaneous completion still follows the existing client conflict
 model; do not claim server-transactional global exactly-once settlement.
 
