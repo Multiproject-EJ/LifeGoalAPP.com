@@ -2450,7 +2450,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
       assert(
-        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
+        pilotSource.includes('const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);'),
         'Island 004 and the established authored worlds use the proven per-material instanced route path',
       );
       assert(pilotSource.includes('const circuitGTile = island19CircuitGBoard.tileMeshes[transform.index];'), 'Circuit G must substitute its own one-to-one canonical mesh route instead of layering a second board');
@@ -3082,6 +3082,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const island1Source = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts', 'utf8');
       const assemblyCraterSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island1AssemblyCraterThreeWorld.ts', 'utf8');
       const island2Source = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts', 'utf8');
+      const island2BirdSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5SunshoreV2Birds.ts', 'utf8');
       const celestialSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts', 'utf8');
       const celestialTerrainSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2CelestialV2Terrain.ts', 'utf8');
       const celestialLandscapeSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2CelestialV2Landscape.ts', 'utf8');
@@ -3206,7 +3207,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(island2Source.includes("boss: 'Sunwheel Arena'") && island2Source.includes("hatchery: 'Egg Grotto Hatchery'"), 'Island 002 must retain its tropical landmark identity lock');
       assert(island2Source.includes('function createEggGrotto') && island2Source.includes('function createHabitLodge') && island2Source.includes('function createStarArchive') && island2Source.includes('function createTideglassOracle') && island2Source.includes('function createIsland5SunwheelArena'), 'Island 002 must keep five distinct procedural landmark factories');
       assert(island2Source.includes("wave.name = 'ISLAND_2_SHORE_WAVE'") && island2Source.includes("fall.name = 'ISLAND_2_WATERFALL'"), 'Island 002 must retain animated shoreline and waterfall systems');
-      assert(island2Source.includes("bird.name = 'ISLAND_2_BIRD'") && island2Source.includes("turtle.name = 'ISLAND_2_TURTLE'"), 'Island 002 must preserve quality-scaled tropical fauna');
+      assert(
+        island2Source.includes('createSunshoreBirds(materials, quality)')
+          && island2BirdSource.includes("root.name = 'SUNSHORE_PARROTS_AND_SEABIRDS'")
+          && island2BirdSource.includes("quality === 'high' ? 12 : quality === 'medium' ? 8 : 4"),
+        'Island 002 must preserve quality-scaled tropical fauna',
+      );
       assert(!island2Source.includes('const levelScale = level === 1'), 'Island 002 progression must not regress to scale-only level changes');
       assert(boardSource.includes('3D quality') && boardSource.includes('Force High to judge phone smoothness.'), 'the live dev menu should expose the phone quality selector');
       assert(boardSource.includes('qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}'), 'quality override must be dev-mode only');
