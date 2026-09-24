@@ -11,6 +11,24 @@ This is not complete global coverage: bonus/input modals and completion reward
 settlement remain pending. No new dice amount or reward grant was introduced.
 Date: 2026-09-24
 
+## Next slice after HUD release
+
+Bonus encounters now project their real existing progress through ActivityProgress:
+quiz = one selection; gratitude = one nonempty draft then submit; focus = one
+acknowledgement; tapping = configured tap count; breathing = configured seconds.
+Completion is only marked saved after the existing reward-stage transition. No
+construction bar is invented for unattached bonus encounters. The modal now uses
+document.body portal and a scoped page-scroll lock. Focused render tests cover all
+five types, blank versus filled drafts, real remaining counts and saved state.
+This slice is local and not part of live `20365528`; full follow-up release QA is
+still needed. The previous Habit/Wisdom progress slice is included in that release.
+
+Content issue found: three-breaths copy describes 3 × (3s in + 3s out), but its
+timer is 9s; box-breathing describes 2 × (4s in + 4s hold + 4s out), but timer is
+10s. Align instructions/timings deliberately in the next slice; no silent reward
+or answer-quota change in this presentation patch. Asked user to confirm 5 dice
+per dual-completed landmark, separately from construction rewards; no answer yet.
+
 ## Outcome and authority
 
 User requests visible remaining-input progress on all Island Run input encounters,

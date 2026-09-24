@@ -77,6 +77,7 @@ import { activateMoonwellThermal } from '../services/islandRunMoonwellThermalAct
 import { isMoonwellHeatAvailable, resolveMoonwellThermalProgress } from '../services/islandRunMoonwellThermal';
 import { ConfettiBurst } from './ConfettiBurst';
 import { IslandHudGlass } from './IslandHudGlass';
+import { EncounterActivityProgress } from './EncounterActivityProgress';
 import {
   IslandMoneyCelebration,
   IslandMoneyCollectionAnimation,
@@ -4660,6 +4661,10 @@ export function IslandRunBoardPrototype({
   }, [showRewardDetailsModal]);
 
   // M6-COMPLETE: Escape key closes encounter modal
+  useEffect(() => {
+    if (!showEncounterModal) return undefined;
+    return lockPageScroll();
+  }, [showEncounterModal]);
   useEffect(() => {
     if (!showEncounterModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -17924,10 +17929,17 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {showEncounterModal && (
+      {showEncounterModal && typeof document !== 'undefined' ? createPortal((
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
             <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
+            {currentEncounterChallenge ? <EncounterActivityProgress
+              challenge={currentEncounterChallenge}
+              complete={encounterStep === 'reward'}
+              secondsLeft={breathingSecondsLeft}
+              taps={encounterTapCount}
+              response={gratitudeText}
+            /> : null}
             {encounterStep === 'challenge' && (
               <p className="island-encounter__intro">
                 Quick positive check-in — choose what feels best for you. Every choice counts.
@@ -18049,7 +18061,7 @@ export function IslandRunBoardPrototype({
             </div>
           </section>
         </div>
-      )}
+      ), document.body) : null}
 
       {showOnboardingBooster && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">

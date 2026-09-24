@@ -49,3 +49,20 @@ clipped wallet values at 320px by using container-relative type and narrower ico
 slots. Inspected the actual Island003 scene with its matching controller; opened
 and closed the board menu and opened the audio menu successfully. This is an
 improvement pass, not a claim of pixel-identical concept art or final user approval.
+
+## Release verified
+
+- Published main commit `2036552840e076f5b09bd1064af2af3bb20ab8f3`, including prior
+  `f33d2aba` controller/egg/progress work. No concurrent main commits were overwritten.
+- TypeScript passed; final Vite build passed; 2,303 Island Run tests passed, zero
+  failed; architecture zero violations (three existing allowlisted warnings).
+- Pages run `36049218023`: build and deploy succeeded. Live lazy-loaded
+  `main-DQgGVl0C.js` / `main-BIOwMNpG.css` contain the optical housing, compact
+  `3.5cqw` wallet fix and mission-visibility hook. The app entry chunk alone does
+  not contain these features: verify the lazy game chunk, not just index.html.
+- Capacitor final copy and signed Debug iOS build succeeded. Signed app entrypoint
+  and its three entry assets hash-match final dist. First device install failed
+  on an interrupted connection; same in-place retry succeeded on paired iPhone.
+  Device launch was denied because the phone is locked. User must unlock/open
+  HabitGame; on-device visual/interaction sign-off remains pending.
+- Next encounter-progress slice is separate local work, not part of this release.
