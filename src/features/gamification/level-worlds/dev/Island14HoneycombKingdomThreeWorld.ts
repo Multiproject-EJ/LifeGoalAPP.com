@@ -2755,6 +2755,7 @@ function createGreatHoneyfallCoronation(
     const easedSequence = reducedMotion
       ? 1
       : THREE.MathUtils.smoothstep(sequenceProgress, 0.04, 0.94);
+    root.userData.missionPresentationActive = !reducedMotion && transitionActive && sequenceProgress < 1;
     currentBlend = transitionActive
       ? THREE.MathUtils.lerp(transitionFromBlend, transitionToBlend, easedSequence)
       : transitionToBlend;
@@ -3589,6 +3590,7 @@ export function createIsland14HoneycombLivingAmbience(
     },
     animate: (elapsed: number) => {
       greatHoneyfall.animate(elapsed);
+      root.userData.missionPresentationActive = greatHoneyfall.root.userData.missionPresentationActive === true;
       const missionBlend = greatHoneyfall.getBlend();
       honeyWorldV2.animate(elapsed, false);
       if (honeyWorldV2.honeyfall) {

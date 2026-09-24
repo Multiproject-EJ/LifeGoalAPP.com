@@ -1,4 +1,5 @@
 import { LivingController } from './living-controller/LivingController';
+import { shouldHideMissionController } from '../services/islandRunPresentationVisibility';
 import './IslandRunThemedTopbar.css';
 import { useControllerPreference } from './living-controller/useControllerPreference';
 import { islandControllerTheme } from './living-controller/policy.js';
@@ -75,6 +76,7 @@ import { IslandMoonwellThermalModal } from './IslandMoonwellThermalModal';
 import { activateMoonwellThermal } from '../services/islandRunMoonwellThermalAction';
 import { isMoonwellHeatAvailable, resolveMoonwellThermalProgress } from '../services/islandRunMoonwellThermal';
 import { ConfettiBurst } from './ConfettiBurst';
+import { IslandHudGlass } from './IslandHudGlass';
 import {
   IslandMoneyCelebration,
   IslandMoneyCollectionAnimation,
@@ -1884,6 +1886,7 @@ export function IslandRunBoardPrototype({
 }: IslandRunBoardPrototypeProps) {
   const [controllerDefaultTheme, setControllerDefaultTheme] = useControllerPreference(session.user.id);
   const [topbarControllerTheme, setTopbarControllerTheme] = useState('ice');
+  const [worldMissionPresentationActive, setWorldMissionPresentationActive] = useState(false);
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
   // chip stays in sync with the profile's total_xp. The hook also handles its
@@ -3243,8 +3246,29 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic('reward_claim');
   }, [playIslandRunSound, showVaultIslandGiftUnlock, triggerIslandRunHaptic]);
 
+  const missionPresentationForRewardsRef = useRef(worldMissionPresentationActive);
+  missionPresentationForRewardsRef.current = worldMissionPresentationActive;
+  const pendingMissionCelebrationsRef = useRef<Array<{ rewards: WinRewardItem[]; subtitle: string }>>([]);
+  const celebrationIslandRef = useRef(islandNumber);
+  useEffect(() => {
+    if (celebrationIslandRef.current !== islandNumber) {
+      celebrationIslandRef.current = islandNumber;
+      pendingMissionCelebrationsRef.current = [];
+      return;
+    }
+    if (worldMissionPresentationActive || showWinCelebrationModal) return;
+    const next = pendingMissionCelebrationsRef.current.shift();
+    if (!next) return;
+    setWinCelebrationRewards(next.rewards);
+    setWinCelebrationSubtitle(next.subtitle);
+    setShowWinCelebrationModal(true);
+  }, [worldMissionPresentationActive, showWinCelebrationModal, islandNumber]);
   const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
     if (rewards.length === 0) return;
+    if (missionPresentationForRewardsRef.current) {
+      pendingMissionCelebrationsRef.current.push({ rewards, subtitle });
+      return;
+    }
     setWinCelebrationRewards(rewards);
     setWinCelebrationSubtitle(subtitle);
     setShowWinCelebrationModal(true);
@@ -3778,6 +3802,7 @@ export function IslandRunBoardPrototype({
       : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
+    worldMissionPresentationActive || moonwellThawActive ||
     firstArrivalActive ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || showFirstCreaturePackModal || eggBatchCards.length > 0 ||
@@ -13751,6 +13776,19 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  const missionOwnsController = worldMissionPresentationActive || firstArrivalActive
+    || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
+    || moonwellThawActive || frostwellSequence.phase === 'drilling'
+    || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
+  const hideControllerForPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
+    lavaSkiffNavigation.active || isShooterControllerActive);
+  useEffect(() => {
+    if (missionOwnsController) {
+      stopAutoRoll();
+      setShowTopbarMenu(false);
+      setShowAudioMenu(false);
+    }
+  }, [missionOwnsController, stopAutoRoll]);
   useEffect(() => {
     if (!pendingRootheartPowerworksAutoOpen || doesModalOwnAttention || isIslandVisualPreview) return undefined;
     const timer = window.setTimeout(() => {
@@ -14376,6 +14414,7 @@ export function IslandRunBoardPrototype({
       islandClearStats?.islandNumber === runtimeState.currentIslandNumber
   );
   const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
+    missionOwnsController ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
@@ -15321,6 +15360,7 @@ export function IslandRunBoardPrototype({
 
         <div ref={topbarMenuRef}>
           <div className="island-run-board__topbar island-run-themed-topbar" data-controller-theme={topbarControllerTheme} aria-label="Island Run top bar">
+            <IslandHudGlass />
             <button type="button" className="island-run-board__topbar-avatar" data-rank-tier={playerRank?.tier ?? 'bronze'} title={playerRank?.title ?? 'Player profile'} aria-label={playerRank ? `Player profile · ${playerRank.title}` : 'Player profile'}>
               {avatarImageUrl ? (
                 <img src={avatarImageUrl} alt="" className="island-run-board__topbar-avatar-img" />
@@ -15334,7 +15374,7 @@ export function IslandRunBoardPrototype({
                 tone={2}
                 className="island-run-board__topbar-money-note"
               />
-              <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
+              <strong title={formatFullWalletValue(runtimeState.essence)}>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
             <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
               <img
@@ -15343,7 +15383,7 @@ export function IslandRunBoardPrototype({
                 alt=""
                 aria-hidden="true"
               />
-              {formatFullWalletValue(shards)}
+              <span className="island-run-themed-topbar__amount" title={formatFullWalletValue(shards)}>{formatFullWalletValue(shards)}</span>
             </div>
             <button
               type="button"
@@ -16097,6 +16137,7 @@ export function IslandRunBoardPrototype({
                 }}
                 onMoonwellThermalPhaseChange={setMoonwellThawPhase}
                 onMoonwellThermalComplete={() => { setMoonwellThawActive(false); setLandingText('♨ Moonwell restored. Warm water now bubbles beneath the winter sky.'); }}
+                onMissionPresentationActiveChange={setWorldMissionPresentationActive}
                 celestialRedockingPresentation={{
                   completedRolls: isIslandVisualPreview && islandArtPreviewNumber === 2
                     ? CELESTIAL_REDOCKING_ROLL_TARGET
@@ -16437,7 +16478,11 @@ export function IslandRunBoardPrototype({
         >
           {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
-          <div className="island-run-prototype__footer-actions">
+          <div className="island-run-prototype__footer-actions"
+            data-mission-hidden={hideControllerForPresentation ? 'true' : undefined}
+            style={hideControllerForPresentation
+              ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
+            aria-hidden={hideControllerForPresentation || undefined}>
             {lavaSkiffNavigation.active ? (
               <LavaSkiffControllerAdapter onChange={handleLavaSkiffControllerChange} />
             ) : isShooterControllerActive ? (

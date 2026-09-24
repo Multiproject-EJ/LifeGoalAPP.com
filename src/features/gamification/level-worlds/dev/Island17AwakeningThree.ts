@@ -159,6 +159,9 @@ export function createTitanAwakeningThree() {
   const animate=(time:number,reduced=false) => {
     elapsed=time;
     const age=time-phaseTime, riseAge=time-riseTime;
+    root.userData.missionPresentationActive = !reduced && (
+      (state.phase >= 2 && riseAge >= 0 && riseAge < 4.5)
+      || (state.phase >= 6 && age >= 0 && age < 4.3));
     const pose=titanRevealPose(state.phase,riseAge,reduced);
     head.visible=pose.visible && (reduced || riseAge >= .6);
     head.position.y=-3.4*(1-pose.lift);

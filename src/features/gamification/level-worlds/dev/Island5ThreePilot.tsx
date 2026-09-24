@@ -431,6 +431,7 @@ interface Island5ThreePilotProps {
   moonwellThermalPresentation?: MoonwellThermalPresentation;
   onMoonwellThermalPhaseChange?: (phase: string) => void;
   onMoonwellThermalComplete?: () => void;
+  onMissionPresentationActiveChange?: (active: boolean) => void;
   celestialRedockingPresentation?: Island2CelestialRedockingPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
   sunkenSandsTreasurePresentation?: Island12SunkenSandsTreasurePresentation;
@@ -3608,6 +3609,7 @@ export default function Island5ThreePilot({
   moonwellThermalPresentation = { heated: false, running: false, sequence: 0 },
   onMoonwellThermalPhaseChange,
   onMoonwellThermalComplete,
+  onMissionPresentationActiveChange,
   celestialRedockingPresentation = { completedRolls: 20, targetRolls: 20, dockedPlatformCount: 4 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
   sunkenSandsTreasurePresentation = { revealProgress: 1, ready: true, claimed: false },
@@ -3798,6 +3800,9 @@ export default function Island5ThreePilot({
   const [rendererRetryVersion, setRendererRetryVersion] = useState(0);
   const [assemblyAssetsReady, setAssemblyAssetsReady] = useState(areIsland001V2AssetsReady);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const missionPresentationCallbackRef = useRef(onMissionPresentationActiveChange);
+  missionPresentationCallbackRef.current = onMissionPresentationActiveChange;
+  const missionPresentationActiveRef = useRef(false);
   const landmarkProgressRef = useRef(landmarkProgress);
   landmarkProgressRef.current = landmarkProgress;
   const selectedLandmarkIdRef = useRef<string | undefined>(undefined);
@@ -10383,6 +10388,23 @@ export default function Island5ThreePilot({
         ? livingAmbience.getSignatureMissionCameraPose?.()
         : null;
       livingAmbience.setSignatureMissionCinematicActive?.(Boolean(signatureMissionCameraPose));
+      // Report actual camera/animation ownership, never a guessed UI duration.
+      // Do not count a persistent inspection camera as an active cinematic.
+      const missionPresentationActive = Boolean(cactusCanyonBlastCameraPose
+        || jungleBuildupCameraPose || jungleZenithCameraPose || marinaArrivalCameraPose
+        || activeWonderRide || activeTrainRide
+        || stagedRestorationRuntime?.root.userData.missionPresentationActive
+        || firstLightAssemblyCrater?.root.userData.missionPresentationActive
+        || livingAmbience.root.userData.missionPresentationActive
+        || (isFishermansVillage && fishermansFishingPresentationRef.current.fishingInteraction?.active)
+        || (isFishermansVillage && fishermansFishingPresentationRef.current.fishCaughtKg >= 78
+          && Math.max(0, fishermansFishingPresentationRef.current.previewElapsedSeconds ?? 0) < 23.5)
+        || (isRootheartCanopyCity && Number.isFinite(rootheartConstructionStartedAtMs)
+          && now - rootheartConstructionStartedAtMs < (rootheartPowerworksPresentationRef.current.buildStage >= 3 ? 5200 : 3200)));
+      if (missionPresentationActive !== missionPresentationActiveRef.current) {
+        missionPresentationActiveRef.current = missionPresentationActive;
+        missionPresentationCallbackRef.current?.(missionPresentationActive);
+      }
       if (
         signatureMissionCameraPose
         && !transition
@@ -10885,6 +10907,8 @@ export default function Island5ThreePilot({
     animationFrame = window.requestAnimationFrame(animate);
 
     return () => {
+      missionPresentationActiveRef.current = false;
+      missionPresentationCallbackRef.current?.(false);
       if (activeTour) {
         setTourStatus('idle');
       }

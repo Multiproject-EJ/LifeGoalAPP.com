@@ -5266,6 +5266,7 @@ export function createIsland17TitansRestLivingAmbience(
     const animateRibMission = ribBridge.userData.animateMission as ((time: number, reducedMotion?: boolean) => void) | undefined;
     animateRibMission?.(elapsed, Boolean(prefersReducedMotion));
     awakening.animate(elapsed, Boolean(prefersReducedMotion));
+    root.userData.missionPresentationActive = awakening.root.userData.missionPresentationActive === true;
     // Readable hints accumulate without moving the board or route.
     const pitLight = pit.getObjectByName('ISLAND_17_CENTRAL_SOULFIRE_LIGHT') as THREE.PointLight;
     if (pitLight) pitLight.intensity = .3 + spineStage * .22;

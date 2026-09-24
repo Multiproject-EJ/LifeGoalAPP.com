@@ -7197,6 +7197,7 @@ export function createIsland12SunkenSandsLivingAmbience(
         rewardDisplayReveal = rewardTargetReveal;
       }
       const reveal = THREE.MathUtils.clamp(rewardDisplayReveal, 0, 1);
+      root.userData.missionPresentationActive = Math.abs(rewardDisplayReveal - rewardTargetReveal) >= 0.0005;
       rewardGlassHinges.forEach((hinge, index) => {
         const closedQuaternion = hinge.userData.closedQuaternion as THREE.Quaternion;
         const openAngle = hinge.userData.openAngle as number;
