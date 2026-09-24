@@ -1,3 +1,7 @@
+import { Island17AwakeningMission } from '../components/Island17AwakeningMission';
+import { useIslandRunState } from '../hooks/useIslandRunState';
+import { prepareTitanAwakeningPreview, titanPreviewSession } from '../services/island17AwakeningPreview';
+import { resolveStagedRestorationMissionProgress } from '../services/islandRunSignatureMissions';
 import type { Island5CameraPresetId } from './island5ThreePilotContract';
 import { IslandFrostwellMissionModal } from '../components/IslandFrostwellMissionModal';
 import { IslandMoonwellThermalModal } from '../components/IslandMoonwellThermalModal';
@@ -283,6 +287,11 @@ export default function IslandTemplateKitPage() {
   const [moonwellSequence, setMoonwellSequence] = useState(0);
   const closeMoonwellFixture = useCallback(() => setMoonwellModal(false), []);
 
+  const [showTitanPuzzle,setShowTitanPuzzle]=useState(false);
+  const closeTitanPuzzle=useCallback(()=>setShowTitanPuzzle(false),[]);
+  const {state:titanPreviewState}=useIslandRunState(titanPreviewSession,null);
+  const titanPreviewProgress=resolveStagedRestorationMissionProgress({ledger:titanPreviewState.signatureMissionProgressByIsland,cycleIndex:0,islandNumber:17});
+  useEffect(()=>{if(initialState.islandNumber===17)void prepareTitanAwakeningPreview();},[initialState.islandNumber]);
   const [spineStages, setSpineStages] = useState(initialState.spineStages);
   const [spineSequence, setSpineSequence] = useState(0);
   const [showCompletionModal, setShowCompletionModal] = useState(initialState.showCompletionModal);
@@ -402,6 +411,7 @@ export default function IslandTemplateKitPage() {
 
   return (
     <main className="island-kit-page">
+      {showTitanPuzzle && <Island17AwakeningMission session={titanPreviewSession} client={null} onClose={closeTitanPuzzle}/>}
       <IslandFrostwellMissionModal open={frostwellModal} phase={frostwellSequence.phase}
         meters={frostwellSequence.held?.meters ?? frostwellFixtureDepth} built={frostwellSequence.held?.built ?? frostwellFixtureBuilt}
         spins={Math.max(0, 2 - frostwellFixtureSpin)} rotation={frostwellFixtureSpin * 1800 + (frostwellFixtureSpin ? 22.5 : 0)}
@@ -562,6 +572,8 @@ export default function IslandTemplateKitPage() {
           ) : null}
           {mode === '3d' && initialState.islandNumber === 17 ? (
             <div className="island-kit-control-group">
+              <button onClick={()=>setShowTitanPuzzle(true)}>Play skull puzzle</button>
+              <button onClick={()=>void prepareTitanAwakeningPreview(true)}>Reset puzzle preview</button>
               <label htmlFor="spine-stages">Spine sections {spineStages}/8</label>
               <input id="spine-stages" type="range" min="0" max="8" step="1" value={spineStages}
                 onChange={event => setSpineStages(Number(event.target.value))} />
@@ -649,6 +661,8 @@ export default function IslandTemplateKitPage() {
                 claimedPickupTileIndices: [],
               } : initialState.islandNumber === 17 ? {
                 islandNumber: 17, activatedStages: spineStages, stageCount: 8,
+                titanAwakening: titanPreviewProgress?.titanAwakening,
+                titanInspectionOpen: showTitanPuzzle,
                 constructionSequence: spineSequence,
               } : undefined}
               island20SkiffNavigation={initialState.islandNumber === 20 ? firebridgeEscape : undefined}

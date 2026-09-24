@@ -1,3 +1,4 @@
+import { applyTitanPuzzleInput, type TitanPuzzleInput } from './island17Awakening';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
@@ -842,5 +843,32 @@ export function claimSunkenSandsFirstTreasure(options: {
       essenceAwarded,
       claimedAtMs,
     };
+  });
+}
+
+/** Free interactions; visit + revision checks reject stale modal/double-click input. */
+export function interactWithTitanSkull(options: {
+  session: Session; client: SupabaseClient | null; cycleIndex: number;
+  expectedRevision: number; input: TitanPuzzleInput;
+}): Promise<{ status: 'ok' | 'wrong' | 'invalid' | 'locked' | 'stale' | 'wrong_island' }> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== 17 || state.cycleIndex !== options.cycleIndex) return { status: 'wrong_island' };
+    const progress = resolveStagedRestorationMissionProgress({ ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex, islandNumber: 17 })!;
+    if (progress.activatedStages < 8) return { status: 'locked' };
+    const current = progress.titanAwakening!;
+    if (current.revision !== options.expectedRevision) return { status: 'stale' };
+    const result = applyTitanPuzzleInput(current, options.input);
+    if (result.status === 'invalid') return { status: 'invalid' };
+    await commitIslandRunState({ session: options.session, client: options.client,
+      record: { ...state, runtimeVersion: state.runtimeVersion + 1,
+        signatureMissionProgressByIsland: { ...state.signatureMissionProgressByIsland,
+          [getIslandRunSignatureMissionKey(state.cycleIndex, 17)]: { ...progress,
+            titanAwakening: result.state, updatedAtMs: Date.now() },
+        },
+      }, triggerSource: 'interact_with_titan_skull',
+    });
+    return { status: result.status };
   });
 }

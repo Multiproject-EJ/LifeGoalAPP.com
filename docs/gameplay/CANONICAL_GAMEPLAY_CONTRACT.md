@@ -747,3 +747,17 @@ Capacitor uses native Local Notifications permission and one-shot schedules. Egg
 ### Free landmark entry and Arena tickets (2026-09-20)
 Ordinary stops charge no entry pass on any island. Islands001–003 expose their introductory stops freely; the finale still follows the introductory activities. From004 the Level3 activity gate and all-buildings-Level3 Hatchery gate remain. Old pass receipts are preserved, but stale purchase callbacks cannot spend money. Event tickets exclusively fund Arena minigames; zero tickets blocks launch, including Crystal Miners. A short ticket-entry animation accompanies launch without a second debit. Existing per-game ticket conversion and saved resources are preserved. The living board-ticket tile awards the active event’s tickets through the canonical roll commit and retains its existing regrowth timing.
 The first Island001 tutorial throw lands on a dynamite cache; later rolls retain at-most-one unclaimed cache collection on landing or passing. Landmark-door overlays preserve mission pickup metadata. Collected caches remain finite and do not pay twice.
+
+
+### Island 017 — The Titan's Last Thought (2026-09-23)
+
+Eight finite soul-bolts and spine stages remain the first chapter. New/incomplete
+journeys then require an ordered free potion, an explicit pour, eye-ring, tooth
+channel and constellation-lens solutions, and an explicit spirit release. These
+are cycle-scoped canonical signature-mission interactions, not landmark activity
+credit. Wrong attempts are free; inputs persist; replay never writes state or
+pays rewards. Completed legacy spine missions retain departure credit and may
+play the new chapter optionally. No completed progress or construction rewards
+are revoked, reset or duplicated. Phone and departure use the same combined
+spine/awakening objective. The first completed throw introduces the mystery once
+per cycle through the existing narrative acknowledgement.

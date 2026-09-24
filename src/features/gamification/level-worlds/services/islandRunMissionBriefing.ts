@@ -263,11 +263,11 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   },
   17: {
     progressKind: 'staged_restoration',
-    headline: "Rebuild the Titan's Spine",
-    missionStatement: "The titan once carried this city. Now its broken spine leaves the outer sanctuary cut off above the abyss. Recover eight soul-bolts and bind the ancient bones back together, one section at a time.",
-    primaryObjective: 'Collect eight soul-bolts and restore all eight spine sections.',
+    headline: "The Titan's Last Thought",
+    missionStatement: "Something beneath the island is answering. Restore the eight spine sections to power the empty well, decipher a summoning potion, then unlock the strange skull that rises from the abyss.",
+    primaryObjective: 'Restore the spine, summon the skull and release the spirit within.',
     supportingObjective: "Restore the five landmarks of Titan's Rest.",
-    fieldProtocol: 'Each soul-bolt repairs one section permanently. The eighth repair reconnects the soul current and awakens the bridge.',
+    fieldProtocol: 'Each soul-bolt repairs one section permanently. Then brew, pour and tinker: the skull opens one mechanism at a time. Puzzle attempts are free and your progress saves.',
     caretakerSignal: 'Even what is broken can carry us again.',
   },
 });
@@ -312,12 +312,12 @@ export function resolveIslandMissionBriefingTrigger(options: {
 }): IslandMissionBriefingTrigger | null {
   const islandNumber = Math.max(1, Math.floor(options.islandNumber));
   const cycleIndex = Math.max(0, Math.floor(options.cycleIndex));
-  // First Light introduces its mission phone after the first completed throw.
-  const firstLightIntroduction = islandNumber === 1 && cycleIndex === 0;
+  // First Light and Titan’s Rest introduce the mystery after the first completed throw.
+  const firstThrowIntroduction = (islandNumber === 1 && cycleIndex === 0) || islandNumber === 17;
   if (!options.hopSequence.length) return null;
 
   const tileCount = Math.max(1, Math.floor(options.tileCount));
-  const triggerTileIndex = firstLightIntroduction
+  const triggerTileIndex = firstThrowIntroduction
     ? options.hopSequence[options.hopSequence.length - 1]
     : Math.floor(tileCount * ISLAND_MISSION_BRIEFING_ROUTE_FRACTION) % tileCount;
   if (!options.hopSequence.includes(triggerTileIndex)) return null;

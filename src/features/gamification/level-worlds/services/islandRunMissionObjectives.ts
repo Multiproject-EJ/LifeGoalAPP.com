@@ -1,3 +1,4 @@
+import { TITAN_PHASES } from './island17Awakening';
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { OPENING_GAMES_TEAM_ROLL_TARGET, resolveOpeningGamesCeremony } from './islandRunOpeningGames';
@@ -371,6 +372,17 @@ export function resolveIslandMissionObjectives(options: {
                   : extracted ? 'Extracted' : 'Skiff ready',
           ),
           objective('Solve Level-3 Labyrinth', landmarkProgress.fullyRestored, landmarkCount),
+        ];
+        break;
+      }
+      if (descriptor.islandNumber === 17) {
+        const awakening = progress.titanAwakening!;
+        const phase = awakening.legacyComplete ? 6 : awakening.phase;
+        objectives = [
+          objective("The Titan's Last Thought", Math.min(8, progress.activatedStages) + phase, 14,
+            progress.activatedStages < 8 ? `${progress.activatedStages} / 8 spine sections`
+              : awakening.legacyComplete ? 'Complete · new puzzles available' : TITAN_PHASES[awakening.phase]),
+          objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
         ];
         break;
       }

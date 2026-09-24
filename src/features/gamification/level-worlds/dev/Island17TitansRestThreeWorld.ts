@@ -1,3 +1,5 @@
+import { createTitanAwakeningThree } from './Island17AwakeningThree';
+import { sanitizeTitanAwakening } from '../services/island17Awakening';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type {
@@ -4180,7 +4182,7 @@ function createFloatingCliff(materials: Island17TitansRestMaterials, quality: Is
   return root;
 }
 
-function createSoulfirePit(materials: Island17TitansRestMaterials, quality: Island3DQuality, runtimeParts: Island17RuntimePart[]) {
+function createSoulfirePit(materials: Island17TitansRestMaterials, quality: Island3DQuality, runtimeParts: Island17RuntimePart[], includeSkull = true) {
   const root = new THREE.Group();
   root.name = 'ISLAND_17_CENTRAL_SOULFIRE_PIT';
   const abyssFloor = cylinder(1.52, 1.35, 0.08, materials.shadow, segments(quality) * 3);
@@ -4292,6 +4294,7 @@ function createSoulfirePit(materials: Island17TitansRestMaterials, quality: Isla
   light.position.set(0, 0.65, 0);
   root.add(light);
   addRearNecropolisCrown(root, materials, quality);
+  if (includeSkull) {
   const rearSkullScale = quality === 'low' ? 2.0 : quality === 'medium' ? 2.18 : 2.3;
   const rearSkull = createSkullHead(materials, quality, rearSkullScale);
   rearSkull.name = 'ISLAND_17_REAR_TITAN_SKULL_SILHOUETTE';
@@ -4367,6 +4370,7 @@ function createSoulfirePit(materials: Island17TitansRestMaterials, quality: Isla
         }));
       },
     );
+  }
   }
   root.userData.sculptRuntime = { parts: [registerIsland17RuntimePart('central-soulfire-pit', root, 'soulfire')] };
   runtimeParts.push(registerIsland17RuntimePart('soulfire-network', root, 'soulfire'));
@@ -5202,7 +5206,19 @@ export function createIsland17TitansRestLivingAmbience(
   const stormBackground = createStormBackground(materials, quality, runtimeParts);
   const paintedBackplate = createPaintedBackplate();
   const cliff = createFloatingCliff(materials, quality, runtimeParts);
-  const pit = createSoulfirePit(materials, quality, runtimeParts);
+  const pit = createSoulfirePit(materials, quality, runtimeParts, false);
+  const awakening = createTitanAwakeningThree();
+  awakening.root.position.set(0, 2.9, -1.2);
+  awakening.root.scale.setScalar(1.4);
+  pit.add(awakening.root);
+  // The island already has its authored well collar; the inspection inset has its own.
+  awakening.root.getObjectByName('TITAN_INSPECTION_WELL_RING')!.visible = false;
+  root.userData.disposeAwakening = awakening.dispose;
+  // Static hit envelope stays fixed as the skull rises and unfolds.
+  const skullHit = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 8),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+  skullHit.name = 'ISLAND_17_AWAKENING_HIT_TARGET'; skullHit.position.set(0, 2.8, -1.2); pit.add(skullHit);
+  let spineStage = 8;
   const ribBridge = createRibBridge(materials, quality, runtimeParts);
   const chainDepth = createChainAndWaterfallDepth(materials, quality, runtimeParts);
   const ruinCity = createBoneRuinCity(materials, quality, runtimeParts);
@@ -5249,6 +5265,10 @@ export function createIsland17TitansRestLivingAmbience(
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const animateRibMission = ribBridge.userData.animateMission as ((time: number, reducedMotion?: boolean) => void) | undefined;
     animateRibMission?.(elapsed, Boolean(prefersReducedMotion));
+    awakening.animate(elapsed, Boolean(prefersReducedMotion));
+    // Readable hints accumulate without moving the board or route.
+    const pitLight = pit.getObjectByName('ISLAND_17_CENTRAL_SOULFIRE_LIGHT') as THREE.PointLight;
+    if (pitLight) pitLight.intensity = .3 + spineStage * .22;
   };
 
   const updateView = (cameraPosition: THREE.Vector3, cameraTarget = new THREE.Vector3()) => {
@@ -5269,6 +5289,9 @@ export function createIsland17TitansRestLivingAmbience(
 
   const updateStagedRestoration = (presentation: IslandStagedRestorationPresentation, immediate = false) => {
     ribBridge.userData.updateRestoration(presentation, immediate);
+    spineStage = presentation.activatedStages;
+    awakening.update(presentation.titanAwakening ?? sanitizeTitanAwakening({ phase: 6 }));
+    awakening.root.visible = spineStage >= 8 || (presentation.titanAwakening?.phase ?? 6) >= 2;
   };
   return {
     root, animate, updateView, updateStagedRestoration,

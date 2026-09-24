@@ -1,4 +1,5 @@
 import { shouldCelebrateSunshoreMaxRoll } from '../services/islandRunCreatureCelebration';
+import { Island17AwakeningMission } from './Island17AwakeningMission';
 import { ArenaTicketEntry } from './ArenaTicketEntry';
 import { resolveLandmarkAttention } from '../services/islandRunLandmarkAttention';
 import { NotificationBadge } from '../../../../components/NotificationBadge';
@@ -3496,6 +3497,9 @@ export function IslandRunBoardPrototype({
       ? Math.max(0, Math.min(stagedRestorationVisualDescriptor.stageCount, Math.floor(requested)))
       : stagedRestorationVisualDescriptor.stageCount;
   }, [isIslandVisualPreview, stagedRestorationVisualDescriptor]);
+  const [showTitanAwakening, setShowTitanAwakening] = useState(false);
+  const closeTitanAwakening = useCallback(() => setShowTitanAwakening(false), []);
+  useEffect(() => { setShowTitanAwakening(false); }, [islandNumber, __storeState.cycleIndex]);
   const stagedRestorationProgress = useMemo(() => resolveStagedRestorationMissionProgress({
     ledger: __storeState.signatureMissionProgressByIsland,
     cycleIndex: __storeState.cycleIndex,
@@ -13682,6 +13686,7 @@ export function IslandRunBoardPrototype({
       showVaultIslandCollection ||
       showMissionPhoneBriefing ||
       Boolean(activeMissionBriefing) ||
+      showTitanAwakening ||
       showFrostwellMission ||
       showFirstLightAssemblyCrater ||
       showCactusCanyonSpiral ||
@@ -14181,6 +14186,9 @@ export function IslandRunBoardPrototype({
     if (isCompassBookCeremonyPlaying || isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
     const isLivingCompass = stagedRestorationDescriptor.missionId === 'jungle-expedition-living-compass';
     setShowMissionPhoneBriefing(false);
+    if (stagedRestorationDescriptor.islandNumber === 17 && stagedRestorationProgress.activatedStages >= 8) {
+      setShowTitanAwakening(true); return;
+    }
     if (stagedRestorationProgress.completedAtMs !== null) {
       if (isLivingCompass) presentCompassBookCeremony(false);
       // Canonical completion is immutable; this only replays the world payoff.
@@ -14229,6 +14237,10 @@ export function IslandRunBoardPrototype({
       playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
       if (completed) {
+        if (stagedRestorationDescriptor.islandNumber === 17) {
+          setLandingText('The well is awake. Open the mission phone to prepare the summoning potion.');
+          return;
+        }
         if (stagedRestorationDescriptor.islandNumber === 20) {
           beginLavaSkiffEscape();
           return;
@@ -16077,6 +16089,8 @@ export function IslandRunBoardPrototype({
                     isIslandVisualPreview && typeof window !== 'undefined'
                     && new URLSearchParams(window.location.search).get('stagedMissionReplay') === '1' ? 1 : 0
                   ),
+                  titanAwakening: stagedRestorationProgress?.titanAwakening,
+                  titanInspectionOpen: showTitanAwakening,
                   claimedPickupTileIndices: stagedRestorationProgress?.claimedPickupTileIndices ?? [],
                 } : undefined}
                 island20SkiffNavigation={lavaSkiffNavigation}
@@ -20001,6 +20015,7 @@ export function IslandRunBoardPrototype({
         }}
       />
 
+      {showTitanAwakening && islandNumber === 17 && <Island17AwakeningMission session={session} client={client} onClose={closeTitanAwakening} />}
       <IslandMissionBriefingModal
         variant={jungleMissionAction ? 'living-compass' : 'default'}
         isOpen={Boolean(activeMissionBriefing) || showMissionPhoneBriefing}
@@ -20019,7 +20034,9 @@ export function IslandRunBoardPrototype({
           : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? firstLightAssemblyProgress.mandateSignedAtMs != null ? 'View sealed mandate' : 'Sign the peacekeeping mandate'
           : showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.label : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
-          ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
+          ? stagedRestorationDescriptor.islandNumber === 17 && stagedRestorationProgress.activatedStages >= 8
+            ? 'Open the Titan’s Last Thought'
+            : stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
             ? 'Solve the Level-3 Labyrinth first'
             : stagedRestorationDescriptor.islandNumber === 20
               && stagedRestorationProgress.completedAtMs !== null
@@ -20037,7 +20054,9 @@ export function IslandRunBoardPrototype({
               ? `Pour nectar · stage ${greatHoneyfallProgress.activatedReservoirs + 1} of ${GREAT_HONEYFALL_MAX_STAGE}`
               : 'Find royal nectar on the route'
           : undefined}
-        primaryActionHint={showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.hint : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+        primaryActionHint={showMissionPhoneBriefing && islandNumber === 17 && stagedRestorationProgress?.activatedStages === 8
+          ? 'Brew the potion, summon the skull and unlock the spirit within. Free to tinker; progress saves.'
+          : showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.hint : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
             ? 'Complete all five objectives, resolve the Hatchery egg and restore every landmark to Level 3. The emergency extraction mission launches immediately afterward.'
             : stagedRestorationDescriptor.islandNumber === 20

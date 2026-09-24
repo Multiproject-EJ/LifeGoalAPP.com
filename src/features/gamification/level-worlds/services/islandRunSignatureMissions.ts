@@ -1,3 +1,4 @@
+import { sanitizeTitanAwakening, mergeTitanAwakening, type TitanAwakening } from './island17Awakening';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
   OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
@@ -332,6 +333,7 @@ export interface FishermansVillageFishingProgress {
 }
 
 export interface StagedRestorationMissionProgress {
+  titanAwakening?: TitanAwakening;
   missionId: StagedRestorationMissionId;
   version: 1;
   claimedPickupTileIndices: number[];
@@ -443,6 +445,7 @@ export function sanitizeIslandRunSignatureMissionProgress(
       const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
       result[key] = {
         missionId: stagedDescriptor.missionId,
+        ...(stagedDescriptor.islandNumber === 17 ? { titanAwakening: sanitizeTitanAwakening(record.titanAwakening, !record.titanAwakening && activatedStages >= 8) } : {}),
         version: 1,
         claimedPickupTileIndices,
         chargesEarned,
@@ -917,7 +920,12 @@ export function resolveStagedRestorationMissionProgress(options: {
   if (!descriptor) return null;
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, descriptor.islandNumber);
   const current = options.ledger[key];
-  if (current?.missionId === descriptor.missionId) return current as StagedRestorationMissionProgress;
+  if (current?.missionId === descriptor.missionId) {
+    const staged = current as StagedRestorationMissionProgress;
+    return descriptor.islandNumber === 17 ? { ...staged,
+      titanAwakening: sanitizeTitanAwakening(staged.titanAwakening, !staged.titanAwakening && staged.activatedStages >= 8),
+    } : staged;
+  }
   const isReassignedIslandMission = current && (
     (descriptor.missionId === 'jungle-expedition-living-compass' && current.missionId === 'great-pollination')
     || (descriptor.missionId === 'great-pollination' && current.missionId === 'jungle-expedition-living-compass')
@@ -927,6 +935,7 @@ export function resolveStagedRestorationMissionProgress(options: {
   }
   return {
     missionId: descriptor.missionId,
+    ...(descriptor.islandNumber === 17 ? { titanAwakening: sanitizeTitanAwakening(null) } : {}),
     version: 1,
     claimedPickupTileIndices: [],
     chargesEarned: 0,
@@ -1637,6 +1646,10 @@ export function mergeIslandRunSignatureMissionProgress(
           : Math.min(left.finaleCompletedAtMs, right.finaleCompletedAtMs);
       merged[key] = {
         missionId: stagedA.missionId,
+        ...(stagedA.islandNumber === 17 ? { titanAwakening: mergeTitanAwakening(
+          sanitizeTitanAwakening(left.titanAwakening, !left.titanAwakening && left.activatedStages >= 8),
+          sanitizeTitanAwakening(right.titanAwakening, !right.titanAwakening && right.activatedStages >= 8),
+        ) } : {}),
         version: 1,
         claimedPickupTileIndices,
         chargesEarned,

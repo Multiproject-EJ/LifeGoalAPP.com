@@ -1,8 +1,11 @@
+import type { TitanAwakening } from '../services/island17Awakening';
 import * as THREE from 'three';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 import type { Island3DQuality } from './island5ThreePilotContract';
 
 export interface IslandStagedRestorationPresentation {
+  titanAwakening?: TitanAwakening;
+  titanInspectionOpen?: boolean;
   islandNumber: 4 | 6 | 7 | 8 | 9 | 17 | 18 | 19 | 20;
   activatedStages: number;
   stageCount: number;

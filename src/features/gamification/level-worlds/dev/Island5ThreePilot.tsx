@@ -5407,13 +5407,13 @@ export default function Island5ThreePilot({
       }, jungleZenithPreviewEnabled || jungleMissionPreviewStage !== null);
     }
     let stagedRestorationPresentationKey = stagedRestorationInitial
-      ? `${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}:${(stagedRestorationInitial.claimedPickupTileIndices ?? []).join(',')}`
+      ? `${stagedRestorationInitial.titanAwakening?.revision ?? 0}:${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}:${(stagedRestorationInitial.claimedPickupTileIndices ?? []).join(',')}`
       : '';
     let ironSkiffPresentationKey = isLavaLabyrinth && stagedRestorationInitial
       ? `${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}`
       : '';
     const clickableSignatureMissions = stagedRestorationRuntime
-      ? [stagedRestorationRuntime.missionHitTarget]
+      ? [stagedRestorationRuntime.missionHitTarget, ...(isTitansRest ? [livingAmbience.root.getObjectByName('ISLAND_17_AWAKENING_HIT_TARGET')!].filter(Boolean) : [])]
       : isAssemblyCraterFirstLight
       ? [scene.getObjectByName('ISLAND_1_ASSEMBLY_CRATER_MISSION_HIT_TARGET')].filter(
           (candidate): candidate is THREE.Object3D => Boolean(candidate),
@@ -8868,6 +8868,12 @@ export default function Island5ThreePilot({
       scene.add(openingCeremonyFx.root);
     }
     const animate = (now: number) => {
+      // The opaque inspection portal owns the screen. Retain the world, but
+      // avoid rendering two expensive WebGL scenes on a phone simultaneously.
+      if (isTitansRest && stagedRestorationPresentationRef.current?.titanInspectionOpen) {
+        animationFrame = window.requestAnimationFrame(animate);
+        return;
+      }
       animationFrame = window.requestAnimationFrame(animate);
       timer.update(now);
       const elapsed = timer.getElapsed();
@@ -8993,7 +8999,7 @@ export default function Island5ThreePilot({
       const resolvedStagedRestorationPresentation = resolveStagedRestorationPresentation(elapsed);
       if (stagedRestorationRuntime && resolvedStagedRestorationPresentation) {
         const nextPresentation = resolvedStagedRestorationPresentation;
-        const nextKey = `${nextPresentation.activatedStages}:${nextPresentation.constructionSequence ?? 0}:${(nextPresentation.claimedPickupTileIndices ?? []).join(',')}`;
+        const nextKey = `${nextPresentation.titanAwakening?.revision ?? 0}:${nextPresentation.activatedStages}:${nextPresentation.constructionSequence ?? 0}:${(nextPresentation.claimedPickupTileIndices ?? []).join(',')}`;
         if (nextKey !== stagedRestorationPresentationKey) {
           stagedRestorationPresentationKey = nextKey;
           stagedRestorationRuntime.update(nextPresentation, isReducedMotion);
@@ -10798,6 +10804,7 @@ export default function Island5ThreePilot({
       }
       window.cancelAnimationFrame(animationFrame);
       firstArrival?.dispose();
+      livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
       moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;

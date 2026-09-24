@@ -1,3 +1,4 @@
+import { island17AwakeningTests } from './island17Awakening.test';
 import { landmarkAttentionTests } from './landmarkAttention.test';
 import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
@@ -223,6 +224,7 @@ import { feedPetCompanionPresentationTests } from '../../../../habits/feedPetCom
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
+  { label: 'island17Awakening', tests: island17AwakeningTests },
   { label: 'landmarkAttention', tests: landmarkAttentionTests },
   { label: 'developerDayLoop', tests: developerDayLoopTests },
   { label: 'islandRunStoryFastMode', tests: islandRunStoryFastModeTests },
