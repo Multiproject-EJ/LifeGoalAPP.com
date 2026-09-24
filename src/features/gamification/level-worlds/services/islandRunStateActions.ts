@@ -1,5 +1,7 @@
 import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
 import { withIslandRunActionLock } from './islandRunActionMutex';
+import { resolveIslandRunRestorationDiceReward } from './islandRunRestorationReward';
+export { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from './islandRunRestorationReward';
 /**
  * islandRunStateActions — pure action functions that mutate Island Run
  * gameplay state through the store ({@link islandRunStateStore}).
@@ -4436,6 +4438,9 @@ export interface ApplyStopBuildSpendBatchOptions {
 export interface ApplyStopBuildSpendBatchResult {
   record: IslandRunGameStateRecord;
   stepsApplied: number;
+  constructionDiceAwarded: number;
+  restorationDiceAwarded: number;
+  diceAwarded: number;
   failureReason?: IslandRunContractV2BuildSpendFailureReason;
 }
 
@@ -5037,7 +5042,7 @@ async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatc
   } = options;
   const current = getIslandRunStateSnapshot(session);
   if (stopIndex < 0 || stopIndex >= current.stopBuildStateByIndex.length) {
-    return { record: current, stepsApplied: 0, failureReason: 'invalid_stop' };
+    return { record: current, stepsApplied: 0, constructionDiceAwarded: 0, restorationDiceAwarded: 0, diceAwarded: 0, failureReason: 'invalid_stop' };
   }
 
   const safeMaxSteps = Math.max(1, Math.floor(maxSteps));
@@ -5078,12 +5083,16 @@ async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatc
   }
 
   if (stepsApplied < 1) {
-    return { record: current, stepsApplied: 0, failureReason };
+    return { record: current, stepsApplied: 0, constructionDiceAwarded: 0, restorationDiceAwarded: 0, diceAwarded: 0, failureReason };
   }
+
+  const constructionDiceAwarded = Math.max(0, (nextStopBuildStateByIndex[stopIndex]?.buildLevel ?? 0) - (initialBuildState?.buildLevel ?? 0));
+  const restorationDiceAwarded = resolveIslandRunRestorationDiceReward(current.stopBuildStateByIndex, nextStopBuildStateByIndex);
+  const diceAwarded = constructionDiceAwarded + restorationDiceAwarded;
 
   const next: IslandRunGameStateRecord = {
     ...current,
-    dicePool: current.dicePool + Math.max(0, (nextStopBuildStateByIndex[stopIndex]?.buildLevel ?? 0) - (initialBuildState?.buildLevel ?? 0)),
+    dicePool: current.dicePool + diceAwarded,
     essence: nextEssence,
     essenceLifetimeSpent: nextEssenceLifetimeSpent,
     stopBuildStateByIndex: nextStopBuildStateByIndex,
@@ -5107,9 +5116,9 @@ async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatc
     record: next,
     triggerSource: triggerSource ?? 'apply_stop_build_spend_batch',
   });
-  const diceAward = next.dicePool - current.dicePool;
-  if (diceAward > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.constructionLevelDice, amount: diceAward, sessionId: session.user.id, metadata: { mode: 'hold_or_part', island: current.currentIslandNumber } });
-  return { record: next, stepsApplied };
+  if (constructionDiceAwarded > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.constructionLevelDice, amount: constructionDiceAwarded, sessionId: session.user.id, metadata: { mode: 'hold_or_part', island: current.currentIslandNumber } });
+  if (restorationDiceAwarded > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.fullRestorationDice, amount: restorationDiceAwarded, sessionId: session.user.id, metadata: { island: current.currentIslandNumber, cycleIndex: current.cycleIndex } });
+  return { record: next, stepsApplied, constructionDiceAwarded, restorationDiceAwarded, diceAwarded };
 }
 
 // ── C3: Island travel ────────────────────────────────────────────────────────

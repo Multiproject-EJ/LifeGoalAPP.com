@@ -13,6 +13,8 @@ import {
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getStagedRestorationPickupTileIndices,
 } from '../services/islandRunSignatureMissions';
+import { deriveBuildModalV2ViewModel } from '../services/islandRunBuildModalV2ViewModel';
+import { BuildModalV2 } from '../components/BuildModalV2';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
 import {
@@ -20,6 +22,7 @@ import {
   type LavaSkiffControllerState,
 } from '../components/LavaSkiffControllerAdapter';
 import type { IslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
+import '../LevelWorlds.css';
 import './IslandTemplateKitPage.css';
 
 type ViewMode = 'blueprint' | 'clay' | 'proof' | '3d';
@@ -33,7 +36,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   const constructionProgress = Math.min(1, Math.max(0, Number(params.get('constructionProgress') ?? '0.58')));
   const requestedLandmark = params.get('landmark');
@@ -118,6 +121,8 @@ function readInitialPreviewState() {
     frostwellBuilt,
     frostwellCutawayTimeSeconds,
     frostwellCutawayView,
+    spineStages: Math.max(0, Math.min(8, Number(params.get('spineStages') ?? 8) || 0)),
+    spineFocus: params.get('mission') === 'spine',
     overlays: params.get('guides') !== '0',
     construction: params.get('construction') === '1',
     constructionWorking: params.get('working') !== '0',
@@ -128,6 +133,8 @@ function readInitialPreviewState() {
     constructionReview: params.get('constructionState') === 'review',
     constructionCelebration: params.get('constructionState') === 'celebration',
     focusPreset,
+    constructionCompletion: params.get('completion') === '1',
+    showCompletionModal: params.get('completionModal') === '1',
   };
 }
 
@@ -276,6 +283,9 @@ export default function IslandTemplateKitPage() {
   const [moonwellSequence, setMoonwellSequence] = useState(0);
   const closeMoonwellFixture = useCallback(() => setMoonwellModal(false), []);
 
+  const [spineStages, setSpineStages] = useState(initialState.spineStages);
+  const [spineSequence, setSpineSequence] = useState(0);
+  const [showCompletionModal, setShowCompletionModal] = useState(initialState.showCompletionModal);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
   // Developer-only presentation controls; never persist or purchase progress.
@@ -289,6 +299,23 @@ export default function IslandTemplateKitPage() {
     // Production review holds its work camera until the player continues.
     const working = review || constructionFixture === 'working' || constructionFixture === 'initial' && initialState.constructionWorking;
     const progress = review || celebration ? 1 : initialState.constructionProgress;
+    if (initialState.constructionCompletion && constructionFixture === 'initial') {
+      return {
+        active: true,
+        working: false,
+        cameraLocked: true,
+        completionCelebration: true,
+        phase: 'finish',
+        progress: 1,
+        sequence: 2,
+        sourceLevel: 3,
+        commissioning: false,
+        cloudCover: 0,
+        targetStopId: initialState.constructionLandmark,
+        targetLevel: 3,
+        reducedMotion: initialState.constructionReducedMotion,
+      };
+    }
     return {
       active: true,
       working,
@@ -311,6 +338,22 @@ export default function IslandTemplateKitPage() {
       reducedMotion: initialState.constructionReducedMotion,
     };
   }, [initialState, constructionFixture, constructionFixtureSequence, constructionFixtureLandmark]);
+  const completedBuildViewModel = useMemo(() => deriveBuildModalV2ViewModel({
+    stopBuildStateByIndex: [30, 70, 90, 120, 200].map((requiredEssence) => ({
+      requiredEssence,
+      spentEssence: requiredEssence,
+      buildLevel: 3,
+    })),
+    islandStopPlan: [
+      { stopId: 'hatchery', title: 'Bone Hollow' },
+      { stopId: 'habit', title: 'Strength Altar' },
+      { stopId: 'mystery', title: 'Coliseum Pit' },
+      { stopId: 'wisdom', title: "Oracle's Cranium" },
+      { stopId: 'boss', title: "Titan's Rest" },
+    ],
+    essenceAvailable: 0,
+    islandArtManifest: null,
+  }), []);
   const evidenceCapture = useMemo(
     () => new URLSearchParams(window.location.search).get('island3dEvidence') === '1',
     [],
@@ -517,6 +560,17 @@ export default function IslandTemplateKitPage() {
               ) : null}
             </div>
           ) : null}
+          {mode === '3d' && initialState.islandNumber === 17 ? (
+            <div className="island-kit-control-group">
+              <label htmlFor="spine-stages">Spine sections {spineStages}/8</label>
+              <input id="spine-stages" type="range" min="0" max="8" step="1" value={spineStages}
+                onChange={event => setSpineStages(Number(event.target.value))} />
+              <button type="button" onClick={() => {
+                setSpineStages(value => Math.min(8, value + 1));
+                setSpineSequence(value => value + 1);
+              }}>{spineStages === 8 ? 'Replay finale' : 'Repair section'}</button>
+            </div>
+          ) : null}
           <dl className="island-kit-specs">
             <div><dt>Scene</dt><dd>1400 × 1600</dd></div>
             <div><dt>Board anchor</dt><dd>700, 800</dd></div>
@@ -546,7 +600,7 @@ export default function IslandTemplateKitPage() {
                 ? initialState.constructionLandmark === 'mystery'
                   ? 'event'
                   : initialState.constructionLandmark as 'hatchery' | 'habit' | 'wisdom' | 'boss'
-                : previewFocusPreset}
+                : previewFocusPreset ?? (initialState.islandNumber === 17 && initialState.spineFocus ? 'titan-spine' : null)}
               constructionPresentation={constructionPresentation}
               signatureMissionPresentation={{
                 metersDrilled: frostwellSequence.held?.meters ?? frostwellFixtureDepth,
@@ -593,6 +647,9 @@ export default function IslandTemplateKitPage() {
                 stageCount: 4,
                 constructionSequence: firebridgeSequence,
                 claimedPickupTileIndices: [],
+              } : initialState.islandNumber === 17 ? {
+                islandNumber: 17, activatedStages: spineStages, stageCount: 8,
+                constructionSequence: spineSequence,
               } : undefined}
               island20SkiffNavigation={initialState.islandNumber === 20 ? firebridgeEscape : undefined}
               onIsland20SkiffRunComplete={initialState.islandNumber === 20 ? () => {
@@ -618,6 +675,22 @@ export default function IslandTemplateKitPage() {
           ))}
         </aside>
       </section>
+      <BuildModalV2
+        isOpen={showCompletionModal}
+        islandNumber={initialState.islandNumber}
+        essenceAvailable={0}
+        viewModel={completedBuildViewModel}
+        isBuildHoldActive={false}
+        isBuildInteractionLocked={false}
+        buildInteractionLockLabel=""
+        buildHoldFeedbackLabel=""
+        isBuildModalHatcheryGuidanceActive={false}
+        onClose={() => setShowCompletionModal(false)}
+        onAdvanceLevelReview={() => undefined}
+        onBuildPartChoice={() => undefined}
+        onStartBuildHold={() => undefined}
+        onStopBuildHold={() => undefined}
+      />
     </main>
   );
 }

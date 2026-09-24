@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 18 | 19 | 20 | 22;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 20 | 22;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -50,6 +50,10 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
     // Its palace is authored procedurally by Island5ThreePilot; there is no GLB route.
     role: 'ordinary',
   },
+  // The Titan's Rest source image is baked with an ISLAND 016 label, but
+  // Eivind reassigned that death/Titan world to runtime Island 017 so runtime
+  // Island 016 can remain Fisherman's Village.
+  { runtimeIslandNumber: 17, worldSourceNumber: 17, role: 'ordinary' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

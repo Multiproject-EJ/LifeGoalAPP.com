@@ -28,13 +28,20 @@ export const islandRunFastBuildTests: TestCase[] = [
       const result = resolveIslandRunFastBuild(before, quote);
       assert(result.applied, 'accepted');
       assertEqual(result.record.essence, before.essence - expected, 'exact spend');
-      assertEqual(result.record.dicePool, 10 + (3 - level) * (island === 1 ? 4 : 5), 'dice per new level');
+      const levelDice = (3 - level) * (island === 1 ? 4 : 5);
+      const restorationDice = island === 1 ? 0 : 100;
+      assertEqual(result.diceAward, levelDice, 'legacy level count remains separate');
+      assertEqual(result.constructionDiceAwarded, levelDice, 'dice per new level');
+      assertEqual(result.restorationDiceAwarded, restorationDice, 'full restoration bonus only when all five reach L3');
+      assertEqual(result.diceAwarded, levelDice + restorationDice, 'actual award includes both sources');
+      assertEqual(result.record.dicePool, 10 + levelDice + restorationDice, 'both awards are committed together');
       assert(result.record.stopStatesByIndex.every(stop => !stop.objectiveComplete), 'activities remain');
       assertEqual(result.record.activeStopIndex, 0, 'no unlock');
       assertEqual(result.record.activeEggTier, 'rare', 'egg preserved');
       assertEqual(result.record.bossTrialResolvedIslandNumber, null, 'boss preserved');
       if (island === 1) assertEqual(result.record.stopBuildStateByIndex[4].buildLevel, level, 'Assembly excluded');
       assert(!resolveIslandRunFastBuild(result.record, quote).applied, 'replay cannot award/spend twice');
+      assertEqual(resolveIslandRunFastBuild(result.record, quote).diceAwarded, 0, 'replay pays neither reward');
       assertEqual(before.stopBuildStateByIndex[0].buildLevel, level, 'input unmodified');
     }
   } },
@@ -44,6 +51,22 @@ export const islandRunFastBuildTests: TestCase[] = [
     assertEqual(result.record.stopBuildStateByIndex[2].buildLevel, 3, 'chosen landmark');
     assertEqual(result.record.stopBuildStateByIndex[0].buildLevel, 1, 'other landmark');
     assertEqual(result.diceAward, 2, 'only two levels');
+    assertEqual(result.restorationDiceAwarded, 0, 'one landmark is not full restoration');
+    assertEqual(result.diceAwarded, 2, 'no early completion payout');
+  } },
+  { name: 'final landmark awards restoration once and a fresh cycle can earn it again', run: () => {
+    for (const cycle of [0, 1]) {
+      const before = record(17, 3, cycle);
+      before.stopBuildStateByIndex[4] = { requiredEssence: 200, spentEssence: 190, buildLevel: 2 };
+      const quote = quoteIslandRunFastBuild(before, 'landmark', 4)!;
+      const result = resolveIslandRunFastBuild(before, quote);
+      assertEqual(result.diceAward, 1, 'one newly funded level');
+      assertEqual(result.restorationDiceAwarded, 100, 'each cycle can restore its fresh buildings');
+      assertEqual(result.diceAwarded, 101, 'actual award includes level and restoration');
+      assertEqual(result.record.dicePool, 111, 'both sources added to existing balance');
+      assertEqual(resolveIslandRunFastBuild(result.record, quote).diceAwarded, 0, 'persisted completion cannot pay again');
+      assertEqual(quoteIslandRunFastBuild(result.record, 'island', 0), null, 'completed visit has no payable quote');
+    }
   } },
   { name: 'fast build rejects insufficient money, stale progress, expired discount and another visit atomically', run: () => {
     const before = record(); const quote = quoteIslandRunFastBuild(before, 'island', 0)!;

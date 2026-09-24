@@ -18,7 +18,7 @@ const ISLAND_NAMES: readonly string[] = [
   'Mango Isle',
   'Crystal Glacier Citadel',
   'Windy Coast',
-  'Hidden Lagoon',
+  "Titan's Rest",
   'The Everblossom Kingdom',
   'Bamboo Bay',
   'Lava Labyrinth',

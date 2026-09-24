@@ -341,8 +341,9 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(results.filter(result => result.applied).length, 1, 'only one accepted action');
       const after = getIslandRunStateSnapshot(session);
       assertEqual(after.essence, before.essence - quote.cost, 'cost once');
-      assertEqual(after.dicePool, 25, 'fifteen completed levels rewarded once');
-      assertEqual(readIslandRunGameStateRecord(session).dicePool, 25, 'reward survives local hydration');
+      assertEqual(after.dicePool, 125, 'fifteen levels plus restoration rewarded once');
+      assertEqual(results.reduce((sum, result) => sum + result.restorationDiceAwarded, 0), 100, 'parallel fast builds pay one restoration bonus');
+      assertEqual(readIslandRunGameStateRecord(session).dicePool, 125, 'reward survives local hydration');
       assert(after.stopStatesByIndex.every(stop => !stop.objectiveComplete), 'no activities skipped');
     },
   },
@@ -4956,6 +4957,123 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.stopStatesByIndex[0]?.buildComplete, true, 'large repeated-click batch should mark the build complete');
       assertEqual(notifications, 1, 'large repeated-click batch should commit once');
       unsub();
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch grants the final level die and restoration bonus once',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 38,
+        currentIslandNumber: 17,
+        dicePool: 12,
+        essence: 10,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 30, spentEssence: 30, buildLevel: 3 },
+          { requiredEssence: 70, spentEssence: 70, buildLevel: 3 },
+          { requiredEssence: 90, spentEssence: 90, buildLevel: 3 },
+          { requiredEssence: 120, spentEssence: 120, buildLevel: 3 },
+          { requiredEssence: 200, spentEssence: 190, buildLevel: 2 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 4,
+        effectiveIslandNumber: 17,
+        maxSteps: 1,
+      });
+
+      assertEqual(result.stepsApplied, 1, 'the final build step should apply');
+      assertEqual(result.constructionDiceAwarded, 1, 'one newly completed level');
+      assertEqual(result.restorationDiceAwarded, 100, 'completion bonus reported separately');
+      assertEqual(result.diceAwarded, 101, 'actual reward includes both sources');
+      assertEqual(result.record.dicePool, 113, 'both sources commit atomically');
+      assertEqual(readIslandRunGameStateRecord(session).dicePool, 113, 'the reward survives local hydration');
+
+      const repeated = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 4,
+        effectiveIslandNumber: 17,
+        maxSteps: 1,
+      });
+      assertEqual(repeated.stepsApplied, 0, 'an already completed build cannot transition again');
+      assertEqual(repeated.diceAwarded, 0, 'an already completed build cannot pay twice');
+      assertEqual(repeated.restorationDiceAwarded, 0, 'restoration cannot pay twice');
+      assertEqual(repeated.record.dicePool, 113, 'the dice reward should remain idempotent');
+    },
+  },
+  {
+    name: 'hold restoration pays only on completion and parallel final holds pay once per cycle',
+    run: async () => {
+      for (const cycleIndex of [0, 1]) {
+        resetAll();
+        const session = makeSession();
+        seedState({
+          currentIslandNumber: 17, cycleIndex, dicePool: 12, essence: 20,
+          essenceLifetimeSpent: 0,
+          stopBuildStateByIndex: [
+            ...Array.from({ length: 4 }, () => ({ requiredEssence: 100, spentEssence: 100, buildLevel: 3 })),
+            { requiredEssence: 200, spentEssence: 180, buildLevel: 2 },
+          ],
+          stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({ objectiveComplete: false, buildComplete: index < 4 })),
+        });
+        const hold = () => applyStopBuildSpendBatch({ session, client: null, stopIndex: 4, effectiveIslandNumber: 17 + cycleIndex * 120, maxSteps: 1 });
+        const partial = await hold();
+        assertEqual(partial.restorationDiceAwarded, 0, 'partial final level is not restoration');
+        assertEqual(partial.diceAwarded, 0, 'partial funding grants no dice');
+        const results = await Promise.all([hold(), hold()]);
+        assertEqual(results.reduce((sum, result) => sum + result.diceAwarded, 0), 101, 'parallel final holds award one level and one bonus');
+        assertEqual(getIslandRunStateSnapshot(session).dicePool, 113, 'each fresh cycle earns exactly one completion reward');
+        assertEqual((await hold()).diceAwarded, 0, 'completed cycle cannot replay');
+      }
+    },
+  },
+  {
+    name: 'final hold and fast builds serialize without charging or rewarding twice',
+    run: async () => {
+      for (const holdFirst of [true, false]) {
+        resetAll();
+        const session = makeSession();
+        seedState({
+          currentIslandNumber: 17,
+          cycleIndex: 0,
+          firstSessionTutorialState: 'complete',
+          dicePool: 12,
+          essence: 10,
+          essenceLifetimeSpent: 0,
+          stopBuildStateByIndex: [
+            { requiredEssence: 30, spentEssence: 30, buildLevel: 3 },
+            { requiredEssence: 70, spentEssence: 70, buildLevel: 3 },
+            { requiredEssence: 90, spentEssence: 90, buildLevel: 3 },
+            { requiredEssence: 120, spentEssence: 120, buildLevel: 3 },
+            { requiredEssence: 200, spentEssence: 190, buildLevel: 2 },
+          ],
+          stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({
+            objectiveComplete: false,
+            buildComplete: index < 4,
+          })),
+        });
+        const quote = quoteIslandRunFastBuild(getIslandRunStateSnapshot(session), 'island', 4)!;
+        assert(Boolean(quote), 'the remaining level has a valid fast-build quote');
+        const hold = () => applyStopBuildSpendBatch({ session, client: null, stopIndex: 4, effectiveIslandNumber: 17, maxSteps: 1 });
+        const fast = () => applyIslandRunFastBuild({ session, client: null, quote });
+        const results = await Promise.all(holdFirst ? [hold(), fast()] : [fast(), hold()]);
+        assertEqual(results.reduce((sum, result) => sum + result.restorationDiceAwarded, 0), 100, 'only one completion bonus across both actions');
+        assertEqual(results.reduce((sum, result) => sum + result.constructionDiceAwarded, 0), 1, 'only one newly completed level across both actions');
+        const after = getIslandRunStateSnapshot(session);
+        assertEqual(after.essence, 0, 'the final step is charged once');
+        assertEqual(after.essenceLifetimeSpent, 10, 'spend accounting is not duplicated');
+        assertEqual(after.dicePool, 113, 'level die plus restoration granted once regardless of action order');
+        assertEqual(readIslandRunGameStateRecord(session).dicePool, 113, 'the final reward is persisted');
+        assert(after.stopStatesByIndex.every(stop => !stop.objectiveComplete), 'construction does not complete activities');
+        assertEqual((await hold()).diceAwarded, 0, 'a repeated hold grants nothing');
+        assertEqual((await fast()).applied, false, 'the old fast-build quote cannot replay');
+      }
     },
   },
   {

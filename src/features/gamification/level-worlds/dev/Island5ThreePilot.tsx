@@ -326,6 +326,15 @@ import {
   type Island15PalaceFramingBounds,
   type Island15PalaceRoomPreset,
 } from './island15/Island15CameraDirector';
+import {
+  buildIsland17TitansRestLandmark,
+  collectIsland17RuntimePartManifest,
+  createIsland17TitansRestLivingAmbience,
+  createIsland17TitansRestMaterials,
+  registerIsland17RuntimePart,
+  ISLAND_17_TITANS_REST_LANDMARK_LABELS,
+  ISLAND_17_TITANS_REST_WORLD_NAME,
+} from './Island17TitansRestThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -2515,6 +2524,8 @@ interface Island5AmbienceRuntime {
   dispose?: () => void;
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3, reducedMotion?: boolean) => void;
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
+  updateStagedRestoration?: (presentation: IslandStagedRestorationPresentation, immediate?: boolean) => void;
+  missionHitTarget?: THREE.Object3D;
   registerRedockingLandmark?: (landmarkId: Island5LandmarkDefinition['id'], root: THREE.Object3D) => void;
   updateRedocking?: (presentation: Island2CelestialRedockingPresentation, immediate?: boolean) => void;
   consumeShadowUpdate?: () => boolean;
@@ -3682,6 +3693,7 @@ export default function Island5ThreePilot({
     && typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('island19BoardFocus') === '1';
   const isCrystalGlacier = resolvedWorldSourceNumber === 15;
+  const isTitansRest = resolvedWorldSourceNumber === 17;
   const worldName = isAssemblyCraterFirstLight
     ? ISLAND_1_ASSEMBLY_CRATER_NAME
     : isFirstLightKingdom
@@ -3722,6 +3734,8 @@ export default function Island5ThreePilot({
                             : isCircuitFPreviewEnabled
                               ? ISLAND_19_CIRCUIT_F_WORLD_NAME
                               : ISLAND_19_HYBRID_WORLD_NAME
+                      : isTitansRest
+                        ? ISLAND_17_TITANS_REST_WORLD_NAME
                         : isFishermansVillage
                           ? ISLAND_22_FISHERMANS_VILLAGE_WORLD_NAME
               : 'Crown of Tides';
@@ -5117,6 +5131,7 @@ export default function Island5ThreePilot({
       canvas.dataset.island19HybridWorldTrainView = 'geometry-proof-only';
     }
     const island15CrystalGlacierMaterials = isCrystalGlacier ? createIsland15CrystalGlacierMaterials() : null;
+    const island17TitansRestMaterials = isTitansRest ? createIsland17TitansRestMaterials() : null;
     const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom || isEverblossomKingdom || isSunkenSands;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
@@ -5168,7 +5183,7 @@ export default function Island5ThreePilot({
 
     // Dedicated worlds own their continuous terrain. Frostmoon's deep ice
     // shelf replaces the old coastal plates, bridges and decorative lagoon.
-    if (!isSunshoreAtoll && !isFrostmoonHaven && !isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier) {
+    if (!isSunshoreAtoll && !isFrostmoonHaven && !isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier && !isTitansRest) {
       const firstLightMainDepth = 3.4;
       const island = isAssemblyCraterFirstLight && island1Materials
         ? createIsland1AssemblyCraterTerrain(qualityProfile.id, {
@@ -5271,6 +5286,8 @@ export default function Island5ThreePilot({
               ? createIsland20LavaLabyrinthLivingAmbience(scene, qualityProfile, island20LavaLabyrinthMaterials, buildLevel)
             : isCrystalGlacier && island15CrystalGlacierMaterials
               ? createIsland15CrystalGlacierLivingAmbience(scene, qualityProfile, island15CrystalGlacierMaterials, water)
+            : isTitansRest && island17TitansRestMaterials
+              ? createIsland17TitansRestLivingAmbience(scene, qualityProfile, island17TitansRestMaterials, water)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
     const jungleInspectionOccluders = isJungleExpedition
       ? [
@@ -5358,9 +5375,20 @@ export default function Island5ThreePilot({
         : stagedRestorationPresentationRef.current ?? null
     );
     const stagedRestorationInitial = resolveStagedRestorationPresentation();
-    const stagedRestorationRuntime = stagedRestorationInitial
-      && stagedRestorationInitial.islandNumber !== 20
-      && [4, 6, 7, 8, 9, 18, 19].includes(stagedRestorationInitial.islandNumber)
+    const stagedRestorationRuntime = stagedRestorationInitial?.islandNumber === 17
+      && livingAmbience.updateStagedRestoration && livingAmbience.missionHitTarget
+      ? {
+          root: livingAmbience.root,
+          missionHitTarget: livingAmbience.missionHitTarget,
+          update: livingAmbience.updateStagedRestoration,
+          animate: (_elapsed: number, reducedMotion: boolean) => {
+            if (reducedMotion) livingAmbience.animate(0);
+          },
+        }
+      : stagedRestorationInitial
+        && stagedRestorationInitial.islandNumber !== 17
+        && stagedRestorationInitial.islandNumber !== 20
+        && [4, 6, 7, 8, 9, 18, 19].includes(stagedRestorationInitial.islandNumber)
       ? createIslandStagedRestorationThreePresentation({
           islandNumber: stagedRestorationInitial.islandNumber,
           stageCount: stagedRestorationInitial.stageCount,
@@ -5368,7 +5396,7 @@ export default function Island5ThreePilot({
         })
       : null;
     if (stagedRestorationRuntime && stagedRestorationInitial) {
-      scene.add(stagedRestorationRuntime.root);
+      if (!stagedRestorationRuntime.root.parent) scene.add(stagedRestorationRuntime.root);
       stagedRestorationRuntime.update(stagedRestorationInitial, true);
     }
     if (isJungleExpedition && stagedRestorationInitial) {
@@ -6046,6 +6074,14 @@ export default function Island5ThreePilot({
                   )
               : isCrystalGlacier && island15CrystalGlacierMaterials
                 ? buildIsland15CrystalGlacierLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island15CrystalGlacierMaterials)
+              : isTitansRest && island17TitansRestMaterials
+                ? buildIsland17TitansRestLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island17TitansRestMaterials,
+                    { constructionPreview },
+                  )
               : buildLandmark(
                   landmark,
                   resolvedBuildLevel,
@@ -6516,8 +6552,9 @@ export default function Island5ThreePilot({
         // burst window, so the live modal deliberately adds no site-wide rig.
         canvas.dataset.constructionScaffoldMode = 'authored-landmark-only';
       } else {
-        constructionTheatre.setCrewScale(0.18);
-        canvas.dataset.constructionCrewScale = '0.180';
+        const presentationCrewScale = next?.completionCelebration ? 0.42 : 0.18;
+        constructionTheatre.setCrewScale(presentationCrewScale);
+        canvas.dataset.constructionCrewScale = presentationCrewScale.toFixed(3);
         constructionTheatre.setTargetEnvelope(
           horizontalExtent / (crewScale * 2),
           constructionBoundsSize.y / crewScale,
@@ -6816,6 +6853,35 @@ export default function Island5ThreePilot({
     let sunshoreCrownTop = 1.05;
     const sunshoreCreatureBounds = new THREE.Box3();
     const sunshoreLandmarkMagic = isSunshoreAtoll ? createSunshoreLandmarkMagicRuntime(landmarkRootsById.values()) : null;
+    if (isTitansRest) {
+      const landmarkNetwork = new THREE.Object3D();
+      landmarkNetwork.name = 'ISLAND_17_LANDMARK_NETWORK_RUNTIME_PROXY';
+      landmarkNetwork.visible = false;
+      const routeIntegration = new THREE.Object3D();
+      routeIntegration.name = 'ISLAND_17_ROUTE_INTEGRATION_RUNTIME_PROXY';
+      routeIntegration.visible = false;
+      landmarkNetwork.userData.sculptRuntime = {
+        parts: [registerIsland17RuntimePart('landmark-network', landmarkNetwork, 'landmark-network')],
+        sockets: Object.fromEntries(ISLAND_5_LANDMARKS.map((landmark) => [landmark.id, `ISLAND_17_${landmark.id.toUpperCase()}_FOCUS_SOCKET`])),
+        colliders: [{ id: 'island-017-landmark-network', type: 'compound', isTrigger: true }],
+        destructionGroups: [{ id: 'landmark-network', breakable: false, partIds: ISLAND_5_LANDMARKS.map((landmark) => landmark.id) }],
+      };
+      routeIntegration.userData.sculptRuntime = {
+        parts: [registerIsland17RuntimePart('route-integration', routeIntegration, 'canonical-board-route')],
+        colliders: [{ id: 'island-017-board-route', type: 'compound-ring', isTrigger: true }],
+      };
+      scene.add(landmarkNetwork, routeIntegration);
+      const partManifest = collectIsland17RuntimePartManifest([
+        livingAmbience.root,
+        landmarkNetwork,
+        routeIntegration,
+        ...landmarkRootsById.values(),
+        ...instancedTileMeshes,
+      ]);
+      canvas.dataset.island17RuntimePartManifest = JSON.stringify(partManifest);
+      canvas.dataset.island17RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
+      canvas.dataset.island17ScenePerformanceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
+    }
     const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevelRef.current;
     const crownDrifter = !isRootheartCanopyCity && !isLavaLabyrinth && !isCrystalGlacier && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
       ? createCrownDrifterModel({ lod: 'board', quality: qualityProfile.id })
@@ -6834,7 +6900,7 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible || isRootheartCanopyCity || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || isCoasterCarnival || isCrystalGlacier || isTitansRest
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
@@ -7093,7 +7159,8 @@ export default function Island5ThreePilot({
         || preset === 'event'
         || preset === 'frostwell'
         || preset === 'powerworks'
-        || preset === 'canyon-spiral';
+        || preset === 'canyon-spiral'
+        || preset === 'titan-spine';
       const visible = !isLandmarkInspection;
       playerPiece.root.visible = visible;
       playerPiece.shadow.visible = visible;
@@ -7153,6 +7220,15 @@ export default function Island5ThreePilot({
           canvas.dataset.island15PalaceEntryPhase = 'idle';
           setIsland15PalaceEntryPhase('idle');
         }
+      }
+      if (isTitansRest) {
+        landmarkRootsById.forEach((landmarkRoot, landmarkId) => {
+          landmarkRoot.visible = !isLandmarkInspection || landmarkId === preset;
+          landmarkRoot.traverse((node) => {
+            if (!node.userData.paintedPartId) return;
+            node.visible = isLandmarkInspection && node.userData.paintedPartId === landmarkId;
+          });
+        });
       }
     };
 
@@ -11244,6 +11320,8 @@ export default function Island5ThreePilot({
                               ? ISLAND_18_JUNGLE_EXPEDITION_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_18_JUNGLE_EXPEDITION_LANDMARK_LABELS]
                             : isLavaLabyrinth
                               ? ISLAND_20_LAVA_LABYRINTH_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_20_LAVA_LABYRINTH_LANDMARK_LABELS]
+                            : isTitansRest
+                              ? ISLAND_17_TITANS_REST_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_17_TITANS_REST_LANDMARK_LABELS]
                           : preset.label}
             </option>
           ))}

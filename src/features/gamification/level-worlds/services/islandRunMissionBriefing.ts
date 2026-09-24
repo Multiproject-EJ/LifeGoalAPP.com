@@ -261,6 +261,15 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'Move with patience. Clarity guides; it does not control.',
     caretakerSignal: 'We survived the storm. Now we need permission to live after it.',
   },
+  17: {
+    progressKind: 'staged_restoration',
+    headline: "Rebuild the Titan's Spine",
+    missionStatement: "The titan once carried this city. Now its broken spine leaves the outer sanctuary cut off above the abyss. Recover eight soul-bolts and bind the ancient bones back together, one section at a time.",
+    primaryObjective: 'Collect eight soul-bolts and restore all eight spine sections.',
+    supportingObjective: "Restore the five landmarks of Titan's Rest.",
+    fieldProtocol: 'Each soul-bolt repairs one section permanently. The eighth repair reconnects the soul current and awakens the bridge.',
+    caretakerSignal: 'Even what is broken can carry us again.',
+  },
 });
 
 const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object.freeze({
@@ -283,6 +292,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   18: 'The Everblossom Kingdom',
   19: 'Coaster Carnival',
   15: 'Crystal Glacier Citadel',
+  17: "Titan's Rest",
 });
 
 function padIsland(islandNumber: number): string {

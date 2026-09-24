@@ -203,6 +203,7 @@ import { island10RootheartThreeWorldContractTests } from './island10RootheartThr
 import { island18JungleExpeditionThreeWorldContractTests } from './island18JungleExpeditionThreeWorldContract.test';
 import { island20LavaLabyrinthThreeWorldContractTests } from './island20LavaLabyrinthThreeWorldContract.test';
 import { island19CoasterCarnivalRepresentativeSliceTests } from './island19CoasterCarnivalRepresentativeSlice.test';
+import { island17TitansRestThreeWorldContractTests } from './island17TitansRestThreeWorldContract.test';
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
 import { eggHatchThreePresentationTests } from './eggHatchThreePresentation.test';
 import { eggHatchThreeContractTests } from './eggHatchThreeContract.test';
@@ -240,6 +241,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'island18JungleExpeditionThreeWorldContract', tests: island18JungleExpeditionThreeWorldContractTests },
   { label: 'island20LavaLabyrinthThreeWorldContract', tests: island20LavaLabyrinthThreeWorldContractTests },
   { label: 'island19CoasterCarnivalRepresentativeSlice', tests: island19CoasterCarnivalRepresentativeSliceTests },
+  { label: 'island17TitansRestThreeWorldContract', tests: island17TitansRestThreeWorldContractTests },
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
   { label: 'eggHatchThreePresentation', tests: eggHatchThreePresentationTests },
   { label: 'eggHatchThreeContract', tests: eggHatchThreeContractTests },

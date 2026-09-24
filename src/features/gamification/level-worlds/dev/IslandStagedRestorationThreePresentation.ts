@@ -3,7 +3,7 @@ import { compactStaticGeometry } from './CrownCitadelThreeModel';
 import type { Island3DQuality } from './island5ThreePilotContract';
 
 export interface IslandStagedRestorationPresentation {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 19 | 20;
+  islandNumber: 4 | 6 | 7 | 8 | 9 | 17 | 18 | 19 | 20;
   activatedStages: number;
   stageCount: number;
   constructionSequence?: number;

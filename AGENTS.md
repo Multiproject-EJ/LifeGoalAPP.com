@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Asset licensing policy
+
+- User decision: do not adopt third-party creative assets that require credit or attribution.
+- Use original assets or third-party assets with verified no-attribution-required terms.
+- Free downloads are not automatically attribution-free; verify the specific asset licence and retain provenance.
+- Do not adapt, integrate or ship attribution-required assets to evade their licence obligations.
+- This is an asset intake policy, not permission to remove existing attribution or licence notices.
+
 ## Island Run rules for AI agents
 
 Before modifying Island Run code, read:

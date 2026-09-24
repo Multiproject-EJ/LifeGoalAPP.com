@@ -1093,12 +1093,12 @@ export function createRobotConstructionTheatre(options: {
             const jumpEnvelope = reducedMotion || jumpCycle > 0.5
               ? 0
               : Math.sin((jumpCycle / 0.5) * Math.PI);
-            const lane = role === 'heavy-worker' ? -0.72 : role === 'mini-artist' ? 0.72 : 0;
+            const lane = role === 'heavy-worker' ? -0.34 : role === 'mini-artist' ? 0.34 : 0;
             targetPosition.set(
               lane * targetEnvelope.radius,
-              targetEnvelope.height * (role === 'project-manager' ? 0.11 : 0.08)
-                + jumpEnvelope * targetEnvelope.height * 0.12,
-              targetEnvelope.radius * 1.18,
+              targetEnvelope.height * (role === 'project-manager' ? 0.48 : 0.44)
+                + jumpEnvelope * targetEnvelope.height * 0.1,
+              targetEnvelope.radius,
             );
             roleContacts[role].set(0, targetEnvelope.height * 0.42, 0);
             targetRotationY = reducedMotion ? 0 : Math.sin(celebrationPhase * 2.1) * 0.16;

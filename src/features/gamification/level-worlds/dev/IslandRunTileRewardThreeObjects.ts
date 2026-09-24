@@ -93,7 +93,8 @@ export function resolveIslandRunTileRewardObjectKind(
     || entry.signatureMissionKind === 'pollination_pollen_light'
     || entry.signatureMissionKind === 'ignition_core'
     || entry.signatureMissionKind === 'heatshield_plate'
-    || entry.signatureMissionKind === 'golden_ride_ticket') return 'staged_restoration_pickup';
+    || entry.signatureMissionKind === 'golden_ride_ticket'
+    || entry.signatureMissionKind === 'titan_soul_bolt') return 'staged_restoration_pickup';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency' || entry.tileType === 'chest') return 'money_symbol';
   if (entry.tileType === 'card') return 'caretaker_card';
@@ -549,6 +550,22 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
     const root = new THREE.Group();
     root.name = `ISLAND_RUN_STAGED_RESTORATION_${entry.signatureMissionKind?.toUpperCase()}`;
     const segments = qualitySegments(quality);
+    if (entry.signatureMissionKind === 'titan_soul_bolt') {
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.085, 0.44, 8), materials.cyan);
+      const head = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.12, 6), materials.gold);
+      head.position.y = 0.23;
+      const seal = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.cyan);
+      seal.position.y = 0.34;
+      root.add(shaft, head, seal);
+      for (let index = 0; index < 3; index += 1) {
+        const thread = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 5, 10), materials.gold);
+        thread.rotation.x = Math.PI / 2;
+        thread.position.y = -0.14 + index * 0.1;
+        root.add(thread);
+      }
+      root.rotation.z = -0.28;
+      return root;
+    }
     const material = entry.signatureMissionKind === 'breathline_pressure_pearl'
       ? materials.cyan
       : entry.signatureMissionKind === 'pollination_pollen_light'
@@ -655,6 +672,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || tileEntry.signatureMissionKind === 'pollination_pollen_light'
         || tileEntry.signatureMissionKind === 'ignition_core'
         || tileEntry.signatureMissionKind === 'golden_ride_ticket'
+        || tileEntry.signatureMissionKind === 'titan_soul_bolt'
         ? 1.16
       : tileEntry.signatureMissionKind === 'heatshield_plate'
         ? 0.9
@@ -790,7 +808,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || entry.signatureMissionKind === 'pollination_pollen_light'
         || entry.signatureMissionKind === 'ignition_core'
         || entry.signatureMissionKind === 'heatshield_plate'
-    || entry.signatureMissionKind === 'golden_ride_ticket')
+        || entry.signatureMissionKind === 'golden_ride_ticket'
+        || entry.signatureMissionKind === 'titan_soul_bolt')
         && stagedRestorationClaimedTiles.has(entry.tileIndex)) {
         entry.root.visible = false;
         return;

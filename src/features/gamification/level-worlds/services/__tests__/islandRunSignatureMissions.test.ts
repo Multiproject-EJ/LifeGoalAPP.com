@@ -1101,7 +1101,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
-      [4, 6, 7, 8, 9, 18, 19, 20].forEach((islandNumber) => {
+      [4, 6, 7, 8, 9, 17, 18, 19, 20].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;
@@ -1354,6 +1354,81 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const progress = resolveStagedRestorationMissionProgress({ ledger: second.ledger, islandNumber: 4, cycleIndex: 0 });
       assertEqual(progress?.chargesEarned, 1, 'exactly one charge persists');
       assertEqual(progress?.claimedPickupTileIndices.length, 1, 'exactly one claim index persists');
+    },
+  },
+  {
+    name: 'Titan spine collects eight finite bolts and restores eight durable sections across reloads',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const tiles = getStagedRestorationPickupTileIndices(17, 36);
+      let ledger = base.signatureMissionProgressByIsland;
+      for (const tileIndex of tiles) {
+        const collected = collectStagedRestorationPickupForRoute({
+          ledger, islandNumber: 17, cycleIndex: 0, tileCount: 36,
+          landingTileIndex: tileIndex, routeTileIndices: [tileIndex], nowMs: 10,
+        });
+        assertEqual(collected.pickupCollected, 1, 'each bolt can be collected');
+        assertEqual(collected.pickupKind, 'titan_soul_bolt', 'Titan pickup identity');
+        ledger = collected.ledger;
+        assertEqual(collectStagedRestorationPickupForRoute({
+          ledger, islandNumber: 17, cycleIndex: 0, tileCount: 36,
+          landingTileIndex: tileIndex, routeTileIndices: [tileIndex], nowMs: 11,
+        }).pickupCollected, 0, 'repeated landing cannot duplicate a bolt');
+      }
+      await writeIslandRunGameStateRecord({ session, client: null,
+        record: { ...base, currentIslandNumber: 17, cycleIndex: 0, signatureMissionProgressByIsland: ledger },
+      });
+      refreshIslandRunStateFromLocal(session);
+      for (let stage = 1; stage <= 8; stage += 1) {
+        const result = await activateStagedRestorationMissionStage({ session, client: null });
+        assertEqual(result.status, 'ok', `repair ${stage} succeeds`);
+        if (result.status !== 'ok') throw new Error('repair failed');
+        assertEqual(result.activatedStages, stage, 'one section per spend');
+        assertEqual(result.chargesRemaining, 8 - stage, 'one soul-bolt per section');
+        assertEqual(result.completedAtMs !== null, stage === 8, 'only eighth repair completes mission');
+        __resetIslandRunStateStoreForTests();
+        refreshIslandRunStateFromLocal(session);
+      }
+      const beforeReplay = readIslandRunGameStateRecord(session);
+      assertEqual((await activateStagedRestorationMissionStage({ session, client: null })).status,
+        'already_complete', 'finale cannot spend or reward again');
+      const afterReplay = readIslandRunGameStateRecord(session);
+      assertEqual(afterReplay.dicePool, base.dicePool, 'mission does not duplicate construction dice reward');
+      assertEqual(afterReplay.essence, base.essence, 'soul-bolts do not spend the essence wallet');
+      assertEqual(afterReplay.runtimeVersion, beforeReplay.runtimeVersion, 'completed mission has no write');
+      assertEqual(resolveStagedRestorationMissionProgress({ ledger: afterReplay.signatureMissionProgressByIsland,
+        cycleIndex: 1, islandNumber: 17 })?.activatedStages, 0, 'future cycle is independent');
+      const briefing = getIslandMissionBriefingPresentation(17);
+      assertEqual(briefing.progressKind, 'staged_restoration', 'mission phone routes to playable mission');
+      assertEqual(briefing.islandName, "Titan's Rest", 'mission phone uses runtime 017 name');
+    },
+  },
+  {
+    name: 'Titan spine serializes competing spends of the last soul-bolt',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      const tileIndex = getStagedRestorationPickupTileIndices(17, 36)[0];
+      const collected = collectStagedRestorationPickupForRoute({ ledger: {}, islandNumber: 17,
+        cycleIndex: 0, tileCount: 36, landingTileIndex: tileIndex, routeTileIndices: [tileIndex], nowMs: 10 });
+      await writeIslandRunGameStateRecord({ session, client: null,
+        record: { ...base, currentIslandNumber: 17, cycleIndex: 0, signatureMissionProgressByIsland: collected.ledger } });
+      refreshIslandRunStateFromLocal(session);
+      const results = await Promise.all([
+        activateStagedRestorationMissionStage({ session, client: null }),
+        activateStagedRestorationMissionStage({ session, client: null }),
+      ]);
+      assertEqual(results.filter((result) => result.status === 'ok').length, 1, 'one repair wins');
+      assertEqual(results.filter((result) => result.status === 'no_charges').length, 1, 'second repair is refused');
     },
   },
   {
