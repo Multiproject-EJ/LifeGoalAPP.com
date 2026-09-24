@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityProgress } from './ActivityProgress';
+import { isAnswerValuePresent } from '../../../compass-book/logic/progress';
 import type { Session } from '@supabase/supabase-js';
 
 import { COMPASS_BOOK_CHAPTER_IDS, type CompassAnswerValue } from '../../../compass-book/types';
@@ -38,6 +40,7 @@ type DraftValues = Record<string, CompassAnswerValue | undefined>;
 type WisdomCaretakerCompassEncounterProps = {
   session: Session;
   islandNumber: number;
+  buildLevel?: number;
   onComplete: (message: string) => void;
   onComeBackLater?: () => void;
   /** Dev-only visual proof: deterministic in-memory Compass, with no remote/local writes. */
@@ -62,6 +65,7 @@ function scoreAriaLabel(signal: CompassIlluminationSignal): string {
 export function WisdomCaretakerCompassEncounter({
   session,
   islandNumber,
+  buildLevel,
   onComplete,
   onComeBackLater,
   previewMode = false,
@@ -161,6 +165,8 @@ export function WisdomCaretakerCompassEncounter({
 
   const chapter = getChapterDefinition(fragment.chapterId);
   const complete = areBlocksAnswered(fragment.inputs, draft);
+  const requiredInputs = fragment.inputs.filter((block) => block.required);
+  const answeredInputs = requiredInputs.filter((block) => isAnswerValuePresent(draft[block.questionId])).length;
   const insight = buildWisdomCompassInsight({
     chapterId: fragment.chapterId,
     blocks: fragment.inputs,
@@ -216,6 +222,7 @@ export function WisdomCaretakerCompassEncounter({
   if (stage === 'insight') {
     return (
       <section className="wisdom-caretaker wisdom-caretaker--insight" aria-labelledby="wisdom-insight-title">
+        <ActivityProgress completed={answeredInputs} total={requiredInputs.length} buildLevel={buildLevel} saved />
         <div className="wisdom-caretaker__ornament" aria-hidden="true">✦</div>
         <header className="wisdom-caretaker__insight-header">
           <span>{isFirstSignal ? 'Saved to your captain profile' : 'Saved to your Compass Book'}</span>
@@ -331,6 +338,7 @@ export function WisdomCaretakerCompassEncounter({
       {!book.ready ? <p className="wisdom-caretaker__loading">Opening your private reflection…</p> : null}
 
       <div className="wisdom-caretaker__question-card">
+        <ActivityProgress completed={answeredInputs} total={requiredInputs.length} buildLevel={buildLevel} />
         <CompassActivityRenderer
           blocks={fragment.inputs}
           values={draft}

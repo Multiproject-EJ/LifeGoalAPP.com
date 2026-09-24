@@ -309,6 +309,22 @@ export const islandRunStateActionsTests: TestCase[] = [
     assertEqual(first.completedStopsByIsland['4'].includes('habit'),true,'existing completion retained');
     assertEqual(place().runtimeVersion,first.runtimeVersion,'duplicate grant no-op');
   }},
+  { name: 'batch egg receipts across islands retain same-species copies and reject replay', run() {
+    resetAll(); const session = makeSession();
+    seedState({ currentIslandNumber: 9, perIslandEggs: {
+      '4': { tier: 'common', setAtMs: 100, hatchAtMs: 200, status: 'ready', location: 'spaceship' },
+      '5': { tier: 'common', setAtMs: 110, hatchAtMs: 210, status: 'ready', location: 'spaceship' },
+    }});
+    const collect = (islandNumber: number) => resolveReadyEggTerminalTransition({ session, client: null,
+      islandNumber, eggLedgerKey: String(islandNumber), terminalStatus: 'collected', openedAtMs: 500,
+      location: 'spaceship', collectedCreatureId: 'common-sproutling', completedStops: ['hatchery'] });
+    assertEqual(collect(4).changed, true, 'first receipt');
+    const second = collect(5);
+    assertEqual(second.changed, true, 'second receipt');
+    assertEqual(second.record.creatureCollection.find(c => c.creatureId === 'common-sproutling')?.copies, 2, 'same species keeps both copies');
+    assertEqual(collect(4).changed, false, 'first replay rejected');
+    assertEqual(collect(5).changed, false, 'second replay rejected');
+  }},
   { name: 'off-island egg collection preserves current active egg and attributes creature to source', run() {
     resetAll(); const session=makeSession();
     seedState({currentIslandNumber:8,activeEggTier:'rare',activeEggSetAtMs:300,activeEggHatchDurationMs:10000,

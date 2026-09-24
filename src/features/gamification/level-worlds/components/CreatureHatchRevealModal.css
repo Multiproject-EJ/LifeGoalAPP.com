@@ -1,0 +1,23 @@
+.egg-reveal-incubating {
+  background: radial-gradient(ellipse, #80dfff55, #040a1433 70%);
+}
+.egg-reveal-shell {
+  animation: egg-reveal-wiggle 550ms ease-in-out 4;
+  transform-origin: 50% 80%;
+  filter: drop-shadow(0 0 20px #9ae9ff88);
+}
+.egg-reveal-arrival .island-run-hatch-reveal__art {
+  animation: egg-reveal-arrive 650ms cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes egg-reveal-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-7deg) translateY(-3px); }
+  70% { transform: rotate(7deg) translateY(-7px); }
+}
+@keyframes egg-reveal-arrive {
+  from { opacity: 0; transform: translateY(25px) scale(.85); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .egg-reveal-shell, .egg-reveal-arrival .island-run-hatch-reveal__art { animation: none; }
+}

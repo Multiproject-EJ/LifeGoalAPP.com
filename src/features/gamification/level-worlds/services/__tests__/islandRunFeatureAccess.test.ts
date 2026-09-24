@@ -10,9 +10,9 @@ const fresh = () => createOpeningGamesCampaignLedger();
 const access = (island: number) => resolveIslandRunFeatureAccess({currentIslandNumber:island, signatureMissionProgressByIsland:fresh()});
 
 export const islandRunFeatureAccessTests: TestCase[] = [
-  {name:'caretaker first appears on Island008 for new and existing saves',run(){
-    for(const ledger of [{},fresh()])for(let island=1;island<=9;island++){
-      assertEqual(resolveIslandRunFeatureAccess({currentIslandNumber:island,signatureMissionProgressByIsland:ledger}).caretakerBoard,island>=8,'caretaker introduction boundary');
+  {name:'caretaker is not a default board NPC for new or existing saves on any island',run(){
+    for(const ledger of [{},fresh()])for(let island=1;island<=120;island++){
+      assertEqual(resolveIslandRunFeatureAccess({currentIslandNumber:island,signatureMissionProgressByIsland:ledger}).caretakerBoard,false,'caretaker never appears as a default board NPC');
     }
   }},
   {name:'Island001 suppresses advanced features for every save without deleting unlocks',run(){

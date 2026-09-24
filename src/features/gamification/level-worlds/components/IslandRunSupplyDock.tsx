@@ -6,10 +6,14 @@ import {
 import { DicePackOfferGrid } from './DicePackOfferGrid';
 import { ShopItemCostLine } from './ShopItemCostLine';
 import './IslandRunSupplyDock.css';
+import {ControllerThemeShop,CONTROLLER_DESIGNS} from './living-controller/ControllerThemeShop';
+import {useControllerShopScrollLock} from './living-controller/useControllerShopScrollLock';
 
 type SupplyDockSection = 'free' | 'collections' | 'supplies' | 'support';
 
 type IslandRunSupplyDockProps = {
+  featuredControllerTheme?: string | null;
+  onChooseControllerDefault?: (theme:'ice'|'dark')=>void;
   islandNumber: number;
   essence: number;
   dicePool: number;
@@ -65,6 +69,8 @@ const SECTIONS: readonly {
 ] as const;
 
 export function IslandRunSupplyDock({
+  featuredControllerTheme,
+  onChooseControllerDefault,
   islandNumber,
   essence,
   dicePool,
@@ -85,6 +91,8 @@ export function IslandRunSupplyDock({
   onClose,
 }: IslandRunSupplyDockProps) {
   const [activeSection, setActiveSection] = useState<SupplyDockSection>('free');
+  const [controllerPreview,setControllerPreview]=useState<string|null>(featuredControllerTheme??null);
+  useControllerShopScrollLock();
   const scrollRef = useRef<HTMLDivElement>(null);
   const isLiveCommerce = DICE_COMMERCE_MODE === 'live';
 
@@ -93,9 +101,10 @@ export function IslandRunSupplyDock({
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  return (
+  return (<>
     <section
       className="island-run-supply-dock"
+      aria-hidden={controllerPreview?true:undefined}
       role="dialog"
       aria-modal="true"
       aria-label="Luma Supply Dock"
@@ -145,6 +154,13 @@ export function IslandRunSupplyDock({
         </nav>
 
         <main className="island-run-supply-dock__content">
+          {onChooseControllerDefault&&<article className="island-run-supply-dock__hero">
+            <div className="island-run-supply-dock__hero-copy"><span className="island-run-supply-dock__eyebrow">Controller collection</span>
+              <h4>{CONTROLLER_DESIGNS.find(item=>item.id===featuredControllerTheme)?.name??'Make it yours'}</h4>
+              <p>Discover luminous glass, winter gold and signature finishes.</p>
+              <button type="button" className="island-run-supply-dock__primary-btn" onClick={()=>setControllerPreview(featuredControllerTheme??'gold')}>Explore controller designs →</button>
+            </div>
+          </article>}
           {activeSection === 'free' ? (
             <>
               <article className="island-run-supply-dock__hero">
@@ -397,5 +413,7 @@ export function IslandRunSupplyDock({
         </footer>
       </div>
     </section>
+    {controllerPreview&&onChooseControllerDefault&&<ControllerThemeShop initialTheme={controllerPreview} onClose={()=>setControllerPreview(null)} onChooseDefault={theme=>{onChooseControllerDefault(theme);setControllerPreview(null);}}/>}
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import VaultCasinoLab from '../../../../dev/VaultCasinoLab';
 import VaultIslandLab, { type VaultIslandLabView } from '../../../../dev/VaultIslandLab';
@@ -14,6 +14,7 @@ import { useVaultModalFocusTrap } from './useVaultModalFocusTrap';
 import './VaultIslandCollectionModal.css';
 
 export interface VaultIslandCollectionModalProps {
+  controller?:ReactNode;
   onClose: () => void;
   unlockedTreasureIds: readonly VaultIslandCollectionTreasureId[];
   collectionEntries: readonly VaultIslandCollectionEntry[];
@@ -26,6 +27,7 @@ export interface VaultIslandCollectionModalProps {
 }
 
 export default function VaultIslandCollectionModal({
+  controller,
   onClose,
   unlockedTreasureIds,
   collectionEntries,
@@ -73,6 +75,7 @@ export default function VaultIslandCollectionModal({
           onPurchaseVaultUpgrade={onPurchaseVaultUpgrade}
         />
       )}
+      {!showCasino&&controller&&<div className="vault-island-collection-controller">{controller}</div>}
     </div>,
     document.body,
   );

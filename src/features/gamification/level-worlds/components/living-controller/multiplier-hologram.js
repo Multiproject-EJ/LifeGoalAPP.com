@@ -1,5 +1,5 @@
 // Presentation only. Multiplier limits and actions remain owned by the game.
-export const PILL={x:0,y:1.98,z:.12,width:2.4,height:.44};
+export const PILL={x:0,y:1.98,z:.12,width:1.85,height:.4};
 export const MAX_JUMP_SECONDS=.54;
 // Match the original pill's rise, landing and smaller rebound. Reduced motion
 // retains the acknowledgement glow without moving the control.
@@ -20,7 +20,7 @@ export function createMultiplierHologram(THREE){
  const root=new THREE.Group();root.name='holographic-roll-power-pill';root.position.set(PILL.x,PILL.y,PILL.z);
  const r=PILL.height/2,a=PILL.width/2-r,s=new THREE.Shape();
  s.moveTo(-a,-r);s.lineTo(a,-r);s.absarc(a,0,r,-Math.PI/2,Math.PI/2,false);s.lineTo(-a,r);s.absarc(-a,0,r,Math.PI/2,Math.PI*1.5,false);
- const glass=new THREE.MeshPhysicalMaterial({color:'#68d6ff',transparent:true,opacity:.38,metalness:.15,roughness:.12,clearcoat:1,depthWrite:false});
+ const glass=new THREE.MeshPhysicalMaterial({color:'#174760',transparent:true,opacity:.68,metalness:.08,roughness:.18,clearcoat:.65,envMapIntensity:.25,depthWrite:false});
  root.add(new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.07,bevelEnabled:true,bevelSize:.018,bevelThickness:.018,bevelSegments:3,curveSegments:24}),glass));
  const points=s.getPoints(80).map(p=>new THREE.Vector3(p.x,p.y,.085));
  const rimMaterial=new THREE.MeshBasicMaterial({color:'#a7e4ff',toneMapped:false});
@@ -37,17 +37,17 @@ export function createMultiplierHologram(THREE){
    const jump=maxJumpFeedback(time-jumpStarted,reduced);
    root.position.y=PILL.y+jump.offset;
    const v=multiplierAppearance(multiplier,maximum,dice),pulse=reduced?1:1+Math.sin(time*(1.5+v.level))*.12;
-   glass.color.set(v.color);rimMaterial.color.set(v.color).multiplyScalar(v.powered?pulse*jump.glow:.45);
+   glass.color.set(v.atMax?'#62512b':'#174760');rimMaterial.color.set(v.color).multiplyScalar(v.powered?pulse*jump.glow:.45);
    haloMaterial.color.set(v.color);haloMaterial.opacity=v.powered?(.12+v.level*.23)*pulse*jump.glow:.025;
    if(time-last<.05)return;last=time;
    const c=canvas.getContext('2d');c.clearRect(0,0,1024,256);
    c.fillStyle=v.color;c.globalAlpha=v.powered?.10:.035;
    for(let i=0;i<8;i++){const x=reduced||!v.powered?i*150:(i*150+time*(12+v.level*38))%1200-100;c.fillRect(x,0,1,256);}
    c.globalAlpha=1;c.textBaseline='middle';c.textAlign='center';c.shadowColor=v.color;c.shadowBlur=v.powered?10+v.level*14:0;
-   c.fillStyle='#f1fbff';c.font='800 132px system-ui';c.fillText('×'+multiplier,280,94);
-   c.font='600 54px system-ui';c.fillStyle=v.color;c.fillText(multiplier>1?'−'+multiplier+' DICE':'ROLL POWER',280,197);
-   c.fillRect(536,48,2,160);c.font='800 84px system-ui';c.fillText(v.atMax?'MAX':'MAX ×'+maximum,766,112);
-   c.font='600 44px system-ui';c.fillText(v.atMax?'SELECTED':'AVAILABLE',766,188);
+   // One crisp primary number; cost/cap details live in transient DOM feedback.
+   c.shadowBlur=0;c.fillStyle='#f1fbff';c.font='800 180px system-ui';
+   c.fillText('×'+multiplier,v.atMax?390:512,138,v.atMax?590:900);
+   if(v.atMax){c.fillStyle=v.color;c.font='800 82px system-ui';c.fillText('MAX',800,138,290);}
    texture.needsUpdate=true;
  }
  return {root,update};

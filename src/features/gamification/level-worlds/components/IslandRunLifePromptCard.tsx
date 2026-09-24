@@ -25,9 +25,12 @@ import {
 } from '../services/islandRunRoutekeeperTinyActions';
 import { DayOneBreathingRitual } from './DayOneBreathingRitual';
 
+import { ActivityProgress } from './ActivityProgress';
+
 interface IslandRunLifePromptCardProps {
   session: Session;
   islandNumber?: number;
+  buildLevel?: number;
   onComplete: (message: string) => void;
   onComeBackLater?: () => void;
   forceDayOnePreview?: boolean;
@@ -74,6 +77,7 @@ function actionEmoji(action: HabitAction): string {
 export function IslandRunLifePromptCard({
   session,
   islandNumber = 1,
+  buildLevel,
   onComplete,
   onComeBackLater,
   forceDayOnePreview = false,
@@ -355,6 +359,7 @@ export function IslandRunLifePromptCard({
   if (isDayOneStoryMode) {
     return (
       <div className="island-hatchery-card">
+        <ActivityProgress completed={routekeeperRewardLine ? 1 : 0} total={1} unit="breathing exercise" buildLevel={buildLevel} saved={Boolean(routekeeperRewardLine)} />
         {routekeeperBreathStage === 'intro' || routekeeperBreathStage === 'adding' ? (
           <div className="day-one-routekeeper-intro">
             <p className="island-stop-modal__eyebrow">Island mission · First Light Shore</p>
@@ -429,6 +434,7 @@ export function IslandRunLifePromptCard({
 
   return (
     <section className="habit-landmark-shell habit-landmark-quiet" aria-labelledby="habit-landmark-title">
+      <ActivityProgress completed={doneMessage ? 1 : 0} total={1} unit="action" buildLevel={buildLevel} saved={Boolean(doneMessage)} />
       <header className="habit-landmark-shell__hero">
         <div className="habit-landmark-shell__sigil" aria-hidden="true">✓</div>
         <div>

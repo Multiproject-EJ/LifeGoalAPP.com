@@ -21,6 +21,8 @@
 
 import { getHapticMode } from '../../../../utils/completionHaptics';
 import audioAssetManifest from './islandRunAudioAssets.json';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +71,7 @@ export type IslandRunSoundEvent =
   | 'tech_item_poof';
 
 export type IslandRunHapticEvent =
+  | 'controller_land'
   | 'roll'
   | 'stop_land'
   | 'island_travel'
@@ -223,6 +226,7 @@ function rewindIslandRunSfxAudio(audio: HTMLAudioElement): void {
 // ─── Haptic patterns (ms) ─────────────────────────────────────────────────────
 
 const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
+  controller_land: [50, 65, 50],
   roll: [30],
   stop_land: [20, 40, 20],
   island_travel: [30, 50, 30],
@@ -463,7 +467,9 @@ export function resetIslandRunAudioDiagnosticsForTests(): void {
 export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
   if (!getIslandRunAudioEnabled()) return;
 
-  if (typeof window === 'undefined' || !navigator.vibrate) return;
+  if (typeof window === 'undefined') return;
+  const nativeControllerLanding = eventId === 'controller_land' && Capacitor.isNativePlatform();
+  if (!nativeControllerLanding && !navigator.vibrate) return;
 
   // Accessibility: skip haptics when user prefers reduced motion.
   if (typeof window.matchMedia === 'function'
@@ -484,6 +490,21 @@ export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
 
   const rawPattern = HAPTIC_PATTERNS[eventId];
   const pattern = mode === 'subtle' ? attenuatePattern(rawPattern) : rawPattern;
+
+  if (nativeControllerLanding) {
+    // iOS has no Vibration API. Keep the native landing feedback inside the
+    // same preference/accessibility/throttle gates as existing game haptics.
+    void (async () => {
+      await Haptics.impact({ style: mode === 'subtle' ? ImpactStyle.Light : ImpactStyle.Heavy });
+      if (mode === 'subtle') return;
+      await new Promise(resolve => window.setTimeout(resolve, 115));
+      if (!document.hidden && getIslandRunAudioEnabled() && getHapticMode() === 'balanced'
+        && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+      }
+    })().catch(() => { /* Unsupported device: presentation remains usable. */ });
+    return;
+  }
 
   try {
     navigator.vibrate(pattern);

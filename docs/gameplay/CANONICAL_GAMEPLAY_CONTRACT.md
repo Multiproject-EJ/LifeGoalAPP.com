@@ -549,7 +549,7 @@ Additional rules:
 ### Beginner presentation (all saves)
 
 - Island001 hides the reward bar, daily spin icon, traffic light and event-minigame launcher. Reward-bar progress and claims are disabled there for both new and existing saves. Existing progress and unlocks are preserved for later islands.
-- The blue board caretaker, his shadow, animation and interaction target are absent on Islands001–007. Island008 is his first board introduction. Existing later-island exclusions remain in force.
+- The default blue board caretaker, his shadow, animation and interaction target are absent on all islands (updated 2026-09-24). His only planned appearance is the Island008 Compass Book handover ceremony, not a persistent roaming NPC. This presentation change does not remove the player's earned Compass Book or alter its acquisition rules.
 
 ### Gradual-introduction cohort (`opening-games-v1`)
 
