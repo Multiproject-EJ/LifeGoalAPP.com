@@ -584,7 +584,7 @@ export function buildIsland2Landmark(
     }
     if (!options.constructionPreview) {
       const crown = arena.getObjectByName('SUNSHORE_RETRACTING_ARENA_CROWN');
-      if (crown) compactStaticGeometry(crown, `SUNSHORE_MOVING_CROWN_L${level}`);
+      if (crown instanceof THREE.Group) compactStaticGeometry(crown, `SUNSHORE_MOVING_CROWN_L${level}`);
       compactStaticGeometry(arena, `ISLAND5_SUNWHEEL_L${level}`, mesh => {
         for (let node: THREE.Object3D | null = mesh; node; node = node.parent) {
           if (node.userData.sunshoreRetractingCrown) return false;
