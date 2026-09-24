@@ -1,3 +1,8 @@
+import { sunshoreCreatureClearanceLift } from './SunshoreCreatureClearance';
+import { createSunshoreArenaRetraction } from './SunshoreArenaRetraction';
+import { createSunshoreLandmarkMagicRuntime } from './Island5SunshoreV2Architecture';
+import { resolveSunshoreCreatureCelebration, type CelebrationPoint } from '../services/islandRunCreatureCelebration';
+import { createSunshoreCelebrationSmoke } from './SunshoreCreatureCelebrationSmoke';
 import { createLandmarkAttentionVisual } from './landmarkAttentionVisual';
 import type { LandmarkAttention } from '../services/islandRunLandmarkAttention';
 import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAccess';
@@ -435,6 +440,8 @@ interface Island5ThreePilotProps {
   /** Read-only build-modal choreography. It cannot mutate gameplay state. */
   constructionPresentation?: IslandRunConstructionPresentation | null;
   arenaBattlePresentation?: IslandRunArenaBattlePresentation | null;
+  /** Successful max-throw presentation cue; no gameplay authority. */
+  arenaCelebrationSequence?: number;
   openingCeremonyPlayback?: OpeningCeremonyPlayback | null;
 }
 
@@ -3617,7 +3624,17 @@ export default function Island5ThreePilot({
   interactionPaused = false,
   constructionPresentation = null,
   arenaBattlePresentation = null,
+  arenaCelebrationSequence = 0,
 }: Island5ThreePilotProps) {
+  const arenaCrownPreviewUntilRef = useRef(0);
+  const creatureCelebrationRequestRef = useRef(0);
+  const lastCelebrationPropRef = useRef(arenaCelebrationSequence);
+  useEffect(() => {
+    if (arenaCelebrationSequence !== lastCelebrationPropRef.current) {
+      lastCelebrationPropRef.current = arenaCelebrationSequence;
+      if (islandNumber === 5) creatureCelebrationRequestRef.current += 1;
+    }
+  }, [arenaCelebrationSequence, islandNumber]);
   const tilePresentationRef = useRef({fragments:visibleTechnologyFragments,trafficLightCharge});
   tilePresentationRef.current = {fragments:visibleTechnologyFragments,trafficLightCharge};
   const firstArrivalCompletedRef = useRef(false);
@@ -4546,8 +4563,12 @@ export default function Island5ThreePilot({
     const island12ArchiveLookdevMode = isSunkenSands && typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('island12ArchiveLookdev')
       : null;
-    const isArchiveNeutralLookdev = island12ArchiveLookdevMode === 'neutral';
-    const isArchiveGrazingLookdev = island12ArchiveLookdevMode === 'grazing';
+    // Development-only relighting proof for Sunshore's real runtime surfaces.
+    const sunshoreSurfaceLookdev = isSunshoreAtoll && import.meta.env.DEV
+      ? new URLSearchParams(window.location.search).get('island5SurfaceLookdev') : null;
+    if (isSunshoreAtoll) canvas.dataset.sunshoreSurfaceLookdev = sunshoreSurfaceLookdev ?? 'production';
+    const isArchiveNeutralLookdev = island12ArchiveLookdevMode === 'neutral' || sunshoreSurfaceLookdev === 'neutral';
+    const isArchiveGrazingLookdev = island12ArchiveLookdevMode === 'grazing' || sunshoreSurfaceLookdev === 'grazing';
     const isArchiveEnvironmentLookdev = island12ArchiveLookdevMode === 'environment';
     const isArchiveBacklightLookdev = island12ArchiveLookdevMode === 'backlight';
     const isArchiveAlbedoLookdev = island12ArchiveLookdevMode === 'albedo';
@@ -4562,11 +4583,11 @@ export default function Island5ThreePilot({
     let honeycombEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let jungleExpeditionEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
     let lavaLabyrinthEnvironmentTarget: THREE.WebGLRenderTarget | null = null;
-    if (isAssemblyCraterFirstLight || isCelestialSkyKingdom) {
+    if (isAssemblyCraterFirstLight || isCelestialSkyKingdom || isSunshoreAtoll) {
       const roomEnvironment = new RoomEnvironment();
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
-      assemblyEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, .06);
-      scene.environment = assemblyEnvironmentTarget.texture; scene.environmentIntensity = isCelestialSkyKingdom ? .35 : .4;
+      assemblyEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, isSunshoreAtoll ? .04 : .06);
+      scene.environment = assemblyEnvironmentTarget.texture; scene.environmentIntensity = isSunshoreAtoll ? .24 : isCelestialSkyKingdom ? .35 : .4;
       roomEnvironment.dispose(); pmremGenerator.dispose();
     }
     if (isArchiveEnvironmentLookdev || isArchiveBacklightLookdev) {
@@ -4715,6 +4736,7 @@ export default function Island5ThreePilot({
       hemisphereIntensity,
     );
     if (isAssemblyCraterFirstLight) { hemisphere.intensity = 1.6; hemisphere.groundColor.setHex(0x847862); }
+    if (isSunshoreAtoll) { hemisphere.intensity = 1.65; hemisphere.groundColor.setHex(0x7c8170); }
     if (isJungleExpedition) hemisphere.name = 'ISLAND_18_PRIMARY_SKY_LIGHT';
     scene.add(hemisphere);
     const sunlightIntensity = isArchiveNeutralLookdev
@@ -4787,7 +4809,7 @@ export default function Island5ThreePilot({
     sunlight.shadow.camera.near = 1;
     sunlight.shadow.camera.far = 34;
     sunlight.shadow.bias = isSunkenSands ? -0.00035 : -0.0006;
-    sunlight.shadow.normalBias = isSunkenSands ? 0.025 : isJungleExpedition ? 0.018 : 0;
+    sunlight.shadow.normalBias = isSunkenSands ? 0.025 : isJungleExpedition || isSunshoreAtoll ? 0.018 : 0;
     scene.add(sunlight);
     const wonderRideKeyLight = new THREE.PointLight(0xffc36d, 0, 7.5, 1.7);
     wonderRideKeyLight.name = 'ISLAND_19_WONDER_EXPRESS_PHASE_KEY_LIGHT';
@@ -5128,8 +5150,8 @@ export default function Island5ThreePilot({
         Math.max(1, Math.floor(qualityProfile.oceanGridSegments / 2)),
       )
       : new THREE.PlaneGeometry(
-        isFirstLightKingdom ? 120 : 68,
-        isFirstLightKingdom ? 120 : 68,
+        isSunshoreAtoll ? 360 : isFirstLightKingdom ? 120 : 68,
+        isSunshoreAtoll ? 360 : isFirstLightKingdom ? 120 : 68,
         isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments,
         isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments,
       );
@@ -5146,7 +5168,7 @@ export default function Island5ThreePilot({
 
     // Dedicated worlds own their continuous terrain. Frostmoon's deep ice
     // shelf replaces the old coastal plates, bridges and decorative lagoon.
-    if (!isFrostmoonHaven && !isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier) {
+    if (!isSunshoreAtoll && !isFrostmoonHaven && !isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity && !isSunkenSands && !isCactusCanyon && !isFishermansVillage && !isHoneycombKingdom && !isJungleExpedition && !isCoasterCarnival && !isLavaLabyrinth && !isCrystalGlacier) {
       const firstLightMainDepth = 3.4;
       const island = isAssemblyCraterFirstLight && island1Materials
         ? createIsland1AssemblyCraterTerrain(qualityProfile.id, {
@@ -5620,7 +5642,7 @@ export default function Island5ThreePilot({
       baseRotationY?: number;
     };
     const tileMeshes = new Map<number, TileMeshEntry>();
-    const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
+    const useInstancedRouteTiles = isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll || isAssemblyCraterFirstLight || isCelestialSkyKingdom || isAbyssalPearlKingdom || isSunkenSands || isCactusCanyon || isFishermansVillage || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth || (isCoasterCarnival && !isCircuitGBoardPreviewEnabled);
     const instancedTileCounts = Array(isAssemblyCraterFirstLight ? 6 : 3).fill(0) as number[];
     if (useInstancedRouteTiles) {
       tileTransforms.forEach((transform) => {
@@ -5635,6 +5657,8 @@ export default function Island5ThreePilot({
             ? `ISLAND_001_TILE_SURFACE_BATCH_${materialIndex + 1}`
             : isCelestialSkyKingdom
               ? `ISLAND_002_TILE_SURFACE_BATCH_${materialIndex + 1}`
+            : isSunshoreAtoll
+              ? `ISLAND_005_TILE_SURFACE_BATCH_${materialIndex + 1}`
             : isSunkenSands
             ? `ISLAND_12_TILE_SURFACE_BATCH_${materialIndex + 1}`
             : isCactusCanyon
@@ -6787,6 +6811,11 @@ export default function Island5ThreePilot({
       };
       refreshIsland15RuntimeDatasets();
     }
+    const sunshoreArenaRoot = isSunshoreAtoll ? landmarkRootsById.get('boss') : undefined;
+    const sunshoreArenaRetraction = sunshoreArenaRoot ? createSunshoreArenaRetraction(sunshoreArenaRoot) : null;
+    let sunshoreCrownTop = 1.05;
+    const sunshoreCreatureBounds = new THREE.Box3();
+    const sunshoreLandmarkMagic = isSunshoreAtoll ? createSunshoreLandmarkMagicRuntime(landmarkRootsById.values()) : null;
     const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevelRef.current;
     const crownDrifter = !isRootheartCanopyCity && !isLavaLabyrinth && !isCrystalGlacier && shouldPresentIslandRunArenaCreature(islandNumber, bossBuildLevel)
       ? createCrownDrifterModel({ lod: 'board', quality: qualityProfile.id })
@@ -6798,6 +6827,10 @@ export default function Island5ThreePilot({
       crownDrifterPresentationRoot.add(crownDrifter.root);
       scene.add(crownDrifterPresentationRoot);
     }
+    const celebrationSmoke = isSunshoreAtoll && crownDrifter ? createSunshoreCelebrationSmoke() : null;
+    if (celebrationSmoke) scene.add(celebrationSmoke.root);
+    let consumedCelebrationRequest = creatureCelebrationRequestRef.current;
+    let creatureCelebration: { startedAt: number; position: CelebrationPoint; yaw: number } | null = null;
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
@@ -8694,7 +8727,7 @@ export default function Island5ThreePilot({
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointerup', handlePointerUp);
 
-    if (isFrostmoonHaven || isDriftwoodIsle) {
+    if (isFrostmoonHaven || isDriftwoodIsle || isSunshoreAtoll) {
       // At phone scale the authored alpha, clearcoat and highlights carry glass
       // and frost. Avoid a second full-world transmission render for tiny panes.
       scene.traverse(object => {
@@ -8719,6 +8752,13 @@ export default function Island5ThreePilot({
         'ISLAND_4_V2_LIVING_WORLD',
         ...['BOSS','HATCHERY','HABIT','WISDOM','EVENT'].map(id => `ISLAND_4_V2_${id}_MODEL`),
       ], 'ISLAND_004_BOARD_SURFACE_BATCHES', 32)
+      : isSunshoreAtoll ? createIslandRigidSurfaceBatches(scene, [
+        'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS', 'ISLAND_5_CARETAKER_BOARD_LOD',
+        'ISLAND_2_TROPICAL_AMBIENCE',
+        // Rigid creature parts retain their animated source pivots and raycasts.
+        'ISLAND_RUN_ARENA_CREATURE_PRESENTATION_ROOT',
+        ...['HATCHERY', 'HABIT', 'WISDOM', 'EVENT'].map(id => `ISLAND_2_${id}_ROOT`),
+      ], 'ISLAND_005_BOARD_SURFACE_BATCHES', 32)
       : isFrostmoonHaven ? createIslandRigidSurfaceBatches(scene, [
         'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS', 'ISLAND_5_CARETAKER_BOARD_LOD',
         'ISLAND_3_FROSTMOON_LIVING_AMBIENCE',
@@ -8728,6 +8768,7 @@ export default function Island5ThreePilot({
         }
         return true;
       }) : null;
+    if (isSunshoreAtoll) canvas.dataset.sunshoreRigidBatchSources = String(island1AnimatedBatches?.sourceCount ?? 0);
     // Mission surfaces stay under the mission root so the cinematic's scene
     // mask cannot hide them. Material-swapping lamps remain ordinary meshes.
     const frostwellBatchOwner = isFrostmoonHaven ? scene.getObjectByName('ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT') : null;
@@ -9545,6 +9586,13 @@ export default function Island5ThreePilot({
         constructionLevelDelta?.applyCommissioningScale(1);
       }
 
+      if (sunshoreArenaRetraction) {
+        const active = Boolean(arenaBattlePresentationRef.current.value?.active) || (!isEmbedded && performance.now() < arenaCrownPreviewUntilRef.current);
+        const pose = sunshoreArenaRetraction.update(elapsed, active, isReducedMotion);
+        sunshoreCrownTop = pose.top;
+        canvas.dataset.sunshoreArenaCrown = JSON.stringify(pose);
+      }
+      sunshoreLandmarkMagic?.update(elapsed, isReducedMotion);
       if (crownDrifter && crownDrifterPresentationRoot) {
         const battlePresentation = arenaBattlePresentationRef.current.value;
         const creatureMotion = battlePresentation?.active
@@ -9562,13 +9610,45 @@ export default function Island5ThreePilot({
               tokenPosition: [playerPiece.root.position.x, playerPiece.root.position.y, playerPiece.root.position.z],
               reducedMotion: isReducedMotion,
             });
+        if (isSunshoreAtoll && creatureCelebrationRequestRef.current !== consumedCelebrationRequest) {
+          consumedCelebrationRequest = creatureCelebrationRequestRef.current;
+          if (!creatureCelebration && !battlePresentation?.active && !constructionPresentationRef.current?.active && !interactionPausedRef.current) {
+            creatureCelebration = { startedAt: elapsed, position: [...creatureMotion.position] as CelebrationPoint, yaw: creatureMotion.yaw };
+          }
+        }
+        if (battlePresentation?.active || constructionPresentationRef.current?.active || interactionPausedRef.current) creatureCelebration = null;
         crownDrifterPresentationRoot.visible = creatureMotion.visible;
         crownDrifterPresentationRoot.position.set(...creatureMotion.position);
         crownDrifterPresentationRoot.rotation.y = creatureMotion.yaw;
         crownDrifterPresentationRoot.rotation.x = 0;
         crownDrifterPresentationRoot.rotation.z = 0;
         crownDrifterPresentationRoot.scale.setScalar(battlePresentation?.active ? 0.86 : CROWN_DRIFTER_BOARD_SCALE);
+        crownDrifter.bodyPivot.rotation.x = 0;
+        crownDrifter.bodyPivot.rotation.y = 0;
         crownDrifter.update(elapsed, frameDeltaSeconds, isReducedMotion, creatureMotion.emergenceProgress);
+        const celebrationElapsed = creatureCelebration ? elapsed - creatureCelebration.startedAt : null;
+        const celebrationPose = creatureCelebration && celebrationElapsed !== null
+          ? resolveSunshoreCreatureCelebration(celebrationElapsed, creatureCelebration.position, creatureMotion.position, isReducedMotion)
+          : null;
+        if (celebrationPose && creatureCelebration) {
+          crownDrifterPresentationRoot.position.set(...celebrationPose.position);
+          const yawDelta = Math.atan2(Math.sin(creatureMotion.yaw - creatureCelebration.yaw), Math.cos(creatureMotion.yaw - creatureCelebration.yaw));
+          crownDrifterPresentationRoot.rotation.y = creatureCelebration.yaw + celebrationPose.spin + yawDelta * celebrationPose.blend;
+          crownDrifter.bodyPivot.rotation.x = celebrationPose.roll;
+          crownDrifter.bodyPivot.scale.set(1 / Math.sqrt(celebrationPose.squash), celebrationPose.squash, 1 / Math.sqrt(celebrationPose.squash));
+          crownDrifter.leftWingPivot.rotation.z -= celebrationPose.fold * 1.0;
+          crownDrifter.rightWingPivot.rotation.z += celebrationPose.fold * 1.0;
+        } else {
+          creatureCelebration = null;
+          crownDrifter.bodyPivot.scale.setScalar(1);
+        }
+        celebrationSmoke?.update(celebrationPose ? celebrationElapsed : null, camera, isReducedMotion);
+        if (isSunshoreAtoll) {
+          canvas.dataset.creatureCelebrationPhase = celebrationPose?.phase ?? 'idle';
+          canvas.dataset.creatureCelebrationSeconds = String(celebrationElapsed ?? 0);
+          canvas.dataset.creatureCelebrationPosition = JSON.stringify(crownDrifterPresentationRoot.position.toArray());
+          canvas.dataset.creatureCelebrationSmoke = String(celebrationSmoke?.root.visible ?? false);
+        }
         if (battlePresentation?.active && !isReducedMotion) {
           const cueElapsed = Math.max(0, (now - arenaBattlePresentationRef.current.cueStartedAtMs) / 1000);
           const cuePulse = Math.sin(Math.min(1, cueElapsed) * Math.PI);
@@ -9593,6 +9673,16 @@ export default function Island5ThreePilot({
             crownDrifterPresentationRoot.position.y += Math.abs(Math.sin(cueElapsed * 3.8)) * 0.18;
             crownDrifterPresentationRoot.scale.multiplyScalar(1 + Math.sin(cueElapsed * 4.2) * 0.04);
           }
+        }
+        if (isSunshoreAtoll) {
+          // Evaluate after celebration and battle transforms; neither can bypass clearance.
+          crownDrifterPresentationRoot.updateWorldMatrix(true, true);
+          sunshoreCreatureBounds.setFromObject(crownDrifterPresentationRoot);
+          const b = sunshoreCreatureBounds;
+          const lift = sunshoreCreatureClearanceLift(b.min.x, b.max.x, b.min.z, b.max.z, b.min.y, sunshoreCrownTop);
+          crownDrifterPresentationRoot.position.y += lift;
+          canvas.dataset.sunshoreCreatureClearanceLift = String(lift);
+          canvas.dataset.creatureCelebrationPosition = JSON.stringify(crownDrifterPresentationRoot.position.toArray());
         }
       }
 
@@ -10600,6 +10690,9 @@ export default function Island5ThreePilot({
       frameCount += 1;
       const metricElapsedMs = now - metricStartedAt;
       if (metricElapsedMs >= 750) {
+        if (import.meta.env.DEV && isSunshoreAtoll && new URLSearchParams(window.location.search).get('island5ProfileDetails') === '1') {
+          canvas.dataset.sunshoreSceneInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
+        }
         if (import.meta.env.DEV && isFrostmoonHaven && new URLSearchParams(window.location.search).get('island3ProfileDetails') === '1') {
           canvas.dataset.island3SceneInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(scene));
           canvas.dataset.island3AmbienceInventory = JSON.stringify(collectIslandThreeScenePerformanceInventory(livingAmbience.root));
@@ -11089,6 +11182,11 @@ export default function Island5ThreePilot({
         {reportShareNotice ? <p className="island-5-three-pilot__profiler-share-notice">{reportShareNotice}</p> : null}
       </section>
 
+      {islandNumber === 5 ? <button className="island-5-three-pilot__celebration-test island-5-three-pilot__arena-test" type="button" onClick={() => { arenaCrownPreviewUntilRef.current = performance.now() + 6500; }}>Test arena rise + return</button> : null}
+      {islandNumber === 5 ? <button className="island-5-three-pilot__celebration-test" type="button" disabled={profilerStatus === 'running' || tourStatus === 'running'} onClick={() => {
+        applyPresetRef.current('overview');
+        creatureCelebrationRequestRef.current += 1;
+      }}>Test creature celebration</button> : null}
       <div className="island-5-three-pilot__camera-controls" aria-label="3D camera presets">
         <div className="island-5-three-pilot__camera-row">
           {ISLAND_5_CAMERA_PRESETS.slice(0, 4).map((preset) => (

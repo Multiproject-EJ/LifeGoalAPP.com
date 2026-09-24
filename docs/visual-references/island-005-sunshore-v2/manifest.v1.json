@@ -1,0 +1,20 @@
+{
+  "island": 5,
+  "version": 1,
+  "references": [
+    {
+      "path": "docs/visual-references/island-005-sunshore-v2/005-source.png",
+      "sha256": "8fea51709c9f11882623a9bff16ecd4a2f093f3fae9586d1d5cd80728f68b781",
+      "authority": "approved-art-target",
+      "origin": "ImageGen concept approved by user 2026-09-23",
+      "status": "approved-goal"
+    }
+  ],
+  "gauntlet": "docs/gauntlets/island-005-v2/EXECUTION-CONTRACT.md",
+  "inventory": "docs/gauntlets/island-005-v2/part-ownership.json",
+  "baseline": "docs/gauntlets/island-005-v2/baseline.v1.json",
+  "runtime": "src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts",
+  "sculptSpec": ".img2threejs/island-005-v2/sculpt-spec.json",
+  "limitations": "Single overview; hidden construction inferred. Canonical 36-tile topology, landmark transforms, progression and camera precede painted layout. Lit illustration is not a neutral PBR plate.",
+  "arenaPrecedence": "Latest runtime Sunwheel arena contract takes precedence over the approved concept: presentation-complete opening at canonical Boss Level 0, funded ceremonial layers, retained open creature airspace and no roof over Crown Drifter."
+}

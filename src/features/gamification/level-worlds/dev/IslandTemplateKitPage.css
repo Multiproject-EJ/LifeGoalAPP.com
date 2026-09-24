@@ -801,3 +801,22 @@ body.island-3d-evidence-capture .island-kit-phone--evidence-frame {
   transform: none;
   transform-origin: top left;
 }
+
+.island-5-three-pilot__celebration-test {
+  position: absolute;
+  z-index: 5;
+  top: 154px;
+  left: 12px;
+  max-width: 155px;
+  padding: 9px 11px;
+  border: 1px solid #acf0c0;
+  border-radius: 10px;
+  background: #234a4a;
+  color: #f2fff7;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.island-5-three-pilot__celebration-test:disabled { opacity: .5; cursor: default; }
+
+.island-5-three-pilot__arena-test { top: 216px; }

@@ -1,0 +1,15 @@
+{
+  "source": "docs/visual-references/island-005-sunshore-v2/005-source.png",
+  "sha256": "8fea51709c9f11882623a9bff16ecd4a2f093f3fae9586d1d5cd80728f68b781",
+  "role": "user-approved ImageGen art target",
+  "admission": "admitted",
+  "suitability": "conditional stylized diorama",
+  "authority": [
+    "Canonical runtime board and landmark footprint precede illustrative layout",
+    "Front visible features have image authority",
+    "Unseen rear and underside are inferred; no generated additional views"
+  ],
+  "partsManifest": "docs/gauntlets/island-005-v2/part-ownership.json",
+  "sculptSpec": ".img2threejs/island-005-v2/sculpt-spec.json",
+  "status": "intake-only; no visual acceptance"
+}

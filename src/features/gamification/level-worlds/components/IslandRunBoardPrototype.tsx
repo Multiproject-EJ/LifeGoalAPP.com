@@ -1,3 +1,4 @@
+import { shouldCelebrateSunshoreMaxRoll } from '../services/islandRunCreatureCelebration';
 import { ArenaTicketEntry } from './ArenaTicketEntry';
 import { resolveLandmarkAttention } from '../services/islandRunLandmarkAttention';
 import { NotificationBadge } from '../../../../components/NotificationBadge';
@@ -2214,6 +2215,7 @@ export function IslandRunBoardPrototype({
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
   const [diceThrowStrength, setDiceThrowStrength] = useState<IslandRunDiceThrowStrength>('normal');
+  const [arenaCelebrationSequence, setArenaCelebrationSequence] = useState(0);
   const [isAutoRolling, setIsAutoRolling] = useState(false);
   const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
   const [isTimedEventLaunchQueued, setIsTimedEventLaunchQueued] = useState(false);
@@ -8323,6 +8325,9 @@ export function IslandRunBoardPrototype({
       return false;
     }
 
+    if (shouldCelebrateSunshoreMaxRoll(effectiveIslandNumber, rollResult.status, maxMultiplierThrowCadence.throwStrength)) {
+      setArenaCelebrationSequence(sequence => sequence + 1);
+    }
     firstMaxMultiplierThrowPendingRef.current = maxMultiplierThrowCadence.nextFirstMaxThrowPending;
     consecutiveMaxMultiplierRollsRef.current = maxMultiplierThrowCadence.nextConsecutiveMaxMultiplierRolls;
 
@@ -15969,6 +15974,7 @@ export function IslandRunBoardPrototype({
                 openingCeremonyPlayback={openingCeremonyPlayback}
                 constructionPresentation={constructionPresentation}
                 arenaBattlePresentation={arenaBattlePresentation}
+                arenaCelebrationSequence={arenaCelebrationSequence}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();

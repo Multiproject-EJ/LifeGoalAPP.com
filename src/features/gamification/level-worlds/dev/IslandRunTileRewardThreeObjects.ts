@@ -1,8 +1,9 @@
+import { TRAFFIC_LIGHT_CHARGE_TARGET } from '../services/islandRunTrafficLightTile';
 import * as THREE from 'three';
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { IslandTileMapEntry, IslandTileType } from '../services/islandBoardTileMap';
-import type { Island3DQuality, Island5TileTransform } from './island5ThreePilotContract';
+import { ISLAND_3D_TILE_RADIAL_DEPTH, type Island3DQuality, type Island5TileTransform } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 
 export interface IslandRunTileRewardThreeRuntime {
@@ -358,15 +359,17 @@ function createMoneySymbol(materials: RewardMaterials, quality: Island3DQuality)
 function createTrafficBeacon(materials: RewardMaterials, quality: Island3DQuality) {
   const root = new THREE.Group();
   root.name = 'ISLAND_RUN_TILE_OBJECT_TRAFFIC_BEACON';
-  const housing = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.4, 0.14), materials.midnight);
-  [materials.hazard, materials.amber, materials.green].forEach((material, index) => {
-    const light = new THREE.Mesh(new THREE.SphereGeometry(0.045, qualitySegments(quality), 7), material.clone());
-    light.name=`TRAFFIC_LAMP_${index}`;
-    light.position.set(0, 0.12 - index * 0.12, 0.08);
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.82, 0.14), materials.midnight);
+  for (let index = 0; index < TRAFFIC_LIGHT_CHARGE_TARGET; index++) {
+    const material = index < 3 ? materials.hazard : index < 6 ? materials.amber : materials.green;
+    const light = new THREE.Mesh(new THREE.SphereGeometry(.034, qualitySegments(quality), 7), material.clone());
+    light.name = `TRAFFIC_LAMP_${index}`;
+    light.position.set(0, .315 - index * .09, .085);
+    light.userData.baseColor = material.color.clone();
     root.add(light);
-  });
+  }
   const cap = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.045, 0.18), materials.gold);
-  cap.position.y = 0.23;
+  cap.position.y = 0.45;
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(.028,.04,.52,8),materials.midnight);
   pole.position.y=-.45;
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.05,8),materials.gold);foot.position.y=-.72;
@@ -627,7 +630,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
     // hiding, but repeated pieces inside it share one batch per material.
     // This is especially important for hazard shards, tickets and scrolls.
     if (tileEntry.tileType === 'traffic_light') {
-      // Keep the three live signal materials independent of the static reward batches.
+      // Keep the eight live progress-lamp materials independent of the static reward batches.
     } else if (compactCollectibleMaterial) {
       compactRewardToVertexColorMesh(visual, compactCollectibleMaterial, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
     } else {
@@ -667,7 +670,16 @@ export function createIslandRunTileRewardThreeObjects(options: {
               ? 0.6
               : 0.7;
     visual.position.set(transform.position[0], baseY, transform.position[2]);
-    visual.rotation.y = -transform.rotationYRad;
+    if (tileEntry.tileType === 'traffic_light') {
+      // Mount on the inner rim; reserve the canonical tile centre for landing.
+      const radius = Math.hypot(transform.position[0], transform.position[2]);
+      if (radius > 0) {
+        const inset = ISLAND_3D_TILE_RADIAL_DEPTH / 2;
+        visual.position.x -= transform.position[0] / radius * inset;
+        visual.position.z -= transform.position[2] / radius * inset;
+      }
+    }
+    visual.rotation.y = -transform.rotationYRad + (tileEntry.tileType === 'traffic_light' ? Math.PI : 0);
     visual.scale.setScalar(baseScale);
     visual.userData.tileIndex = tileEntry.index;
     visual.userData.tileType = tileEntry.tileType;
@@ -757,9 +769,10 @@ export function createIslandRunTileRewardThreeObjects(options: {
         entry.root.traverse(child=>{
           if(!(child instanceof THREE.Mesh)||!child.name.startsWith('TRAFFIC_LAMP_'))return;
           const index=Number(child.name.slice(-1));
-          const active=trafficCharge>=8?2:trafficCharge>=3?1:0;
+          const lit = index < Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.max(0, Math.floor(trafficCharge)));
           const material=child.material as THREE.MeshPhysicalMaterial;
-          material.emissiveIntensity=index===active?2:.06;
+          material.emissiveIntensity=lit?2:.02;
+          material.color.copy(child.userData.baseColor as THREE.Color).multiplyScalar(lit?1:.28);
         });
         return;
       }
