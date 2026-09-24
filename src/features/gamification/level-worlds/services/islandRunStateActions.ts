@@ -1,6 +1,7 @@
 import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { resolveIslandRunRestorationDiceReward } from './islandRunRestorationReward';
+import { applyLandmarkCompletionReward } from './islandRunLandmarkReward';
 export { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from './islandRunRestorationReward';
 /**
  * islandRunStateActions — pure action functions that mutate Island Run
@@ -4363,7 +4364,7 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   if (areStringArraysEqual(currentStops, normalizedCompletedStops)) {
     return current;
   }
-  const next: IslandRunGameStateRecord = {
+  let next: IslandRunGameStateRecord = {
     ...current,
     completedStopsByIsland: {
       ...current.completedStopsByIsland,
@@ -4371,6 +4372,7 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
     },
     runtimeVersion: current.runtimeVersion + 1,
   };
+  next = applyLandmarkCompletionReward(current, next, session.user.id);
   void commitIslandRunState({
     session,
     client,
@@ -4473,13 +4475,14 @@ export function applyStopObjectiveProgress(options: ApplyStopObjectiveProgressOp
     accessUnlocked: index === 0 || entry.accessUnlocked === true || entry.objectiveComplete === true,
     ...(entry.objectiveComplete === true ? { postponedAtMs: null } : {}),
   }));
-  const next: IslandRunGameStateRecord = {
+  let next: IslandRunGameStateRecord = {
     ...current,
     stopStatesByIndex: normalizedStopStates,
     activeStopIndex,
     activeStopType,
     runtimeVersion: current.runtimeVersion + 1,
   };
+  next = applyLandmarkCompletionReward(current, next, session.user.id);
   void commitIslandRunState({
     session,
     client,
@@ -4704,7 +4707,7 @@ export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): 
   } = options;
   const current = getIslandRunStateSnapshot(session);
   if (!canPlaceIslandRunEggs(current, islandNumber, Object.keys(eggEntriesByLedgerKey))) return current;
-  const next: IslandRunGameStateRecord = {
+  let next: IslandRunGameStateRecord = {
     ...current,
     ...hatcheryGrantProgress(current, completedStops),
     activeEggTier,
@@ -4714,6 +4717,7 @@ export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): 
     perIslandEggs: { ...current.perIslandEggs, ...Object.fromEntries(Object.entries(eggEntriesByLedgerKey).map(([key, entry]) => [key, { ...entry, location: 'spaceship' as const }])) },
     runtimeVersion: current.runtimeVersion + 1,
   };
+  next = applyLandmarkCompletionReward(current, next, session.user.id);
   void commitIslandRunState({
     session,
     client,
@@ -4738,7 +4742,7 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
   if (!canPlaceIslandRunEggs(current, islandNumber, [islandKey])) return current;
-  const next: IslandRunGameStateRecord = {
+  let next: IslandRunGameStateRecord = {
     ...current,
     ...hatcheryGrantProgress(current, completedStops),
     activeEggTier,
@@ -4748,6 +4752,7 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
     perIslandEggs: { ...current.perIslandEggs, [islandKey]: { ...perIslandEggEntry, location: 'spaceship' } },
     runtimeVersion: current.runtimeVersion + 1,
   };
+  next = applyLandmarkCompletionReward(current, next, session.user.id);
   void commitIslandRunState({
     session,
     client,
@@ -4994,7 +4999,7 @@ export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): 
     triggerSource,
   } = options;
   const current = getIslandRunStateSnapshot(session);
-  const next: IslandRunGameStateRecord = {
+  let next: IslandRunGameStateRecord = {
     ...current,
     essence,
     essenceLifetimeSpent,
@@ -5002,6 +5007,7 @@ export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): 
     stopStatesByIndex,
     runtimeVersion: current.runtimeVersion + 1,
   };
+  next = applyLandmarkCompletionReward(current, next, session.user.id);
   // The store publishes synchronously, so return after the canonical client
   // state is visible and let the writer finish/queue Supabase persistence.
   // Waiting here keeps the UI's build-tap lock held for the whole network
@@ -5090,7 +5096,7 @@ async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatc
   const restorationDiceAwarded = resolveIslandRunRestorationDiceReward(current.stopBuildStateByIndex, nextStopBuildStateByIndex);
   const diceAwarded = constructionDiceAwarded + restorationDiceAwarded;
 
-  const next: IslandRunGameStateRecord = {
+  let next: IslandRunGameStateRecord = {
     ...current,
     dicePool: current.dicePool + diceAwarded,
     essence: nextEssence,
@@ -5107,6 +5113,7 @@ async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatc
       : current.firstSessionTutorialState,
     runtimeVersion: current.runtimeVersion + 1,
   };
+  next = applyLandmarkCompletionReward(current, next, session.user.id);
   // `commitIslandRunState` publishes before its first await. Do not keep the
   // build interaction locked while Supabase persistence completes; the
   // writer's single-flight queue safely serializes subsequent snapshots.
@@ -5118,7 +5125,7 @@ async function applyStopBuildSpendBatchUnlocked(options: ApplyStopBuildSpendBatc
   });
   if (constructionDiceAwarded > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.constructionLevelDice, amount: constructionDiceAwarded, sessionId: session.user.id, metadata: { mode: 'hold_or_part', island: current.currentIslandNumber } });
   if (restorationDiceAwarded > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.fullRestorationDice, amount: restorationDiceAwarded, sessionId: session.user.id, metadata: { island: current.currentIslandNumber, cycleIndex: current.cycleIndex } });
-  return { record: next, stepsApplied, constructionDiceAwarded, restorationDiceAwarded, diceAwarded };
+  return { record: next, stepsApplied, constructionDiceAwarded, restorationDiceAwarded, diceAwarded: next.dicePool - current.dicePool };
 }
 
 // ── C3: Island travel ────────────────────────────────────────────────────────

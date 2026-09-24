@@ -41,6 +41,7 @@ type WisdomCaretakerCompassEncounterProps = {
   session: Session;
   islandNumber: number;
   buildLevel?: number;
+  landmarkRewardStatus?: 'locked' | 'earned' | 'legacy-complete';
   onComplete: (message: string) => void;
   onComeBackLater?: () => void;
   /** Dev-only visual proof: deterministic in-memory Compass, with no remote/local writes. */
@@ -66,6 +67,7 @@ export function WisdomCaretakerCompassEncounter({
   session,
   islandNumber,
   buildLevel,
+  landmarkRewardStatus,
   onComplete,
   onComeBackLater,
   previewMode = false,
@@ -222,7 +224,7 @@ export function WisdomCaretakerCompassEncounter({
   if (stage === 'insight') {
     return (
       <section className="wisdom-caretaker wisdom-caretaker--insight" aria-labelledby="wisdom-insight-title">
-        <ActivityProgress completed={answeredInputs} total={requiredInputs.length} buildLevel={buildLevel} saved />
+        <ActivityProgress completed={answeredInputs} total={requiredInputs.length} buildLevel={buildLevel} saved landmarkRewardStatus={landmarkRewardStatus} />
         <div className="wisdom-caretaker__ornament" aria-hidden="true">✦</div>
         <header className="wisdom-caretaker__insight-header">
           <span>{isFirstSignal ? 'Saved to your captain profile' : 'Saved to your Compass Book'}</span>
@@ -338,7 +340,7 @@ export function WisdomCaretakerCompassEncounter({
       {!book.ready ? <p className="wisdom-caretaker__loading">Opening your private reflection…</p> : null}
 
       <div className="wisdom-caretaker__question-card">
-        <ActivityProgress completed={answeredInputs} total={requiredInputs.length} buildLevel={buildLevel} />
+        <ActivityProgress completed={answeredInputs} total={requiredInputs.length} buildLevel={buildLevel} landmarkRewardStatus={landmarkRewardStatus} />
         <CompassActivityRenderer
           blocks={fragment.inputs}
           values={draft}

@@ -8,4 +8,10 @@
 .activity-progress .activity-progress__build { accent-color: #bd9650; }
 .activity-progress .activity-progress__build::-webkit-progress-value { background: #bd9650; }
 .activity-progress .activity-progress__build::-moz-progress-bar { background: #bd9650; }
+.activity-progress__reward { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 3px; padding: 9px 11px; border: 1px solid #d7a94b66; border-radius: 11px; background: linear-gradient(100deg, #d7a94b14, #56bde916); font-size: .82rem; }
+.activity-progress__reward span { white-space: nowrap; font-weight: 800; color: #d2a240; }
+.activity-progress__reward[data-status='earned'] { border-color: #50d99b80; box-shadow: 0 0 16px #50d99b20; }
+.activity-progress__reward[data-status='earned'] span { color: #32c88b; }
+.activity-progress__reward[data-status='legacy-complete'] { border-color: #8396a744; background: #74879a10; }
+.activity-progress__reward[data-status='legacy-complete'] span { color: inherit; opacity: .75; }
 .activity-progress small { opacity: .8; line-height: 1.4; }

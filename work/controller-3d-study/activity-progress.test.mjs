@@ -19,4 +19,7 @@ assert.match(render({ completed: 3, total: 3 }), /Ready to submit/);
 assert.match(render({ completed: 3, total: 3, saved: true }), /Activity saved/);
 assert.equal((render({ completed: 0, total: 1 }).match(/<progress /g) ?? []).length, 1);
 assert.match(render({ completed: 9, total: 2, buildLevel: 9 }), /Level 3 of 3/);
-console.log('PASS activity progress: remaining counts, independent build bar, draft/saved distinction and clamping');
+assert.match(render({ completed: 0, total: 1, buildLevel: 2, landmarkRewardStatus: 'locked' }), /Completion reward/);
+assert.match(render({ completed: 1, total: 1, buildLevel: 3, saved: true, landmarkRewardStatus: 'earned' }), /Reward earned/);
+assert.match(render({ completed: 1, total: 1, buildLevel: 3, saved: true, landmarkRewardStatus: 'legacy-complete' }), /already complete before the new dice reward/);
+console.log('PASS activity progress: remaining counts, independent build bar, reward states, draft/saved distinction and clamping');

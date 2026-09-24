@@ -8,9 +8,13 @@ export function applyIslandRunFastBuild(options: { session: Session; client: Sup
   return withIslandRunActionLock(options.session.user.id, async () => {
     const result = resolveIslandRunFastBuild(getIslandRunStateSnapshot(options.session), options.quote);
     if (result.applied) {
+      const landmarkCompletionDiceAwarded = result.diceAwarded
+        - result.constructionDiceAwarded
+        - result.restorationDiceAwarded;
       // Publish and persist locally synchronously; the existing writer queues remote sync.
       void commitIslandRunState({ session: options.session, client: options.client, record: result.record, triggerSource: `build_fast_${options.quote.mode}` });
       recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.constructionLevelDice, amount: result.diceAward, sessionId: options.session.user.id, metadata: { mode: options.quote.mode, island: result.record.currentIslandNumber } });
+      if (landmarkCompletionDiceAwarded > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.landmarkCompletionDice, amount: landmarkCompletionDiceAwarded, sessionId: options.session.user.id, metadata: { mode: options.quote.mode, island: result.record.currentIslandNumber } });
       if (result.restorationDiceAwarded > 0) recordIslandRunDiceInflow({ source: ISLAND_RUN_ECONOMY_SOURCES.fullRestorationDice, amount: result.restorationDiceAwarded, sessionId: options.session.user.id, metadata: { mode: options.quote.mode, island: result.record.currentIslandNumber, cycleIndex: result.record.cycleIndex } });
     }
     return result;

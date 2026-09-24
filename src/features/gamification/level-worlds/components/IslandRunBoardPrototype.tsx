@@ -58,6 +58,7 @@ import {
 } from '../services/islandRunControllerVisualContract';
 import { resolveIslandRunControllerTuckGesture } from '../services/islandRunControllerTuckPresentation';
 import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuildOpenFlow';
+import { getLandmarkRewardStatus } from '../services/islandRunLandmarkReward';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
@@ -17375,7 +17376,8 @@ export function IslandRunBoardPrototype({
               <IslandRunLifePromptCard
                 session={session}
                 islandNumber={islandNumber}
-                buildLevel={runtimeState.stopBuildStateByIndex[openedStopIndex]?.buildLevel ?? 0}
+                buildLevel={__storeState.stopBuildStateByIndex[openedStopIndex]?.buildLevel ?? 0}
+                landmarkRewardStatus={getLandmarkRewardStatus(__storeState, openedStopIndex)}
                 onComplete={(message) => {
                   handleCompleteActiveStop(`✅ Habit landmark complete. ${message}`);
                 }}
@@ -17389,7 +17391,8 @@ export function IslandRunBoardPrototype({
                 <WisdomCaretakerCompassEncounter
                   session={session}
                   islandNumber={islandNumber}
-                  buildLevel={runtimeState.stopBuildStateByIndex[openedStopIndex]?.buildLevel ?? 0}
+                  buildLevel={__storeState.stopBuildStateByIndex[openedStopIndex]?.buildLevel ?? 0}
+                  landmarkRewardStatus={getLandmarkRewardStatus(__storeState, openedStopIndex)}
                   onComplete={(message) => {
                     handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}

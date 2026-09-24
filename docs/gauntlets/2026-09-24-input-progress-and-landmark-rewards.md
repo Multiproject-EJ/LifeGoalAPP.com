@@ -1,6 +1,24 @@
 # Input progress and landmark reward gates
 
-Status: discovery complete for primary Habit/Wisdom paths; economy decision pending.
+Status: five-dice landmark reward implemented locally; production release QA pending.
+
+## 2026-09-24 reward checkpoint
+
+Eivind explicitly approved five dice per actual landmark after both its activity
+and Level3 construction. The reward and visit-scoped receipt now commit together
+through canonical objective, completion-ledger, ordinary/fast construction,
+Hatchery placement and early-island activity actions. It works in either order,
+does not back-pay old fully complete landmarks, and excludes Island001's synthetic
+Assembly slot. Hatching and collection are deliberately not reward triggers.
+
+The shared Habit/Wisdom progress card reads the canonical store and presents the
+five-dice reward as locked, earned, or legacy-complete. The JSON parser retains
+receipts and same-visit conflict merge cannot lose a receipt. Isolated reward
+coverage passes 21 scenarios; the full Island Run service suite passes 2,305/0,
+the architecture guard reports 0 violations, shared progress render tests pass,
+and TypeScript project compilation passes. This remains local and undeployed.
+Cross-device simultaneous completion still follows the existing client conflict
+model; do not claim server-transactional global exactly-once settlement.
 
 Implementation checkpoint: Habit and Wisdom now share ActivityProgress. The
 ordinary Habit path counts one real action; the first-day path labels its unit

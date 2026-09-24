@@ -3,6 +3,7 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { reconcileIslandRunStopObjectivesFromCompletionLedger, resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
+import { applyLandmarkCompletionReward } from './islandRunLandmarkReward';
 
 /** An explicit free arrival activity, not construction credit or an egg grant.
  * Keep the existing internal stop ID and derive the next stop with the shared
@@ -30,12 +31,13 @@ export function completeIslandRunWelcomeCheckIn(options: {
     } : entry);
     const stops = resolveIslandRunContractV2Stops({ stopStatesByIndex,
       stopTicketsPaidByIsland: state.stopTicketsPaidByIsland, islandNumber: state.currentIslandNumber });
-    await commitIslandRunState({ session: options.session, client: options.client,
-      triggerSource: 'complete_welcome_check_in', record: {
+    const record = applyLandmarkCompletionReward(state, {
         ...state, runtimeVersion: state.runtimeVersion + 1, stopStatesByIndex,
         activeStopIndex: stops.activeStopIndex, activeStopType: stops.activeStopType,
         completedStopsByIsland: { ...state.completedStopsByIsland, [islandKey]: [...completedStops, 'hatchery'] },
-      },
+      }, options.session.user.id);
+    await commitIslandRunState({ session: options.session, client: options.client,
+      triggerSource: 'complete_welcome_check_in', record,
     });
     return { status: 'completed' as const };
   });

@@ -282,6 +282,41 @@ function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] 
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
+  {
+    name: 'landmark reward settles activity-first and build-first once',
+    run: async () => {
+      for (const activityFirst of [true, false]) {
+        resetAll();
+        const session = makeSession();
+        seedState({
+          currentIslandNumber: 3,
+          cycleIndex: 0,
+          islandStartedAtMs: 123,
+          dicePool: 20,
+          essence: 1000,
+          completedStopsByIsland: {},
+          stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false })),
+          stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ requiredEssence: 100, spentEssence: 90, buildLevel: 2 })),
+        });
+        const completeActivity = () => syncCompletedStopsForIsland({
+          session, client: null, islandNumber: 3, completedStops: ['habit'],
+        });
+        if (activityFirst) completeActivity();
+        const built = await applyStopBuildSpendBatch({
+          session, client: null, stopIndex: 1, effectiveIslandNumber: 3,
+          maxSteps: 1, spendAmount: 10, enforceSequentialBuildTarget: false,
+        });
+        assertEqual(built.diceAwarded, activityFirst ? 6 : 1, 'construction plus gated reward');
+        if (!activityFirst) completeActivity();
+        const done = getIslandRunStateSnapshot(session);
+        assertEqual(done.dicePool, 26, 'five completion dice and one construction die');
+        assertEqual(done.stopStatesByIndex[1].completionDiceAwarded, true, 'receipt committed');
+        completeActivity();
+        assertEqual(getIslandRunStateSnapshot(session).dicePool, 26, 'repeated ledger sync cannot repay');
+        assertEqual(readIslandRunGameStateRecord(session).stopStatesByIndex[1].completionDiceAwarded, true, 'receipt survives persistence normalization');
+      }
+    },
+  },
   { name: 'Hatchery grant requires all Level3 buildings, awards once and starts ship incubation', run() {
     resetAll(); const session=makeSession();
     const eligible = {
@@ -4552,6 +4587,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       seedState({
         runtimeVersion: 4,
         currentIslandNumber: 7,
+        dicePool: 20,
         stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ buildLevel: 3, spentEssence: 0, requiredEssence: 0 })),
         stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({ objectiveComplete: index >= 1 && index <= 3, buildComplete: true })),
         activeEggTier: null,
@@ -4585,6 +4621,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.activeEggHatchDurationMs, 3600, 'active egg hatch duration should be set');
       assertEqual(result.perIslandEggs['7']?.status, 'incubating', 'island ledger should contain incubating egg');
       assertEqual(result.completedStopsByIsland['7']?.[0], 'hatchery', 'completed stops should be synced for island');
+      assertEqual(result.dicePool, 25, 'Hatchery dual completion should award five dice');
+      assertEqual(result.stopStatesByIndex[0]?.completionDiceAwarded, true, 'Hatchery reward receipt should persist');
       assertEqual(result.runtimeVersion, 5, 'runtimeVersion should bump by one');
     },
   },
@@ -6137,7 +6175,7 @@ export const islandRunStateActionsTests: TestCase[] = [
     run: () => {
       resetAll();
       const session = makeSession();
-      seedState({ runtimeVersion: 10, currentIslandNumber: 12, perIslandEggs: {},
+      seedState({ runtimeVersion: 10, currentIslandNumber: 12, dicePool: 30, perIslandEggs: {},
         stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ buildLevel: 3, spentEssence: 0, requiredEssence: 0 })),
         stopStatesByIndex: Array.from({ length: 5 }, (_, index) => ({ objectiveComplete: index >= 1 && index <= 3, buildComplete: true })),
       });
@@ -6162,6 +6200,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(Object.keys(next.perIslandEggs).filter((key) => key.startsWith('12')).length, 3, 'expected three egg slots for island');
       assertEqual(next.activeEggTier, 'common', 'base slot remains compatibility active egg');
       assertEqual(next.completedStopsByIsland['12']?.includes('hatchery'), true, 'hatchery objective is completed by triple-set');
+      assertEqual(next.dicePool, 35, 'Egg Mania placement should award one Hatchery completion prize');
+      assertEqual(next.stopStatesByIndex[0]?.completionDiceAwarded, true, 'batch placement writes one receipt');
       assertEqual(next.runtimeVersion, 11, 'batch placement bumps runtime once');
     },
   },

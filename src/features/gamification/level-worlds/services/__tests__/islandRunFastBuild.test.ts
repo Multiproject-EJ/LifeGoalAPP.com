@@ -16,6 +16,24 @@ function record(island = 2, level = 0, cycle = 0): IslandRunGameStateRecord {
   };
 }
 export const islandRunFastBuildTests: TestCase[] = [
+  {
+    name: 'fast build pays five dice for each activity-complete landmark and cannot replay',
+    run: () => {
+      const before = record(3, 2);
+      before.stopStatesByIndex[1].objectiveComplete = true;
+      before.completedStopsByIsland = { '3': ['wisdom'] };
+      const quote = quoteIslandRunFastBuild(before, 'island', 0)!;
+      const result = resolveIslandRunFastBuild(before, quote);
+      assertEqual(result.constructionDiceAwarded, 5, 'five construction levels');
+      assertEqual(result.restorationDiceAwarded, 100, 'restoration preserved');
+      assertEqual(result.diceAwarded, 115, 'two dual-completion rewards added');
+      assertEqual(result.record.dicePool, 125, 'one atomic wallet update');
+      assertEqual(result.record.stopStatesByIndex[1].completionDiceAwarded, true, 'Habit receipt');
+      assertEqual(result.record.stopStatesByIndex[3].completionDiceAwarded, true, 'Wisdom receipt');
+      assertEqual(result.record.stopStatesByIndex[0].completionDiceAwarded, undefined, 'unfinished activity not rewarded');
+      assertEqual(resolveIslandRunFastBuild(result.record, quote).diceAwarded, 0, 'quote replay pays nothing');
+    },
+  },
   { name: 'fast building supports every island and all starting levels at the exact remaining price', run: () => {
     for (let island = 1; island <= 120; island++) for (let level = 0; level < 3; level++) {
       const before = record(island, level, island % 2);
