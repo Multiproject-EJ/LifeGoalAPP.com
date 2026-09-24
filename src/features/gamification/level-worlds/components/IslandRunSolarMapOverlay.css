@@ -1,0 +1,2948 @@
+.island-run-orbit-compass {
+  position: relative;
+  width: min(96vw, 430px);
+  height: min(96dvh, 880px);
+  min-height: 620px;
+  overflow: clip;
+  border: 1px solid rgba(248, 199, 102, 0.62);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(248, 199, 102, 0.18), transparent 20%),
+    linear-gradient(180deg, #0a2b48 0%, #07506a 48%, #071a31 100%);
+  color: #fff1c5;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.58),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  isolation: isolate;
+}
+
+.island-run-orbit-compass__stars,
+.island-run-orbit-compass__world,
+.island-run-orbit-compass__sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__stars {
+  z-index: 1;
+  opacity: 0.48;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 1px, transparent 1.7px),
+    radial-gradient(circle, rgba(104, 220, 255, 0.68) 0 1px, transparent 1.8px);
+  background-position: 22px 38px, 84px 126px;
+  background-size: 124px 164px, 178px 226px;
+}
+
+.island-run-orbit-compass__stars::before,
+.island-run-orbit-compass__stars::after {
+  content: "";
+  position: absolute;
+  width: 58px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(184, 239, 255, 0.9));
+  filter: drop-shadow(0 0 6px rgba(104, 220, 255, 0.82));
+  opacity: 0;
+  transform: rotate(-34deg);
+  animation: island-run-orbit-compass-shooting-star 8.5s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__stars::before {
+  left: 12%;
+  top: 24%;
+}
+
+.island-run-orbit-compass__stars::after {
+  right: 8%;
+  top: 44%;
+  animation-delay: 4.25s;
+}
+
+.island-run-orbit-compass__world {
+  z-index: 0;
+  background-image:
+    linear-gradient(180deg, rgba(4, 27, 50, 0.2), rgba(3, 39, 64, 0.56) 52%, rgba(3, 15, 29, 0.9)),
+    url("/assets/themes/first-light-kingdom/today/today-sky-background.webp");
+  background-position: center;
+  background-size: cover;
+  opacity: 0.32;
+  filter: saturate(1.26) brightness(0.76) contrast(1.12);
+}
+
+.island-run-orbit-compass__sweep {
+  z-index: 3;
+  inset: -25%;
+  background: conic-gradient(from -28deg, transparent 0deg, transparent 318deg, rgba(104, 220, 255, 0.05) 338deg, rgba(104, 220, 255, 0.11) 350deg, transparent 360deg);
+  mix-blend-mode: screen;
+  animation: island-run-orbit-compass-sweep 11s linear infinite;
+}
+
+.island-run-orbit-compass__topbar {
+  position: absolute;
+  z-index: 10;
+  left: 0.8rem;
+  right: 0.8rem;
+  top: 0.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 44px;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.island-run-orbit-compass__title,
+.island-run-orbit-compass__progress,
+.island-run-orbit-compass__detail,
+.island-run-orbit-compass__branch,
+.island-run-orbit-compass__legend {
+  background: linear-gradient(180deg, rgba(10, 29, 50, 0.93), rgba(5, 15, 28, 0.88));
+  border: 1px solid rgba(248, 199, 102, 0.74);
+  box-shadow:
+    inset 0 0 18px rgba(104, 220, 255, 0.08),
+    0 10px 24px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+.island-run-orbit-compass__title,
+.island-run-orbit-compass__progress,
+.island-run-orbit-compass__close {
+  min-height: 44px;
+  border-radius: 999px;
+}
+
+.island-run-orbit-compass__title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.42rem 0.5rem;
+}
+
+.island-run-orbit-compass__title span:not(.island-run-orbit-compass__compass) {
+  display: block;
+  color: rgba(174, 241, 255, 0.82);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.island-run-orbit-compass h2,
+.island-run-orbit-compass h3,
+.island-run-orbit-compass p {
+  margin: 0;
+}
+
+.island-run-orbit-compass h2 {
+  overflow: hidden;
+  color: #ffe49c;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.42);
+}
+
+.island-run-orbit-compass__compass {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(248, 199, 102, 0.72);
+  border-radius: 50%;
+}
+
+.island-run-orbit-compass__compass::before,
+.island-run-orbit-compass__compass::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 3px;
+  width: 3px;
+  height: 21px;
+  background: #f8c766;
+  clip-path: polygon(50% 0, 100% 44%, 50% 100%, 0 44%);
+}
+
+.island-run-orbit-compass__compass::after {
+  transform: rotate(90deg);
+}
+
+.island-run-orbit-compass__progress {
+  box-sizing: border-box;
+  width: 112px;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-content: center;
+  justify-content: center;
+  gap: 0.06rem 0.22rem;
+  padding: 0.38rem 0.68rem;
+  color: #fff6da;
+  font-weight: 900;
+}
+
+.island-run-orbit-compass__progress strong,
+.island-run-orbit-compass__progress span {
+  line-height: 1;
+}
+
+.island-run-orbit-compass__progress i {
+  grid-column: 1 / -1;
+  display: block;
+  width: 76px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.island-run-orbit-compass__progress b {
+  position: relative;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5ee082, #f8c766);
+}
+
+.island-run-orbit-compass__progress b::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent);
+  transform: translateX(-120%);
+  animation: island-run-orbit-compass-progress-glint 3.8s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  border: 1px solid rgba(248, 199, 102, 0.74);
+  background: rgba(5, 15, 28, 0.88);
+  color: #ffe49c;
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 0 14px rgba(104, 220, 255, 0.08);
+}
+
+.island-run-orbit-compass__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.island-run-orbit-compass__stage--dragging {
+  cursor: grabbing;
+}
+
+.island-run-orbit-compass__stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.island-run-orbit-compass__mini {
+  position: absolute;
+  z-index: 6;
+  right: 1rem;
+  top: 4.6rem;
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border: 1px solid rgba(248, 199, 102, 0.72);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(8, 37, 60, 0.98), rgba(3, 15, 28, 0.96)),
+    repeating-radial-gradient(circle, transparent 0 13px, rgba(104, 220, 255, 0.34) 14px 15px, transparent 16px 22px);
+  box-shadow:
+    inset 0 0 18px rgba(104, 220, 255, 0.12),
+    0 10px 22px rgba(0, 0, 0, 0.22);
+  padding: 0;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__mini:focus-visible {
+  outline: 2px solid #fff0a6;
+  outline-offset: 3px;
+}
+
+.island-run-orbit-compass__mini span {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(104, 220, 255, 0.34);
+  animation: island-run-orbit-compass-mini 15s linear infinite;
+}
+
+.island-run-orbit-compass__mini span::before,
+.island-run-orbit-compass__mini span::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(104, 220, 255, 0.28);
+  border-radius: 50%;
+}
+
+.island-run-orbit-compass__mini span::before { inset: 10px; }
+.island-run-orbit-compass__mini span::after { inset: 21px; }
+
+.island-run-orbit-compass__mini i {
+  --mini-angle: 0deg;
+  position: absolute;
+  z-index: 2;
+  left: calc(50% - 4px);
+  top: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 50%;
+  background: #5ee082;
+  box-shadow: 0 0 7px currentColor;
+  transform: rotate(var(--mini-angle)) translateY(-27px);
+}
+
+.island-run-orbit-compass__mini i:nth-child(1) { --mini-angle: 0deg; color: #68dcff; background: #68dcff; }
+.island-run-orbit-compass__mini i:nth-child(2) { --mini-angle: 72deg; color: #5ee082; background: #5ee082; }
+.island-run-orbit-compass__mini i:nth-child(3) { --mini-angle: 144deg; color: #ff8a4a; background: #ff8a4a; }
+.island-run-orbit-compass__mini i:nth-child(4) { --mini-angle: 216deg; color: #f8c766; background: #f8c766; }
+.island-run-orbit-compass__mini i:nth-child(5) { --mini-angle: 288deg; color: #d377ff; background: #d377ff; }
+
+.island-run-orbit-compass__mini b {
+  position: absolute;
+  z-index: 3;
+  left: calc(50% - 6px);
+  top: calc(50% - 6px);
+  width: 12px;
+  height: 12px;
+  border: 1px solid #fff0a6;
+  border-radius: 50%;
+  background: #f8b934;
+  box-shadow: 0 0 12px rgba(248, 199, 102, 0.82);
+}
+
+.island-run-orbit-compass__label {
+  --label-x: 0px;
+  --label-y: 0px;
+  position: absolute;
+  z-index: 7;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border: 1px solid rgba(248, 199, 102, 0.9);
+  border-radius: 50%;
+  background: rgba(4, 14, 27, 0.93);
+  color: #fff3cf;
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0;
+  transform: translate3d(var(--label-x), var(--label-y), 0);
+  pointer-events: none;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.28),
+    0 0 14px rgba(248, 199, 102, 0.16);
+}
+
+.island-run-orbit-compass__label--completed {
+  border-color: rgba(94, 224, 130, 0.9);
+}
+
+.island-run-orbit-compass__label--visited,
+.island-run-orbit-compass__label--unvisited {
+  border-color: rgba(104, 220, 255, 0.9);
+}
+
+.island-run-orbit-compass__label--locked {
+  opacity: 0.42 !important;
+  filter: grayscale(0.8);
+}
+
+.island-run-orbit-compass__label--current,
+.island-run-orbit-compass__label--selected {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border: 2px solid #fff0a6;
+  font-size: 0.86rem;
+  box-shadow:
+    0 0 0 8px rgba(104, 220, 255, 0.17),
+    0 0 34px rgba(104, 220, 255, 0.56);
+}
+
+.island-run-orbit-compass__label--current {
+  animation: island-run-orbit-compass-current-label 2.2s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__detail {
+  position: absolute;
+  z-index: 10;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 6.95rem;
+  min-height: 96px;
+  overflow: hidden;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 0.72rem;
+  padding: 0.62rem;
+  border-width: 2px;
+  box-shadow:
+    inset 0 0 22px rgba(104, 220, 255, 0.1),
+    0 12px 30px rgba(0, 0, 0, 0.36),
+    0 0 20px rgba(248, 199, 102, 0.14);
+  animation: island-run-orbit-compass-panel-pop 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.island-run-orbit-compass__detail::after,
+.island-run-orbit-compass__focus-detail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--orbit-accent, #f8c766) 52%, transparent);
+  border-radius: inherit;
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--orbit-accent, #f8c766) 12%, transparent);
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__detail--life,
+.island-run-orbit-compass__focus-detail--life { --orbit-accent: #5ee082; }
+.island-run-orbit-compass__detail--water,
+.island-run-orbit-compass__focus-detail--water { --orbit-accent: #68dcff; }
+.island-run-orbit-compass__detail--heat,
+.island-run-orbit-compass__focus-detail--heat { --orbit-accent: #ff8a4a; }
+.island-run-orbit-compass__detail--sky,
+.island-run-orbit-compass__focus-detail--sky { --orbit-accent: #f8c766; }
+.island-run-orbit-compass__detail--absurd,
+.island-run-orbit-compass__focus-detail--absurd { --orbit-accent: #d377ff; }
+
+.island-run-orbit-compass__thumb {
+  height: 72px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  box-shadow: inset 0 -16px 26px rgba(0, 0, 0, 0.26);
+}
+
+.island-run-orbit-compass__thumb--life {
+  background:
+    radial-gradient(circle at 54% 28%, rgba(255, 255, 255, 0.78), transparent 9%),
+    radial-gradient(circle at 56% 57%, rgba(94, 224, 130, 0.86), transparent 24%),
+    radial-gradient(circle at 45% 70%, rgba(30, 116, 62, 0.72), transparent 23%),
+    linear-gradient(150deg, #1b5d91, #31d98a 52%, #f8c766);
+}
+
+.island-run-orbit-compass__thumb--water {
+  background:
+    radial-gradient(circle at 54% 28%, rgba(255, 255, 255, 0.78), transparent 9%),
+    radial-gradient(circle at 56% 57%, rgba(104, 220, 255, 0.88), transparent 24%),
+    radial-gradient(circle at 45% 70%, rgba(39, 129, 205, 0.74), transparent 23%),
+    linear-gradient(150deg, #1c4e92, #20d4c2 52%, #f8c766);
+}
+
+.island-run-orbit-compass__thumb--heat {
+  background:
+    radial-gradient(circle at 54% 28%, rgba(255, 255, 255, 0.78), transparent 9%),
+    radial-gradient(circle at 56% 57%, rgba(255, 116, 78, 0.88), transparent 24%),
+    radial-gradient(circle at 45% 70%, rgba(255, 196, 76, 0.66), transparent 23%),
+    linear-gradient(150deg, #683114, #cb542d 52%, #f8c766);
+}
+
+.island-run-orbit-compass__thumb--sky {
+  background:
+    radial-gradient(circle at 54% 28%, rgba(255, 255, 255, 0.88), transparent 9%),
+    radial-gradient(circle at 56% 57%, rgba(248, 199, 102, 0.9), transparent 24%),
+    radial-gradient(circle at 45% 70%, rgba(91, 184, 225, 0.7), transparent 23%),
+    linear-gradient(150deg, #2879a5, #f1bc4f 52%, #fff1b0);
+}
+
+.island-run-orbit-compass__thumb--absurd {
+  background:
+    radial-gradient(circle at 54% 28%, rgba(255, 255, 255, 0.78), transparent 9%),
+    radial-gradient(circle at 56% 57%, rgba(211, 119, 255, 0.86), transparent 24%),
+    radial-gradient(circle at 45% 70%, rgba(104, 220, 255, 0.64), transparent 23%),
+    linear-gradient(150deg, #38216f, #d85cff 52%, #68dcff);
+}
+
+.island-run-orbit-compass__thumb--art {
+  background-color: rgba(3, 14, 27, 0.92);
+  box-shadow:
+    inset 0 0 18px rgba(104, 220, 255, 0.08),
+    0 5px 14px rgba(0, 0, 0, 0.28);
+}
+
+.island-run-orbit-compass__thumb--art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.42));
+}
+
+.island-run-orbit-compass__copy {
+  min-width: 0;
+}
+
+.island-run-orbit-compass__status {
+  display: inline-flex;
+  margin-bottom: 0.26rem;
+  border-radius: 999px;
+  padding: 0.16rem 0.44rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff1c5;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.island-run-orbit-compass__status--completed {
+  background: rgba(94, 224, 130, 0.18);
+  color: #9ff0b6;
+}
+
+.island-run-orbit-compass__status--visited,
+.island-run-orbit-compass__status--unvisited {
+  background: rgba(104, 220, 255, 0.16);
+  color: #a8efff;
+}
+
+.island-run-orbit-compass__status--current {
+  background: rgba(248, 199, 102, 0.22);
+  color: #ffe18a;
+}
+
+.island-run-orbit-compass__status--locked {
+  background: rgba(159, 176, 199, 0.14);
+  color: #bdcbe0;
+}
+
+.island-run-orbit-compass__detail h3 {
+  overflow: hidden;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.06;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-run-orbit-compass__detail p {
+  margin-top: 0.22rem;
+  color: rgba(255, 247, 223, 0.78);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.island-run-orbit-compass__checks {
+  display: flex;
+  gap: 0.28rem;
+  margin-top: 0.44rem;
+}
+
+.island-run-orbit-compass__checks span {
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.island-run-orbit-compass__checks span.is-complete {
+  border-color: #45d879;
+  background: #45d879;
+  box-shadow: 0 0 8px rgba(69, 216, 121, 0.45);
+}
+
+.island-run-orbit-compass__checks span.is-complete::after,
+.island-run-orbit-compass__focus-checks span.is-complete::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 3px;
+  margin: 4px auto 0;
+  border-left: 2px solid #071d13;
+  border-bottom: 2px solid #071d13;
+  transform: rotate(-45deg);
+}
+
+.island-run-orbit-compass__action {
+  width: 58px;
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  border: 1px solid rgba(255, 239, 166, 0.88);
+  border-radius: 999px;
+  background: radial-gradient(circle at 32% 24%, #fff2ac, #e2a539 58%, #84510d);
+  color: #071323;
+  font-size: 0.7rem;
+  font-weight: 900;
+  font-family: inherit;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(248, 199, 102, 0.42);
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.island-run-orbit-compass__action:not(:disabled):active,
+.island-run-orbit-compass__focus-action:not(:disabled):active {
+  transform: scale(0.92);
+}
+
+.island-run-orbit-compass__action--locked {
+  opacity: 0.82;
+  filter: saturate(0.72);
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__action:disabled {
+  opacity: 0.52;
+  filter: grayscale(0.5);
+  cursor: default;
+}
+
+.island-run-orbit-compass__atlas {
+  position: absolute;
+  z-index: 8;
+  inset: 4.65rem 0.75rem 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 50% 37%, rgba(248, 199, 102, 0.14), transparent 21%),
+    linear-gradient(180deg, rgba(7, 34, 55, 0.9), rgba(3, 15, 28, 0.98));
+  display: grid;
+  grid-template-rows: 62px minmax(260px, 1fr) 100px;
+  box-shadow: inset 0 0 44px rgba(104, 220, 255, 0.06);
+  animation: island-run-orbit-compass-panel-pop 260ms ease-out;
+}
+
+.island-run-orbit-compass__atlas-header {
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 12px;
+  text-align: center;
+  align-items: center;
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid rgba(104, 220, 255, 0.16);
+  background: rgba(3, 15, 28, 0.42);
+}
+
+.island-run-orbit-compass__atlas-header span {
+  display: block;
+  color: rgba(174, 241, 255, 0.7);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.island-run-orbit-compass__atlas-header h3 {
+  margin-top: 0.08rem;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.island-run-orbit-compass__atlas-header button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(104, 220, 255, 0.5);
+  border-radius: 8px;
+  background: rgba(8, 40, 66, 0.84);
+  color: #c8f3ff;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__atlas-worlds {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(#0d333dc9, #071f30ed), url('/assets/themes/first-light-kingdom/today/today-sky-background.webp') center / cover;
+}
+
+.island-run-orbit-compass__atlas-worlds::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 51%;
+  width: min(96%, 380px);
+  aspect-ratio: 1;
+  background: transparent;
+  -webkit-mask: radial-gradient(circle, transparent 0 39px, black 44px 45%, transparent 52%);
+  mask: radial-gradient(circle, transparent 0 39px, black 44px 45%, transparent 52%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__atlas-orbit {
+  position: absolute;
+  left: 50%;
+  top: 51%;
+  width: min(90%, 350px);
+  height: 78%;
+  border: 1px dashed rgba(248, 199, 102, 0.26);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__atlas-orbit::before,
+.island-run-orbit-compass__atlas-orbit::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 74%;
+  height: 74%;
+  border: 1px solid rgba(248, 199, 102, 0.14);
+  border-radius: 50%;
+  background: none;
+  transform: translate(-50%, -50%) rotate(-24deg);
+}
+
+.island-run-orbit-compass__atlas-orbit::after {
+  width: 44%;
+  height: 44%;
+}
+
+.island-run-orbit-compass__atlas-sun {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 51%;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(255, 239, 166, 0.92);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, #fff5b8 0 10%, transparent 12%),
+    radial-gradient(circle, #ffd76b 0 46%, #f09b28 68%, rgba(240, 155, 40, 0.2) 70% 100%);
+  box-shadow:
+    0 0 0 9px rgba(248, 199, 102, 0.08),
+    0 0 34px rgba(248, 199, 102, 0.58);
+  transform: translate(-50%, -50%);
+  animation: island-run-orbit-compass-atlas-sun 3.2s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__atlas-world {
+  --atlas-color: #68dcff;
+  --atlas-size: 96px;
+  position: absolute;
+  z-index: 2;
+  width: var(--atlas-size);
+  height: calc(var(--atlas-size) + 40px);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff1c5;
+  font: inherit;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.island-run-orbit-compass__atlas-world--slot-0 { left: 50%; top: 18%; }
+.island-run-orbit-compass__atlas-world--slot-1 { left: 20%; top: 43%; }
+.island-run-orbit-compass__atlas-world--slot-2 { left: 80%; top: 40%; }
+.island-run-orbit-compass__atlas-world--slot-3 { left: 27%; top: 78%; }
+.island-run-orbit-compass__atlas-world--slot-4 { left: 74%; top: 77%; }
+
+.island-run-orbit-compass__atlas-world--life { --atlas-color: #5ee082; }
+.island-run-orbit-compass__atlas-world--water { --atlas-color: #68dcff; }
+.island-run-orbit-compass__atlas-world--heat { --atlas-color: #ff8a4a; }
+.island-run-orbit-compass__atlas-world--sky { --atlas-color: #f8c766; }
+.island-run-orbit-compass__atlas-world--absurd { --atlas-color: #d377ff; }
+
+.island-run-orbit-compass__atlas-world.is-selected {
+  --atlas-size: 104px;
+  z-index: 3;
+  filter: brightness(1.1) saturate(1.08);
+}
+
+.island-run-orbit-compass__atlas-world::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: calc(var(--atlas-size) * 0.72);
+  height: calc(var(--atlas-size) * 0.72);
+  border-radius: 50%;
+  background: transparent;
+  transform: translateX(-50%);
+}
+
+.island-run-orbit-compass__atlas-world:focus-visible {
+  outline: none;
+}
+
+.island-run-orbit-compass__atlas-world:focus-visible .island-run-orbit-compass__atlas-world-ring {
+  filter:
+    drop-shadow(0 0 2px #ffffff)
+    drop-shadow(0 0 8px var(--atlas-color));
+}
+
+.island-run-orbit-compass__atlas-world-ring {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--atlas-size);
+  height: var(--atlas-size);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  -webkit-mask: radial-gradient(circle, transparent 57%, black 59% 68%, transparent 70%);
+  mask: radial-gradient(circle, transparent 57%, black 59% 68%, transparent 70%);
+  opacity: 0.55;
+}
+
+.island-run-orbit-compass__atlas-world img {
+  position: absolute;
+  left: 50%;
+  top: 1px;
+  width: var(--atlas-size);
+  height: var(--atlas-size);
+  display: block;
+  object-fit: contain;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 7px 8px rgba(0, 0, 0, 0.5));
+}
+
+.island-run-orbit-compass__atlas-world b,
+.island-run-orbit-compass__atlas-world small {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  display: block;
+  width: max-content;
+  transform: translateX(-50%);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.86);
+}
+
+.island-run-orbit-compass__atlas-world b {
+  bottom: 19px;
+  color: color-mix(in srgb, var(--atlas-color) 68%, white);
+  font-size: 0.88rem;
+}
+
+.island-run-orbit-compass__atlas-world small {
+  bottom: 0;
+  color: #c1d4dc;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.island-run-orbit-compass__atlas-world.is-selected b {
+  color: #fff2bd;
+  font-size: 0.88rem;
+}
+
+.island-run-orbit-compass__atlas-world em {
+  position: absolute;
+  z-index: 4;
+  right: 2px;
+  top: 2px;
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0 0.16rem;
+  border: 1px solid #fff0a6;
+  border-radius: 50%;
+  background: #c88c27;
+  color: #071323;
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 950;
+  box-shadow: 0 0 12px rgba(248, 199, 102, 0.54);
+}
+
+.island-run-orbit-compass__atlas-nearby {
+  position: relative;
+  z-index: 4;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.18rem;
+  padding: 0.32rem 0.38rem 0.42rem;
+  border-top: 1px solid rgba(104, 220, 255, 0.18);
+  border-bottom: 1px solid rgba(248, 199, 102, 0.2);
+  background: rgba(3, 15, 28, 0.66);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.island-run-orbit-compass__atlas-nearby::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 4%;
+  right: 4%;
+  top: 53%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5ee082, #f8c766 48%, rgba(104, 220, 255, 0.36));
+  box-shadow: 0 0 10px rgba(104, 220, 255, 0.24);
+}
+
+.island-run-orbit-compass__atlas-island {
+  position: relative;
+  min-width: 0;
+  height: 82px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #dce8f5;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.island-run-orbit-compass__atlas-island img {
+  width: 100%;
+  height: 66px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 6px rgba(0, 0, 0, 0.52));
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__atlas-island b {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  min-width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  padding: 0 0.18rem;
+  border: 1px solid rgba(159, 176, 199, 0.64);
+  border-radius: 50%;
+  background: rgba(3, 14, 27, 0.94);
+  color: inherit;
+  font-size: 0.61rem;
+  transform: translateX(-50%);
+}
+
+.island-run-orbit-compass__atlas-island--completed {
+  color: #8eeba9;
+}
+
+.island-run-orbit-compass__atlas-island--completed b {
+  border-color: #5ee082;
+  background: #1f7847;
+}
+
+.island-run-orbit-compass__atlas-island--current,
+.island-run-orbit-compass__atlas-island.is-selected {
+  z-index: 2;
+  transform: translateY(-4px) scale(1.12);
+  color: #ffe18a;
+}
+
+.island-run-orbit-compass__atlas-island--current b,
+.island-run-orbit-compass__atlas-island.is-selected b {
+  border: 2px solid #fff0a6;
+  box-shadow: 0 0 14px rgba(248, 199, 102, 0.68);
+}
+
+.island-run-orbit-compass__atlas-island--locked {
+  filter: grayscale(0.68) brightness(0.68);
+}
+
+.island-run-orbit-compass__atlas-island--locked.is-selected {
+  filter: grayscale(0.35) brightness(0.84);
+}
+
+.island-run-orbit-compass__atlas-detail {
+  --atlas-detail-color: #68dcff;
+  z-index: 4;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 0.58rem;
+  padding: 0.48rem 0.62rem;
+  background: linear-gradient(180deg, rgba(8, 29, 49, 0.74), rgba(3, 13, 25, 0.96));
+  box-shadow: inset 0 3px 18px color-mix(in srgb, var(--atlas-detail-color) 8%, transparent);
+}
+
+.island-run-orbit-compass__atlas-detail--life { --atlas-detail-color: #5ee082; }
+.island-run-orbit-compass__atlas-detail--water { --atlas-detail-color: #68dcff; }
+.island-run-orbit-compass__atlas-detail--heat { --atlas-detail-color: #ff8a4a; }
+.island-run-orbit-compass__atlas-detail--sky { --atlas-detail-color: #f8c766; }
+.island-run-orbit-compass__atlas-detail--absurd { --atlas-detail-color: #d377ff; }
+
+.island-run-orbit-compass__atlas-detail > img {
+  width: 72px;
+  height: 72px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 7px rgba(0, 0, 0, 0.46));
+}
+
+.island-run-orbit-compass__atlas-detail > div {
+  min-width: 0;
+}
+
+.island-run-orbit-compass__atlas-detail h3 {
+  overflow: hidden;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.island-run-orbit-compass__atlas-detail .island-run-orbit-compass__status {
+  margin-bottom: 0.2rem;
+}
+
+.island-run-orbit-compass__atlas-detail .island-run-orbit-compass__checks {
+  margin-top: 0.38rem;
+}
+
+.island-run-orbit-compass__atlas-detail > button {
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(255, 239, 166, 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 24%, #fff2ac, #e2a539 58%, #84510d);
+  color: #071323;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(248, 199, 102, 0.36);
+}
+
+.island-run-orbit-compass__focus {
+  position: absolute;
+  z-index: 8;
+  inset: 4.65rem 0.75rem 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(104, 220, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(7, 29, 51, 0.98), rgba(4, 14, 27, 0.98));
+  display: grid;
+  grid-template-rows: 62px minmax(260px, 1fr) auto;
+  box-shadow:
+    inset 0 0 42px rgba(104, 220, 255, 0.06),
+    0 18px 40px rgba(0, 0, 0, 0.34);
+}
+
+.island-run-orbit-compass__focus-world {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.38;
+  filter: saturate(1.2) contrast(1.08);
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__focus-world::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 17, 31, 0.32), rgba(4, 17, 31, 0.7));
+}
+
+.island-run-orbit-compass__focus-header {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.62rem;
+  min-height: 0;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(248, 199, 102, 0.22);
+}
+
+.island-run-orbit-compass__focus-header > button {
+  min-height: 44px;
+  border: 1px solid rgba(104, 220, 255, 0.46);
+  border-radius: 8px;
+  background: rgba(8, 40, 66, 0.82);
+  color: #bcefff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__focus-header > div {
+  min-width: 0;
+  text-align: center;
+}
+
+.island-run-orbit-compass__focus-header span {
+  display: block;
+  margin-bottom: 0.16rem;
+  color: rgba(174, 241, 255, 0.78);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.island-run-orbit-compass__focus-header h3 {
+  overflow: hidden;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-run-orbit-compass__focus-header > strong {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(248, 199, 102, 0.78);
+  border-radius: 50%;
+  background: rgba(3, 14, 27, 0.9);
+  color: #fff1bd;
+  font-size: 0.78rem;
+  box-shadow: 0 0 16px rgba(248, 199, 102, 0.2);
+}
+
+.island-run-orbit-compass__focus-route {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+.island-run-orbit-compass__focus-route::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__focus-route::after {
+  content: none;
+  position: absolute;
+  left: 10%;
+  top: 52%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff1a8;
+  box-shadow: 0 0 9px #f8c766, 0 0 22px rgba(104, 220, 255, 0.74);
+  animation: island-run-orbit-compass-focus-spark 4.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__focus-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__focus-node {
+  --focus-node-size: 68px;
+  position: absolute;
+  z-index: 2;
+  width: var(--focus-node-size);
+  height: var(--focus-node-size);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff4d5;
+  font: inherit;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: left 260ms ease, top 260ms ease, width 260ms ease, height 260ms ease, filter 180ms ease;
+}
+
+.island-run-orbit-compass__focus-node--slot-0 { left: 14%; top: 86%; --focus-node-size: max(44px, min(17cqw, 15cqh)); }
+.island-run-orbit-compass__focus-node--slot-1 { left: 23%; top: 70%; --focus-node-size: max(52px, min(25cqw, 23cqh)); }
+.island-run-orbit-compass__focus-node--slot-2 { left: 50%; top: 49%; --focus-node-size: min(49cqw, 39cqh); }
+.island-run-orbit-compass__focus-node--slot-3 { left: 77%; top: 28%; --focus-node-size: max(52px, min(25cqw, 23cqh)); }
+.island-run-orbit-compass__focus-node--slot-4 { left: 86%; top: 12%; --focus-node-size: max(44px, min(17cqw, 15cqh)); }
+
+.island-run-orbit-compass__focus-node--empty {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__focus-node--hub {
+  cursor: default;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__focus-node.island-run-orbit-compass__focus-node--hub::before {
+  border: 1px solid rgba(248, 199, 102, 0.86);
+  background: rgba(45, 31, 12, 0.58);
+  box-shadow:
+    0 0 0 5px rgba(248, 199, 102, 0.08),
+    0 0 24px rgba(248, 199, 102, 0.42);
+}
+
+.island-run-orbit-compass__focus-sun {
+  position: absolute;
+  left: 22%;
+  top: 22%;
+  width: 56%;
+  height: 56%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, #fff3ae 0 12%, transparent 14%),
+    radial-gradient(circle, #ffd56a 0 46%, #f59b24 66%, rgba(245, 155, 36, 0.12) 69% 100%);
+  box-shadow: 0 0 18px rgba(248, 199, 102, 0.76);
+}
+
+.island-run-orbit-compass__focus-node--hub b {
+  bottom: -6px;
+  min-width: 34px;
+  color: #ffe49c;
+  font-size: 0.54rem;
+}
+
+.island-run-orbit-compass__focus-node::before {
+  content: "";
+  position: absolute;
+  inset: 68% 5% 6%;
+  z-index: -1;
+  border: 1px solid rgba(104, 220, 255, 0.52);
+  border-radius: 50%;
+  background: rgba(3, 15, 28, 0.56);
+  box-shadow: 0 0 18px rgba(104, 220, 255, 0.18);
+}
+
+.island-run-orbit-compass__focus-node--completed::before {
+  border-color: rgba(94, 224, 130, 0.82);
+  background: rgba(18, 88, 65, 0.42);
+  box-shadow:
+    0 0 0 4px rgba(94, 224, 130, 0.08),
+    0 0 22px rgba(94, 224, 130, 0.38);
+}
+
+.island-run-orbit-compass__focus-node--current::before,
+.island-run-orbit-compass__focus-node--current.is-selected::before {
+  border: 2px solid #ffe39a;
+  box-shadow:
+    0 0 0 8px rgba(104, 220, 255, 0.12),
+    0 0 28px rgba(248, 199, 102, 0.5);
+}
+
+.island-run-orbit-compass__focus-node.is-selected {
+  z-index: 3;
+}
+
+.island-run-orbit-compass__focus-node--locked .island-run-orbit-compass__focus-art {
+  filter: grayscale(0.55) brightness(0.74);
+}
+
+.island-run-orbit-compass__focus-art {
+  --focus-terrain: #5ee082;
+  --focus-terrain-dark: #246c4a;
+  --focus-rock: #554638;
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.38));
+}
+
+.island-run-orbit-compass__focus-art:not(.has-art)::before,
+.island-run-orbit-compass__focus-art:not(.has-art)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.island-run-orbit-compass__focus-art:not(.has-art)::before {
+  z-index: 2;
+  top: 26%;
+  width: 64%;
+  height: 42%;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.62), transparent 12%),
+    radial-gradient(ellipse at center, var(--focus-terrain) 0 48%, var(--focus-terrain-dark) 52% 72%, transparent 74%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-terrain) 46%, transparent);
+}
+
+.island-run-orbit-compass__focus-art:not(.has-art)::after {
+  z-index: 1;
+  top: 53%;
+  width: 48%;
+  height: 34%;
+  background: linear-gradient(165deg, #8b745c, var(--focus-rock) 55%, #1d2530);
+  clip-path: polygon(0 0, 100% 0, 72% 54%, 50% 100%, 28% 54%);
+}
+
+.island-run-orbit-compass__focus-art--life {
+  --focus-terrain: #5ee082;
+  --focus-terrain-dark: #246c4a;
+}
+
+.island-run-orbit-compass__focus-art--water {
+  --focus-terrain: #68dcff;
+  --focus-terrain-dark: #247bb4;
+  --focus-rock: #315a6c;
+}
+
+.island-run-orbit-compass__focus-art--heat {
+  --focus-terrain: #ff8a4a;
+  --focus-terrain-dark: #8f321d;
+  --focus-rock: #6f3328;
+}
+
+.island-run-orbit-compass__focus-art--sky {
+  --focus-terrain: #f8c766;
+  --focus-terrain-dark: #a76f25;
+  --focus-rock: #5f6472;
+}
+
+.island-run-orbit-compass__focus-art--absurd {
+  --focus-terrain: #d377ff;
+  --focus-terrain-dark: #6642aa;
+  --focus-rock: #45316f;
+}
+
+.island-run-orbit-compass__focus-art.has-art {
+  display: grid;
+  place-items: center;
+}
+
+.island-run-orbit-compass__focus-art.has-art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 12px rgba(0, 0, 0, 0.46));
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+.island-run-orbit-compass__focus-node b {
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 0.26rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(248, 199, 102, 0.86);
+  border-radius: 999px;
+  background: rgba(3, 14, 27, 0.94);
+  color: #fff0b1;
+  font-size: 0.8rem;
+  transform: translateX(-50%);
+}
+
+.island-run-orbit-compass__focus-detail {
+  position: relative;
+  z-index: 3;
+  min-height: 164px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.8rem;
+  border-top: 1px solid rgba(248, 199, 102, 0.36);
+  background: linear-gradient(180deg, rgba(8, 29, 49, 0.86), rgba(3, 13, 25, 0.96));
+  animation: island-run-orbit-compass-panel-pop 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.island-run-orbit-compass__focus-detail h3 {
+  overflow: hidden;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.island-run-orbit-compass__focus-detail p {
+  margin-top: 0.2rem;
+  color: rgba(255, 247, 223, 0.76);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.island-run-orbit-compass__focus-checks {
+  display: flex;
+  gap: 0.38rem;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.island-run-orbit-compass__focus-checks span {
+  position: relative;
+  width: 19px;
+  height: 19px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.island-run-orbit-compass__focus-checks span.is-complete {
+  border-color: #45d879;
+  background: #45d879;
+  box-shadow: 0 0 10px rgba(69, 216, 121, 0.42);
+}
+
+.island-run-orbit-compass__focus-action {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(255, 239, 166, 0.9);
+  border-radius: 8px;
+  background: radial-gradient(circle at 32% 24%, #fff2ac, #e2a539 58%, #84510d);
+  color: #071323;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(248, 199, 102, 0.38);
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.island-run-orbit-compass__search-icon {
+  display: block;
+  position: relative;
+  width: 15px;
+  height: 15px;
+  margin: auto !important;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+.island-run-orbit-compass__search-icon::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 2px;
+  background: currentColor;
+  right: -6px;
+  bottom: -3px;
+  transform: rotate(45deg);
+}
+.island-run-orbit-compass__atlas-routes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.island-run-orbit-compass__node-state {
+  position: absolute;
+  top: 4%;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: #163b45;
+  color: #d9e9ed;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px #00192180;
+}
+.island-run-orbit-compass__node-state--completed { background: #267a51; color: #edfff3; border-radius: 50%; }
+.island-run-orbit-compass__focus-node--slot-3 .island-run-orbit-compass__node-state { right: auto; left: -12px; }
+.island-run-orbit-compass__focus-node--slot-1 .island-run-orbit-compass__node-state--completed { right: auto; left: -4px; }
+.island-run-orbit-compass__node-state--current { background: #ffe19b; color: #463716; top: -12px; right: 50%; transform: translateX(50%); }
+.island-run-orbit-compass__lock-icon { width: 9px; height: 8px; background: currentColor; border-radius: 2px; position: relative; margin-top: 5px; }
+.island-run-orbit-compass__lock-icon::before { content: ""; position: absolute; width: 7px; height: 7px; border: 1.5px solid currentColor; border-radius: 6px; top: -5px; left: 1px; }
+.island-run-orbit-compass__current-shortcut { position: absolute; right: 12px; bottom: 12px; min-height: 44px; padding: 0 12px; border: 1px solid #99c9cb80; border-radius: 8px; background: #10363f; color: #ecf6f6; font: inherit; font-size: 0.75rem; cursor: pointer; }
+.island-run-orbit-compass button:focus-visible { outline: 2px solid #fff3ad; outline-offset: 3px; }
+.island-run-orbit-compass__focus-action span { margin-left: 8px; }
+.island-run-orbit-compass .island-run-orbit-compass__focus-action { color: #352b14; }
+.island-run-orbit-compass:focus { outline: none; }
+.island-run-orbit-compass__title > div { min-width: 0; }
+
+.island-run-orbit-compass__focus-action:disabled {
+  opacity: 0.52;
+  filter: grayscale(0.5);
+  cursor: default;
+}
+
+.island-run-orbit-compass__archive {
+  --archive-accent: #68dcff;
+  position: absolute;
+  z-index: 8;
+  inset: 4.65rem 0.75rem 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--archive-accent) 68%, #f8c766);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(7, 29, 51, 0.92), rgba(3, 13, 25, 0.99));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  box-shadow:
+    inset 0 0 54px color-mix(in srgb, var(--archive-accent) 10%, transparent),
+    0 18px 40px rgba(0, 0, 0, 0.34);
+  isolation: isolate;
+  animation: island-run-orbit-compass-archive-enter 360ms cubic-bezier(0.2, 0.82, 0.2, 1);
+}
+
+.island-run-orbit-compass__archive--life { --archive-accent: #5ee082; }
+.island-run-orbit-compass__archive--water { --archive-accent: #68dcff; }
+.island-run-orbit-compass__archive--heat { --archive-accent: #ff8a4a; }
+.island-run-orbit-compass__archive--sky { --archive-accent: #f8c766; }
+.island-run-orbit-compass__archive--absurd { --archive-accent: #d377ff; }
+
+.island-run-orbit-compass__archive-world {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.44;
+  filter: saturate(1.28) contrast(1.08);
+  transform: scale(1.04);
+}
+
+.island-run-orbit-compass__archive::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--archive-accent) 24%, transparent), transparent 36%),
+    linear-gradient(180deg, rgba(3, 14, 27, 0.24), rgba(3, 14, 27, 0.7) 64%, rgba(3, 14, 27, 0.98));
+}
+
+.island-run-orbit-compass__archive-header {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 0.62rem;
+  min-height: 70px;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--archive-accent) 28%, transparent);
+  background: rgba(3, 14, 27, 0.46);
+  backdrop-filter: blur(7px);
+}
+
+.island-run-orbit-compass__archive-header > button {
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--archive-accent) 58%, transparent);
+  border-radius: 8px;
+  background: rgba(8, 40, 66, 0.82);
+  color: #d7f8ff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__archive-header > div {
+  min-width: 0;
+  text-align: center;
+}
+
+.island-run-orbit-compass__archive-header span {
+  display: block;
+  margin-bottom: 0.16rem;
+  color: color-mix(in srgb, var(--archive-accent) 72%, white);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.island-run-orbit-compass__archive-header h3 {
+  overflow: hidden;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-run-orbit-compass__archive-header > strong {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--archive-accent) 78%, #f8c766);
+  border-radius: 50%;
+  background: rgba(3, 14, 27, 0.9);
+  color: #fff1bd;
+  font-size: 0.78rem;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--archive-accent) 28%, transparent);
+}
+
+.island-run-orbit-compass__archive-scene {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.island-run-orbit-compass__archive-orbits {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: min(88%, 360px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotateX(64deg) rotateZ(-10deg);
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__archive-orbits i {
+  position: absolute;
+  inset: 9%;
+  border: 1px solid color-mix(in srgb, var(--archive-accent) 55%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--archive-accent) 13%, transparent);
+  animation: island-run-orbit-compass-archive-orbit 12s linear infinite;
+}
+
+.island-run-orbit-compass__archive-orbits i:nth-child(2) {
+  inset: 20%;
+  border-style: dashed;
+  animation-duration: 9s;
+  animation-direction: reverse;
+}
+
+.island-run-orbit-compass__archive-orbits i:nth-child(3) {
+  inset: 33%;
+  border-color: rgba(248, 199, 102, 0.48);
+  animation-duration: 6s;
+}
+
+.island-run-orbit-compass__archive-orbits i::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 17%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff2ac;
+  box-shadow: 0 0 10px var(--archive-accent);
+}
+
+.island-run-orbit-compass__archive-island {
+  position: relative;
+  width: min(78%, 310px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  transform: translateY(-8%);
+  animation: island-run-orbit-compass-archive-float 4.4s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__archive-island > span {
+  position: absolute;
+  inset: 13%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--archive-accent) 34%, transparent), transparent 68%);
+  box-shadow: 0 0 46px color-mix(in srgb, var(--archive-accent) 28%, transparent);
+  animation: island-run-orbit-compass-archive-pulse 2.8s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__archive-island img {
+  position: relative;
+  width: 112%;
+  height: 112%;
+  display: block;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 18px 18px rgba(0, 0, 0, 0.54))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--archive-accent) 34%, transparent));
+}
+
+.island-run-orbit-compass__archive-seal {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 0.35rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  display: grid;
+  justify-items: center;
+  gap: 0.32rem;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.island-run-orbit-compass__archive-seal > strong {
+  color: #fff0bd;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+}
+
+.island-run-orbit-compass__archive-checks {
+  display: flex;
+  gap: 0.42rem;
+}
+
+.island-run-orbit-compass__archive-checks > span {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 50%;
+  background: rgba(3, 14, 27, 0.7);
+}
+
+.island-run-orbit-compass__archive-checks > span.is-complete {
+  border-color: #5ee082;
+  background: #45d879;
+  box-shadow: 0 0 10px rgba(69, 216, 121, 0.52);
+}
+
+.island-run-orbit-compass__archive-checks > span.is-complete::after {
+  content: "";
+  display: block;
+  width: 7px;
+  height: 4px;
+  margin: 4px auto 0;
+  border-left: 2px solid #071d13;
+  border-bottom: 2px solid #071d13;
+  transform: rotate(-45deg);
+}
+
+.island-run-orbit-compass__archive-actions {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 0.58rem;
+  padding: 0.78rem;
+  border-top: 1px solid color-mix(in srgb, var(--archive-accent) 28%, transparent);
+  background: rgba(3, 14, 27, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.island-run-orbit-compass__archive-actions button {
+  min-height: 46px;
+  border: 1px solid rgba(104, 220, 255, 0.46);
+  border-radius: 8px;
+  background: rgba(8, 40, 66, 0.88);
+  color: #c8f3ff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__archive-actions button:last-child {
+  border-color: rgba(255, 239, 166, 0.9);
+  background: linear-gradient(180deg, #f5d171, #c98d2d);
+  color: #071323;
+  box-shadow: 0 0 18px rgba(248, 199, 102, 0.28);
+}
+
+.island-run-orbit-compass__index {
+  position: absolute;
+  z-index: 8;
+  inset: 4.65rem 0.75rem 0.75rem;
+  min-height: 0;
+  overflow: clip;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 29, 51, 0.97), rgba(4, 14, 27, 0.99)),
+    url("/assets/themes/first-light-kingdom/today/today-sky-background.webp") center / cover;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  box-shadow:
+    inset 0 0 42px rgba(104, 220, 255, 0.06),
+    0 18px 40px rgba(0, 0, 0, 0.34);
+}
+
+.island-run-orbit-compass__index-header {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.62rem;
+  min-height: 70px;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(248, 199, 102, 0.22);
+}
+
+.island-run-orbit-compass__index-header > button {
+  min-height: 44px;
+  border: 1px solid rgba(104, 220, 255, 0.46);
+  border-radius: 8px;
+  background: rgba(8, 40, 66, 0.82);
+  color: #bcefff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__index-header > div {
+  min-width: 0;
+  text-align: center;
+}
+
+.island-run-orbit-compass__index-header span {
+  display: block;
+  margin-bottom: 0.16rem;
+  color: rgba(174, 241, 255, 0.78);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.island-run-orbit-compass__index-header h3 {
+  overflow: hidden;
+  color: #ffe6a3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-run-orbit-compass__index-header > .island-run-orbit-compass__locate {
+  position: relative;
+  width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border-color: rgba(248, 199, 102, 0.74);
+  background: rgba(3, 14, 27, 0.9);
+}
+
+.island-run-orbit-compass__locate::before,
+.island-run-orbit-compass__locate::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.island-run-orbit-compass__locate::before {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #f8c766;
+  border-radius: 50%;
+}
+
+.island-run-orbit-compass__locate::after {
+  width: 24px;
+  height: 2px;
+  background: #f8c766;
+  box-shadow: 0 0 10px rgba(248, 199, 102, 0.42);
+}
+
+.island-run-orbit-compass__index-search {
+  position: relative;
+  margin: 0.72rem 0.72rem 0.5rem;
+}
+
+.island-run-orbit-compass__index-search > span {
+  position: absolute;
+  z-index: 1;
+  left: 0.82rem;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(174, 241, 255, 0.72);
+  border-radius: 50%;
+  transform: translateY(-58%);
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__index-search > span::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 7px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(174, 241, 255, 0.72);
+  transform: rotate(45deg);
+}
+
+.island-run-orbit-compass__index-search input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  border: 1px solid rgba(104, 220, 255, 0.38);
+  border-radius: 8px;
+  outline: 0;
+  background: rgba(3, 16, 30, 0.78);
+  color: #fff4d5;
+  font: inherit;
+  font-size: 1rem;
+  padding: 0 0.75rem 0 2.45rem;
+}
+
+.island-run-orbit-compass__index-search input:focus {
+  border-color: rgba(248, 199, 102, 0.84);
+  box-shadow: 0 0 0 2px rgba(248, 199, 102, 0.12);
+}
+
+.island-run-orbit-compass__index-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.28rem;
+  padding: 0 0.72rem 0.62rem;
+  border-bottom: 1px solid rgba(248, 199, 102, 0.18);
+}
+
+.island-run-orbit-compass__index-tab {
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.26rem;
+  padding: 0.4rem 0.12rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 244, 213, 0.74);
+  font: inherit;
+  cursor: pointer;
+}
+
+.island-run-orbit-compass__index-tab[aria-current="page"] {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 14px color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.island-run-orbit-compass__index-tab i {
+  display: none;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.island-run-orbit-compass__index-tab > span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.island-run-orbit-compass__index-tab small {
+  display: block;
+  margin-top: 0.18rem;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.65rem;
+}
+
+.island-run-orbit-compass__index-tab--life { color: #5ee082; }
+.island-run-orbit-compass__index-tab--water { color: #68dcff; }
+.island-run-orbit-compass__index-tab--heat { color: #ff8a4a; }
+.island-run-orbit-compass__index-tab--sky { color: #f8c766; }
+.island-run-orbit-compass__index-tab--absurd { color: #d377ff; }
+
+.island-run-orbit-compass__index-grid {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 96px;
+  align-content: start;
+  gap: 0.46rem;
+  padding: 0.68rem;
+}
+
+.island-run-orbit-compass__index-grid.is-searching {
+  grid-auto-rows: 96px;
+  align-content: start;
+}
+
+.island-run-orbit-compass__index-grid.is-searching > .island-run-orbit-compass__index-island:only-child {
+  grid-column: 1 / -1;
+  min-height: 78px;
+  padding-left: 0.72rem;
+}
+
+.island-run-orbit-compass__index-grid.is-searching > .island-run-orbit-compass__index-island:only-child strong {
+  font-size: 1rem;
+}
+
+.island-run-orbit-compass__index-grid.is-searching > .island-run-orbit-compass__index-island:only-child span {
+  font-size: 0.85rem;
+}
+
+.island-run-orbit-compass__index-grid.is-searching > .island-run-orbit-compass__index-island:only-child > img {
+  right: 0.7rem;
+  width: 70px;
+  height: 70px;
+}
+
+.island-run-orbit-compass__index-island {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(159, 176, 199, 0.28);
+  border-radius: 8px;
+  background: rgba(13, 34, 55, 0.74);
+  color: #d9e4f2;
+  font: inherit;
+  padding: 0.38rem 0.35rem;
+  text-align: left;
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 150ms ease, border-color 150ms ease, filter 150ms ease;
+}
+
+.island-run-orbit-compass__index-island::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: currentColor;
+  opacity: 0.76;
+}
+
+.island-run-orbit-compass__index-island strong {
+  display: block;
+  color: #fff0b1;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.island-run-orbit-compass__index-island span {
+  display: block;
+  margin-top: 0.22rem;
+  overflow: hidden;
+  color: rgba(235, 242, 250, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.island-run-orbit-compass__index-island--featured {
+  padding-right: 2.85rem;
+  background-image: linear-gradient(120deg, rgba(255, 255, 255, 0.07), transparent 70%);
+}
+
+.island-run-orbit-compass__index-island > img {
+  position: absolute;
+  z-index: -1;
+  right: 0.1rem;
+  bottom: -0.12rem;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.48));
+}
+
+.island-run-orbit-compass__index-island i {
+  position: absolute;
+  right: 0.35rem;
+  top: 0.35rem;
+  width: 11px;
+  height: 11px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.island-run-orbit-compass__index-island--completed {
+  border-color: rgba(94, 224, 130, 0.54);
+  background: rgba(27, 101, 63, 0.36);
+  color: #5ee082;
+}
+
+.island-run-orbit-compass__index-island--completed i {
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.island-run-orbit-compass__index-island--completed i::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 5px;
+  height: 3px;
+  border-left: 2px solid #082318;
+  border-bottom: 2px solid #082318;
+  transform: rotate(-45deg);
+}
+
+.island-run-orbit-compass__index-island--current {
+  border-color: #f8c766;
+  background: rgba(109, 73, 18, 0.46);
+  color: #f8c766;
+  box-shadow: 0 0 16px rgba(248, 199, 102, 0.22);
+  animation: island-run-orbit-compass-index-current 2.4s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__index-island--current i {
+  border: 0;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  clip-path: polygon(50% 0, 62% 36%, 100% 50%, 62% 64%, 50% 100%, 38% 64%, 0 50%, 38% 36%);
+}
+
+.island-run-orbit-compass__index-island--visited,
+.island-run-orbit-compass__index-island--unvisited {
+  border-color: rgba(104, 220, 255, 0.52);
+  color: #68dcff;
+}
+
+.island-run-orbit-compass__index-island--locked {
+  opacity: 0.7;
+  filter: grayscale(0.42);
+}
+
+.island-run-orbit-compass__index-island--locked i {
+  top: 0.52rem;
+  width: 10px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.island-run-orbit-compass__index-island--locked i::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: -7px;
+  width: 6px;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+}
+
+.island-run-orbit-compass__index-empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  color: rgba(218, 232, 246, 0.68);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.island-run-orbit-compass__branch {
+  position: absolute;
+  z-index: 10;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 3.7rem;
+  min-height: 42px;
+  border-radius: 999px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.34rem;
+  align-items: center;
+  padding: 0.28rem 0.42rem;
+}
+
+.island-run-orbit-compass__branch-node {
+  min-width: 0;
+  min-height: 31px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 244, 213, 0.78);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+}
+
+.island-run-orbit-compass__branch-node--completed {
+  border-color: transparent;
+  background: #5ee082;
+  color: #071323;
+}
+
+.island-run-orbit-compass__branch-node--current {
+  border-color: transparent;
+  background: #f8c766;
+  color: #071323;
+  box-shadow: 0 0 14px rgba(248, 199, 102, 0.5);
+}
+
+.island-run-orbit-compass__branch-node--visited,
+.island-run-orbit-compass__branch-node--unvisited {
+  border-color: rgba(104, 220, 255, 0.52);
+  color: #e8fbff;
+}
+
+.island-run-orbit-compass__branch-node--locked {
+  color: rgba(255, 244, 213, 0.54);
+}
+
+.island-run-orbit-compass__branch-node[aria-current="step"] {
+  outline: 2px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
+  animation: island-run-orbit-compass-branch-current 2.2s ease-in-out infinite;
+}
+
+.island-run-orbit-compass__legend {
+  position: absolute;
+  z-index: 10;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 1rem;
+  min-height: 36px;
+  border-radius: 999px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.58rem;
+}
+
+.island-run-orbit-compass__legend-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34rem;
+  color: rgba(255, 244, 213, 0.82);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.island-run-orbit-compass__legend-item > span {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-run-orbit-compass__legend-item small {
+  display: block;
+  margin-top: 0.14rem;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.5rem;
+}
+
+.island-run-orbit-compass__legend-item i {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.island-run-orbit-compass__legend-item--life { color: #5ee082; }
+.island-run-orbit-compass__legend-item--water { color: #68dcff; }
+.island-run-orbit-compass__legend-item--heat { color: #ff8a4a; }
+.island-run-orbit-compass__legend-item--sky { color: #f8c766; }
+.island-run-orbit-compass__legend-item--absurd { color: #d377ff; }
+
+.island-run-orbit-compass--journey {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 205, 93, 0.36), transparent 25%),
+    radial-gradient(circle at 76% 20%, rgba(104, 220, 255, 0.24), transparent 22%),
+    linear-gradient(180deg, #0b2d4d 0%, #07506b 48%, #061326 100%);
+}
+
+.island-run-orbit-compass--journey .island-run-orbit-compass__topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.island-run-orbit-compass--journey .island-run-orbit-compass__sweep {
+  animation-duration: 3.2s;
+}
+
+.island-run-orbit-compass__journey-scene {
+  position: absolute;
+  z-index: 4;
+  inset: 4.65rem 0.75rem 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(151, 222, 246, 0.28);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(248, 199, 102, 0.15), transparent 31%),
+    linear-gradient(180deg, rgba(5, 31, 52, 0.62), rgba(2, 12, 24, 0.9));
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__journey-arc {
+  position: absolute;
+  left: 20%;
+  top: 35%;
+  width: 60%;
+  height: 26%;
+  border-top: 2px solid rgba(134, 225, 255, 0.42);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 8px rgba(104, 220, 255, 0.42));
+}
+
+.island-run-orbit-compass__journey-island {
+  position: absolute;
+  z-index: 2;
+  top: 42%;
+  width: 48%;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  transition: filter 340ms ease, opacity 340ms ease, transform 340ms ease;
+}
+
+.island-run-orbit-compass__journey-island--from {
+  left: -1%;
+  filter: saturate(0.82) brightness(0.88);
+}
+
+.island-run-orbit-compass__journey-island--to {
+  right: -1%;
+  opacity: 0.48;
+  filter: grayscale(0.56) brightness(0.72);
+}
+
+.island-run-orbit-compass__journey-island img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.54));
+}
+
+.island-run-orbit-compass__journey-island b {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 6%;
+  min-width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0 0.28rem;
+  border: 1px solid rgba(255, 236, 158, 0.88);
+  border-radius: 50%;
+  background: rgba(3, 14, 27, 0.94);
+  color: #ffe499;
+  font-size: 0.72rem;
+  transform: translateX(-50%);
+  box-shadow: 0 0 14px rgba(248, 199, 102, 0.28);
+}
+
+.island-run-orbit-compass__journey-island--to > span {
+  position: absolute;
+  z-index: 0;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 226, 123, 0.72), rgba(104, 220, 255, 0.2) 42%, transparent 70%);
+  box-shadow: 0 0 34px rgba(248, 199, 102, 0.3), 0 0 62px rgba(104, 220, 255, 0.2);
+  opacity: 0;
+  transform: scale(0.62);
+}
+
+.island-run-orbit-compass--journey-travel .island-run-orbit-compass__journey-island--from {
+  opacity: 0.62;
+  filter: grayscale(0.24) saturate(0.7) brightness(0.76);
+  transform: translateY(-50%) scale(0.9);
+}
+
+.island-run-orbit-compass--journey-arrive .island-run-orbit-compass__journey-island--to,
+.island-run-orbit-compass--journey-celebrate .island-run-orbit-compass__journey-island--to {
+  opacity: 1;
+  filter: saturate(1.2) brightness(1.12);
+  transform: translateY(-50%) scale(1.12);
+}
+
+.island-run-orbit-compass--journey-arrive .island-run-orbit-compass__journey-island--from,
+.island-run-orbit-compass--journey-celebrate .island-run-orbit-compass__journey-island--from {
+  opacity: 0.56;
+  filter: grayscale(0.38) saturate(0.62) brightness(0.7);
+  transform: translateY(-50%) scale(0.88);
+}
+
+.island-run-orbit-compass--journey-arrive .island-run-orbit-compass__journey-island--to > span,
+.island-run-orbit-compass--journey-celebrate .island-run-orbit-compass__journey-island--to > span {
+  opacity: 1;
+  transform: scale(1.18);
+  transition: opacity 260ms ease, transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.island-run-orbit-compass__journey-light {
+  position: absolute;
+  z-index: 5;
+  left: 20%;
+  top: 47%;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff5bd;
+  opacity: 0;
+  box-shadow: 0 0 8px #f8c766, 0 0 24px #68dcff;
+  transform: translate(-50%, -50%);
+}
+
+.island-run-orbit-compass__journey-light span {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 52px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(104, 220, 255, 0.84));
+  transform: translateY(-50%);
+}
+
+.island-run-orbit-compass--journey-travel .island-run-orbit-compass__journey-light {
+  animation: island-run-orbit-compass-journey-flight 1.12s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.island-run-orbit-compass__journey-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: end center;
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__journey-ui::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 42% 0 0;
+  background: linear-gradient(180deg, transparent, rgba(2, 12, 24, 0.84) 68%, rgba(2, 10, 20, 0.98));
+  pointer-events: none;
+}
+
+.island-run-orbit-compass__journey-fireworks {
+  --celebration-fireworks-z: 1;
+  inset: 8% 0 24%;
+  opacity: 0.78;
+  animation: island-run-orbit-compass-journey-fireworks 460ms ease-out both;
+}
+
+.island-run-orbit-compass__journey-copy {
+  position: relative;
+  z-index: 4;
+  width: min(100% - 5rem, 340px);
+  margin-bottom: 2.2rem;
+  color: #fff3c1;
+  text-align: center;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.84);
+  animation: island-run-orbit-compass-journey-copy 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.island-run-orbit-compass__journey-copy > span {
+  display: inline-block;
+  color: #9cecff;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.island-run-orbit-compass__journey-copy h3 {
+  margin-top: 0.28rem;
+  color: #ffe294;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.85rem;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.island-run-orbit-compass__journey-route {
+  width: min(100%, 238px);
+  display: grid;
+  grid-template-columns: 30px minmax(64px, 1fr) 30px;
+  align-items: center;
+  gap: 0.48rem;
+  margin-inline: auto;
+  margin-top: 0.55rem;
+  color: rgba(232, 248, 255, 0.86);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.island-run-orbit-compass__journey-route b {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(248, 199, 102, 0.76);
+  border-radius: 50%;
+  background: rgba(3, 15, 28, 0.92);
+  color: #fff0b1;
+  box-shadow: 0 0 14px rgba(248, 199, 102, 0.18);
+}
+
+.island-run-orbit-compass__journey-route b:first-child {
+  border-color: rgba(94, 224, 130, 0.88);
+  color: #b9ffd0;
+  box-shadow: 0 0 16px rgba(94, 224, 130, 0.32);
+}
+
+.island-run-orbit-compass__journey-route b:last-child {
+  opacity: 0.56;
+  transition: opacity 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+.island-run-orbit-compass__journey-route i {
+  position: relative;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(117, 181, 207, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(166, 226, 247, 0.12);
+}
+
+.island-run-orbit-compass__journey-route i::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5ee082, #f8c766 58%, #68dcff);
+  box-shadow: 0 0 10px rgba(104, 220, 255, 0.68);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.island-run-orbit-compass__journey-route i span {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff4b5;
+  box-shadow: 0 0 7px #f8c766, 0 0 18px rgba(104, 220, 255, 0.92);
+  transform: translate(-50%, -50%);
+}
+
+.island-run-orbit-compass--journey-travel .island-run-orbit-compass__journey-route i::before {
+  animation: island-run-orbit-compass-journey-route-fill 1.12s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.island-run-orbit-compass--journey-travel .island-run-orbit-compass__journey-route i span {
+  animation: island-run-orbit-compass-journey-route-light 1.12s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.island-run-orbit-compass--journey-arrive .island-run-orbit-compass__journey-route i::before,
+.island-run-orbit-compass--journey-celebrate .island-run-orbit-compass__journey-route i::before {
+  transform: scaleX(1);
+}
+
+.island-run-orbit-compass--journey-arrive .island-run-orbit-compass__journey-route i span,
+.island-run-orbit-compass--journey-celebrate .island-run-orbit-compass__journey-route i span {
+  left: 100%;
+}
+
+.island-run-orbit-compass--journey-arrive .island-run-orbit-compass__journey-route b:last-child,
+.island-run-orbit-compass--journey-celebrate .island-run-orbit-compass__journey-route b:last-child {
+  opacity: 1;
+  color: #e5fbff;
+  box-shadow: 0 0 0 5px rgba(104, 220, 255, 0.1), 0 0 22px rgba(104, 220, 255, 0.54);
+}
+
+.island-run-orbit-compass--journey-seal .island-run-orbit-compass__progress b {
+  background: linear-gradient(90deg, #5ee082, #f8c766);
+}
+
+.island-run-orbit-compass--journey-arrive,
+.island-run-orbit-compass--journey-celebrate {
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.58),
+    inset 0 0 54px rgba(248, 199, 102, 0.2),
+    0 0 38px rgba(104, 220, 255, 0.22);
+}
+
+@keyframes island-run-orbit-compass-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes island-run-orbit-compass-journey-copy {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes island-run-orbit-compass-journey-fireworks {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 0.78; transform: scale(1); }
+}
+
+@keyframes island-run-orbit-compass-journey-route-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes island-run-orbit-compass-journey-route-light {
+  from { left: 0; }
+  to { left: 100%; }
+}
+
+@keyframes island-run-orbit-compass-journey-flight {
+  0% { left: 20%; top: 47%; opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  12% { opacity: 1; }
+  50% { left: 50%; top: 31%; opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+  88% { opacity: 1; }
+  100% { left: 80%; top: 47%; opacity: 0; transform: translate(-50%, -50%) scale(0.72); }
+}
+
+@keyframes island-run-orbit-compass-mini {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes island-run-orbit-compass-shooting-star {
+  0%, 68% {
+    opacity: 0;
+    transform: translate3d(-24px, -18px, 0) rotate(-34deg) scaleX(0.35);
+  }
+  72% {
+    opacity: 0.9;
+  }
+  82% {
+    opacity: 0;
+    transform: translate3d(138px, 96px, 0) rotate(-34deg) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes island-run-orbit-compass-progress-glint {
+  0%, 48% { transform: translateX(-120%); }
+  68%, 100% { transform: translateX(120%); }
+}
+
+@keyframes island-run-orbit-compass-current-label {
+  0%, 100% {
+    box-shadow: 0 0 0 7px rgba(104, 220, 255, 0.12), 0 0 26px rgba(104, 220, 255, 0.48);
+  }
+  50% {
+    box-shadow: 0 0 0 11px rgba(248, 199, 102, 0.16), 0 0 38px rgba(248, 199, 102, 0.66);
+  }
+}
+
+@keyframes island-run-orbit-compass-atlas-sun {
+  0%, 100% {
+    box-shadow: 0 0 0 9px rgba(248, 199, 102, 0.08), 0 0 30px rgba(248, 199, 102, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 13px rgba(248, 199, 102, 0.12), 0 0 42px rgba(248, 199, 102, 0.68);
+  }
+}
+
+@keyframes island-run-orbit-compass-panel-pop {
+  from {
+    opacity: 0.76;
+    transform: translateY(7px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes island-run-orbit-compass-focus-spark {
+  0% { left: 9%; opacity: 0; transform: scale(0.5); }
+  12% { opacity: 1; }
+  50% { opacity: 0.84; transform: scale(1); }
+  88% { opacity: 1; }
+  100% { left: 91%; opacity: 0; transform: scale(0.5); }
+}
+
+@keyframes island-run-orbit-compass-selected-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.035); }
+}
+
+@keyframes island-run-orbit-compass-archive-enter {
+  from { opacity: 0; transform: scale(0.975); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes island-run-orbit-compass-archive-float {
+  0%, 100% { transform: translateY(-8%) rotate(-0.7deg); }
+  50% { transform: translateY(-11%) rotate(0.7deg); }
+}
+
+@keyframes island-run-orbit-compass-archive-pulse {
+  0%, 100% { opacity: 0.65; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes island-run-orbit-compass-archive-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes island-run-orbit-compass-index-current {
+  0%, 100% { box-shadow: 0 0 12px rgba(248, 199, 102, 0.2); }
+  50% { box-shadow: 0 0 22px rgba(248, 199, 102, 0.5); }
+}
+
+@keyframes island-run-orbit-compass-branch-current {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.075); }
+}
+
+@media (hover: hover) {
+  .island-run-orbit-compass__action:not(:disabled):hover,
+  .island-run-orbit-compass__focus-action:not(:disabled):hover {
+    filter: brightness(1.1) saturate(1.08);
+    box-shadow: 0 0 28px rgba(248, 199, 102, 0.62);
+  }
+
+  .island-run-orbit-compass__focus-node:not(.is-selected):not(.island-run-orbit-compass__focus-node--locked):hover .island-run-orbit-compass__focus-art.has-art img {
+    transform: translateY(-4px) scale(1.04);
+    filter: drop-shadow(0 16px 15px rgba(0, 0, 0, 0.52));
+  }
+
+  .island-run-orbit-compass__branch-node:hover,
+  .island-run-orbit-compass__index-island:hover,
+  .island-run-orbit-compass__index-tab:hover {
+    filter: brightness(1.14);
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-height: 700px) {
+  .island-run-orbit-compass {
+    min-height: 0;
+    height: calc(100dvh - 1rem);
+  }
+
+  .island-run-orbit-compass__detail {
+    bottom: 6.45rem;
+    min-height: 88px;
+  }
+
+  .island-run-orbit-compass__focus {
+    grid-template-rows: 54px minmax(0, 1fr) auto;
+  }
+
+  .island-run-orbit-compass__focus-detail {
+    min-height: 124px;
+  }
+
+  .island-run-orbit-compass__atlas {
+    grid-template-rows: 54px minmax(220px, 1fr) 88px;
+  }
+
+  .island-run-orbit-compass__atlas-world {
+    --atlas-size: 70px;
+  }
+
+  .island-run-orbit-compass__atlas-world.is-selected {
+    --atlas-size: 88px;
+  }
+
+  .island-run-orbit-compass__atlas-island {
+    height: 68px;
+  }
+
+  .island-run-orbit-compass__atlas-island img {
+    height: 54px;
+  }
+
+  .island-run-orbit-compass__atlas-detail > img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .island-run-orbit-compass__atlas-detail {
+    grid-template-columns: 60px minmax(0, 1fr) 52px;
+  }
+
+  .island-run-orbit-compass__atlas-detail > button {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 370px) {
+  .island-run-orbit-compass__topbar {
+    left: 0.62rem;
+    right: 0.62rem;
+    grid-template-columns: minmax(0, 1fr) 102px 44px;
+  }
+
+  .island-run-orbit-compass--journey .island-run-orbit-compass__topbar {
+    grid-template-columns: minmax(0, 1fr) 102px;
+  }
+
+  .island-run-orbit-compass__journey-copy {
+    width: calc(100% - 3.5rem);
+  }
+
+  .island-run-orbit-compass__journey-copy h3 {
+    font-size: 1.55rem;
+  }
+
+  .island-run-orbit-compass__title {
+    padding-inline: 0.58rem;
+  }
+
+  .island-run-orbit-compass__title .island-run-orbit-compass__compass { display: none; }
+  .island-run-orbit-compass__focus-checks { display: none; }
+  .island-run-orbit-compass__focus-detail > div:first-child { grid-column: 1 / -1; }
+
+  .island-run-orbit-compass h2 {
+    font-size: 1.12rem;
+  }
+
+  .island-run-orbit-compass__progress {
+    width: 102px;
+    font-size: 0.86rem;
+  }
+
+  .island-run-orbit-compass__progress i {
+    width: 66px;
+  }
+
+  .island-run-orbit-compass__mini {
+    width: 72px;
+    height: 72px;
+  }
+
+  .island-run-orbit-compass__detail {
+    grid-template-columns: 66px minmax(0, 1fr) 52px;
+    gap: 0.5rem;
+  }
+
+  .island-run-orbit-compass__thumb {
+    height: 66px;
+  }
+
+  .island-run-orbit-compass__detail h3 {
+    font-size: 1.04rem;
+  }
+
+  .island-run-orbit-compass__action {
+    width: 50px;
+  }
+
+  .island-run-orbit-compass__focus {
+    inset-inline: 0.55rem;
+  }
+
+  .island-run-orbit-compass__atlas-world {
+    --atlas-size: 74px;
+  }
+
+  .island-run-orbit-compass__atlas-world.is-selected {
+    --atlas-size: 92px;
+  }
+
+  .island-run-orbit-compass__atlas-detail {
+    grid-template-columns: 62px minmax(0, 1fr) 52px;
+    gap: 0.44rem;
+  }
+
+  .island-run-orbit-compass__atlas-detail > img {
+    width: 62px;
+    height: 62px;
+  }
+
+  .island-run-orbit-compass__atlas-detail > button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .island-run-orbit-compass__branch {
+    gap: 0.24rem;
+    padding-inline: 0.32rem;
+  }
+
+  .island-run-orbit-compass__legend {
+    gap: 0.2rem;
+  }
+
+  .island-run-orbit-compass__legend-item {
+    gap: 0.22rem;
+    font-size: 0.61rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-orbit-compass *,
+  .island-run-orbit-compass *::before,
+  .island-run-orbit-compass *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .island-run-orbit-compass__sweep,
+  .island-run-orbit-compass__mini span,
+  .island-run-orbit-compass__stars::before,
+  .island-run-orbit-compass__stars::after,
+  .island-run-orbit-compass__progress b::after,
+  .island-run-orbit-compass__label--current,
+  .island-run-orbit-compass__atlas-sun,
+  .island-run-orbit-compass__detail,
+  .island-run-orbit-compass__focus-detail,
+  .island-run-orbit-compass__focus-route::after,
+  .island-run-orbit-compass__focus-node.is-selected,
+  .island-run-orbit-compass__archive,
+  .island-run-orbit-compass__archive-orbits i,
+  .island-run-orbit-compass__archive-island,
+  .island-run-orbit-compass__archive-island > span,
+  .island-run-orbit-compass__index-island--current,
+  .island-run-orbit-compass__branch-node[aria-current="step"] {
+    animation: none;
+  }
+
+  .island-run-orbit-compass__journey-copy,
+  .island-run-orbit-compass__journey-fireworks,
+  .island-run-orbit-compass__journey-route i::before,
+  .island-run-orbit-compass__journey-route i span {
+    animation: none;
+  }
+}

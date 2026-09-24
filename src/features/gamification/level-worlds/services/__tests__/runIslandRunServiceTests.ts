@@ -178,6 +178,8 @@ import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
 import { islandRunCompletionTests } from './islandRunCompletion.test';
 import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
 import { islandRunConcordHubEntryTests } from './islandRunConcordHubEntry.test';
+import { islandRunOrbitTopologyTests } from './islandRunOrbitTopology.test';
+import { islandRunOrbitProgressTests } from './islandRunOrbitProgress.test';
 import { islandRunConcordRollProtectionTests } from './islandRunConcordRollProtection.test';
 import { islandCommunicationAccessTests } from './islandCommunicationAccess.test';
 import { bossRhythmGameTests } from './bossRhythmGame.test';
@@ -433,6 +435,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunCompletion', tests: islandRunCompletionTests },
   { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
   { label: 'islandRunConcordHubEntry', tests: islandRunConcordHubEntryTests },
+  { label: 'islandRunOrbitTopology', tests: islandRunOrbitTopologyTests },
+  { label: 'islandRunOrbitProgress', tests: islandRunOrbitProgressTests },
   { label: 'islandRunConcordRollProtection', tests: islandRunConcordRollProtectionTests },
   { label: 'islandCommunicationAccess', tests: islandCommunicationAccessTests },
   { label: 'bossRhythmGame', tests: bossRhythmGameTests },

@@ -42,9 +42,9 @@ export function resolveIslandRunConcordHubEntryState(
 
   if (concordAccess.active) {
     return {
-      label: 'Concord',
+      label: 'Concord & Story',
       icon: '📡',
-      ariaLabel: 'Open The Concord hub',
+      ariaLabel: 'Open Concord & Story: stories, videos and translation',
       primaryAction: 'open-concord-hub',
       isConcordActive: true,
       collectedFragmentCount: REQUIRED_CONCORD_FRAGMENT_COUNT,
@@ -53,10 +53,10 @@ export function resolveIslandRunConcordHubEntryState(
   }
 
   return {
-    label: `Concord ${collectedFragmentCount}/${REQUIRED_CONCORD_FRAGMENT_COUNT}`,
-    icon: '◈',
-    ariaLabel: `Open The Concord restoration grid. ${collectedFragmentCount} of ${REQUIRED_CONCORD_FRAGMENT_COUNT} fragments recovered.`,
-    primaryAction: 'open-concord-progress',
+    label: 'Story',
+    icon: '📖',
+    ariaLabel: `Open Story. Concord restoration: ${collectedFragmentCount} of ${REQUIRED_CONCORD_FRAGMENT_COUNT} fragments recovered.`,
+    primaryAction: 'open-story',
     isConcordActive: false,
     collectedFragmentCount,
     requiredFragmentCount: REQUIRED_CONCORD_FRAGMENT_COUNT,

@@ -1,3 +1,6 @@
+import { LivingController } from './living-controller/LivingController';
+import { IslandRunSolarMapOverlay } from './IslandRunSolarMapOverlay';
+import { resolveIslandRunOrbitProgress } from '../services/islandRunOrbitProgress';
 import { shouldCelebrateSunshoreMaxRoll } from '../services/islandRunCreatureCelebration';
 import { Island17AwakeningMission } from './Island17AwakeningMission';
 import { ArenaTicketEntry } from './ArenaTicketEntry';
@@ -172,7 +175,7 @@ import {
 } from '../services/islandRunModalVisibility';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../../../services/themePurchases';
-import { AVAILABLE_THEMES, resolveThemeAccess, type Theme, type ThemeAccessResult, type ThemeMetadata } from '../../../../contexts/ThemeContext';
+import { useTheme, isThemeDark, AVAILABLE_THEMES, resolveThemeAccess, type Theme, type ThemeAccessResult, type ThemeMetadata } from '../../../../contexts/ThemeContext';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
   ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
@@ -1871,6 +1874,7 @@ export function IslandRunBoardPrototype({
   dailySpinCount = 0,
   isPro = false,
 }: IslandRunBoardPrototypeProps) {
+  const { theme: controllerAppTheme } = useTheme();
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
   // chip stays in sync with the profile's total_xp. The hook also handles its
@@ -2028,6 +2032,7 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timeoutId);
   }, [caretakerBoardBubbleText]);
   const [showConcordHubModal, setShowConcordHubModal] = useState(false);
+  const [showSolarMapOverlay, setShowSolarMapOverlay] = useState(false);
   const [showBoardSymbolLegend, setShowBoardSymbolLegend] = useState(showBoardLegendPreview);
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
@@ -3287,6 +3292,7 @@ export function IslandRunBoardPrototype({
   // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
   // behind the overlay.
   const anyBlockingModalOpen =
+    showSolarMapOverlay ||
     isCompassBookCeremonyPlaying || showShopPanel ||
     showMarketPanel ||
     showBuildPanel ||
@@ -3367,6 +3373,13 @@ export function IslandRunBoardPrototype({
   } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const orbitProgress = useMemo(() => resolveIslandRunOrbitProgress({
+    currentIslandNumber: islandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+    maxIslandCount: ISLAND_RUN_MAX_ISLAND,
+    completedStopsByIsland: runtimeState.completedStopsByIsland,
+    perIslandEggs: runtimeState.perIslandEggs,
+  }), [islandNumber, runtimeState.cycleIndex, runtimeState.completedStopsByIsland, runtimeState.perIslandEggs]);
   const vaultIslandCollection = useMemo(
     () => resolveVaultIslandCollection(runtimeState.vaultRushClaimsByIsland),
     [runtimeState.vaultRushClaimsByIsland],
@@ -13642,6 +13655,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
+    showSolarMapOverlay ||
     firstArrivalActive ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     assemblyMandateOpen ||
@@ -14553,9 +14567,13 @@ export function IslandRunBoardPrototype({
     });
   }, [championshipPresentation, closeCurrentChampionshipOpening]);
   const handleConcordEntryClick = useCallback(() => {
+    if (!concordHubEntryState.isConcordActive) {
+      setActiveStoryEpisode({ kind: 'story_replay', manifestPath: resolveIslandTravelArrivalManifestPath(islandNumber) });
+      return;
+    }
     setTechCollectionModal(null);
     setShowConcordHubModal(true);
-  }, []);
+  }, [concordHubEntryState.isConcordActive, islandNumber]);
   const closeConcordHub = useCallback(() => {
     setShowConcordHubModal(false);
     setTechCollectionModal(null);
@@ -15384,6 +15402,11 @@ export function IslandRunBoardPrototype({
 
           {showTopbarMenu && (
             <div id="island-run-topbar-menu" className="island-run-board__topbar-menu-panel" role="menu" aria-label="Board menu">
+              <button type="button" className="island-run-board__topbar-menu-item"
+                aria-label={`Open Island Map, current island ${islandNumber} of ${ISLAND_RUN_MAX_ISLAND}`}
+                onClick={() => { stopAutoRoll(); setShowTopbarMenu(false); setShowSolarMapOverlay(true); }}>
+                Island Map · {islandNumber} / {ISLAND_RUN_MAX_ISLAND}
+              </button>
               <button
                 ref={topbarMenuFirstItemRef}
                 type="button"
@@ -16369,6 +16392,30 @@ export function IslandRunBoardPrototype({
             ) : isShooterControllerActive ? (
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
+              <LivingController
+                dark={isThemeDark(controllerAppTheme)} dev={isDevModeEnabled}
+                dice={hasHydratedRuntimeState ? dicePool : 0}
+                multiplier={effectiveMultiplier} maximum={maxAvailableMultiplier} cost={effectiveDiceCost}
+                rolling={isRolling} autoRolling={isAutoRolling}
+                jackpot={dormantDoorReward?.tier === 'jackpot'}
+                buildReady={hasAffordableBuildStep} tutorial={isBuildTutorialPromptActive}
+                creatureRewardReady={sanctuaryRewardReadyCount > 0}
+                blocked={isBuildTutorialGameplayBlocked || doesModalOwnAttention}
+                rollDisabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
+                multiplierDisabled={isRolling || isMultiplierMaxJumping}
+                multiplierMaxJumping={isMultiplierMaxJumping}
+                canHold={canHoldForAutoRoll && !isBuildTutorialGameplayBlocked && !isIslandTimerPendingStart}
+                rollTitle={isIslandTimerPendingStart ? 'Start Island' : isRolling ? 'ROLLING' : isAutoRolling ? 'AUTO ROLL' : rollButtonLabel}
+                regenLabel={dicePool < effectiveDiceCost ? [diceRegenStatusLabel, diceRegenCountdown].filter(Boolean).join(' ') : ''}
+                concordLabel={concordEntryButtonState.ariaLabel} concordTitle={concordEntryButtonState.label}
+                rollHint={rollDisabledMessage ?? 'Hold to auto-roll; release to stop'}
+                onRoll={isIslandTimerPendingStart ? activateCurrentIsland : handleRollButtonClick}
+                onHoldStart={beginAutoRollHold} onHoldEnd={endAutoRollHold}
+                onHoldCancel={cancelAutoRollHold} onStopAuto={stopAutoRoll}
+                onMultiplier={handleMultiplierPillClick} onShop={openShopPanel}
+                onBuild={openBuildPanelFromFooter} onCreatures={openSanctuaryPanel}
+                onConcord={handleConcordEntryClick}
+                fallback={
               <div
                 className={`island-run-prototype__footer-controller-shell${isAutoRolling ? ' island-run-prototype__footer-controller-shell--auto-rolling' : ''}`}
                 aria-label="Island Run controller layout"
@@ -16517,10 +16564,22 @@ export function IslandRunBoardPrototype({
                   )}
                 </div>
               </div>
+                }
+              />
             )}
           </div>
         </div>
       </div>
+
+      {showSolarMapOverlay && typeof document !== 'undefined' ? createPortal(
+        <IslandRunSolarMapOverlay currentIslandNumber={islandNumber}
+          currentIslandCompletedStopCount={completedStops.length}
+          maxIslandCount={ISLAND_RUN_MAX_ISLAND}
+          completedIslandNumbers={orbitProgress.completedIslandNumbers}
+          visitedIslandNumbers={orbitProgress.visitedIslandNumbers}
+          onClose={() => setShowSolarMapOverlay(false)} />,
+        document.body,
+      ) : null}
 
       {techCompletionCelebration ? (
         <IslandTechCompletionCelebration
@@ -20189,7 +20248,7 @@ export function IslandRunBoardPrototype({
               <section className="island-concord-hub-modal" role="dialog" aria-modal="true" aria-label="The Concord hub">
                 <header className="island-concord-hub-modal__header">
                   <p className="island-concord-hub-modal__eyebrow">The Concord</p>
-                  <h3 className="island-concord-hub-modal__title">Creature link ready</h3>
+                  <h3 className="island-concord-hub-modal__title">Concord & Story</h3>
                   <p className="island-concord-hub-modal__copy">AI translation follows every island's native language.</p>
                 </header>
                 <div className="island-concord-hub-modal__instrument">
@@ -20200,6 +20259,10 @@ export function IslandRunBoardPrototype({
                   />
                 </div>
                 <div className="island-concord-hub-modal__channels" aria-label="The Concord channels">
+                      <button type="button" className="island-concord-hub-modal__channel" onClick={() => {
+                        closeConcordHub();
+                        setActiveStoryEpisode({ kind: 'story_replay', manifestPath: resolveIslandTravelArrivalManifestPath(islandNumber) });
+                      }}>Stories & video</button>
                       <button
                         type="button"
                         className="island-concord-hub-modal__channel"

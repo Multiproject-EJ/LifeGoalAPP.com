@@ -22,7 +22,7 @@ import {
 import { getNarrativeBeatForPlayback } from './islandNarrativeTrack';
 
 export type ActiveIslandStoryEpisode = {
-  kind: 'island_arrival' | 'island_resolution' | 'island_travel_arrival' | 'championship';
+  kind: 'island_arrival' | 'island_resolution' | 'island_travel_arrival' | 'championship' | 'story_replay';
   manifestPath: string;
 } | null;
 
