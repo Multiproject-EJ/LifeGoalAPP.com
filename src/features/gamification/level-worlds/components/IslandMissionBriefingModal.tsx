@@ -8,6 +8,21 @@ import type { resolveIslandRunCompletion } from '../services/islandRunCompletion
 
 export type MissionObjectiveAction = 'launch' | 'details';
 
+/** Mini Mission Phone for HUD buttons: the slim slab, status light and traffic-light stat bars. */
+export function MissionPhoneRailIcon(): React.JSX.Element {
+  return (
+    <svg className="island-run-board__mission-phone-icon" viewBox="0 0 26 44" aria-hidden="true" focusable="false">
+      <rect x="1" y="1" width="24" height="42" rx="5.5" fill="#1a1d22" stroke="#6b717a" strokeWidth="1.2" />
+      <rect x="3.3" y="3.3" width="19.4" height="37.4" rx="3.6" fill="#0a1730" stroke="#e2ac60" strokeWidth="0.7" />
+      <rect x="10" y="5.3" width="6" height="1.4" rx="0.7" fill="#4fd8ff" />
+      <rect x="6.2" y="10.5" width="13.6" height="2.6" rx="1.3" fill="#4ade80" />
+      <rect x="6.2" y="15.4" width="9.8" height="2.6" rx="1.3" fill="#facc15" />
+      <rect x="6.2" y="20.3" width="6.4" height="2.6" rx="1.3" fill="#f87171" />
+      <path d="M13 26.4 14.3 30.5 18.4 31.8 14.3 33.1 13 37.2 11.7 33.1 7.6 31.8 11.7 30.5z" fill="#3b8be0" />
+    </svg>
+  );
+}
+
 export interface IslandMissionBriefingModalProps {
   isOpen: boolean;
   presentation: IslandMissionBriefingPresentation | null;
@@ -248,7 +263,7 @@ function MissionPhoneStats({ stats }: { stats: IslandMissionStats }): React.JSX.
   );
 }
 const MISSION_PHONE_PACK_CENTER_RATIO = 0.1;
-const MISSION_PHONE_LAUNCH_SOURCE_SELECTOR = '.island-run-board__mission-phone-rail';
+const MISSION_PHONE_LAUNCH_SOURCE_SELECTOR = '.island-run-board__mission-phone-floating, .island-run-board__mission-phone-rail';
 
 // Points the fly-in/fly-out at the rail button that summoned the phone, so the
 // pack visibly leaves and returns to it. Falls back to the lower right edge.

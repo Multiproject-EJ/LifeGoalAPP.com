@@ -70,6 +70,7 @@ import { BoardStage, type BoardStageCameraControls } from './board';
 import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
 import {
   IslandMissionBriefingModal,
+  MissionPhoneRailIcon,
   type MissionObjectiveAction,
 } from './IslandMissionBriefingModal';
 import { IslandBoardSymbolLegendModal } from './IslandBoardSymbolLegendModal';
@@ -15675,15 +15676,6 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
-        {!diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
-          <div className="island-run-board__rewardbar-cluster">
-            <button type="button" className="island-run-board__mission-phone-rail"
-              aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
-              onClick={() => setShowMissionPhoneBriefing(true)}>
-              <img src="/tech/ExpeditionPhone_v19_folded.webp" alt="" aria-hidden="true" /><small>Mission</small>
-            </button>
-          </div>
-        ) : null}
         {diplomaticRewardChannelVisible ? (
           <div className={`island-run-board__rewardbar-cluster${diplomaticActivationAnimating ? ' island-run-board__rewardbar-cluster--mission-reveal' : ''}${featureAccess.inauguralRound ? ' island-run-board__rewardbar-cluster--opening-reveal' : ''}`}>
           <div className="island-run-board__rewardbar-hatchery-tray">
@@ -15916,7 +15908,7 @@ export function IslandRunBoardPrototype({
                       title="Mission tracker"
                       onClick={() => setShowMissionPhoneBriefing(true)}
                     >
-                      <img src="/tech/ExpeditionPhone_v19_folded.webp" alt="" aria-hidden="true" />
+                      <MissionPhoneRailIcon />
                       <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
                       <small>Mission</small>
                     </button>
@@ -16419,6 +16411,21 @@ export function IslandRunBoardPrototype({
           {diceRollTotalOverlay}
         </div>
       )}
+
+      {/* Until the reward bar is revealed (First Light and gradual islands) the
+          phone has no reward-bar slot, so it sits directly above the magnifier. */}
+      {!diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
+        <button
+          type="button"
+          className="island-run-board__mission-phone-floating"
+          aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+          title="Mission tracker"
+          onClick={() => setShowMissionPhoneBriefing(true)}
+        >
+          <MissionPhoneRailIcon />
+          <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
+        </button>
+      ) : null}
 
       <button
         type="button"
