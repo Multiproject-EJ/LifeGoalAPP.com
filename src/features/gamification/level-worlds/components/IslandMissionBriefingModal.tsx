@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { triggerIslandRunHaptic } from '../services/islandRunAudio';
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
-import type { IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
+import type { IslandMissionStats, IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
 
 export type MissionObjectiveAction = 'launch' | 'details';
@@ -14,6 +14,7 @@ export interface IslandMissionBriefingModalProps {
   progress?: readonly IslandMissionTrackerObjective[];
   overallProgressPercent?: number;
   islandCompletion?: ReturnType<typeof resolveIslandRunCompletion> | null;
+  stats?: IslandMissionStats | null;
   objectiveActions?: readonly MissionObjectiveAction[];
   objectiveDetails?: readonly string[];
   acknowledgeLabel?: string;
@@ -29,7 +30,7 @@ export interface IslandMissionBriefingModalProps {
   onAcknowledge: () => void;
 }
 
-type MissionPhonePhase = 'unfolding' | 'open' | 'folding';
+type MissionPhonePhase = 'unfolding' | 'unlocking' | 'open' | 'folding';
 
 // The phone arrives as a compact pack, unlatches with a click, then slides out
 // into a full phone. Keep these in sync with the island-mission-phone-* keyframes.
@@ -38,6 +39,192 @@ const MISSION_PHONE_FOLD_DURATION_MS = 460;
 const MISSION_PHONE_UNFOLD_LATCH_MS = 470;
 const MISSION_PHONE_UNFOLD_DOCK_MS = 970;
 const MISSION_PHONE_FOLD_LATCH_MS = 240;
+// Pretend Face ID: scan, tick, padlock opens, lock screen swipes away. A tap skips it.
+const MISSION_PHONE_UNLOCK_DURATION_MS = 820;
+const MISSION_PHONE_UNLOCK_SUCCESS_MS = 380;
+const MISSION_PHONE_DIFFICULTY_LEVELS: Record<IslandMissionStats['difficulty'], number> = {
+  Easy: 1,
+  Medium: 2,
+  'Medium-Hard': 3,
+  Hard: 4,
+  'Very Hard': 5,
+};
+const MISSION_PHONE_STANCE_LABELS: Record<IslandMissionStats['stance'], string> = {
+  friendly: 'Friendly',
+  diplomatic: 'Diplomatic',
+  unfriendly: 'Unfriendly',
+  war: 'WAR',
+};
+const MISSION_PHONE_EGG_STATE_LABELS: Record<Exclude<IslandMissionStats['egg']['state'], 'none'>, string> = {
+  incubating: 'Incubating',
+  ready: 'Ready to hatch',
+  resolved: 'Claimed',
+};
+
+type BatteryManagerLike = EventTarget & { level: number; charging: boolean };
+
+interface MissionPhoneDeviceStatus {
+  now: Date;
+  online: boolean;
+  batteryLevel: number | null;
+  charging: boolean;
+}
+
+// Real clock, connection and (where the browser exposes it) battery for the
+// phone's status bar. Only runs while the phone is open.
+function useMissionPhoneDeviceStatus(active: boolean): MissionPhoneDeviceStatus {
+  const [status, setStatus] = React.useState<MissionPhoneDeviceStatus>(() => ({
+    now: new Date(),
+    online: typeof navigator === 'undefined' ? true : navigator.onLine,
+    batteryLevel: null,
+    charging: false,
+  }));
+
+  React.useEffect(() => {
+    if (!active || typeof window === 'undefined') return undefined;
+    let cancelled = false;
+    let battery: BatteryManagerLike | null = null;
+    const refreshClock = () => setStatus((current) => ({ ...current, now: new Date() }));
+    const refreshOnline = () => setStatus((current) => ({ ...current, online: navigator.onLine }));
+    const refreshBattery = () => {
+      if (!battery || cancelled) return;
+      const { level, charging } = battery;
+      setStatus((current) => ({ ...current, batteryLevel: level, charging }));
+    };
+    refreshClock();
+    refreshOnline();
+    const clockTimer = window.setInterval(refreshClock, 15_000);
+    window.addEventListener('online', refreshOnline);
+    window.addEventListener('offline', refreshOnline);
+    const getBattery = (navigator as Navigator & { getBattery?: () => Promise<BatteryManagerLike> }).getBattery;
+    getBattery?.call(navigator).then((manager) => {
+      if (cancelled) return;
+      battery = manager;
+      manager.addEventListener('levelchange', refreshBattery);
+      manager.addEventListener('chargingchange', refreshBattery);
+      refreshBattery();
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+      window.clearInterval(clockTimer);
+      window.removeEventListener('online', refreshOnline);
+      window.removeEventListener('offline', refreshOnline);
+      battery?.removeEventListener('levelchange', refreshBattery);
+      battery?.removeEventListener('chargingchange', refreshBattery);
+    };
+  }, [active]);
+
+  return status;
+}
+
+// Phone-style clock: "4:11", without a leading zero or AM/PM marker.
+function formatMissionPhoneTime(date: Date): string {
+  return new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' })
+    .formatToParts(date)
+    .filter((part) => part.type === 'hour' || part.type === 'minute' || (part.type === 'literal' && part.value.trim() === ':'))
+    .map((part) => part.value)
+    .join('');
+}
+
+const MISSION_PHONE_EGG_TIER_LABELS: Record<Exclude<IslandMissionStats['egg'], { state: 'none' }>['tier'], string> = {
+  common: 'Common',
+  rare: 'Rare',
+  mythic: 'Mythic',
+};
+
+function MissionPhoneStatusBar({ status }: { status: MissionPhoneDeviceStatus }): React.JSX.Element {
+  const time = formatMissionPhoneTime(status.now);
+  const batteryPercent = status.batteryLevel === null ? 100 : Math.round(status.batteryLevel * 100);
+  return (
+    <span className="island-mission-tracker__status-bar" aria-hidden="true">
+      <span className="island-mission-tracker__status-time">{time}</span>
+      <span className="island-mission-tracker__status-icons">
+        <svg className="island-mission-tracker__status-signal" data-online={status.online} viewBox="0 0 18 12" focusable="false">
+          <rect x="0" y="8" width="3" height="4" rx="0.8" />
+          <rect x="5" y="5.5" width="3" height="6.5" rx="0.8" />
+          <rect x="10" y="3" width="3" height="9" rx="0.8" />
+          <rect x="15" y="0" width="3" height="12" rx="0.8" />
+        </svg>
+        <span
+          className="island-mission-tracker__status-battery"
+          data-low={batteryPercent <= 20}
+          data-charging={status.charging}
+          style={{ '--mission-phone-battery': `${batteryPercent}%` } as React.CSSProperties}
+        >
+          <i />
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function MissionPhoneLockScreen({ status, onSkip }: { status: MissionPhoneDeviceStatus; onSkip: () => void }): React.JSX.Element {
+  const time = formatMissionPhoneTime(status.now);
+  const date = status.now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
+  return (
+    <div className="island-mission-tracker__lock" aria-hidden="true" onClick={onSkip}>
+      <svg className="island-mission-tracker__lock-padlock" viewBox="0 0 20 24" focusable="false">
+        <path className="island-mission-tracker__lock-shackle" d="M5 11V7a5 5 0 0 1 10 0v4" />
+        <rect x="2.5" y="10.5" width="15" height="12" rx="3" />
+      </svg>
+      <strong className="island-mission-tracker__lock-time">{time}</strong>
+      <small className="island-mission-tracker__lock-date">{date}</small>
+      <span className="island-mission-tracker__faceid">
+        <svg viewBox="0 0 64 64" focusable="false">
+          <g className="island-mission-tracker__faceid-frame">
+            <path d="M4 18V11a7 7 0 0 1 7-7h7" />
+            <path d="M46 4h7a7 7 0 0 1 7 7v7" />
+            <path d="M60 46v7a7 7 0 0 1-7 7h-7" />
+            <path d="M18 60h-7a7 7 0 0 1-7-7v-7" />
+          </g>
+          <g className="island-mission-tracker__faceid-face">
+            <path d="M22 23v5M42 23v5" />
+            <path d="M32 23v11h-3" />
+            <path d="M24 43c4.5 4 11.5 4 16 0" />
+          </g>
+          <path className="island-mission-tracker__faceid-check" d="M19 33.5 28.5 43 46 23" />
+        </svg>
+      </span>
+      <small className="island-mission-tracker__lock-hint">Face ID</small>
+    </div>
+  );
+}
+
+function MissionPhoneStats({ stats }: { stats: IslandMissionStats }): React.JSX.Element {
+  const difficultyLevel = MISSION_PHONE_DIFFICULTY_LEVELS[stats.difficulty];
+  const egg = stats.egg;
+  return (
+    <ul className="island-mission-tracker__stats" aria-label="Island status">
+      <li className="island-mission-tracker__stat" data-complete={stats.complete}>
+        <small>Island</small>
+        <strong>{stats.complete ? 'Cleared' : `${stats.completionPercent}%`}</strong>
+        <span className="island-mission-tracker__stat-meter" aria-hidden="true">
+          <i style={{ width: `${stats.completionPercent}%` }} />
+        </span>
+      </li>
+      <li className="island-mission-tracker__stat island-mission-tracker__stat--stance" data-stance={stats.stance}>
+        <small>Island stance</small>
+        <strong><i aria-hidden="true" />{MISSION_PHONE_STANCE_LABELS[stats.stance]}</strong>
+        <span className="island-mission-tracker__stat-note">{stats.stance === 'war' ? 'Emergency status' : 'Toward the expedition'}</span>
+      </li>
+      <li className="island-mission-tracker__stat" aria-label={`Difficulty: ${stats.difficulty}, ${difficultyLevel} of 5`}>
+        <small>Difficulty</small>
+        <strong>{stats.difficulty}</strong>
+        <span className="island-mission-tracker__stat-pips" aria-hidden="true">
+          {Array.from({ length: 5 }, (_, index) => <i key={index} className={index < difficultyLevel ? 'is-filled' : undefined} />)}
+        </span>
+      </li>
+      <li className="island-mission-tracker__stat island-mission-tracker__stat--egg" data-tier={egg.state === 'none' ? 'none' : egg.tier}>
+        <small>Egg</small>
+        <strong>
+          <svg viewBox="0 0 12 15" aria-hidden="true" focusable="false"><path d="M6 .8C3 .8.8 5.6.8 9a5.2 5.2 0 0 0 10.4 0C11.2 5.6 9 .8 6 .8z" /></svg>
+          {egg.state === 'none' ? 'None yet' : MISSION_PHONE_EGG_TIER_LABELS[egg.tier]}
+        </strong>
+        <span className="island-mission-tracker__stat-note">{egg.state === 'none' ? 'Set one at the Hatchery' : MISSION_PHONE_EGG_STATE_LABELS[egg.state]}</span>
+      </li>
+    </ul>
+  );
+}
 const MISSION_PHONE_PACK_CENTER_RATIO = 0.1;
 const MISSION_PHONE_LAUNCH_SOURCE_SELECTOR = '.island-run-board__mission-phone-rail';
 
@@ -96,6 +283,7 @@ export function IslandMissionBriefingModal({
   progress = [],
   overallProgressPercent,
   islandCompletion,
+  stats = null,
   objectiveActions = [],
   objectiveDetails = [],
   acknowledgeLabel = 'Accept field order',
@@ -119,6 +307,7 @@ export function IslandMissionBriefingModal({
   const onObjectiveSelectRef = React.useRef(onObjectiveSelect);
   const phaseRef = React.useRef<MissionPhonePhase>('unfolding');
   const closeTimerRef = React.useRef<number | null>(null);
+  const deviceStatus = useMissionPhoneDeviceStatus(isOpen);
 
   const updatePhase = React.useCallback((nextPhase: MissionPhonePhase) => {
     phaseRef.current = nextPhase;
@@ -193,7 +382,7 @@ export function IslandMissionBriefingModal({
     const reduceMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const timers = [window.setTimeout(
-      () => updatePhase('open'),
+      () => updatePhase(reduceMotion ? 'open' : 'unlocking'),
       reduceMotion ? 1 : MISSION_PHONE_UNFOLD_DURATION_MS,
     )];
     if (!reduceMotion) {
@@ -204,6 +393,19 @@ export function IslandMissionBriefingModal({
     }
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [isOpen, phase, updatePhase]);
+
+  React.useEffect(() => {
+    if (!isOpen || phase !== 'unlocking') return undefined;
+    const timers = [
+      window.setTimeout(() => triggerIslandRunHaptic('mission_phone_latch'), MISSION_PHONE_UNLOCK_SUCCESS_MS),
+      window.setTimeout(() => updatePhase('open'), MISSION_PHONE_UNLOCK_DURATION_MS),
+    ];
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [isOpen, phase, updatePhase]);
+
+  const skipUnlock = React.useCallback(() => {
+    if (phaseRef.current === 'unlocking') updatePhase('open');
+  }, [updatePhase]);
 
   React.useEffect(() => {
     if (phase !== 'open') return undefined;
@@ -257,36 +459,29 @@ export function IslandMissionBriefingModal({
               <small>Mission · {overallPercent}%</small>
             </span>
             <span className="island-mission-tracker__sheen" aria-hidden="true" />
+            <MissionPhoneStatusBar status={deviceStatus} />
+            <MissionPhoneLockScreen status={deviceStatus} onSkip={skipUnlock} />
 
             <div className="island-mission-tracker__phone-screen" style={islandCompletion ? { overflowY: 'auto' } : undefined}>
-              <button
-                ref={acknowledgeRef}
-                type="button"
-                className="island-mission-tracker__close"
-                aria-label={acknowledgeLabel}
-                title={acknowledgeLabel}
-                onClick={requestClose}
-                disabled={phase !== 'open'}
-              >
-                ×
-              </button>
-
-              <header className="island-mission-tracker__command-plate">
-                <span className="island-mission-tracker__command-frame" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="island-mission-tracker__command-insignia" aria-hidden="true">
-                  <i />
-                  <svg viewBox="0 0 40 44" focusable="false">
-                    <path className="island-mission-tracker__insignia-shield" d="M20 2.4 35 8v12.5c0 10-6.2 17.4-15 21.1-8.8-3.7-15-11.1-15-21.1V8z" />
-                    <path className="island-mission-tracker__insignia-chevron" d="m11.2 14.2 8.8 5.5 8.8-5.5v5L20 24.7l-8.8-5.5zm0 9.1 8.8 5.5 8.8-5.5v5L20 33.8l-8.8-5.5z" />
-                  </svg>
-                  <i />
-                </span>
-                <h2 id={titleId}>{missionTitle}</h2>
+              <header className="island-mission-tracker__header">
+                {stats ? <MissionPhoneStats stats={stats} /> : null}
+                <div className="island-mission-tracker__mission-caption">
+                  <span>
+                    <small>Current mission</small>
+                    <h2 id={titleId}>{missionTitle}</h2>
+                  </span>
+                  <button
+                    ref={acknowledgeRef}
+                    type="button"
+                    className="island-mission-tracker__close"
+                    aria-label={acknowledgeLabel}
+                    title={acknowledgeLabel}
+                    onClick={requestClose}
+                    disabled={phase !== 'open'}
+                  >
+                    ×
+                  </button>
+                </div>
               </header>
 
               {selectedObjective ? (

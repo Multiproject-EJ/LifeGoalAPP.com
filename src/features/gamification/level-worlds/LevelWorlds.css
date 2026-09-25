@@ -7043,6 +7043,372 @@
   animation: island-mission-phone-pack-face-return 460ms both;
 }
 
+/* Status bar: real time, connection and battery around the status light. */
+.island-mission-tracker__status-bar {
+  position: absolute;
+  z-index: 7;
+  top: calc(var(--mission-phone-frame) + 3px);
+  right: calc(var(--mission-phone-frame) + 16px);
+  left: calc(var(--mission-phone-frame) + 18px);
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  color: #f2f7fa;
+  font-size: 0.72rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  opacity: 0;
+}
+
+.island-mission-tracker__status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.island-mission-tracker__status-signal {
+  width: 15px;
+  height: 10px;
+  fill: currentColor;
+}
+
+.island-mission-tracker__status-signal[data-online='false'] rect:not(:first-child) {
+  opacity: 0.25;
+}
+
+.island-mission-tracker__status-battery {
+  position: relative;
+  width: 22px;
+  height: 11px;
+  padding: 1.5px;
+  border: 1px solid rgba(242, 247, 250, 0.55);
+  border-radius: 3.5px;
+}
+
+.island-mission-tracker__status-battery::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: -3px;
+  width: 1.5px;
+  height: 4px;
+  border-radius: 0 1px 1px 0;
+  background: rgba(242, 247, 250, 0.55);
+}
+
+.island-mission-tracker__status-battery > i {
+  display: block;
+  width: var(--mission-phone-battery, 100%);
+  height: 100%;
+  border-radius: 1.5px;
+  background: #f2f7fa;
+}
+
+.island-mission-tracker__status-battery[data-low='true'] > i { background: #ff5a4f; }
+.island-mission-tracker__status-battery[data-charging='true'] > i { background: #4ade80; }
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__status-bar {
+  animation: island-mission-phone-wake 1100ms both;
+}
+
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__status-bar,
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__status-bar {
+  opacity: 1;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__status-bar {
+  animation: island-mission-phone-screen-off 150ms ease-in both;
+}
+
+/* Pretend Face ID lock screen: wakes while the phone slides open, scans,
+   ticks, opens the padlock and swipes away. Tapping skips it. */
+.island-mission-tracker__lock {
+  position: absolute;
+  z-index: 4;
+  inset: var(--mission-phone-frame);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding-top: 30px;
+  border-radius: calc(var(--mission-phone-radius) - var(--mission-phone-frame));
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 118%, rgba(42, 214, 222, 0.34), transparent 48%),
+    radial-gradient(circle at 12% 8%, rgba(211, 150, 64, 0.2), transparent 40%),
+    radial-gradient(ellipse at 50% 38%, rgba(40, 92, 170, 0.36), transparent 62%),
+    linear-gradient(180deg, #081631, #030914 70%);
+  color: #f4f8fb;
+  opacity: 0;
+}
+
+.island-mission-tracker__lock-padlock {
+  width: 15px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  overflow: visible;
+}
+
+.island-mission-tracker__lock-padlock rect {
+  fill: currentColor;
+  stroke: none;
+}
+
+.island-mission-tracker__lock-shackle {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+}
+
+.island-mission-tracker__lock-time {
+  margin-top: 8px;
+  font-size: clamp(3rem, 17vw, 4.2rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.island-mission-tracker__lock-date {
+  margin-top: 6px;
+  color: rgba(226, 238, 247, 0.82);
+  font-size: 0.86rem;
+  font-weight: 550;
+}
+
+.island-mission-tracker__faceid {
+  width: 58px;
+  height: 58px;
+  margin-top: auto;
+}
+
+.island-mission-tracker__faceid svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #f4f8fb;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.island-mission-tracker__faceid-frame,
+.island-mission-tracker__faceid-face {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+.island-mission-tracker__faceid-check {
+  stroke: #6ff2c3;
+  stroke-width: 4.2;
+  stroke-dasharray: 44;
+  stroke-dashoffset: 44;
+}
+
+.island-mission-tracker__lock-hint {
+  margin: 8px 0 26%;
+  color: rgba(226, 238, 247, 0.7);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__lock {
+  animation: island-mission-phone-wake 1100ms both;
+}
+
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__lock {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: island-mission-phone-lock-away 820ms both;
+}
+
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__faceid-frame {
+  animation: island-mission-phone-faceid-frame 820ms both;
+}
+
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__faceid-face {
+  animation: island-mission-phone-faceid-face 820ms both;
+}
+
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__faceid-check {
+  animation: island-mission-phone-faceid-check 820ms both;
+}
+
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__lock-shackle {
+  animation: island-mission-phone-shackle 820ms both;
+}
+
+/* Island stats replace the old command badge. */
+.island-mission-tracker__header {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.island-mission-tracker__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.island-mission-tracker__stat {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 9px 8px;
+  border: 1px solid rgba(116, 200, 212, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
+}
+
+.island-mission-tracker__stat > small {
+  color: #7fb4c0;
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.island-mission-tracker__stat > strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  color: #f4f8fb;
+  font-size: 0.92rem;
+  font-weight: 750;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-mission-tracker__stat[data-complete='true'] > strong { color: #6ff2c3; }
+
+.island-mission-tracker__stat-note {
+  overflow: hidden;
+  color: rgba(214, 229, 236, 0.62);
+  font-size: 0.64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-mission-tracker__stat-meter {
+  height: 4px;
+  margin-top: 3px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.island-mission-tracker__stat-meter > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2bd4dd, #6ff2c3);
+}
+
+.island-mission-tracker__stat-pips {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.island-mission-tracker__stat-pips > i {
+  flex: 1 1 0;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.island-mission-tracker__stat-pips > i.is-filled { background: #f0b85c; }
+
+.island-mission-tracker__stat--stance {
+  --mission-stance-color: #5ee6a8;
+}
+
+.island-mission-tracker__stat--stance[data-stance='diplomatic'] { --mission-stance-color: #7cc4ff; }
+.island-mission-tracker__stat--stance[data-stance='unfriendly'] { --mission-stance-color: #ffb454; }
+.island-mission-tracker__stat--stance[data-stance='war'] {
+  --mission-stance-color: #ff4d4d;
+  border-color: rgba(255, 77, 77, 0.5);
+  background: linear-gradient(180deg, rgba(255, 60, 60, 0.16), rgba(255, 60, 60, 0.04));
+}
+
+.island-mission-tracker__stat--stance > strong { color: var(--mission-stance-color); }
+
+.island-mission-tracker__stat--stance > strong > i {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mission-stance-color);
+  box-shadow: 0 0 8px var(--mission-stance-color);
+}
+
+.island-mission-tracker__stat--stance[data-stance='war'] > strong > i {
+  animation: island-mission-phone-alert 900ms ease-in-out infinite;
+}
+
+.island-mission-tracker__stat--egg { --mission-egg-color: #d9dde3; }
+.island-mission-tracker__stat--egg[data-tier='rare'] { --mission-egg-color: #6fb7ff; }
+.island-mission-tracker__stat--egg[data-tier='mythic'] { --mission-egg-color: #d38bff; }
+.island-mission-tracker__stat--egg[data-tier='none'] { --mission-egg-color: rgba(214, 229, 236, 0.35); }
+
+.island-mission-tracker__stat--egg > strong svg {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 13px;
+  fill: var(--mission-egg-color);
+  filter: drop-shadow(0 0 5px var(--mission-egg-color));
+}
+
+.island-mission-tracker__stat--egg[data-tier='none'] > strong { color: rgba(214, 229, 236, 0.62); }
+
+.island-mission-tracker__mission-caption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 2px 2px 0;
+}
+
+.island-mission-tracker__mission-caption > span {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.island-mission-tracker__mission-caption small {
+  color: #e0aa4c;
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.island-mission-tracker__mission-caption h2 {
+  margin: 0;
+  color: #f7f1e3;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
 /* Specular sweep across the glass as the phone slides open. */
 .island-mission-tracker__sheen {
   position: absolute;
@@ -7069,7 +7435,7 @@
   flex-direction: column;
   box-sizing: border-box;
   min-width: 0;
-  padding: clamp(34px, 5.3dvh, 47px) clamp(15px, 4.4vw, 24px) clamp(19px, 3.2dvh, 27px);
+  padding: 34px clamp(13px, 4vw, 20px) clamp(16px, 2.6dvh, 22px);
   overflow: hidden;
   border-radius: calc(var(--mission-phone-radius) - var(--mission-phone-frame));
   background: #000;
@@ -7079,6 +7445,7 @@
   pointer-events: none;
 }
 
+.island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__phone-screen,
 .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen,
 .island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone-screen {
   opacity: 1;
@@ -7139,9 +7506,8 @@
 }
 
 .island-mission-tracker__close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  position: relative;
+  flex: 0 0 auto;
   z-index: 5;
   width: 30px;
   height: 30px;
@@ -7173,190 +7539,6 @@
   pointer-events: none;
 }
 
-.island-mission-tracker__command-plate {
-  position: relative;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  min-height: 122px;
-  padding: 47px 24px 18px;
-  border: 1px solid rgba(177, 186, 185, 0.88);
-  background:
-    linear-gradient(90deg, transparent 14%, #6d4a1d 14% 17%, #e0aa4c 17% 83%, #6d4a1d 83% 86%, transparent 86%) bottom 8px center / 100% 2px no-repeat,
-    linear-gradient(90deg, transparent 19%, #6d4a1d 19% 22%, #d89f43 22% 78%, #6d4a1d 78% 81%, transparent 81%) top 8px center / 100% 2px no-repeat,
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(90deg,
-      #202629 0%,
-      #626a6a 7%,
-      #343b3d 15%,
-      #4d5556 27%,
-      #22282a 42%,
-      #121719 49%,
-      #121719 51%,
-      #22282a 58%,
-      #4d5556 73%,
-      #343b3d 85%,
-      #626a6a 93%,
-      #202629 100%);
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.36),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.68),
-    inset 8px 0 12px rgba(255, 255, 255, 0.05),
-    inset -8px 0 12px rgba(255, 255, 255, 0.05),
-    inset 0 0 0 4px rgba(7, 12, 14, 0.32),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.38),
-    0 11px 20px rgba(0, 0, 0, 0.46),
-    0 0 20px rgba(210, 153, 59, 0.07);
-  clip-path: polygon(8% 0, 92% 0, 100% 16%, 100% 84%, 92% 100%, 8% 100%, 0 84%, 0 16%);
-}
-
-.island-mission-tracker__command-plate::before,
-.island-mission-tracker__command-plate::after {
-  content: '';
-  position: absolute;
-  top: 21%;
-  bottom: 21%;
-  width: 10px;
-  border: 1px solid rgba(177, 186, 185, 0.52);
-  background:
-    linear-gradient(90deg, #151a1c, #737b7a 45%, #272d2f 55%, #111618),
-    #333a3c;
-  box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.22),
-    inset -1px 0 0 rgba(0, 0, 0, 0.7),
-    0 0 0 2px rgba(7, 11, 13, 0.32);
-}
-
-.island-mission-tracker__command-plate::before {
-  left: 6px;
-  clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 88%);
-}
-
-.island-mission-tracker__command-plate::after {
-  right: 6px;
-  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
-  transform: scaleX(-1);
-}
-
-.island-mission-tracker__command-frame {
-  position: absolute;
-  z-index: 1;
-  inset: 7px 12px;
-  pointer-events: none;
-  border: 1px solid rgba(202, 211, 210, 0.35);
-  background:
-    linear-gradient(90deg, rgba(236, 246, 244, 0.2), transparent 15% 85%, rgba(236, 246, 244, 0.2)) border-box;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.56),
-    0 0 0 1px rgba(221, 168, 73, 0.18);
-  clip-path: polygon(6% 0, 94% 0, 100% 12%, 100% 88%, 94% 100%, 6% 100%, 0 88%, 0 12%);
-}
-
-.island-mission-tracker__command-frame::before,
-.island-mission-tracker__command-frame::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 22%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(224, 170, 76, 0.68));
-}
-
-.island-mission-tracker__command-frame::before { left: 6%; }
-
-.island-mission-tracker__command-frame::after {
-  right: 6%;
-  background: linear-gradient(90deg, rgba(224, 170, 76, 0.68), transparent);
-}
-
-.island-mission-tracker__command-frame > i {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border: 1px solid #9ba2a1;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 36% 30%, #f4f7f5 0 12%, #969d9c 14% 31%, #3e4546 34% 57%, #111619 60%),
-    #3d4445;
-  box-shadow:
-    0 0 0 2px rgba(9, 13, 15, 0.72),
-    0 0 0 3px rgba(211, 160, 69, 0.24),
-    0 2px 3px rgba(0, 0, 0, 0.52);
-}
-
-.island-mission-tracker__command-frame > i:nth-child(1) { top: 7px; left: 8px; }
-.island-mission-tracker__command-frame > i:nth-child(2) { top: 7px; right: 8px; }
-.island-mission-tracker__command-frame > i:nth-child(3) { bottom: 7px; left: 8px; }
-.island-mission-tracker__command-frame > i:nth-child(4) { right: 8px; bottom: 7px; }
-
-.island-mission-tracker__command-insignia {
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  width: 98px;
-  height: 39px;
-  display: grid;
-  grid-template-columns: 1fr 27px 1fr;
-  align-items: center;
-  gap: 6px;
-  transform: translateX(-50%);
-  z-index: 2;
-  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
-}
-
-.island-mission-tracker__command-insignia > i {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #8a642d 36%, #e2ad50);
-  box-shadow: 0 4px 0 rgba(210, 154, 61, 0.38);
-  transform: skewX(-25deg);
-}
-
-.island-mission-tracker__command-insignia > i:last-child {
-  background: linear-gradient(90deg, #e2ad50, #8a642d 64%, transparent);
-  transform: skewX(25deg);
-}
-
-.island-mission-tracker__command-insignia svg {
-  width: 27px;
-  height: 30px;
-  overflow: visible;
-}
-
-.island-mission-tracker__insignia-shield {
-  fill: #202729;
-  stroke: #e4b15a;
-  stroke-width: 2.4;
-}
-
-.island-mission-tracker__insignia-chevron {
-  fill: #dda647;
-}
-
-.island-mission-tracker__command-plate h2 {
-  position: relative;
-  z-index: 2;
-  max-width: 100%;
-  margin: 0;
-  color: #e9ece7;
-  background: linear-gradient(180deg, #ffffff 0%, #c5ccca 37%, #737b7b 51%, #f1f4f1 66%, #a8afad 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  font-size: clamp(1.34rem, 6.9vw, 1.9rem);
-  font-weight: 900;
-  letter-spacing: 0.055em;
-  line-height: 0.96;
-  text-align: center;
-  text-transform: uppercase;
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.58),
-    0 3px 0 #070a0b,
-    0 5px 5px rgba(0, 0, 0, 0.46),
-    0 0 16px rgba(232, 236, 230, 0.12);
-  text-wrap: balance;
-}
-
 .island-mission-tracker__checklist {
   flex: 1 1 auto;
   display: grid;
@@ -7364,7 +7546,7 @@
   gap: 9px;
   min-height: 0;
   margin: 0;
-  padding: 18px 2px 8px;
+  padding: 12px 2px 8px;
   list-style: none;
 }
 
@@ -7707,18 +7889,6 @@
   scrollbar-width: none;
 }
 
-.island-mission-tracker[data-variant="living-compass"] .island-mission-tracker__command-plate {
-  flex: 0 0 auto;
-  min-height: 88px;
-  padding: 38px 12px 12px;
-}
-
-.island-mission-tracker[data-variant="living-compass"] .island-mission-tracker__command-plate h2 {
-  font-size: 1.32rem;
-  letter-spacing: 0;
-  line-height: 1.08;
-}
-
 .island-mission-tracker[data-variant="living-compass"] .island-mission-tracker__objective-row {
   grid-template-columns: 34px minmax(0, 1fr) auto 8px;
   gap: 6px;
@@ -7992,6 +8162,49 @@
   100% { opacity: 0.55; filter: none; }
 }
 
+@keyframes island-mission-phone-wake {
+  0%, 60% { opacity: 0; }
+  86%, 100% { opacity: 1; }
+}
+
+@keyframes island-mission-phone-lock-away {
+  0%, 70% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-14%); }
+}
+
+@keyframes island-mission-phone-faceid-frame {
+  0% { transform: scale(1); opacity: 1; }
+  18% { transform: scale(0.9); }
+  34% { transform: scale(1.02); }
+  44% { transform: scale(0.94); opacity: 1; }
+  54%, 100% { transform: scale(0.84); opacity: 0; }
+}
+
+@keyframes island-mission-phone-faceid-face {
+  0%, 12% { transform: translateX(0); opacity: 1; }
+  22% { transform: translateX(-3px); }
+  32% { transform: translateX(3px); }
+  40% { transform: translateX(0); opacity: 1; }
+  48%, 100% { opacity: 0; }
+}
+
+@keyframes island-mission-phone-faceid-check {
+  0%, 44% { stroke-dashoffset: 44; opacity: 0; }
+  46% { opacity: 1; }
+  62%, 100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes island-mission-phone-shackle {
+  0%, 48% { transform: translate(0, 0) rotate(0deg); }
+  58% { transform: translate(0, -3px) rotate(0deg); }
+  68%, 100% { transform: translate(0, -3px) rotate(28deg); }
+}
+
+@keyframes island-mission-phone-alert {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.8); }
+}
+
 @keyframes island-mission-phone-screen-off {
   from { opacity: 1; }
   to { opacity: 0; }
@@ -8055,8 +8268,7 @@
 }
 
 @media (max-height: 560px) {
-  .island-mission-tracker__phone-screen { padding-top: 27px; padding-bottom: 15px; }
-  .island-mission-tracker__command-plate { min-height: 94px; padding: 39px 21px 13px; }
+  .island-mission-tracker__phone-screen { padding-top: 32px; padding-bottom: 15px; }
   .island-mission-tracker__checklist { padding-block: 5px 3px; }
   .island-mission-tracker__checklist li { min-height: 50px; }
   .island-mission-tracker__overall { gap: 5px; padding-top: 5px; }
@@ -8077,8 +8289,6 @@
 .island-mission-tracker { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 .island-mission-tracker *, .island-mission-tracker *::before, .island-mission-tracker *::after { box-sizing: border-box; }
 .island-mission-tracker[data-objective-count='3'] .island-mission-tracker__phone-screen { overflow-y: auto; scrollbar-width: thin; }
-.island-mission-tracker[data-objective-count='3'] .island-mission-tracker__command-plate { flex: 0 0 auto; min-height: 94px; padding: 34px 16px 12px; }
-.island-mission-tracker[data-objective-count='3'] .island-mission-tracker__command-plate h2 { margin: 0; font-size: 1.4rem; }
 .island-mission-tracker[data-objective-count='3'] .island-mission-tracker__checklist { flex: 1 0 auto; gap: 6px; padding: 8px 0 5px; }
 .island-mission-tracker[data-objective-count='3'] .island-mission-tracker__checklist li { min-height: 52px; }
 .island-mission-tracker[data-objective-count='3'] .island-mission-tracker__objective-row { min-height: 50px; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 6px; padding: 6px; }
