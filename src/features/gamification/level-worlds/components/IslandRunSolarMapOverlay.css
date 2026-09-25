@@ -1,3 +1,25 @@
+/* Viewport-anchored modal root (AGENTS modal guardrail). Without it the map
+   renders in document flow below the app, invisible, while the board still
+   treats it as open: the controller hides and the Shop stays disabled. */
+.island-run-solar-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--island-run-mission-overlay-z, 22000);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding:
+    max(8px, env(safe-area-inset-top, 0px))
+    max(8px, env(safe-area-inset-right, 0px))
+    max(8px, env(safe-area-inset-bottom, 0px))
+    max(8px, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0, 8, 15, 0.62);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
 .island-run-orbit-compass {
   position: relative;
   width: min(96vw, 430px);
