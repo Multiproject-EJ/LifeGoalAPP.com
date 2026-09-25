@@ -30,8 +30,27 @@ export interface IslandMissionBriefingModalProps {
 
 type MissionPhonePhase = 'unfolding' | 'open' | 'folding';
 
-const MISSION_PHONE_UNFOLD_DURATION_MS = 2450;
-const MISSION_PHONE_FOLD_DURATION_MS = 320;
+// The phone arrives as a compact pack, then its screen rolls out below the
+// housing. Keep these in sync with the island-mission-phone-* keyframes.
+const MISSION_PHONE_UNFOLD_DURATION_MS = 980;
+const MISSION_PHONE_FOLD_DURATION_MS = 420;
+const MISSION_PHONE_PACK_CENTER_RATIO = 0.135;
+const MISSION_PHONE_LAUNCH_SOURCE_SELECTOR = '.island-run-board__mission-phone-rail';
+
+// Points the fly-in/fly-out at the rail button that summoned the phone, so the
+// pack visibly leaves and returns to it. Falls back to the lower right edge.
+function setMissionPhoneLaunchOrigin(phone: HTMLElement | null): void {
+  if (!phone || typeof window === 'undefined') return;
+  const phoneRect = phone.getBoundingClientRect();
+  const sourceRect = document.querySelector<HTMLElement>(MISSION_PHONE_LAUNCH_SOURCE_SELECTOR)?.getBoundingClientRect();
+  const hasSource = Boolean(sourceRect && sourceRect.width > 0 && sourceRect.height > 0);
+  const targetX = hasSource && sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth - 40;
+  const targetY = hasSource && sourceRect ? sourceRect.top + sourceRect.height / 2 : window.innerHeight * 0.62;
+  const packCenterX = phoneRect.left + phoneRect.width / 2;
+  const packCenterY = phoneRect.top + phoneRect.height * MISSION_PHONE_PACK_CENTER_RATIO;
+  phone.style.setProperty('--mission-phone-launch-x', `${Math.round(targetX - packCenterX)}px`);
+  phone.style.setProperty('--mission-phone-launch-y', `${Math.round(targetY - packCenterY)}px`);
+}
 
 function MissionObjectiveGlyph({ label }: { label: string }): React.JSX.Element {
   const normalizedLabel = label.toLowerCase();
@@ -91,6 +110,7 @@ export function IslandMissionBriefingModal({
   const [selectedObjectiveIndex, setSelectedObjectiveIndex] = React.useState<number | null>(null);
   const titleId = React.useId();
   const acknowledgeRef = React.useRef<HTMLButtonElement | null>(null);
+  const phoneRef = React.useRef<HTMLElement | null>(null);
   const onAcknowledgeRef = React.useRef(onAcknowledge);
   const onObjectiveSelectRef = React.useRef(onObjectiveSelect);
   const phaseRef = React.useRef<MissionPhonePhase>('unfolding');
@@ -109,6 +129,7 @@ export function IslandMissionBriefingModal({
       onFolded();
       return;
     }
+    setMissionPhoneLaunchOrigin(phoneRef.current);
     updatePhase('folding');
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null;
@@ -158,16 +179,14 @@ export function IslandMissionBriefingModal({
     };
   }, [isOpen, requestClose, updatePhase]);
 
+  React.useLayoutEffect(() => {
+    if (isOpen) setMissionPhoneLaunchOrigin(phoneRef.current);
+  }, [isOpen]);
+
   React.useEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
-    [
-      '/tech/ExpeditionPhone_v19_folded.webp',
-      '/tech/ExpeditionPhone_v21_opening.webp',
-      '/tech/ExpeditionPhone_v11_open_front.webp',
-    ].forEach((src) => {
-      const image = new Image();
-      image.src = src;
-    });
+    const image = new Image();
+    image.src = '/tech/ExpeditionPhone_v11_open_front.webp';
   }, [isOpen]);
 
   React.useEffect(() => {
@@ -183,7 +202,7 @@ export function IslandMissionBriefingModal({
 
   React.useEffect(() => {
     if (phase !== 'open') return undefined;
-    const focusTimer = window.setTimeout(() => acknowledgeRef.current?.focus(), 520);
+    const focusTimer = window.setTimeout(() => acknowledgeRef.current?.focus(), 320);
     return () => window.clearTimeout(focusTimer);
   }, [phase]);
 
@@ -210,171 +229,183 @@ export function IslandMissionBriefingModal({
   return createPortal(
     <div className="island-mission-tracker" data-phase={phase} data-variant={variant} data-objective-count={normalizedProgress.length} role="presentation">
       <section
+        ref={phoneRef}
         className="island-mission-tracker__phone"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <img
-          className="island-mission-tracker__phone-opening"
-          src="/tech/ExpeditionPhone_v21_opening.webp"
-          alt=""
-          aria-hidden="true"
-        />
-        <img
-          className="island-mission-tracker__phone-hardware"
-          src="/tech/ExpeditionPhone_v11_open_front.webp"
-          alt=""
-          aria-hidden="true"
-        />
-
-        <div className="island-mission-tracker__phone-screen" style={islandCompletion ? { overflowY: 'auto' } : undefined}>
-          <button
-            ref={acknowledgeRef}
-            type="button"
-            className="island-mission-tracker__close"
-            aria-label={acknowledgeLabel}
-            title={acknowledgeLabel}
-            onClick={requestClose}
-            disabled={phase !== 'open'}
-          >
-            ×
-          </button>
-
-          <header className="island-mission-tracker__command-plate">
-            <span className="island-mission-tracker__command-frame" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="island-mission-tracker__command-insignia" aria-hidden="true">
-              <i />
-              <svg viewBox="0 0 40 44" focusable="false">
-                <path className="island-mission-tracker__insignia-shield" d="M20 2.4 35 8v12.5c0 10-6.2 17.4-15 21.1-8.8-3.7-15-11.1-15-21.1V8z" />
-                <path className="island-mission-tracker__insignia-chevron" d="m11.2 14.2 8.8 5.5 8.8-5.5v5L20 24.7l-8.8-5.5zm0 9.1 8.8 5.5 8.8-5.5v5L20 33.8l-8.8-5.5z" />
+        <span className="island-mission-tracker__phone-shadow" aria-hidden="true" />
+        <div className="island-mission-tracker__device">
+          <span className="island-mission-tracker__edge island-mission-tracker__edge--left" aria-hidden="true"><i /></span>
+          <span className="island-mission-tracker__edge island-mission-tracker__edge--right" aria-hidden="true"><i /></span>
+          <span className="island-mission-tracker__edge island-mission-tracker__edge--top" aria-hidden="true" />
+          <div className="island-mission-tracker__body">
+            <img
+              className="island-mission-tracker__phone-hardware"
+              src="/tech/ExpeditionPhone_v11_open_front.webp"
+              alt=""
+              aria-hidden="true"
+            />
+            <span className="island-mission-tracker__pack-face" aria-hidden="true">
+              <svg viewBox="0 0 48 48" focusable="false">
+                <path d="M24 3.5 28.2 19.8 44.5 24 28.2 28.2 24 44.5 19.8 28.2 3.5 24 19.8 19.8z" />
+                <path className="island-mission-tracker__pack-face-facet" d="M24 3.5 28.2 19.8 24 24zm20.5 20.5L28.2 28.2 24 24zM24 44.5l-4.2-16.3L24 24zM3.5 24l16.3-4.2L24 24z" />
               </svg>
-              <i />
+              <small>Mission · {overallPercent}%</small>
             </span>
-            <h2 id={titleId}>{missionTitle}</h2>
-          </header>
+            <span className="island-mission-tracker__sheen" aria-hidden="true" />
 
-          {selectedObjective ? (
-            <section className="island-mission-tracker__objective-detail" aria-label={`${selectedObjective.label} mission information`}>
+            <div className="island-mission-tracker__phone-screen" style={islandCompletion ? { overflowY: 'auto' } : undefined}>
               <button
+                ref={acknowledgeRef}
                 type="button"
-                className="island-mission-tracker__objective-back"
-                onClick={() => setSelectedObjectiveIndex(null)}
+                className="island-mission-tracker__close"
+                aria-label={acknowledgeLabel}
+                title={acknowledgeLabel}
+                onClick={requestClose}
+                disabled={phase !== 'open'}
               >
-                <span aria-hidden="true">‹</span> Objectives
+                ×
               </button>
-              <div className="island-mission-tracker__objective-detail-card">
-                <span className="island-mission-tracker__objective-detail-glyph" aria-hidden="true">
-                  <MissionObjectiveGlyph label={selectedObjective.label} />
+
+              <header className="island-mission-tracker__command-plate">
+                <span className="island-mission-tracker__command-frame" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <i />
                 </span>
-                <small>Mission objective</small>
-                <h3>{selectedObjective.label}</h3>
-                <p>{objectiveDetails[selectedObjectiveIndex ?? 0] ?? presentation.primaryObjective}</p>
-              </div>
-            </section>
-          ) : (
-            <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
-              {normalizedProgress.map((item, objectiveIndex) => {
-                const objectiveLabel = `${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`;
-                const objectiveContent = (
-                  <>
-                    <span
-                      className="island-mission-tracker__objective-marker"
-                      aria-hidden="true"
-                      style={{ '--mission-objective-progress': `${Math.round((item.value / item.target) * 360)}deg` } as React.CSSProperties}
-                    >
-                      <span>
-                        {item.complete ? '✓' : <MissionObjectiveGlyph label={item.label} />}
-                      </span>
-                    </span>
-                    <span className="island-mission-tracker__objective-copy">
-                      <strong>{item.label}</strong>
-                    </span>
-                    <span className="island-mission-tracker__objective-count">
-                      {item.complete && item.label !== 'Build Landmarks' ? 'Done' : item.displayValue ?? `${Math.floor(item.value)} / ${Math.floor(item.target)}`}
-                    </span>
-                    {onObjectiveSelect ? <span className="island-mission-tracker__objective-chevron" aria-hidden="true">›</span> : null}
-                  </>
-                );
-                return (
-                  <li
-                    key={item.label}
-                    className={item.complete ? 'island-mission-tracker__checklist-item--complete' : undefined}
+                <span className="island-mission-tracker__command-insignia" aria-hidden="true">
+                  <i />
+                  <svg viewBox="0 0 40 44" focusable="false">
+                    <path className="island-mission-tracker__insignia-shield" d="M20 2.4 35 8v12.5c0 10-6.2 17.4-15 21.1-8.8-3.7-15-11.1-15-21.1V8z" />
+                    <path className="island-mission-tracker__insignia-chevron" d="m11.2 14.2 8.8 5.5 8.8-5.5v5L20 24.7l-8.8-5.5zm0 9.1 8.8 5.5 8.8-5.5v5L20 33.8l-8.8-5.5z" />
+                  </svg>
+                  <i />
+                </span>
+                <h2 id={titleId}>{missionTitle}</h2>
+              </header>
+
+              {selectedObjective ? (
+                <section className="island-mission-tracker__objective-detail" aria-label={`${selectedObjective.label} mission information`}>
+                  <button
+                    type="button"
+                    className="island-mission-tracker__objective-back"
+                    onClick={() => setSelectedObjectiveIndex(null)}
                   >
-                    {onObjectiveSelect ? (
-                      <button
-                        type="button"
-                        className="island-mission-tracker__objective-row island-mission-tracker__objective-row--actionable"
-                        aria-label={`${objectiveLabel}. Open objective.`}
-                        onClick={() => handleObjectiveClick(objectiveIndex)}
+                    <span aria-hidden="true">‹</span> Objectives
+                  </button>
+                  <div className="island-mission-tracker__objective-detail-card">
+                    <span className="island-mission-tracker__objective-detail-glyph" aria-hidden="true">
+                      <MissionObjectiveGlyph label={selectedObjective.label} />
+                    </span>
+                    <small>Mission objective</small>
+                    <h3>{selectedObjective.label}</h3>
+                    <p>{objectiveDetails[selectedObjectiveIndex ?? 0] ?? presentation.primaryObjective}</p>
+                  </div>
+                </section>
+              ) : (
+                <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
+                  {normalizedProgress.map((item, objectiveIndex) => {
+                    const objectiveLabel = `${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`;
+                    const objectiveContent = (
+                      <>
+                        <span
+                          className="island-mission-tracker__objective-marker"
+                          aria-hidden="true"
+                          style={{ '--mission-objective-progress': `${Math.round((item.value / item.target) * 360)}deg` } as React.CSSProperties}
+                        >
+                          <span>
+                            {item.complete ? '✓' : <MissionObjectiveGlyph label={item.label} />}
+                          </span>
+                        </span>
+                        <span className="island-mission-tracker__objective-copy">
+                          <strong>{item.label}</strong>
+                        </span>
+                        <span className="island-mission-tracker__objective-count">
+                          {item.complete && item.label !== 'Build Landmarks' ? 'Done' : item.displayValue ?? `${Math.floor(item.value)} / ${Math.floor(item.target)}`}
+                        </span>
+                        {onObjectiveSelect ? <span className="island-mission-tracker__objective-chevron" aria-hidden="true">›</span> : null}
+                      </>
+                    );
+                    return (
+                      <li
+                        key={item.label}
+                        className={item.complete ? 'island-mission-tracker__checklist-item--complete' : undefined}
                       >
-                        {objectiveContent}
-                      </button>
-                    ) : (
-                      <div className="island-mission-tracker__objective-row" aria-label={objectiveLabel}>
-                        {objectiveContent}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          )}
+                        {onObjectiveSelect ? (
+                          <button
+                            type="button"
+                            className="island-mission-tracker__objective-row island-mission-tracker__objective-row--actionable"
+                            aria-label={`${objectiveLabel}. Open objective.`}
+                            onClick={() => handleObjectiveClick(objectiveIndex)}
+                          >
+                            {objectiveContent}
+                          </button>
+                        ) : (
+                          <div className="island-mission-tracker__objective-row" aria-label={objectiveLabel}>
+                            {objectiveContent}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
 
-          {primaryActionLabel && onPrimaryAction ? (
-            <div className="island-mission-tracker__mission-action">
-              {milestoneCount > 0 ? (
-                <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
-                  {Array.from({ length: milestoneCount }, (_, index) => (
-                    <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">{variant === 'living-compass' ? index + 1 : '⬡'}</i>
-                  ))}
-                </span>
+              {primaryActionLabel && onPrimaryAction ? (
+                <div className="island-mission-tracker__mission-action">
+                  {milestoneCount > 0 ? (
+                    <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
+                      {Array.from({ length: milestoneCount }, (_, index) => (
+                        <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">{variant === 'living-compass' ? index + 1 : '⬡'}</i>
+                      ))}
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
+                    onClick={onPrimaryAction}
+                  >
+                    <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
+                    <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
+                  </button>
+                  {primaryActionHint ? <small>{primaryActionHint}</small> : null}
+                </div>
               ) : null}
-              <button
-                type="button"
-                disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
-                onClick={onPrimaryAction}
-              >
-                <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
-                <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
-              </button>
-              {primaryActionHint ? <small>{primaryActionHint}</small> : null}
-            </div>
-          ) : null}
 
-          <footer className="island-mission-tracker__overall" aria-label="Mission progress">
-            <span>
-              <small>Mission progress</small>
-              <strong>{overallPercent}%</strong>
-            </span>
-            <span
-              className="island-mission-tracker__overall-track"
-              role="progressbar"
-              aria-label="Overall mission progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={overallPercent}
-            >
-              <i style={{ width: `${overallPercent}%` }} />
-            </span>
-          </footer>
-          {islandCompletion ? (
-            <details style={{ fontSize: 11, lineHeight: 1.5, marginTop: 8, maxHeight: 135, overflowY: 'auto', flexShrink: 0 }}>
-              <summary aria-label={`Island completion ${islandCompletion.percent}%`} style={{ cursor: 'pointer' }}>
-                Island {islandCompletion.percent}% · {islandCompletion.complete ? 'Ready to travel' : 'View remaining requirements'}
-              </summary>
-              <ul style={{ paddingLeft: 16, margin: '6px 0' }}>
-                {islandCompletion.requirements.map(item => (
-                  <li key={item.id}>{item.complete ? '✓' : '○'} {item.label} · {item.value}/{item.target}</li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
+              <footer className="island-mission-tracker__overall" aria-label="Mission progress">
+                <span>
+                  <small>Mission progress</small>
+                  <strong>{overallPercent}%</strong>
+                </span>
+                <span
+                  className="island-mission-tracker__overall-track"
+                  role="progressbar"
+                  aria-label="Overall mission progress"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={overallPercent}
+                >
+                  <i style={{ width: `${overallPercent}%` }} />
+                </span>
+              </footer>
+              {islandCompletion ? (
+                <details style={{ fontSize: 11, lineHeight: 1.5, marginTop: 8, maxHeight: 135, overflowY: 'auto', flexShrink: 0 }}>
+                  <summary aria-label={`Island completion ${islandCompletion.percent}%`} style={{ cursor: 'pointer' }}>
+                    Island {islandCompletion.percent}% · {islandCompletion.complete ? 'Ready to travel' : 'View remaining requirements'}
+                  </summary>
+                  <ul style={{ paddingLeft: 16, margin: '6px 0' }}>
+                    {islandCompletion.requirements.map(item => (
+                      <li key={item.id}>{item.complete ? '✓' : '○'} {item.label} · {item.value}/{item.target}</li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
+          </div>
+          <span className="island-mission-tracker__roller" aria-hidden="true"><i /></span>
         </div>
       </section>
     </div>,

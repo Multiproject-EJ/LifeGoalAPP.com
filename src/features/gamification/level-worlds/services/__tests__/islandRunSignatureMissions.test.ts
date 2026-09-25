@@ -618,7 +618,10 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(boardSource.includes("[1, 3, 10, 13].includes(islandNumber)"), 'only islands with dedicated mission panels are marked as external launches');
       assert(modalSource.includes('aria-label="Mission progress"'), 'phone tracker exposes accessible overall progress');
       assert(boardSource.includes('/tech/ExpeditionPhone_v19_folded.webp'), 'the board affordance uses the folded phone hardware');
-      assert(modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker unfolds through the authored phone-opening sequence');
+      assert(!modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker no longer waits on the heavy animated opening image');
+      assert(modalSource.includes('island-mission-tracker__roller') && modalSource.includes('island-mission-tracker__pack-face'), 'the tracker rolls out from a compact pack with a roller bezel');
+      assert(modalSource.includes('MISSION_PHONE_UNFOLD_DURATION_MS = 980'), 'the phone opens in under a second');
+      assert(cssSource.includes('@keyframes island-mission-phone-unroll') && cssSource.includes('transform-style: preserve-3d'), 'the phone is a real 3D object that unrolls its screen');
       assert(modalSource.includes('data-phase={phase}'), 'the tracker exposes unfold, powered-on, and fold-back presentation phases');
       assert(!modalSource.includes('Command council'), 'compact tracker removes the command-council information wall');
       assert(!modalSource.includes('presentation.missionStatement'), 'compact tracker removes the long mission paragraph');

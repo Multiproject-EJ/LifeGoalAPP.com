@@ -6755,32 +6755,89 @@
 }
 
 .island-mission-tracker__phone {
-  --mission-phone-launch-x: calc(50vw - max(16px, calc(env(safe-area-inset-right, 0px) + 16px)) - 23px);
-  --mission-phone-launch-y: calc(50dvh - clamp(12.75rem, 54vw, 22rem) - env(safe-area-inset-bottom, 0px) - 175px);
+  /* Rollable Expedition Phone. It flies out of the mission rail as a compact
+     pack (top 27% of the device), then the screen rolls out below the housing
+     while a roller bar travels down to become the bottom bezel. Pure CSS 3D:
+     only transforms, clip-path and opacity animate, and no image has to
+     decode before the motion can start. */
+  --mission-phone-w: min(368px, 88vw, calc((100dvh - 34px) * 0.6949));
+  --mission-phone-h: calc(var(--mission-phone-w) * 944 / 656);
+  --mission-phone-depth: calc(var(--mission-phone-w) * 0.05);
+  --mission-phone-radius: calc(var(--mission-phone-w) * 0.075);
+  --mission-phone-launch-x: calc(50vw - 40px);
+  --mission-phone-launch-y: 18vh;
   position: relative;
-  width: min(368px, 88vw, calc((100dvh - 34px) * 0.6949));
+  width: var(--mission-phone-w);
   aspect-ratio: 656 / 944;
   color: #f5fbfb;
-  transform-origin: 100% 100%;
-  filter:
-    drop-shadow(0 36px 44px rgba(0, 0, 0, 0.68))
-    drop-shadow(0 0 34px rgba(35, 213, 231, 0.2))
-    drop-shadow(-7px 5px 8px rgba(211, 145, 50, 0.08));
+  perspective: 1150px;
+  perspective-origin: 50% 28%;
 }
 
 .island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone {
-  animation: island-mission-tracker-deploy 460ms cubic-bezier(0.18, 0.82, 0.22, 1) both;
+  animation: island-mission-phone-materialize 980ms linear both;
 }
 
 .island-mission-tracker[data-phase='folding'] {
-  animation: island-mission-tracker-backdrop-out 320ms ease-in both;
+  animation: island-mission-tracker-backdrop-out 420ms ease-in both;
 }
 
 .island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone {
-  animation: island-mission-tracker-retract 320ms cubic-bezier(0.58, 0, 0.82, 0.18) both;
+  animation: island-mission-phone-dematerialize 420ms linear both;
 }
 
-.island-mission-tracker__phone-opening,
+.island-mission-tracker__phone-shadow {
+  position: absolute;
+  right: 4%;
+  bottom: -4.5%;
+  left: 4%;
+  height: 10%;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.28) 55%, transparent),
+    radial-gradient(closest-side, rgba(35, 213, 231, 0.16), transparent);
+  filter: blur(9px);
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone-shadow {
+  animation: island-mission-phone-shadow-in 980ms ease-out both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone-shadow {
+  animation: island-mission-phone-shadow-in 240ms ease-in reverse both;
+}
+
+.island-mission-tracker__device {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% calc(var(--mission-phone-h) * 0.135);
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__device {
+  animation: island-mission-phone-deploy 980ms both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__device {
+  animation: island-mission-phone-retract 420ms both;
+}
+
+.island-mission-tracker__body {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--mission-phone-radius);
+  background: #05080d;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__body {
+  animation: island-mission-phone-unroll 980ms both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__body {
+  animation: island-mission-phone-roll-up 420ms both;
+}
+
 .island-mission-tracker__phone-hardware {
   position: absolute;
   inset: 0;
@@ -6792,17 +6849,197 @@
   user-select: none;
 }
 
-.island-mission-tracker__phone-opening {
-  opacity: 0;
-  object-fit: contain;
+/* Side walls give the device real thickness while it is tilted in flight. */
+.island-mission-tracker__edge {
+  position: absolute;
+  pointer-events: none;
 }
 
-.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone-opening {
-  opacity: 1;
+.island-mission-tracker__edge--left,
+.island-mission-tracker__edge--right {
+  top: 3%;
+  bottom: 3%;
+  width: var(--mission-phone-depth);
 }
 
-.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone-hardware {
+.island-mission-tracker__edge--left {
+  left: 0.6%;
+  transform-origin: 0 50%;
+  transform: rotateY(90deg);
+}
+
+.island-mission-tracker__edge--right {
+  right: 0.6%;
+  transform-origin: 100% 50%;
+  transform: rotateY(-90deg);
+}
+
+.island-mission-tracker__edge > i {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 17%, rgba(0, 0, 0, 0.62) 17% 17.8%, rgba(255, 236, 196, 0.28) 17.8% 18.4%, transparent 18.4% 25%),
+    linear-gradient(90deg, #07090c, #34383e 16%, #a86b25 30%, #f2c178 48%, #c8873a 64%, #3b3f45 84%, #07090c);
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__edge > i {
+  animation: island-mission-phone-edge-unroll 980ms both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__edge > i {
+  animation: island-mission-phone-edge-roll-up 420ms both;
+}
+
+.island-mission-tracker__edge--top {
+  top: 0.4%;
+  right: 5%;
+  left: 5%;
+  height: var(--mission-phone-depth);
+  border-radius: 3px;
+  transform-origin: 50% 0;
+  transform: rotateX(-90deg);
+  background:
+    linear-gradient(180deg, #0a0c10, #474b52 30%, #9aa0a8 52%, #3c4046 74%, #0a0c10),
+    #1a1d22;
+}
+
+/* Compact pack face: shown while folded, dissolves as the screen rolls out. */
+.island-mission-tracker__pack-face {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--mission-phone-h) * 0.064);
+  right: 7.6%;
+  left: 7.6%;
+  height: calc(var(--mission-phone-h) * 0.168);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 5px;
+  border-radius: calc(var(--mission-phone-radius) * 0.72);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(49, 132, 214, 0.28), transparent 64%),
+    linear-gradient(180deg, #0c1c3a, #081530);
+  box-shadow: inset 0 0 0 1px rgba(92, 170, 255, 0.16), inset 0 0 24px rgba(0, 0, 0, 0.5);
   opacity: 0;
+}
+
+.island-mission-tracker__pack-face svg {
+  width: clamp(34px, 11vw, 48px);
+  height: auto;
+  fill: #2f7ed8;
+  filter: drop-shadow(0 0 8px rgba(80, 160, 255, 0.55));
+}
+
+.island-mission-tracker__pack-face-facet {
+  fill: #1c4f9a;
+}
+
+.island-mission-tracker__pack-face small {
+  color: #8cc3ff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__pack-face {
+  animation: island-mission-phone-pack-face 980ms both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__pack-face {
+  animation: island-mission-phone-pack-face-return 420ms both;
+}
+
+/* Specular sweep across the glass as the screen extends. */
+.island-mission-tracker__sheen {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(210, 245, 255, 0.2) 44%, rgba(255, 255, 255, 0.34) 48%, rgba(210, 245, 255, 0.14) 52%, transparent 64%);
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__sheen {
+  animation: island-mission-phone-sheen 980ms ease-out both;
+}
+
+/* The roller: in pack form it caps the housing; unrolled it is the bottom bezel. */
+.island-mission-tracker__roller {
+  position: absolute;
+  top: 0;
+  right: -1.2%;
+  left: -1.2%;
+  height: calc(var(--mission-phone-h) * 0.068);
+  border-radius: calc(var(--mission-phone-h) * 0.034);
+  pointer-events: none;
+  transform: translate3d(0, calc(var(--mission-phone-h) * 0.932), 1px);
+  background:
+    linear-gradient(90deg, #7a4b16, #f0bd6c 2.2%, #b2742b 4.4%, transparent 4.6% 95.4%, #b2742b 95.6%, #f0bd6c 97.8%, #7a4b16),
+    linear-gradient(180deg, #8d939b 0%, #3a3e44 14%, #121418 42%, #07080a 60%, #1f2227 82%, #5e636b 100%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.45);
+}
+
+.island-mission-tracker__roller::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: 7%;
+  left: 7%;
+  height: 2px;
+  border-radius: 2px;
+  background: #a9fbff;
+  box-shadow: 0 0 8px #5cecf4, 0 0 22px rgba(64, 230, 240, 0.7);
+  opacity: 0;
+}
+
+.island-mission-tracker__roller::after {
+  content: '';
+  position: absolute;
+  inset: 12% 5% 40%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent);
+}
+
+.island-mission-tracker__roller > i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22%;
+  height: 34%;
+  border: 1px solid rgba(200, 206, 214, 0.35);
+  border-radius: 999px;
+  background: #050608;
+  transform: translate(-50%, -50%);
+}
+
+.island-mission-tracker__roller > i::before,
+.island-mission-tracker__roller > i::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 90%;
+  height: 5px;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, #1b1d21 1.6px, transparent 2px) 0 50% / 9px 5px repeat-x;
+}
+
+.island-mission-tracker__roller > i::before { right: calc(100% + 8px); }
+.island-mission-tracker__roller > i::after { left: calc(100% + 8px); }
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__roller {
+  animation: island-mission-phone-roller-out 980ms both;
+}
+
+.island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__roller::before {
+  animation: island-mission-phone-seam 980ms both;
+}
+
+.island-mission-tracker[data-phase='folding'] .island-mission-tracker__roller {
+  animation: island-mission-phone-roller-in 420ms both;
 }
 
 .island-mission-tracker__phone-screen {
@@ -6833,7 +7070,7 @@
 
 .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen {
   pointer-events: auto;
-  animation: island-mission-tracker-screen-boot 520ms ease-out both;
+  animation: island-mission-tracker-screen-boot 380ms ease-out both;
 }
 
 .island-mission-tracker__phone-screen > * {
@@ -6841,11 +7078,12 @@
 }
 
 .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-screen > * {
-  animation: island-mission-tracker-visuals-online 420ms 210ms ease-out both;
+  animation: island-mission-tracker-visuals-online 340ms 140ms ease-out both;
 }
 
 .island-mission-tracker[data-phase='folding'] .island-mission-tracker__phone-screen > * {
   opacity: 1;
+  animation: island-mission-phone-screen-off 170ms ease-in both;
 }
 
 .island-mission-tracker__phone-screen::before {
@@ -7600,22 +7838,137 @@
   100% { transform: translateY(760%); opacity: 0; }
 }
 
-@keyframes island-mission-tracker-deploy {
-  0% {
-    transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.12) rotate(-7deg);
-    opacity: 0.35;
-  }
-  58% { opacity: 1; }
-  78% { transform: translate3d(0, 0, 0) scale(1.025) rotate(0deg); }
-  100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
+/* Mission phone timeline (980ms open / 420ms close):
+   0-40% the pack flies from the mission rail, tilted to show its thickness;
+   40-90% the screen rolls out while the phone turns to face the player;
+   90-100% the roller docks with a small settle. */
+@keyframes island-mission-phone-materialize {
+  0% { opacity: 0.2; }
+  14%, 100% { opacity: 1; }
 }
 
-@keyframes island-mission-tracker-retract {
-  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-  100% {
-    transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.12) rotate(-7deg);
-    opacity: 0;
+@keyframes island-mission-phone-dematerialize {
+  0%, 72% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes island-mission-phone-shadow-in {
+  0%, 36% { opacity: 0; transform: scaleX(0.4) translateY(calc(var(--mission-phone-h) * -0.62)); }
+  40% { opacity: 0.55; transform: scaleX(0.72) translateY(calc(var(--mission-phone-h) * -0.62)); }
+  90% { opacity: 1; transform: scaleX(1.02) translateY(0); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes island-mission-phone-deploy {
+  0% {
+    transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.16) rotateX(26deg) rotateY(-54deg) rotateZ(-16deg);
+    animation-timing-function: cubic-bezier(0.18, 0.7, 0.24, 1);
   }
+  38% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.365), 0) scale(1.05) rotateX(14deg) rotateY(-26deg) rotateZ(-3deg);
+    animation-timing-function: ease-in-out;
+  }
+  44% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.35), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    animation-timing-function: cubic-bezier(0.35, 0.05, 0.2, 1);
+  }
+  90% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * -0.006), 0) scale(1.012) rotateX(-1.5deg) rotateY(1.5deg) rotateZ(0deg);
+    animation-timing-function: ease-out;
+  }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+}
+
+@keyframes island-mission-phone-retract {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.4, 1);
+  }
+  46% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.35), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4);
+  }
+  100% { transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.16) rotateX(26deg) rotateY(-54deg) rotateZ(-16deg); }
+}
+
+@keyframes island-mission-phone-unroll {
+  0%, 42% {
+    clip-path: inset(0 0 73% 0 round var(--mission-phone-radius));
+    animation-timing-function: cubic-bezier(0.35, 0.05, 0.2, 1);
+  }
+  90%, 100% { clip-path: inset(0 0 0 0 round var(--mission-phone-radius)); }
+}
+
+@keyframes island-mission-phone-roll-up {
+  0% {
+    clip-path: inset(0 0 0 0 round var(--mission-phone-radius));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.4, 1);
+  }
+  46%, 100% { clip-path: inset(0 0 73% 0 round var(--mission-phone-radius)); }
+}
+
+@keyframes island-mission-phone-edge-unroll {
+  0%, 42% {
+    clip-path: inset(0 0 74.5% 0);
+    animation-timing-function: cubic-bezier(0.35, 0.05, 0.2, 1);
+  }
+  90%, 100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes island-mission-phone-edge-roll-up {
+  0% {
+    clip-path: inset(0 0 0 0);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.4, 1);
+  }
+  46%, 100% { clip-path: inset(0 0 74.5% 0); }
+}
+
+@keyframes island-mission-phone-roller-out {
+  0%, 42% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.236), 1px);
+    animation-timing-function: cubic-bezier(0.35, 0.05, 0.2, 1);
+  }
+  90% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.938), 1px);
+    animation-timing-function: ease-out;
+  }
+  100% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.932), 1px); }
+}
+
+@keyframes island-mission-phone-roller-in {
+  0% {
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.932), 1px);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.4, 1);
+  }
+  46%, 100% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.236), 1px); }
+}
+
+@keyframes island-mission-phone-seam {
+  0%, 40% { opacity: 0; }
+  46%, 80% { opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+
+@keyframes island-mission-phone-screen-off {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes island-mission-phone-pack-face {
+  0%, 42% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+
+@keyframes island-mission-phone-pack-face-return {
+  0%, 30% { opacity: 0; }
+  46%, 100% { opacity: 1; }
+}
+
+@keyframes island-mission-phone-sheen {
+  0%, 44% { opacity: 0; transform: translate3d(-70%, -20%, 0); }
+  56% { opacity: 1; }
+  96% { opacity: 0.5; }
+  100% { opacity: 0; transform: translate3d(70%, 20%, 0); }
 }
 
 @keyframes island-mission-tracker-backdrop-out {
@@ -7669,6 +8022,7 @@
 @media (prefers-reduced-motion: reduce) {
   .island-mission-tracker,
   .island-mission-tracker__phone,
+  .island-mission-tracker__phone *,
   .island-mission-tracker__phone-screen::before,
   .island-mission-tracker__overall-track > i { animation: none; transition: none; }
   .island-mission-tracker[data-phase='open'] .island-mission-tracker__phone-hardware,
