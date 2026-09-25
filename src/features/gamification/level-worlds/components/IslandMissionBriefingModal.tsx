@@ -38,7 +38,7 @@ const MISSION_PHONE_FOLD_DURATION_MS = 460;
 const MISSION_PHONE_UNFOLD_LATCH_MS = 470;
 const MISSION_PHONE_UNFOLD_DOCK_MS = 970;
 const MISSION_PHONE_FOLD_LATCH_MS = 240;
-const MISSION_PHONE_PACK_CENTER_RATIO = 0.135;
+const MISSION_PHONE_PACK_CENTER_RATIO = 0.1;
 const MISSION_PHONE_LAUNCH_SOURCE_SELECTOR = '.island-run-board__mission-phone-rail';
 
 // Points the fly-in/fly-out at the rail button that summoned the phone, so the

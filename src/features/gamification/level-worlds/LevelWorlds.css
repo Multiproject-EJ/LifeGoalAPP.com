@@ -6756,12 +6756,12 @@
 
 .island-mission-tracker__phone {
   /* Sliding Expedition Phone. It flies out of the mission rail as a compact
-     pack (top 27% of the device), unlatches with a click, then the lower
+     pack (top 20% of the device), unlatches with a click, then the lower
      housing slides smoothly down into a full slim phone. The slide mechanism
      stays hidden: top and bottom caps are matching slim edges. Pure CSS 3D:
      only transforms, clip-path and opacity animate. */
-  --mission-phone-w: min(368px, 88vw, calc((100dvh - 34px) * 0.6949));
-  --mission-phone-h: calc(var(--mission-phone-w) * 944 / 656);
+  --mission-phone-w: min(368px, 88vw, calc((100dvh - 34px) / 2));
+  --mission-phone-h: calc(var(--mission-phone-w) * 2);
   --mission-phone-depth: calc(var(--mission-phone-w) * 0.042);
   --mission-phone-radius: calc(var(--mission-phone-w) * 0.062);
   --mission-phone-frame: calc(var(--mission-phone-w) * 0.03);
@@ -6769,10 +6769,19 @@
   --mission-phone-launch-y: 18vh;
   position: relative;
   width: var(--mission-phone-w);
-  aspect-ratio: 656 / 944;
+  aspect-ratio: 1 / 2;
   color: #f5fbfb;
   perspective: 1150px;
   perspective-origin: 50% 28%;
+}
+
+/* Short (landscape) viewports keep the stouter shape so the screen stays readable. */
+@media (max-height: 560px) {
+  .island-mission-tracker__phone {
+    --mission-phone-w: min(368px, 88vw, calc((100dvh - 34px) / 1.44));
+    --mission-phone-h: calc(var(--mission-phone-w) * 1.44);
+    aspect-ratio: 1 / 1.44;
+  }
 }
 
 .island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__phone {
@@ -6813,7 +6822,7 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform-origin: 50% calc(var(--mission-phone-h) * 0.135);
+  transform-origin: 50% calc(var(--mission-phone-h) * 0.1);
 }
 
 .island-mission-tracker[data-phase='unfolding'] .island-mission-tracker__device {
@@ -6993,7 +7002,7 @@
   top: var(--mission-phone-frame);
   right: var(--mission-phone-frame);
   left: var(--mission-phone-frame);
-  height: calc(var(--mission-phone-h) * 0.279 - var(--mission-phone-frame) * 2);
+  height: calc(var(--mission-phone-h) * 0.208 - var(--mission-phone-frame) * 2);
   display: grid;
   place-content: center;
   justify-items: center;
@@ -7351,11 +7360,11 @@
 .island-mission-tracker__checklist {
   flex: 1 1 auto;
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 9px;
   min-height: 0;
   margin: 0;
-  padding: 13px 2px 8px;
+  padding: 18px 2px 8px;
   list-style: none;
 }
 
@@ -7863,8 +7872,8 @@
 }
 
 @keyframes island-mission-phone-shadow-in {
-  0%, 36% { opacity: 0; transform: scaleX(0.4) translateY(calc(var(--mission-phone-h) * -0.62)); }
-  46% { opacity: 0.55; transform: scaleX(0.72) translateY(calc(var(--mission-phone-h) * -0.62)); }
+  0%, 36% { opacity: 0; transform: scaleX(0.4) translateY(calc(var(--mission-phone-h) * -0.44)); }
+  46% { opacity: 0.55; transform: scaleX(0.72) translateY(calc(var(--mission-phone-h) * -0.44)); }
   88% { opacity: 1; transform: scaleX(1) translateY(0); }
   100% { opacity: 1; transform: none; }
 }
@@ -7875,19 +7884,19 @@
     animation-timing-function: cubic-bezier(0.18, 0.7, 0.24, 1);
   }
   36% {
-    transform: translate3d(0, calc(var(--mission-phone-h) * 0.36), 0) scale(1.04) rotateX(14deg) rotateY(-26deg) rotateZ(-3deg);
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.395), 0) scale(1.04) rotateX(14deg) rotateY(-26deg) rotateZ(-3deg);
     animation-timing-function: ease-in-out;
   }
   42% {
-    transform: translate3d(0, calc(var(--mission-phone-h) * 0.365), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.4), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
     animation-timing-function: ease-out;
   }
   44% {
-    transform: translate3d(0, calc(var(--mission-phone-h) * 0.365 + 3px), 0) scale(0.992) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.4 + 3px), 0) scale(0.992) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
     animation-timing-function: ease-out;
   }
   47% {
-    transform: translate3d(0, calc(var(--mission-phone-h) * 0.365), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.4), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
     animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1);
   }
   88% {
@@ -7906,64 +7915,64 @@
     animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1);
   }
   50% {
-    transform: translate3d(0, calc(var(--mission-phone-h) * 0.365), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.4), 0) scale(1) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
     animation-timing-function: ease-out;
   }
   54% {
-    transform: translate3d(0, calc(var(--mission-phone-h) * 0.365 - 3px), 0) scale(0.992) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
+    transform: translate3d(0, calc(var(--mission-phone-h) * 0.4 - 3px), 0) scale(0.992) rotateX(12deg) rotateY(-21deg) rotateZ(-2deg);
     animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4);
   }
   100% { transform: translate3d(var(--mission-phone-launch-x), var(--mission-phone-launch-y), 0) scale(0.16) rotateX(26deg) rotateY(-54deg) rotateZ(-16deg); }
 }
 
-/* Slide extents: pack edge at 27% of the height, latch pop to 27.9%. */
+/* Slide extents: pack edge at 20% of the height, latch pop to 20.8%. */
 @keyframes island-mission-phone-slide-open {
-  0%, 42% { clip-path: inset(0 0 73% 0 round var(--mission-phone-radius)); animation-timing-function: ease-out; }
-  45%, 47% { clip-path: inset(0 0 72.1% 0 round var(--mission-phone-radius)); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
+  0%, 42% { clip-path: inset(0 0 80% 0 round var(--mission-phone-radius)); animation-timing-function: ease-out; }
+  45%, 47% { clip-path: inset(0 0 79.2% 0 round var(--mission-phone-radius)); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
   88%, 100% { clip-path: inset(0 0 0 0 round var(--mission-phone-radius)); }
 }
 
 @keyframes island-mission-phone-slide-closed {
   0%, 10% { clip-path: inset(0 0 0 0 round var(--mission-phone-radius)); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
-  50% { clip-path: inset(0 0 72.1% 0 round var(--mission-phone-radius)); animation-timing-function: ease-in; }
-  53%, 100% { clip-path: inset(0 0 73% 0 round var(--mission-phone-radius)); }
+  50% { clip-path: inset(0 0 79.2% 0 round var(--mission-phone-radius)); animation-timing-function: ease-in; }
+  53%, 100% { clip-path: inset(0 0 80% 0 round var(--mission-phone-radius)); }
 }
 
 @keyframes island-mission-phone-edge-open {
-  0%, 42% { clip-path: inset(0 0 75% 0); animation-timing-function: ease-out; }
-  45%, 47% { clip-path: inset(0 0 74% 0); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
+  0%, 42% { clip-path: inset(0 0 81.5% 0); animation-timing-function: ease-out; }
+  45%, 47% { clip-path: inset(0 0 80.7% 0); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
   88%, 100% { clip-path: inset(0 0 0 0); }
 }
 
 @keyframes island-mission-phone-edge-closed {
   0%, 10% { clip-path: inset(0 0 0 0); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
-  50% { clip-path: inset(0 0 74% 0); animation-timing-function: ease-in; }
-  53%, 100% { clip-path: inset(0 0 75% 0); }
+  50% { clip-path: inset(0 0 80.7% 0); animation-timing-function: ease-in; }
+  53%, 100% { clip-path: inset(0 0 81.5% 0); }
 }
 
 @keyframes island-mission-phone-cap-open {
-  0%, 42% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.27 - var(--mission-phone-frame) - 1px), 0); animation-timing-function: ease-out; }
-  45%, 47% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.279 - var(--mission-phone-frame) - 1px), 0); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
+  0%, 42% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.2 - var(--mission-phone-frame) - 1px), 0); animation-timing-function: ease-out; }
+  45%, 47% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.208 - var(--mission-phone-frame) - 1px), 0); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
   88% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) - var(--mission-phone-frame) - 1px), 0); }
   100% { opacity: 0; transform: translate3d(0, calc(var(--mission-phone-h) - var(--mission-phone-frame) - 1px), 0); }
 }
 
 @keyframes island-mission-phone-cap-closed {
   0%, 10% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) - var(--mission-phone-frame) - 1px), 0); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
-  50% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.279 - var(--mission-phone-frame) - 1px), 0); animation-timing-function: ease-in; }
-  53%, 100% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.27 - var(--mission-phone-frame) - 1px), 0); }
+  50% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.208 - var(--mission-phone-frame) - 1px), 0); animation-timing-function: ease-in; }
+  53%, 100% { opacity: 1; transform: translate3d(0, calc(var(--mission-phone-h) * 0.2 - var(--mission-phone-frame) - 1px), 0); }
 }
 
 @keyframes island-mission-phone-bottom-edge-open {
-  0%, 42% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.27), 0) rotateX(-90deg); animation-timing-function: ease-out; }
-  45%, 47% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.279), 0) rotateX(-90deg); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
+  0%, 42% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.2), 0) rotateX(-90deg); animation-timing-function: ease-out; }
+  45%, 47% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.208), 0) rotateX(-90deg); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
   88%, 100% { transform: translate3d(0, var(--mission-phone-h), 0) rotateX(-90deg); }
 }
 
 @keyframes island-mission-phone-bottom-edge-closed {
   0%, 10% { transform: translate3d(0, var(--mission-phone-h), 0) rotateX(-90deg); animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1); }
-  50% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.279), 0) rotateX(-90deg); animation-timing-function: ease-in; }
-  53%, 100% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.27), 0) rotateX(-90deg); }
+  50% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.208), 0) rotateX(-90deg); animation-timing-function: ease-in; }
+  53%, 100% { transform: translate3d(0, calc(var(--mission-phone-h) * 0.2), 0) rotateX(-90deg); }
 }
 
 /* The status light flashes on each click. */
