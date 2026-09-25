@@ -25,6 +25,7 @@ export const islandRunConcordHubEntryTests: TestCase[] = [
       assertEqual(state.icon, '📖', 'pre-build icon identifies the dormant Concord signal');
       assertEqual(state.primaryAction, 'open-story', 'pre-build action opens the restoration grid');
       assertEqual(state.isConcordActive, false, 'pre-build Concord inactive');
+      assertEqual(state.ariaLabel, 'Open Story', 'no Concord mention before its first fragment (it is introduced on Island 005)');
     },
   },
   {
@@ -37,6 +38,7 @@ export const islandRunConcordHubEntryTests: TestCase[] = [
       assertEqual(state.label, 'Story', 'partial build label exposes current progress');
       assertEqual(state.primaryAction, 'open-story', 'partial build opens the restoration grid');
       assertEqual(state.collectedFragmentCount, 4, 'partial fragment count exposed for copy');
+      assertEqual(state.ariaLabel, 'Open Story. Concord restoration: 4 of 9 fragments recovered.', 'progress is announced once fragments exist');
     },
   },
   {

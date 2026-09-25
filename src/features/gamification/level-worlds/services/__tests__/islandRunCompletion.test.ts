@@ -131,11 +131,15 @@ export const islandRunCompletionTests: TestCase[] = [
     },
   },
   {
-    name: 'legacy Concord completion and Island 020 extraction retain their explicit gates',
+    name: 'Island 001 always needs the Assembly and Island 020 extraction retains its explicit gate',
     run: () => {
       reset();
-      const legacy = { ...completeState(1), technologyUnlocksById: { 'the-concord': { active: true, builtAtMs: 1 } } };
-      assert(resolveIslandRunCompletion(legacy).complete, 'Previously completed Concord-era Island 001 remains eligible');
+      // The Concord belongs to Island 005; having it active never swaps Island 001 onto a Concord route.
+      const concordActive = { ...completeState(1), technologyUnlocksById: { 'the-concord': { active: true, builtAtMs: 1 } } };
+      const concordCompletion = resolveIslandRunCompletion(concordActive);
+      assert(!concordCompletion.complete, 'An active Concord does not complete Island 001 without the Assembly');
+      assert(!concordCompletion.requirements.some(item => item.id === 'concord'), 'Island 001 never asks to activate the Concord');
+      assert(concordCompletion.requirements.some(item => item.id === 'assembly'), 'Island 001 keeps the Assembly requirement');
       const lava = completeState(20);
       assert(resolveIslandRunCompletion(lava).baseComplete, 'Ordinary completion unlocks the extraction');
       assertEqual(resolveIslandRunCompletion(lava).nextRequirement?.id, 'extraction', 'Cannot leave before extraction');

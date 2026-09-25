@@ -55,7 +55,11 @@ export function resolveIslandRunConcordHubEntryState(
   return {
     label: 'Story',
     icon: '📖',
-    ariaLabel: `Open Story. Concord restoration: ${collectedFragmentCount} of ${REQUIRED_CONCORD_FRAGMENT_COUNT} fragments recovered.`,
+    // The Concord is introduced on Island 005; before its first fragment the
+    // button is simply Story.
+    ariaLabel: collectedFragmentCount > 0
+      ? `Open Story. Concord restoration: ${collectedFragmentCount} of ${REQUIRED_CONCORD_FRAGMENT_COUNT} fragments recovered.`
+      : 'Open Story',
     primaryAction: 'open-story',
     isConcordActive: false,
     collectedFragmentCount,

@@ -5,6 +5,7 @@ import {
   type IslandRunBestNextActionKind,
   type IslandRunBestNextActionResult,
 } from '../islandRunBestNextActionAdvisor';
+import { FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET, getIslandRunSignatureMissionKey } from '../islandRunSignatureMissions';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const NOW_MS = 1_800_000;
@@ -30,8 +31,21 @@ function makeRecord(overrides: Partial<IslandRunGameStateRecord> = {}): IslandRu
   return {
     ...base,
     firstSessionTutorialState: 'complete',
-    // These legacy five-stop fixtures predate the Assembly replacement.
-    technologyUnlocksById: { 'the-concord': { active: true, builtAtMs: 1 } },
+    // Island 001 fixtures with the Assembly finished and the mandate signed, so
+    // only the landmark and egg state under test decides the best action.
+    signatureMissionProgressByIsland: {
+      [getIslandRunSignatureMissionKey(0, 1)]: {
+        missionId: 'first-light-assembly-crater',
+        version: 2,
+        claimedDynamiteTileIndices: [],
+        chargesDetonated: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
+        lastDetonatedSector: null,
+        startedAtMs: 1,
+        completedAtMs: 2,
+        mandateSignedAtMs: 3,
+        updatedAtMs: 3,
+      },
+    },
     dicePool: 0,
     completedStopsByIsland: { [ISLAND_KEY]: ['hatchery'] },
     stopStatesByIndex: base.stopStatesByIndex.map((stopState, index) => ({
@@ -133,7 +147,10 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
   {
     name: 'claim island clear waits for boss defeat even when landmarks and egg are done',
     run: () => {
+      // Island 001 has no Boss (the Assembly replaces it), so use an ordinary island.
       const record = makeRecord({
+        currentIslandNumber: 25,
+        completedStopsByIsland: { '25': STOP_IDS.slice(0, 4) },
         stopStatesByIndex: Array.from({ length: 5 }, (_, i) => ({ objectiveComplete: i < 4, buildComplete: true })),
         stopBuildStateByIndex: Array.from({ length: 5 }, () => ({
           requiredEssence: 100,
@@ -146,7 +163,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         activeEggSetAtMs: null,
         activeEggHatchDurationMs: null,
         perIslandEggs: {
-          [ISLAND_KEY]: {
+          '25': {
             tier: 'common',
             setAtMs: NOW_MS - 10_000,
             hatchAtMs: NOW_MS - 1,
