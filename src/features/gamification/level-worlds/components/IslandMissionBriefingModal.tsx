@@ -39,10 +39,9 @@ const MISSION_PHONE_FOLD_DURATION_MS = 460;
 const MISSION_PHONE_UNFOLD_LATCH_MS = 470;
 const MISSION_PHONE_UNFOLD_DOCK_MS = 970;
 const MISSION_PHONE_FOLD_LATCH_MS = 240;
-// Pretend Face ID, every open: a quick "accepted" tick, the padlock opens and
-// the lock screen swipes away. A tap skips it.
-const MISSION_PHONE_UNLOCK_DURATION_MS = 460;
-const MISSION_PHONE_UNLOCK_SUCCESS_MS = 110;
+// Pretend Face ID: scan, tick, padlock opens, lock screen swipes away. A tap skips it.
+const MISSION_PHONE_UNLOCK_DURATION_MS = 820;
+const MISSION_PHONE_UNLOCK_SUCCESS_MS = 380;
 const MISSION_PHONE_DIFFICULTY_LEVELS: Record<IslandMissionStats['difficulty'], number> = {
   Easy: 1,
   Medium: 2,

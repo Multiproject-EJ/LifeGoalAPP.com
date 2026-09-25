@@ -7227,23 +7227,23 @@
   opacity: 1;
   pointer-events: auto;
   cursor: pointer;
-  animation: island-mission-phone-lock-away 460ms both;
+  animation: island-mission-phone-lock-away 820ms both;
 }
 
 .island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__faceid-frame {
-  animation: island-mission-phone-faceid-frame 460ms both;
+  animation: island-mission-phone-faceid-frame 820ms both;
 }
 
 .island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__faceid-face {
-  animation: island-mission-phone-faceid-face 460ms both;
+  animation: island-mission-phone-faceid-face 820ms both;
 }
 
 .island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__faceid-check {
-  animation: island-mission-phone-faceid-check 460ms both;
+  animation: island-mission-phone-faceid-check 820ms both;
 }
 
 .island-mission-tracker[data-phase='unlocking'] .island-mission-tracker__lock-shackle {
-  animation: island-mission-phone-shackle 460ms both;
+  animation: island-mission-phone-shackle 820ms both;
 }
 
 /* Island stats replace the old command badge. */
@@ -8172,32 +8172,36 @@
 }
 
 @keyframes island-mission-phone-lock-away {
-  0%, 52% { opacity: 1; transform: translateY(0); }
+  0%, 70% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-14%); }
 }
 
-/* Recognised at a glance: the frame closes in, the face gives way to a tick. */
 @keyframes island-mission-phone-faceid-frame {
   0% { transform: scale(1); opacity: 1; }
-  22% { transform: scale(0.9); opacity: 1; }
-  36%, 100% { transform: scale(0.82); opacity: 0; }
+  18% { transform: scale(0.9); }
+  34% { transform: scale(1.02); }
+  44% { transform: scale(0.94); opacity: 1; }
+  54%, 100% { transform: scale(0.84); opacity: 0; }
 }
 
 @keyframes island-mission-phone-faceid-face {
-  0%, 10% { opacity: 1; }
-  24%, 100% { opacity: 0; }
+  0%, 12% { transform: translateX(0); opacity: 1; }
+  22% { transform: translateX(-3px); }
+  32% { transform: translateX(3px); }
+  40% { transform: translateX(0); opacity: 1; }
+  48%, 100% { opacity: 0; }
 }
 
 @keyframes island-mission-phone-faceid-check {
-  0%, 18% { stroke-dashoffset: 44; opacity: 0; }
-  20% { opacity: 1; }
-  42%, 100% { stroke-dashoffset: 0; opacity: 1; }
+  0%, 44% { stroke-dashoffset: 44; opacity: 0; }
+  46% { opacity: 1; }
+  62%, 100% { stroke-dashoffset: 0; opacity: 1; }
 }
 
 @keyframes island-mission-phone-shackle {
-  0%, 28% { transform: translate(0, 0) rotate(0deg); }
-  38% { transform: translate(0, -3px) rotate(0deg); }
-  50%, 100% { transform: translate(0, -3px) rotate(28deg); }
+  0%, 48% { transform: translate(0, 0) rotate(0deg); }
+  58% { transform: translate(0, -3px) rotate(0deg); }
+  68%, 100% { transform: translate(0, -3px) rotate(28deg); }
 }
 
 @keyframes island-mission-phone-alert {
