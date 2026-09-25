@@ -7263,15 +7263,24 @@
 }
 
 .island-mission-tracker__stat {
+  --mission-signal: #4ade80;
   display: grid;
   align-content: start;
   gap: 3px;
   min-width: 0;
-  padding: 7px 9px 8px;
+  padding: 7px 9px 8px 11px;
   border: 1px solid rgba(116, 200, 212, 0.16);
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
+  background:
+    linear-gradient(90deg, var(--mission-signal) 0 3px, transparent 3px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
 }
+
+/* Traffic-light signal shared by every stat tile. */
+.island-mission-tracker__stat[data-signal='yellow'] { --mission-signal: #facc15; }
+.island-mission-tracker__stat[data-signal='red'] { --mission-signal: #f87171; }
+
+.island-mission-tracker__stat > strong { color: var(--mission-signal); }
 
 .island-mission-tracker__stat > small {
   color: #7fb4c0;
@@ -7287,7 +7296,7 @@
   gap: 6px;
   min-width: 0;
   overflow: hidden;
-  color: #f4f8fb;
+  color: var(--mission-signal);
   font-size: 0.92rem;
   font-weight: 750;
   line-height: 1.15;
@@ -7295,7 +7304,6 @@
   white-space: nowrap;
 }
 
-.island-mission-tracker__stat[data-complete='true'] > strong { color: #6ff2c3; }
 
 .island-mission-tracker__stat-note {
   overflow: hidden;
@@ -7317,7 +7325,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #2bd4dd, #6ff2c3);
+  background: var(--mission-signal);
 }
 
 .island-mission-tracker__stat-pips {
@@ -7333,29 +7341,23 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-.island-mission-tracker__stat-pips > i.is-filled { background: #f0b85c; }
+.island-mission-tracker__stat-pips > i.is-filled { background: var(--mission-signal); }
 
-.island-mission-tracker__stat--stance {
-  --mission-stance-color: #5ee6a8;
-}
-
-.island-mission-tracker__stat--stance[data-stance='diplomatic'] { --mission-stance-color: #7cc4ff; }
-.island-mission-tracker__stat--stance[data-stance='unfriendly'] { --mission-stance-color: #ffb454; }
 .island-mission-tracker__stat--stance[data-stance='war'] {
-  --mission-stance-color: #ff4d4d;
+  --mission-signal: #ff4d4d;
   border-color: rgba(255, 77, 77, 0.5);
-  background: linear-gradient(180deg, rgba(255, 60, 60, 0.16), rgba(255, 60, 60, 0.04));
+  background:
+    linear-gradient(90deg, var(--mission-signal) 0 3px, transparent 3px),
+    linear-gradient(180deg, rgba(255, 60, 60, 0.18), rgba(255, 60, 60, 0.04));
 }
-
-.island-mission-tracker__stat--stance > strong { color: var(--mission-stance-color); }
 
 .island-mission-tracker__stat--stance > strong > i {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--mission-stance-color);
-  box-shadow: 0 0 8px var(--mission-stance-color);
+  background: var(--mission-signal);
+  box-shadow: 0 0 8px var(--mission-signal);
 }
 
 .island-mission-tracker__stat--stance[data-stance='war'] > strong > i {
@@ -7375,7 +7377,9 @@
   filter: drop-shadow(0 0 5px var(--mission-egg-color));
 }
 
+.island-mission-tracker__stat--egg > strong { color: #f4f8fb; }
 .island-mission-tracker__stat--egg[data-tier='none'] > strong { color: rgba(214, 229, 236, 0.62); }
+.island-mission-tracker__stat--egg > .island-mission-tracker__stat-note { color: var(--mission-signal); }
 
 .island-mission-tracker__mission-caption {
   display: flex;

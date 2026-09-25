@@ -191,31 +191,53 @@ function MissionPhoneLockScreen({ status, onSkip }: { status: MissionPhoneDevice
   );
 }
 
+// Every stat reads as a traffic light: green is good, yellow needs attention,
+// red is a problem or still to do.
+type MissionPhoneSignal = 'green' | 'yellow' | 'red';
+
+const MISSION_PHONE_STANCE_SIGNALS: Record<IslandMissionStats['stance'], MissionPhoneSignal> = {
+  friendly: 'green',
+  diplomatic: 'yellow',
+  unfriendly: 'red',
+  war: 'red',
+};
+
+function resolveMissionPhoneSignals(stats: IslandMissionStats): Record<'island' | 'stance' | 'difficulty' | 'egg', MissionPhoneSignal> {
+  const difficultyLevel = MISSION_PHONE_DIFFICULTY_LEVELS[stats.difficulty];
+  return {
+    island: stats.complete ? 'green' : stats.completionPercent >= 34 ? 'yellow' : 'red',
+    stance: MISSION_PHONE_STANCE_SIGNALS[stats.stance],
+    difficulty: difficultyLevel <= 1 ? 'green' : difficultyLevel <= 3 ? 'yellow' : 'red',
+    egg: stats.egg.state === 'none' ? 'red' : stats.egg.state === 'incubating' ? 'yellow' : 'green',
+  };
+}
+
 function MissionPhoneStats({ stats }: { stats: IslandMissionStats }): React.JSX.Element {
   const difficultyLevel = MISSION_PHONE_DIFFICULTY_LEVELS[stats.difficulty];
   const egg = stats.egg;
+  const signals = resolveMissionPhoneSignals(stats);
   return (
     <ul className="island-mission-tracker__stats" aria-label="Island status">
-      <li className="island-mission-tracker__stat" data-complete={stats.complete}>
+      <li className="island-mission-tracker__stat" data-complete={stats.complete} data-signal={signals.island}>
         <small>Island</small>
         <strong>{stats.complete ? 'Cleared' : `${stats.completionPercent}%`}</strong>
         <span className="island-mission-tracker__stat-meter" aria-hidden="true">
           <i style={{ width: `${stats.completionPercent}%` }} />
         </span>
       </li>
-      <li className="island-mission-tracker__stat island-mission-tracker__stat--stance" data-stance={stats.stance}>
+      <li className="island-mission-tracker__stat island-mission-tracker__stat--stance" data-stance={stats.stance} data-signal={signals.stance}>
         <small>Island stance</small>
         <strong><i aria-hidden="true" />{MISSION_PHONE_STANCE_LABELS[stats.stance]}</strong>
         <span className="island-mission-tracker__stat-note">{stats.stance === 'war' ? 'Emergency status' : 'Toward the expedition'}</span>
       </li>
-      <li className="island-mission-tracker__stat" aria-label={`Difficulty: ${stats.difficulty}, ${difficultyLevel} of 5`}>
+      <li className="island-mission-tracker__stat" data-signal={signals.difficulty} aria-label={`Difficulty: ${stats.difficulty}, ${difficultyLevel} of 5`}>
         <small>Difficulty</small>
         <strong>{stats.difficulty}</strong>
         <span className="island-mission-tracker__stat-pips" aria-hidden="true">
           {Array.from({ length: 5 }, (_, index) => <i key={index} className={index < difficultyLevel ? 'is-filled' : undefined} />)}
         </span>
       </li>
-      <li className="island-mission-tracker__stat island-mission-tracker__stat--egg" data-tier={egg.state === 'none' ? 'none' : egg.tier}>
+      <li className="island-mission-tracker__stat island-mission-tracker__stat--egg" data-tier={egg.state === 'none' ? 'none' : egg.tier} data-signal={signals.egg}>
         <small>Egg</small>
         <strong>
           <svg viewBox="0 0 12 15" aria-hidden="true" focusable="false"><path d="M6 .8C3 .8.8 5.6.8 9a5.2 5.2 0 0 0 10.4 0C11.2 5.6 9 .8 6 .8z" /></svg>
