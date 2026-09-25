@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
+import { triggerIslandRunHaptic } from '../services/islandRunAudio';
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
@@ -30,10 +31,13 @@ export interface IslandMissionBriefingModalProps {
 
 type MissionPhonePhase = 'unfolding' | 'open' | 'folding';
 
-// The phone arrives as a compact pack, then its screen rolls out below the
-// housing. Keep these in sync with the island-mission-phone-* keyframes.
-const MISSION_PHONE_UNFOLD_DURATION_MS = 980;
-const MISSION_PHONE_FOLD_DURATION_MS = 420;
+// The phone arrives as a compact pack, unlatches with a click, then slides out
+// into a full phone. Keep these in sync with the island-mission-phone-* keyframes.
+const MISSION_PHONE_UNFOLD_DURATION_MS = 1100;
+const MISSION_PHONE_FOLD_DURATION_MS = 460;
+const MISSION_PHONE_UNFOLD_LATCH_MS = 470;
+const MISSION_PHONE_UNFOLD_DOCK_MS = 970;
+const MISSION_PHONE_FOLD_LATCH_MS = 240;
 const MISSION_PHONE_PACK_CENTER_RATIO = 0.135;
 const MISSION_PHONE_LAUNCH_SOURCE_SELECTOR = '.island-run-board__mission-phone-rail';
 
@@ -131,6 +135,7 @@ export function IslandMissionBriefingModal({
     }
     setMissionPhoneLaunchOrigin(phoneRef.current);
     updatePhase('folding');
+    window.setTimeout(() => triggerIslandRunHaptic('mission_phone_latch'), MISSION_PHONE_FOLD_LATCH_MS);
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null;
       onFolded();
@@ -184,20 +189,20 @@ export function IslandMissionBriefingModal({
   }, [isOpen]);
 
   React.useEffect(() => {
-    if (!isOpen || typeof window === 'undefined') return;
-    const image = new Image();
-    image.src = '/tech/ExpeditionPhone_v11_open_front.webp';
-  }, [isOpen]);
-
-  React.useEffect(() => {
     if (!isOpen || phase !== 'unfolding') return undefined;
     const reduceMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const timer = window.setTimeout(
+    const timers = [window.setTimeout(
       () => updatePhase('open'),
       reduceMotion ? 1 : MISSION_PHONE_UNFOLD_DURATION_MS,
-    );
-    return () => window.clearTimeout(timer);
+    )];
+    if (!reduceMotion) {
+      timers.push(
+        window.setTimeout(() => triggerIslandRunHaptic('mission_phone_latch'), MISSION_PHONE_UNFOLD_LATCH_MS),
+        window.setTimeout(() => triggerIslandRunHaptic('mission_phone_dock'), MISSION_PHONE_UNFOLD_DOCK_MS),
+      );
+    }
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [isOpen, phase, updatePhase]);
 
   React.useEffect(() => {
@@ -240,13 +245,10 @@ export function IslandMissionBriefingModal({
           <span className="island-mission-tracker__edge island-mission-tracker__edge--left" aria-hidden="true"><i /></span>
           <span className="island-mission-tracker__edge island-mission-tracker__edge--right" aria-hidden="true"><i /></span>
           <span className="island-mission-tracker__edge island-mission-tracker__edge--top" aria-hidden="true" />
+          <span className="island-mission-tracker__edge island-mission-tracker__edge--bottom" aria-hidden="true" />
           <div className="island-mission-tracker__body">
-            <img
-              className="island-mission-tracker__phone-hardware"
-              src="/tech/ExpeditionPhone_v11_open_front.webp"
-              alt=""
-              aria-hidden="true"
-            />
+            <span className="island-mission-tracker__glass" aria-hidden="true" />
+            <span className="island-mission-tracker__led" aria-hidden="true" />
             <span className="island-mission-tracker__pack-face" aria-hidden="true">
               <svg viewBox="0 0 48 48" focusable="false">
                 <path d="M24 3.5 28.2 19.8 44.5 24 28.2 28.2 24 44.5 19.8 28.2 3.5 24 19.8 19.8z" />
@@ -404,8 +406,8 @@ export function IslandMissionBriefingModal({
                 </details>
               ) : null}
             </div>
+            <span className="island-mission-tracker__bottom-cap" aria-hidden="true"><i /></span>
           </div>
-          <span className="island-mission-tracker__roller" aria-hidden="true"><i /></span>
         </div>
       </section>
     </div>,

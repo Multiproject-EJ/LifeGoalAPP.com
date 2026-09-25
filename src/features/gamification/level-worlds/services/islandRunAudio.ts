@@ -97,6 +97,9 @@ export type IslandRunHapticEvent =
   // engages, so the 1.4s charge is felt as well as seen.
   | 'auto_roll_arm'
   | 'auto_roll_engage'
+  // Mission phone: a tiny latch tick as the pack unlocks, a firmer dock click.
+  | 'mission_phone_latch'
+  | 'mission_phone_dock'
   | 'tech_item_poof';
 
 export type IslandRunSoundPlaybackStatus =
@@ -253,6 +256,8 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   // can lift their eyes off the button once it fires.
   auto_roll_arm: [10],
   auto_roll_engage: [28, 36, 44],
+  mission_phone_latch: [8],
+  mission_phone_dock: [16],
 };
 
 // ─── Sound event map ─────────────────────────────────────────────────────────
