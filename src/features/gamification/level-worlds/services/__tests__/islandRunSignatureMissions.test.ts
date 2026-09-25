@@ -606,9 +606,10 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(!boardSource.includes('standardMissionCompletionPercent'), 'board no longer owns generic phone progress arithmetic');
       assert(trackerSource.includes("objective('Use Dynamite'"), 'phone read model reports the short dynamite objective');
       assert(trackerSource.includes("objective('Build Landmarks'"), 'phone read model reports the short landmark objective');
-      assert(modalSource.includes('island-mission-tracker__command-plate'), 'phone tracker uses the compact military command header');
-      assert(modalSource.includes('island-mission-tracker__command-frame'), 'military header carries a symmetrical inset metal frame and four fasteners');
-      assert(modalSource.includes('island-mission-tracker__command-insignia'), 'military header carries the shield-and-chevron insignia');
+      assert(modalSource.includes('<MissionPhoneStats stats={stats} />'), 'phone header shows island stats instead of a badge');
+      assert(modalSource.includes('island-mission-tracker__mission-caption'), 'the mission name stays readable under the stats');
+      assert(modalSource.includes('<MissionPhoneStatusBar') && modalSource.includes('<MissionPhoneLockScreen'), 'the phone has a live status bar and a pretend Face ID lock screen');
+      assert(modalSource.includes("updatePhase(reduceMotion ? 'open' : 'unlocking')"), 'the lock screen is skipped for reduced motion');
       assert(modalSource.includes('island-mission-tracker__checklist'), 'phone tracker renders objectives as checklist rows');
       assert(modalSource.includes('island-mission-tracker__objective-marker'), 'each short objective carries a visual progress marker');
       assert(modalSource.includes('island-mission-tracker__objective-row--actionable'), 'the live mission phone exposes each objective as an action');
@@ -618,7 +619,12 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(boardSource.includes("[1, 3, 10, 13].includes(islandNumber)"), 'only islands with dedicated mission panels are marked as external launches');
       assert(modalSource.includes('aria-label="Mission progress"'), 'phone tracker exposes accessible overall progress');
       assert(boardSource.includes('/tech/ExpeditionPhone_v19_folded.webp'), 'the board affordance uses the folded phone hardware');
-      assert(modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker unfolds through the authored phone-opening sequence');
+      assert(!modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker no longer waits on the heavy animated opening image');
+      assert(modalSource.includes('island-mission-tracker__bottom-cap') && modalSource.includes('island-mission-tracker__pack-face'), 'the tracker slides out from a compact pack behind a slim bottom cap');
+      assert(!modalSource.includes('island-mission-tracker__roller'), 'the slide mechanism stays hidden instead of showing a roller bar');
+      assert(modalSource.includes("triggerIslandRunHaptic('mission_phone_latch')") && modalSource.includes("triggerIslandRunHaptic('mission_phone_dock')"), 'the latch and dock clicks are felt as well as seen');
+      assert(modalSource.includes('MISSION_PHONE_UNFOLD_DURATION_MS = 1100'), 'the phone opens in about a second');
+      assert(cssSource.includes('@keyframes island-mission-phone-slide-open') && cssSource.includes('transform-style: preserve-3d'), 'the phone is a real 3D object that slides open from its pack');
       assert(modalSource.includes('data-phase={phase}'), 'the tracker exposes unfold, powered-on, and fold-back presentation phases');
       assert(!modalSource.includes('Command council'), 'compact tracker removes the command-council information wall');
       assert(!modalSource.includes('presentation.missionStatement'), 'compact tracker removes the long mission paragraph');

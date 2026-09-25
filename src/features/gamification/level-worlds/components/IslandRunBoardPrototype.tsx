@@ -20211,6 +20211,7 @@ export function IslandRunBoardPrototype({
           : null}
         progress={displayedMissionTracker.objectives}
         islandCompletion={displayedMissionTracker.islandCompletion}
+        stats={displayedMissionTracker.stats}
         overallProgressPercent={displayedMissionTracker.overallProgressPercent}
         objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}

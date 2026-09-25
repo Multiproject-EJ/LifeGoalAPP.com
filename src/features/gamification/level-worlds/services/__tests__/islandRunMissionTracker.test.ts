@@ -1,5 +1,6 @@
 import { getIslandMissionBriefingPresentation } from '../islandRunMissionBriefing';
 import { resolveIslandMissionTrackerPresentation } from '../islandRunMissionTracker';
+import { getIslandStance, ISLAND_STANCE_ISLAND_COUNT } from '../islandRunIslandStance';
 import {
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   FIRST_LIGHT_ASSEMBLY_DYNAMITE_TILE_INDICES,
@@ -43,6 +44,45 @@ function restoredStops(count = 5) {
 }
 
 export const islandRunMissionTrackerTests: TestCase[] = [
+  {
+    name: 'mission phone stats report completion, boss difficulty and the rarest island egg',
+    run: () => {
+      const empty = resolveIslandMissionTrackerPresentation({ islandNumber: 1, state: makeState() });
+      assertEqual(empty.stats.egg.state, 'none', 'no egg placed yet');
+      assertEqual(empty.stats.difficulty, 'Easy', 'early islands use the canonical boss difficulty');
+      assertEqual(empty.stats.completionPercent, empty.overallProgressPercent, 'stat strip mirrors the canonical percent');
+      assert(!empty.stats.complete, 'fresh island is not complete');
+
+      const eggs = {
+        '1': { tier: 'common' as const, status: 'collected' as const, setAtMs: 1, hatchAtMs: 2 },
+        '1:2': { tier: 'rare' as const, status: 'incubating' as const, setAtMs: 3, hatchAtMs: 4 },
+        '2': { tier: 'mythic' as const, status: 'ready' as const, setAtMs: 5, hatchAtMs: 6 },
+      };
+      const withEggs = resolveIslandMissionTrackerPresentation({ islandNumber: 1, state: makeState({ perIslandEggs: eggs }) });
+      assertEqual(JSON.stringify(withEggs.stats.egg), JSON.stringify({ state: 'incubating', tier: 'rare' }), 'rarest egg on this island only');
+
+      const sold = resolveIslandMissionTrackerPresentation({ islandNumber: 2, state: makeState({
+        currentIslandNumber: 2,
+        perIslandEggs: { '2': { tier: 'mythic', status: 'sold', setAtMs: 1, hatchAtMs: 2 } },
+      }) });
+      assertEqual(JSON.stringify(sold.stats.egg), JSON.stringify({ state: 'resolved', tier: 'mythic' }), 'sold eggs read as resolved');
+      assertEqual(resolveIslandMissionTrackerPresentation({ islandNumber: 45, state: makeState({ currentIslandNumber: 45 }) }).stats.difficulty, 'Medium-Hard', 'difficulty scales by island');
+    },
+  },
+  {
+    name: 'island stance defaults to Friendly for about 55% of islands and keeps WAR rare and late',
+    run: () => {
+      const stances = Array.from({ length: ISLAND_STANCE_ISLAND_COUNT }, (_, index) => getIslandStance(index + 1));
+      const count = (stance: string) => stances.filter((entry) => entry === stance).length;
+      assertEqual(count('friendly'), 66, 'Friendly is the default for 55% of the route');
+      assertEqual(count('war'), 3, 'WAR is a rare emergency status');
+      assert(stances.every((stance, index) => stance !== 'war' || index + 1 > 108), 'WAR only appears at the end of the route');
+      assert(stances.slice(0, 12).every((stance) => stance === 'friendly'), 'the opening islands are all Friendly');
+      assertEqual(getIslandStance(117), 'diplomatic', 'Universal Championship host negotiates');
+      assertEqual(getIslandStance(121), getIslandStance(1), 'later cycles repeat the roster');
+      assertEqual(resolveIslandMissionTrackerPresentation({ islandNumber: 115, state: makeState({ currentIslandNumber: 115 }) }).stats.stance, 'war', 'phone stats read the canonical stance');
+    },
+  },
   {
     name: 'merged mission resolver preserves ceremony and Welcome credit without duplicate departure gates',
     run: () => {
