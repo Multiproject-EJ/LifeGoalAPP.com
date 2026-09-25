@@ -4607,6 +4607,27 @@
   gap: 6px;
 }
 
+/* The board menu grows with Vault, controller and developer controls. The
+   controller and floating buttons sit in a higher stacking layer than the
+   board, so the menu ends above the controller and scrolls, keeping Exit
+   Island Run reachable. */
+.island-run-board__topbar-menu-panel {
+  max-height: calc(100dvh - clamp(12.75rem, 54vw, 22rem) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 175px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.island-run-prototype:has(#island-run-topbar-menu) :is(
+  .island-run-prototype__camera-reset-floating,
+  .island-run-prototype__compass-floating,
+  .island-run-prototype__vault-island-floating,
+  .island-run-board__mission-phone-floating
+) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .island-run-board__audio-menu-panel {
   right: 10px;
   top: 52px;
@@ -6309,6 +6330,15 @@
      exposing a temporary black strip outside the fixed overlay. */
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* Popups portaled straight to <body> (Shop, Bonus Encounter) must sit above
+   the game layer (.level-worlds-entry-modal, z-index 9999). At 1100 they
+   opened behind the 3D island while the board still counted them as open,
+   so the controller hid and the player appeared stuck. Popups rendered
+   inside the game keep the original stacking. */
+body > .island-run-overlay-root.island-stop-modal-backdrop {
+  z-index: 12000;
 }
 
 .island-stop-modal {

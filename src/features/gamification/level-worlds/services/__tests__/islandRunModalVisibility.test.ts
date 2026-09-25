@@ -3,9 +3,29 @@ import {
   shouldRenderFirstRunCelebration,
   shouldRenderPerfectCompanionHint,
 } from '../islandRunModalVisibility';
-import { assertEqual, type TestCase } from './testHarness';
+import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunModalVisibilityTests: TestCase[] = [
+  {
+    name: 'body-portaled Island Run popups stay in the viewport and above the game layer',
+    run: async () => {
+      // A popup the board counts as open but the player cannot see hides the
+      // controller and disables the Shop, which reads as a frozen game.
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const levelWorldsCss = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      const mapCss = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunSolarMapOverlay.css', 'utf8');
+      const appCss = fsMod.readFileSync('src/index.css', 'utf8');
+      const gameLayerZ = Number(/\.level-worlds-entry-modal \{[^}]*z-index: (\d+)/.exec(appCss)?.[1]);
+      const portalZ = Number(/body > \.island-run-overlay-root\.island-stop-modal-backdrop \{\s*z-index: (\d+)/.exec(levelWorldsCss)?.[1]);
+      assert(gameLayerZ > 0 && portalZ > gameLayerZ, 'Shop and Bonus Encounter portals render above the game layer');
+      assert(boardSource.includes('{showShopPanel && typeof document !== \'undefined\' && createPortal(')
+        && boardSource.includes('{showEncounterModal && typeof document !== \'undefined\' ? createPortal(('), 'Shop and Bonus Encounter are body portals covered by that rule');
+      assert(/\.island-run-solar-map-overlay \{\s*position: fixed;\s*inset: 0;/.test(mapCss), 'the Island Map root is a viewport-anchored overlay');
+      assert(/\.island-run-board__topbar-menu-panel \{\s*max-height:[^;]+;\s*overflow-y: auto;/.test(levelWorldsCss), 'the board menu scrolls so Exit Island Run stays reachable');
+    },
+  },
   {
     name: 'arrival story outranks first-run and active-stop modals',
     run: () => {
