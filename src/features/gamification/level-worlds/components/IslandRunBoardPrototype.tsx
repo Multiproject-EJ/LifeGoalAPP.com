@@ -114,7 +114,7 @@ import { getIslandCaretakerConcordContent, hasIslandCaretakerConcordContent } fr
 import type { IslandConversationDefinition, IslandInhabitantTopicDefinition } from '../inhabitants/islandConversationTypes';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
-import { getIslandTechnologyAccess, resolveIslandTechnologyBuildEligibility } from '../services/islandRunTechnologyUnlocks';
+import { resolveIslandTechnologyBuildEligibility } from '../services/islandRunTechnologyUnlocks';
 import { resolveIslandRunConcordHubEntryState } from '../services/islandRunConcordHubEntry';
 import type { ConcordFragmentPickupReason } from '../services/islandRunConcordRollProtection';
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
@@ -7459,7 +7459,6 @@ export function IslandRunBoardPrototype({
     });
     if (
       islandNumber === 1
-      && !getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active
       && latestAssembly.completedAtMs === null
       && source !== 'dev_clear_island'
     ) {

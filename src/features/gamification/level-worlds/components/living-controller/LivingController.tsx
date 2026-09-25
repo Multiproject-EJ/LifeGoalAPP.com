@@ -58,7 +58,6 @@ export function LivingController(p:LivingControllerProps){
  const actions:Record<Action,()=>void>={shop:p.onShop,build:p.onBuild,creatures:p.onCreatures,concord:p.onConcord,roll:p.onRoll};
  const labels:Record<Action,string>={shop:'Shop',build:p.buildReady?'Build — next step affordable':'Build',creatures:'Creatures',concord:p.concordLabel,roll:`${p.rollTitle} · ${Math.floor(p.dice/Math.max(1,p.cost))} rolls left`};
  return <div className={`living-controller-dock${isCollapsed?' is-collapsed':''}`} data-theme={snapshot.current.theme}>
-   {isCollapsed&&<span className="living-controller-restore-hint" aria-hidden="true">Swipe up to open controller</span>}
    {p.dev&&!isCollapsed&&<select className="living-controller-themes" aria-label="Dev controller theme" value={selection} onChange={e=>setSelection(e.target.value)}>
      <option value="auto">Island / saved default</option><option value="ice">Default Day</option><option value="dark">Default Dark</option><option value="light">Light (preview)</option><option value="christmas">Christmas (preview)</option><option value="snow">Snow & Gold (preview)</option><option value="classic">Classic Christmas (preview)</option><option value="gold">Gold (preview)</option><option value="wood">Satin Teak (preview)</option>
    </select>}

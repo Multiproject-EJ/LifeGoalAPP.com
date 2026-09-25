@@ -168,10 +168,6 @@ export function resolveIslandMissionObjectives(options: {
       break;
     }
     case 'first_light_assembly': {
-      if (landmarkCount === 5) {
-        objectives = [objective('Activate Concord', 1, 1), objective('Build Landmarks', landmarkProgress.buildsComplete, 5)];
-        break;
-      }
       const progress = resolveFirstLightAssemblyCraterProgress({
         ledger: state.signatureMissionProgressByIsland,
         cycleIndex: state.cycleIndex,

@@ -1,14 +1,17 @@
 .island-run-prototype__footer:has(.living-controller) .island-run-prototype__footer-tuck-handle{display:none}
 .living-controller-ready-dot{position:absolute;right:10%;top:10%;width:8px;height:8px;border-radius:50%;background:#ff5149;box-shadow:0 0 8px #ff5149;pointer-events:none}
 .island-run-prototype__footer-main:has(.living-controller){padding-left:0;padding-right:0}
-.living-controller-dock{position:relative;width:min(100%,640px);margin:auto;aspect-ratio:1.52;transition:height .28s;isolation:isolate}
-.living-controller-dock.is-collapsed{height:44px;aspect-ratio:auto;overflow:hidden}
-.living-controller-restore-hint{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#d9f7ff;font:600 12px system-ui;z-index:4;background:linear-gradient(180deg,#102838dd,#123347dd);border:1px solid #83dfff66;border-radius:999px}
+.living-controller-dock{position:relative;width:min(100%,640px);margin:auto;aspect-ratio:1.52;transition:transform .32s cubic-bezier(.22,.8,.28,1);isolation:isolate}
+/* Tucked: the whole controller slides down and keeps its top edge in view.
+   Swiping up on (or tapping) that edge brings it back. The empty footer area
+   lets touches through to the island while it is tucked. */
+.living-controller-dock.is-collapsed{transform:translateY(calc(100% - var(--living-controller-peek,104px)));pointer-events:auto}
+.island-run-prototype__footer:has(.living-controller-dock.is-collapsed),.island-run-prototype__footer:has(.living-controller-dock.is-collapsed) .island-run-prototype__footer-main{pointer-events:none}
 .living-controller{position:relative;width:100%;aspect-ratio:1.52;touch-action:none;outline:none}
 .living-controller:focus-visible{outline:2px solid #83e4ff;border-radius:24px}
 .living-controller-canvas{position:absolute;inset:0;pointer-events:none}
 .living-controller-canvas canvas{display:block;width:100%;height:100%}
-.living-controller-dock.is-collapsed .living-controller{cursor:n-resize;transform:translateY(-12px)}
+.living-controller-dock.is-collapsed .living-controller{cursor:n-resize}
 .living-controller-hit,.living-controller-multiplier{position:absolute!important;transform:translate(-50%,-50%);margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;box-shadow:none!important;border:0!important;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .living-controller-hit{background:transparent!important;color:transparent!important;z-index:2}
 .living-controller-hit:focus-visible{background:#4ccfff40!important;outline:2px solid #c1f5ff!important}

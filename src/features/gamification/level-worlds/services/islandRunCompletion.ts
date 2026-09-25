@@ -1,7 +1,6 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 import { resolveIslandMissionObjectives, resolveLandmarkProgress } from './islandRunMissionObjectives';
-import { getIslandTechnologyAccess } from './islandRunTechnologyUnlocks';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveOpeningGamesCeremony } from './islandRunOpeningGames';
 import {
@@ -38,10 +37,10 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   });
   const assemblyComplete = islandNumber === 1 && assembly.completedAtMs !== null
     && assembly.chargesDetonated >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET;
-  const legacyConcord = islandNumber === 1 && !assemblyComplete
-    && assembly.chargesDetonated === 0
-    && getIslandTechnologyAccess({ technologyUnlocksById: state.technologyUnlocksById ?? {} }, 'the-concord').active;
-  const landmarkCount = islandNumber === 1 && !legacyConcord ? 4 : 5;
+  // Island 001 always runs the Assembly. The Concord is recovered on Island 005,
+  // so an active Concord (e.g. a returning or compatibility-granted save) no
+  // longer switches Island 001 to the retired five-stop Concord route.
+  const landmarkCount = islandNumber === 1 ? 4 : 5;
   const { buildsComplete, objectivesComplete } = resolveLandmarkProgress({
     islandNumber, state, landmarkCount,
   });
@@ -55,8 +54,7 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   // Hatchery completion awards the shipboard egg. Incubation never blocks departure.
   if (islandNumber < 4 && !access.welcomeCheckIn) add('egg', 'Collect or sell all Hatchery eggs', eggResolved ? 1 : 0);
   if (islandNumber === 1) {
-    if (legacyConcord) add('concord', 'Activate the Concord', 1);
-    else add('assembly', 'Complete the Assembly', assembly.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET);
+    add('assembly', 'Complete the Assembly', assembly.chargesDetonated, FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET);
   }
   // Every playable objective shown on the phone is required for departure.
   // Planned missions expose only the standard goals, so cannot strand players.
@@ -69,7 +67,7 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   }
   // Base completion unlocks Island 020's extraction. It is not permission to leave.
   const baseComplete = requirements.every(item => item.complete);
-  if (islandNumber === 1 && !legacyConcord) {
+  if (islandNumber === 1) {
     add('mandate', 'Sign the peacekeeping mandate', assemblyComplete && assembly.mandateSignedAtMs != null ? 1 : 0);
   }
   if (islandNumber === 20) {
