@@ -299,3 +299,10 @@ export function isAppError(value: unknown): value is AppError {
 export function getCategoryDefinition(category: AppErrorCategory): CategoryDefinition {
   return CATEGORY_DEFINITIONS[category];
 }
+
+/** Plain-language title and explanation for a stored error code, if known. */
+export function describeErrorCode(code: string | null | undefined): { title: string; explanation: string } | null {
+  if (!code) return null;
+  const definition = Object.values(CATEGORY_DEFINITIONS).find((entry) => entry.code === code);
+  return definition ? { title: definition.title, explanation: definition.explanation } : null;
+}

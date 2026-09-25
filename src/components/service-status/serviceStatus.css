@@ -242,3 +242,130 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+.sync-indicator--button {
+  border: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Island Run owns the whole screen and its top bar; stuck changes stay
+   visible on the app screens and in My Account instead. */
+body:has(.level-worlds-entry-modal) .app-sync-indicator {
+  display: none;
+}
+
+.sync-issues-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding:
+    max(16px, env(safe-area-inset-top, 0px))
+    max(16px, env(safe-area-inset-right, 0px))
+    max(16px, env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(8, 15, 28, 0.55);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sync-issues {
+  box-sizing: border-box;
+  width: min(440px, 100%);
+  max-height: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.sync-issues__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sync-issues__header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.sync-issues__close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sync-issues__intro,
+.sync-issues__empty {
+  margin: 0;
+  color: #475569;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.sync-issues__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sync-issues__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #fee2e2;
+  border-radius: 12px;
+  background: #fff7f7;
+}
+
+.sync-issues__item > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sync-issues__item strong { font-size: 0.9rem; }
+.sync-issues__item small { color: #64748b; font-size: 0.72rem; }
+.sync-issues__item span { color: #b91c1c; font-size: 0.78rem; }
+
+.sync-issues__discard {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #b91c1c;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sync-issues__actions {
+  display: flex;
+  justify-content: flex-end;
+}

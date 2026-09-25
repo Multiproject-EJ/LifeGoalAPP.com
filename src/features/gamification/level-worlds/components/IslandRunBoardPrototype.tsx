@@ -2053,6 +2053,8 @@ export function IslandRunBoardPrototype({
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [showMissionPhoneBriefing, setShowMissionPhoneBriefing] = useState(false);
+  // Developer-only controller finish override, chosen from the board menu.
+  const [devControllerThemeSelection, setDevControllerThemeSelection] = useState('auto');
   // Presentation-only queue: a roll may earn both a Concord fragment and a
   // signature-mission pickup. The pickup modal gets the first beat; its mission
   // panel is released after that full-attention surface closes.
@@ -15573,6 +15575,23 @@ export function IslandRunBoardPrototype({
                 </select>
                 <small>Saved on this device. Special islands temporarily use their own design.</small>
               </label>
+              {isDevModeEnabled ? (
+                <label className="island-run-board__dev-three-quality">
+                  <span>Controller theme (dev)</span>
+                  <select aria-label="Dev controller theme" value={devControllerThemeSelection} onChange={event => setDevControllerThemeSelection(event.target.value)}>
+                    <option value="auto">Island / saved default</option>
+                    <option value="ice">Default Day</option>
+                    <option value="dark">Default Dark</option>
+                    <option value="light">Light (preview)</option>
+                    <option value="christmas">Christmas (preview)</option>
+                    <option value="snow">Snow &amp; Gold (preview)</option>
+                    <option value="classic">Classic Christmas (preview)</option>
+                    <option value="gold">Gold (preview)</option>
+                    <option value="wood">Satin Teak (preview)</option>
+                  </select>
+                  <small>Developer preview of controller finishes. Not saved.</small>
+                </label>
+              ) : null}
               {isDevModeEnabled && shouldRenderIsland5Three ? (
                 <label className="island-run-board__dev-three-quality">
                   <span>3D quality</span>
@@ -16504,7 +16523,7 @@ export function IslandRunBoardPrototype({
                 arrivalKey={String(islandNumber)}
                 onThemeChange={setTopbarControllerTheme}
                 onArrivalImpact={() => triggerIslandRunHaptic('controller_land')}
-                dark={false} dev={isDevModeEnabled}
+                dark={false} dev={isDevModeEnabled} devThemeSelection={devControllerThemeSelection}
                 islandNumber={islandArtPreviewNumber} preferredTheme={controllerDefaultTheme}
                 dice={hasHydratedRuntimeState ? dicePool : 0}
                 multiplier={effectiveMultiplier} maximum={maxAvailableMultiplier} cost={effectiveDiceCost}
@@ -16514,7 +16533,10 @@ export function IslandRunBoardPrototype({
                 creatureRewardReady={sanctuaryRewardReadyCount > 0}
                 blocked={isBuildTutorialGameplayBlocked || doesModalOwnAttention}
                 rollDisabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
-                multiplierDisabled={isRolling}
+                // The roll in flight already locked its multiplier (cost is charged
+                // and landing rewards resolve in that roll's closure), so the pill
+                // stays live and a change applies to the next throw.
+                multiplierDisabled={false}
                 multiplierMaxJumping={isMultiplierMaxJumping}
                 multiplierFeedbackKey={multiplierMaxBurstIdRef.current}
                 canHold={canHoldForAutoRoll && !isBuildTutorialGameplayBlocked && !isIslandTimerPendingStart}

@@ -106,9 +106,9 @@
   .island-run-themed-topbar .island-run-board__topbar-money-note { flex-basis: 18px; width: 18px; }
   .island-run-themed-topbar .island-run-board__topbar-currency-icon { width: 17px; }
 }
-.island-run-prototype:has(.island-run-themed-topbar) .island-run-board__rewardbar-cluster { top: calc(env(safe-area-inset-top, 0px) + 94px); }
+.island-run-prototype:has(.island-run-themed-topbar) .island-run-board__rewardbar-cluster { top: calc(env(safe-area-inset-top, 0px) + 84px); }
 .island-run-themed-topbar ~ .island-run-board__topbar-menu-panel,
-.island-run-themed-topbar ~ .island-run-board__audio-menu-panel { top: calc(env(safe-area-inset-top, 0px) + 88px); }
+.island-run-themed-topbar ~ .island-run-board__audio-menu-panel { top: calc(env(safe-area-inset-top, 0px) + 78px); }
 
 /* Pass 2: authored optical silhouette, not a blurry CSS tube. */
 .island-run-board__topbar.island-run-themed-topbar {
@@ -144,6 +144,10 @@
   background: repeating-linear-gradient(3deg, #3f1c0c55 0 1px, transparent 1px 4px, #deb18444 4px 5px, transparent 5px 9px);
 }
 @media (max-width: 360px) { .island-run-board__topbar.island-run-themed-topbar { padding: 14px 13px; gap: 4px; } }
-.island-run-prototype:has(.island-run-themed-topbar) .island-run-board__rewardbar-cluster { top: calc(env(safe-area-inset-top, 0px) + 100px); }
+.island-run-prototype:has(.island-run-themed-topbar) .island-run-board__rewardbar-cluster { top: calc(env(safe-area-inset-top, 0px) + 90px); }
 .island-run-themed-topbar ~ .island-run-board__topbar-menu-panel,
-.island-run-themed-topbar ~ .island-run-board__audio-menu-panel { top: calc(env(safe-area-inset-top, 0px) + 94px); }
+.island-run-themed-topbar ~ .island-run-board__audio-menu-panel { top: calc(env(safe-area-inset-top, 0px) + 84px); }
+
+/* Sit the top bar 10px higher (user request, 2026-09-25); the panels above
+   hang from it and moved up by the same amount. */
+.island-run-board__topbar.island-run-themed-topbar { top: calc(env(safe-area-inset-top, 0px) + 2px); }
