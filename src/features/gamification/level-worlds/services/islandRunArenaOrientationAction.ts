@@ -3,6 +3,7 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { reconcileIslandRunStopObjectivesFromCompletionLedger, resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
+import { applyLandmarkCompletionReward } from './islandRunLandmarkReward';
 
 /** Island001 teaches the route before Island002 introduces live games.
  * Construction, paying a ticket or opening the dialog do not finish this activity. */
@@ -35,12 +36,13 @@ export function completeIslandRunArenaOrientation(options: {
     } : entry);
     const next = resolveIslandRunContractV2Stops({ stopStatesByIndex,
       stopTicketsPaidByIsland: state.stopTicketsPaidByIsland, islandNumber: state.currentIslandNumber });
-    await commitIslandRunState({ session: options.session, client: options.client,
-      triggerSource: 'complete_first_island_orientation', record: {
+    const record = applyLandmarkCompletionReward(state, {
         ...state, runtimeVersion: state.runtimeVersion + 1, stopStatesByIndex,
         activeStopIndex: next.activeStopIndex, activeStopType: next.activeStopType,
         completedStopsByIsland: { ...state.completedStopsByIsland, [islandKey]: [...completedStops, 'mystery'] },
-      },
+      }, options.session.user.id);
+    await commitIslandRunState({ session: options.session, client: options.client,
+      triggerSource: 'complete_first_island_orientation', record,
     });
     return { status: 'completed' as const };
   });

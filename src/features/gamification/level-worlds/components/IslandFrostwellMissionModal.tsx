@@ -1,4 +1,5 @@
 import React from 'react';
+import './IslandFrostwellMissionPresentation.css';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { FROSTWELL_SPIN_METERS } from '../services/islandRunSignatureMissions';

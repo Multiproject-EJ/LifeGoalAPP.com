@@ -1,4 +1,10 @@
 import { LivingController } from './living-controller/LivingController';
+import { shouldHideMissionController } from '../services/islandRunPresentationVisibility';
+import './IslandRunThemedTopbar.css';
+import { useControllerPreference } from './living-controller/useControllerPreference';
+import { islandControllerTheme } from './living-controller/policy.js';
+import { createMaxTapGuard } from './living-controller/max-tap-guard.js';
+import { DevDailySpinPreviewModal } from '../../../spin-wheel/DevDailySpinPreviewModal';
 import { IslandRunSolarMapOverlay } from './IslandRunSolarMapOverlay';
 import { resolveIslandRunOrbitProgress } from '../services/islandRunOrbitProgress';
 import { shouldCelebrateSunshoreMaxRoll } from '../services/islandRunCreatureCelebration';
@@ -52,6 +58,7 @@ import {
 } from '../services/islandRunControllerVisualContract';
 import { resolveIslandRunControllerTuckGesture } from '../services/islandRunControllerTuckPresentation';
 import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuildOpenFlow';
+import { getLandmarkRewardStatus } from '../services/islandRunLandmarkReward';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
@@ -70,6 +77,8 @@ import { IslandMoonwellThermalModal } from './IslandMoonwellThermalModal';
 import { activateMoonwellThermal } from '../services/islandRunMoonwellThermalAction';
 import { isMoonwellHeatAvailable, resolveMoonwellThermalProgress } from '../services/islandRunMoonwellThermal';
 import { ConfettiBurst } from './ConfettiBurst';
+import { IslandHudGlass } from './IslandHudGlass';
+import { EncounterActivityProgress } from './EncounterActivityProgress';
 import {
   IslandMoneyCelebration,
   IslandMoneyCollectionAnimation,
@@ -175,7 +184,7 @@ import {
 } from '../services/islandRunModalVisibility';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../../../services/themePurchases';
-import { useTheme, isThemeDark, AVAILABLE_THEMES, resolveThemeAccess, type Theme, type ThemeAccessResult, type ThemeMetadata } from '../../../../contexts/ThemeContext';
+import { AVAILABLE_THEMES, resolveThemeAccess, type Theme, type ThemeAccessResult, type ThemeMetadata } from '../../../../contexts/ThemeContext';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
   ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
@@ -390,6 +399,7 @@ import { buildCreatureCardSimpleView } from '../services/creatureCardV2Adapter';
 import { CreatureCard } from './CreatureCard';
 import { CreatureGridCard } from './CreatureGridCard';
 import { CreatureHatchRevealModal } from './CreatureHatchRevealModal';
+import { EggBatchReveal } from './EggBatchReveal';
 import {
   FirstSessionCreaturePackModal,
   type FirstSessionCreaturePackModalPhase,
@@ -1850,6 +1860,7 @@ const DORMANT_DOOR_FIGURE_NAMES: Record<DormantDoorFigure, string> = {
 };
 
 interface IslandRunBoardPrototypeProps {
+  playerRank?: { title: string; tier: 'bronze' | 'command' };
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
   onExitBoard?: () => void;
@@ -1863,6 +1874,7 @@ interface IslandRunBoardPrototypeProps {
 }
 
 export function IslandRunBoardPrototype({
+  playerRank,
   session,
   initialPanel = 'default',
   onExitBoard,
@@ -1874,7 +1886,9 @@ export function IslandRunBoardPrototype({
   dailySpinCount = 0,
   isPro = false,
 }: IslandRunBoardPrototypeProps) {
-  const { theme: controllerAppTheme } = useTheme();
+  const [controllerDefaultTheme, setControllerDefaultTheme] = useControllerPreference(session.user.id);
+  const [topbarControllerTheme, setTopbarControllerTheme] = useState('ice');
+  const [worldMissionPresentationActive, setWorldMissionPresentationActive] = useState(false);
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
   // chip stays in sync with the profile's total_xp. The hook also handles its
@@ -2033,6 +2047,7 @@ export function IslandRunBoardPrototype({
   }, [caretakerBoardBubbleText]);
   const [showConcordHubModal, setShowConcordHubModal] = useState(false);
   const [showSolarMapOverlay, setShowSolarMapOverlay] = useState(false);
+  const [showDevDailySpinPreview,setShowDevDailySpinPreview]=useState(false);
   const [showBoardSymbolLegend, setShowBoardSymbolLegend] = useState(showBoardLegendPreview);
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
@@ -2877,6 +2892,7 @@ export function IslandRunBoardPrototype({
   // It must not repeatedly interrupt board play with an automatic modal.
 
   const [showShopPanel, setShowShopPanel] = useState(false);
+  const [featuredControllerTheme,setFeaturedControllerTheme]=useState<string|null>(null);
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
@@ -2973,6 +2989,7 @@ export function IslandRunBoardPrototype({
   const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
   const [sanctuaryMenuModule, setSanctuaryMenuModule] = useState<'collection' | 'inventory' | 'quest' | 'rooms' | 'filters' | null>(null);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
+  const [eggBatchCards, setEggBatchCards] = useState<string[]>([]);
   const [hatchedCreatureCardId, setHatchedCreatureCardId] = useState<string | null>(null);
   const [devPackOpeningPrototype, setDevPackOpeningPrototype] = useState<null | {
     cards: CreaturePackOpeningPrototypeCard[];
@@ -3119,6 +3136,7 @@ export function IslandRunBoardPrototype({
   const [isMultiplierMaxJumping, setIsMultiplierMaxJumping] = useState(false);
   const [multiplierMaxBursts, setMultiplierMaxBursts] = useState<Array<{ id: number; lane: number }>>([]);
   const multiplierMaxJumpLockRef = useRef(false);
+  const multiplierMaxTapGuard = useRef(createMaxTapGuard());
   const multiplierMaxBurstIdRef = useRef(0);
   const multiplierMaxBurstTimersRef = useRef<Set<number>>(new Set());
   const firstMaxMultiplierThrowPendingRef = useRef(false);
@@ -3172,7 +3190,7 @@ export function IslandRunBoardPrototype({
     // The max-tier hop is a deliberate beat: taps during it must not wrap the
     // pill to x1 before the player sees the max state land.
     if (unlockedMultipliers.length <= 1) return;
-    if (isAtMaxAvailableMultiplier && multiplierMaxJumpLockRef.current) {
+    if (isAtMaxAvailableMultiplier && multiplierMaxTapGuard.current.protect(performance.now(), multiplierMaxJumpLockRef.current)) {
       emitMultiplierMaxBurst();
       playIslandRunSound('multiplier_max');
       return;
@@ -3184,6 +3202,7 @@ export function IslandRunBoardPrototype({
     setDiceMultiplier(step.nextMultiplier);
 
     if (step.reachedMax) {
+      multiplierMaxTapGuard.current.reached(performance.now());
       emitMultiplierMaxBurst();
       firstMaxMultiplierThrowPendingRef.current = true;
       consecutiveMaxMultiplierRollsRef.current = 0;
@@ -3229,8 +3248,29 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic('reward_claim');
   }, [playIslandRunSound, showVaultIslandGiftUnlock, triggerIslandRunHaptic]);
 
+  const missionPresentationForRewardsRef = useRef(worldMissionPresentationActive);
+  missionPresentationForRewardsRef.current = worldMissionPresentationActive;
+  const pendingMissionCelebrationsRef = useRef<Array<{ rewards: WinRewardItem[]; subtitle: string }>>([]);
+  const celebrationIslandRef = useRef(islandNumber);
+  useEffect(() => {
+    if (celebrationIslandRef.current !== islandNumber) {
+      celebrationIslandRef.current = islandNumber;
+      pendingMissionCelebrationsRef.current = [];
+      return;
+    }
+    if (worldMissionPresentationActive || showWinCelebrationModal) return;
+    const next = pendingMissionCelebrationsRef.current.shift();
+    if (!next) return;
+    setWinCelebrationRewards(next.rewards);
+    setWinCelebrationSubtitle(next.subtitle);
+    setShowWinCelebrationModal(true);
+  }, [worldMissionPresentationActive, showWinCelebrationModal, islandNumber]);
   const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
     if (rewards.length === 0) return;
+    if (missionPresentationForRewardsRef.current) {
+      pendingMissionCelebrationsRef.current.push({ rewards, subtitle });
+      return;
+    }
     setWinCelebrationRewards(rewards);
     setWinCelebrationSubtitle(subtitle);
     setShowWinCelebrationModal(true);
@@ -3292,7 +3332,7 @@ export function IslandRunBoardPrototype({
   // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
   // behind the overlay.
   const anyBlockingModalOpen =
-    showSolarMapOverlay ||
+    showSolarMapOverlay || showDevDailySpinPreview ||
     isCompassBookCeremonyPlaying || showShopPanel ||
     showMarketPanel ||
     showBuildPanel ||
@@ -3326,7 +3366,7 @@ export function IslandRunBoardPrototype({
     Boolean(techCompletionCelebration) ||
     showEncounterModal ||
     showGamifiedJournalCard ||
-    showClaimModal;
+    showClaimModal || eggBatchCards.length > 0;
   // Only react to a modal *opening* (a false→true edge), never to a flag merely
   // being set. Previously this effect force-closed the menu on every render where
   // `showTopbarMenu` was true and any flag was set. That meant if any one of these
@@ -3764,9 +3804,10 @@ export function IslandRunBoardPrototype({
       : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
+    worldMissionPresentationActive || moonwellThawActive ||
     firstArrivalActive ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
-    isCompassBookCeremonyPlaying || showFirstCreaturePackModal ||
+    isCompassBookCeremonyPlaying || showFirstCreaturePackModal || eggBatchCards.length > 0 ||
       showStoryReader ||
       activeStopId ||
       activeLaunchedMinigameId ||
@@ -4622,6 +4663,10 @@ export function IslandRunBoardPrototype({
 
   // M6-COMPLETE: Escape key closes encounter modal
   useEffect(() => {
+    if (!showEncounterModal) return undefined;
+    return lockPageScroll();
+  }, [showEncounterModal]);
+  useEffect(() => {
     if (!showEncounterModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -5446,7 +5491,10 @@ export function IslandRunBoardPrototype({
     [islandNumber, featureAccess.welcomeCheckIn, featureAccess.arenaOrientation],
   );
   const [showEarlyOwnedEggs, setShowEarlyOwnedEggs] = useState(false);
-  useEffect(() => { setShowEarlyOwnedEggs(false); }, [activeStopId, islandNumber]);
+  useEffect(() => {
+    if (activeStopId !== 'hatchery') setShowEarlyOwnedEggs(false);
+  }, [activeStopId]);
+  useEffect(() => { setShowEarlyOwnedEggs(false); }, [islandNumber]);
 
   // B1-3: dayIndex computed from island start time
   const dayIndex = useMemo(
@@ -9557,7 +9605,6 @@ export function IslandRunBoardPrototype({
       }];
     })
     .sort((first, second) => {
-      if (first.isCurrentIsland !== second.isCurrentIsland) return first.isCurrentIsland ? -1 : 1;
       if (first.isReady !== second.isReady) return first.isReady ? -1 : 1;
       if (first.hatchAtMs !== second.hatchAtMs) return first.hatchAtMs - second.hatchAtMs;
       return first.slotIndex - second.slotIndex;
@@ -9626,6 +9673,9 @@ export function IslandRunBoardPrototype({
     rewardBarMissionSlotIndex + 1,
   );
   const openHatcheryQuickAccess = useCallback(() => {
+    // This is the travelling inventory, not the current island's welcome activity.
+    setShowEarlyOwnedEggs(true);
+    setSelectedHatcheryEggIndex(0);
     requestActiveStopTransition('hatchery', 'manifest_quick_access');
   }, [requestActiveStopTransition]);
   const sanctuaryZoneSummaries = useMemo(
@@ -9977,14 +10027,14 @@ export function IslandRunBoardPrototype({
     return baselineCreature;
   };
 
-  const handleCollectCreature = () => {
-    const resolvedEgg = selectedHatcheryDisplayEgg;
-    if (!resolvedEgg || selectedHatcheryEggStage < 4) return;
-    if (!canResolveSelectedHatcheryEgg) return;
-    const sourceIslandNumber = selectedHatcheryEgg?.islandNumber ?? islandNumber;
-    const selectedLedgerKey = selectedHatcheryEgg?.ledgerKey ?? getEggSlotLedgerKey(islandNumber, 0);
-    const selectedEntry = runtimeState.perIslandEggs?.[selectedLedgerKey];
+  const handleCollectCreature = (batchEgg?: HatcheryCarouselEgg) => {
+    const resolvedEgg = batchEgg ?? selectedHatcheryDisplayEgg;
+    if (!resolvedEgg) return;
+    const sourceIslandNumber = batchEgg?.islandNumber ?? selectedHatcheryEgg?.islandNumber ?? islandNumber;
+    const selectedLedgerKey = batchEgg?.ledgerKey ?? selectedHatcheryEgg?.ledgerKey ?? getEggSlotLedgerKey(islandNumber, 0);
+    const selectedEntry = getIslandRunStateSnapshot(session).perIslandEggs?.[selectedLedgerKey];
     if (selectedEntry?.status === 'collected' || selectedEntry?.status === 'sold') return;
+    if (selectedEntry?.status !== 'ready' && !(resolvedEgg.hatchAtMs <= Date.now())) return;
     // Re-entrancy guard: block double-clicks / StrictMode double-invoke.
     // The `islandEggSlotUsed` memo above only flips to true *after* React
     // commits the `setActiveEgg(null)` + runtime-state update below, so a
@@ -9994,7 +10044,7 @@ export function IslandRunBoardPrototype({
     collectingCreatureRef.current = true;
     setIsCollectingCreature(true);
     const nowTs = Date.now();
-    const eggLocation = selectedHatcheryEggLocation;
+    const eggLocation = batchEgg?.location ?? selectedHatcheryEggLocation;
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg, sourceIslandNumber);
     const hasCollectedPerfectCompanionBeforeCollect = creatureCollection.some((entry) =>
       (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
@@ -10033,8 +10083,10 @@ export function IslandRunBoardPrototype({
       islandNumber: sourceIslandNumber,
       collectedAtMs: nowTs,
     }));
-    setHatchReveal({ creatureId: creature.id, creatureName: creature.name, rarity: creature.tier });
-    playIslandRunHatchRevealSound(
+    if (!batchEgg) setHatchReveal({ creatureId: creature.id, creatureName: creature.name, rarity: creature.tier });
+    // Never leave the incubator competing with the hatch presentation for focus.
+    setActiveStopId(null);
+    if (!batchEgg) playIslandRunHatchRevealSound(
       `${session.user.id}:${islandNumber}:${selectedLedgerKey}:${resolvedEgg.setAtMs}`,
     );
     triggerIslandRunHaptic('egg_open');
@@ -10054,7 +10106,7 @@ export function IslandRunBoardPrototype({
       },
     });
     logIslandRunEntryDebug('island_creature_collected', { tier: resolvedEgg.tier, creatureId: creature.id, creatureName: creature.name, source: 'island_hatchery' });
-    if (isFirstCreatureCollected && typeof window !== 'undefined') {
+    if (!batchEgg && isFirstCreatureCollected && typeof window !== 'undefined') {
       const hintSeenStorageKey = getPerfectCompanionOnboardingHintStorageKey(session.user.id);
       const hasSeenHint = window.localStorage.getItem(hintSeenStorageKey) === '1';
       if (!hasSeenHint) {
@@ -10091,6 +10143,20 @@ export function IslandRunBoardPrototype({
     // any legitimate future collection (new egg, new island) can proceed.
     collectingCreatureRef.current = false;
     setIsCollectingCreature(false);
+    return creature.id;
+  };
+
+  const handleCollectReadyEggBatch = () => {
+    if (collectingCreatureRef.current || eggBatchCards.length > 0) return;
+    stopAutoRoll();
+    // Resolve each stable ledger key through the same idempotent canonical action.
+    // The presentation contains only successful receipts, never pending rewards.
+    const cards = hatcheryPendingEggs.filter((egg) => egg.isReady)
+      .flatMap((egg) => {
+        const creatureId = handleCollectCreature(egg);
+        return creatureId ? [creatureId] : [];
+      });
+    if (cards.length) setEggBatchCards(cards);
   };
 
   /** Egg sell with player choice: shards or dice */
@@ -12957,6 +13023,7 @@ export function IslandRunBoardPrototype({
   };
 
   const openShopPanel = () => {
+    setFeaturedControllerTheme(null);
     setShowShopPanel(true);
     setShowMarketPanel(false);
     setShowBuildPanel(false);
@@ -12975,6 +13042,11 @@ export function IslandRunBoardPrototype({
   const openMarketPanel = () => {
     // Market is now merged into the shop panel — redirect to shop
     openShopPanel();
+  };
+  const openControllerShop = (surface:'island'|'treasure'='island') => {
+    openShopPanel();
+    const theme=islandControllerTheme(islandArtPreviewNumber,surface);
+    setFeaturedControllerTheme(theme&&theme!=='ice'&&theme!=='dark'?theme:null);
   };
 
   const openRewardDetailsModal = () => {
@@ -13655,7 +13727,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
-    showSolarMapOverlay ||
+    showSolarMapOverlay || showDevDailySpinPreview ||
     firstArrivalActive ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     assemblyMandateOpen ||
@@ -13663,7 +13735,7 @@ export function IslandRunBoardPrototype({
       activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
-      hatchReveal ||
+      hatchReveal || eggBatchCards.length > 0 ||
       hatchedCreatureCardId ||
       ticketPromptStopId ||
       lockedStopInfoStopId ||
@@ -13710,6 +13782,19 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  const missionOwnsController = worldMissionPresentationActive || firstArrivalActive
+    || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
+    || moonwellThawActive || frostwellSequence.phase === 'drilling'
+    || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
+  const hideControllerForPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
+    lavaSkiffNavigation.active || isShooterControllerActive);
+  useEffect(() => {
+    if (missionOwnsController) {
+      stopAutoRoll();
+      setShowTopbarMenu(false);
+      setShowAudioMenu(false);
+    }
+  }, [missionOwnsController, stopAutoRoll]);
   useEffect(() => {
     if (!pendingRootheartPowerworksAutoOpen || doesModalOwnAttention || isIslandVisualPreview) return undefined;
     const timer = window.setTimeout(() => {
@@ -14335,12 +14420,13 @@ export function IslandRunBoardPrototype({
       islandClearStats?.islandNumber === runtimeState.currentIslandNumber
   );
   const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
+    missionOwnsController ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     isCompassBookCeremonyPlaying || isArenaBattleOpen ||
       activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
-      hatchReveal ||
+      hatchReveal || eggBatchCards.length > 0 ||
       hatchedCreatureCardId ||
       ticketPromptStopId ||
       lockedStopInfoStopId ||
@@ -15279,8 +15365,9 @@ export function IslandRunBoardPrototype({
         <div className="island-run-board__discovery-atmosphere" aria-hidden="true" />
 
         <div ref={topbarMenuRef}>
-          <div className="island-run-board__topbar" aria-label="Island Run top bar">
-            <button type="button" className="island-run-board__topbar-avatar" aria-label="Player profile">
+          <div className="island-run-board__topbar island-run-themed-topbar" data-controller-theme={topbarControllerTheme} aria-label="Island Run top bar">
+            <IslandHudGlass />
+            <button type="button" className="island-run-board__topbar-avatar" data-rank-tier={playerRank?.tier ?? 'bronze'} title={playerRank?.title ?? 'Player profile'} aria-label={playerRank ? `Player profile · ${playerRank.title}` : 'Player profile'}>
               {avatarImageUrl ? (
                 <img src={avatarImageUrl} alt="" className="island-run-board__topbar-avatar-img" />
               ) : (
@@ -15293,7 +15380,7 @@ export function IslandRunBoardPrototype({
                 tone={2}
                 className="island-run-board__topbar-money-note"
               />
-              <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
+              <strong title={formatFullWalletValue(runtimeState.essence)}>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
             <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
               <img
@@ -15302,7 +15389,7 @@ export function IslandRunBoardPrototype({
                 alt=""
                 aria-hidden="true"
               />
-              {formatFullWalletValue(shards)}
+              <span className="island-run-themed-topbar__amount" title={formatFullWalletValue(shards)}>{formatFullWalletValue(shards)}</span>
             </div>
             <button
               type="button"
@@ -15478,6 +15565,14 @@ export function IslandRunBoardPrototype({
                 Vault Island collection · {vaultIslandCollection.unlockedCount}/{vaultIslandCollection.collectionSize} relics
                 </button>
               ) : null}
+              <label className="island-run-board__dev-three-quality">
+                <span>Default controller</span>
+                <select aria-label="Default controller theme" value={controllerDefaultTheme} onChange={event => setControllerDefaultTheme(event.target.value)}>
+                  <option value="ice">Default Day</option>
+                  <option value="dark">Default Dark</option>
+                </select>
+                <small>Saved on this device. Special islands temporarily use their own design.</small>
+              </label>
               {isDevModeEnabled && shouldRenderIsland5Three ? (
                 <label className="island-run-board__dev-three-quality">
                   <span>3D quality</span>
@@ -15503,6 +15598,8 @@ export function IslandRunBoardPrototype({
               ) : null}
               {isDevModeEnabled ? (
                 <section className="island-run-board__dev-island-jump" role="group" aria-label="Jump to island developer control">
+                  <button type="button" className="island-run-board__dev-island-jump-submit" onClick={()=>{stopAutoRoll();setShowTopbarMenu(false);setShowDevDailySpinPreview(true);}}>Reset daily spin · test mode</button>
+                  <small>Repeatable wheel rehearsal. Keeps daily eligibility, reward history and wallets unchanged.</small>
                   <div className="island-run-board__dev-island-jump-heading">
                     <span>Jump to island</span>
                     <output aria-live="polite">{devIslandJumpLabel}</output>
@@ -16046,6 +16143,7 @@ export function IslandRunBoardPrototype({
                 }}
                 onMoonwellThermalPhaseChange={setMoonwellThawPhase}
                 onMoonwellThermalComplete={() => { setMoonwellThawActive(false); setLandingText('♨ Moonwell restored. Warm water now bubbles beneath the winter sky.'); }}
+                onMissionPresentationActiveChange={setWorldMissionPresentationActive}
                 celestialRedockingPresentation={{
                   completedRolls: isIslandVisualPreview && islandArtPreviewNumber === 2
                     ? CELESTIAL_REDOCKING_ROLL_TARGET
@@ -16386,14 +16484,22 @@ export function IslandRunBoardPrototype({
         >
           {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
-          <div className="island-run-prototype__footer-actions">
+          <div className="island-run-prototype__footer-actions"
+            data-mission-hidden={hideControllerForPresentation ? 'true' : undefined}
+            style={hideControllerForPresentation
+              ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
+            aria-hidden={hideControllerForPresentation || undefined}>
             {lavaSkiffNavigation.active ? (
               <LavaSkiffControllerAdapter onChange={handleLavaSkiffControllerChange} />
             ) : isShooterControllerActive ? (
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
               <LivingController
-                dark={isThemeDark(controllerAppTheme)} dev={isDevModeEnabled}
+                arrivalKey={String(islandNumber)}
+                onThemeChange={setTopbarControllerTheme}
+                onArrivalImpact={() => triggerIslandRunHaptic('controller_land')}
+                dark={false} dev={isDevModeEnabled}
+                islandNumber={islandArtPreviewNumber} preferredTheme={controllerDefaultTheme}
                 dice={hasHydratedRuntimeState ? dicePool : 0}
                 multiplier={effectiveMultiplier} maximum={maxAvailableMultiplier} cost={effectiveDiceCost}
                 rolling={isRolling} autoRolling={isAutoRolling}
@@ -16402,8 +16508,9 @@ export function IslandRunBoardPrototype({
                 creatureRewardReady={sanctuaryRewardReadyCount > 0}
                 blocked={isBuildTutorialGameplayBlocked || doesModalOwnAttention}
                 rollDisabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
-                multiplierDisabled={isRolling || isMultiplierMaxJumping}
+                multiplierDisabled={isRolling}
                 multiplierMaxJumping={isMultiplierMaxJumping}
+                multiplierFeedbackKey={multiplierMaxBurstIdRef.current}
                 canHold={canHoldForAutoRoll && !isBuildTutorialGameplayBlocked && !isIslandTimerPendingStart}
                 rollTitle={isIslandTimerPendingStart ? 'Start Island' : isRolling ? 'ROLLING' : isAutoRolling ? 'AUTO ROLL' : rollButtonLabel}
                 regenLabel={dicePool < effectiveDiceCost ? [diceRegenStatusLabel, diceRegenCountdown].filter(Boolean).join(' ') : ''}
@@ -16412,7 +16519,7 @@ export function IslandRunBoardPrototype({
                 onRoll={isIslandTimerPendingStart ? activateCurrentIsland : handleRollButtonClick}
                 onHoldStart={beginAutoRollHold} onHoldEnd={endAutoRollHold}
                 onHoldCancel={cancelAutoRollHold} onStopAuto={stopAutoRoll}
-                onMultiplier={handleMultiplierPillClick} onShop={openShopPanel}
+                onMultiplier={handleMultiplierPillClick} onShop={()=>openControllerShop()}
                 onBuild={openBuildPanelFromFooter} onCreatures={openSanctuaryPanel}
                 onConcord={handleConcordEntryClick}
                 fallback={
@@ -16571,6 +16678,7 @@ export function IslandRunBoardPrototype({
         </div>
       </div>
 
+      {showDevDailySpinPreview&&isDevModeEnabled&&<DevDailySpinPreviewModal session={session} onClose={()=>setShowDevDailySpinPreview(false)}/>}
       {showSolarMapOverlay && typeof document !== 'undefined' ? createPortal(
         <IslandRunSolarMapOverlay currentIslandNumber={islandNumber}
           currentIslandCompletedStopCount={completedStops.length}
@@ -17005,7 +17113,7 @@ export function IslandRunBoardPrototype({
                     <p className="island-hatchery-card__headline">Egg already completed — no new egg on this island.</p>
                     <p style={{ fontSize: '0.82rem', opacity: 0.65 }}>Each island's egg slot is permanent and non-renewable.</p>
                   </div>
-                ) : selectedHatcheryDisplayEgg && selectedHatcheryEggStage >= 4 ? (
+                ) : selectedHatcheryDisplayEgg && (selectedHatcheryEgg?.isReady ?? (selectedHatcheryDisplayEgg.hatchAtMs <= nowMs)) ? (
                   /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
                     <img
@@ -17037,11 +17145,17 @@ export function IslandRunBoardPrototype({
                         <button
                           type="button"
                           className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                          onClick={handleCollectCreature}
+                          onClick={() => handleCollectCreature()}
                           disabled={isCollectingCreature}
                         >
                           {isCollectingCreature ? 'Collecting…' : 'Collect Creature 🐾'}
                         </button>
+                        {hatcheryPendingEggs.filter((egg) => egg.isReady).length > 1 ? (
+                          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary"
+                            disabled={isCollectingCreature || eggBatchCards.length > 0} onClick={handleCollectReadyEggBatch}>
+                            Hatch all {hatcheryPendingEggs.filter((egg) => egg.isReady).length} ready eggs
+                          </button>
+                        ) : null}
                         {(() => {
                           const sellOptions = getEggSellRewardOptions(selectedHatcheryDisplayEgg.tier);
                           const sellAdvisor = adviseEggSellChoice({
@@ -17262,6 +17376,8 @@ export function IslandRunBoardPrototype({
               <IslandRunLifePromptCard
                 session={session}
                 islandNumber={islandNumber}
+                buildLevel={__storeState.stopBuildStateByIndex[openedStopIndex]?.buildLevel ?? 0}
+                landmarkRewardStatus={getLandmarkRewardStatus(__storeState, openedStopIndex)}
                 onComplete={(message) => {
                   handleCompleteActiveStop(`✅ Habit landmark complete. ${message}`);
                 }}
@@ -17275,6 +17391,8 @@ export function IslandRunBoardPrototype({
                 <WisdomCaretakerCompassEncounter
                   session={session}
                   islandNumber={islandNumber}
+                  buildLevel={__storeState.stopBuildStateByIndex[openedStopIndex]?.buildLevel ?? 0}
+                  landmarkRewardStatus={getLandmarkRewardStatus(__storeState, openedStopIndex)}
                   onComplete={(message) => {
                     handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}
@@ -17814,10 +17932,17 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {showEncounterModal && (
+      {showEncounterModal && typeof document !== 'undefined' ? createPortal((
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
             <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
+            {currentEncounterChallenge ? <EncounterActivityProgress
+              challenge={currentEncounterChallenge}
+              complete={encounterStep === 'reward'}
+              secondsLeft={breathingSecondsLeft}
+              taps={encounterTapCount}
+              response={gratitudeText}
+            /> : null}
             {encounterStep === 'challenge' && (
               <p className="island-encounter__intro">
                 Quick positive check-in — choose what feels best for you. Every choice counts.
@@ -17939,7 +18064,7 @@ export function IslandRunBoardPrototype({
             </div>
           </section>
         </div>
-      )}
+      ), document.body) : null}
 
       {showOnboardingBooster && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
@@ -18553,9 +18678,11 @@ export function IslandRunBoardPrototype({
       )}
 
       {/* M14: unified shop panel (merged shop + market) */}
-      {showShopPanel && (
+      {showShopPanel && typeof document !== 'undefined' && createPortal(
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <IslandRunSupplyDock
+            featuredControllerTheme={featuredControllerTheme}
+            onChooseControllerDefault={setControllerDefaultTheme}
             islandNumber={islandNumber}
             essence={runtimeState.essence}
             dicePool={runtimeState.dicePool}
@@ -18587,7 +18714,7 @@ export function IslandRunBoardPrototype({
               });
             }}
           />
-        </div>
+        </div>,document.body
       )}
 
       {/* Build panel v2 — Monopoly GO-style bottom tray (Island 1 artwork + horizontal card tray) */}
@@ -18678,7 +18805,7 @@ export function IslandRunBoardPrototype({
 
       {shouldRenderPerfectCompanionHint({
         requested: showPerfectCompanionOnboardingHint,
-        hatchRevealOpen: Boolean(hatchReveal),
+        hatchRevealOpen: Boolean(hatchReveal) || eggBatchCards.length > 0,
         creatureCardOpen: Boolean(hatchedCreatureCardId),
       }) && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
@@ -19683,6 +19810,7 @@ export function IslandRunBoardPrototype({
         />
       ) : null}
 
+      {eggBatchCards.length > 0 ? <EggBatchReveal creatureIds={eggBatchCards} onClose={() => setEggBatchCards([])} /> : null}
       {hatchReveal ? (
         <CreatureHatchRevealModal
           open={Boolean(hatchReveal)}
@@ -21029,6 +21157,21 @@ export function IslandRunBoardPrototype({
           )}
         >
           <VaultIslandCollectionModal
+            controller={<LivingController
+              surface="treasure" dark={false} dev={false} dice={dicePool}
+              multiplier={effectiveMultiplier} maximum={maxAvailableMultiplier} cost={effectiveDiceCost}
+              rolling={false} autoRolling={false} jackpot={false} buildReady={hasAffordableBuildStep}
+              tutorial={false} blocked={false} rollDisabled={false} multiplierDisabled canHold={false}
+              rollTitle="BACK TO ISLAND" regenLabel="Return without rolling" rollHint="Return to your island. No dice spent."
+              concordLabel={concordEntryButtonState.ariaLabel} concordTitle={concordEntryButtonState.label}
+              onRoll={()=>setShowVaultIslandCollection(false)}
+              onHoldStart={()=>{}} onHoldEnd={()=>{}} onHoldCancel={()=>{}} onStopAuto={stopAutoRoll} onMultiplier={()=>{}}
+              onShop={()=>{setShowVaultIslandCollection(false);openControllerShop('treasure');}}
+              onBuild={()=>{setShowVaultIslandCollection(false);openBuildPanelFromFooter();}}
+              onCreatures={()=>{setShowVaultIslandCollection(false);openSanctuaryPanel();}}
+              onConcord={()=>{setShowVaultIslandCollection(false);handleConcordEntryClick();}}
+              fallback={<button type="button" onClick={()=>setShowVaultIslandCollection(false)}>Back to island</button>}
+            />}
             unlockedTreasureIds={vaultIslandCollection.unlockedTreasureIds}
             collectionEntries={vaultIslandCollection.entries}
             holdingsValue={runtimeState.essence}

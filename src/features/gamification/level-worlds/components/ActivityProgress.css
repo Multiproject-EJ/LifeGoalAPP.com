@@ -1,0 +1,17 @@
+.activity-progress { display: grid; gap: 7px; margin: 12px 0 18px; padding: 14px; border: 1px solid #87bdd340; border-radius: 14px; background: #417f9610; }
+.activity-progress__label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: .85rem; }
+.activity-progress__label span { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.activity-progress progress { display: block; width: 100%; height: 8px; appearance: none; border: 0; overflow: hidden; border-radius: 8px; background: #74879a30; accent-color: #329fc2; }
+.activity-progress progress::-webkit-progress-bar { background: #74879a30; border-radius: 8px; }
+.activity-progress progress::-webkit-progress-value { background: #329fc2; border-radius: 8px; }
+.activity-progress progress::-moz-progress-bar { background: #329fc2; }
+.activity-progress .activity-progress__build { accent-color: #bd9650; }
+.activity-progress .activity-progress__build::-webkit-progress-value { background: #bd9650; }
+.activity-progress .activity-progress__build::-moz-progress-bar { background: #bd9650; }
+.activity-progress__reward { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 3px; padding: 9px 11px; border: 1px solid #d7a94b66; border-radius: 11px; background: linear-gradient(100deg, #d7a94b14, #56bde916); font-size: .82rem; }
+.activity-progress__reward span { white-space: nowrap; font-weight: 800; color: #d2a240; }
+.activity-progress__reward[data-status='earned'] { border-color: #50d99b80; box-shadow: 0 0 16px #50d99b20; }
+.activity-progress__reward[data-status='earned'] span { color: #32c88b; }
+.activity-progress__reward[data-status='legacy-complete'] { border-color: #8396a744; background: #74879a10; }
+.activity-progress__reward[data-status='legacy-complete'] span { color: inherit; opacity: .75; }
+.activity-progress small { opacity: .8; line-height: 1.4; }

@@ -1,0 +1,9 @@
+.egg-card-stack { position: fixed; inset: 0; z-index: 9900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; color: #e7f8ff; background: radial-gradient(ellipse at center, #234c63, #07121ef5 75%); overflow: auto; }
+.egg-card-stack p { margin: 0; text-align: center; font-size: .9rem; }
+.egg-card-stack__cards { position: relative; width: min(320px, 78vw, 46dvh); touch-action: none; perspective: 1000px; }
+.egg-card-stack__front { position: relative; transition: transform 260ms ease-in, opacity 260ms ease-in; }
+.egg-card-stack__back { position: absolute; inset: 0; border: 1px solid #b9e7ff99; border-radius: 20px; background: linear-gradient(140deg, #53728b, #101f37); transform: translate(8px, 9px) rotate(3deg); box-shadow: 0 16px 45px #0008; }
+.egg-card-stack__cards.is-leaving .egg-card-stack__front { transform: translateY(-65vh) rotate(-5deg); opacity: 0; }
+.egg-card-stack button { border: 1px solid #a0defe99; border-radius: 999px; padding: 12px 28px; background: #234960; color: white; font-weight: 700; min-height: 44px; }
+.egg-card-stack button:focus-visible { outline: 3px solid #91dcff; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .egg-card-stack__front { transition: none; } }

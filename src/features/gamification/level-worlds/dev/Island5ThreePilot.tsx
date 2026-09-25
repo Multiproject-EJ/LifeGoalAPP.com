@@ -14,6 +14,8 @@ import './Island19WonderRide.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
 import { createWonderRideCameraFilter } from './island19WonderRideCamera';
 import * as THREE from 'three';
+import { choosePawnCamera, shortestPawnAngle, pawnSightBlocked, completedPawnHops, type PawnObstacle, type PawnPoint } from './islandPawnPresentation';
+import { createIslandPawnTileTrail } from './islandPawnTileTrail';
 import { resolveIsland18CompassCeremonyCamera } from './island18CompassCeremonyCamera';
 import { JUNGLE_COMPASS_CEREMONY_DURATION_MS, JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS } from '../services/islandRunJungleMissionPresentation';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -429,6 +431,7 @@ interface Island5ThreePilotProps {
   moonwellThermalPresentation?: MoonwellThermalPresentation;
   onMoonwellThermalPhaseChange?: (phase: string) => void;
   onMoonwellThermalComplete?: () => void;
+  onMissionPresentationActiveChange?: (active: boolean) => void;
   celestialRedockingPresentation?: Island2CelestialRedockingPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
   sunkenSandsTreasurePresentation?: Island12SunkenSandsTreasurePresentation;
@@ -3606,6 +3609,7 @@ export default function Island5ThreePilot({
   moonwellThermalPresentation = { heated: false, running: false, sequence: 0 },
   onMoonwellThermalPhaseChange,
   onMoonwellThermalComplete,
+  onMissionPresentationActiveChange,
   celestialRedockingPresentation = { completedRolls: 20, targetRolls: 20, dockedPlatformCount: 4 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
   sunkenSandsTreasurePresentation = { revealProgress: 1, ready: true, claimed: false },
@@ -3796,6 +3800,9 @@ export default function Island5ThreePilot({
   const [rendererRetryVersion, setRendererRetryVersion] = useState(0);
   const [assemblyAssetsReady, setAssemblyAssetsReady] = useState(areIsland001V2AssetsReady);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const missionPresentationCallbackRef = useRef(onMissionPresentationActiveChange);
+  missionPresentationCallbackRef.current = onMissionPresentationActiveChange;
+  const missionPresentationActiveRef = useRef(false);
   const landmarkProgressRef = useRef(landmarkProgress);
   landmarkProgressRef.current = landmarkProgress;
   const selectedLandmarkIdRef = useRef<string | undefined>(undefined);
@@ -5477,9 +5484,9 @@ export default function Island5ThreePilot({
           ]
         : isFrostmoonHaven
           ? [
-              new THREE.MeshStandardMaterial({ color: 0xe8f2fc, roughness: 0.72 }),
-              new THREE.MeshStandardMaterial({ color: 0x536bb8, roughness: 0.52, metalness: 0.07 }),
-              new THREE.MeshStandardMaterial({ color: 0x9a72e2, roughness: 0.36, metalness: 0.22, emissive: 0x46257d, emissiveIntensity: 0.18 }),
+              new THREE.MeshStandardMaterial({ color: 0xe8f2ef, roughness: 0.72 }),
+              new THREE.MeshStandardMaterial({ color: 0x668e9d, roughness: 0.56, metalness: 0.07 }),
+              new THREE.MeshStandardMaterial({ color: 0xd9c18b, roughness: 0.4, metalness: 0.28, emissive: 0x725328, emissiveIntensity: 0.1 }),
             ]
           : isDriftwoodIsle
             ? [
@@ -7034,6 +7041,31 @@ export default function Island5ThreePilot({
 
     const timer = new THREE.Timer();
     timer.connect(document);
+    const pawnTileTrail = createIslandPawnTileTrail(scene, isReducedMotion);
+    let pawnCameraHeading = 0;
+    let pawnCameraChoice = { heading: 0, height: 8.4, blocked: 0 };
+    let pawnCameraHop = -1;
+    let pawnCameraObstacles: PawnObstacle[] = [];
+    let pawnCameraMeshes: THREE.Mesh[][] = [];
+    const pawnVisibilityRay = new THREE.Raycaster();
+    const pawnRayEye = new THREE.Vector3(), pawnRayDirection = new THREE.Vector3();
+    const exactPawnBlocked = (eye: PawnPoint, target: PawnPoint) => {
+      pawnRayEye.set(...eye); pawnRayDirection.set(...target).sub(pawnRayEye);
+      pawnVisibilityRay.set(pawnRayEye,pawnRayDirection.clone().normalize());
+      pawnVisibilityRay.near=0.1; pawnVisibilityRay.far=Math.max(0.1,pawnRayDirection.length()-0.3);
+      for(let i=0;i<pawnCameraMeshes.length;i++) {
+        if(!pawnSightBlocked(eye,target,pawnCameraObstacles[i]))continue;
+        const hits=pawnVisibilityRay.intersectObjects(pawnCameraMeshes[i],false);
+        if(hits.some(hit=>{
+          let object: THREE.Object3D|null=hit.object;
+          while(object){if(!object.visible)return false;object=object.parent;}
+          if(!(hit.object instanceof THREE.Mesh))return false;
+          const materials=Array.isArray(hit.object.material)?hit.object.material:[hit.object.material];
+          return materials.some(material=>(material.userData.islandOriginalDepthWrite??material.depthWrite) && (material.userData.islandOriginalOpacity??material.opacity)>0.4);
+        }))return 1;
+      }
+      return 0;
+    };
     const bossRootForOcclusion = isCrystalGlacier ? undefined : landmarkRootsById.get('boss');
     const bossOcclusionBounds = bossRootForOcclusion
       ? new THREE.Box3().setFromObject(bossRootForOcclusion)
@@ -7123,6 +7155,7 @@ export default function Island5ThreePilot({
       startsAt: number;
       fromPosition: readonly [number, number, number];
       lastTriggeredHopIndex: number;
+      lastTrailHopIndex: number;
       finalImpactTriggered: boolean;
     } | null = null;
     let idleOverviewAt: number | null = null;
@@ -7292,6 +7325,12 @@ export default function Island5ThreePilot({
     setCameraAuthoringModeRef.current = setCameraAuthoringMode;
     setCameraAuthoringMode(cameraAuthoringEnabledRef.current);
 
+    const markPawnTrail = (tileIndex:number, startedAt:number, landing:boolean) => {
+      const trailPoint = getIsland5TokenGroundPosition(tileTransforms, tileIndex);
+      const trailTile = tileMeshes.get(tileIndex);
+      const surfaceY = (trailTile?.baseY ?? trailPoint[1]) + (tileGeometry.boundingBox?.max.y ?? 0.12);
+      pawnTileTrail.mark(tileIndex, [trailPoint[0], surfaceY + 0.035, trailPoint[2]], startedAt, landing);
+    };
     const triggerTileImpact = (tileIndex: number, strength: number, startedAt: number) => {
       if (isReducedMotion) return;
       const existing = activeTileImpacts.get(tileIndex);
@@ -7307,6 +7346,7 @@ export default function Island5ThreePilot({
       startedAt: number,
     ) => {
       const strength = impact === 'special' ? 1.35 : impact === 'hazard' ? 1.2 : 0.9;
+      markPawnTrail(tileIndex,startedAt,true);
       triggerTileImpact(tileIndex, strength, startedAt);
       if (!isReducedMotion) {
         activeTokenSettle = {
@@ -9911,6 +9951,33 @@ export default function Island5ThreePilot({
 
       const pendingTokenMotion = tokenMotionRequestRef.current;
       if (pendingTokenMotion && pendingTokenMotion.id !== consumedTokenMotionRequestId) {
+        pawnCameraHeading = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+        pawnCameraChoice = { heading: pawnCameraHeading, height: 8.4, blocked: 0 };
+        pawnCameraHop = -1;
+        // Rebuild only at roll start: landmarks can grow between rolls.
+        pawnCameraObstacles = [];
+        pawnCameraMeshes = [];
+        if (islandNumber >= 1 && islandNumber <= 20) {
+          landmarkRootsById.forEach(root => {
+            if (!root.visible) return;
+            const bounds = new THREE.Box3().setFromObject(root);
+            if (bounds.isEmpty() || bounds.max.y - bounds.min.y < 1.3) return;
+            pawnCameraObstacles.push({ min: bounds.min.toArray() as [number, number, number], max: bounds.max.toArray() as [number, number, number] });
+            const meshes:THREE.Mesh[]=[];
+            root.traverseVisible(object=>{if(object instanceof THREE.Mesh)meshes.push(object);});
+            pawnCameraMeshes.push(meshes);
+          });
+        }
+        if (import.meta.env.DEV && window.location.pathname === '/work/controller-release-check/pawn.html') {
+          let auditHeading = pawnCameraHeading;
+          canvas.dataset.pawnCameraAudit = JSON.stringify(tileTransforms.map(tile => {
+            const point = getIsland5TokenGroundPosition(tileTransforms, tile.index);
+            const choice = choosePawnCamera([point[0], point[1] + 0.5, point[2]], auditHeading, pawnCameraObstacles,exactPawnBlocked);
+            const turn = Math.abs(shortestPawnAngle(auditHeading, choice.heading));
+            auditHeading = choice.heading;
+            return { tile: tile.index, blocked: choice.blocked, turn: Number(turn.toFixed(2)), height: choice.height };
+          }));
+        }
         consumedTokenMotionRequestId = pendingTokenMotion.id;
         idleOverviewAt = null;
         ambientCameraEligibleAt = now + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;
@@ -9926,6 +9993,7 @@ export default function Island5ThreePilot({
           startsAt: pendingTokenMotion.requestedAt + pendingTokenMotion.holdMs,
           fromPosition: [playerPiece.root.position.x, playerPiece.root.position.y, playerPiece.root.position.z],
           lastTriggeredHopIndex: -1,
+          lastTrailHopIndex: -1,
           finalImpactTriggered: false,
         };
         logIslandRunEntryDebug('island5_3d_hop_started', {
@@ -9954,6 +10022,12 @@ export default function Island5ThreePilot({
         const totalMotionMs = request.durationsMs.reduce((total, duration) => total + duration, 0);
         const motionElapsedMs = isReducedMotion ? totalMotionMs : Math.max(0, now - startsAt);
         const finalTileIndex = request.sequence[request.sequence.length - 1] ?? tokenIndexRef.current;
+        if (!isReducedMotion) {
+          for (const hop of completedPawnHops(request.durationsMs,motionElapsedMs,activeTokenMotion.lastTrailHopIndex)) {
+            markPawnTrail(request.sequence[hop.index],startsAt+hop.at,hop.index===request.sequence.length-1);
+            activeTokenMotion.lastTrailHopIndex=hop.index;
+          }
+        }
 
         if (now < startsAt && !isReducedMotion) {
           const anticipationProgress = Math.max(0, Math.min(1, (now - request.requestedAt) / request.holdMs));
@@ -10066,12 +10140,30 @@ export default function Island5ThreePilot({
           playerPiece.shadow.scale.setScalar(1 - airborne * 0.38);
           playerPiece.shadowMaterial.opacity = 0.32 - airborne * 0.18;
 
-          const desiredTarget = new THREE.Vector3(tokenPosition[0], 0.72, tokenPosition[2]);
-          const desiredCamera = desiredTarget.clone().add(new THREE.Vector3(...ISLAND_3D_TOKEN_FOLLOW_OFFSET));
+          const destinationPosition = getIsland5TokenGroundPosition(tileTransforms, destinationTileIndex);
+          const desiredTarget = new THREE.Vector3(tokenPosition[0], destinationPosition[1] + 0.5, tokenPosition[2]);
           const followAlpha = 1 - Math.exp(-frameDeltaSeconds * 6.4);
-          controls.target.lerp(desiredTarget, followAlpha);
-          camera.position.lerp(desiredCamera, followAlpha);
-          camera.lookAt(controls.target);
+          if (!isReducedMotion && !interactionPausedRef.current && !constructionPresentationRef.current?.active) {
+            // Palace exterior is not represented by the room landmark roots.
+            // Keep its previous follow path until a route-specific cutaway is authored.
+            if (islandNumber >= 1 && islandNumber <= 20 && !isCrystalGlacier) {
+              if (pawnCameraHop !== hopIndex) {
+                pawnCameraHop = hopIndex;
+                pawnCameraChoice = choosePawnCamera([destinationPosition[0], destinationPosition[1] + 0.5, destinationPosition[2]], pawnCameraChoice.heading, pawnCameraObstacles,exactPawnBlocked);
+                canvas.dataset.pawnCameraBlockedCandidates = String(pawnCameraChoice.blocked);
+              }
+              // Polar interpolation moves around scenery, not through its centre.
+              const delta = shortestPawnAngle(pawnCameraHeading, pawnCameraChoice.heading);
+              pawnCameraHeading += Math.max(-frameDeltaSeconds * 1.3, Math.min(frameDeltaSeconds * 1.3, delta));
+              controls.target.lerp(desiredTarget, followAlpha);
+              const radius = THREE.MathUtils.lerp(Math.hypot(camera.position.x - controls.target.x, camera.position.z - controls.target.z), 10.8, followAlpha);
+              camera.position.set(controls.target.x + Math.sin(pawnCameraHeading) * radius, THREE.MathUtils.lerp(camera.position.y, controls.target.y + pawnCameraChoice.height, followAlpha), controls.target.z + Math.cos(pawnCameraHeading) * radius);
+            } else {
+              controls.target.lerp(desiredTarget, followAlpha);
+              camera.position.lerp(desiredTarget.clone().add(new THREE.Vector3(...ISLAND_3D_TOKEN_FOLLOW_OFFSET)), followAlpha);
+            }
+            camera.lookAt(controls.target);
+          }
         }
       }
 
@@ -10296,6 +10388,23 @@ export default function Island5ThreePilot({
         ? livingAmbience.getSignatureMissionCameraPose?.()
         : null;
       livingAmbience.setSignatureMissionCinematicActive?.(Boolean(signatureMissionCameraPose));
+      // Report actual camera/animation ownership, never a guessed UI duration.
+      // Do not count a persistent inspection camera as an active cinematic.
+      const missionPresentationActive = Boolean(cactusCanyonBlastCameraPose
+        || jungleBuildupCameraPose || jungleZenithCameraPose || marinaArrivalCameraPose
+        || activeWonderRide || activeTrainRide
+        || stagedRestorationRuntime?.root.userData.missionPresentationActive
+        || firstLightAssemblyCrater?.root.userData.missionPresentationActive
+        || livingAmbience.root.userData.missionPresentationActive
+        || (isFishermansVillage && fishermansFishingPresentationRef.current.fishingInteraction?.active)
+        || (isFishermansVillage && fishermansFishingPresentationRef.current.fishCaughtKg >= 78
+          && Math.max(0, fishermansFishingPresentationRef.current.previewElapsedSeconds ?? 0) < 23.5)
+        || (isRootheartCanopyCity && Number.isFinite(rootheartConstructionStartedAtMs)
+          && now - rootheartConstructionStartedAtMs < (rootheartPowerworksPresentationRef.current.buildStage >= 3 ? 5200 : 3200)));
+      if (missionPresentationActive !== missionPresentationActiveRef.current) {
+        missionPresentationActiveRef.current = missionPresentationActive;
+        missionPresentationCallbackRef.current?.(missionPresentationActive);
+      }
       if (
         signatureMissionCameraPose
         && !transition
@@ -10462,6 +10571,7 @@ export default function Island5ThreePilot({
       }
 
       const bossRoot = bossRootForOcclusion;
+      pawnTileTrail.update(now, playerPiece.root.visible);
       if (bossRoot) {
         const focusedOuterLandmark = activeInspectionPreset === 'hatchery'
           || activeInspectionPreset === 'habit'
@@ -10478,9 +10588,12 @@ export default function Island5ThreePilot({
         const focusRoot = focusedOuterLandmark
           ? landmarkRootsById.get(activeInspectionPreset as Island5LandmarkId)
           : undefined;
-        const shouldFadeBoss = activeInspectionPreset === 'frostwell' || (Boolean(focusRoot) && shouldFadeCentralLandmarkForCamera({
+        const pawnNeedsClearView = Boolean(activeTokenMotion || activeTokenSettle);
+        const shouldFadeBoss = activeInspectionPreset === 'frostwell' || ((Boolean(focusRoot) || pawnNeedsClearView) && shouldFadeCentralLandmarkForCamera({
           cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
-          focusPosition: [focusRoot!.position.x, focusRoot!.position.y + 1.2, focusRoot!.position.z],
+          focusPosition: pawnNeedsClearView
+            ? [playerPiece.root.position.x, playerPiece.root.position.y + 0.5, playerPiece.root.position.z]
+            : [focusRoot!.position.x, focusRoot!.position.y + 1.2, focusRoot!.position.z],
           centralPosition: bossOcclusionBounds && bossOcclusionCenter
             ? [bossOcclusionCenter.x, bossOcclusionBounds.min.y, bossOcclusionCenter.z]
             : undefined,
@@ -10794,6 +10907,8 @@ export default function Island5ThreePilot({
     animationFrame = window.requestAnimationFrame(animate);
 
     return () => {
+      missionPresentationActiveRef.current = false;
+      missionPresentationCallbackRef.current?.(false);
       if (activeTour) {
         setTourStatus('idle');
       }
@@ -10806,6 +10921,7 @@ export default function Island5ThreePilot({
       firstArrival?.dispose();
       livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
+      pawnTileTrail.dispose();
       moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;
       resizeObserver.disconnect();

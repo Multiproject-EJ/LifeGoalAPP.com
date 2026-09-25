@@ -24,7 +24,9 @@ export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessCon
   const vault = isVaultIslandCollectionUnlocked(ledger);
   return {
     gradual,
-    caretakerBoard: validIsland && island >= 8,
+    // The caretaker is a story actor, not a persistent board NPC. Island008's
+    // Compass handover owns his future ceremony-only presentation separately.
+    caretakerBoard: false,
     arenaOrientation: gradual && island === 1,
     welcomeCheckIn: validIsland && island < GRADUAL_EGG_INTRODUCTION_ISLAND,
     // Presentation, progress accumulation and claims share this policy.

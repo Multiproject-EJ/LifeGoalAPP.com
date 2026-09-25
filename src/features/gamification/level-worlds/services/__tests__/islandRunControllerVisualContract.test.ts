@@ -98,9 +98,9 @@ export const islandRunControllerVisualContractTests: TestCase[] = [
       const islandCss = readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
 
       assert(
-        boardSource.includes('if (isAtMaxAvailableMultiplier && multiplierMaxJumpLockRef.current)')
+        boardSource.includes('if (isAtMaxAvailableMultiplier && multiplierMaxTapGuard.current.protect(performance.now(), multiplierMaxJumpLockRef.current))')
           && boardSource.includes('emitMultiplierMaxBurst();'),
-        'Clicks during the yellow max lock must emit feedback without wrapping',
+        'Protected rapid MAX taps and the yellow jump lock must emit feedback without wrapping',
       );
       assert(
         boardSource.includes('multiplierMaxBursts.map((burst)')

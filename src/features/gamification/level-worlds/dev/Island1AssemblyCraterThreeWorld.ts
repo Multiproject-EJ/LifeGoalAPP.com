@@ -993,6 +993,11 @@ export function createIsland1AssemblyCraterRuntime(
     speakingLight.rotation.y = elapsed * 0.45;
     const blastAge = elapsed - blastStartedAt;
     const activeBlast = blastAge >= 0 && blastAge < ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS;
+    root.userData.missionPresentationActive = activeBlast
+      || (Number.isFinite(assemblyBuildStartedAt) && elapsed >= assemblyBuildStartedAt
+        && elapsed < assemblyBuildStartedAt + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS)
+      || (Number.isFinite(marinaStartedAt) && elapsed >= marinaStartedAt
+        && elapsed < marinaStartedAt + ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS);
     waterImpacts.visible = activeBlast && currentPresentation.chargesDetonated === 8;
     if (waterImpacts.visible) {
       const wave = THREE.MathUtils.clamp((blastAge / ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS - 0.68) / 0.32, 0, 1);

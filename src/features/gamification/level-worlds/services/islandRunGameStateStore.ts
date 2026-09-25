@@ -441,6 +441,8 @@ export interface IslandRunGameStateRecord {
     accessUnlocked?: boolean;
     postponedAtMs?: number | null;
     completedAtMs?: number;
+    /** Visit-scoped receipt for the activity + Level3 completion prize. */
+    completionDiceAwarded?: boolean;
   }>;
   stopBuildStateByIndex: Array<{
     requiredEssence: number;
@@ -805,7 +807,7 @@ function getDefaultStopBuildStateByIndex() {
   }));
 }
 
-function toStopStateEntry(value: unknown, index = 0): { objectiveComplete: boolean; buildComplete: boolean; accessUnlocked: boolean; postponedAtMs?: number | null; completedAtMs?: number } {
+function toStopStateEntry(value: unknown, index = 0): IslandRunGameStateRecord['stopStatesByIndex'][number] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return { objectiveComplete: false, buildComplete: false, accessUnlocked: index === 0 };
   }
@@ -826,6 +828,7 @@ function toStopStateEntry(value: unknown, index = 0): { objectiveComplete: boole
   return {
     objectiveComplete,
     buildComplete: candidate.buildComplete === true,
+    ...(candidate.completionDiceAwarded === true ? { completionDiceAwarded: true } : {}),
     accessUnlocked: index === 0 || objectiveComplete || candidate.accessUnlocked === true,
     ...(postponedAtMs !== undefined && !objectiveComplete ? { postponedAtMs } : {}),
     ...(typeof completedAtMs === 'number' ? { completedAtMs } : {}),
@@ -2553,6 +2556,16 @@ export function mergeRecordForConflict(options: {
   local: IslandRunGameStateRecord;
 }): IslandRunGameStateRecord {
   const { remote, local } = options;
+  const sameLandmarkVisit = remote.currentIslandNumber === local.currentIslandNumber
+    && remote.cycleIndex === local.cycleIndex
+    && remote.islandStartedAtMs === local.islandStartedAtMs;
+  const mergedStopStatesByIndex = sameLandmarkVisit
+    ? local.stopStatesByIndex.map((entry, index) => (
+        remote.stopStatesByIndex[index]?.completionDiceAwarded === true
+          ? { ...entry, completionDiceAwarded: true }
+          : entry
+      ))
+    : local.stopStatesByIndex;
   const mergedPerIslandEggs = mergePerIslandEggsForConflict(remote.perIslandEggs, local.perIslandEggs);
   const mergedCompletedStopsByIsland = {
     ...remote.completedStopsByIsland,
@@ -2635,6 +2648,7 @@ export function mergeRecordForConflict(options: {
     ...remote,
     ...local,
     runtimeVersion: remote.runtimeVersion,
+    stopStatesByIndex: mergedStopStatesByIndex,
     welcomePackClaimed: local.welcomePackClaimed || remote.welcomePackClaimed,
     welcomePackRewardBundleClaimed: local.welcomePackRewardBundleClaimed || remote.welcomePackRewardBundleClaimed,
     narrativeSeenState: mergeIslandNarrativeSeenState(remote.narrativeSeenState, local.narrativeSeenState),

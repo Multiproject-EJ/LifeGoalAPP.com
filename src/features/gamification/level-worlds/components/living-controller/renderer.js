@@ -2,6 +2,7 @@ import {drawJackpotButton} from './jackpot-effects.js';
 import * as THREE from 'three';
 import {createMultiplierHologram,PILL} from './multiplier-hologram.js';
 import {controllerFraming} from './framing.js';
+import {createPersonalityClock,personalityPose} from './personality.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {SVGLoader} from 'three/addons/loaders/SVGLoader.js';
 import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -85,14 +86,7 @@ function drawButton(b,t){
    b.mat.roughness=jackpot?.28:glass?.16:(themes[theme].panelRoughness??.4);b.mat.metalness=jackpot?.65:glass?.04:(themes[theme].panelMetalness??.15);b.mat.clearcoat=glass?.85:(themes[theme].panelClearcoat??.15);
    c.shadowColor=jackpot?'#ffbf36':themes[theme].light;c.shadowBlur=0;c.fillStyle='#fff3c2';
    if(jackpot)jackpotEmblem(c,b,t);
-   else if(b.id==='build'&&buildAffordable){
-     const fade=reduced?1:Math.min(1,Math.max(0,(t-buildCueStarted)/.45));
-     c.globalAlpha=1-fade;drawEmblem(c,b.id,themes[theme].iconInk||ink,false,themes[theme].iconGlow);c.globalAlpha=fade;
-     icon(c,'build',256,160,68,themes[theme].iconInk||ink);
-     c.textAlign='center';c.textBaseline='middle';c.fillStyle=themes[theme].iconInk||ink;c.shadowColor=themes[theme].readyLight||'#ffc869';c.shadowBlur=reduced?0:12;
-     c.font='800 100px system-ui';c.fillText('BUILD',256,290,470);
-     c.font='600 32px system-ui';c.fillText('READY',256,367);c.globalAlpha=1;
-   }else if(b.id==='concord'){
+   else if(b.id==='concord'){
      // A crisp open-book mark for the story device, not a reduced leaf glyph.
      c.save();c.strokeStyle=themes[theme].iconInk||ink;c.lineWidth=9;c.lineJoin='round';
      c.beginPath();c.moveTo(256,220);c.quadraticCurveTo(198,184,130,196);
@@ -142,13 +136,13 @@ function drawButton(b,t){
  if(state.phase==='rolling'){
   c.save();c.translate(800,270);c.rotate(reduced?0:t*5);c.shadowColor='#2ebeff';c.shadowBlur=38;icon(c,'dice',-32,-15,72,'#a5efff');icon(c,'dice',35,24,72,'#a5efff');c.restore();
  }
- c.font='500 30px system-ui';c.fillText(autoRoll.running?'AUTO ON · RELEASE TO STOP':cue.kind==='insufficient'?'CHANGE × ABOVE TO KEEP ROLLING':cue.kind==='empty'?'DICE RECHARGE':'HOLD TO AUTO-ROLL',512,452);
+ c.font='500 30px system-ui';c.fillText(snapshot.navigationOnly?'SWIPE DOWN TO TUCK':autoRoll.running?'AUTO ON · RELEASE TO STOP':cue.kind==='insufficient'?'CHANGE × ABOVE TO KEEP ROLLING':cue.kind==='empty'?'DICE RECHARGE':'HOLD TO AUTO-ROLL',512,452);
  const age=t-b.press;if(age<.7){const flash=c.createRadialGradient(512,256,30,512,256,620);flash.addColorStop(0,'#55cfff00');flash.addColorStop(.75,'rgba(74,192,255,'+(.24*(1-age/.7))+')');flash.addColorStop(1,'#55cfff00');c.fillStyle=flash;c.fillRect(0,0,W,H);}
 
  c.shadowBlur=0;c.shadowOffsetY=0;b.tex.needsUpdate=true;
 }
 
- function placeHit(el,x,y,w,h){const item=buttons.find(b=>b.hit===el),outline=item&&buttonOutlines.get(item.id);el.hidden=camera.position.z<1;if(outline){const points=outline.map(p=>new THREE.Vector3(p.x,p.y,surface(p.x,p.y)+.08).project(camera)).map(p=>[(p.x+1)*.5*host.clientWidth,(1-p.y)*.5*host.clientHeight]);const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;el.style.left=(left+width/2)+'px';el.style.top=(top+height/2)+'px';el.style.width=width+'px';el.style.height=height+'px';el.style.clipPath='polygon('+points.map(p=>`${(p[0]-left)/width*100}% ${(p[1]-top)/height*100}%`).join(',')+')';return;}const v=new THREE.Vector3(x,y,surface(x,y)+.12).project(camera),a=new THREE.Vector3(x-w/2,y-h/2,surface(x,y)+.12).project(camera),b=new THREE.Vector3(x+w/2,y+h/2,surface(x,y)+.12).project(camera);el.style.left=(v.x+1)*.5*host.clientWidth+'px';el.style.top=(1-v.y)*.5*host.clientHeight+'px';el.style.width=Math.max(36,Math.abs(b.x-a.x)*.5*host.clientWidth)+'px';el.style.height=Math.max(32,Math.abs(b.y-a.y)*.5*host.clientHeight)+'px';}
+ function placeHit(el,x,y,w,h){const item=buttons.find(b=>b.hit===el),outline=item&&buttonOutlines.get(item.id);el.hidden=camera.position.z<1;if(outline){const points=outline.map(p=>new THREE.Vector3(p.x,p.y,surface(p.x,p.y)+.08).applyMatrix4(body.matrixWorld).project(camera)).map(p=>[(p.x+1)*.5*host.clientWidth,(1-p.y)*.5*host.clientHeight]);const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;el.style.left=(left+width/2)+'px';el.style.top=(top+height/2)+'px';el.style.width=width+'px';el.style.height=height+'px';el.style.clipPath='polygon('+points.map(p=>`${(p[0]-left)/width*100}% ${(p[1]-top)/height*100}%`).join(',')+')';return;}const v=new THREE.Vector3(x,y,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),a=new THREE.Vector3(x-w/2,y-h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),b=new THREE.Vector3(x+w/2,y+h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera);el.style.left=(v.x+1)*.5*host.clientWidth+'px';el.style.top=(1-v.y)*.5*host.clientHeight+'px';el.style.width=Math.max(36,Math.abs(b.x-a.x)*.5*host.clientWidth)+'px';el.style.height=Math.max(32,Math.abs(b.y-a.y)*.5*host.clientHeight)+'px';}
 
  const paintUniforms={paintTime:{value:0},paintEnergy:{value:0},paintPower:{value:0},paintJackpot:{value:0}};
 // Seasonal system is removable and separate from body geometry.
@@ -159,12 +153,29 @@ for(const side of [-1,1]){
  for(let j=0;j<3;j++){const berry=new THREE.Mesh(new THREE.SphereGeometry(.035,12,10),new THREE.MeshPhysicalMaterial({color:'#a60f22',clearcoat:1,roughness:.25}));berry.position.set((j-1)*.05,j===1?-.035:0,.04);sprig.add(berry);}
 }
  const rollLight=new THREE.PointLight('#42bfff',0,4,2);rollLight.position.set(0,.9,1.4);scene.add(rollLight);
+ const body=new THREE.Group();body.name='controller-personality';scene.add(body);body.add(shell,group,seasonal,rollLight);
+ const personality=createPersonalityClock();let pose=personalityPose({kind:'rest',age:0}),landed=false;
+ const hat=new THREE.Group();hat.visible=false;body.add(hat);
+ const hatMaterial=new THREE.MeshStandardMaterial({color:'#d79742',roughness:.58,metalness:.2});
+ const brim=new THREE.Mesh(new THREE.SphereGeometry(1,32,12),hatMaterial);brim.scale.set(.83,.06,.32);hat.add(brim);
+ const crown=new THREE.Mesh(new THREE.CylinderGeometry(.30,.42,.30,32),hatMaterial);crown.position.y=.12;hat.add(crown);hat.position.set(0,1.98,.32);
+ const band=new THREE.Mesh(new THREE.CylinderGeometry(.40,.42,.06,32),new THREE.MeshStandardMaterial({color:'#613b27',roughness:.65}));band.position.y=.01;hat.add(band);
+ const dust=new THREE.Group();body.add(dust);
+ for(let i=0;i<32;i++){const particle=new THREE.Mesh(new THREE.OctahedronGeometry(.018+i%3*.008),new THREE.MeshBasicMaterial({color:i%3?'#9eeaff':'#ffe7a2',transparent:true,opacity:0,toneMapped:false,depthWrite:false}));dust.add(particle);}
  let lastTheme='',lastJackpot=false,lastRolling=false,previous=0;
  function applyTheme(){chassis.setTheme(themes[theme]);shell.traverse(o=>{if(!o.isMesh)return;for(const m of (Array.isArray(o.material)?o.material:[o.material]))m.dispose();o.material=createPaintMaterial(THREE,themes[theme],paintUniforms);});}
  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;const frame=controllerFraming(camera.aspect);camera.position.set(0,frame.y,frame.z);camera.lookAt(0,frame.y,0);camera.updateProjectionMatrix();}
  observer=new ResizeObserver(resize);observer.observe(host);resize();
- function tick(ms){if(disposed)return;frame=requestAnimationFrame(tick);if(ms-previous<33)return;const dt=Math.min(.1,(ms-previous)/1000);previous=ms;snapshot=getSnapshot();if(document.hidden||snapshot.hidden)return;
+ function tick(ms){if(disposed)return;frame=requestAnimationFrame(tick);if(ms-previous<33)return;const dt=Math.min(.1,(ms-previous)/1000);previous=ms;snapshot=getSnapshot();if(document.hidden||snapshot.hidden){personality(ms/1000,{...snapshot,hidden:true});return;}
  now=ms/1000;theme=snapshot.theme;reduced=snapshot.reduced;
+ const performance=personality(now,snapshot);pose=personalityPose(performance);
+ host.dataset.controllerMotion=performance.kind;
+ body.position.set(pose.x,pose.y,0);body.rotation.set(pose.rx,pose.ry,pose.rz);body.scale.setScalar(pose.scale);body.updateMatrixWorld(true);
+ if(pose.burst>0&&!landed){landed=true;snapshot.onArrivalImpact?.();}
+ if(performance.kind!=='arrival')landed=false;
+ hat.visible=pose.cowboy;
+ dust.visible=pose.burst>0;
+ dust.children.forEach((p,i)=>{const a=i*2.39996,travel=1-pose.burst;p.position.set(Math.cos(a)*(1+travel*1.4),-.9+Math.sin(a)*travel*.5,.7+travel*.2);p.material.opacity=pose.burst*.8;p.scale.setScalar(.5+pose.burst);});
  state={dice:snapshot.dice,multiplier:snapshot.multiplier,playerMax:snapshot.maximum,phase:snapshot.jackpot?'jackpot':snapshot.rolling?'rolling':snapshot.dice===0?'empty':'ready'};
  const jackpot=state.phase==='jackpot';
  if(lastTheme!==theme||lastJackpot!==jackpot){applyTheme();seasonal.visible=!!themes[theme].holiday;lastTheme=theme;lastJackpot=jackpot;}
@@ -177,7 +188,7 @@ for(const side of [-1,1]){
  shell.position.x=group.position.x=jackpot&&!reduced?Math.sin(now*45)*.014:0;
  paintUniforms.paintTime.value=reduced?0:now;paintUniforms.paintPower.value=snapshot.dice>0?power:0;paintUniforms.paintEnergy.value=snapshot.dice>0?power*level:0;paintUniforms.paintJackpot.value=jackpot?1:0;
  for(const [i,b] of buttons.entries()){
- const age=now-b.press,pressed=b.hit.matches(':active');b.hover=b.hit.matches(':hover,:focus-visible');
+ const age=now-b.press,pressed=b.hit?.matches(':active')??false;b.hover=b.hit?.matches(':hover,:focus-visible')??false;
  b.root.position.z=reduced?0:pressed?-.025:age<.4?-.025*Math.sin(Math.PI*age/.4):0;
  const ready=b.id==='build'&&buildAffordable,charge=ready?1:power;
  const tint=jackpot?'#fff0a3':ready?(themes[theme].readyLight||'#ffc56b'):themes[theme].light;
@@ -190,11 +201,28 @@ for(const side of [-1,1]){
    b.haloMat.opacity=reduced?.2:.2+.045*Math.sin(now*1.6);rollLight.intensity=0;
  }
  for(const layer of b.root.userData.neonLayers){layer.mesh.visible=theme==='dark'&&!jackpot;layer.material.opacity=layer.falloff*(.12+charge);}
- drawButton(b,now);placeHit(b.hit,b.x,b.y,b.w,b.h);
+ drawButton(b,now);
+ if(pose.cowboy){
+  if(b.id==='roll'){const c=b.ctx;c.clearRect(0,0,1024,512);c.fillStyle=themes[theme].roll[1];c.fillRect(0,0,1024,512);c.strokeStyle='#c8f8ff';c.lineWidth=14;c.lineCap='round';c.beginPath();c.arc(390,195,18,0,Math.PI*2);c.moveTo(652,195);c.arc(634,195,18,0,Math.PI*2);c.stroke();c.beginPath();c.arc(512,250,112,.18,Math.PI-.18);c.stroke();}
+  b.haloMat.opacity=.25+.12*Math.sin(now*4);
  }
- powerPill.update(snapshot,now,reduced);
- placeHit(controls.multiplier,PILL.x,PILL.y,PILL.width,.5);
+ if(pose.dark){b.glow.color.set('#183345');b.haloMat.opacity=0;for(const layer of b.root.userData.neonLayers)layer.material.opacity=0;}
+ // Dim optical artwork too, not only the edge tubes.
+ for(const child of b.root.children)if(child.material?.map===b.tex)child.material.opacity=pose.dark?.12:1;
+ if(b.hit)placeHit(b.hit,b.x,b.y,b.w,b.h);
+ }
+ powerPill.update(snapshot,now,reduced);powerPill.root.visible=!pose.dark&&!pose.cowboy;
+ if(pose.dark){paintUniforms.paintPower.value=0;paintUniforms.paintEnergy.value=0;rollLight.intensity=0;seasonal.visible=false;}
+ else seasonal.visible=!!themes[theme].holiday;
+ if(controls.multiplier)placeHit(controls.multiplier,PILL.x,PILL.y,PILL.width,.5);
+ // Suppress every optical trim during the unpowered arrival spin, including
+ // chassis accents. Restore material state immediately after this frame.
+ const dimmed=[],seenMaterials=new Set();
+ if(pose.dark)body.traverse(o=>{for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[])){
+  if(m.isMeshBasicMaterial&&!m.map&&!seenMaterials.has(m)){seenMaterials.add(m);dimmed.push([m,m.color.clone()]);m.color.set('#10202c');}
+ }});
  renderer.render(scene,camera);
+ for(const [m,color] of dimmed)m.color.copy(color);
  }
  frame=requestAnimationFrame(tick);onReady();
  }

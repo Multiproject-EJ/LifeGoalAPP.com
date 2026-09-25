@@ -8,3 +8,5 @@
   background: #102b3c;
   isolation: isolate;
 }
+.vault-island-collection-controller{position:absolute;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);z-index:30;pointer-events:none}
+.vault-island-collection-controller>.living-controller-dock{pointer-events:auto}

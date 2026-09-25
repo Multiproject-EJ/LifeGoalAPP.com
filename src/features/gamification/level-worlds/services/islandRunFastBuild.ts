@@ -1,4 +1,5 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import { settleLandmarkCompletionDice } from './islandRunLandmarkReward';
 import { resolveIslandRunRestorationDiceReward } from './islandRunRestorationReward';
 import { getEffectiveIslandNumber, resolveBuildSpendStepForTier, spendIslandRunContractV2EssenceOnStopBuild } from './islandRunContractV2EssenceBuild';
 
@@ -52,11 +53,20 @@ export function resolveIslandRunFastBuild(record: IslandRunGameStateRecord, quot
   const next = simulate(record, quote.mode, quote.stopIndex, currentQuote.discountRate);
   const restorationDiceAwarded = resolveIslandRunRestorationDiceReward(record.stopBuildStateByIndex, next.stopBuildStateByIndex);
   const diceAwarded = next.levels + restorationDiceAwarded;
+  const settlement = settleLandmarkCompletionDice(record, {
+    ...record,
+    essence: record.essence - next.cost,
+    essenceLifetimeSpent: record.essenceLifetimeSpent + next.cost,
+    stopBuildStateByIndex: next.stopBuildStateByIndex,
+    stopStatesByIndex: next.stopStatesByIndex,
+    dicePool: record.dicePool + diceAwarded,
+    runtimeVersion: record.runtimeVersion + 1,
+  });
   return {
-    constructionDiceAwarded: next.levels, restorationDiceAwarded, diceAwarded,
+    constructionDiceAwarded: next.levels,
+    restorationDiceAwarded,
+    diceAwarded: diceAwarded + settlement.diceAwarded,
     applied: true, reason: 'built' as const, diceAward: next.levels,
-    record: { ...record, essence: record.essence - next.cost, essenceLifetimeSpent: record.essenceLifetimeSpent + next.cost,
-      stopBuildStateByIndex: next.stopBuildStateByIndex, stopStatesByIndex: next.stopStatesByIndex,
-      dicePool: record.dicePool + diceAwarded, runtimeVersion: record.runtimeVersion + 1 },
+    record: settlement.record,
   };
 }

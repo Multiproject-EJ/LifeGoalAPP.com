@@ -6,6 +6,11 @@ import './LivingController.css';
 type Action = 'shop' | 'build' | 'creatures' | 'concord' | 'roll';
 export interface LivingControllerProps {
  dark:boolean; dev:boolean; dice:number; multiplier:number; maximum:number; cost:number;
+ arrivalKey?:string;
+ islandNumber?:number; preferredTheme?:string; surface?:'island'|'treasure';
+ multiplierFeedbackKey?:number;
+ onArrivalImpact?:()=>void;
+ onThemeChange?:(theme:string)=>void;
  creatureRewardReady?:boolean; rolling:boolean; autoRolling:boolean; jackpot:boolean; buildReady:boolean; tutorial:boolean;
  blocked:boolean; rollDisabled:boolean; multiplierDisabled:boolean; multiplierMaxJumping?:boolean; canHold:boolean;
  rollTitle:string; regenLabel:string; concordLabel:string; concordTitle?:string; rollHint?:string;
@@ -14,17 +19,32 @@ export interface LivingControllerProps {
  fallback:ReactNode;
 }
 export function LivingController(p:LivingControllerProps){
- const [failed,setFailed]=useState(false),[ready,setReady]=useState(false),[collapsed,setCollapsed]=useState(false),[selection,setSelection]=useState('auto');
+ const [failed,setFailed]=useState(false),[ready,setReady]=useState(false),[collapsed,setCollapsed]=useState(p.surface==='treasure'),[selection,setSelection]=useState('auto');
  const [reduced,setReduced]=useState(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [label,setLabel]=useState('');
+ const [powerFeedback,setPowerFeedback]=useState('');
+ const previousMultiplier=useRef(p.multiplier);
+ const previousFeedback=useRef(p.multiplierFeedbackKey);
+ useEffect(()=>{if(previousMultiplier.current===p.multiplier&&previousFeedback.current===p.multiplierFeedbackKey)return;previousMultiplier.current=p.multiplier;previousFeedback.current=p.multiplierFeedbackKey;
+  setPowerFeedback(p.multiplier===p.maximum&&p.maximum>1?`MAX ×${p.multiplier} · ${p.cost} dice per roll`:`×${p.multiplier} · ${p.cost} dice per roll · maximum ×${p.maximum}`);
+  const timer=window.setTimeout(()=>setPowerFeedback(''),1600);return()=>window.clearTimeout(timer);
+ },[p.multiplier,p.maximum,p.cost,p.multiplierFeedbackKey]);
+ const activity=useRef(0);
+ useEffect(()=>{const touch=()=>{activity.current++;};document.addEventListener('pointerdown',touch,true);document.addEventListener('keydown',touch,true);document.addEventListener('visibilitychange',touch);return()=>{document.removeEventListener('pointerdown',touch,true);document.removeEventListener('keydown',touch,true);document.removeEventListener('visibilitychange',touch);};},[]);
  const host=useRef<HTMLDivElement>(null),controls=useRef<Record<string,HTMLButtonElement>>({});
  const gesture=useRef<{id:number;x:number;y:number;drag:boolean}|null>(null),suppress=useRef(false),keyboardHeld=useRef(false);
  const snapshot=useRef<ControllerSnapshot>(null!);const callbacks=useRef(p);callbacks.current=p;
  const isCollapsed=collapsed&&!p.tutorial;
  snapshot.current={theme:resolveControllerTheme(p.dark,p.dev,selection),reduced,hidden:isCollapsed,dice:p.dice,multiplier:p.multiplier,maximum:p.maximum,rolling:p.rolling,autoRolling:p.autoRolling,jackpot:p.jackpot,buildReady:p.buildReady,rollTitle:p.rollTitle,regenLabel:p.regenLabel,concordTitle:p.concordTitle??'Story',multiplierMaxJumping:!!p.multiplierMaxJumping};
+ snapshot.current.arrivalKey=p.arrivalKey;snapshot.current.blocked=p.blocked||p.tutorial;
+ snapshot.current.onArrivalImpact=p.onArrivalImpact;
+ snapshot.current.navigationOnly=p.surface==='treasure';
+ snapshot.current.theme=resolveControllerTheme(false,p.dev,selection,p.islandNumber,p.preferredTheme,p.surface);
+ const resolvedTheme=snapshot.current.theme;
+ useEffect(()=>{p.onThemeChange?.(resolvedTheme);},[resolvedTheme,p.onThemeChange]);
  useEffect(()=>{const media=matchMedia('(prefers-reduced-motion: reduce)');const change=()=>setReduced(media.matches);media.addEventListener('change',change);return()=>media.removeEventListener('change',change);},[]);
  useEffect(()=>{if(!host.current)return;let cancelled=false,dispose:(()=>void)|undefined;
-   import('./renderer.js').then(({mountLivingController})=>{if(cancelled||!host.current)return;dispose=mountLivingController(host.current,controls.current,()=>snapshot.current,()=>setReady(true),()=>setFailed(true));}).catch(()=>{if(!cancelled)setFailed(true);});
+   import('./renderer.js').then(({mountLivingController})=>{if(cancelled||!host.current)return;dispose=mountLivingController(host.current,controls.current,()=>({...snapshot.current,activity:activity.current}),()=>setReady(true),()=>setFailed(true));}).catch(()=>{if(!cancelled)setFailed(true);});
    return()=>{cancelled=true;dispose?.();callbacks.current.onStopAuto();};
  },[]);
  useEffect(()=>{const stop=()=>callbacks.current.onStopAuto();const visibility=()=>{if(document.hidden)stop();};window.addEventListener('blur',stop);document.addEventListener('visibilitychange',visibility);return()=>{window.removeEventListener('blur',stop);document.removeEventListener('visibilitychange',visibility);};},[]);
@@ -38,8 +58,9 @@ export function LivingController(p:LivingControllerProps){
  const actions:Record<Action,()=>void>={shop:p.onShop,build:p.onBuild,creatures:p.onCreatures,concord:p.onConcord,roll:p.onRoll};
  const labels:Record<Action,string>={shop:'Shop',build:p.buildReady?'Build — next step affordable':'Build',creatures:'Creatures',concord:p.concordLabel,roll:`${p.rollTitle} · ${Math.floor(p.dice/Math.max(1,p.cost))} rolls left`};
  return <div className={`living-controller-dock${isCollapsed?' is-collapsed':''}`} data-theme={snapshot.current.theme}>
+   {isCollapsed&&<span className="living-controller-restore-hint" aria-hidden="true">Swipe up to open controller</span>}
    {p.dev&&!isCollapsed&&<select className="living-controller-themes" aria-label="Dev controller theme" value={selection} onChange={e=>setSelection(e.target.value)}>
-     <option value="auto">Controller: app day/dark</option><option value="light">Default Light (dev)</option><option value="christmas">Christmas (dev)</option><option value="snow">Snow & Gold (dev)</option><option value="classic">Classic Christmas (dev)</option><option value="gold">Gold (dev)</option><option value="wood">Satin Teak (dev)</option>
+     <option value="auto">Island / saved default</option><option value="ice">Default Day</option><option value="dark">Default Dark</option><option value="light">Light (preview)</option><option value="christmas">Christmas (preview)</option><option value="snow">Snow & Gold (preview)</option><option value="classic">Classic Christmas (preview)</option><option value="gold">Gold (preview)</option><option value="wood">Satin Teak (preview)</option>
    </select>}
    <div className={`living-controller${ready?' is-ready':''}`} aria-label={isCollapsed?'Controller hidden — swipe up or press Enter to restore':'Game controller — swipe down to hide'} tabIndex={0}
      onKeyDown={e=>{if(e.target!==e.currentTarget)return;if((isCollapsed&&(e.key==='Enter'||e.key==='ArrowUp'))||(!isCollapsed&&e.key==='ArrowDown'&&!p.tutorial)){e.preventDefault();p.onStopAuto();setCollapsed(!isCollapsed);}}}
@@ -49,6 +70,7 @@ export function LivingController(p:LivingControllerProps){
      onClickCapture={e=>{if(suppress.current&&e.detail!==0){e.preventDefault();e.stopPropagation();return;}if(isCollapsed){e.preventDefault();e.stopPropagation();setCollapsed(false);}}}>
      <div className="living-controller-canvas" ref={host} aria-hidden="true" />
      {!isCollapsed&&<span className="living-controller-label" aria-hidden="true">{label}</span>}
+     {!isCollapsed&&powerFeedback&&<span key={p.multiplierFeedbackKey} className="living-controller-power-feedback" role="status">{powerFeedback}</span>}
      {(['shop','build','roll','creatures','concord'] as Action[]).map(id=><button key={id} ref={el=>{if(el)controls.current[id]=el;}} type="button" className={`living-controller-hit living-controller-hit--${id}`} aria-label={labels[id]} title={id==='roll'?p.rollHint:labels[id]} tabIndex={isCollapsed?-1:0}
        disabled={isCollapsed||(id==='build'?false:p.blocked)||(id==='roll'&&p.rollDisabled&&!p.autoRolling)}
        onFocus={()=>setLabel(id==='roll'?'':id==='concord'?(p.concordTitle??'Story'):labels[id])} onBlur={()=>{setLabel('');if(id==='roll'){keyboardHeld.current=false;p.onHoldCancel?.();}}}

@@ -1,6 +1,7 @@
 // New Daily Spin Wheel Modal - SVG-based wheel with economy-aligned prizes
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import {canPreviewDailySpin,previewDailySpin} from '../../services/dailySpinDevPreview';
 import type { Session } from '@supabase/supabase-js';
 import confetti from 'canvas-confetti';
 import {
@@ -26,6 +27,7 @@ import {
 import './NewDailySpinWheel.css';
 
 interface NewDailySpinWheelProps {
+  devPreview?:boolean;
   session: Session;
   onClose: () => void;
 }
@@ -205,7 +207,8 @@ function WheelPointer() {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) {
+export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDailySpinWheelProps) {
+  const isDevPreview=devPreview&&canPreviewDailySpin();
   const { refreshProfile } = useGamification(session);
   const [loading, setLoading] = useState(true);
   const [charging, setCharging] = useState(false);
@@ -278,6 +281,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   useEffect(() => {
     const init = async () => {
+      if(devPreview&&!isDevPreview){setError('Developer mode is required');setLoading(false);return;}
+      if(isDevPreview){setPrizePool(SPIN_PRIZES);setCanSpin(true);setLoading(false);return;}
       const prizes = await getSpinPrizesForUser(session.user.id, session);
       setPrizePool(prizes);
       if (prizes.some(isIslandThreeJackpotPrize)) {
@@ -303,6 +308,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   }, []);
 
   const loadSpinStatus = async (availablePrizes: SpinPrize[] = prizePool) => {
+    if(devPreview&&!canPreviewDailySpin()){setError('Developer mode is required');setLoading(false);return;}
     setLoading(true);
     setError(null);
     setWonPrize(null);
@@ -310,6 +316,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     setShowReward(false);
     setShowGiftOpening(false);
     setGiftRewards([]);
+    if(isDevPreview){setCanSpin(true);setLoading(false);return;}
 
     try {
       const { data: spinState, error: spinError } = await getDailySpinState(session.user.id);
@@ -362,6 +369,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   };
 
   const handleSpin = async () => {
+    if(devPreview&&!canPreviewDailySpin())return;
     const multiplierOption = hasIslandThreeJackpot
       ? SPIN_REWARD_MULTIPLIER_OPTIONS[0]
       : SPIN_REWARD_MULTIPLIER_OPTIONS.find((entry) => entry.multiplier === selectedMultiplier)
@@ -380,7 +388,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       await new Promise<void>((resolve) => window.setTimeout(resolve, 460));
       setCharging(false);
       setSpinning(true);
-      const { data, error: spinError } = await executeSpin(session.user.id, {
+      const { data, error: spinError } = isDevPreview ? {data:previewDailySpin(),error:null} : await executeSpin(session.user.id, {
         session,
         rewardMultiplier: multiplierOption.multiplier,
         essenceCost: multiplierOption.essenceCost,
@@ -424,8 +432,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           }
         }, 720);
 
-        refreshProfile();
-        window.dispatchEvent(new CustomEvent('dailySpinComplete'));
+        if(!isDevPreview){refreshProfile();window.dispatchEvent(new CustomEvent('dailySpinComplete'));}
       }, 3200);
     } catch (err) {
       console.error('Spin failed:', err);
@@ -489,7 +496,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const isTreasureChest = wonPrize?.type === 'treasure_chest';
   const isIslandThreeJackpot = wonPrize ? isIslandThreeJackpotPrize(wonPrize) : false;
 
-  const rewardSubtitle = wonPrize
+  const rewardSubtitle = isDevPreview ? 'Developer preview only — no rewards or daily eligibility changed.' : wonPrize
     ? isIslandThreeJackpotPrize(wonPrize)
       ? 'Island 3 jackpot! 2,000 dice are now in your Island Run wallet.'
       : wonPrize.type === 'treasure_chest'
@@ -539,6 +546,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             alt="Daily Momentum"
           />
           <p className="new-daily-spin-modal__subtitle">{headerSubtitle}</p>
+          {isDevPreview&&<><p role="status">Developer rehearsal · no wallet payouts</p><button type="button" disabled={spinning||charging} onClick={()=>void loadSpinStatus()}>Reset test spin</button></>}
         </header>
 
         {error && (

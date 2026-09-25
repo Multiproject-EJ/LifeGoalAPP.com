@@ -374,6 +374,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
     }
     const transitionAge = elapsed - transitionStartedAt;
     const activeTransition = !reducedMotion && transitionAge >= 0 && transitionAge < 2.5;
+    root.userData.missionPresentationActive = activeTransition;
     flashPoints.visible = activeTransition;
     robots.visible = activeTransition && (options.islandNumber === 4 || presentation.activatedStages < options.stageCount);
     if (activeTransition && presentation.activatedStages > 0) {

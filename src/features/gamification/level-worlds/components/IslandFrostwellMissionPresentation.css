@@ -1,0 +1,8 @@
+/* Drilling is the event: leave the world visible, retain an explicit skip. */
+.frostwell-v2-overlay.is-cinematic { padding: 8px 12px max(10px,env(safe-area-inset-bottom)); }
+.frostwell-v2-overlay.is-cinematic .frostwell-v2 { width: min(340px,100%); max-width: 340px; padding: 10px 42px 8px 12px; border-radius: 14px; background: #061c2fd9; }
+.frostwell-v2-overlay.is-cinematic .frostwell-v2__eyebrow,
+.frostwell-v2-overlay.is-cinematic h2,
+.frostwell-v2-overlay.is-cinematic p { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.frostwell-v2-overlay.is-cinematic .frostwell-v2__cinematic-meter { margin: 0; }
+.frostwell-v2-overlay.is-cinematic .frostwell-v2__text { margin: 4px 0 0; min-height: 32px; }

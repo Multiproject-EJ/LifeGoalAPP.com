@@ -10,6 +10,7 @@ import type { IslandRunGuestClaimSource } from './services/islandRunGuestClaimSe
 import './LevelWorlds.css';
 
 interface LevelWorldsHubProps {
+  playerRank?: { title: string; tier: 'bronze' | 'command' };
   session: Session;
   onClose: () => void;
   initialPanel?: 'default' | 'sanctuary';
@@ -23,6 +24,7 @@ interface LevelWorldsHubProps {
 }
 
 export function LevelWorldsHub({
+  playerRank,
   session,
   onClose,
   initialPanel = 'default',
@@ -52,6 +54,7 @@ export function LevelWorldsHub({
   return (
     <div className="level-worlds-island-run-shell">
       <IslandRunBoardPrototype
+        playerRank={playerRank}
         session={session}
         initialPanel={initialPanel}
         onExitBoard={onClose}

@@ -5829,6 +5829,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       >
         <LevelWorldsHub
           session={activeSession}
+          playerRank={menuRankProgress.current}
           initialPanel={levelWorldsEntryPanel}
           onClose={handleCloseLevelWorldsEntry}
           isAdmin={isAdmin === true}
