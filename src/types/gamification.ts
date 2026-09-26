@@ -434,12 +434,8 @@ export const SPIN_PRIZES: SpinPrize[] = [
   { type: 'dice',           value: 250, label: '250 Dice',        icon: '🎲', wheelSize: 'large',  wheelWeight: 0.8, details: { rarity: 'rare' } },
   { type: 'dice',           value: 500, label: '500 Dice',        icon: '🎲', wheelSize: 'small',  wheelWeight: 0.08, details: { rarity: 'legendary' } },
   // Glowing Super Slice (about 1 spin in 40): pays one high-value jackpot
-  // from DAILY_SPIN_SUPER_SLICE_OPTIONS.
-  { type: 'super',          value: 1,   label: 'Super Slice',     icon: '★', wheelSize: 'small',  wheelWeight: 0.8, details: { rarity: 'legendary' } },
-  { type: 'essence',        value: 25,  label: '25 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 4 },
-  { type: 'shards',         value: 5,   label: '5 Essence',       icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'treasure_chest', value: 1,   label: 'Treasure Chest',  icon: '🧰', wheelSize: 'small',  wheelWeight: 1.2, details: { rarity: 'rare' } },
-  { type: 'mystery',        value: 1,   label: 'Mystery Box',     icon: '🎁', wheelSize: 'small',  wheelWeight: 0.5, details: { rarity: 'legendary' } },
+  // from DAILY_SPIN_SUPER_SLICE_OPTIONS. The wheel is dice plus this slice only.
+  { type: 'super',          value: 1,   label: 'Super Slice',     icon: '★', wheelSize: 'small',  wheelWeight: 0.6, details: { rarity: 'legendary' } },
 ];
 
 // =====================================================
