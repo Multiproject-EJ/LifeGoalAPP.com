@@ -153,6 +153,17 @@ function WheelSVG({
           <stop offset="75%" stopColor="#35c8ff" />
           <stop offset="100%" stopColor="#9b5cff" />
         </linearGradient>
+        <radialGradient id="spin-wheel-super-star-fill" cx="42%" cy="36%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor="#fff27a" />
+          <stop offset="70%" stopColor="#ffb31a" />
+          <stop offset="100%" stopColor="#ff3fb4" />
+        </radialGradient>
+        <radialGradient id="spin-wheel-super-ray-fill" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="45%" stopColor="#fff3a0" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#ffd23f" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       {/* Segments */}
@@ -203,23 +214,48 @@ function WheelSVG({
         const p = polarToCart(CX, CY, iconR, seg.centerAngle);
         const iconSize = seg.wheelSize === 'small' ? 25 : seg.wheelSize === 'large' ? 34 : 30;
         if (seg.type === 'super') {
-          const r = 13;
-          const star = Array.from({ length: 10 }, (_, point) => {
-            const radius = point % 2 === 0 ? r : r * 0.45;
+          const r = 15;
+          const starPoints = (outer: number, inner: number) => Array.from({ length: 10 }, (_, point) => {
+            const radius = point % 2 === 0 ? outer : inner;
             const angle = (point * 36 - 90) * DEG;
             return `${(p.x + radius * Math.cos(angle)).toFixed(2)},${(p.y + radius * Math.sin(angle)).toFixed(2)}`;
           }).join(' ');
+          // Faceted look: each arm is split into a lit and a shaded half.
+          const facets = Array.from({ length: 5 }, (_, arm) => {
+            const tipAngle = (arm * 72 - 90) * DEG;
+            const leftAngle = (arm * 72 - 126) * DEG;
+            const tip = `${(p.x + r * Math.cos(tipAngle)).toFixed(2)},${(p.y + r * Math.sin(tipAngle)).toFixed(2)}`;
+            const valley = `${(p.x + r * 0.45 * Math.cos(leftAngle)).toFixed(2)},${(p.y + r * 0.45 * Math.sin(leftAngle)).toFixed(2)}`;
+            return `${p.x.toFixed(2)},${p.y.toFixed(2)} ${valley} ${tip}`;
+          });
+          const orbit = polarToCart(p.x, p.y, r * 1.45, 0);
           return (
-            <polygon
-              key={`asset-${i}`}
-              className="spin-wheel-super-star"
-              points={star}
-              fill="#ffffff"
-              stroke="#6d28d9"
-              strokeWidth="1.4"
-              strokeLinejoin="round"
-              style={{ pointerEvents: 'none' }}
-            />
+            <g key={`asset-${i}`} className="spin-wheel-super-emblem" style={{ pointerEvents: 'none' }}>
+              <g className="spin-wheel-super-rays" style={{ transformOrigin: `${p.x}px ${p.y}px` }}>
+                {Array.from({ length: 8 }, (_, ray) => {
+                  const a = (ray * 45) * DEG;
+                  const b = (ray * 45 + 12) * DEG;
+                  return (
+                    <polygon
+                      key={ray}
+                      points={`${p.x},${p.y} ${(p.x + r * 2.1 * Math.cos(a)).toFixed(2)},${(p.y + r * 2.1 * Math.sin(a)).toFixed(2)} ${(p.x + r * 2.1 * Math.cos(b)).toFixed(2)},${(p.y + r * 2.1 * Math.sin(b)).toFixed(2)}`}
+                      fill="url(#spin-wheel-super-ray-fill)"
+                    />
+                  );
+                })}
+              </g>
+              <circle className="spin-wheel-super-ring" cx={p.x} cy={p.y} r={r * 0.9} fill="none" stroke="#ffffff" strokeWidth="1.4" style={{ transformOrigin: `${p.x}px ${p.y}px` }} />
+              <g className="spin-wheel-super-star" style={{ transformOrigin: `${p.x}px ${p.y}px` }}>
+                <polygon points={starPoints(r, r * 0.45)} fill="url(#spin-wheel-super-star-fill)" stroke="#5b1a8c" strokeWidth="1.3" strokeLinejoin="round" />
+                {facets.map((facet, facetIndex) => (
+                  <polygon key={facetIndex} points={facet} fill="#ffffff" opacity="0.35" />
+                ))}
+                <circle cx={p.x - r * 0.18} cy={p.y - r * 0.22} r={r * 0.16} fill="#ffffff" opacity="0.9" />
+              </g>
+              <g className="spin-wheel-super-orbit" style={{ transformOrigin: `${p.x}px ${p.y}px` }}>
+                <circle cx={orbit.x} cy={orbit.y} r="1.9" fill="#ffffff" />
+              </g>
+            </g>
           );
         }
         return (
