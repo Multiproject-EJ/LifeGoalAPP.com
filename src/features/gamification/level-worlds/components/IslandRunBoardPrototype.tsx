@@ -2052,6 +2052,9 @@ export function IslandRunBoardPrototype({
   const [showBoardSymbolLegend, setShowBoardSymbolLegend] = useState(showBoardLegendPreview);
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
+  // Dev island jump intro sequence (arrival + mission briefing) that the
+  // bottom-right Skip button can dismiss in one tap.
+  const [devFreshArrivalBriefing, setDevFreshArrivalBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [showMissionPhoneBriefing, setShowMissionPhoneBriefing] = useState(false);
   // Developer-only controller finish override, chosen from the board menu.
   const [devControllerThemeSelection, setDevControllerThemeSelection] = useState('auto');
@@ -2677,8 +2680,13 @@ export function IslandRunBoardPrototype({
   const [firstArrivalSkip, setFirstArrivalSkip] = useState(false);
   const [firstArrivalWelcomeComplete, setFirstArrivalWelcomeComplete] = useState(false);
   const [firstArrivalBeat, setFirstArrivalBeat] = useState('FAST TRAVEL');
-  const firstArrivalActive = shouldPlayIsland001FirstArrival(__storeState, hasHydratedRuntimeState, isIslandVisualPreview);
+  // Dev island jump: replay the Island 001 arrival as if it were a first visit.
+  const [devArrivalReplayActive, setDevArrivalReplayActive] = useState(false);
+  const firstArrivalActive = shouldPlayIsland001FirstArrival(__storeState, hasHydratedRuntimeState, isIslandVisualPreview)
+    || (devArrivalReplayActive && hasHydratedRuntimeState && !isIslandVisualPreview
+      && __storeState.currentIslandNumber === 1 && __storeState.cycleIndex === 0);
   const finishFirstArrival = useCallback(() => {
+    setDevArrivalReplayActive(false);
     applyStoryPrologueSeenMarker({session, client, storyPrologueSeen: true, triggerSource: 'island001_ship_arrival_complete'});
   }, [session, client]);
   useEffect(() => {
@@ -11575,7 +11583,26 @@ export function IslandRunBoardPrototype({
     setIsDevIslandJumpPending(true);
     try {
       await performIslandTravel(devIslandJumpTarget, { startTimer: false });
-      setLandingText(`🧪 DEV jump complete: Island ${devIslandJumpLabel} loaded as a fresh visit.`);
+      if (getIslandRunStateSnapshot(session).currentIslandNumber !== devIslandJumpTarget) {
+        throw new Error('Island travel did not complete.');
+      }
+      // Arrive as if for the first time: fresh mission, egg and briefing.
+      // Creatures, wallet and dice are kept.
+      const result = await resetCurrentIslandMissionForDev({ session, client, freshArrival: true });
+      setRuntimeState(result.record);
+      runtimeStateRef.current = result.record;
+      setActiveEgg(null);
+      setActiveMissionBriefing(null);
+      setShowMissionPhoneBriefing(false);
+      setQueuedSignatureMissionPresentation(null);
+      setShowIslandClearCelebration(false);
+      setPendingMissionBriefing(result.briefingTrigger);
+      setDevFreshArrivalBriefing(result.briefingTrigger);
+      const replayIslandOneArrival = result.islandNumber === 1 && result.cycleIndex === 0;
+      setDevArrivalReplayActive(replayIslandOneArrival);
+      // The arrival cinematic owns the screen, as on a real first visit.
+      if (replayIslandOneArrival) setActiveStopId(null);
+      setLandingText(`🧪 DEV jump complete: Island ${devIslandJumpLabel} loaded as a first visit.`);
       setShowTopbarMenu(false);
     } catch (error) {
       console.error('[island-run] Dev island jump failed:', error);
@@ -11583,6 +11610,25 @@ export function IslandRunBoardPrototype({
     } finally {
       setIsDevIslandJumpPending(false);
     }
+  };
+
+  useEffect(() => {
+    if (devFreshArrivalBriefing && !firstArrivalActive && !pendingMissionBriefing && !activeMissionBriefing) {
+      setDevFreshArrivalBriefing(null);
+    }
+  }, [devFreshArrivalBriefing, firstArrivalActive, pendingMissionBriefing, activeMissionBriefing]);
+
+  const handleSkipDevFreshArrivalIntro = () => {
+    if (firstArrivalActive) setFirstArrivalSkip(true);
+    const trigger = activeMissionBriefing ?? pendingMissionBriefing ?? devFreshArrivalBriefing;
+    if (trigger) {
+      const acknowledgement = acknowledgeIslandMissionBriefing({ session, client, trigger, triggerSource: 'dev_fresh_arrival_skip_intro' });
+      runtimeStateRef.current = acknowledgement.record;
+      setRuntimeState(acknowledgement.record);
+    }
+    setPendingMissionBriefing(null);
+    setActiveMissionBriefing(null);
+    setDevFreshArrivalBriefing(null);
   };
 
   const handleDevResetCurrentIslandMission = async () => {
@@ -15664,7 +15710,7 @@ export function IslandRunBoardPrototype({
                   </button>
                   <small className="island-run-board__dev-island-jump-hint">
                     {isDevIslandJumpTargetValid
-                      ? 'Fresh visit · clear mission resets objectives/builds without touching wallet or collections'
+                      ? 'First visit · mission, stops, egg and intros reset; creatures, wallet and dice are kept'
                       : 'Choose an island from 001 to 120'}
                   </small>
                 </section>
@@ -19962,11 +20008,15 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing) ? createPortal(
+        <button type="button" className="island-run-dev-skip-intro" onClick={handleSkipDevFreshArrivalIntro} aria-label="Skip intro">
+          Skip <span aria-hidden="true">⏭</span>
+        </button>, document.body) : null}
       {firstArrivalActive && !showWelcomePackModal ? createPortal(
         <div className="arrival-caption" aria-label="Your arrival on Island 001">
           <div className="arrival-caption__brand">HABITGAME / FIRST LIGHT</div>
           <div className="arrival-caption__bottom"><div><small>{firstArrivalBeat}</small><h1>A new world. A new beginning.</h1></div>
-            <button onClick={() => setFirstArrivalSkip(true)}>Skip arrival</button>
+            {devFreshArrivalBriefing ? null : <button onClick={() => setFirstArrivalSkip(true)}>Skip arrival</button>}
           </div>
         </div>, document.body) : null}
       {showFirstVoyageDepartureModal ? createPortal(
@@ -20328,6 +20378,7 @@ export function IslandRunBoardPrototype({
           runtimeStateRef.current = acknowledgement.record;
           setRuntimeState(acknowledgement.record);
           setActiveMissionBriefing(null);
+          setDevFreshArrivalBriefing(null);
           setLandingText(islandNumber === 1 ? 'Collect dynamite and build the Diplomatic Peace Signing Assembly. Your mission phone tracks the progress.' : 'Field order accepted. Your mission phone tracks the progress.');
           playIslandRunSound('stop_land');
           triggerIslandRunHaptic('stop_land');

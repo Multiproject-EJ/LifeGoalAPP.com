@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { getIslandMissionBriefingBeatId } from '../islandRunMissionBriefing';
 import {
   buildCurrentIslandMissionResetRecord,
+  buildDevFreshIslandArrivalRecord,
   resetCurrentIslandMissionForDev,
 } from '../islandRunMissionResetAction';
 import {
@@ -169,6 +170,44 @@ export const islandRunMissionResetActionTests: TestCase[] = [
         undefined,
         'persisted signature mission should be cleared',
       );
+    },
+  },
+  {
+    name: 'dev fresh arrival also clears this island egg but keeps creatures and other islands',
+    run: async () => {
+      const session = await seedCompletedIslandTwoMission();
+      const seeded = readIslandRunGameStateRecord(session);
+      const creature = seeded.creatureCollection[0] ?? ({ creatureId: 'test-creature' } as (typeof seeded.creatureCollection)[number]);
+      const egg = { tier: 'rare' as const, setAtMs: 1, hatchAtMs: 2, status: 'collected' as const, location: 'island' as const };
+      const before = {
+        ...seeded,
+        activeEggTier: 'rare' as const,
+        activeEggSetAtMs: 1,
+        activeEggHatchDurationMs: 1,
+        activeEggIsDormant: true,
+        perIslandEggs: { '2': egg, '9': egg },
+        creatureCollection: [creature],
+      };
+      const after = buildDevFreshIslandArrivalRecord(before);
+      assertEqual(after.perIslandEggs['2'], undefined, 'this island egg is gone, so the Hatchery starts empty');
+      assert(after.perIslandEggs['9'] !== undefined, 'other island eggs stay');
+      assertEqual(after.activeEggTier, null, 'no active egg on arrival');
+      assertEqual(after.activeEggIsDormant, false, 'no dormant egg on arrival');
+      assertDeepEqual(after.creatureCollection, [creature], 'creature collection is kept');
+      assertEqual(after.dicePool, before.dicePool, 'dice are kept');
+      assertEqual(after.narrativeSeenState.beats[getIslandMissionBriefingBeatId(0, 2)], undefined, 'briefing plays again');
+    },
+  },
+  {
+    name: 'dev fresh arrival action persists and returns the briefing to play at once',
+    run: async () => {
+      const session = await seedCompletedIslandTwoMission();
+      const result = await resetCurrentIslandMissionForDev({ session, client: null, freshArrival: true });
+      assertEqual(result.briefingTrigger?.beatId, getIslandMissionBriefingBeatId(0, 2), 'briefing trigger names this island');
+      assertEqual(result.briefingTrigger?.islandNumber, 2, 'briefing trigger island');
+      assertEqual(readIslandRunGameStateRecord(session).activeEggTier, null, 'persisted record has no egg');
+      const plain = await resetCurrentIslandMissionForDev({ session, client: null });
+      assertEqual(plain.briefingTrigger, null, 'plain mission reset does not auto-present a briefing');
     },
   },
 ];
