@@ -85,7 +85,7 @@ export const dailySpinRewardPolicyTests: TestCase[] = [
       const totalWeight = SPIN_PRIZES.reduce((sum, entry) => sum + (entry.wheelWeight ?? 1), 0);
       const odds = (superPrizes[0].wheelWeight ?? 0) / totalWeight;
       assert(odds > 0.015 && odds < 0.04, `Super Slice lands roughly once in 25-60 spins (got ${odds.toFixed(3)})`);
-      assert(SPIN_PRIZES.some((entry) => entry.type === 'mystery'), 'the Mystery Box slice stays alongside it');
+      assert(SPIN_PRIZES.every((entry) => entry.type === 'dice' || entry.type === 'super'), 'the wheel is dice slices plus the Super Slice only');
 
       const first = resolveDailySpinAwards(superPrizes[0], 1, () => 0);
       assertEqual(JSON.stringify(first.map((award) => [award.currency, award.amount])), JSON.stringify([['dice', 550]]), 'lowest roll pays 550 dice');
