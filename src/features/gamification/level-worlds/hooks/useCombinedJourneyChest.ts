@@ -53,7 +53,7 @@ export function useCombinedJourneyChest(params: {
   const milestoneInputsRef = useRef(milestoneInputs);
   milestoneInputsRef.current = milestoneInputs;
 
-  const level = deriveCombinedJourneyLevel(milestoneInputs).level;
+  const { level, xp } = deriveCombinedJourneyLevel(milestoneInputs);
 
   useEffect(() => {
     if (!enabled || !isOpen || !userId) {
@@ -84,8 +84,11 @@ export function useCombinedJourneyChest(params: {
   // failed write never blocks the overlay.
   useEffect(() => {
     if (!isOpen || !userId) return;
-    void persistCombinedJourneyProgress(getSupabaseClient(), userId, milestoneInputsRef.current);
-  }, [isOpen, userId]);
+    const timer = setTimeout(() => {
+      void persistCombinedJourneyProgress(getSupabaseClient(), userId, milestoneInputsRef.current);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [isOpen, userId, xp]);
 
   // Withhold the CTA until the baseline is resolved so pre-launch chests are
   // never briefly offered.

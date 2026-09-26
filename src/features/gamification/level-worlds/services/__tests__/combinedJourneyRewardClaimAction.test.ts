@@ -92,6 +92,34 @@ const UNLOCKED_ISLAND_NUMBER = 15;
 
 export const combinedJourneyRewardClaimActionTests: TestCase[] = [
   {
+    name: 'a display XP floor and caller-supplied island progress cannot unlock rewards',
+    run: async () => {
+      resetEnvironment();
+      __setIslandRunFeatureFlagsForTests({ combinedJourneyRewardsEnabled: true });
+      await seedState({ currentIslandNumber: 1, cycleIndex: 0 });
+      const client = makeFakeClient();
+      const result = await claimCombinedJourneyReward({
+        session: makeSession(), client: client as never, thresholdLevel: 99,
+        milestoneInputs: { earnedXpFloor: 1000000, islandsCompleted: 10000, currentIslandProgressPercent: 100 },
+      });
+      assertEqual(result.status, 'not_yet_unlocked', 'Display checkpoint never authorizes a grant');
+      assertEqual(client.claimCalls(), 0, 'No RPC for forged display checkpoint');
+    },
+  },
+  {
+    name: 'canonical completed cycles remain visible to dormant reward eligibility',
+    run: async () => {
+      resetEnvironment();
+      __setIslandRunFeatureFlagsForTests({ combinedJourneyRewardsEnabled: true });
+      await seedState({ currentIslandNumber: 1, cycleIndex: 1 });
+      const client = makeFakeClient();
+      const result = await claimCombinedJourneyReward({
+        session: makeSession(), client: client as never, thresholdLevel: 20,
+      });
+      assertEqual(result.status, 'claimed', 'Completed cycle not erased by Island 1');
+    },
+  },
+  {
     name: 'returns disabled when the feature flag is off',
     run: async () => {
       resetEnvironment();

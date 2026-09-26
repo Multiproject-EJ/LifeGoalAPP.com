@@ -78,6 +78,8 @@ import { LoadingReadinessScreen, type LoadingReadinessStep } from './components/
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { buildJourneyLevelInputFromOverlay } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import { useCombinedJourneyChest } from './features/gamification/level-worlds/hooks/useCombinedJourneyChest';
+import { useEarnedJourneyXp } from './features/gamification/level-worlds/hooks/useEarnedJourneyXp';
+import { resolveIslandRunCompletion } from './features/gamification/level-worlds/services/islandRunCompletion';
 import {
   deriveCombinedJourneyLevel,
   cumulativeXpForLevel,
@@ -121,7 +123,7 @@ import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorlds
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { getIslandDisplayName } from './features/gamification/level-worlds/services/islandNames';
 import { hasReceivedCompassBook } from './features/gamification/level-worlds/services/islandRunCompassBookReceipt';
-import { getIslandRunStateSnapshot, subscribeIslandRunState } from './features/gamification/level-worlds/services/islandRunStateStore';
+import { getIslandRunStateSnapshot, hydrateIslandRunState, subscribeIslandRunState } from './features/gamification/level-worlds/services/islandRunStateStore';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
 import { fetchSoundEffectsEnabled, updateSoundEffectsEnabled } from './services/soundPreferences';
 import {
@@ -708,6 +710,28 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setDarkTheme,
   } = useTheme();
   const [localGuestSession, setLocalGuestSession] = useState<Session | null>(null);
+  const activeSession = useMemo(
+    () => (supabaseSession ?? localGuestSession) as Session,
+    [localGuestSession, supabaseSession],
+  );
+  const subscribeJourneyState = useCallback((onChange: () => void) => (
+    activeSession ? subscribeIslandRunState(activeSession, onChange) : () => {}
+  ), [activeSession]);
+  const readJourneyState = useCallback(() => (
+    activeSession ? getIslandRunStateSnapshot(activeSession) : null
+  ), [activeSession]);
+  const journeyState = useSyncExternalStore(subscribeJourneyState, readJourneyState, readJourneyState);
+  useEffect(() => {
+    if (!activeSession) return;
+    void hydrateIslandRunState({ session: activeSession, client }).catch(() => {
+      // Keep the canonical local snapshot usable if remote hydration fails.
+    });
+  }, [activeSession, client]);
+  const islandJourneyProgress = useMemo(() => journeyState ? {
+    currentIslandNumber: journeyState.currentIslandNumber,
+    cycleIndex: journeyState.cycleIndex,
+    completion: resolveIslandRunCompletion(journeyState),
+  } : undefined, [journeyState]);
   const guestClaimInFlightUserIdRef = useRef<string | null>(null);
 
   useEffect(() => scheduleRapidFireworksPreload(), []);
@@ -1200,18 +1224,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [showGameBoardOverlay, showLevelWorldsFromEntry, supabaseSession?.user?.id]);
 
   // Read-only Real Life Journey summary for the dual-track overlay.
-  // Loaded only when the overlay opens and the user is authenticated; failures
-  // fall back to placeholders and never block PLAY.
-  const [overlayRealLifeInput, setOverlayRealLifeInput] = useState<DualTrackRealLifeInput | undefined>(undefined);
+  // Owner-scoped: an account switch must never credit the previous user's data.
+  const [overlayRealLifeData, setOverlayRealLifeData] = useState<{
+    userId: string; input: DualTrackRealLifeInput;
+  } | null>(null);
   const overlayRealLifeUserId = supabaseSession?.user?.id ?? null;
+  const overlayRealLifeInput = overlayRealLifeData?.userId === overlayRealLifeUserId
+    ? overlayRealLifeData?.input : undefined;
 
   // Shared Combined Journey Level inputs (chest claim + player-menu rank header).
-  const journeyLevelInput = buildJourneyLevelInputFromOverlay({
-    islandNumber: overlayIslandNumber,
-    rewardBarProgress: overlayRewardBarProgress,
-    rewardBarThreshold: overlayRewardBarThreshold,
+  const currentJourneyInput = buildJourneyLevelInputFromOverlay({
+    islandJourneyProgress,
     realLife: overlayRealLifeInput,
   });
+  const earnedJourneyXp = useEarnedJourneyXp(
+    activeSession?.user.id ?? null,
+    deriveCombinedJourneyLevel(currentJourneyInput).xp,
+    gamificationProfile?.user_id === activeSession?.user.id
+      ? gamificationProfile?.combined_journey_xp ?? 0 : 0,
+  );
+  const journeyLevelInput = { ...currentJourneyInput, earnedXpFloor: earnedJourneyXp };
 
   // Combined Journey Level chest claim (R5). Flag-gated; no-op while off.
   const combinedJourneyChest = useCombinedJourneyChest({
@@ -1280,7 +1312,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   };
 
   useEffect(() => {
-    if (!showGameBoardOverlay || !overlayRealLifeUserId) return;
+    if (!overlayRealLifeUserId) return;
     let cancelled = false;
 
     void (async () => {
@@ -1297,14 +1329,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
         const habitSummaries = (habitsResult?.data ?? [])
           .map((habit) => ({ id: habit.id, title: habit.title, emoji: habit.emoji ?? null }));
 
-        setOverlayRealLifeInput({
+        setOverlayRealLifeData({ userId: overlayRealLifeUserId, input: {
           isAuthenticated: true,
           goals: goalSummaries,
           habits: habitSummaries,
-        });
+        } });
       } catch {
         if (!cancelled) {
-          setOverlayRealLifeInput({ isAuthenticated: true, goals: [], habits: [] });
+          setOverlayRealLifeData({ userId: overlayRealLifeUserId, input: {
+            isAuthenticated: true, goals: [], habits: [],
+          } });
         }
       }
     })();
@@ -1917,10 +1951,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setAuthMessage(null);
   }, [showAuthPanel, supabaseSession?.user?.id]);
 
-  const activeSession = useMemo(
-    () => (supabaseSession ?? localGuestSession) as Session,
-    [localGuestSession, supabaseSession],
-  );
   const subscribeCompassReceipt = useCallback((onChange: () => void) => (
     activeSession ? subscribeIslandRunState(activeSession, onChange) : () => {}
   ), [activeSession]);
@@ -6168,6 +6198,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
           creatureCollectionCount={creatureCollectionSummary.total}
           creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
           realLife={overlayRealLifeInput}
+          islandJourneyProgress={islandJourneyProgress}
+          earnedXpFloor={earnedJourneyXp}
           viewerId={overlayRealLifeUserId ?? undefined}
           {...combinedJourneyChestProps}
           {...rankSpineProps}
@@ -6514,6 +6546,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         creatureCollectionCount={creatureCollectionSummary.total}
         creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
         realLife={overlayRealLifeInput}
+        islandJourneyProgress={islandJourneyProgress}
+        earnedXpFloor={earnedJourneyXp}
         viewerId={overlayRealLifeUserId ?? undefined}
         {...combinedJourneyChestProps}
         {...rankSpineProps}

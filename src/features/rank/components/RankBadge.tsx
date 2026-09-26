@@ -8,19 +8,22 @@
 
 import type { CSSProperties } from 'react';
 import type { RankDefinition } from '../rankModel';
-import { rankBadgeSrc, rankBadgeAlt } from '../rankAssets';
+import { rankBadgeSrc, rankBadgeAlt, rankBadgeVariantForSize, type RankBadgeVariant } from '../rankAssets';
 import './RankBadge.css';
 
 export interface RankBadgeProps {
   rank: RankDefinition;
   /** Rendered pixel size (square). */
   size?: number;
+  /** Auto uses a purpose-designed pin at <=48px when one is available. */
+  variant?: RankBadgeVariant | 'auto';
   locked?: boolean;
   className?: string;
 }
 
-export function RankBadge({ rank, size = 48, locked = false, className }: RankBadgeProps) {
-  const src = rankBadgeSrc(rank.id);
+export function RankBadge({ rank, size = 48, variant = 'auto', locked = false, className }: RankBadgeProps) {
+  const resolvedVariant = variant === 'auto' ? rankBadgeVariantForSize(size) : variant;
+  const src = rankBadgeSrc(rank.id, resolvedVariant);
   const style = { '--rank-badge-size': `${size}px` } as CSSProperties;
 
   return (

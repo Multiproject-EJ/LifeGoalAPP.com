@@ -30,7 +30,7 @@ export const dualTrackOverlayAdapterTests: TestCase[] = [
       assertEqual(viewModel.gameTrack[0].title, 'Island 119', 'Expected previous island card for island 120');
       assertEqual(viewModel.gameTrack[1].title, 'Island 120', 'Expected current island card for island 120');
       assertEqual(viewModel.gameTrack[1].subtitle, 'Final Horizon', 'Expected supplied current island display name');
-      assertEqual(viewModel.gameTrack[1].progressLabel, '90% current progress', 'Expected current island progress label');
+      assertEqual(viewModel.gameTrack[1].progressLabel, '0% current progress', 'Reward bar cannot stand in for island completion');
       assertEqual(viewModel.gameTrack.some((card) => card.title === 'Island 121'), false, 'Expected no invalid island 121 card');
       assertEqual(viewModel.gameTrack.some((card) => card.position === 'next'), false, 'Expected no next card past the final island');
       assertEqual(viewModel.gameTrack[viewModel.gameTrack.length - 1]?.position, 'locked', 'Expected final card to remain a locked future placeholder');
@@ -42,7 +42,7 @@ export const dualTrackOverlayAdapterTests: TestCase[] = [
       const viewModel = buildDualTrackOverlayViewModel({ islandNumber: -8, rewardBarProgress: 500, rewardBarThreshold: 100 });
 
       assertEqual(viewModel.gameTrack[1].title, 'Island 1', 'Expected invalid island number to clamp to island 1');
-      assertEqual(viewModel.gameTrack[1].progressLabel, '100% current progress', 'Expected progress to clamp to 100%');
+      assertEqual(viewModel.gameTrack[1].progressLabel, '0% current progress', 'Ignore reward bar even when overflowing');
       assert(
         viewModel.centerSpine.progressPercent >= 0 && viewModel.centerSpine.progressPercent <= 100,
         'Expected center spine journey progress to stay within 0..100',

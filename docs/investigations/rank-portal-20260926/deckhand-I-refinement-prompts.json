@@ -1,0 +1,17 @@
+{
+  "mode": "built-in image_gen",
+  "status": "Candidate for individual approval; overall ladder direction accepted",
+  "prompts": {
+    "medal": "Use case: precise-object-edit. Edit target image 1 is the existing HabitGame first-rank medal. Refine this ONE standalone medal for the approved bronze-star spaceship rank system. Preserve a single slender circular bronze bezel, clean smooth dark graphite inset, ONE clear four-point sculpted bronze navigation star with longer vertical than horizontal points, and ONE small cyan diamond centre. Preserve the restrained entry-level simplicity, front-facing symmetry and cast-metal dimensional quality. Refine proportions: star slightly broader through its four bases, balanced with generous uninterrupted graphite between emblem and bezel; top and bottom points equal lengths. Refine materials toward warm satin copper-bronze rather than yellow gold, with broad readable bevels and controlled highlights. Small cyan luminous enamel centre, no large white flare or surrounding glow. Smooth manufactured spacecraft metal, no scratches or weathering. Entire round medal centred, occupying about 88 percent of a square image, fully visible. Genuinely transparent background outside the medal. No text, no extra stars, no shoulder ornaments, no mounting loop, no wings, no ropes, knots, braids, tethers or pretzel motifs. This is Deckhand I, not an epic rank. Make one image of one medal only.",
+    "pin": "Use case: precise-object-edit. Image 1 is the edit target: standalone bronze navigation-star pin for HabitGame rank Deckhand I. Image 2 is its paired medal material reference only, do not include its frame. Refine the pin for clear rendering at 24-48px. Preserve the single FOUR-point bronze navigation star and cyan diamond centre. Make its silhouette broader and more compact: total height only 1.15 times total width; four simple broad tapered arms, top and bottom equal lengths, left and right equal lengths. Slightly thicken the bases of each arm and remove tiny extra bevel lines. Four principal dimensional faces with strong light/dark contrast, restrained satin copper-bronze rather than yellow gold; no distressed texture. Enlarge the simple cyan enamel diamond centre modestly so it remains a clear blue pixel cluster at 24px; no white flare. Genuinely transparent background everywhere outside the free-standing star. Centred, complete silhouette, about 86 percent image-height, consistent padding. Rich sculpted game-asset metal, NOT flat vector, NOT a miniature medal. No ring, no dark backing plate, no ornamental frame, no text, no tiny star inserts, no ropes, knots, braids, tethers or pretzel motifs. One image of one pin only."
+  },
+  "references": {
+    "medal": [
+      "first-light-medal-v2.png"
+    ],
+    "pin": [
+      "first-light-pin-v1.png",
+      "first-light-medal-v2.png"
+    ]
+  }
+}

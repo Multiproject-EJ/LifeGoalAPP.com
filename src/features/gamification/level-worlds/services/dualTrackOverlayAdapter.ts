@@ -1,5 +1,6 @@
 import { getIslandDisplayName } from './islandNames';
 import { deriveCombinedJourneyLevel, type CombinedJourneyLevelInput } from './combinedJourneyLevel';
+import { buildIslandJourneyMilestones, type IslandJourneyProgress } from './islandJourneyMilestones';
 
 export type DualTrackMilestonePosition = 'achieved' | 'current' | 'next' | 'locked';
 export type DualTrackMilestoneTrack = 'real_life' | 'game';
@@ -84,6 +85,8 @@ export type DualTrackRealLifeInput = {
 };
 
 type BuildDualTrackOverlayViewModelInput = {
+  islandJourneyProgress?: IslandJourneyProgress;
+  earnedXpFloor?: number;
   islandNumber?: number;
   islandDisplayName?: string;
   rewardBarProgress?: number;
@@ -123,11 +126,6 @@ const REAL_LIFE_PLACEHOLDERS = [
     rewardPreviewLabel: 'Future preview',
   },
 ];
-
-function clampPercent(numerator: number, denominator: number): number {
-  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return 0;
-  return Math.min(100, Math.max(0, Math.round((numerator / denominator) * 100)));
-}
 
 function normalizeIslandNumber(islandNumber: number | undefined): number {
   return Number.isFinite(islandNumber) ? Math.min(TOTAL_ISLANDS, Math.max(1, Math.floor(islandNumber ?? 1))) : 1;
@@ -315,9 +313,10 @@ function createRealLifePlaceholderTrack(): DualTrackMilestoneCard[] {
 }
 
 function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackMilestoneCard[] {
-  const currentIsland = normalizeIslandNumber(input.islandNumber);
-  const displayName = input.islandDisplayName?.trim() || getIslandDisplayName(currentIsland);
-  const progressPercent = clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10);
+  const currentIsland = normalizeIslandNumber(input.islandJourneyProgress?.currentIslandNumber ?? input.islandNumber);
+  const displayName = input.islandJourneyProgress
+    ? getIslandDisplayName(currentIsland) : input.islandDisplayName?.trim() || getIslandDisplayName(currentIsland);
+  const progressPercent = input.islandJourneyProgress?.completion.percent ?? 0;
   const previousIsland = Math.max(1, currentIsland - 1);
   const nextIsland = Math.min(TOTAL_ISLANDS, currentIsland + 1);
   const futureIsland = Math.min(TOTAL_ISLANDS, currentIsland + 2);
@@ -411,15 +410,17 @@ export function buildJourneyLevelInputFromOverlay(
   const completedGoalCount = validGoals.filter((goal) => isCompletedGoalStatus(goal.status)).length;
 
   return {
-    islandsCompleted: Math.max(0, currentIsland - 1),
-    currentIslandProgressPercent: clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10),
+    ...buildIslandJourneyMilestones(input.islandJourneyProgress ?? {
+      currentIslandNumber: currentIsland, cycleIndex: 0, completion: {complete:false,percent:0},
+    }),
+    earnedXpFloor: input.earnedXpFloor,
     completedGoals: completedGoalCount,
     habitConsistencyScore: habitCount,
   };
 }
 
 export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewModelInput = {}): DualTrackOverlayViewModel {
-  const currentIsland = normalizeIslandNumber(input.islandNumber);
+  const currentIsland = normalizeIslandNumber(input.islandJourneyProgress?.currentIslandNumber ?? input.islandNumber);
   const realLifeTrack = createRealLifeTrack(input.realLife);
   const usesRealLifeData = realLifeTrack.some((card) => card.source === 'goal' || card.source === 'habit');
   const validGoals = (input.realLife?.goals ?? []).filter((goal) => goal && typeof goal.title === 'string' && goal.title.trim());
@@ -440,7 +441,7 @@ export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewM
     },
     gameProgress: {
       currentIsland,
-      collectedCount: Math.max(0, currentIsland - 1),
+      collectedCount: Math.max(0, currentIsland - 1) + (input.islandJourneyProgress?.completion.complete ? 1 : 0),
       totalCount: TOTAL_ISLANDS,
     },
     centerSpine: {

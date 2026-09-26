@@ -7,6 +7,7 @@
     "moduleResolution": "Node10",
     "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
+    "jsx": "react-jsx",
     "skipLibCheck": true,
     "rootDir": "src",
     "outDir": ".tmp-rank-tests",
@@ -17,6 +18,9 @@
     "src/features/rank/rankAssets.ts",
     "src/features/rank/rankProgressView.ts",
     "src/features/rank/rankAcknowledgement.ts",
-    "src/features/rank/__tests__/rankModel.test.ts"
+    "src/features/rank/components/RankBadge.tsx",
+    "src/features/onboarding/worldPortalAccess.ts",
+    "src/features/rank/__tests__/rankModel.test.ts",
+    "src/features/rank/__tests__/rankExpansion.test.ts"
   ]
 }

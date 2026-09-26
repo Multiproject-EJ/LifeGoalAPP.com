@@ -1,0 +1,427 @@
+{
+  "sourceRevision": "1cf96aec74cbb1bcbc59ef2b304c5a078a2fd82a",
+  "generatedAt": "2026-09-26T18:39:33.986Z",
+  "assumptions": "Island-only examples; no completed goals or habits, zero current reward bar except reset reproduction. These are XP calculations, not time-to-rank or measured player outcomes.",
+  "arrivals": [
+    {
+      "island": 1,
+      "xp": 0,
+      "level": 1
+    },
+    {
+      "island": 2,
+      "xp": 150,
+      "level": 2
+    },
+    {
+      "island": 10,
+      "xp": 950,
+      "level": 5
+    },
+    {
+      "island": 20,
+      "xp": 1950,
+      "level": 8
+    },
+    {
+      "island": 38,
+      "xp": 3750,
+      "level": 12
+    },
+    {
+      "island": 39,
+      "xp": 3850,
+      "level": 13
+    },
+    {
+      "island": 40,
+      "xp": 3950,
+      "level": 13
+    },
+    {
+      "island": 41,
+      "xp": 4050,
+      "level": 13
+    },
+    {
+      "island": 80,
+      "xp": 7950,
+      "level": 19
+    },
+    {
+      "island": 120,
+      "xp": 11950,
+      "level": 25
+    }
+  ],
+  "fullyCompleted120": {
+    "level": 25,
+    "xp": 12050,
+    "gameXp": 12050,
+    "lifeXp": 0,
+    "balanceMultiplier": 1,
+    "xpIntoLevel": 170,
+    "xpForNextLevel": 870,
+    "progressPercentToNextLevel": 20,
+    "nextThresholdLevel": 26
+  },
+  "level40": {
+    "journeyXp": 28080,
+    "activityXp": 252982,
+    "activityFormulaSource": "export function calculateXPForLevel(level: number): number {\n  return Math.floor(Math.pow(level, 1.5) * 1000);\n}"
+  },
+  "rewardReset": [
+    {
+      "xp": 3850,
+      "level": 13
+    },
+    {
+      "xp": 3750,
+      "level": 12
+    }
+  ],
+  "cycleWrap": {
+    "adapterAcceptsCycleIndex": false,
+    "before": {
+      "island": 120,
+      "xp": 11950,
+      "level": 25
+    },
+    "after": {
+      "island": 1,
+      "xp": 0,
+      "level": 1
+    }
+  },
+  "ranks": [
+    {
+      "id": 1,
+      "key": "deckhand-1",
+      "title": "Deckhand I",
+      "xp": 0,
+      "level": 1,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 2,
+      "key": "deckhand-2",
+      "title": "Deckhand II",
+      "xp": 50,
+      "level": 1,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 3,
+      "key": "deckhand-3",
+      "title": "Deckhand III",
+      "xp": 100,
+      "level": 1,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 4,
+      "key": "crewmate-1",
+      "title": "Crewmate I",
+      "xp": 150,
+      "level": 2,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 5,
+      "key": "crewmate-2",
+      "title": "Crewmate II",
+      "xp": 280,
+      "level": 2,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 6,
+      "key": "crewmate-3",
+      "title": "Crewmate III",
+      "xp": 410,
+      "level": 3,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 7,
+      "key": "pathfinder-1",
+      "title": "Pathfinder I",
+      "xp": 540,
+      "level": 4,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 8,
+      "key": "pathfinder-2",
+      "title": "Pathfinder II",
+      "xp": 810,
+      "level": 5,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 9,
+      "key": "pathfinder-3",
+      "title": "Pathfinder III",
+      "xp": 1080,
+      "level": 6,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 10,
+      "key": "navigator-1",
+      "title": "Navigator I",
+      "xp": 1350,
+      "level": 7,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 11,
+      "key": "navigator-2",
+      "title": "Navigator II",
+      "xp": 1850,
+      "level": 8,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 12,
+      "key": "navigator-3",
+      "title": "Navigator III",
+      "xp": 2350,
+      "level": 9,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 13,
+      "key": "flight-operator-1",
+      "title": "Flight Operator I",
+      "xp": 2850,
+      "level": 11,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 14,
+      "key": "flight-operator-2",
+      "title": "Flight Operator II",
+      "xp": 3700,
+      "level": 12,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 15,
+      "key": "flight-operator-3",
+      "title": "Flight Operator III",
+      "xp": 4550,
+      "level": 14,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 16,
+      "key": "senior-operator-1",
+      "title": "Senior Operator I",
+      "xp": 5400,
+      "level": 16,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 17,
+      "key": "senior-operator-2",
+      "title": "Senior Operator II",
+      "xp": 7010,
+      "level": 18,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 18,
+      "key": "senior-operator-3",
+      "title": "Senior Operator III",
+      "xp": 8620,
+      "level": 20,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 19,
+      "key": "lieutenant-1",
+      "title": "Lieutenant I",
+      "xp": 10230,
+      "level": 23,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 20,
+      "key": "lieutenant-2",
+      "title": "Lieutenant II",
+      "xp": 13020,
+      "level": 26,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 21,
+      "key": "lieutenant-3",
+      "title": "Lieutenant III",
+      "xp": 15810,
+      "level": 29,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 22,
+      "key": "commander-1",
+      "title": "Commander I",
+      "xp": 18600,
+      "level": 32,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 23,
+      "key": "commander-2",
+      "title": "Commander II",
+      "xp": 23110,
+      "level": 36,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 24,
+      "key": "commander-3",
+      "title": "Commander III",
+      "xp": 27620,
+      "level": 39,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 25,
+      "key": "wing-commander-1",
+      "title": "Wing Commander I",
+      "xp": 32130,
+      "level": 43,
+      "ageYears": 0,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 26,
+      "key": "wing-commander-2",
+      "title": "Wing Commander II",
+      "xp": 39620,
+      "level": 48,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 27,
+      "key": "wing-commander-3",
+      "title": "Wing Commander III",
+      "xp": 47110,
+      "level": 52,
+      "ageYears": 0,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 28,
+      "key": "captain-1",
+      "title": "Captain I",
+      "xp": 54600,
+      "level": 57,
+      "ageYears": 1,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 29,
+      "key": "captain-2",
+      "title": "Captain II",
+      "xp": 66330,
+      "level": 63,
+      "ageYears": 1,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 30,
+      "key": "captain-3",
+      "title": "Captain III",
+      "xp": 78060,
+      "level": 68,
+      "ageYears": 1,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 31,
+      "key": "fleet-captain-1",
+      "title": "Fleet Captain I",
+      "xp": 89790,
+      "level": 74,
+      "ageYears": 2,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 32,
+      "key": "fleet-captain-2",
+      "title": "Fleet Captain II",
+      "xp": 107290,
+      "level": 81,
+      "ageYears": 2,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 33,
+      "key": "fleet-captain-3",
+      "title": "Fleet Captain III",
+      "xp": 124790,
+      "level": 87,
+      "ageYears": 2,
+      "status": "proposed-subdivision"
+    },
+    {
+      "id": 34,
+      "key": "sky-marshal-1",
+      "title": "Sky Marshal I",
+      "xp": 142290,
+      "level": 94,
+      "ageYears": 3,
+      "status": "existing-anchor"
+    },
+    {
+      "id": 35,
+      "key": "sky-marshal-2",
+      "title": "Sky Marshal II",
+      "xp": null,
+      "level": null,
+      "ageYears": 3,
+      "status": "unresolved"
+    },
+    {
+      "id": 36,
+      "key": "sky-marshal-3",
+      "title": "Sky Marshal III",
+      "xp": null,
+      "level": null,
+      "ageYears": 3,
+      "status": "unresolved"
+    }
+  ],
+  "implementationStatus": {
+    "rank36RuntimeActive": false,
+    "portalRuntimeActive": false,
+    "pairedProductionAssets": 1
+  }
+}

@@ -13,6 +13,8 @@ import {
 } from './combinedJourneyLevel';
 import { type JourneyChestReward, type JourneyRewardKind } from './combinedJourneyRewardLadder';
 import { applyJourneyRewardToRecord } from './combinedJourneyRewardGrant';
+import { buildIslandJourneyMilestones } from './islandJourneyMilestones';
+import { resolveIslandRunCompletion } from './islandRunCompletion';
 
 /**
  * Combined Journey Level — server-authoritative reward claim (R4).
@@ -95,7 +97,14 @@ export function claimCombinedJourneyReward(
     // inputs come from the caller's already-loaded summaries.
     const summary = deriveCombinedJourneyLevel({
       ...milestoneInputs,
-      islandsCompleted: Math.max(0, current.currentIslandNumber - 1),
+      ...buildIslandJourneyMilestones({
+        currentIslandNumber: current.currentIslandNumber,
+        cycleIndex: current.cycleIndex,
+        completion: resolveIslandRunCompletion(current),
+      }),
+      // A display checkpoint is not evidence of reward eligibility. Claims stay
+      // disabled until the server independently verifies all milestone inputs.
+      earnedXpFloor: undefined,
     });
     if (normalizedThreshold > summary.level) {
       return { status: 'not_yet_unlocked', reward: null, record: current };
