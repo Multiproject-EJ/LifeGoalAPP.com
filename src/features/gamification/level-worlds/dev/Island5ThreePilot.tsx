@@ -7201,7 +7201,12 @@ export default function Island5ThreePilot({
       caretakerFootplate.visible = visible && caretakerBoardAvailable;
       caretakerContactShadow.visible = visible && caretakerBoardAvailable;
       caretakerHitTarget.visible = visible && caretakerBoardAvailable;
-      const showAssemblyCutaway = isAssemblyCraterFirstLight && preset === 'boss';
+      // The subterranean cutaway is the finished-Assembly view (and the final
+      // blast's point of view). While charges are still being collected the
+      // crater mission keeps the ordinary island surface, so early play never
+      // shows a sliced-open island.
+      const showAssemblyCutaway = isAssemblyCraterFirstLight && preset === 'boss'
+        && firstLightAssemblyCraterPresentationRef.current.completed;
       const showPlayableRoute = preset !== 'powerworks' && !showAssemblyCutaway;
       tileMeshes.forEach((entry) => {
         // Keep only the far half of the real canonical route in the cutaway so
@@ -9022,6 +9027,8 @@ export default function Island5ThreePilot({
           tileRewardObjects.setFirstLightClaimedDynamiteTiles(
             assemblyPresentation.claimedDynamiteTileIndices ?? [],
           );
+          // Completion unlocks the cutaway; re-apply it if the crater view is open.
+          if (activeInspectionPreset === 'boss') setBoardActorsVisibleForPreset('boss');
         }
       }
       if (isCelestialSkyKingdom) {
