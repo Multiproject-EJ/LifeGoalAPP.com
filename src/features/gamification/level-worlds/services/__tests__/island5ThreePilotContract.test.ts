@@ -3038,14 +3038,19 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('constructionCrewRevealStages'), 'the five-stage reveal distribution must be exposed for live QA');
       assert(pilotSource.includes('constructionCommissioningFx.trigger'), 'completed levels must trigger the shared commissioning beat');
       assert(pilotSource.includes('applyCommissioningScale'), 'only additive construction geometry should consume the finish pop');
-      assert(commissioningSource.includes('new THREE.Points') && commissioningSource.includes('new THREE.PointLight'), 'the finish beat needs one pooled sparkle burst and one light flash');
+      assert(commissioningSource.includes('new THREE.Points') && commissioningSource.includes('new THREE.Sprite'), 'the finish beat needs one pooled sparkle burst and one glow flash');
+      // Lights change the light count compiled into every island shader, so a
+      // light that appears with the crew or the finish beat recompiles the scene.
+      assert(!/new THREE\.(Point|Spot|Directional|Hemisphere|Ambient)Light/.test(commissioningSource), 'the finish flash must not add a light to the island scene');
+      assert(pilotSource.includes("createRobotFamilyModel({ quality: 'low', showAddonRack: false, fixtureLights: false, transmission: false })"), 'the on-island build crew must not add lights or refractive glass (a full-scene transmission pre-pass) to the island scene');
       assert(presentationSource.includes('options.levelReview?.stopId ?? landmark?.stopId'), 'a completion beat must remain on the landmark that actually finished');
       assert(presentationSource.includes('sourceLevel') && pilotSource.includes('next?.sourceLevel'), 'level review must reconstruct the completed additive L(n-1) to Ln delta');
       assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(commissioningSource), 'commissioning FX must remain presentation-only');
       assert(pilotSource.includes('constructionTheatre.setCrewScale(0.11)'), 'the live construction crew must remain miniature beside the authored landmark');
       assert(theatreSource.includes('THREE.MathUtils.clamp(scale, 0.035, 1.25)'), 'the theatre must honor the authored low-profile landmark crew scale instead of silently raising it');
       assert(theatreSource.includes('THREE.MathUtils.clamp(crewScale / 0.58, 0.18, 1.25)'), 'miniature crew occupancy must contract with the rendered workers while retaining a conservative floor');
-      assert(pilotSource.includes('0.19 * (constructionPreviewSize.y / previewHorizontalSize)'), 'crew scale must respond to low-wide versus tall landmark silhouettes while remaining readable on a physical phone');
+      assert(pilotSource.includes('const previewStageScale = 1 / (crewScale * authoredBuildingScale);'), 'the Build preview must be drawn at the landmark\'s true board size so Build and the island never disagree about scale');
+      assert(pilotSource.includes('(buildingWorldHeight * 0.25) / (constructionHeavyWorkerModelHeight * 0.84 * crewScale)'), 'crew size must follow the real building height so the robots read clearly on a phone');
       assert(pilotSource.includes("canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3)"), 'live QA must expose the resolved building-aware miniature scale');
       assert(pilotSource.includes('completionCelebration: next?.completionCelebration ?? false'), 'the live renderer must forward the fully-built victory state to the robot theatre');
       assert(theatreSource.includes("isCompletionCelebration") && theatreSource.includes("? 'celebrate'"), 'all three robots must use their authored celebration motion in the fully-built state');

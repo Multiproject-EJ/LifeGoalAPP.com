@@ -6145,7 +6145,7 @@ export default function Island5ThreePilot({
     // The live construction crew shares this renderer and reads the real
     // landmark bounds. It is intentionally absent from clickableLandmarks.
     canvas.dataset.constructionRendererGeneration = String(performance.now());
-    const constructionFamily = createRobotFamilyModel({ quality: 'low', showAddonRack: false });
+    const constructionFamily = createRobotFamilyModel({ quality: 'low', showAddonRack: false, fixtureLights: false, transmission: false });
     const constructionTheatre = createRobotConstructionTheatre({
       family: constructionFamily,
       quality: 'low',
@@ -6154,6 +6154,12 @@ export default function Island5ThreePilot({
     // The family lab keeps showroom scale. On a live landmark these are a
     // coordinated miniature work crew, with matching tools and payloads.
     constructionTheatre.setCrewScale(0.11);
+    // Measured once at model scale: crew sizing is expressed as a share of
+    // the real building height rather than a fixed miniature factor.
+    const constructionHeavyWorkerModelHeight = Math.max(
+      0.001,
+      new THREE.Box3().setFromObject(constructionFamily.members['heavy-worker']).getSize(new THREE.Vector3()).y,
+    );
     const constructionCommissioningFx = createIslandConstructionCommissioningFx();
     const constructionAnchor = new THREE.Group();
     constructionAnchor.name = 'ISLAND_RUN_BUILD_MODAL_CONSTRUCTION_ANCHOR';
@@ -6323,24 +6329,36 @@ export default function Island5ThreePilot({
         entryMaterials.forEach((material) => material.dispose());
       });
     };
-    const ensureConstructionPreview = (
+    type PreparedConstructionPreview = {
+      key: string;
+      stage: THREE.Group;
+      delta: IslandConstructionLevelDelta;
+      bounds: THREE.Box3;
+      size: THREE.Vector3;
+    };
+    /**
+     * Compiles every shader a subtree can need. renderer.compile walks the
+     * whole subtree, hidden objects included, so reveal parts compile now
+     * instead of one stall per part as each first appears mid-build. The
+     * driver finishes the compiles in the background before first use.
+     * compileAsync is deliberately avoided: its readiness poll throws an
+     * uncaught error if a material is disposed before it reports ready.
+     */
+    const warmConstructionShaders = (root: THREE.Object3D) => {
+      if (!renderer) return;
+      try {
+        renderer.compile(root, camera, scene);
+      } catch {
+        // Warm-up is an optimisation only; rendering compiles on demand.
+      }
+    };
+    const buildConstructionPreview = (
       landmarkId: Island5LandmarkId,
       currentLevel: BuildLevel,
       targetLevel: BuildLevel,
-    ) => {
-      const previewKey = `${landmarkId}:${currentLevel}->${targetLevel}`;
-      if (previewKey === constructionPreviewKey && constructionPreviewRoot) return;
-      if (constructionPreviewRoot) {
-        constructionStageBuilding.remove(constructionPreviewRoot);
-        disposeDetachedConstructionRoot(constructionPreviewRoot);
-      }
-      constructionLevelDelta = null;
-      constructionPreviewKey = previewKey;
+    ): PreparedConstructionPreview | null => {
       const definition = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === landmarkId);
-      if (!definition) {
-        constructionPreviewRoot = null;
-        return;
-      }
+      if (!definition) return null;
       const stage = new THREE.Group();
       stage.name = `ISLAND_RUN_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_TO_L${targetLevel}_DELTA_STAGE`;
       const current = island15PalaceRuntime
@@ -6358,14 +6376,14 @@ export default function Island5ThreePilot({
         stage.add(root);
       });
       stage.updateWorldMatrix(true, true);
-      constructionPreviewBounds.makeEmpty();
+      const bounds = new THREE.Box3();
       target.traverseVisible((entry) => {
         if (entry instanceof THREE.Mesh || entry instanceof THREE.Line || entry instanceof THREE.Points || entry instanceof THREE.Sprite) {
-          constructionPreviewBounds.expandByObject(entry, true);
+          bounds.expandByObject(entry, true);
         }
       });
-      constructionPreviewBounds.getSize(constructionPreviewSize);
-      constructionLevelDelta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
+      const size = bounds.getSize(new THREE.Vector3());
+      const delta = prepareIslandConstructionLevelDelta({ currentRoot: current, targetRoot: target });
       if (isDriftwoodIsle && landmarkId === 'boss' && currentLevel > 0) {
         const fundedPalace = current.getObjectByName('OPENING_PALACE');
         if (fundedPalace instanceof THREE.Group) compactOpeningPalaceParts(fundedPalace);
@@ -6375,8 +6393,133 @@ export default function Island5ThreePilot({
         compactStaticGeometry(current, `${worldPrefix}_BUILD_MODAL_${landmarkId.toUpperCase()}_L${currentLevel}_FUNDED`);
       }
       if (!island15PalaceRuntime) makeLandmarkMaterialsIndependent(current);
-      constructionPreviewRoot = stage;
-      constructionStageBuilding.add(stage);
+      // Transmission makes Three.js re-render the whole opaque island into an
+      // offscreen buffer every frame (and compile a second shader variant of
+      // every island material) whenever it is on screen. The build camera
+      // frames this preview up close, so its own glass copies stay
+      // see-through via opacity instead. Only materials this preview owns
+      // are changed; shared board materials are never touched.
+      const ownedPreviewMaterials = new Set<THREE.Material>();
+      delta.revealParts.forEach((part) => part.materials.forEach((material) => ownedPreviewMaterials.add(material)));
+      if (!island15PalaceRuntime) {
+        current.traverse((entry) => {
+          if (!(entry instanceof THREE.Mesh)) return;
+          (Array.isArray(entry.material) ? entry.material : [entry.material])
+            .forEach((material) => ownedPreviewMaterials.add(material));
+        });
+      }
+      ownedPreviewMaterials.forEach((material) => {
+        if (material instanceof THREE.MeshPhysicalMaterial && material.transmission > 0) {
+          material.transmission = 0;
+          material.needsUpdate = true;
+        }
+      });
+      warmConstructionShaders(stage);
+      return { key: `${landmarkId}:${currentLevel}->${targetLevel}`, stage, delta, bounds, size };
+    };
+    // The next level's preview is built during the level-complete pause, so
+    // starting that level never stalls on geometry work or shader compiles.
+    let preparedNextConstructionPreview: PreparedConstructionPreview | null = null;
+    let nextConstructionPreviewHandle: number | null = null;
+    const cancelNextConstructionPreview = () => {
+      if (nextConstructionPreviewHandle === null) return;
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(nextConstructionPreviewHandle);
+      else window.clearTimeout(nextConstructionPreviewHandle);
+      nextConstructionPreviewHandle = null;
+    };
+    const discardPreparedNextConstructionPreview = () => {
+      cancelNextConstructionPreview();
+      if (preparedNextConstructionPreview) disposeDetachedConstructionRoot(preparedNextConstructionPreview.stage);
+      preparedNextConstructionPreview = null;
+    };
+    // Mirrors the build panel's sequence: each landmark L1->L3 in stop order.
+    const constructionSequence: readonly Island5LandmarkId[] = ['hatchery', 'habit', 'event', 'wisdom', 'boss'];
+    const resolveBoardBuildLevel = (landmarkId: Island5LandmarkId) => THREE.MathUtils.clamp(
+      landmarkBuildLevelsRef.current?.[landmarkId] ?? buildLevelRef.current,
+      0,
+      3,
+    ) as BuildLevel;
+    const scheduleConstructionPreview = (landmarkId: Island5LandmarkId, fundedLevel: BuildLevel) => {
+      // Island 15 swaps in its palace runtime asynchronously; never cache a fallback model.
+      if (fundedLevel >= 3 || isCrystalGlacier) return;
+      const nextLevel = (fundedLevel + 1) as BuildLevel;
+      const nextKey = `${landmarkId}:${fundedLevel}->${nextLevel}`;
+      if (preparedNextConstructionPreview?.key === nextKey || constructionPreviewKey === nextKey) return;
+      cancelNextConstructionPreview();
+      const run = () => {
+        nextConstructionPreviewHandle = null;
+        if (preparedNextConstructionPreview?.key === nextKey || constructionPreviewKey === nextKey) return;
+        discardPreparedNextConstructionPreview();
+        preparedNextConstructionPreview = buildConstructionPreview(landmarkId, fundedLevel, nextLevel);
+      };
+      nextConstructionPreviewHandle = typeof window.requestIdleCallback === 'function'
+        ? window.requestIdleCallback(run, { timeout: 900 })
+        : window.setTimeout(run, 120);
+    };
+    const scheduleNextConstructionPreview = (landmarkId: Island5LandmarkId, fundedLevel: BuildLevel) => {
+      if (fundedLevel < 3) {
+        scheduleConstructionPreview(landmarkId, fundedLevel);
+        return;
+      }
+      const index = constructionSequence.indexOf(landmarkId);
+      const nextLandmark = constructionSequence
+        .slice(index + 1)
+        .find((candidate) => resolveBoardBuildLevel(candidate) < 3);
+      if (nextLandmark) scheduleConstructionPreview(nextLandmark, resolveBoardBuildLevel(nextLandmark));
+    };
+    /** The first Build tap of a visit opens on a preview that is already prepared. */
+    const scheduleFirstConstructionPreview = () => {
+      const firstLandmark = constructionSequence.find((candidate) => resolveBoardBuildLevel(candidate) < 3);
+      if (firstLandmark) scheduleConstructionPreview(firstLandmark, resolveBoardBuildLevel(firstLandmark));
+    };
+    // Three.js compiles a material the first time it is drawn, so the hidden
+    // build crew, tools and effects, and island parts only the close build
+    // camera frames, used to compile mid-interaction. Compile the whole scene
+    // once the island has settled instead.
+    const warmConstructionCrew = () => {
+      constructionCrewWarmHandle = null;
+      warmConstructionShaders(scene);
+      if (!constructionPresentationRef.current?.active) scheduleFirstConstructionPreview();
+    };
+    let constructionCrewWarmHandle: number | null = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback(warmConstructionCrew, { timeout: 4000 })
+      : window.setTimeout(warmConstructionCrew, 2500);
+    const cancelConstructionCrewWarmup = () => {
+      if (constructionCrewWarmHandle === null) return;
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(constructionCrewWarmHandle);
+      else window.clearTimeout(constructionCrewWarmHandle);
+      constructionCrewWarmHandle = null;
+    };
+    const ensureConstructionPreview = (
+      landmarkId: Island5LandmarkId,
+      currentLevel: BuildLevel,
+      targetLevel: BuildLevel,
+    ) => {
+      const previewKey = `${landmarkId}:${currentLevel}->${targetLevel}`;
+      if (previewKey === constructionPreviewKey && constructionPreviewRoot) return;
+      if (constructionPreviewRoot) {
+        constructionStageBuilding.remove(constructionPreviewRoot);
+        disposeDetachedConstructionRoot(constructionPreviewRoot);
+      }
+      constructionLevelDelta = null;
+      constructionPreviewKey = previewKey;
+      let prepared: PreparedConstructionPreview | null;
+      if (preparedNextConstructionPreview?.key === previewKey) {
+        prepared = preparedNextConstructionPreview;
+        preparedNextConstructionPreview = null;
+      } else {
+        discardPreparedNextConstructionPreview();
+        prepared = buildConstructionPreview(landmarkId, currentLevel, targetLevel);
+      }
+      if (!prepared) {
+        constructionPreviewRoot = null;
+        return;
+      }
+      constructionLevelDelta = prepared.delta;
+      constructionPreviewBounds.copy(prepared.bounds);
+      constructionPreviewSize.copy(prepared.size);
+      constructionPreviewRoot = prepared.stage;
+      constructionStageBuilding.add(prepared.stage);
       canvas.dataset.constructionCrewBuilding = `${landmarkId}:L${currentLevel}->L${targetLevel}:additive-delta`;
       canvas.dataset.constructionCrewLevelDelta = `${constructionLevelDelta.retainedMeshCount}:${constructionLevelDelta.additiveMeshCount}`;
       canvas.dataset.constructionCrewRevealStages = JSON.stringify(constructionLevelDelta.stageCounts);
@@ -6493,6 +6636,9 @@ export default function Island5ThreePilot({
       // Swapping to the board root here changes apparent size by up to 2.4x.
       ensureConstructionPreview(mappedStopId as Island5LandmarkId, currentLevel, previewLevel);
       applyConstructionPreviewProgress(next?.completionCelebration ? 1 : next?.progress ?? 0, next?.working ?? false);
+      if (!next?.working && (next?.completionCelebration || (next?.progress ?? 0) >= 0.999)) {
+        scheduleNextConstructionPreview(mappedStopId as Island5LandmarkId, previewLevel);
+      }
 
       constructionBounds.setFromObject(targetRoot);
       constructionBounds.getCenter(constructionBoundsCenter);
@@ -6523,35 +6669,36 @@ export default function Island5ThreePilot({
       if (constructionPreviewRoot) {
         constructionPreviewBounds.getCenter(constructionPreviewCenter);
         const previewHorizontalSize = Math.max(constructionPreviewSize.x, constructionPreviewSize.z, 0.001);
+        // The build preview is drawn at the landmark's true board size (world
+        // scale 1). It used to be shrunk to 58% (and further for tall levels)
+        // to fit between the header and dock, so buildings looked much smaller
+        // in Build than on the island. Framing now belongs to the camera.
+        const previewStageScale = 1 / (crewScale * authoredBuildingScale);
+        // Size the crew from the real building: the Heavy Worker stands about
+        // a quarter of the building's height, so all three robots read clearly.
+        const buildingWorldHeight = constructionPreviewSize.y;
         const crewVisualScale = THREE.MathUtils.clamp(
-          0.19 * (constructionPreviewSize.y / previewHorizontalSize),
-          isJungleExpedition ? 0.16 : 0.084,
-          isJungleExpedition ? 0.27 : 0.2,
+          (buildingWorldHeight * 0.25) / (constructionHeavyWorkerModelHeight * 0.84 * crewScale),
+          0.12,
+          0.9,
         );
         constructionTheatre.setCrewScale(crewVisualScale);
         canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3);
-        // Tall restored landmarks (especially tree/citadel L3s) need the same
-        // visible-stage ceiling as broad buildings. Otherwise their upper
-        // scaffold and work stations disappear beneath the modal header.
-        const verticalFit = THREE.MathUtils.clamp(
-          (previewHorizontalSize * 1.38) / Math.max(constructionPreviewSize.y, 0.001),
-          0.72,
-          1,
-        );
-        const previewStageScale = (0.58 / crewScale) * verticalFit;
+        canvas.dataset.constructionPreviewWorldScale = (crewScale * authoredBuildingScale * previewStageScale).toFixed(3);
         constructionPreviewRoot.scale.setScalar(previewStageScale);
         constructionPreviewRoot.position.set(
           -constructionPreviewCenter.x * previewStageScale,
           -constructionPreviewBounds.min.y * previewStageScale,
           -constructionPreviewCenter.z * previewStageScale,
         );
+        // Envelopes are in anchor space (the anchor carries crewScale).
         constructionTheatre.setTargetEnvelope(
-          previewHorizontalSize * previewStageScale * 0.5,
-          constructionPreviewSize.y * previewStageScale,
+          (previewHorizontalSize * 0.5) / crewScale,
+          buildingWorldHeight / crewScale,
         );
         constructionCommissioningFx.setTargetEnvelope(
-          previewHorizontalSize * previewStageScale * 0.5,
-          constructionPreviewSize.y * previewStageScale,
+          (previewHorizontalSize * 0.5) / crewScale,
+          buildingWorldHeight / crewScale,
         );
         // The target landmark already owns its stage-specific façade
         // scaffolding. A second rectangular cage around the entire plot was
@@ -7880,20 +8027,34 @@ export default function Island5ThreePilot({
       const buildPresentation = constructionPresentationRef.current;
       const buildPreset = buildPresentation?.targetStopId === 'mystery' ? 'event' : buildPresentation?.targetStopId;
       if (buildPresentation?.active && id === buildPreset && constructionPreviewRoot) {
-        // Frame the actual miniature, including off-centre authored landmarks.
-        // Twenty percent more apparent size comes from the camera, not from
-        // compounding funded geometry or changing the board footprint.
-        const offset = new THREE.Vector3(...preset.position).sub(new THREE.Vector3(...preset.target));
-        offset.multiplyScalar(1 / 1.2);
-        const target = constructionAnchor.position.clone();
-        const previewHeight = constructionPreviewSize.y * constructionPreviewRoot.scale.y
+        // Fit the true-size building (plus a margin for the crew) into the
+        // clear area between the Build header and dock, keeping each world's
+        // authored viewing angle. The building is shown at real board size,
+        // so framing is solved from its bounds rather than a fixed zoom.
+        const previewWorldScale = constructionPreviewRoot.scale.y
           * constructionAnchor.scale.y * constructionStageBuilding.scale.y;
-        target.y += previewHeight * 0.44;
+        const buildingWidth = Math.max(constructionPreviewSize.x, constructionPreviewSize.z) * previewWorldScale;
+        const buildingHeight = constructionPreviewSize.y * previewWorldScale;
+        const buildingCenter = constructionAnchor.position.clone();
+        buildingCenter.y += buildingHeight * 0.5;
+        const fitRadius = 0.5 * Math.hypot(buildingWidth, buildingHeight) * 1.08;
+        const halfFovTan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / Math.max(camera.zoom, 0.001);
+        // Roughly 70% of the phone height is clear of the header and dock.
+        const clearHalfHeightTan = halfFovTan * 0.72;
+        const clearHalfWidthTan = halfFovTan * camera.aspect * 0.92;
+        const fitDistance = fitRadius / Math.max(Math.min(clearHalfHeightTan, clearHalfWidthTan), 0.001);
+        const viewOffset = new THREE.Vector3(...preset.position).sub(new THREE.Vector3(...preset.target)).setLength(fitDistance);
+        const viewDirection = viewOffset.clone().negate().normalize();
+        const viewRight = new THREE.Vector3().crossVectors(viewDirection, THREE.Object3D.DEFAULT_UP).normalize();
+        const viewUp = new THREE.Vector3().crossVectors(viewRight, viewDirection).normalize();
+        // The clear area sits above screen centre (the dock is taller than the
+        // header), so aim slightly below the building to lift it into view.
+        const target = buildingCenter.clone().addScaledVector(viewUp, -0.16 * halfFovTan * fitDistance);
         preset = { ...preset,
-          position: target.clone().add(offset).toArray() as [number, number, number],
+          position: target.clone().add(viewOffset).toArray() as [number, number, number],
           target: target.toArray() as [number, number, number],
         };
-        canvas.dataset.constructionFraming = 'centred-1.20';
+        canvas.dataset.constructionFraming = 'fit-true-size';
       }
       setActivePreset(id);
       if (isReducedMotion || instant) {
@@ -10984,6 +11145,8 @@ export default function Island5ThreePilot({
       if (island15CrystalPalaceRuntimeRef.current === disposingIsland15PalaceRuntime) {
         island15CrystalPalaceRuntimeRef.current = null;
       }
+      cancelConstructionCrewWarmup();
+      discardPreparedNextConstructionPreview();
       disposeScene(scene);
       if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
       if (rootheartNightBackdrop && rootheartNightBackdrop !== disposedSceneBackground) rootheartNightBackdrop.dispose();
